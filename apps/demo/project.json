@@ -1,0 +1,19 @@
+{
+  "sourceRoot": "apps/demo/src",
+  "projectType": "application",
+  "tags": ["type:feature"],
+  "targets": {
+    "lingui-extract": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui extract"
+      }
+    },
+    "lingui-compile": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui compile"
+      }
+    }
+  }
+}

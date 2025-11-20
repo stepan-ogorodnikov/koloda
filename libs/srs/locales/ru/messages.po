@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-07-15 07:40+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ru\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:9
+msgid "daily-limits.learn-more-than-total"
+msgstr "Лимит карточек заучивания не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:10
+msgid "daily-limits.review-more-than-total"
+msgstr "Лимит карточек повтора не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:8
+msgid "daily-limits.untouched-more-than-total"
+msgstr "Лимит новых карточек не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/templates.ts:15
+msgid "fields.min-length"
+msgstr "Необходимо хотя бы одно поле"
+
+#: ../../libs/srs/src/lib/templates.ts:16
+msgid "layout.min-length"
+msgstr "Раскладка не может быть пустой"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:24
+msgid "motion.off"
+msgstr "Отключено"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:23
+msgid "motion.on"
+msgstr "Включено"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:25
+msgid "motion.system"
+msgstr "Как в системе"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:16
+msgid "theme.dark"
+msgstr "Тёмная"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:15
+msgid "theme.light"
+msgstr "Светлая"
+
+#: ../../libs/srs/src/lib/settings-interface.ts:17
+msgid "theme.system"
+msgstr "Системная"
+
+#: ../../libs/srs/src/lib/algorithms.ts:15
+#: ../../libs/srs/src/lib/decks.ts:15
+#: ../../libs/srs/src/lib/templates.ts:14
+msgid "title.max-length"
+msgstr "Название дожно быть не длинее 255 символов"
+
+#: ../../libs/srs/src/lib/algorithms.ts:14
+#: ../../libs/srs/src/lib/decks.ts:14
+#: ../../libs/srs/src/lib/templates.ts:13
+msgid "title.min-length"
+msgstr "Название не может быть пустым"

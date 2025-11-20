@@ -1,0 +1,48 @@
+@utility bg-* {
+  background: color-mix(in oklab, --value(--color-bg-*) --modifier(integer)%, transparent);
+}
+
+@utility bg-* {
+  background: --value(--color-bg-*);
+}
+
+@utility fg-* {
+  color: --value(--color-fg-*);
+  color: --value(--color-*);
+}
+
+@utility border-* {
+  border-color: color-mix(in oklab, --value(--color-border-*) --modifier(integer)%, transparent);
+}
+
+@utility border-* {
+  border-color: --value(--color-border-*);
+}
+
+@utility outline-* {
+  outline-color: --value(--color-outline-*);
+}
+
+@utility stroke-* {
+  stroke-width: --value(number);
+}
+
+@utility focus-ring {
+  @apply outline-0 data-focus-visible:outline-2 outline-offset-3 outline-focus-ring;
+}
+
+@utility no-focus-ring {
+  @apply data-focus-visible:outline-0 focus-visible:outline-0;
+}
+
+@utility group-focus-ring {
+  @apply outline-0 group-data-focus-visible:outline-2 outline-offset-3 outline-focus-ring;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@utility animate-colors {
+  @apply transition-colors duration-300 ease-in-out;
+}

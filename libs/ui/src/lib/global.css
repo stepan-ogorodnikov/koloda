@@ -1,0 +1,226 @@
+@import "tailwindcss";
+@plugin "tailwindcss-react-aria-components";
+@import "./utilities";
+
+:root {
+  --bg-body: var(--color-stone-100);
+  --bg-level-1: oklch(98% 0 0);
+  --bg-level-2: oklch(94% 0 0);
+  --fg-level-1: oklch(28% 0 0);
+  --fg-level-2: oklch(32% 0 0);
+  --fg-level-3: oklch(35% 0 0);
+  --fg-level-4: oklch(52% 0 0);
+  --fg-inactive: oklch(50% 0 0);
+  --fg-disabled: oklch(73% 0 0);
+  --fg-link: var(--color-sky-300);
+  --fg-error: oklch(from var(--color-red-500) calc(l - 0.12) calc(c - 0.04) h);
+  --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.15) calc(c - 0.03) h);
+  /* input */
+  --bg-input: oklch(from var(--bg-level-1) calc(l - 0.0075) c h);
+  --fg-input-placeholder: var(--fg-disabled);
+  --border-input: oklch(from var(--bg-level-1) calc(l - 0.05) c h);
+  --shadow-input: inset 0 0.125rem 0.125rem oklch(75% 0 0 / 6%);
+  /* button */
+  --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --border-button-bordered: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
+  --bg-button-ghost-hover: oklch(0% 0 0 / 3%);
+  --bg-button-ghost-pressed: oklch(0% 0 0 / 5%);
+  --shadow-button-ghost: var(--shadow-input);
+  --bg-button-primary: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
+  --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l - 0.01) c h);
+  --bg-button-primary-disabled: transparent;
+  --border-button-primary: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
+  --shadow-button-primary: inset 0 0.5rem 0.5rem oklch(100% 0 0 / 30%);
+  /* switch */
+  --bg-switch: oklch(0% 0 0 / 5%);
+  --bg-switch-selected: oklch(from var(--color-green-700) calc(l + 0.06) calc(c - 0.02) h);
+  --shadow-switch: var(--shadow-input);
+  --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+  --border-switch-selected: oklch(from var(--color-green-700) calc(l - 0.01) calc(c - 0.02) h);
+  --bg-switch-bullet: oklch(100% 0 0);
+  /* pickers */
+  --bg-picker-item-hover: oklch(50% 0 0 / 5%);
+  /* toggle group */
+  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --border-toggle-group: var(--border-input);
+  --bg-toggle-group-active: var(--bg-level-1);
+  --border-toggle-group-active: oklch(from var(--border-toggle-group) calc(l - 0.02) c h);
+  /* overlay */
+  --bg-overlay: radial-gradient(oklch(0% 0 0 / 35%), oklch(0% 0 0 / 30%));
+  --shadow-overlay-frame: 0 0.25rem 0.25rem oklch(25% 0 0 / 1%), 0 1rem 1rem 0.25rem oklch(50% 0 0 / 4%);
+  /* main */
+  --border-main: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
+  --bg-main-sidebar-link-active: oklch(from var(--bg-level-1) calc(l - 0.015) c h);
+  /* table */
+  --border-table: oklch(0% 0 0 / 5%);
+  --bg-table-head: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
+  --fg-table-head: oklch(56% 0 0);
+  --fg-table-head-inactive: oklch(78% 0 0);
+  /* tabs */
+  --fg-tabs-item: var(--fg-level-4);
+  --fg-tabs-item-active: oklch(from var(--color-blue-500) calc(l - 0.06) c h);
+  --fg-tabs-item-active: var(--fg-level-1);
+  /* lesson type */
+  --bg-lesson-type-blue: oklch(from var(--color-blue-900) calc(l + 0.27) c h);
+  --bg-lesson-type-red: --alpha(var(--color-red-500) / 50%);
+  --bg-lesson-type-green: --alpha(var(--color-green-500) / 75%);
+  --fg-lesson-type-blue: oklch(from var(--color-blue-900) calc(l + 0.18) c h);
+  --fg-lesson-type-red: oklch(from var(--color-red-900) calc(l + 0.18) c h);
+  --fg-lesson-type-green: oklch(from var(--color-green-900) calc(l + 0.18) c h);
+}
+
+:root.dark {
+  --bg-body: oklch(21% 0 0);
+  --bg-level-1: oklch(22% 0 0);
+  --bg-level-2: oklch(30% 0 0);
+  --fg-level-1: oklch(91.5% 0 0);
+  --fg-level-2: oklch(75% 0 0);
+  --fg-level-3: oklch(67% 0 0);
+  --fg-level-4: oklch(59% 0 0);
+  --fg-inactive: var(--color-neutral-400);
+  --fg-disabled: oklch(43% 0 0);
+  --fg-link: var(--color-sky-600);
+  --fg-error: oklch(from var(--color-red-500) calc(l - 0.03) calc(c - 0.02) h);
+  --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.02) c h);
+  /* input */
+  --bg-input: oklch(100% 0 0 / 2%);
+  --fg-input-placeholder: oklch(100% 0 0 / 20%);
+  --shadow-input: inset 0 2px 2px oklch(0% 0 0 / 8%);
+  --border-input: oklch(100% 0 0 / 9%);
+  /* button */
+  --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l + 0.03) c h);
+  --border-button-bordered: var(--border-input);
+  --bg-button-ghost-hover: oklch(100% 0 0 / 3%);
+  --bg-button-ghost-pressed: oklch(100% 0 0 / 5%);
+  --shadow-button-ghost: var(--shadow-input);
+  --bg-button-primary: oklch(50% 0 0 / 5%);
+  --bg-button-primary-hover: oklch(50% 0 0 / 9%);
+  --bg-button-primary-disabled: transparent;
+  --border-button-primary: oklch(100% 0 0 / 5%);
+  --shadow-button-primary: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 1%);
+  /* switch */
+  --bg-switch: var(--bg-input);
+  --bg-switch-selected: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.04) h);
+  --shadow-switch: var(--shadow-input);
+  --border-switch: var(--border-input);
+  --border-switch-selected: oklch(from var(--color-green-500) calc(l - 0.21) calc(c - 0.04) h);
+  --bg-switch-bullet: var(--fg-level-1);
+  /* pickers */
+  --bg-picker-item-hover: oklch(100% 0 0 / 4%);
+  /* toggle group */
+  --bg-toggle-group: oklch(19% 0 0);
+  --border-toggle-group: oklch(27.5% 0 0);
+  --bg-toggle-group-active: oklch(100% 0 0 / 3%);
+  --border-toggle-group-active: oklch(34% 0 0);
+  /* overlay */
+  --bg-overlay: oklch(50% 0 0 / 5%);
+  --shadow-overlay-frame: none;
+  /* main */
+  --border-main: oklch(30% 0 0 / 75%);
+  --bg-main-sidebar-link-active: oklch(100% 0 0 / 2.5%);
+  /* table */
+  --border-table: oklch(100% 0 0 / 10%);
+  --bg-table-head: oklch(21.75% 0 0);
+  --fg-table-head: var(--fg-level-2);
+  --fg-table-head-inactive: var(--fg-level-4);
+  /* tabs */
+  --fg-tabs-item: var(--fg-level-3);
+  --fg-tabs-item-active: var(--color-sky-100);
+  /* lesson type */
+  --bg-lesson-type-blue: oklch(from var(--color-blue-500) calc(l - 0.08) c h);
+  --bg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.2) calc(c - 0.05) h);
+  --bg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.05) h);
+  --fg-lesson-type-blue: oklch(from var(--color-blue-500) calc(l + 0.05) calc(c + 0.03) h);
+  --fg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.1) calc(c - 0.05) h);
+  --fg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.13) calc(c - 0.05) h);
+}
+
+@theme {
+  --font-family-sans: "Inter Variable", sans-serif;
+  --color-bg-body: var(--bg-body);
+  --color-bg-level-1: var(--bg-level-1);
+  --color-bg-level-2: var(--bg-level-2);
+  --color-fg-level-1: var(--fg-level-1);
+  --color-fg-level-2: var(--fg-level-2);
+  --color-fg-level-3: var(--fg-level-3);
+  --color-fg-level-4: var(--fg-level-4);
+  --color-fg-inactive: var(--fg-inactive);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-link: var(--fg-link);
+  --color-fg-error: var(--fg-error);
+  --color-outline-focus-ring: var(--outline-focus-ring);
+  /* input */
+  --color-bg-input: var(--bg-input);
+  --color-fg-input-placeholder: var(--fg-input-placeholder);
+  --shadow-input: var(--shadow-input);
+  --color-border-input: var(--border-input);
+  /* button */
+  --color-bg-button-bordered-hover: var(--bg-button-bordered-hover);
+  --color-border-button-bordered: var(--border-button-bordered);
+  --shadow-button-bordered: var(--shadow-button-bordered);
+  --color-bg-button-ghost-hover: var(--bg-button-ghost-hover);
+  --color-bg-button-ghost-pressed: var(--bg-button-ghost-pressed);
+  --shadow-button-ghost: var(--shadow-button-ghost);
+  --color-bg-button-primary: var(--bg-button-primary);
+  --color-bg-button-primary-hover: var(--bg-button-primary-hover);
+  --color-border-button-primary: var(--border-button-primary);
+  --shadow-button-primary: var(--shadow-button-primary);
+  /* switch */
+  --color-bg-switch: var(--bg-switch);
+  --color-bg-switch-selected: var(--bg-switch-selected);
+  --shadow-switch: var(--shadow-switch);
+  --color-border-switch: var(--border-switch);
+  --color-border-switch-selected: var(--border-switch-selected);
+  --color-bg-switch-bullet: var(--bg-switch-bullet);
+  /* pickers */
+  --color-bg-picker-item-hover: var(--bg-picker-item-hover);
+  /* toggle group */
+  --color-bg-toggle-group: var(--bg-toggle-group);
+  --color-border-toggle-group: var(--border-toggle-group);
+  --color-bg-toggle-group-active: var(--bg-toggle-group-active);
+  --color-border-toggle-group-active: var(--border-toggle-group-active);
+  --shadow-toggle-group-active: var(--shadow-button-bordered);
+  /* overlays */
+  --color-bg-overlay: var(--bg-overlay);
+  --color-border-overlay-frame: var(--border-main);
+  --shadow-overlay-frame: var(--shadow-overlay-frame);
+  /* main */
+  --color-border-main: var(--border-main);
+  --color-bg-main-sidebar-link-active: var(--bg-main-sidebar-link-active);
+  /* table */
+  --color-border-table: var(--border-table);
+  --color-bg-table-head: var(--bg-table-head);
+  --color-fg-table-head: var(--fg-table-head);
+  --color-fg-table-head-inactive: var(--fg-table-head-inactive);
+  /* tabs */
+  --color-fg-tabs-item: var(--fg-tabs-item);
+  --color-fg-tabs-item-active: var(--fg-tabs-item-active);
+  /* lesson type */
+  --color-bg-lesson-type-blue: var(--bg-lesson-type-blue);
+  --color-bg-lesson-type-red: var(--bg-lesson-type-red);
+  --color-bg-lesson-type-green: var(--bg-lesson-type-green);
+  --color-fg-lesson-type-blue: var(--fg-lesson-type-blue);
+  --color-fg-lesson-type-red: var(--fg-lesson-type-red);
+  --color-fg-lesson-type-green: var(--fg-lesson-type-green);
+}
+
+@layer base {
+  body {
+    @apply flex min-h-screen scheme-light dark:scheme-dark antialiased bg-body fg-level-1 font-sans font-medium
+      dark:font-normal;
+  }
+
+  h1 {
+    @apply text-xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl font-bold;
+  }
+
+  h3 {
+    @apply text-lg font-bold;
+  }
+}
+
+@custom-variant dark (&:where(.dark, .dark *));

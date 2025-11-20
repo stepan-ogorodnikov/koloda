@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/demo"
+    },
+    {
+      "path": "./libs/ui"
+    },
+    {
+      "path": "./libs/srs"
+    },
+    {
+      "path": "./libs/react"
+    }
+  ]
+}

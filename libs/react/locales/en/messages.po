@@ -1,0 +1,582 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-07-15 07:40+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. placeholder {0}: decks.length
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:59
+msgid "{0, plural, other {algorithm-used-by-#-decks}}"
+msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
+
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:70
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:75
+msgid "add-algorithm.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:95
+msgid "add-algorithm.redirect.link"
+msgstr "Go to the new preset"
+
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:106
+msgid "add-algorithm.submit"
+msgstr "Create"
+
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:64
+msgid "add-algorithm.title"
+msgstr "New preset"
+
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:51
+msgid "add-algorithm.trigger"
+msgstr "New preset"
+
+#: ../../libs/react/src/lib/cards/add-card-reducer.ts:9
+msgid "add-card.errors.field-empty"
+msgstr "This field can't be empty"
+
+#: ../../libs/react/src/lib/cards/add-card-fields-item.tsx:30
+msgid "add-card.field.placeholder"
+msgstr "Empty"
+
+#: ../../libs/react/src/lib/cards/add-card.tsx:78
+msgid "add-card.submit"
+msgstr "Create card"
+
+#: ../../libs/react/src/lib/decks/deck-cards.tsx:25
+msgid "add-cards.trigger"
+msgstr "Add cards"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:75
+msgid "add-deck.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:98
+msgid "add-deck.redirect.link"
+msgstr "Go to the new deck"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:109
+msgid "add-deck.submit"
+msgstr "Add deck"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:109
+msgid "add-deck.success"
+msgstr "Done"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:64
+msgid "add-deck.title"
+msgstr "New deck"
+
+#: ../../libs/react/src/lib/decks/add-deck.tsx:51
+msgid "add-deck.trigger"
+msgstr "New deck"
+
+#: ../../libs/react/src/lib/templates/add-template.tsx:75
+msgid "add-template.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/templates/add-template.tsx:90
+msgid "add-template.redirect.link"
+msgstr "Go to the new template"
+
+#: ../../libs/react/src/lib/templates/add-template.tsx:101
+msgid "add-template.submit"
+msgstr "Create"
+
+#: ../../libs/react/src/lib/templates/add-template.tsx:64
+msgid "add-template.title"
+msgstr "New template"
+
+#: ../../libs/react/src/lib/templates/add-template.tsx:51
+msgid "add-template.trigger"
+msgstr "New template"
+
+#: ../../libs/react/src/lib/algorithms/algorithm-picker.tsx:31
+msgid "algorithm-picker.label"
+msgstr "Preset"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:147
+msgid "algorithm.actions.label"
+msgstr "Actions"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:91
+msgid "algorithm.inputs.isFuzzEnabled.label"
+msgstr "Apply fuzz factor"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:117
+msgid "algorithm.inputs.learning-steps.label"
+msgstr "Learning steps"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:142
+msgid "algorithm.inputs.maximum-interval.label"
+msgstr "Maximum interval"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:129
+msgid "algorithm.inputs.relearning-steps.label"
+msgstr "Relearning steps"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:77
+msgid "algorithm.inputs.retention.label"
+msgstr "Retention"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:64
+msgid "algorithm.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:105
+msgid "algorithm.inputs.weights.label"
+msgstr "Weights"
+
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:29
+msgid "algorithms.title"
+msgstr "Presets"
+
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:43
+msgid "cards-table.delete.message"
+msgstr "Delete this card and all it's reviews?"
+
+#: ../../libs/react/src/lib/cards/cards-table-cell-state.tsx:7
+msgid "cards-table.state.learn"
+msgstr "Learn"
+
+#: ../../libs/react/src/lib/cards/cards-table-cell-state.tsx:9
+msgid "cards-table.state.relearn"
+msgstr "Relearn"
+
+#: ../../libs/react/src/lib/cards/cards-table-cell-state.tsx:8
+msgid "cards-table.state.review"
+msgstr "Review"
+
+#: ../../libs/react/src/lib/cards/cards-table-cell-state.tsx:6
+msgid "cards-table.state.untouched"
+msgstr "New"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:49
+msgid "cards.table.columns.created-at"
+msgstr "Created"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:43
+msgid "cards.table.columns.due-at"
+msgstr "Due"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:37
+msgid "cards.table.columns.state"
+msgstr "Status"
+
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:74
+msgid "clone-algorithm.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:93
+msgid "clone-algorithm.redirect.link"
+msgstr "Go to the new preset"
+
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:109
+msgid "clone-algorithm.submit"
+msgstr "Clone"
+
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:106
+msgid "clone-algorithm.success"
+msgstr "Done"
+
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:54
+msgid "clone-algorithm.trigger"
+msgstr "Clone preset"
+
+#: ../../libs/react/src/lib/templates/clone-template.tsx:74
+msgid "clone-template.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/templates/clone-template.tsx:93
+msgid "clone-template.redirect.link"
+msgstr "Go to the new template"
+
+#: ../../libs/react/src/lib/templates/clone-template.tsx:104
+msgid "clone-template.submit"
+msgstr "Clone"
+
+#: ../../libs/react/src/lib/templates/clone-template.tsx:104
+msgid "clone-template.success"
+msgstr "Done"
+
+#: ../../libs/react/src/lib/templates/clone-template.tsx:54
+msgid "clone-template.trigger"
+msgstr "Clone template"
+
+#: ../../libs/react/src/lib/decks/deck-details.tsx:87
+msgid "deck.actions.label"
+msgstr "Actions"
+
+#: ../../libs/react/src/lib/decks/deck-details.tsx:64
+msgid "deck.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:25
+msgid "deck.tabs.cards"
+msgstr "Cards"
+
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:24
+msgid "deck.tabs.details"
+msgstr "Details"
+
+#: ../../libs/react/src/lib/routes/_.decks.tsx:28
+msgid "decks.title"
+msgstr "Decks"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:78
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:87
+msgid "delete-algorithm.cancel"
+msgstr "Cancel"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:49
+msgid "delete-algorithm.cant-delete"
+msgstr "Default preset can't be deleted"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:79
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:88
+msgid "delete-algorithm.confirm"
+msgstr "Delete preset"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:85
+msgid "delete-algorithm.message"
+msgstr "Are you sure you want to delete this preset?"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:61
+msgid "delete-algorithm.successor-message"
+msgstr "If you want to delete this preset, select a successor."
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:65
+msgid "delete-algorithm.successor.label"
+msgstr "Successor preset"
+
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:46
+msgid "delete-algorithm.trigger"
+msgstr "Delete preset"
+
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:36
+msgid "delete-deck.cancel"
+msgstr "Cancel"
+
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:37
+msgid "delete-deck.confirm"
+msgstr "Delete deck"
+
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:34
+msgid "delete-deck.message"
+msgstr "Are you sure you want to delete this deck and all it's cards and reviews?"
+
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:31
+msgid "delete-deck.trigger"
+msgstr "Delete deck"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:48
+msgid "delete-template.cancel"
+msgstr "Cancel"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:31
+msgid "delete-template.cant-delete-default"
+msgstr "Default template can't be deleted"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:31
+msgid "delete-template.cant-delete-locked"
+msgstr "This template is locked and can't be deleted"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:49
+msgid "delete-template.confirm"
+msgstr "Delete template"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:46
+msgid "delete-template.message"
+msgstr "Are you sure you want to delete this template?"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:37
+msgid "delete-template.trigger"
+msgstr "Delete template"
+
+#: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:10
+msgid "fsrs.grades.again"
+msgstr "Again"
+
+#: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:13
+msgid "fsrs.grades.easy"
+msgstr "Easy"
+
+#: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:12
+msgid "fsrs.grades.good"
+msgstr "Good"
+
+#: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:11
+msgid "fsrs.grades.hard"
+msgstr "Hard"
+
+#: ../../libs/react/src/lib/settings/interface-controls/language-select.tsx:32
+msgid "language-select.label"
+msgstr "Language"
+
+#: ../../libs/react/src/lib/components/learned-today.tsx:37
+msgid "learned-today.title"
+msgstr "Learned today"
+
+#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:30
+msgid "lesson.completion.close"
+msgstr "Close"
+
+#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:22
+msgid "lesson.completion.message"
+msgstr "Done"
+
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:99
+msgid "lesson.content.submit"
+msgstr "Continue"
+
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:73
+msgid "lesson.content.termination.accept"
+msgstr "Close"
+
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:64
+msgid "lesson.content.termination.refuse"
+msgstr "Continue studying"
+
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
+msgid "lesson.init.amount-input.learn"
+msgstr "Amount of cards of type learn"
+
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:14
+msgid "lesson.init.amount-input.review"
+msgstr "Amount of cards of type review"
+
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
+msgid "lesson.init.amount-input.untouched"
+msgstr "Amount of cards of type new"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:22
+msgid "lesson.init.labels.learn"
+msgstr "Learn"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:23
+msgid "lesson.init.labels.review"
+msgstr "Review"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:24
+msgid "lesson.init.labels.total"
+msgstr "Total"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:21
+msgid "lesson.init.labels.untouched"
+msgstr "New"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:101
+msgid "lesson.init.submit"
+msgstr "Start"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:74
+msgid "lesson.init.table.columns.amount"
+msgstr "Amount"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:75
+msgid "lesson.init.table.columns.available"
+msgstr "Available"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:76
+msgid "lesson.init.table.columns.learned"
+msgstr "Learned today"
+
+#: ../../libs/react/src/lib/lessons/lesson.tsx:49
+msgid "lesson.init.title"
+msgstr "Study cards"
+
+#: ../../libs/react/src/lib/lessons/lessons.tsx:22
+msgid "lessons.table.columns.title"
+msgstr "Deck"
+
+#: ../../libs/react/src/lib/lessons/lessons-table-cell.tsx:17
+msgid "lessons.table.columns.title.all"
+msgstr "All"
+
+#: ../../libs/react/src/lib/lessons/lessons.tsx:42
+msgid "lessons.table.columns.total"
+msgstr "Total"
+
+#: ../../libs/react/src/lib/lessons/lessons.tsx:32
+msgid "lessons.types.learn"
+msgstr "Learn"
+
+#: ../../libs/react/src/lib/lessons/lessons.tsx:37
+msgid "lessons.types.review"
+msgstr "Review"
+
+#: ../../libs/react/src/lib/lessons/lessons.tsx:27
+msgid "lessons.types.untouched"
+msgstr "New"
+
+#: ../../libs/react/src/lib/routes/_.tsx:21
+msgid "nav.algorithms"
+msgstr "Presets"
+
+#: ../../libs/react/src/lib/routes/_.tsx:19
+msgid "nav.decks"
+msgstr "Decks"
+
+#: ../../libs/react/src/lib/routes/_.tsx:18
+msgid "nav.home"
+msgstr "Dashboard"
+
+#: ../../libs/react/src/lib/routes/_.tsx:22
+msgid "nav.settings"
+msgstr "Settings"
+
+#: ../../libs/react/src/lib/routes/_.tsx:20
+msgid "nav.templates"
+msgstr "Templates"
+
+#: ../../libs/react/src/lib/routes/_.settings.tsx:17
+msgid "settings.interface"
+msgstr "Interface"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:25
+msgid "settings.interface.language"
+msgstr "Language"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:39
+msgid "settings.interface.motion"
+msgstr "Animations"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
+msgid "settings.interface.theme"
+msgstr "Theme"
+
+#: ../../libs/react/src/lib/routes/_.settings.tsx:18
+msgid "settings.learning"
+msgstr "Learning"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:121
+msgid "settings.learning.day-starts-at"
+msgstr "Start of the day"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:51
+msgid "settings.learning.defaults.algorithm"
+msgstr "Default algorithm"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:61
+msgid "settings.learning.defaults.template"
+msgstr "Default template"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:67
+msgid "settings.learning.limits"
+msgstr "Daily limits"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:99
+msgid "settings.learning.limits.learn"
+msgstr "Learn"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:111
+msgid "settings.learning.limits.review"
+msgstr "Review"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:75
+msgid "settings.learning.limits.total"
+msgstr "Total"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:87
+msgid "settings.learning.limits.untouched"
+msgstr "New"
+
+#: ../../libs/react/src/lib/routes/_.settings.tsx:29
+msgid "settings.title"
+msgstr "Settings"
+
+#: ../../libs/react/src/lib/templates/template-picker.tsx:30
+msgid "template-picker.label"
+msgstr "Template"
+
+#: ../../libs/react/src/lib/templates/template.tsx:92
+msgid "template.actions.label"
+msgstr "Actions"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:68
+msgid "template.inputs.fields.add"
+msgstr "Add"
+
+#: ../../libs/react/src/lib/templates/template.tsx:86
+msgid "template.inputs.fields.label"
+msgstr "Fields"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:93
+msgid "template.inputs.fields.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:99
+msgid "template.inputs.fields.title.placeholder"
+msgstr "Untitled"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:47
+msgid "template.inputs.layout.field.label"
+msgstr "Field"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:54
+msgid "template.inputs.layout.field.placeholder"
+msgstr "Untitled"
+
+#: ../../libs/react/src/lib/templates/template.tsx:89
+msgid "template.inputs.layout.label"
+msgstr "Layout"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:60
+msgid "template.inputs.layout.operation.label"
+msgstr "Operation"
+
+#: ../../libs/react/src/lib/templates/template.tsx:65
+msgid "template.inputs.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/templates/template.tsx:78
+msgid "template.status.locked"
+msgstr "Locked"
+
+#: ../../libs/react/src/lib/templates/template.tsx:72
+msgid "template.status.title"
+msgstr "Status"
+
+#: ../../libs/react/src/lib/templates/template.tsx:81
+msgid "template.status.unlocked"
+msgstr "Not locked"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:13
+msgid "templates.operations.display"
+msgstr "Display"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:14
+msgid "templates.operations.reveal"
+msgstr "Reveal"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:15
+msgid "templates.operations.type"
+msgstr "Type"
+
+#: ../../libs/react/src/lib/routes/_.templates.tsx:28
+msgid "templates.title"
+msgstr "Templates"
+
+#: ../../libs/react/src/lib/settings/interface-controls/theme-select.tsx:32
+msgid "theme-select.label"
+msgstr "Theme"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
+msgid "theme.dark"
+msgstr "Dark"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:34
+msgid "theme.light"
+msgstr "Light"
+
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
+msgid "theme.system"
+msgstr "System"

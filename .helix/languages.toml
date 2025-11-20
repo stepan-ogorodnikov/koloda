@@ -1,0 +1,69 @@
+# Emmet
+[language-server.emmet-ls]
+command = "emmet-language-server"
+args = ["--stdio"]
+
+# Oxlint
+[language-server.oxlint]
+command = "oxc_language_server"
+args = ["--stdio"]
+
+# HTML
+[[language]]
+name = "html"
+language-servers = ["vscode-html-language-server", "tailwindcss-ls", "emmet-ls"]
+formatter = { command = "dprint", args = ["fmt", "--stdin", "html"] }
+auto-format = true
+
+# CSS
+[language-server.vscode-css-language-server.config]
+css = { validate = { enable = true } }
+scss = { validate = { enable = true } }
+less = { validate = { enable = true } }
+provideFormatter = true
+
+[[language]]
+name = "css"
+language-servers = [
+  "vscode-css-language-server",
+  "tailwindcss-ls",
+]
+formatter = { command = "dprint", args = ["fmt", "--stdin", "css"] }
+auto-format = true
+
+# TypeScript
+[[language]]
+name = "typescript"
+language-servers = [
+  "typescript-language-server",
+  "tailwindcss-ls",
+  "oxlint",
+]
+formatter = { command = "dprint", args = ["fmt", "--stdin", "ts"] }
+auto-format = true
+
+[[language]]
+name = "tsx"
+language-servers = [
+  "typescript-language-server",
+  "tailwindcss-ls",
+  "emmet-ls",
+  "oxlint",
+]
+formatter = { command = "dprint", args = ["fmt", "--stdin", "tsx"] }
+auto-format = true
+
+# JSON
+[language-server.vscode-json-language-server.config]
+json = { keepLines = { enable = true }, validate = { enable = true }, format = { enable = true } }
+provideFormatter = true
+
+[[language]]
+name = "json"
+formatter = { command = "dprint", args = ["fmt", "--stdin", "json"] }
+auto-format = true
+
+[[language]]
+name = "jsonc"
+formatter = { command = "dprint", args = ["fmt", "--stdin", "jsonc"] }
+auto-format = true
