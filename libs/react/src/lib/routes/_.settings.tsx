@@ -1,3 +1,4 @@
+import { NotFound } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_/settings")({
       throw redirect({ to: "/settings/interface" });
     }
   },
+  notFoundComponent: NotFound,
 });
 
 const LINKS = [

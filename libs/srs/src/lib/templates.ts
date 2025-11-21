@@ -101,7 +101,7 @@ export async function getTemplate(db: DB, id: Template["id"] | string) {
       .groupBy(...Object.values(getTableColumns(templates)))
       .limit(1);
 
-    return result[0] as Template | undefined;
+    return result[0] as Template || null;
   } catch (e) {
     handleDBError(e);
     return;

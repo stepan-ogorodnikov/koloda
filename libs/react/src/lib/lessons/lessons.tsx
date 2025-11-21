@@ -55,6 +55,8 @@ export function Lessons() {
     keepPinnedRows: true,
   });
 
+  if (!data) return null;
+
   return (
     <div className="w-160 p-4 overflow-auto">
       <CurrentLesson />

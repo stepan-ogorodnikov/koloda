@@ -35,7 +35,7 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
 export async function getDeck(db: DB, id: string | Deck["id"]) {
   try {
     const result = await db.query.decks.findFirst({ where: eq(decks.id, Number(id)) });
-    return result;
+    return result || null;
   } catch (e) {
     handleDBError(e);
     return;

@@ -1,4 +1,4 @@
-import { type Queries, queriesAtom } from "@koloda/react";
+import { NotFound, type Queries, queriesAtom } from "@koloda/react";
 import { langAtom, routeTree } from "@koloda/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
@@ -22,13 +22,14 @@ const queryClient = new QueryClient();
 
 const router = createRouter({
   routeTree,
+  basepath: import.meta.env.VITE_BASE,
   context: {
     queryClient,
     queries: store.get(queriesAtom) as Queries,
   },
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
-  basepath: import.meta.env.VITE_BASE,
+  defaultNotFoundComponent: NotFound,
 });
 
 const root = createRoot(

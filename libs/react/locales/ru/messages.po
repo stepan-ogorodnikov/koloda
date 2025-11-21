@@ -417,25 +417,37 @@ msgstr "Повтор"
 msgid "lessons.types.untouched"
 msgstr "Новые"
 
-#: ../../libs/react/src/lib/routes/_.tsx:21
+#: ../../libs/react/src/lib/components/app.tsx:12
 msgid "nav.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/react/src/lib/routes/_.tsx:19
+#: ../../libs/react/src/lib/components/app.tsx:10
 msgid "nav.decks"
 msgstr "Колоды"
 
-#: ../../libs/react/src/lib/routes/_.tsx:18
+#: ../../libs/react/src/lib/components/app.tsx:9
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/react/src/lib/routes/_.tsx:22
+#: ../../libs/react/src/lib/components/app.tsx:13
 msgid "nav.settings"
 msgstr "Настройки"
 
-#: ../../libs/react/src/lib/routes/_.tsx:20
+#: ../../libs/react/src/lib/components/app.tsx:11
 msgid "nav.templates"
 msgstr "Шаблоны"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:17
+msgid "not-found.back"
+msgstr "Назад"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:15
+msgid "not-found.message"
+msgstr "Запрашиваемые данные не существуют"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:14
+msgid "not-found.title"
+msgstr "Не найдено"
 
 #: ../../libs/react/src/lib/routes/_.settings.tsx:17
 msgid "settings.interface"

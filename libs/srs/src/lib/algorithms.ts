@@ -39,7 +39,7 @@ export async function getAlgorithms(db: DB) {
 export async function getAlgorithm(db: DB, id: Algorithm["id"] | string) {
   try {
     const result = await db.select().from(algorithms).where(eq(algorithms.id, Number(id))).limit(1);
-    return result[0] as Algorithm;
+    return result[0] as Algorithm || null;
   } catch (e) {
     handleDBError(e);
     return undefined;

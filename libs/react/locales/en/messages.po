@@ -417,25 +417,37 @@ msgstr "Review"
 msgid "lessons.types.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/routes/_.tsx:21
+#: ../../libs/react/src/lib/components/app.tsx:12
 msgid "nav.algorithms"
 msgstr "Presets"
 
-#: ../../libs/react/src/lib/routes/_.tsx:19
+#: ../../libs/react/src/lib/components/app.tsx:10
 msgid "nav.decks"
 msgstr "Decks"
 
-#: ../../libs/react/src/lib/routes/_.tsx:18
+#: ../../libs/react/src/lib/components/app.tsx:9
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/react/src/lib/routes/_.tsx:22
+#: ../../libs/react/src/lib/components/app.tsx:13
 msgid "nav.settings"
 msgstr "Settings"
 
-#: ../../libs/react/src/lib/routes/_.tsx:20
+#: ../../libs/react/src/lib/components/app.tsx:11
 msgid "nav.templates"
 msgstr "Templates"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:17
+msgid "not-found.back"
+msgstr "Go back"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:15
+msgid "not-found.message"
+msgstr "Content you're trying to access doesn't exist"
+
+#: ../../libs/react/src/lib/components/not-found.tsx:14
+msgid "not-found.title"
+msgstr "Not found"
 
 #: ../../libs/react/src/lib/routes/_.settings.tsx:17
 msgid "settings.interface"

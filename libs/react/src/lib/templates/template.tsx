@@ -1,4 +1,4 @@
-import { CloneTemplate, DeleteTemplate, queriesAtom } from "@koloda/react";
+import { CloneTemplate, DeleteTemplate, NotFound, queriesAtom } from "@koloda/react";
 import type { Template, UpdateTemplateValues } from "@koloda/srs";
 import { templatesMessages, updateTemplateSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -16,7 +16,7 @@ export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getTemplateQuery, updateTemplateMutation } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: ["templates", id], ...getTemplateQuery(id) });
+  const { data, isSuccess } = useQuery({ queryKey: ["templates", id], ...getTemplateQuery(id) });
   const { mutate } = useMutation(updateTemplateMutation());
   const form = useAppForm({
     defaultValues: data as UpdateTemplateValues,
@@ -32,6 +32,10 @@ export function Template({ id }: TemplateProps) {
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
+
+  if (isSuccess && data === null) return <NotFound />;
+
+  if (!data) return null;
 
   return (
     <form

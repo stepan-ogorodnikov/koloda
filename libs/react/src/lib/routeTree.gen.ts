@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RouteImport } from './routes/_'
+import { Route as IndexRouteImport } from './routes/_.index'
 import { Route as TemplatesRouteImport } from './routes/_.templates'
 import { Route as SettingsRouteImport } from './routes/_.settings'
 import { Route as DecksRouteImport } from './routes/_.decks'
@@ -26,6 +27,11 @@ import { Route as DecksDeckIdCardsRouteImport } from './routes/_.decks.$deckId.c
 const Route = RouteImport.update({
   id: '/_',
   getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => Route,
 } as any)
 const TemplatesRoute = TemplatesRouteImport.update({
   id: '/templates',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/decks': typeof DecksRouteWithChildren
   '/settings': typeof SettingsRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
+  '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
   '/settings/interface': typeof SettingsInterfaceRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/decks': typeof DecksRouteWithChildren
   '/settings': typeof SettingsRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
+  '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
   '/settings/interface': typeof SettingsInterfaceRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/_/decks': typeof DecksRouteWithChildren
   '/_/settings': typeof SettingsRouteWithChildren
   '/_/templates': typeof TemplatesRouteWithChildren
+  '/_/': typeof IndexRoute
   '/_/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/_/decks/$deckId': typeof DecksDeckIdRouteWithChildren
   '/_/settings/interface': typeof SettingsInterfaceRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/decks'
     | '/settings'
     | '/templates'
+    | '/'
     | '/algorithms/$algorithmId'
     | '/decks/$deckId'
     | '/settings/interface'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/decks'
     | '/settings'
     | '/templates'
+    | '/'
     | '/algorithms/$algorithmId'
     | '/decks/$deckId'
     | '/settings/interface'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/_/decks'
     | '/_/settings'
     | '/_/templates'
+    | '/_/'
     | '/_/algorithms/$algorithmId'
     | '/_/decks/$deckId'
     | '/_/settings/interface'
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       fullPath: ''
       preLoaderRoute: typeof RouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_/': {
+      id: '/_/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof Route
     }
     '/_/templates': {
       id: '/_/templates'
@@ -346,6 +365,7 @@ interface RouteChildren {
   DecksRoute: typeof DecksRouteWithChildren
   SettingsRoute: typeof SettingsRouteWithChildren
   TemplatesRoute: typeof TemplatesRouteWithChildren
+  IndexRoute: typeof IndexRoute
 }
 
 const RouteChildren: RouteChildren = {
@@ -354,6 +374,7 @@ const RouteChildren: RouteChildren = {
   DecksRoute: DecksRouteWithChildren,
   SettingsRoute: SettingsRouteWithChildren,
   TemplatesRoute: TemplatesRouteWithChildren,
+  IndexRoute: IndexRoute,
 }
 
 const RouteWithChildren = Route._addFileChildren(RouteChildren)

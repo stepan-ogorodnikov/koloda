@@ -1,3 +1,4 @@
+import { App, NotFound } from "@koloda/react";
 import { type QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext } from "@tanstack/react-router";
 import { atom, useAtomValue } from "jotai";
@@ -13,6 +14,7 @@ type RouterContext = {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootRoute,
+  notFoundComponent: RootNotFoundRoute,
 });
 
 function RootRoute() {
@@ -21,4 +23,12 @@ function RootRoute() {
   if (!AppEntry) return null;
 
   return <AppEntry />;
+}
+
+function RootNotFoundRoute() {
+  return (
+    <App>
+      <NotFound />
+    </App>
+  );
 }
