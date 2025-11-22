@@ -103,39 +103,39 @@ msgstr "New template"
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:147
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:151
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:91
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:95
 msgid "algorithm.inputs.isFuzzEnabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:117
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:121
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:142
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:146
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:129
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:133
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:77
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:81
 msgid "algorithm.inputs.retention.label"
 msgstr "Retention"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:64
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:68
 msgid "algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:105
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:109
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
 
-#: ../../libs/react/src/lib/routes/_.algorithms.tsx:29
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:31
 msgid "algorithms.title"
 msgstr "Presets"
 
@@ -227,7 +227,7 @@ msgstr "Cards"
 msgid "deck.tabs.details"
 msgstr "Details"
 
-#: ../../libs/react/src/lib/routes/_.decks.tsx:28
+#: ../../libs/react/src/lib/routes/_.decks.tsx:30
 msgid "decks.title"
 msgstr "Decks"
 
@@ -449,59 +449,59 @@ msgstr "Content you're trying to access doesn't exist"
 msgid "not-found.title"
 msgstr "Not found"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:17
+#: ../../libs/react/src/lib/routes/_.settings.tsx:20
 msgid "settings.interface"
 msgstr "Interface"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:25
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
 msgid "settings.interface.language"
 msgstr "Language"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:39
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:40
 msgid "settings.interface.motion"
 msgstr "Animations"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
 msgid "settings.interface.theme"
 msgstr "Theme"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:18
+#: ../../libs/react/src/lib/routes/_.settings.tsx:21
 msgid "settings.learning"
 msgstr "Learning"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:121
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:122
 msgid "settings.learning.day-starts-at"
 msgstr "Start of the day"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:51
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:52
 msgid "settings.learning.defaults.algorithm"
 msgstr "Default algorithm"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:61
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:62
 msgid "settings.learning.defaults.template"
 msgstr "Default template"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:67
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:68
 msgid "settings.learning.limits"
 msgstr "Daily limits"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:99
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:100
 msgid "settings.learning.limits.learn"
 msgstr "Learn"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:111
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:112
 msgid "settings.learning.limits.review"
 msgstr "Review"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:75
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:76
 msgid "settings.learning.limits.total"
 msgstr "Total"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:87
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:88
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:29
+#: ../../libs/react/src/lib/routes/_.settings.tsx:33
 msgid "settings.title"
 msgstr "Settings"
 
@@ -509,7 +509,7 @@ msgstr "Settings"
 msgid "template-picker.label"
 msgstr "Template"
 
-#: ../../libs/react/src/lib/templates/template.tsx:92
+#: ../../libs/react/src/lib/templates/template.tsx:96
 msgid "template.actions.label"
 msgstr "Actions"
 
@@ -517,7 +517,7 @@ msgstr "Actions"
 msgid "template.inputs.fields.add"
 msgstr "Add"
 
-#: ../../libs/react/src/lib/templates/template.tsx:86
+#: ../../libs/react/src/lib/templates/template.tsx:90
 msgid "template.inputs.fields.label"
 msgstr "Fields"
 
@@ -537,7 +537,7 @@ msgstr "Field"
 msgid "template.inputs.layout.field.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/react/src/lib/templates/template.tsx:89
+#: ../../libs/react/src/lib/templates/template.tsx:93
 msgid "template.inputs.layout.label"
 msgstr "Layout"
 
@@ -545,19 +545,19 @@ msgstr "Layout"
 msgid "template.inputs.layout.operation.label"
 msgstr "Operation"
 
-#: ../../libs/react/src/lib/templates/template.tsx:65
+#: ../../libs/react/src/lib/templates/template.tsx:69
 msgid "template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/template.tsx:78
+#: ../../libs/react/src/lib/templates/template.tsx:82
 msgid "template.status.locked"
 msgstr "Locked"
 
-#: ../../libs/react/src/lib/templates/template.tsx:72
+#: ../../libs/react/src/lib/templates/template.tsx:76
 msgid "template.status.title"
 msgstr "Status"
 
-#: ../../libs/react/src/lib/templates/template.tsx:81
+#: ../../libs/react/src/lib/templates/template.tsx:85
 msgid "template.status.unlocked"
 msgstr "Not locked"
 
@@ -573,7 +573,7 @@ msgstr "Reveal"
 msgid "templates.operations.type"
 msgstr "Type"
 
-#: ../../libs/react/src/lib/routes/_.templates.tsx:28
+#: ../../libs/react/src/lib/routes/_.templates.tsx:29
 msgid "templates.title"
 msgstr "Templates"
 
@@ -581,14 +581,46 @@ msgstr "Templates"
 msgid "theme-select.label"
 msgstr "Theme"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
 msgid "theme.dark"
 msgstr "Dark"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:34
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
 msgid "theme.light"
 msgstr "Light"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:37
 msgid "theme.system"
 msgstr "System"
+
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:16
+msgid "title.algorithms"
+msgstr "Presets"
+
+#: ../../libs/react/src/lib/routes/_.tsx:11
+msgid "title.base"
+msgstr "Koloda"
+
+#: ../../libs/react/src/lib/routes/_.dashboard.tsx:10
+msgid "title.dashboard"
+msgstr "Dashboard"
+
+#: ../../libs/react/src/lib/routes/_.decks.tsx:15
+msgid "title.decks"
+msgstr "Decks"
+
+#: ../../libs/react/src/lib/routes/_.settings.tsx:15
+msgid "title.settings"
+msgstr "Settings"
+
+#: ../../libs/react/src/lib/routes/_.settings.interface.tsx:10
+msgid "title.settings.interface"
+msgstr "Interface"
+
+#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:10
+msgid "title.settings.learning"
+msgstr "Learning"
+
+#: ../../libs/react/src/lib/routes/_.templates.tsx:14
+msgid "title.templates"
+msgstr "Templates"

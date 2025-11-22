@@ -1,4 +1,4 @@
-import { NotFound, queriesAtom } from "@koloda/react";
+import { NotFound, queriesAtom, useTitle } from "@koloda/react";
 import { Link, Main, tab, TabIndicator, tabLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react";
@@ -26,6 +26,7 @@ const DECK_TABS = [
 ];
 
 function DeckRoute() {
+  useTitle();
   const { deckId } = Route.useParams();
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const { data, isSuccess } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });

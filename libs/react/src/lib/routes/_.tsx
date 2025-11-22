@@ -1,17 +1,22 @@
-import { App, appMenu } from "@koloda/react";
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { App, appMenu, useTitle } from "@koloda/react";
+import { msg } from "@lingui/core/macro";
+import { createFileRoute, HeadContent, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_")({
-  component: RootLayout,
-  loader: ({ location, context: { queryClient } }) => {
+  component: RootRoute,
+  beforeLoad: ({ location, context: { queryClient } }) => {
     const data = queryClient.getQueryData(["app"]);
     if (data === "ok" && location.pathname === "/") throw redirect({ to: appMenu[0].to });
   },
+  loader: () => ({ title: msg`title.base` }),
 });
 
-function RootLayout() {
+function RootRoute() {
+  useTitle();
+
   return (
     <App>
+      <HeadContent />
       <Outlet />
     </App>
   );

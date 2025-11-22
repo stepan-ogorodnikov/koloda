@@ -1,4 +1,4 @@
-import { Algorithm } from "@koloda/react";
+import { Algorithm, useTitle } from "@koloda/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_/algorithms/$algorithmId")({
@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
 });
 
 function AlgorithmRoute() {
+  useTitle();
   const { algorithmId } = Route.useParams();
 
   return <Algorithm id={algorithmId} key={algorithmId} />;

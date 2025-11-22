@@ -103,39 +103,39 @@ msgstr "Новый шаблон"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:147
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:151
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:91
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:95
 msgid "algorithm.inputs.isFuzzEnabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:117
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:121
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:142
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:146
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:129
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:133
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:77
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:81
 msgid "algorithm.inputs.retention.label"
 msgstr "Коэфициент"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:64
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:68
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:105
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:109
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
-#: ../../libs/react/src/lib/routes/_.algorithms.tsx:29
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:31
 msgid "algorithms.title"
 msgstr "Алгоритмы"
 
@@ -227,7 +227,7 @@ msgstr "Карточки"
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/react/src/lib/routes/_.decks.tsx:28
+#: ../../libs/react/src/lib/routes/_.decks.tsx:30
 msgid "decks.title"
 msgstr "Колоды"
 
@@ -449,59 +449,59 @@ msgstr "Запрашиваемые данные не существуют"
 msgid "not-found.title"
 msgstr "Не найдено"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:17
+#: ../../libs/react/src/lib/routes/_.settings.tsx:20
 msgid "settings.interface"
 msgstr "Интерфейс"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:25
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:39
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:40
 msgid "settings.interface.motion"
 msgstr "Анимации"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
 msgid "settings.interface.theme"
 msgstr "Тема оформления"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:18
+#: ../../libs/react/src/lib/routes/_.settings.tsx:21
 msgid "settings.learning"
 msgstr "Изучение"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:121
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:122
 msgid "settings.learning.day-starts-at"
 msgstr "Начало дня"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:51
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:52
 msgid "settings.learning.defaults.algorithm"
 msgstr "Алгоритм по умолчанию"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:61
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:62
 msgid "settings.learning.defaults.template"
 msgstr "Шаблон по умолчанию"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:67
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:68
 msgid "settings.learning.limits"
 msgstr "Дневные лимиты"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:99
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:100
 msgid "settings.learning.limits.learn"
 msgstr "Заучивание"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:111
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:112
 msgid "settings.learning.limits.review"
 msgstr "Повтор"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:75
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:76
 msgid "settings.learning.limits.total"
 msgstr "Всего"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:87
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:88
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:29
+#: ../../libs/react/src/lib/routes/_.settings.tsx:33
 msgid "settings.title"
 msgstr "Настройки"
 
@@ -509,7 +509,7 @@ msgstr "Настройки"
 msgid "template-picker.label"
 msgstr "Шаблон"
 
-#: ../../libs/react/src/lib/templates/template.tsx:92
+#: ../../libs/react/src/lib/templates/template.tsx:96
 msgid "template.actions.label"
 msgstr "Действия"
 
@@ -517,7 +517,7 @@ msgstr "Действия"
 msgid "template.inputs.fields.add"
 msgstr "Добавить"
 
-#: ../../libs/react/src/lib/templates/template.tsx:86
+#: ../../libs/react/src/lib/templates/template.tsx:90
 msgid "template.inputs.fields.label"
 msgstr "Поля"
 
@@ -537,7 +537,7 @@ msgstr "Поле"
 msgid "template.inputs.layout.field.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/react/src/lib/templates/template.tsx:89
+#: ../../libs/react/src/lib/templates/template.tsx:93
 msgid "template.inputs.layout.label"
 msgstr "Раскладка"
 
@@ -545,19 +545,19 @@ msgstr "Раскладка"
 msgid "template.inputs.layout.operation.label"
 msgstr "Действие"
 
-#: ../../libs/react/src/lib/templates/template.tsx:65
+#: ../../libs/react/src/lib/templates/template.tsx:69
 msgid "template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template.tsx:78
+#: ../../libs/react/src/lib/templates/template.tsx:82
 msgid "template.status.locked"
 msgstr "Заблокирован"
 
-#: ../../libs/react/src/lib/templates/template.tsx:72
+#: ../../libs/react/src/lib/templates/template.tsx:76
 msgid "template.status.title"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/templates/template.tsx:81
+#: ../../libs/react/src/lib/templates/template.tsx:85
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
 
@@ -573,7 +573,7 @@ msgstr "Раскрыть"
 msgid "templates.operations.type"
 msgstr "Печатать"
 
-#: ../../libs/react/src/lib/routes/_.templates.tsx:28
+#: ../../libs/react/src/lib/routes/_.templates.tsx:29
 msgid "templates.title"
 msgstr "Шаблоны"
 
@@ -581,14 +581,46 @@ msgstr "Шаблоны"
 msgid "theme-select.label"
 msgstr "Тема оформления"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
 msgid "theme.dark"
 msgstr "Тёмная"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:34
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
 msgid "theme.light"
 msgstr "Светлая"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:37
 msgid "theme.system"
 msgstr "Системная"
+
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:16
+msgid "title.algorithms"
+msgstr "Алгоритмы"
+
+#: ../../libs/react/src/lib/routes/_.tsx:11
+msgid "title.base"
+msgstr "Koloda"
+
+#: ../../libs/react/src/lib/routes/_.dashboard.tsx:10
+msgid "title.dashboard"
+msgstr "Главная"
+
+#: ../../libs/react/src/lib/routes/_.decks.tsx:15
+msgid "title.decks"
+msgstr "Колоды"
+
+#: ../../libs/react/src/lib/routes/_.settings.tsx:15
+msgid "title.settings"
+msgstr "Настройки"
+
+#: ../../libs/react/src/lib/routes/_.settings.interface.tsx:10
+msgid "title.settings.interface"
+msgstr "Интерфейс"
+
+#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:10
+msgid "title.settings.learning"
+msgstr "Изучение"
+
+#: ../../libs/react/src/lib/routes/_.templates.tsx:14
+msgid "title.templates"
+msgstr "Шаблоны"

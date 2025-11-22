@@ -1,5 +1,5 @@
 import { parseTime } from "@internationalized/date";
-import { AlgorithmPicker, queriesAtom, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker, queriesAtom, TemplatePicker, useTitle } from "@koloda/react";
 import type { LearningSettings } from "@koloda/srs";
 import { learningSettingsMessages, learningSettingsValidation as schema } from "@koloda/srs";
 import { formLayout, Label, NumberField, TimeField, useAppForm } from "@koloda/ui";
@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
 export function SettingsLearning() {
+  useTitle();
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { patchSettingsMutation, getSettingsQuery } = useAtomValue(queriesAtom);

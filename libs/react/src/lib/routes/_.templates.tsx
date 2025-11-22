@@ -1,21 +1,22 @@
-import { queriesAtom } from "@koloda/react";
+import { AddTemplate, queriesAtom, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { AddTemplate } from "../templates/add-template";
 
 export const Route = createFileRoute("/_/templates")({
   component: TemplatesRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getTemplatesQuery } = queries;
     queryClient.ensureQueryData({ queryKey: ["templates"], ...getTemplatesQuery() });
+    return { title: msg`title.templates` };
   },
 });
 
 export function TemplatesRoute() {
+  useTitle();
   const { _ } = useLingui();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: ["templates"], ...getTemplatesQuery() });

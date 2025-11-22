@@ -1,4 +1,11 @@
-import { defaultAlgorithmAtom, defaultTemplateAtom, motionSettingAtom, queriesAtom, themeAtom } from "@koloda/react";
+import {
+  defaultAlgorithmAtom,
+  defaultTemplateAtom,
+  langAtom,
+  motionSettingAtom,
+  queriesAtom,
+  themeAtom,
+} from "@koloda/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect } from "react";
@@ -11,6 +18,7 @@ export function useGlobalSync() {
   const setDefaultTemplate = useSetAtom(defaultTemplateAtom);
   const setTheme = useSetAtom(themeAtom);
   const setMotion = useSetAtom(motionSettingAtom);
+  const language = useAtomValue(langAtom);
 
   useEffect(() => {
     if (learning) {
@@ -25,6 +33,10 @@ export function useGlobalSync() {
       if (data?.content?.motion) setMotion(data.content.motion);
     }
   }, [data, setTheme, setMotion]);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   return null;
 }

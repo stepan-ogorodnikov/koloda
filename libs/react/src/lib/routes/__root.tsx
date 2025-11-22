@@ -1,6 +1,6 @@
-import { App, NotFound } from "@koloda/react";
+import { App, NotFound, useTitle } from "@koloda/react";
 import { type QueryClient } from "@tanstack/react-query";
-import { createRootRouteWithContext } from "@tanstack/react-router";
+import { createRootRouteWithContext, HeadContent } from "@tanstack/react-router";
 import { atom, useAtomValue } from "jotai";
 import { type JSX } from "react";
 import type { Queries } from "../queries";
@@ -13,16 +13,22 @@ type RouterContext = {
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootRoute,
+  component: RootLayout,
   notFoundComponent: RootNotFoundRoute,
 });
 
-function RootRoute() {
+function RootLayout() {
+  useTitle();
   const { component: AppEntry } = useAtomValue(appEntryAtom);
 
   if (!AppEntry) return null;
 
-  return <AppEntry />;
+  return (
+    <>
+      <HeadContent />
+      <AppEntry />
+    </>
+  );
 }
 
 function RootNotFoundRoute() {

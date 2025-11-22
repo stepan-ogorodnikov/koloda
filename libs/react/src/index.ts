@@ -10,6 +10,7 @@ export * from "./lib/decks/deck-cards";
 export * from "./lib/decks/deck-details";
 export * from "./lib/hooks/use-global-sync";
 export * from "./lib/hooks/use-motion-setting";
+export * from "./lib/hooks/use-title";
 export * from "./lib/lessons/lesson";
 export * from "./lib/lessons/lessons";
 export * from "./lib/queries";

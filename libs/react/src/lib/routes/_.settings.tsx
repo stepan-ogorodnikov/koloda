@@ -1,4 +1,4 @@
-import { NotFound } from "@koloda/react";
+import { NotFound, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_/settings")({
       throw redirect({ to: "/settings/interface" });
     }
   },
+  loader: () => ({ title: msg`title.settings` }),
   notFoundComponent: NotFound,
 });
 
@@ -21,6 +22,7 @@ const LINKS = [
 ];
 
 export function SettingsRoute() {
+  useTitle();
   const { _ } = useLingui();
 
   return (

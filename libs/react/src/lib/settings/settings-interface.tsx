@@ -1,4 +1,4 @@
-import { LanguageSelect, motionSettingAtom, queriesAtom, themeAtom } from "@koloda/react";
+import { LanguageSelect, motionSettingAtom, queriesAtom, themeAtom, useTitle } from "@koloda/react";
 import { MOTION_SETTINGS } from "@koloda/srs";
 import type { Settings } from "@koloda/srs";
 import { FormLayout, ToggleGroup } from "@koloda/ui";
@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
 
 export function SettingsInterface() {
+  useTitle();
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const [theme, setTheme] = useAtom(themeAtom);

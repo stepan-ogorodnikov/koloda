@@ -1,4 +1,4 @@
-import { DeckDetails } from "@koloda/react";
+import { DeckDetails, useTitle } from "@koloda/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_/decks/$deckId/details")({
@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_/decks/$deckId/details")({
 });
 
 function DeckDetailsRoute() {
+  useTitle();
   const { deckId } = Route.useParams();
 
   return <DeckDetails id={deckId} key={deckId} />;
