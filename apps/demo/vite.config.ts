@@ -2,7 +2,6 @@
 import { lingui } from "@lingui/vite-plugin";
 import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import tailwindcss from "@tailwindcss/vite";
-import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
@@ -20,7 +19,6 @@ export default defineConfig(() => ({
     host: "localhost",
   },
   plugins: [
-    devtools(),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
