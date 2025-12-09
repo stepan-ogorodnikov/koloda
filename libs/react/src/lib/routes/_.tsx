@@ -1,6 +1,6 @@
 import { App, appMenu, useTitle } from "@koloda/react";
 import { msg } from "@lingui/core/macro";
-import { createFileRoute, HeadContent, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_")({
   component: RootRoute,
@@ -16,7 +16,6 @@ function RootRoute() {
 
   return (
     <App>
-      <HeadContent />
       <Outlet />
     </App>
   );

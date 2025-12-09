@@ -1,9 +1,9 @@
 import { NotFound, queriesAtom, useTitle } from "@koloda/react";
-import { Link, Main, tab, TabIndicator, tabLink } from "@koloda/ui";
+import { BackButton, Link, Main, tab, TabIndicator, tabLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
 import { redirect } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
@@ -28,6 +28,7 @@ const DECK_TABS = [
 function DeckRoute() {
   useTitle();
   const { deckId } = Route.useParams();
+  const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const { data, isSuccess } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
 
@@ -38,25 +39,22 @@ function DeckRoute() {
   return (
     <>
       <Main.Titlebar>
-        {data?.title && (
-          <>
-            <Main.H2>{data.title}</Main.H2>
-            <Main.Tabs>
-              {DECK_TABS.map(({ to, t }) => (
-                <Link className={tab} to={`/decks/$deckId/${to}`} params={{ deckId }} key={to}>
-                  {({ isActive }) => (
-                    <>
-                      <span className={tabLink}>
-                        <Trans id={t.id} message={t.message} />
-                      </span>
-                      {isActive && <TabIndicator id="deck-tabs" />}
-                    </>
-                  )}
-                </Link>
-              ))}
-            </Main.Tabs>
-          </>
-        )}
+        <BackButton onClick={() => router.navigate({ to: "/decks" })} />
+        <Main.H2>{data?.title}</Main.H2>
+        <Main.Tabs>
+          {DECK_TABS.map(({ to, t }) => (
+            <Link className={tab} to={`/decks/$deckId/${to}`} params={{ deckId }} key={to}>
+              {({ isActive }) => (
+                <>
+                  <span className={tabLink}>
+                    <Trans id={t.id} message={t.message} />
+                  </span>
+                  {isActive && <TabIndicator id="deck-tabs" />}
+                </>
+              )}
+            </Link>
+          ))}
+        </Main.Tabs>
       </Main.Titlebar>
       <Outlet />
     </>

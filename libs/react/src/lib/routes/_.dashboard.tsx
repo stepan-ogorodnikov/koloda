@@ -15,9 +15,9 @@ function DashboardRoute() {
   useTitle();
 
   return (
-    <div>
-      <LearnedToday />
+    <div className="grow flex flex-col tb:flex-row items-start gap-4 tb:p-4">
       <Lessons />
+      <LearnedToday />
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 export const overlay = tv({
   base: [
     "flex items-center justify-center",
-    "fixed inset-0 z-10 overflow-y-auto min-h-full p-4",
+    "fixed inset-0 z-10 overflow-y-auto min-h-full p-1 tb:p-4",
     "bg-overlay backdrop-blur-xs",
   ],
 });
@@ -18,7 +18,7 @@ export const overlayFrame = tv({
   ],
 });
 
-const overlayFrameHeader = tv({ base: "flex flex-row items-center min-h-14 py-2 px-4 border-b-2 border-main" });
+const overlayFrameHeader = tv({ base: "flex flex-row items-center min-h-14 p-2 tb:px-4 border-b-2 border-main" });
 
 type OverlayFrameHeaderProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameHeader>;
 

@@ -8,7 +8,9 @@ import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef } from "react";
 import { queriesAtom } from "../queries";
+import { AddCard } from "./add-card";
 import { CardsTableCell } from "./cards-table-cell";
+import { CardsViewToggle } from "./cards-view-toggle";
 
 const cell = (cell: CellContext<Card, unknown>) => <CardsTableCell cell={cell} />;
 
@@ -75,11 +77,17 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
   if (!templateData) return null;
 
   return (
-    <div ref={wrapperRef}>
-      <Table.Root>
-        <Table.Head table={table} />
-        <Table.Body table={table} />
-      </Table.Root>
-    </div>
+    <>
+      <div className="flex flex-row items-center justify-between gap-4">
+        <CardsViewToggle />
+        <AddCard deckId={Number(deckId)} templateId={Number(templateId)} />
+      </div>
+      <div ref={wrapperRef}>
+        <Table.Root>
+          <Table.Head table={table} />
+          <Table.Body table={table} />
+        </Table.Root>
+      </div>
+    </>
   );
 }

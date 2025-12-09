@@ -22,7 +22,7 @@ function DialogBody(props: DialogProps) {
 
 function DialogClose(props: ButtonProps) {
   return (
-    <Button variants={{ style: "bordered", size: "none", class: "p-1" }} {...props}>
+    <Button variants={{ style: "bordered", size: "none", class: "z-10 p-1" }} {...props}>
       <X className="size-4" />
     </Button>
   );

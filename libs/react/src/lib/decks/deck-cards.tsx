@@ -1,40 +1,30 @@
-import { Button, Dialog } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
+import { cardsViewAtom } from "@koloda/react";
+import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
-import { Plus } from "lucide-react";
-import { AddCard } from "../cards/add-card";
+import { useAtom, useAtomValue } from "jotai";
+import { useEffect } from "react";
+import { CardsStack } from "../cards/cards-stack";
 import { CardsTable } from "../cards/cards-table";
 import { queriesAtom } from "../queries";
 
-type Props = { deckId: string };
+type DeckCardsProps = { deckId: string };
 
-export function DeckCards({ deckId }: Props) {
-  const { _ } = useLingui();
+export function DeckCards({ deckId }: DeckCardsProps) {
+  const isMobile = useMediaQuery("(width < 48rem)");
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const { data: deckData } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
+  const { data } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
+  const [view, setView] = useAtom(cardsViewAtom);
+
+  useEffect(() => {
+    if (isMobile) setView("stack");
+  }, [isMobile, setView]);
+
+  if (!data) return null;
 
   return (
-    <div className="flex flex-col gap-2 py-4 px-6">
-      <div className="flex flex-row items-center">
-        {deckData && (
-          <Dialog.Root>
-            <Button variants={{ style: "dashed" }}>
-              <Plus className="size-4" />
-              {_(msg`add-cards.trigger`)}
-            </Button>
-            <Dialog.Overlay>
-              <Dialog.Modal variants={{ class: "min-w-84" }}>
-                <Dialog.Body>
-                  <AddCard deckId={Number(deckId)} templateId={deckData.templateId} />
-                </Dialog.Body>
-              </Dialog.Modal>
-            </Dialog.Overlay>
-          </Dialog.Root>
-        )}
-      </div>
-      {deckData && <CardsTable deckId={deckId} templateId={deckData.templateId} />}
+    <div className="flex flex-col gap-2 p-2 tb:p-4">
+      {view === "stack" && <CardsStack deckId={deckId} templateId={data.templateId} />}
+      {view === "table" && <CardsTable deckId={deckId} templateId={data.templateId} />}
     </div>
   );
 }

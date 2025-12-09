@@ -46,17 +46,11 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       }}
     >
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          <form.AppForm>
-            <form.FormControls />
-          </form.AppForm>
-        </FormLayout.Section.Term>
-        <FormLayout.Section.Content>
-          <form.FormTimestamps>
-            <form.FormCreatedAt timestamp={data?.createdAt} />
-            <form.FormUpdatedAt timestamp={data?.updatedAt} />
-          </form.FormTimestamps>
-        </FormLayout.Section.Content>
+        <form.Timestamps>
+          <form.Timestamp>ID: {data?.id}</form.Timestamp>
+          <form.CreatedAt timestamp={data?.createdAt} />
+          <form.UpdatedAt timestamp={data?.updatedAt} />
+        </form.Timestamps>
       </FormLayout.Section>
       <form.AppField name="title">
         {(field) => (
@@ -88,6 +82,9 @@ export function DeckDetails({ id }: DeckDetailsProps) {
         <DeleteDeck id={id} />
       </FormLayout.Section>
       {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
+      <form.AppForm>
+        <form.Controls />
+      </form.AppForm>
     </form>
   );
 }

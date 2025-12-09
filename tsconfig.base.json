@@ -6,7 +6,7 @@
     "importHelpers": true,
     "isolatedModules": true,
     "lib": ["es2022", "dom"],
-    "module": "nodenext",
+    "module": "es2022",
     "moduleResolution": "bundler",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,

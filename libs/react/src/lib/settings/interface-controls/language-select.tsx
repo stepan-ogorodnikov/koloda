@@ -37,7 +37,7 @@ export function LanguageSelect(
       onSelectionChange={(key) => {
         if (key) {
           setLang(key.toString());
-          if (isPersisted) mutate({ name: "interface", content: { language: key } });
+          if (isPersisted) mutate({ name: "interface", content: { language: key.toString() } });
         }
       }}
     >

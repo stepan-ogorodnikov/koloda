@@ -1,64 +1,92 @@
 import { tabs } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
+import { tv } from "tailwind-variants";
 
-export const main = [
-  "grow flex flex-row",
-  "overflow-hidden rounded-xl bg-level-1 border-2 border-main",
-].join(" ");
+export const main = "grow flex flex-row min-w-0 rounded-xl bg-level-1 border-2 border-main";
 
 export function Main({ children }: PropsWithChildren) {
   return <div className={main}>{children}</div>;
 }
 
-export const mainTitlebar = "flex flex-row items-center gap-2 h-14 px-2 border-b-2 border-main";
+export const mainTitlebar =
+  "flex flex-row items-center tb:gap-2 w-full min-w-0 min-h-14 dt:h-14 px-2 border-b-2 border-main";
 
 export function MainTitlebar({ children }: PropsWithChildren) {
-  return <div className={mainTitlebar}>{children}</div>;
+  return (
+    <div className="overflow-hidden">
+      <div className={mainTitlebar}>{children}</div>
+    </div>
+  );
 }
 
-export const mainH1 = "grow px-2 text-lg font-semibold tracking-normal";
+export const mainH1 = "grow px-2 text-lg font-semibold tracking-normal truncate";
 
 function MainH1({ children }: PropsWithChildren) {
   return <h1 className={mainH1}>{children}</h1>;
 }
 
-export const mainH2 = "px-2 text-lg font-semibold tracking-normal";
+export const mainH2 = "px-2 text-lg font-semibold tracking-normal truncate";
 
 function MainH2({ children }: PropsWithChildren) {
   return <h2 className={mainH2}>{children}</h2>;
 }
 
-const mainContent = "grow flex flex-col";
+const mainContent = tv({
+  base: "grow flex-col min-w-0",
+  variants: { hasContent: { true: "flex", false: "hidden tb:flex" } },
+});
 
-function MainContent({ children }: PropsWithChildren) {
-  return <div className={mainContent}>{children}</div>;
+type MainContentProps = PropsWithChildren & { hasContent?: boolean };
+
+function MainContent({ hasContent, children }: MainContentProps) {
+  return <div className={mainContent({ hasContent })}>{children}</div>;
 }
 
-const mainSidebar = "flex flex-col min-w-60 border-r-2 border-main";
+const mainSidebar = tv({
+  base: "flex-col overflow-hidden tb:min-w-48 tb:max-w-48 dt:min-w-72 dt:max-w-72 tb:border-r-2 tb:border-main",
+  variants: { hasContent: { true: "hidden tb:flex", false: "max-tb:grow" } },
+});
 
-function MainSidebar({ children }: PropsWithChildren) {
-  return <div className={mainSidebar}>{children}</div>;
+type MainSidebarProps = PropsWithChildren & { hasContent?: boolean };
+
+function MainSidebar({ hasContent, children }: MainSidebarProps) {
+  return <div className={mainSidebar({ hasContent })}>{children}</div>;
 }
 
-const mainSidebarItem = "flex flex-col border-b-2 border-main";
+const mainSidebarItem = "relative flex flex-col border-b-2 border-main truncate";
 
 function MainSidebarItem({ children }: PropsWithChildren) {
-  return <div className={mainSidebarItem}>{children}</div>;
+  return (
+    <div className={mainSidebarItem}>
+      {children}
+      <div className={mainSidebarItemFade} />
+    </div>
+  );
 }
 
 export const mainSidebarItemLink = [
-  "group flex flex-col p-2 text-lg tracking-wide",
-  "fg-level-3 data-current:bg-main-sidebar-link-active data-current:fg-level-1",
-  "no-focus-ring animate-colors",
+  "group flex flex-col p-4 text-lg tracking-wide no-focus-ring animate-colors",
+  "fg-level-3 current:bg-main-sidebar-link-active current:fg-level-1",
 ].join(" ");
 
-export const mainSidebarItemLinkContent = "p-2 rounded-lg group-focus-ring";
+export const mainSidebarItemLinkContent = "z-2 absolute inset-2 p-2 rounded-lg group-focus-ring";
+
+const mainSidebarItemFade = [
+  "z-1 absolute inset-0 pointer-events-none",
+  "group-not-current:inline-fade-bg-level-1/4 group-current:inline-fade-bg-main-sidebar-link-active/4",
+].join(" ");
 
 function MainSidebarItemLinkContent({ children }: PropsWithChildren) {
-  return <div className={mainSidebarItemLinkContent}>{children}</div>;
+  return (
+    <>
+      <div className={mainSidebarItemLinkContent} />
+      <div className={mainSidebarItemFade} />
+      {children}
+    </>
+  );
 }
 
-export const mainTabs = "flex flex-row";
+export const mainTabs = "flex flex-row max-tb:w-full";
 
 function MainTabs({ children }: PropsWithChildren) {
   return <div className={tabs}>{children}</div>;

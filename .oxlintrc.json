@@ -6,6 +6,7 @@
     "typescript",
     "import"
   ],
+  "jsPlugins": ["eslint-plugin-react-hooks"],
   "categories": {},
   "rules": {
     "for-direction": "warn",

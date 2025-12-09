@@ -15,13 +15,15 @@ const lessonCardContentField = tv({
   },
 });
 
-type Props = {
+type LessonCardContentFieldProps = {
   params: LessonTemplateLayoutItem;
   content: LessonReducerState["content"];
   dispatch: ActionDispatch<[action: LessonReducerAction]>;
 };
 
-export function LessonCardContentField({ params: { field, operation }, content, dispatch }: Props) {
+export function LessonCardContentField(
+  { params: { field, operation }, content, dispatch }: LessonCardContentFieldProps,
+) {
   if (!field || !content) return null;
 
   const actualValue = content.card.content[field.id]?.text || "";

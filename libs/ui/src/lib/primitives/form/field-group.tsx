@@ -3,7 +3,7 @@ import { Group, type GroupProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const fieldGroup = tv({
-  base: ["flex flex-row"],
+  base: "flex flex-row",
   variants: {
     group: {
       true: "focus-within:focus-ring",

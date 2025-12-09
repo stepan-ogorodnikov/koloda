@@ -14,19 +14,19 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:32
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
 msgstr "Created {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:94
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:93
 msgid "form.reset"
 msgstr "Discard"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:67
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:66
 msgid "form.save"
 msgstr "Save"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:44
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:45
 msgid "form.updatedAt {0}"
 msgstr "Last updated {0}"

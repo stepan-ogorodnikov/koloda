@@ -13,6 +13,7 @@ import type {
   DeleteTemplateData,
   GetCardsParams,
   GetLessonDataParams,
+  GetReviewsData,
   InsertAlgorithmData,
   InsertCardData,
   InsertDeckData,
@@ -23,12 +24,13 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
+  ResetCardProgressData,
   Review,
-  Settings,
   SettingsName,
   Template,
   TodaysReviewTotals,
   UpdateAlgorithmData,
+  UpdateCardData,
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
@@ -38,7 +40,12 @@ import { atom } from "jotai";
 
 export type Queries = {
   getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | undefined>;
-  patchSettingsMutation: () => UseMutationOptions<Settings | undefined, Error, PatchSettingsData, unknown>;
+  patchSettingsMutation: <T extends SettingsName>() => UseMutationOptions<
+    AllowedSettings<T> | undefined,
+    Error,
+    PatchSettingsData<T>,
+    unknown
+  >;
   getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;
   getAlgorithmQuery: (id: string) => QueryOptions<Algorithm | null | undefined>;
   addAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, Error, InsertAlgorithmData, unknown>;
@@ -61,12 +68,14 @@ export type Queries = {
   getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
   addCardMutation: () => UseMutationOptions<Card | undefined, Error, InsertCardData, unknown>;
-  updateCardMutation: () => UseMutationOptions<Card | undefined, Error, Card, unknown>;
+  updateCardMutation: () => UseMutationOptions<Card | undefined, Error, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, Error, DeleteCardData, unknown>;
+  resetCardProgressMutation: () => UseMutationOptions<unknown, Error, ResetCardProgressData, unknown>;
   getLessonsQuery: (filters: LessonFilters) => QueryOptions<Lesson[] | undefined>;
   getTodayReviewTotalsQuery: () => QueryOptions<TodaysReviewTotals | undefined>;
   getLessonDataQuery: (params: GetLessonDataParams) => QueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, Error, LessonResultData, unknown>;
+  getReviewsQuery: (data: GetReviewsData) => QueryOptions<Review[] | undefined>;
   addReviewMutation: () => UseMutationOptions<Review | undefined, Error, InsertReviewData, unknown>;
 };
 

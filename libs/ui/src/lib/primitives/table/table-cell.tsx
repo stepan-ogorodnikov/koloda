@@ -3,7 +3,7 @@ import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
 export const tableCell = tv({
-  base: "",
+  base: "overflow-hidden break-all",
   variants: {
     paddings: {
       none: "p-0",

@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/srs/src/lib/cards.ts:23
+msgid "card.errors.field-empty"
+msgstr "This field can't be empty"
+
 #: ../../libs/srs/src/lib/settings-learning.ts:9
 msgid "daily-limits.learn-more-than-total"
 msgstr "Learn can't be more than total"
@@ -32,6 +36,22 @@ msgstr "There has to be at least one field"
 #: ../../libs/srs/src/lib/templates.ts:16
 msgid "layout.min-length"
 msgstr "There has to be at least one layout item"
+
+#: ../../libs/srs/src/lib/lessons.ts:20
+msgid "lesson.init.labels.learn"
+msgstr "Learn"
+
+#: ../../libs/srs/src/lib/lessons.ts:21
+msgid "lesson.init.labels.review"
+msgstr "Review"
+
+#: ../../libs/srs/src/lib/lessons.ts:22
+msgid "lesson.init.labels.total"
+msgstr "Total"
+
+#: ../../libs/srs/src/lib/lessons.ts:19
+msgid "lesson.init.labels.untouched"
+msgstr "New"
 
 #: ../../libs/srs/src/lib/settings-interface.ts:24
 msgid "motion.off"

@@ -1,6 +1,5 @@
 import type { Queries } from "@koloda/react";
 import type {
-  Card,
   CloneAlgorithmData,
   CloneDeckData,
   CloneTemplateData,
@@ -11,6 +10,7 @@ import type {
   DeleteTemplateData,
   GetCardsParams,
   GetLessonDataParams,
+  GetReviewsData,
   InsertAlgorithmData,
   InsertCardData,
   InsertDeckData,
@@ -19,8 +19,10 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
+  ResetCardProgressData,
   SettingsName,
   UpdateAlgorithmData,
+  UpdateCardData,
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
@@ -45,12 +47,14 @@ import {
   getDecks,
   getLessonData,
   getLessons,
+  getReviews,
   getSettings,
   getTemplate,
   getTemplateDecks,
   getTemplates,
   getTodaysReviewTotals,
   patchSettings,
+  resetCardProgress,
   submitLessonResult,
   updateAlgorithm,
   updateCard,
@@ -73,7 +77,9 @@ export const demoSetupMutationOptions = {
 
 export const queriesFn = (db: DB): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({ queryFn: () => getSettings<T>(db, name) }),
-  patchSettingsMutation: () => ({ mutationFn: (data: PatchSettingsData) => patchSettings(db, data) }),
+  patchSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: (data: PatchSettingsData<T>) => patchSettings<T>(db, data),
+  }),
   getAlgorithmsQuery: () => ({ queryFn: () => getAlgorithms(db) }),
   getAlgorithmQuery: (id: string) => ({ queryFn: () => getAlgorithm(db, id) }),
   addAlgorithmMutation: () => ({ mutationFn: (data: InsertAlgorithmData) => addAlgorithm(db, data) }),
@@ -96,13 +102,15 @@ export const queriesFn = (db: DB): Queries => ({
   getTemplateDecksQuery: (data: DeleteDeckData) => ({ queryFn: () => getTemplateDecks(db, data) }),
   getCardsQuery: (params: GetCardsParams) => ({ queryFn: () => getCards(db, params) }),
   addCardMutation: () => ({ mutationFn: (data: InsertCardData) => addCard(db, data) }),
+  updateCardMutation: () => ({ mutationFn: (data: UpdateCardData) => updateCard(db, data) }),
   deleteCardMutation: () => ({ mutationFn: (data: DeleteCardData) => deleteCard(db, data) }),
-  updateCardMutation: () => ({ mutationFn: (data: Card) => updateCard(db, data) }),
+  resetCardProgressMutation: () => ({ mutationFn: (data: ResetCardProgressData) => resetCardProgress(db, data) }),
   getLessonsQuery: (filters: LessonFilters) => ({ queryFn: () => getLessons(db, new Date(), filters) }),
   getTodayReviewTotalsQuery: () => ({ queryFn: () => getTodaysReviewTotals(db) }),
   getLessonDataQuery: ({ filters, amounts }: GetLessonDataParams) => ({
     queryFn: () => getLessonData(db, new Date(), filters, amounts),
   }),
   submitLessonResultMutation: () => ({ mutationFn: (data: LessonResultData) => submitLessonResult(db, data) }),
+  getReviewsQuery: (data: GetReviewsData) => ({ queryFn: () => getReviews(db, data) }),
   addReviewMutation: () => ({ mutationFn: (data: InsertReviewData) => addReview(db, data) }),
 });

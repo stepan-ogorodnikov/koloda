@@ -13,6 +13,10 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/srs/src/lib/cards.ts:23
+msgid "card.errors.field-empty"
+msgstr "Это поле не может быть пустым"
+
 #: ../../libs/srs/src/lib/settings-learning.ts:9
 msgid "daily-limits.learn-more-than-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
@@ -32,6 +36,22 @@ msgstr "Необходимо хотя бы одно поле"
 #: ../../libs/srs/src/lib/templates.ts:16
 msgid "layout.min-length"
 msgstr "Раскладка не может быть пустой"
+
+#: ../../libs/srs/src/lib/lessons.ts:20
+msgid "lesson.init.labels.learn"
+msgstr "Изучение"
+
+#: ../../libs/srs/src/lib/lessons.ts:21
+msgid "lesson.init.labels.review"
+msgstr "Повтор"
+
+#: ../../libs/srs/src/lib/lessons.ts:22
+msgid "lesson.init.labels.total"
+msgstr "Всего"
+
+#: ../../libs/srs/src/lib/lessons.ts:19
+msgid "lesson.init.labels.untouched"
+msgstr "Новые"
 
 #: ../../libs/srs/src/lib/settings-interface.ts:24
 msgid "motion.off"

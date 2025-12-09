@@ -21,7 +21,7 @@ type DeleteDialogTriggerProps = PropsWithChildren & ButtonProps & TWVProps<typeo
 
 function DeleteDialogTrigger({ children, ...props }: DeleteDialogTriggerProps) {
   return (
-    <Button className={deleteButtonTrigger({ style: "primary", class: "relative" })} {...props}>
+    <Button className={deleteButtonTrigger({ style: "primary" })} {...props}>
       <Trash2 className="size-4.5 stroke-1.75" />
       {children}
     </Button>

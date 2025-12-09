@@ -1,3 +1,4 @@
+import type { ZodIssue } from "@koloda/srs";
 import { Button, FormTextField } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
@@ -8,13 +9,13 @@ import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import type { PropsWithChildren } from "react";
 
-function FormTimestamps(props: PropsWithChildren) {
-  return <div className="flex flex-row items-center gap-4" {...props} />;
+function Timestamps(props: PropsWithChildren) {
+  return <div className="flex flex-row flex-wrap items-center gap-4" {...props} />;
 }
 
 type FormTimestampProps = { timestamp?: Date | null };
 
-function FormTimestamp({ children }: PropsWithChildren) {
+function Timestamp({ children }: PropsWithChildren) {
   return (
     <span className="fg-level-4">
       {children}
@@ -22,27 +23,27 @@ function FormTimestamp({ children }: PropsWithChildren) {
   );
 }
 
-function FormCreatedAt({ timestamp }: FormTimestampProps) {
+function CreatedAt({ timestamp }: FormTimestampProps) {
   const { i18n } = useLingui();
 
   if (!timestamp) return null;
 
   return (
-    <FormTimestamp>
+    <Timestamp>
       <Trans>form.createdAt {i18n.date(timestamp)}</Trans>
-    </FormTimestamp>
+    </Timestamp>
   );
 }
 
-function FormUpdatedAt({ timestamp }: FormTimestampProps) {
+function UpdatedAt({ timestamp }: FormTimestampProps) {
   const { i18n } = useLingui();
 
   if (!timestamp) return null;
 
   return (
-    <FormTimestamp>
+    <Timestamp>
       <Trans>form.updatedAt {i18n.date(timestamp)}</Trans>
-    </FormTimestamp>
+    </Timestamp>
   );
 }
 
@@ -51,9 +52,7 @@ function SubscribeButton(props: ButtonProps) {
   const { _ } = useLingui();
 
   return (
-    <form.Subscribe
-      selector={(state) => [state.isDirty, state.canSubmit]}
-    >
+    <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
       {([isDirty, canSubmit]) => (
         <Button
           variants={{
@@ -98,23 +97,35 @@ function ResetButton(props: ButtonProps) {
   );
 }
 
-function FormControls() {
+function Controls() {
+  const form = useFormContext();
   return (
-    <div className="flex flex-row items-center gap-2">
-      <SubscribeButton />
-      <ResetButton />
-    </div>
+    <form.Subscribe selector={(state) => [state.isDirty]}>
+      {([isDirty]) => (
+        <div className="sticky bottom-16 tb:bottom-4 flex flex-col items-center">
+          {isDirty && (
+            <div className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1">
+              <SubscribeButton />
+              <ResetButton />
+            </div>
+          )}
+        </div>
+      )}
+    </form.Subscribe>
   );
 }
 
 type FormErrorsProps = {
-  errors: Record<string, StandardSchemaV1Issue[]>;
+  errors: Record<number | string, StandardSchemaV1Issue[]> | ZodIssue[] | undefined;
   translations?: Record<string, MessageDescriptor>;
   fallback?: MessageDescriptor;
 };
 
-function FormErrors({ errors, translations, fallback }: FormErrorsProps) {
+export function Errors({ errors, translations, fallback }: FormErrorsProps) {
   const { _ } = useLingui();
+
+  if (!errors) return null;
+
   const errorsArray = Object.values(errors).flat();
 
   return (
@@ -135,13 +146,14 @@ const { fieldContext, useFieldContext, formContext, useFormContext } = createFor
 const { useAppForm, withForm } = createFormHook({
   fieldComponents: { TextField: FormTextField },
   formComponents: {
-    FormControls,
+    Controls,
     SubscribeButton,
     ResetButton,
-    FormTimestamps,
-    FormCreatedAt,
-    FormUpdatedAt,
-    Errors: FormErrors,
+    Timestamp,
+    Timestamps,
+    CreatedAt,
+    UpdatedAt,
+    Errors,
   },
   fieldContext,
   formContext,

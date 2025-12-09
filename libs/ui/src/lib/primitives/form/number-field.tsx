@@ -1,14 +1,16 @@
+import type { TWVProps } from "@koloda/ui";
 import { MinusIcon, PlusIcon } from "lucide-react";
 import { Button, NumberField as ReactAriaNumberField } from "react-aria-components";
 import type { ButtonProps, NumberFieldProps as ReactAriaNumberFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
-import type { TWVProps } from "../../types";
 import { button } from "./button";
-import { FieldGroup } from "./field-group";
+import { FieldGroup, fieldGroup } from "./field-group";
 import type { TextFieldInputProps } from "./text-field";
 import { textField, TextFieldInput } from "./text-field";
 
-export const numberField = tv({ extend: textField });
+export const numberField = tv({
+  extend: textField,
+});
 
 export type NumberFieldProps = ReactAriaNumberFieldProps & TWVProps<typeof numberField>;
 
@@ -16,9 +18,21 @@ export function NumberField({ variants, ...props }: NumberFieldProps) {
   return <ReactAriaNumberField className={numberField(variants)} {...props} />;
 }
 
-export function NumberFieldGroup(props: TextFieldInputProps) {
+export const numberFieldGroup = tv({
+  extend: fieldGroup,
+  variants: {
+    size: {
+      default: "max-w-48",
+    },
+  },
+  defaultVariants: { size: "default" },
+});
+
+export type NumberFieldGroupProps = TextFieldInputProps & TWVProps<typeof numberFieldGroup>;
+
+export function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
   return (
-    <FieldGroup>
+    <FieldGroup className={numberFieldGroup(variants)}>
       <NumberFieldInput {...props} />
       <NumberFieldDecrement>
         <MinusIcon className="size-4" />
@@ -31,7 +45,7 @@ export function NumberFieldGroup(props: TextFieldInputProps) {
 }
 
 function NumberFieldInput(props: TextFieldInputProps) {
-  return <TextFieldInput variants={{ style: "group", content: "number", class: "w-auto" }} {...props} />;
+  return <TextFieldInput variants={{ style: "group", content: "number", class: "w-auto pe-0" }} {...props} />;
 }
 
 const numberFieldButton = button({

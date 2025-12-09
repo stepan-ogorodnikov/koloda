@@ -2,16 +2,10 @@ import { NotFound, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { redirect } from "@tanstack/react-router";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_/settings")({
   component: SettingsRoute,
-  beforeLoad: ({ location }) => {
-    if (location.pathname === "/settings") {
-      throw redirect({ to: "/settings/interface" });
-    }
-  },
   loader: () => ({ title: msg`title.settings` }),
   notFoundComponent: NotFound,
 });
@@ -21,17 +15,17 @@ const LINKS = [
   { id: "learning", t: msg`settings.learning`, url: "learning" },
 ];
 
-export function SettingsRoute() {
+function SettingsRoute() {
   useTitle();
   const { _ } = useLingui();
+  const { pathname } = useLocation();
+  const hasContent = !(pathname === "/settings" || pathname === "/settings/");
 
   return (
     <>
-      <Main.Sidebar>
+      <Main.Sidebar hasContent={hasContent}>
         <Main.Titlebar>
-          <Main.H1>
-            {_(msg`settings.title`)}
-          </Main.H1>
+          <Main.H1>{_(msg`settings.title`)}</Main.H1>
         </Main.Titlebar>
         {LINKS.map(({ id, t, url }) => (
           <Main.SidebarItem key={id}>
@@ -41,7 +35,7 @@ export function SettingsRoute() {
           </Main.SidebarItem>
         ))}
       </Main.Sidebar>
-      <Main.Content>
+      <Main.Content hasContent={hasContent}>
         <Outlet />
       </Main.Content>
     </>

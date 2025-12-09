@@ -2,10 +2,12 @@ import { NotFound, type Queries, queriesAtom } from "@koloda/react";
 import { langAtom, routeTree } from "@koloda/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import type { I18nProviderProps } from "@lingui/react";
+import { TanStackDevtools } from "@tanstack/react-devtools";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { Provider as JotaiProvider, useSetAtom } from "jotai";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -53,12 +55,24 @@ function App() {
 
   return (
     <StrictMode>
-      <I18nProvider i18n={i18n}>
+      <I18nProvider i18n={i18n as unknown as I18nProviderProps["i18n"]}>
         <QueryClientProvider client={queryClient}>
           <JotaiProvider store={store}>
             <RouterProvider router={router} />
-            <ReactQueryDevtools initialIsOpen={false} />
-            <TanStackRouterDevtools router={router} />
+            <TanStackDevtools
+              plugins={[
+                {
+                  name: "TanStack Query",
+                  render: <ReactQueryDevtoolsPanel />,
+                  defaultOpen: true,
+                },
+                {
+                  name: "TanStack Router",
+                  render: <TanStackRouterDevtoolsPanel />,
+                  defaultOpen: false,
+                },
+              ]}
+            />
           </JotaiProvider>
         </QueryClientProvider>
       </I18nProvider>

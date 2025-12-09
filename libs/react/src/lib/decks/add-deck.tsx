@@ -51,7 +51,7 @@ export function AddDeck() {
       <Button variants={{ style: "primary", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
         <PlusIcon className="size-4 stroke-2" />
       </Button>
-      <Dialog.Popover variants={{ class: "min-w-84" }}>
+      <Dialog.Popover variants={{ class: "w-84" }}>
         <Dialog.Body>
           <form
             onSubmit={(e) => {

@@ -17,7 +17,7 @@ export function Table({ table }: TableProps) {
 
 function TableRoot({ children }: PropsWithChildren) {
   return (
-    <table className="w-full border-2 border-table border-separate border-spacing-0 rounded-md overflow-hidden">
+    <table className="rounded-md border-2 border-table table-fixed border-separate border-spacing-0 overflow-hidden">
       {children}
     </table>
   );

@@ -14,8 +14,8 @@ export const TemplateFields = withForm({
   props: { isLocked: false },
   render: function Render({ form, isLocked }) {
     const { _ } = useLingui();
-    const fieldsValue = useStore(form.store, (state) => state.values.content.fields);
-    const layoutValue = useStore(form.store, (state) => state.values.content.layout);
+    const fieldsValue = useStore(form.store, (state) => state.values?.content?.fields);
+    const layoutValue = useStore(form.store, (state) => state.values?.content?.layout);
 
     return (
       <form.Field name="content.fields" mode="array">
@@ -36,7 +36,7 @@ export const TemplateFields = withForm({
               }
             }}
           >
-            <div className="divide-y-1 divide-dotted divide-border-main">
+            <div className="divide-y divide-dotted divide-border-main">
               {field.state.value.map((item, i) => (
                 <Draggable id={item.id} index={i} key={item.id}>
                   <form.Field name={`content.fields[${i}].title`}>
@@ -95,7 +95,7 @@ function TemplateField({ title, onTitleChange, isLocked, onDelete }: TemplateFie
         onChange={onTitleChange}
       >
         <TextField.Input
-          variants={{ style: "inline", class: "w-72" }}
+          variants={{ style: "inline", class: "dt:w-72" }}
           placeholder={_(msg`template.inputs.fields.title.placeholder`)}
         />
       </TextField>

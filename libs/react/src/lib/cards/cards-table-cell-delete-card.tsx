@@ -40,12 +40,12 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
         <Dialog.Body>
           <Dialog.Content>
             <div className="flex flex-row items-center gap-4">
-              {_(msg`cards-table.delete.message`)}
+              {_(msg`delete-card.message`)}
               <Button variants={{ style: "primary", size: "small" }} onClick={handleClick}>
-                Delete
+                {_(msg`delete-card.confirm`)}
               </Button>
               <Button variants={{ style: "ghost", size: "small" }} slot="close" autoFocus>
-                Cancel
+                {_(msg`delete-card.cancel`)}
               </Button>
             </div>
           </Dialog.Content>

@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { Algorithm } from "./algorithms";
@@ -12,6 +14,13 @@ import type { Template, TemplateField, TemplateLayoutItem } from "./templates";
 import type { Modify } from "./utility";
 
 export const LESSON_TYPES = ["untouched", "learn", "review", "total"] as const;
+
+export const LESSON_TYPE_LABELS: Record<LessonType, MessageDescriptor> = {
+  untouched: msg`lesson.init.labels.untouched`,
+  learn: msg`lesson.init.labels.learn`,
+  review: msg`lesson.init.labels.review`,
+  total: msg`lesson.init.labels.total`,
+} as const;
 
 export type LessonType = typeof LESSON_TYPES[number];
 

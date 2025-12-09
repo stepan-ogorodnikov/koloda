@@ -2,6 +2,7 @@ export * from "./lib/algorithms/add-algorithm";
 export * from "./lib/algorithms/algorithm";
 export * from "./lib/algorithms/algorithm-picker";
 export * from "./lib/algorithms/clone-algorithm";
+export * from "./lib/cards/cards-view-toggle";
 export * from "./lib/components/app";
 export * from "./lib/components/learned-today";
 export * from "./lib/components/not-found";

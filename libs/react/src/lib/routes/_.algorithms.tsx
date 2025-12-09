@@ -4,7 +4,7 @@ import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useLocation } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
@@ -17,15 +17,17 @@ export const Route = createFileRoute("/_/algorithms")({
   },
 });
 
-export function AlgorithmsRoute() {
+function AlgorithmsRoute() {
   useTitle();
   const { _ } = useLingui();
+  const { pathname } = useLocation();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: ["algorithms"], ...getAlgorithmsQuery() });
+  const hasContent = !(pathname === "/algorithms" || pathname === "/algorithms/");
 
   return (
     <>
-      <Main.Sidebar>
+      <Main.Sidebar hasContent={hasContent}>
         <Main.Titlebar>
           <Main.H1>
             {_(msg`algorithms.title`)}
@@ -42,7 +44,7 @@ export function AlgorithmsRoute() {
           ))
           : null}
       </Main.Sidebar>
-      <Main.Content>
+      <Main.Content hasContent={hasContent}>
         <Outlet />
       </Main.Content>
     </>

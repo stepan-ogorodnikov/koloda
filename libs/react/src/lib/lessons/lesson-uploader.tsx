@@ -31,7 +31,7 @@ export function LessonUploader({ state, dispatch }: LessonUploaderProps) {
 
   useEffect(() => {
     upload(index);
-  }, [upload, index]);
+  }, [index]);
 
   return null;
 }

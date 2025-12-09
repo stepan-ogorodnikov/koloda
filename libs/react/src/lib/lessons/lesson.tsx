@@ -39,7 +39,7 @@ export function Lesson() {
     <Dialog.Root isOpen={state.meta.isOpen} onOpenChange={(value) => dispatch(["isOpenUpdated", value])}>
       <Button className="hidden" />
       <Dialog.Overlay isKeyboardDismissDisabled>
-        <Dialog.Modal variants={{ class: "min-w-112 min-h-96" }} isKeyboardDismissDisabled>
+        <Dialog.Modal variants={{ class: "max-tb:w-full tb:min-w-112 min-h-96" }} isKeyboardDismissDisabled>
           <Dialog.Body>
             <Dialog.Header variants={{ class: "relative flex-col items-stretch gap-2 overflow-hidden" }}>
               <div className="relative grow flex flex-row items-start justify-between">

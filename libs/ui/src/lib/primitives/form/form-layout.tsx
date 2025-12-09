@@ -1,7 +1,9 @@
+import type { TWVProps } from "@koloda/ui";
 import type { ReactNode } from "react";
 import { type HTMLAttributes, type LabelHTMLAttributes } from "react";
+import { tv } from "tailwind-variants";
 
-export const formLayout = "grow flex flex-col py-2 px-6";
+export const formLayout = "grow flex flex-col py-2 px-4";
 
 type FormLayoutProps = HTMLAttributes<HTMLDivElement>;
 
@@ -9,14 +11,16 @@ export function FormLayout({ children }: FormLayoutProps) {
   return <div className={formLayout}>{children}</div>;
 }
 
-export const formLayoutSection = "flex flex-row flex-wrap items-baseline gap-4 py-2";
+export const formLayoutSection = tv({ base: "flex flex-col tb:flex-row flex-wrap tb:items-baseline tb:gap-4 py-2" });
 
-type FormLayoutSectionProps = HTMLAttributes<HTMLDivElement> & { term?: ReactNode };
+type FormLayoutSectionProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof formLayoutSection> & {
+  term?: ReactNode;
+};
 
-export function FormLayoutSection({ term, children }: FormLayoutSectionProps) {
+export function FormLayoutSection({ variants, term, children }: FormLayoutSectionProps) {
   if (term) {
     return (
-      <div className={formLayoutSection}>
+      <div className={formLayoutSection(variants)}>
         <FormLayoutSectionTerm>{term}</FormLayoutSectionTerm>
         <FormLayoutSectionContent>
           {children}
@@ -24,10 +28,10 @@ export function FormLayoutSection({ term, children }: FormLayoutSectionProps) {
       </div>
     );
   }
-  return <div className={formLayoutSection}>{children}</div>;
+  return <div className={formLayoutSection(variants)}>{children}</div>;
 }
 
-export const formLayoutSectionTerm = "basis-60 font-semibold";
+export const formLayoutSectionTerm = "tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold";
 
 type FormLayoutSectionTermProps = LabelHTMLAttributes<HTMLDivElement>;
 
@@ -35,7 +39,7 @@ export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
   return <div className={formLayoutSectionTerm} {...props} />;
 }
 
-export const formLayoutSectionContent = "basis-180 flex flex-col items-baseline gap-4";
+export const formLayoutSectionContent = "flex flex-col items-baseline";
 
 type FormLayoutSectionContentProps = HTMLAttributes<HTMLDivElement>;
 

@@ -46,7 +46,7 @@ export const selectRoot = tv({
   base: "flex flex-col items-start select-none",
   variants: {
     layout: {
-      form: formLayoutSection,
+      form: formLayoutSection(),
     },
   },
 });
@@ -59,7 +59,7 @@ export function SelectRoot<T extends object>({ variants, ...props }: SelectRootP
 
 const selectButton = tv({
   extend: button,
-  base: "justify-between w-full",
+  base: "justify-between w-full min-w-0",
   variants: {
     layout: { form: [formLayoutSectionContent, "flex-row items-center max-w-60"] },
     size: { default: "h-10 p-2" },
@@ -75,7 +75,7 @@ export type SelectButtonProps = TWVProps<typeof selectButton> & ButtonProps & {
 function SelectButton({ variants, withChevron = true, icon, ...props }: SelectButtonProps) {
   return (
     <Button className={selectButton(variants)} {...props}>
-      <ReactAriaSelectValue className="flex flex-row items-center gap-2">
+      <ReactAriaSelectValue className="flex flex-row items-center gap-2 truncate">
         {(state) => (
           <>
             {icon}
@@ -93,7 +93,7 @@ function SelectButton({ variants, withChevron = true, icon, ...props }: SelectBu
 }
 
 function SelectPopover(props: PopoverProps) {
-  return <Popover variants={{ class: "flex-col items-stretch min-w-[var(--trigger-width)]" }} {...props} />;
+  return <Popover variants={{ class: "flex-col items-stretch w-[var(--trigger-width)]" }} {...props} />;
 }
 
 const selectListBox = tv({ base: "py-1 rounded-lg" });
@@ -112,7 +112,7 @@ function SelectListBox<T extends object>({
 const selectListBoxItem = tv({
   base: [
     "flex flex-row items-center justify-between gap-2 mx-1 py-2 px-2",
-    "outline-none rounded-lg cursor-default select-none",
+    "outline-none rounded-lg cursor-default select-none truncate",
     "cursor-default select-none focus:bg-picker-item-hover",
   ],
 });

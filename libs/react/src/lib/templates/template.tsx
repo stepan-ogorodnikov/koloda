@@ -23,10 +23,10 @@ export function Template({ id }: TemplateProps) {
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: (template) => {
+        onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: ["templates"] });
-          queryClient.setQueryData(["templates", id], template);
-          formApi.reset(template);
+          queryClient.setQueryData(["templates", id], returning);
+          formApi.reset(returning);
         },
       });
     },
@@ -47,17 +47,11 @@ export function Template({ id }: TemplateProps) {
       }}
     >
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          <form.AppForm>
-            <form.FormControls />
-          </form.AppForm>
-        </FormLayout.Section.Term>
-        <FormLayout.Section.Content>
-          <form.FormTimestamps>
-            <form.FormCreatedAt timestamp={data?.createdAt} />
-            <form.FormUpdatedAt timestamp={data?.updatedAt} />
-          </form.FormTimestamps>
-        </FormLayout.Section.Content>
+        <form.Timestamps>
+          <form.Timestamp>ID: {data?.id}</form.Timestamp>
+          <form.CreatedAt timestamp={data?.createdAt} />
+          <form.UpdatedAt timestamp={data?.updatedAt} />
+        </form.Timestamps>
       </FormLayout.Section>
       <form.Field name="title">
         {(field) => (
@@ -94,12 +88,15 @@ export function Template({ id }: TemplateProps) {
         <TemplateLayout form={form} />
       </FormLayout.Section>
       <FormLayout.Section term={_(msg`template.actions.label`)}>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row flex-wrap items-center gap-2">
           <CloneTemplate id={id} />
           <DeleteTemplate id={id} />
         </div>
       </FormLayout.Section>
       {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={templatesMessages} />}
+      <form.AppForm>
+        <form.Controls />
+      </form.AppForm>
     </form>
   );
 }

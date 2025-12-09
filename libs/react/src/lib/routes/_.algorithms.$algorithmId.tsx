@@ -1,5 +1,8 @@
-import { Algorithm, useTitle } from "@koloda/react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Algorithm, queriesAtom } from "@koloda/react";
+import { BackButton, Main } from "@koloda/ui";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
+import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   component: AlgorithmRoute,
@@ -10,8 +13,19 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
 });
 
 function AlgorithmRoute() {
-  useTitle();
   const { algorithmId } = Route.useParams();
+  const router = useRouter();
+  const canGoBack = useCanGoBack();
+  const { getAlgorithmQuery } = useAtomValue(queriesAtom);
+  const { data } = useQuery({ queryKey: ["algorithms", algorithmId], ...getAlgorithmQuery(algorithmId) });
 
-  return <Algorithm id={algorithmId} key={algorithmId} />;
+  return (
+    <>
+      <Main.Titlebar>
+        {canGoBack && <BackButton onClick={() => router.navigate({ to: "/algorithms" })} />}
+        <Main.H1>{data?.title}</Main.H1>
+      </Main.Titlebar>
+      <Algorithm id={algorithmId} key={algorithmId} />
+    </>
+  );
 }

@@ -1,6 +1,5 @@
-import { LESSON_TYPES, type LessonType } from "@koloda/srs";
+import { LESSON_TYPE_LABELS, LESSON_TYPES } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
-import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,13 +15,6 @@ import { LessonInitLabel } from "./lesson-init-label";
 import { LessonInitLearnedToday } from "./lesson-init-learned-today";
 import { LessonInitTh } from "./lesson-init-th";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
-
-const LABELS: Record<LessonType, MessageDescriptor> = {
-  untouched: msg`lesson.init.labels.untouched`,
-  learn: msg`lesson.init.labels.learn`,
-  review: msg`lesson.init.labels.review`,
-  total: msg`lesson.init.labels.total`,
-} as const;
 
 type LessonInitProps = {
   state: LessonReducerState;
@@ -59,7 +51,7 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
 
   return (
     <>
-      <Dialog.Content>
+      <Dialog.Content variants={{ class: "overflow-auto" }}>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -79,7 +71,7 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
             <tbody>
               {LESSON_TYPES.map((type) => (
                 <tr key={type}>
-                  <LessonInitLabel>{_(LABELS[type])}</LessonInitLabel>
+                  <LessonInitLabel>{_(LESSON_TYPE_LABELS[type])}</LessonInitLabel>
                   {type === "total"
                     ? <LessonInitAmount amount={state?.amounts?.total || 0} />
                     : <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />}

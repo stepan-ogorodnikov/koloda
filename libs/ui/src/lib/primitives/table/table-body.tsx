@@ -29,7 +29,7 @@ export function TableBodyRow({ row }: TableBodyRowProps) {
     <tr key={row.id}>
       {row.getVisibleCells().map((cell) => {
         return (
-          <td className="border-t-2 border-table" style={{ width: `${cell.column.getSize()}rem` }} key={cell.id}>
+          <td className="p-0 border-t-2 border-table" style={{ width: `${cell.column.getSize()}rem` }} key={cell.id}>
             {flexRender(
               cell.column.columnDef.cell,
               cell.getContext(),

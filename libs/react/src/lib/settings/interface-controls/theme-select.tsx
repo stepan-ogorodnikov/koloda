@@ -34,7 +34,7 @@ export function ThemeSelect({ variants, withChevron, isPersisted = true }: Theme
       onSelectionChange={(key) => {
         if (key) {
           setTheme(key.toString());
-          if (isPersisted) mutate({ name: "interface", content: { theme: key } });
+          if (isPersisted) mutate({ name: "interface", content: { theme: key.toString() } });
         }
       }}
     >

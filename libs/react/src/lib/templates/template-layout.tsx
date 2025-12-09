@@ -40,42 +40,44 @@ export const TemplateLayout = withForm({
               }
             }}
           >
-            <div className="divide-y-1 divide-dotted divide-border-main">
+            <div className="divide-y divide-dotted divide-border-main">
               {field.state.value.map((item, i) => (
                 <Draggable id={item.field} index={i} key={item.field}>
-                  <TextField
-                    aria-label={_(msg`template.inputs.layout.field.label`)}
-                    value={getTemplateFieldTitleById(fieldsValue, field.state.value[i].field)}
-                    isReadOnly
-                    isDisabled
-                  >
-                    <TextField.Input
-                      variants={{ style: "inline", class: "w-72" }}
-                      placeholder={_(msg`template.inputs.layout.field.placeholder`)}
-                    />
-                  </TextField>
-                  <form.Field name={`content.layout[${i}].operation`}>
-                    {(operationField) => (
-                      <Select.Root
-                        aria-label={_(msg`template.inputs.layout.operation.label`)}
-                        selectedKey={operationField.state.value}
-                        onSelectionChange={(e) => {
-                          if (typeof e === "string") operationField.handleChange(e as TemplateOperation);
-                        }}
-                      >
-                        <Select.Button variants={{ style: "ghost", class: "w-48" }} />
-                        <Select.Popover>
-                          <Select.ListBox>
-                            {operations.map(({ id, value }) => (
-                              <Select.ListBoxItem id={id} textValue={_(value)} key={id}>
-                                {_(value)}
-                              </Select.ListBoxItem>
-                            ))}
-                          </Select.ListBox>
-                        </Select.Popover>
-                      </Select.Root>
-                    )}
-                  </form.Field>
+                  <div className="flex flex-row flex-wrap">
+                    <TextField
+                      aria-label={_(msg`template.inputs.layout.field.label`)}
+                      value={getTemplateFieldTitleById(fieldsValue, field.state.value[i].field)}
+                      isReadOnly
+                      isDisabled
+                    >
+                      <TextField.Input
+                        variants={{ style: "inline", class: "dt:w-72" }}
+                        placeholder={_(msg`template.inputs.layout.field.placeholder`)}
+                      />
+                    </TextField>
+                    <form.Field name={`content.layout[${i}].operation`}>
+                      {(operationField) => (
+                        <Select.Root
+                          aria-label={_(msg`template.inputs.layout.operation.label`)}
+                          selectedKey={operationField.state.value}
+                          onSelectionChange={(e) => {
+                            if (typeof e === "string") operationField.handleChange(e as TemplateOperation);
+                          }}
+                        >
+                          <Select.Button variants={{ style: "ghost", class: "w-48" }} />
+                          <Select.Popover>
+                            <Select.ListBox>
+                              {operations.map(({ id, value }) => (
+                                <Select.ListBoxItem id={id} textValue={_(value)} key={id}>
+                                  {_(value)}
+                                </Select.ListBoxItem>
+                              ))}
+                            </Select.ListBox>
+                          </Select.Popover>
+                        </Select.Root>
+                      )}
+                    </form.Field>
+                  </div>
                 </Draggable>
               ))}
             </div>

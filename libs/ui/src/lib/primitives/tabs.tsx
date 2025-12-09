@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 export const tabs = "self-stretch flex flex-row gap-2 items-center px-2";
 
 export const tab = [
-  "group relative self-stretch flex items-center justify-center h-full p-2 no-focus-ring",
+  "group relative self-stretch flex items-center justify-center h-full no-focus-ring",
   "fg-tabs-item hover:fg-tabs-item-active data-current:fg-tabs-item-active",
 ].join(" ");
 

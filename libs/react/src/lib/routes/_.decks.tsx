@@ -3,7 +3,7 @@ import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useLocation } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
@@ -16,15 +16,17 @@ export const Route = createFileRoute("/_/decks")({
   },
 });
 
-export function DecksRoute() {
+function DecksRoute() {
   useTitle();
   const { _ } = useLingui();
+  const { pathname } = useLocation();
   const { getDecksQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: ["decks"], ...getDecksQuery() });
+  const hasContent = !(pathname === "/decks" || pathname === "/decks/");
 
   return (
     <>
-      <Main.Sidebar>
+      <Main.Sidebar hasContent={hasContent}>
         <Main.Titlebar>
           <Main.H1>
             {_(msg`decks.title`)}
@@ -41,7 +43,7 @@ export function DecksRoute() {
           ))
           : null}
       </Main.Sidebar>
-      <Main.Content>
+      <Main.Content hasContent={hasContent}>
         <Outlet />
       </Main.Content>
     </>

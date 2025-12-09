@@ -22,12 +22,12 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
   const { _ } = useLingui();
 
   return (
-    <div className="flex flex-row gap-2">
+    <div className="flex flex-row gap-1 tb:gap-2">
       {grades.map(({ card, log }, i) => (
-        <div className="flex flex-col items-center gap-1 w-24" key={i}>
-          <div className="text-sm">{formatDistanceStrict(card.due, log.due)}</div>
+        <div className="flex flex-col items-center gap-1 tb:w-24" key={i}>
+          <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.due)}</div>
           <Button
-            variants={{ style: "primary", class: "self-stretch" }}
+            variants={{ style: "primary", class: "self-stretch max-tb:text-sm" }}
             onClick={() => {
               dispatch(["gradeSelected", i]);
             }}

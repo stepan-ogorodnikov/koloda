@@ -11,7 +11,7 @@ export const timeField = tv({
   base: "select-none",
   variants: {
     layout: {
-      form: formLayoutSection,
+      form: formLayoutSection(),
     },
   },
 });

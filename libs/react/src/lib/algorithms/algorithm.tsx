@@ -46,17 +46,11 @@ export function Algorithm({ id }: AlgorithmProps) {
       }}
     >
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          <form.AppForm>
-            <form.FormControls />
-          </form.AppForm>
-        </FormLayout.Section.Term>
-        <FormLayout.Section.Content>
-          <form.FormTimestamps>
-            <form.FormCreatedAt timestamp={data?.createdAt} />
-            <form.FormUpdatedAt timestamp={data?.updatedAt} />
-          </form.FormTimestamps>
-        </FormLayout.Section.Content>
+        <form.Timestamps>
+          <form.Timestamp>ID: {data?.id}</form.Timestamp>
+          <form.CreatedAt timestamp={data?.createdAt} />
+          <form.UpdatedAt timestamp={data?.updatedAt} />
+        </form.Timestamps>
       </FormLayout.Section>
       <form.Field name="title">
         {(field) => (
@@ -92,8 +86,8 @@ export function Algorithm({ id }: AlgorithmProps) {
                 isSelected={field.state.value}
                 onChange={field.handleChange}
               >
-                <Switch.Label>{_(msg`algorithm.inputs.isFuzzEnabled.label`)}</Switch.Label>
                 <Switch.Indicator />
+                <Switch.Label>{_(msg`algorithm.inputs.isFuzzEnabled.label`)}</Switch.Label>
               </Switch>
             )}
           </form.Field>
@@ -149,12 +143,15 @@ export function Algorithm({ id }: AlgorithmProps) {
         )}
       </form.Field>
       <FormLayout.Section term={_(msg`algorithm.actions.label`)}>
-        <div className="flex flex-row items-center gap-2">
+        <div className="flex flex-row flex-wrap items-center gap-2">
           <CloneAlgorithm id={id} />
           <DeleteAlgorithm id={id} />
         </div>
       </FormLayout.Section>
       {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={algorithmsMessages} />}
+      <form.AppForm>
+        <form.Controls />
+      </form.AppForm>
     </form>
   );
 }

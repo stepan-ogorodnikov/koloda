@@ -6,7 +6,25 @@ import { lessonAtom } from "./lesson";
 
 export const lessonBadge = tv({
   extend: tableCell,
-  base: ["group w-full text-left hover:bg-button-ghost-hover", "cursor-pointer disabled:cursor-default no-focus-ring"],
+  base: [
+    "group flex min-h-0 h-full w-full text-left hover:bg-button-ghost-hover",
+    "cursor-pointer disabled:cursor-default no-focus-ring",
+  ],
+});
+
+export const lessonBadgeContent = tv({
+  base: [
+    "w-full h-full px-2 max-tb:py-2 group-focus-ring rounded-sm",
+    "font-semibold text-lg leading-6 group-disabled:fg-level-4 max-tb:text-center",
+  ],
+  variants: {
+    type: {
+      untouched: "fg-lesson-type-blue",
+      learn: "fg-lesson-type-red",
+      review: "fg-lesson-type-green",
+      total: "",
+    },
+  },
 });
 
 type LessonBadgeProps = {
@@ -27,12 +45,9 @@ export function LessonBadge({ type, value, deckId }: LessonBadgeProps) {
         if (Number(value)) setLesson({ type, deckId });
       }}
     >
-      <div
-        className="w-full px-2 group-focus-ring rounded-sm font-semibold text-lg leading-6 data-disabled:fg-level-4"
-        data-disabled={isDisabled || undefined}
-      >
+      <span className={lessonBadgeContent({ type })}>
         {isDisabled ? "0" : value}
-      </div>
+      </span>
     </Button>
   );
 }

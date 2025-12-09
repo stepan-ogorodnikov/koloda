@@ -6,7 +6,7 @@ import { TableSortIcon } from "./table-sort-icon";
 
 export const tableHeadCell = tv({
   extend: tableCell,
-  base: "flex flex-row items-center gap-1 fg-table-head font-semibold",
+  base: "flex flex-row items-center gap-1 fg-table-head font-semibold whitespace-nowrap",
   variants: {
     isSortable: {
       true: "cursor-pointer select-none",
@@ -28,7 +28,7 @@ export function TableHead({ table }: TableHeadProps) {
           {headerGroup.headers.map((header) => (
             <th
               className="text-left"
-              style={{ width: header.getSize() }}
+              style={{ width: `${header.getSize()}rem` }}
               key={header.id}
             >
               <div

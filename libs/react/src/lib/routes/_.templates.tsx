@@ -3,7 +3,7 @@ import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/templates")({
@@ -15,15 +15,17 @@ export const Route = createFileRoute("/_/templates")({
   },
 });
 
-export function TemplatesRoute() {
+function TemplatesRoute() {
   useTitle();
   const { _ } = useLingui();
+  const { pathname } = useLocation();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: ["templates"], ...getTemplatesQuery() });
+  const hasContent = !(pathname === "/templates" || pathname === "/templates/");
 
   return (
     <>
-      <Main.Sidebar>
+      <Main.Sidebar hasContent={hasContent}>
         <Main.Titlebar>
           <Main.H1>
             {_(msg`templates.title`)}
@@ -40,7 +42,7 @@ export function TemplatesRoute() {
           ))
           : null}
       </Main.Sidebar>
-      <Main.Content>
+      <Main.Content hasContent={hasContent}>
         <Outlet />
       </Main.Content>
     </>

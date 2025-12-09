@@ -22,10 +22,14 @@ const reviewValidation = {
 export const selectReviewSchema = createSelectSchema(reviews, reviewValidation);
 export type Review = z.input<typeof selectReviewSchema>;
 
-export type GetReviewsParams = { cardId: Card["id"] | string };
+export type GetReviewsData = { cardId: Card["id"] | string };
 
-export async function getReviews(db: DB, { cardId }: GetReviewsParams) {
-  const result = await db.select().from(reviews).where(eq(reviews.cardId, Number(cardId)));
+export async function getReviews(db: DB, { cardId }: GetReviewsData) {
+  const result = await db
+    .select()
+    .from(reviews)
+    .where(eq(reviews.cardId, Number(cardId)));
+
   return result;
 }
 

@@ -4,7 +4,7 @@ import { LessonInitTd } from "./lesson-init-td";
 export function LessonInitLabel({ children }: PropsWithChildren) {
   return (
     <LessonInitTd>
-      <div className="w-32 text-lg font-semibold">
+      <div className="tb:w-28 pr-4 font-semibold">
         {children}
       </div>
     </LessonInitTd>
