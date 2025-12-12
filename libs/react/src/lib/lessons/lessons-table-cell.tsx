@@ -1,5 +1,5 @@
 import type { Lesson, LessonType } from "@koloda/srs";
-import { Table, tableHeadCell } from "@koloda/ui";
+import { Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { CellContext } from "@tanstack/react-table";
@@ -14,9 +14,13 @@ export function LessonsTableCell({ cell }: LessonTableCellProps) {
 
   if (id === "title") {
     return value === null
-      ? <span className={tableHeadCell()}>{_(msg`lessons.table.columns.title.all`)}</span>
-      : <Table.Cell>{value}</Table.Cell>;
+      ? <Table.CellContent variants={{ type: "head" }}>{_(msg`lessons.table.columns.title.all`)}</Table.CellContent>
+      : <Table.CellContent>{value}</Table.CellContent>;
   }
 
-  return <LessonBadge type={id as LessonType} value={value} deckId={original.id} />;
+  return (
+    <Table.CellContent variants={{ paddings: "none", size: "full" }}>
+      <LessonBadge type={id as LessonType} value={value} deckId={original.id} />
+    </Table.CellContent>
+  );
 }

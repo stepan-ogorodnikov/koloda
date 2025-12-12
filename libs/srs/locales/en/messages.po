@@ -33,6 +33,38 @@ msgstr "New can't be more than total"
 msgid "fields.min-length"
 msgstr "There has to be at least one field"
 
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
+msgid "fsrs.learning-steps.units.days.long"
+msgstr "days"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
+msgid "fsrs.learning-steps.units.days.short"
+msgstr "d"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:11
+msgid "fsrs.learning-steps.units.hours.long"
+msgstr "hours"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:11
+msgid "fsrs.learning-steps.units.hours.short"
+msgstr "h"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:10
+msgid "fsrs.learning-steps.units.minutes.long"
+msgstr "minutes"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:10
+msgid "fsrs.learning-steps.units.minutes.short"
+msgstr "m"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:9
+msgid "fsrs.learning-steps.units.seconds.long"
+msgstr "seconds"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:9
+msgid "fsrs.learning-steps.units.seconds.short"
+msgstr "s"
+
 #: ../../libs/srs/src/lib/templates.ts:16
 msgid "layout.min-length"
 msgstr "There has to be at least one layout item"

@@ -29,4 +29,4 @@ msgstr "Save"
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:45
 msgid "form.updatedAt {0}"
-msgstr "Last updated {0}"
+msgstr "Updated {0}"

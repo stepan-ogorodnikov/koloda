@@ -8,9 +8,7 @@ import { FieldGroup, fieldGroup } from "./field-group";
 import type { TextFieldInputProps } from "./text-field";
 import { textField, TextFieldInput } from "./text-field";
 
-export const numberField = tv({
-  extend: textField,
-});
+export const numberField = tv({ extend: textField });
 
 export type NumberFieldProps = ReactAriaNumberFieldProps & TWVProps<typeof numberField>;
 
@@ -25,14 +23,24 @@ export const numberFieldGroup = tv({
       default: "max-w-48",
     },
   },
-  defaultVariants: { size: "default" },
+  defaultVariants: { size: "default", bordered: true, focusable: true },
 });
 
-export type NumberFieldGroupProps = TextFieldInputProps & TWVProps<typeof numberFieldGroup>;
+export type NumberFieldGroupProps = NumberFieldContentProps & TWVProps<typeof numberFieldGroup>;
 
-export function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
+function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
   return (
     <FieldGroup className={numberFieldGroup(variants)}>
+      <NumberFieldContent {...props} />
+    </FieldGroup>
+  );
+}
+
+export type NumberFieldContentProps = TextFieldInputProps;
+
+function NumberFieldContent(props: TextFieldInputProps) {
+  return (
+    <>
       <NumberFieldInput {...props} />
       <NumberFieldDecrement>
         <MinusIcon className="size-4" />
@@ -40,7 +48,7 @@ export function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) 
       <NumberFieldIncrement>
         <PlusIcon className="size-4" />
       </NumberFieldIncrement>
-    </FieldGroup>
+    </>
   );
 }
 
@@ -66,3 +74,4 @@ NumberField.Input = NumberFieldInput;
 NumberField.Increment = NumberFieldIncrement;
 NumberField.Decrement = NumberFieldDecrement;
 NumberField.Group = NumberFieldGroup;
+NumberField.Content = NumberFieldContent;

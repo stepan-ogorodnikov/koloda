@@ -3,11 +3,13 @@ import { Group, type GroupProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const fieldGroup = tv({
-  base: "flex flex-row",
+  base: "flex flex-row items-center min-w-0 rounded-lg",
   variants: {
-    group: {
+    bordered: {
+      true: "overflow-hidden bg-input fg-level-1 border-input border-2 shadow-input",
+    },
+    focusable: {
       true: "focus-within:focus-ring",
-      false: "overflow-hidden bg-input fg-level-1 border-input border-2 rounded-lg shadow-input focus-ring",
     },
   },
 });

@@ -59,7 +59,6 @@ function MainSidebarItem({ children }: PropsWithChildren) {
   return (
     <div className={mainSidebarItem}>
       {children}
-      <div className={mainSidebarItemFade} />
     </div>
   );
 }

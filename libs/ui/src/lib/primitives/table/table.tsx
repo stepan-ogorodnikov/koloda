@@ -1,7 +1,7 @@
 import type { Table as TanstackTable } from "@tanstack/react-table";
 import type { PropsWithChildren } from "react";
 import { TableBody } from "./table-body";
-import { TableCell } from "./table-cell";
+import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";
 
 type TableProps = { table: TanstackTable<any> };
@@ -26,4 +26,4 @@ function TableRoot({ children }: PropsWithChildren) {
 Table.Root = TableRoot;
 Table.Head = TableHead;
 Table.Body = TableBody;
-Table.Cell = TableCell;
+Table.CellContent = TableCellContent;

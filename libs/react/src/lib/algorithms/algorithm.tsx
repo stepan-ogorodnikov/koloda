@@ -7,6 +7,7 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
 import { DeleteAlgorithm } from "./delete-algorithm";
 
 type AlgorithmProps = { id: string };
@@ -68,7 +69,9 @@ export function Algorithm({ id }: AlgorithmProps) {
         {(field) => (
           <NumberField
             variants={{ layout: "form" }}
-            step={0.001}
+            minValue={70}
+            maxValue={99}
+            step={1}
             value={field.state.value}
             onChange={field.handleChange}
           >
@@ -105,30 +108,12 @@ export function Algorithm({ id }: AlgorithmProps) {
           </TextField>
         )}
       </form.Field>
-      <form.Field name="content.learningSteps">
-        {(field) => (
-          <TextField
-            variants={{ layout: "form" }}
-            value={field.state.value}
-            onChange={field.handleChange}
-          >
-            <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.learning-steps.label`)}</Label>
-            <TextField.Input variants={{ layout: "form" }} />
-          </TextField>
-        )}
-      </form.Field>
-      <form.Field name="content.relearningSteps">
-        {(field) => (
-          <TextField
-            variants={{ layout: "form" }}
-            value={field.state.value}
-            onChange={field.handleChange}
-          >
-            <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.relearning-steps.label`)}</Label>
-            <TextField.Input variants={{ layout: "form" }} />
-          </TextField>
-        )}
-      </form.Field>
+      <FormLayout.Section term={_(msg`algorithm.inputs.learning-steps.label`)}>
+        <AlgorithmLearningSteps type="learningSteps" form={form} />
+      </FormLayout.Section>
+      <FormLayout.Section term={_(msg`algorithm.inputs.relearning-steps.label`)}>
+        <AlgorithmLearningSteps type="relearningSteps" form={form} />
+      </FormLayout.Section>
       <form.Field name="content.maximumInterval">
         {(field) => (
           <NumberField

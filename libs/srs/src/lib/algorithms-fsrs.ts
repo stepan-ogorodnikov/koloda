@@ -1,16 +1,30 @@
+import { msg } from "@lingui/core/macro";
 import { fsrs, generatorParameters } from "ts-fsrs";
 import type { FSRSParameters } from "ts-fsrs";
 import { z } from "zod/v4";
 import { mapObjectProperties } from "./utility";
 import type { ObjectPropertiesMapping } from "./utility";
 
+export const LEARNING_STEPS_UNITS = [
+  { id: "s", short: msg`fsrs.learning-steps.units.seconds.short`, long: msg`fsrs.learning-steps.units.seconds.long` },
+  { id: "m", short: msg`fsrs.learning-steps.units.minutes.short`, long: msg`fsrs.learning-steps.units.minutes.long` },
+  { id: "h", short: msg`fsrs.learning-steps.units.hours.short`, long: msg`fsrs.learning-steps.units.hours.long` },
+  { id: "d", short: msg`fsrs.learning-steps.units.days.short`, long: msg`fsrs.learning-steps.units.days.long` },
+];
+
+const learningStepsValidation = z.array(
+  z.tuple([z.int(), z.literal(["s", "m", "h", "d"])]),
+);
+
 export const algorithmFSRSValidation = z.object({
   type: z.literal("fsrs"),
-  retention: z.number(),
+  retention: z.number().min(70).max(99),
   weights: z.string(),
   isFuzzEnabled: z.boolean(),
-  learningSteps: z.string(),
-  relearningSteps: z.string(),
+  // learningSteps: z.string(),
+  // relearningSteps: z.string(),
+  learningSteps: learningStepsValidation,
+  relearningSteps: learningStepsValidation,
   maximumInterval: z.number(),
 });
 
@@ -18,7 +32,7 @@ export type AlgorithmFSRS = z.infer<typeof algorithmFSRSValidation>;
 
 export const DEFAULT_FSRS_ALGORITHM: AlgorithmFSRS = {
   type: "fsrs",
-  retention: 0.9,
+  retention: 90,
   weights: [
     0.212,
     1.2931,
@@ -42,9 +56,11 @@ export const DEFAULT_FSRS_ALGORITHM: AlgorithmFSRS = {
     0.0658,
     0.1542,
   ].join(", "),
-  isFuzzEnabled: false,
-  learningSteps: ["1m", "10m"].join(", "),
-  relearningSteps: ["10m"].join(", "),
+  isFuzzEnabled: true,
+  // learningSteps: ["1m", "10m"].join(", "),
+  // relearningSteps: ["10m"].join(", "),
+  learningSteps: [[1, "m"], [10, "m"]],
+  relearningSteps: [[10, "m"]],
   maximumInterval: 36500,
 };
 
@@ -58,7 +74,8 @@ const FSRS_ALGORITHM_PROPERTIES: ObjectPropertiesMapping<AlgorithmFSRS, FSRSPara
 } as const;
 
 export function createFSRSAlgorithm(algorithm: AlgorithmFSRS) {
+  const retention = algorithm.retention / 100;
   const weights = algorithm.weights.split(",").map(Number);
-  const params = mapObjectProperties({ ...algorithm, weights }, FSRS_ALGORITHM_PROPERTIES);
+  const params = mapObjectProperties({ ...algorithm, retention, weights }, FSRS_ALGORITHM_PROPERTIES);
   return fsrs(generatorParameters(params));
 }

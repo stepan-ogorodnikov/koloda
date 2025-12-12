@@ -33,6 +33,38 @@ msgstr "Лимит новых карточек не может быть боль
 msgid "fields.min-length"
 msgstr "Необходимо хотя бы одно поле"
 
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
+msgid "fsrs.learning-steps.units.days.long"
+msgstr "д"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
+msgid "fsrs.learning-steps.units.days.short"
+msgstr "дни"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:11
+msgid "fsrs.learning-steps.units.hours.long"
+msgstr "часы"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:11
+msgid "fsrs.learning-steps.units.hours.short"
+msgstr "ч"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:10
+msgid "fsrs.learning-steps.units.minutes.long"
+msgstr "минуты"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:10
+msgid "fsrs.learning-steps.units.minutes.short"
+msgstr "м"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:9
+msgid "fsrs.learning-steps.units.seconds.long"
+msgstr "секунды"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:9
+msgid "fsrs.learning-steps.units.seconds.short"
+msgstr "с"
+
 #: ../../libs/srs/src/lib/templates.ts:16
 msgid "layout.min-length"
 msgstr "Раскладка не может быть пустой"

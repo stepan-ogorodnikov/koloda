@@ -1,12 +1,12 @@
 import { flexRender } from "@tanstack/react-table";
 import type { Table } from "@tanstack/react-table";
 import { tv } from "tailwind-variants";
-import { tableCell } from "./table-cell";
+import { tableCellContent } from "./table-cell-content";
 import { TableSortIcon } from "./table-sort-icon";
 
-export const tableHeadCell = tv({
-  extend: tableCell,
-  base: "flex flex-row items-center gap-1 fg-table-head font-semibold whitespace-nowrap",
+export const tableHeadCellContent = tv({
+  extend: tableCellContent,
+  base: ["flex flex-row items-center gap-1 whitespace-nowrap"],
   variants: {
     isSortable: {
       true: "cursor-pointer select-none",
@@ -33,7 +33,7 @@ export function TableHead({ table }: TableHeadProps) {
             >
               <div
                 {...{
-                  className: tableHeadCell({ isSortable: header.column.getCanSort() }),
+                  className: tableHeadCellContent({ isSortable: header.column.getCanSort(), type: "head" }),
                   onClick: header.column.getToggleSortingHandler(),
                 }}
               >

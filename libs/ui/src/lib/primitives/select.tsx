@@ -1,8 +1,8 @@
-import { Button, button, formLayoutSection, formLayoutSectionContent, Label } from "@koloda/ui";
+import { Button, button, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import { Check, ChevronDown } from "lucide-react";
-import type { ReactNode } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import {
   ListBox,
   ListBoxItem,
@@ -14,6 +14,7 @@ import type {
   ListBoxProps,
   PopoverProps,
   SelectProps as ReactAriaSelectProps,
+  SelectValueProps as ReactAriaSelectValueProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
@@ -67,33 +68,46 @@ const selectButton = tv({
   defaultVariants: { style: "bordered" },
 });
 
-export type SelectButtonProps = TWVProps<typeof selectButton> & ButtonProps & {
+export type SelectButtonProps = TWVProps<typeof selectButton> & ButtonProps & PropsWithChildren & {
   withChevron?: boolean;
   icon?: ReactNode;
 };
 
-function SelectButton({ variants, withChevron = true, icon, ...props }: SelectButtonProps) {
+function SelectButton({ variants, withChevron = true, icon, children, ...props }: SelectButtonProps) {
   return (
     <Button className={selectButton(variants)} {...props}>
-      <ReactAriaSelectValue className="flex flex-row items-center gap-2 truncate">
-        {(state) => (
-          <>
-            {icon}
-            {state.defaultChildren}
-          </>
-        )}
-      </ReactAriaSelectValue>
+      {children || (
+        <SelectValue>
+          {(state) => (
+            <>
+              {icon}
+              {state.defaultChildren}
+            </>
+          )}
+        </SelectValue>
+      )}
       {withChevron && (
         <div aria-hidden="true">
-          <ChevronDown className="size-4" />
+          <ChevronDown className="size-4 min-w-4" />
         </div>
       )}
     </Button>
   );
 }
 
-function SelectPopover(props: PopoverProps) {
-  return <Popover variants={{ class: "flex-col items-stretch w-[var(--trigger-width)]" }} {...props} />;
+function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
+  return <ReactAriaSelectValue className="flex flex-row items-center gap-2 leading-4 truncate" {...props} />;
+}
+
+const selectPopover = tv({
+  extend: popover,
+  base: "flex-col items-stretch w-[var(--trigger-width)]",
+});
+
+type SelectPopoverProps = PopoverProps & TWVProps<typeof selectPopover>;
+
+function SelectPopover({ variants, ...props }: SelectPopoverProps) {
+  return <Popover className={selectPopover(variants)} {...props} />;
 }
 
 const selectListBox = tv({ base: "py-1 rounded-lg" });
@@ -123,7 +137,7 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
       {(state) => (
         <>
           {typeof children === "function" ? children(state) : children}
-          {state.isSelected && <Check className="size-4" aria-hidden="true" />}
+          {state.isSelected && <Check className="size-4 min-w-4" aria-hidden="true" />}
         </>
       )}
     </ListBoxItem>
@@ -132,6 +146,7 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
 
 Select.Root = SelectRoot;
 Select.Button = SelectButton;
+Select.Value = SelectValue;
 Select.Popover = SelectPopover;
 Select.ListBox = SelectListBox;
 Select.ListBoxItem = SelectListBoxItem;

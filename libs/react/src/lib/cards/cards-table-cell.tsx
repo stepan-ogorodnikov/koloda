@@ -25,11 +25,15 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
 
   if (id === "state") {
     return (
-      <Table.Cell>
+      <Table.CellContent>
         <CardState value={value as number} />
-      </Table.Cell>
+      </Table.CellContent>
     );
   }
 
-  return <Table.Cell variants={isDateValue ? { class: "fg-level-4" } : undefined}>{formatted}</Table.Cell>;
+  return (
+    <Table.CellContent variants={isDateValue ? { class: "fg-level-4" } : undefined}>
+      {formatted}
+    </Table.CellContent>
+  );
 }

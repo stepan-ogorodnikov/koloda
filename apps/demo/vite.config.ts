@@ -19,6 +19,7 @@ export default defineConfig(() => ({
     host: "localhost",
   },
   plugins: [
+    nxViteTsPaths(),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -30,7 +31,6 @@ export default defineConfig(() => ({
     }),
     tailwindcss(),
     lingui(),
-    nxViteTsPaths(),
   ],
   // Uncomment this if you are using workers.
   // worker: {

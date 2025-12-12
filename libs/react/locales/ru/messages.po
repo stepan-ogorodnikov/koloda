@@ -99,37 +99,75 @@ msgstr "Новый шаблон"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:145
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:140
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:90
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:103
 msgid "algorithm.inputs.isFuzzEnabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:115
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:121
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:140
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:135
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:127
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:124
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:75
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:88
 msgid "algorithm.inputs.retention.label"
 msgstr "Коэфициент"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:62
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:73
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:103
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:116
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
+
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
+msgid "algorithm.learning-steps.add"
+msgstr "Добавить интервал заучивания"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+msgid "algorithm.learning-steps.amount.{0}"
+msgstr "Количество для интервала заучивания номер {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
+msgid "algorithm.learning-steps.delete.{0}"
+msgstr "Удалить интервал заучивания номер {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+msgid "algorithm.learning-steps.unit.{0}"
+msgstr "Тип временного отрезка для интервала заучивания номер {0}"
+
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:87
+msgid "algorithm.relearning-steps.add"
+msgstr "Добавить интервал переучивания"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:29
+msgid "algorithm.relearning-steps.amount.{0}"
+msgstr "Количество для интервала переучивания номер {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:72
+msgid "algorithm.relearning-steps.delete.{0}"
+msgstr "Удалить интервал переучивания номер {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:45
+msgid "algorithm.relearning-steps.unit.{0}"
+msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
 #: ../../libs/react/src/lib/routes/_.algorithms.tsx:33
 msgid "algorithms.title"
@@ -364,7 +402,7 @@ msgstr "Трудно"
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
-#: ../../libs/react/src/lib/components/learned-today.tsx:37
+#: ../../libs/react/src/lib/components/learned-today.tsx:55
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 

@@ -1,4 +1,5 @@
 import { cardsViewAtom } from "@koloda/react";
+import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
@@ -10,7 +11,7 @@ import { queriesAtom } from "../queries";
 type DeckCardsProps = { deckId: string };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
-  const isMobile = useMediaQuery("(width < 48rem)");
+  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
   const [view, setView] = useAtom(cardsViewAtom);

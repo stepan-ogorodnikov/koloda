@@ -99,37 +99,75 @@ msgstr "New template"
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:145
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:140
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:90
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:103
 msgid "algorithm.inputs.isFuzzEnabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:115
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:121
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:140
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:135
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:127
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:124
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:75
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:88
 msgid "algorithm.inputs.retention.label"
 msgstr "Retention"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:62
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:73
 msgid "algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:103
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:116
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
+
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
+msgid "algorithm.learning-steps.add"
+msgstr "Add learning step"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+msgid "algorithm.learning-steps.amount.{0}"
+msgstr "Amount for learning step number {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
+msgid "algorithm.learning-steps.delete.{0}"
+msgstr "Delete learning step number {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+msgid "algorithm.learning-steps.unit.{0}"
+msgstr "Time period for learning step number {0}"
+
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:87
+msgid "algorithm.relearning-steps.add"
+msgstr "Add relearning step"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:29
+msgid "algorithm.relearning-steps.amount.{0}"
+msgstr "Amount for relearning step number {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:72
+msgid "algorithm.relearning-steps.delete.{0}"
+msgstr "Delete relearning step number {0}"
+
+#. placeholder {0}: i + 1
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:45
+msgid "algorithm.relearning-steps.unit.{0}"
+msgstr "Time period for relearning step number {0}"
 
 #: ../../libs/react/src/lib/routes/_.algorithms.tsx:33
 msgid "algorithms.title"
@@ -364,7 +402,7 @@ msgstr "Hard"
 msgid "language-select.label"
 msgstr "Language"
 
-#: ../../libs/react/src/lib/components/learned-today.tsx:37
+#: ../../libs/react/src/lib/components/learned-today.tsx:55
 msgid "learned-today.title"
 msgstr "Learned today"
 
