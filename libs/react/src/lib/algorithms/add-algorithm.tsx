@@ -7,7 +7,7 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { queriesAtom } from "../queries";
 
 export function AddAlgorithm() {
@@ -15,6 +15,7 @@ export function AddAlgorithm() {
   const { _ } = useLingui();
   const { addAlgorithmMutation } = useAtomValue(queriesAtom);
   const { mutate, isSuccess } = useMutation(addAlgorithmMutation());
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Algorithm["id"] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -40,6 +41,10 @@ export function AddAlgorithm() {
 
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
   const isLinkVisible = !!(isSuccess && newId);
+
+  useEffect(() => {
+    if (newId) linkRef.current?.focus();
+  }, [newId]);
 
   useEffect(() => {
     setNewId(null);
@@ -88,6 +93,7 @@ export function AddAlgorithm() {
               {isLinkVisible && (
                 <Link
                   className={link({ type: "added" })}
+                  ref={linkRef}
                   to="/algorithms/$algorithmId"
                   params={{ algorithmId: newId }}
                   onClick={() => setIsOpen(false)}

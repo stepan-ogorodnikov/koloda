@@ -8,7 +8,7 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { Copy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type CloneAlgorithmProps = { id: string };
 
@@ -17,6 +17,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   const { _ } = useLingui();
   const { cloneAlgorithmMutation } = useAtomValue(queriesAtom);
   const { mutate, isSuccess } = useMutation(cloneAlgorithmMutation());
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Algorithm["id"] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -41,6 +42,10 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
   const isLinkVisible = !!(isSuccess && newId);
+
+  useEffect(() => {
+    if (newId) linkRef.current?.focus();
+  }, [newId]);
 
   useEffect(() => {
     setNewId(null);
@@ -86,6 +91,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
               {isLinkVisible && (
                 <Link
                   className={link({ type: "added" })}
+                  ref={linkRef}
                   to="/algorithms/$algorithmId"
                   params={{ algorithmId: newId }}
                   onClick={() => setIsOpen(false)}

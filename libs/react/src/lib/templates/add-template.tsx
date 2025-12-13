@@ -8,13 +8,14 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function AddTemplate() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { addTemplateMutation } = useAtomValue(queriesAtom);
   const { mutate, isSuccess } = useMutation(addTemplateMutation());
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Template["id"] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -40,6 +41,10 @@ export function AddTemplate() {
 
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
   const isLinkVisible = !!(isSuccess && newId);
+
+  useEffect(() => {
+    if (newId) linkRef.current?.focus();
+  }, [newId]);
 
   useEffect(() => {
     setNewId(null);
@@ -83,6 +88,7 @@ export function AddTemplate() {
               {isLinkVisible && (
                 <Link
                   className={link({ type: "added" })}
+                  ref={linkRef}
                   to="/templates/$templateId"
                   params={{ templateId: newId }}
                   onClick={() => setIsOpen(false)}

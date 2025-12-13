@@ -8,13 +8,14 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function AddDeck() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { addDeckMutation } = useAtomValue(queriesAtom);
   const { mutate, isSuccess } = useMutation(addDeckMutation());
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Deck["id"] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
@@ -40,6 +41,10 @@ export function AddDeck() {
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
   const isLinkVisible = !!(isSuccess && newId);
+
+  useEffect(() => {
+    if (newId) linkRef.current?.focus();
+  }, [newId]);
 
   useEffect(() => {
     setNewId(null);
@@ -91,6 +96,7 @@ export function AddDeck() {
               {isLinkVisible && (
                 <Link
                   className={link({ type: "added" })}
+                  ref={linkRef}
                   to="/decks/$deckId"
                   params={{ deckId: newId }}
                   onClick={() => setIsOpen(false)}

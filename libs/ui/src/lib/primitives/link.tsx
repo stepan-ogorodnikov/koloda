@@ -5,7 +5,10 @@ import { Link as ReactAriaLink } from "react-aria-components";
 import type { LinkProps as ReactAriaLinkProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-export const link = tv({ base: "fg-link animate-colors", variants: { type: { added: "p-2 rounded-lg font-medium" } } });
+export const link = tv({
+  base: "fg-link hover:fg-link-hover focus-ring animate-colors",
+  variants: { type: { added: "p-2 rounded-lg font-medium" } },
+});
 
 export const Link = createLink(
   forwardRef<HTMLAnchorElement, ReactAriaLinkProps>((props, ref) => (
