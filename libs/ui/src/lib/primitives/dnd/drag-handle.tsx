@@ -10,11 +10,11 @@ export function DragHandle(props: DragHandleProps) {
       variants={{
         style: "ghost",
         size: "none",
-        class: "h-10 px-1 rounded-md cursor-grab",
+        class: "h-10 px-1 rounded-md cursor-grab drag-focus-ring",
       }}
       {...props}
     >
-      <GripVertical className="size-5 fg-level-2" />
+      <GripVertical className="size-5 min-w-5 fg-level-2" />
     </Button>
   );
 }

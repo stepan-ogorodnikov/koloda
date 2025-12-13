@@ -36,7 +36,7 @@ export const TemplateFields = withForm({
               }
             }}
           >
-            <div className="divide-y divide-dotted divide-border-main">
+            <div className="flex flex-col gap-2">
               {field.state.value.map((item, i) => (
                 <Draggable id={item.id} index={i} key={item.id}>
                   <form.Field name={`content.fields[${i}].title`}>
@@ -57,7 +57,7 @@ export const TemplateFields = withForm({
               {!isLocked && (
                 <div>
                   <Button
-                    variants={{ style: "ghost", class: "justify-start gap-4.5 w-full px-1" }}
+                    variants={{ style: "dashed", class: "justify-start gap-4 w-full px-1" }}
                     onClick={() => {
                       const id = getNextNumericId(fieldsValue);
                       field.pushValue({ ...DEFAULT_TEMPLATE_FIELD, id });

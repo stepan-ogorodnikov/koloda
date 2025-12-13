@@ -96,7 +96,7 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
 }
 
 function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
-  return <ReactAriaSelectValue className="flex flex-row items-center gap-2 leading-4 truncate" {...props} />;
+  return <ReactAriaSelectValue className="flex flex-row items-center gap-2 truncate" {...props} />;
 }
 
 const selectPopover = tv({

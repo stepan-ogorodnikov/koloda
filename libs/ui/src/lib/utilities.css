@@ -39,6 +39,10 @@
   @apply outline-0 group-data-focus-visible:outline-2 outline-offset-3 outline-focus-ring;
 }
 
+@utility drag-focus-ring {
+  @apply outline-0 data-is-dragging:outline-2 outline-offset-3 outline-focus-ring;
+}
+
 @utility scrollbar-thin {
   scrollbar-width: thin;
 }

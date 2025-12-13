@@ -40,7 +40,7 @@ export const TemplateLayout = withForm({
               }
             }}
           >
-            <div className="divide-y divide-dotted divide-border-main">
+            <div className="flex flex-col gap-2">
               {field.state.value.map((item, i) => (
                 <Draggable id={item.field} index={i} key={item.field}>
                   <div className="flex flex-row flex-wrap">

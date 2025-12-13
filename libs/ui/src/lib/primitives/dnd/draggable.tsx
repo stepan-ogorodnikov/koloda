@@ -12,7 +12,7 @@ export function Draggable({ id, index, children }: DraggableProps) {
 
   return (
     <div
-      className="flex flex-row items-center"
+      className="flex flex-row items-center rounded-lg border-2 border-input"
       ref={ref}
     >
       <DragHandle data-is-dragging={isDragging || undefined} ref={handleRef} />
