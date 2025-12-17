@@ -21,8 +21,6 @@ export const algorithmFSRSValidation = z.object({
   retention: z.number().min(70).max(99),
   weights: z.string(),
   isFuzzEnabled: z.boolean(),
-  // learningSteps: z.string(),
-  // relearningSteps: z.string(),
   learningSteps: learningStepsValidation,
   relearningSteps: learningStepsValidation,
   maximumInterval: z.number(),
@@ -57,8 +55,6 @@ export const DEFAULT_FSRS_ALGORITHM: AlgorithmFSRS = {
     0.1542,
   ].join(", "),
   isFuzzEnabled: true,
-  // learningSteps: ["1m", "10m"].join(", "),
-  // relearningSteps: ["10m"].join(", "),
   learningSteps: [[1, "m"], [10, "m"]],
   relearningSteps: [[10, "m"]],
   maximumInterval: 36500,
@@ -76,6 +72,11 @@ const FSRS_ALGORITHM_PROPERTIES: ObjectPropertiesMapping<AlgorithmFSRS, FSRSPara
 export function createFSRSAlgorithm(algorithm: AlgorithmFSRS) {
   const retention = algorithm.retention / 100;
   const weights = algorithm.weights.split(",").map(Number);
-  const params = mapObjectProperties({ ...algorithm, retention, weights }, FSRS_ALGORITHM_PROPERTIES);
+  const learningSteps = algorithm.learningSteps.map((step) => step.join()).join(", ");
+  const relearningSteps = algorithm.relearningSteps.map((step) => step.join()).join(", ");
+  const params = mapObjectProperties(
+    { ...algorithm, retention, weights, learningSteps, relearningSteps },
+    FSRS_ALGORITHM_PROPERTIES,
+  );
   return fsrs(generatorParameters(params));
 }

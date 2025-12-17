@@ -1,5 +1,5 @@
 import { DEFAULT_FSRS_ALGORITHM, LEARNING_STEPS_UNITS } from "@koloda/srs";
-import { Button, NumberField, Select, withForm } from "@koloda/ui";
+import { Button, FieldGroup, NumberField, Select, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Plus, Trash2 } from "lucide-react";
@@ -17,7 +17,7 @@ export const AlgorithmLearningSteps = withForm({
         {(field) => (
           <div className="flex flex-row flex-wrap gap-2">
             {field.state.value.map((_item, i) => (
-              <div className="flex flex-row items-center h-10 border-2 border-input rounded-lg" key={i}>
+              <FieldGroup variants={{ style: "input" }} key={i}>
                 <form.Field name={`content.${type}[${i}][0]`}>
                   {(field) => (
                     <NumberField
@@ -31,7 +31,7 @@ export const AlgorithmLearningSteps = withForm({
                       value={field.state.value}
                       onChange={field.handleChange}
                     >
-                      <NumberField.Group variants={{ bordered: false }} />
+                      <NumberField.Group variants={{ style: "ghost" }} />
                     </NumberField>
                   )}
                 </form.Field>
@@ -48,8 +48,7 @@ export const AlgorithmLearningSteps = withForm({
                     >
                       <Select.Button variants={{ style: "ghost" }}>
                         <Select.Value>
-                          {({ selectedText }) =>
-                            selectedText}
+                          {({ selectedText }) => selectedText}
                         </Select.Value>
                       </Select.Button>
                       <Select.Popover variants={{ class: "min-w-36" }}>
@@ -77,7 +76,7 @@ export const AlgorithmLearningSteps = withForm({
                 >
                   <Trash2 className="size-4 min-w-4 mx-0.5" />
                 </Button>
-              </div>
+              </FieldGroup>
             ))}
             <Button
               variants={{ style: "dashed", size: "icon" }}

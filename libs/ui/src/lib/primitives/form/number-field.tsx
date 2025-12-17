@@ -23,24 +23,14 @@ export const numberFieldGroup = tv({
       default: "max-w-48",
     },
   },
-  defaultVariants: { size: "default", bordered: true, focusable: true },
+  defaultVariants: { size: "default", style: "input", focusable: true },
 });
 
-export type NumberFieldGroupProps = NumberFieldContentProps & TWVProps<typeof numberFieldGroup>;
+export type NumberFieldGroupProps = Omit<TextFieldInputProps, "variants"> & TWVProps<typeof numberFieldGroup>;
 
 function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
   return (
     <FieldGroup className={numberFieldGroup(variants)}>
-      <NumberFieldContent {...props} />
-    </FieldGroup>
-  );
-}
-
-export type NumberFieldContentProps = TextFieldInputProps;
-
-function NumberFieldContent(props: TextFieldInputProps) {
-  return (
-    <>
       <NumberFieldInput {...props} />
       <NumberFieldDecrement>
         <MinusIcon className="size-4" />
@@ -48,7 +38,7 @@ function NumberFieldContent(props: TextFieldInputProps) {
       <NumberFieldIncrement>
         <PlusIcon className="size-4" />
       </NumberFieldIncrement>
-    </>
+    </FieldGroup>
   );
 }
 
@@ -74,4 +64,3 @@ NumberField.Input = NumberFieldInput;
 NumberField.Increment = NumberFieldIncrement;
 NumberField.Decrement = NumberFieldDecrement;
 NumberField.Group = NumberFieldGroup;
-NumberField.Content = NumberFieldContent;

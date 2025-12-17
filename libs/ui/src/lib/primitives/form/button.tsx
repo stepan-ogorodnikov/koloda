@@ -28,12 +28,12 @@ export const button = tv({
         "disabled:bg-button-primary-disabled disabled:fg-disabled",
       ],
       dashed: [
-        "bg-transparent border-2 border-button-bordered border-dashed fg-level-2",
+        "bg-transparent hover:bg-button-ghost-hover border-2 border-button-bordered border-dashed fg-level-2",
       ],
     },
     size: {
       none: "rounded-lg",
-      icon: "h-10 p-2 rounded-lg",
+      icon: "h-10 min-w-10 p-2 rounded-lg",
       default: "h-10 px-4 rounded-lg",
       small: "h-8 px-3 rounded-md",
     },

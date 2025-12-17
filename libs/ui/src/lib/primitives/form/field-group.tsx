@@ -5,8 +5,10 @@ import { tv } from "tailwind-variants";
 export const fieldGroup = tv({
   base: "flex flex-row items-center min-w-0 rounded-lg",
   variants: {
-    bordered: {
-      true: "overflow-hidden bg-input fg-level-1 border-input border-2 shadow-input",
+    style: {
+      input: "bg-input fg-level-1 border-input border-2 shadow-input",
+      button: "bg-button-primary fg-level-1 border-button-primary border-2 shadow-button-primary",
+      ghost: "",
     },
     focusable: {
       true: "focus-within:focus-ring",

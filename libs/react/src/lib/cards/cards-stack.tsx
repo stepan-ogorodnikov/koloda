@@ -1,5 +1,5 @@
 import type { Deck, Template } from "@koloda/srs";
-import { Button } from "@koloda/ui";
+import { Button, FieldGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ export function CardsStack({ deckId, templateId }: CardsTableProps) {
     <>
       <div className="flex flex-row items-center justify-between gap-2">
         <CardsViewToggle />
-        <div className="flex flex-row gap-1">
+        <FieldGroup variants={{ style: "button" }}>
           <Button
             variants={{ style: "ghost", size: "icon" }}
             aria-label={_(msg`cards-stack.navigation.prev`)}
@@ -44,7 +44,7 @@ export function CardsStack({ deckId, templateId }: CardsTableProps) {
           >
             <ChevronRight className="size-5" />
           </Button>
-        </div>
+        </FieldGroup>
         {cards.length > 0 && (
           <div className="flex flex-row items-center gap-1">
             <span className="text-xl font-semibold">{index + 1}</span>

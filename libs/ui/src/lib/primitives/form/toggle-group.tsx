@@ -10,7 +10,7 @@ export const toggleGroup = tv({
 type ToggleGroupProps = ToggleButtonGroupProps & TWVProps<typeof toggleGroup>;
 
 export function ToggleGroup({ variants, ...props }: ToggleGroupProps) {
-  return <ToggleButtonGroup className={toggleGroup(variants || {})} {...props} />;
+  return <ToggleButtonGroup className={toggleGroup(variants)} {...props} />;
 }
 
 export const toggleGroupItem = tv({
