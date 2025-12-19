@@ -27,11 +27,23 @@ export type Deck = z.infer<typeof selectDeckSchema>;
 export type DeckWithTemplate = Deck & { template: Template };
 export type DeckWithOnlyTitle = Pick<Deck, "id" | "title">;
 
+/**
+ * Retrieves all decks from the database with optional filters
+ * @param db - The database instance
+ * @param filters - Optional SQL filters to apply
+ * @returns Array of deck objects
+ */
 export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
   const result = await db.select().from(decks).where(filters);
   return result as Deck[];
 }
 
+/**
+ * Retrieves a specific deck by ID
+ * @param db - The database instance
+ * @param id - The ID of the deck to retrieve
+ * @returns The deck object if found, null otherwise
+ */
 export async function getDeck(db: DB, id: string | Deck["id"]) {
   try {
     const result = await db.query.decks.findFirst({ where: eq(decks.id, Number(id)) });
@@ -45,6 +57,12 @@ export async function getDeck(db: DB, id: string | Deck["id"]) {
 export const insertDeckSchema = createInsertSchema(decks, deckValidation).omit(TIMESTAMPS);
 export type InsertDeckData = z.infer<typeof insertDeckSchema>;
 
+/**
+ * Adds a new deck to the database
+ * @param db - The database instance
+ * @param data - The deck data to insert
+ * @returns The created deck object
+ */
 export async function addDeck(db: DB, data: InsertDeckData) {
   try {
     const result = await db.insert(decks).values(data).returning();
@@ -59,6 +77,13 @@ export const updateDeckSchema = createUpdateSchema(decks);
 export type UpdateDeckValues = z.input<typeof updateDeckSchema>;
 export type UpdateDeckData = UpdateData<Deck, "id", UpdateDeckValues>;
 
+/**
+ * Updates an existing deck in the database
+ * @param db - The database instance
+ * @param id - The ID of the deck to update
+ * @param values - The updated deck values
+ * @returns The updated deck object
+ */
 export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   try {
     const payload = updateDeckSchema.parse(values);
@@ -75,24 +100,14 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   }
 }
 
-export const cloneDeckSchema = insertDeckSchema.pick({ title: true }).extend({ sourceId: z.string() });
-export type CloneDeckData = z.infer<typeof cloneDeckSchema>;
-
-export async function cloneDeck(db: DB, { title, sourceId }: CloneDeckData) {
-  try {
-    const sourceDeck = await getDeck(db, sourceId);
-    if (!sourceDeck) throw ("Source deck not found");
-    const data = insertDeckSchema.parse({ ...sourceDeck, title });
-    const result = await addDeck(db, data);
-    return result;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
-
 export type DeleteDeckData = Pick<Deck, "id">;
 
+/**
+ * Deletes a deck from the database
+ * @param db - The database instance
+ * @param id - The ID of the deck to delete
+ * @returns The result of the database delete operation
+ */
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
   try {
     const result = await db.delete(decks).where(eq(decks.id, Number(id)));

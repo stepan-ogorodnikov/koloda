@@ -15,12 +15,20 @@ import type { I18nContext } from "@lingui/react";
 import { sql } from "drizzle-orm";
 import { db, migrations, MIGRATIONS_TABLE } from "./db";
 
+/**
+ * Gets the current status of the database
+ * @returns "blank" if no migrations have been applied, "ok" otherwise
+ */
 export async function getStatus() {
   const appliedMigrations = await getMigrations();
   if (appliedMigrations.length === 0) return "blank";
   return "ok";
 }
 
+/**
+ * Retrieves the list of applied database migrations
+ * @returns Array of migration records
+ */
 async function getMigrations() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
@@ -34,6 +42,9 @@ async function getMigrations() {
   return result?.rows;
 }
 
+/**
+ * Applies missing database migrations
+ */
 export async function migrate() {
   const appliedMigrations = await getMigrations();
 
@@ -52,6 +63,12 @@ export async function migrate() {
 
 type SetupFromScratchData = Partial<InterfaceSettings> & { t: I18nContext["_"] };
 
+/**
+ * Sets up the application from scratch by applying migrations,
+ * creating default algorithm and template, and configuring settings
+ * @param data - Configuration data including interface settings and translation function
+ * @returns Promise resolving to true if setup was successful, false otherwise
+ */
 export async function setupFromScratch({ t, ...settings }: SetupFromScratchData) {
   try {
     await migrate();

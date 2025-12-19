@@ -3,7 +3,6 @@ import type {
   AllowedSettings,
   Card,
   CloneAlgorithmData,
-  CloneDeckData,
   CloneTemplateData,
   Deck,
   DeckWithOnlyTitle,
@@ -56,7 +55,6 @@ export type Queries = {
   getDecksQuery: () => QueryOptions<Deck[] | undefined>;
   getDeckQuery: (id: string) => QueryOptions<Deck | null | undefined>;
   addDeckMutation: () => UseMutationOptions<Deck | undefined, Error, InsertDeckData, unknown>;
-  cloneDeckMutation: () => UseMutationOptions<Deck | undefined, Error, CloneDeckData, unknown>;
   updateDeckMutation: () => UseMutationOptions<Deck | undefined, Error, UpdateDeckData, unknown>;
   deleteDeckMutation: () => UseMutationOptions<unknown, Error, DeleteDeckData, unknown>;
   getTemplatesQuery: () => QueryOptions<Template[]>;

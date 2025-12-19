@@ -1,7 +1,6 @@
 import type { Queries } from "@koloda/react";
 import type {
   CloneAlgorithmData,
-  CloneDeckData,
   CloneTemplateData,
   DB,
   DeleteAlgorithmData,
@@ -33,7 +32,6 @@ import {
   addReview,
   addTemplate,
   cloneAlgorithm,
-  cloneDeck,
   cloneTemplate,
   deleteAlgorithm,
   deleteCard,
@@ -90,7 +88,6 @@ export const queriesFn = (db: DB): Queries => ({
   getDecksQuery: () => ({ queryFn: () => getDecks(db) }),
   getDeckQuery: (id: string) => ({ queryFn: () => getDeck(db, id) }),
   addDeckMutation: () => ({ mutationFn: (data: InsertDeckData) => addDeck(db, data) }),
-  cloneDeckMutation: () => ({ mutationFn: (data: CloneDeckData) => cloneDeck(db, data) }),
   updateDeckMutation: () => ({ mutationFn: (data: UpdateDeckData) => updateDeck(db, data) }),
   deleteDeckMutation: () => ({ mutationFn: (data: DeleteDeckData) => deleteDeck(db, data) }),
   getTemplatesQuery: () => ({ queryFn: () => getTemplates(db) }),

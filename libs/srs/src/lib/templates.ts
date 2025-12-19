@@ -68,6 +68,12 @@ export const DEFAULT_TEMPLATE_FIELD: TemplateField = {
   isRequired: true,
 };
 
+/**
+ * Gets the title of a template field by its ID
+ * @param fields - Array of template fields
+ * @param id - The ID of the field to find
+ * @returns The title of the field if found, undefined otherwise
+ */
 export function getTemplateFieldTitleById(
   fields: Template["content"]["fields"],
   id: Template["content"]["fields"][number]["id"],
@@ -75,6 +81,11 @@ export function getTemplateFieldTitleById(
   return fields.find((x) => x.id === id)?.title;
 }
 
+/**
+ * Retrieves all templates from the database
+ * @param db - The database instance
+ * @returns Array of Template objects
+ */
 export async function getTemplates(db: DB) {
   try {
     const result = await db
@@ -88,6 +99,12 @@ export async function getTemplates(db: DB) {
   }
 }
 
+/**
+ * Retrieves a specific template by ID
+ * @param db - The database instance
+ * @param id - The ID of the template to retrieve
+ * @returns The template object if found, null otherwise
+ */
 export async function getTemplate(db: DB, id: Template["id"] | string) {
   try {
     const result = await db
@@ -111,6 +128,12 @@ export async function getTemplate(db: DB, id: Template["id"] | string) {
 export const insertTemplateSchema = createInsertSchema(templates, templatesValidation).omit(TIMESTAMPS);
 export type InsertTemplateData = z.input<typeof insertTemplateSchema>;
 
+/**
+ * Adds a new template to the database
+ * @param db - The database instance
+ * @param data - The template data to insert
+ * @returns The created Template object
+ */
 export async function addTemplate(db: DB, data: InsertTemplateData) {
   try {
     const result = await db.insert(templates).values(data).returning();
@@ -125,6 +148,13 @@ export const updateTemplateSchema = createUpdateSchema(templates, templatesValid
 export type UpdateTemplateValues = z.input<typeof updateTemplateSchema>;
 export type UpdateTemplateData = UpdateData<Template, "id", UpdateTemplateValues>;
 
+/**
+ * Updates an existing template in the database
+ * @param db - The database instance
+ * @param id - The ID of the template to update
+ * @param values - The updated template values
+ * @returns The updated template object
+ */
 export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData) {
   try {
     const payload = updateTemplateSchema.parse(values);
@@ -149,6 +179,12 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
   }
 }
 
+/**
+ * Validates that locked template fields have not been modified inappropriately
+ * @param original - The original template fields
+ * @param updated - The updated template fields
+ * @returns Object containing validation result and any errors found
+ */
 function validateLockedTemplateFields(original: TemplateField[], updated: TemplateField[]) {
   const errors: string[] = [];
 
@@ -186,6 +222,13 @@ function validateLockedTemplateFields(original: TemplateField[], updated: Templa
 export const cloneTemplateSchema = insertTemplateSchema.pick({ title: true }).extend({ sourceId: z.string() });
 export type CloneTemplateData = z.infer<typeof cloneTemplateSchema>;
 
+/**
+ * Clones an existing template with a new title
+ * @param db - The database instance
+ * @param title - The new title for the cloned template
+ * @param sourceId - The ID of the source template to clone
+ * @returns The created template object
+ */
 export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateData) {
   try {
     const sourceTemplate = await getTemplate(db, sourceId);
@@ -201,6 +244,12 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
 
 export type DeleteTemplateData = Pick<Template, "id">;
 
+/**
+ * Deletes a template from the database
+ * @param db - The database instance
+ * @param id - The ID of the template to delete
+ * @returns The result of the database delete operation
+ */
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   try {
     const template = await getTemplate(db, id);
@@ -215,6 +264,12 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   }
 }
 
+/**
+ * Retrieves all decks associated with a specific template
+ * @param db - The database instance
+ * @param id - The ID of the template
+ * @returns Array of decks with only ID and title
+ */
 export async function getTemplateDecks(db: DB, { id }: DeleteTemplateData) {
   try {
     const result = await db

@@ -31,6 +31,13 @@ export type Lesson = Record<LessonType, number> & {
 
 export type LessonFilters = { deckIds?: (Deck["id"] | string)[] };
 
+/**
+ * Retrieves lesson card counts ready to learn by type (untouched, learn, review, total) for decks
+ * @param db - The database instance
+ * @param dueAt - The timestamp to check card due status against
+ * @param filters - Optional filters to apply to the query
+ * @returns Array of objects with counts per deck where the first row is sum of the rest of the rows
+ */
 export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}) {
   try {
     const filtersSQL = filters.deckIds?.length
@@ -71,6 +78,14 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
 export type LessonAmounts = Record<LessonType, number>;
 export type LessonCard = Pick<Card, "id" | "state" | "content" | "deckId">;
 
+/**
+ * Retrieves cards for a lesson based on due time, filters and amounts
+ * @param db - The database instance
+ * @param dueAt - The date to check card due status against
+ * @param filters - Filters to apply to the query
+ * @param amounts - The number of cards to retrieve for each lesson type
+ * @returns Array of cards for the lesson
+ */
 export async function getLessonCards(
   db: DB,
   dueAt: Date,
@@ -108,6 +123,12 @@ export async function getLessonCards(
   }
 }
 
+/**
+ * Retrieves the algorithms used by given decks
+ * @param db - The database instance
+ * @param deckIds - Array of deck IDs to retrieve algorithms for
+ * @returns Array of algorithms used by the specified decks
+ */
 export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
   try {
     if (!deckIds.length) return Promise.resolve([]);
@@ -133,6 +154,12 @@ export type LessonTemplate = Modify<Template, {
   layout: LessonTemplateLayoutItem[];
 }>;
 
+/**
+ * Retrieves the templates used by given decks
+ * @param db - The database instance
+ * @param deckIds - Array of deck IDs to retrieve templates for
+ * @returns Array of templates used by the specified decks
+ */
 export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
   try {
     if (!deckIds.length) return Promise.resolve([]);
@@ -164,6 +191,14 @@ export type GetLessonDataParams = {
 
 export type LessonData = NonNullable<Awaited<ReturnType<typeof getLessonData>>>;
 
+/**
+ * Retrieves all data needed for a lesson (cards, decks, templates, algorithms)
+ * @param db - The database instance
+ * @param dueAt - The timestamp to check card due status against
+ * @param filters - Filters to apply to the query
+ * @param amounts - The number of cards to retrieve for each lesson type
+ * @returns Object containing lesson cards, decks, templates, and algorithms, or null if any are missing
+ */
 export async function getLessonData(
   db: DB,
   dueAt: Date,
@@ -190,6 +225,13 @@ export type LessonResultData = {
   review: InsertReviewData;
 };
 
+/**
+ * Submits a lesson result for a single card by updating card data and adding a review
+ * @param db - The database instance
+ * @param card - The card with updated data
+ * @param review - The review data to insert
+ * @returns The inserted review object
+ */
 export async function submitLessonResult(db: DB, { card, review }: LessonResultData) {
   try {
     const { id, ...data } = card;

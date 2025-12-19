@@ -21,6 +21,12 @@ export type AllowedSettings<T extends SettingsName> = Omit<Settings, "name" | "c
 export const selectSettingsSchema = createSelectSchema(settings);
 export type Settings = z.input<typeof selectSettingsSchema>;
 
+/**
+ * Retrieves settings by name from the database
+ * @param db - The database instance
+ * @param name - The name of the settings to retrieve
+ * @returns The settings object if found, undefined otherwise
+ */
 export async function getSettings<T extends SettingsName>(
   db: DB,
   name: SettingsName,
@@ -34,6 +40,13 @@ export type SetSettingsData<T extends SettingsName> = {
   content: SettingsContent<T>;
 };
 
+/**
+ * Sets settings in the database, updating if already exist
+ * @param db - The database instance
+ * @param name - The name of the settings
+ * @param content - The settings content to store
+ * @returns The stored settings object
+ */
 export async function setSettings<T extends SettingsName>(db: DB, { name, content }: SetSettingsData<T>) {
   try {
     const result = await db
@@ -54,6 +67,13 @@ export type PatchSettingsData<T extends SettingsName> = {
   content: DeepPartial<SettingsContent<T>>;
 };
 
+/**
+ * Patches existing settings by merging new content with existing content
+ * @param db - The database instance
+ * @param name - The name of the settings to patch
+ * @param content - The partial settings content to merge
+ * @returns The updated settings object
+ */
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
   try {
     const result = await db

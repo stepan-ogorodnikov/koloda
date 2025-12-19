@@ -26,6 +26,11 @@ export const algorithmsValidation = {
 export const selectAlgorithmSchema = createSelectSchema(algorithms);
 export type Algorithm = z.infer<typeof selectAlgorithmSchema> & { content: z.infer<typeof algorithmFSRSValidation> };
 
+/**
+ * Retrieves all algorithms from the database
+ * @param db - The database instance
+ * @returns Array of algorithm objects
+ */
 export async function getAlgorithms(db: DB) {
   try {
     const result = await db.select().from(algorithms);
@@ -36,6 +41,12 @@ export async function getAlgorithms(db: DB) {
   }
 }
 
+/**
+ * Retrieves a specific algorithm by ID from the database
+ * @param db - The database instance
+ * @param id - The ID of the algorithm to retrieve
+ * @returns The algorithm object if found, null otherwise
+ */
 export async function getAlgorithm(db: DB, id: Algorithm["id"] | string) {
   try {
     const result = await db.select().from(algorithms).where(eq(algorithms.id, Number(id))).limit(1);
@@ -46,6 +57,11 @@ export async function getAlgorithm(db: DB, id: Algorithm["id"] | string) {
   }
 }
 
+/**
+ * Retrieves the default algorithm from the database
+ * @param db - The database instance
+ * @returns The default algorithm object
+ */
 export async function getDefaultAlgorithm(db: DB) {
   try {
     const result = await db.select().from(algorithms).limit(1);
@@ -59,6 +75,12 @@ export async function getDefaultAlgorithm(db: DB) {
 export const insertAlgorithmSchema = createInsertSchema(algorithms, algorithmsValidation).omit(TIMESTAMPS);
 export type InsertAlgorithmData = z.infer<typeof insertAlgorithmSchema>;
 
+/**
+ * Adds a new algorithm to the database
+ * @param db - The database instance
+ * @param data - The algorithm data to insert
+ * @returns The created algorithm object
+ */
 export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
   try {
     const result = await db.insert(algorithms).values(data).returning();
@@ -73,6 +95,13 @@ export const updateAlgorithmSchema = createUpdateSchema(algorithms, algorithmsVa
 export type UpdateAlgorithmValues = z.infer<typeof updateAlgorithmSchema>;
 export type UpdateAlgorithmData = UpdateData<Algorithm, "id", UpdateAlgorithmValues>;
 
+/**
+ * Updates an existing algorithm in the database
+ * @param db - The database instance
+ * @param id - The ID of the algorithm to update
+ * @param values - The updated algorithm values
+ * @returns The updated algorithm object
+ */
 export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmData) {
   try {
     const payload = updateAlgorithmSchema.parse(values);
@@ -92,6 +121,13 @@ export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmDat
 export type CloneAlgorithmData = z.infer<typeof cloneAlgorithmSchema>;
 export const cloneAlgorithmSchema = insertAlgorithmSchema.pick({ title: true }).extend({ sourceId: z.string() });
 
+/**
+ * Clones an existing algorithm with a new title
+ * @param db - The database instance
+ * @param title - The new title for the cloned algorithm
+ * @param sourceId - The ID of the source algorithm to clone
+ * @returns The created algorithm object
+ */
 export async function cloneAlgorithm(db: DB, { title, sourceId }: CloneAlgorithmData) {
   try {
     const sourceAlgorithm = await getAlgorithm(db, sourceId);
@@ -110,6 +146,13 @@ export type DeleteAlgorithmData = {
   successorId?: Algorithm["id"] | string | null;
 };
 
+/**
+ * Deletes an algorithm from the database, optionally replacing it with another algorithm in associated decks
+ * @param db - The database instance
+ * @param id - The ID of the algorithm to delete
+ * @param successorId - Optional ID of the algorithm to replace the deleted one in decks
+ * @returns The result of the database delete operation
+ */
 export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorithmData) {
   try {
     const algorithmDecks = await getAlgorithmDecks(db, id);
@@ -135,6 +178,12 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
   }
 }
 
+/**
+ * Retrieves all decks associated with a specific algorithm
+ * @param db - The database instance
+ * @param id - The ID of the algorithm
+ * @returns Array of decks with only ID and title
+ */
 export async function getAlgorithmDecks(db: DB, id: Algorithm["id"] | string) {
   try {
     const result = await db

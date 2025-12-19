@@ -69,6 +69,11 @@ const FSRS_ALGORITHM_PROPERTIES: ObjectPropertiesMapping<AlgorithmFSRS, FSRSPara
   maximumInterval: "maximum_interval",
 } as const;
 
+/**
+ * Creates ts-fsrs algorithm instance from stored algorithm data
+ * @param algorithm - Algorithm data ('content' column)
+ * @returns ts-fsrs algorithm instance
+ */
 export function createFSRSAlgorithm(algorithm: AlgorithmFSRS) {
   const retention = algorithm.retention / 100;
   const weights = algorithm.weights.split(",").map(Number);

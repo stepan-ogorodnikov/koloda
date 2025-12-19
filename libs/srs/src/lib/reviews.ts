@@ -24,6 +24,12 @@ export type Review = z.input<typeof selectReviewSchema>;
 
 export type GetReviewsData = { cardId: Card["id"] | string };
 
+/**
+ * Retrieves all reviews for a specific card
+ * @param db - The database instance
+ * @param cardId - The ID of the card to retrieve reviews for
+ * @returns Array of review objects
+ */
 export async function getReviews(db: DB, { cardId }: GetReviewsData) {
   const result = await db
     .select()
@@ -36,6 +42,12 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
 export const insertReviewSchema = createInsertSchema(reviews, reviewValidation).omit(TIMESTAMPS);
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
 
+/**
+ * Adds a new review to the database
+ * @param db - The database instance
+ * @param data - The review data to insert
+ * @returns The created review object
+ */
 export async function addReview(db: DB, data: InsertReviewData) {
   try {
     const result = await db.insert(reviews).values(data).returning();
@@ -46,6 +58,12 @@ export async function addReview(db: DB, data: InsertReviewData) {
   }
 }
 
+/**
+ * Calculates the datetime range for the current learning day based on the dayStartsAt from learning settings
+ * @param dayStartsAt - Time in 'hh:mm' format when the learning day starts
+ * @returns Object containing 'from' and 'to' timestamps in ISO string format
+ * @throws {Error} If dayStartsAt is not in 'hh:mm' format or out of range
+ */
 export async function getCurrentLearningDayRange(dayStartsAt: string) {
   const match = dayStartsAt.match(/^(\d{2}):(\d{2})$/);
   if (!match) throw new Error("dayStartsAt must be 'hh:mm'");
@@ -96,6 +114,13 @@ type GetReviewTotalsProps = {
 
 type ReviewTotals = Record<LessonType, number>;
 
+/**
+ * Gets the totals of different types of reviews within a date range
+ * @param db - The database instance
+ * @param from - Start datetime for the query
+ * @param to - End datetime for the query
+ * @returns Review totals object containing counts for every lesson type + total
+ */
 export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps) {
   try {
     const result = await db.execute(sql`
@@ -116,17 +141,23 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
   }
 }
 
+/**
+ * Gets the review totals for the current learning day
+ * @param db - The database instance
+ * @returns Object containing daily limits, review totals, and metadata about limits
+ * @throws {Error} If can't get learning settings or review totals
+ */
 export async function getTodaysReviewTotals(db: DB) {
   const learningSettings = await getSettings(db, "learning");
   const content = learningSettingsValidation.parse(learningSettings?.content);
-  if (!learningSettingsValidation.parse(content)) throw ("Can't parse learning settings");
+  if (!learningSettingsValidation.parse(content)) throw new Error("Can't parse learning settings");
   // convert 0 to Infinity
   const dailyLimits = Object.fromEntries(
     Object.entries(content.dailyLimits).map(([key, value]) => [key, value || Infinity]),
   );
   const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
   const reviewTotals = await getReviewTotals(db, { from, to });
-  if (!reviewTotals) throw ("Error while querying for review totals");
+  if (!reviewTotals) throw new Error("Error while querying for review totals");
   const { untouched, learn, review, total } = reviewTotals;
   const meta = {
     isUntouchedOverTheLimit: (untouched > 0) && (untouched > dailyLimits.untouched || total > dailyLimits.total),
@@ -145,6 +176,11 @@ const FSRS_REVIEW_PROPERTIES: ObjectPropertiesMapping<Review, ReviewFSRS> = {
   scheduledDays: "scheduled_days",
 } as const;
 
+/**
+ * Creates a review object from an FSRS review object
+ * @param input - The FSRS review object to convert
+ * @returns The converted review object
+ */
 export function createReviewFromReviewFSRS(input: ReviewFSRS) {
   return mapObjectPropertiesReverse(input, FSRS_REVIEW_PROPERTIES) as Omit<InsertReviewData, "cardId" | "isIgnored">;
 }
