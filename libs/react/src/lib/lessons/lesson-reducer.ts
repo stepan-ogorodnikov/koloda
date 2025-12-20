@@ -31,34 +31,46 @@ export type LessonReducerState = {
     isInitDataReady?: boolean;
     isError?: boolean;
   };
-  filters?: LessonFilters;
+  // values that define decks to study
   params?: LessonAtomValue;
+  // object to pass to lesson query based on params above
+  filters?: LessonFilters;
+  // available amounts of cards to study of each type for each deck and all decks in total
   lessons?: Lesson[];
+  // daily limits and review counts for current learning day
   todayReviewTotals?: TodaysReviewTotals;
+  // counts of cards for each type to study for this lesson
   amounts?: LessonAmounts;
+  // data required for a lesson (decks, cards, algorithms, templates)
   data?: LessonData;
+  // data related to the card that is being studied
   content?: {
-    // index of current card to study (in draft.data.cards)
+    // index of current card to study (in state.data.cards)
     index: number;
+    // form data for certain operations, e.g., 'type'
     form: {
       data: Record<number | string, string>;
       isSubmitted: boolean;
     };
     card: Card;
     template: LessonTemplate;
+    // array of grades from ts-fsrs in order: [Again, Hard, Good, Easy]
     grades: CardGrade[];
-    // counts of cards by types
-    progress?: {
-      done: LessonAmounts;
-      pending: LessonAmounts;
-    };
   };
+  // counts of cards of each type that are studied | to study
+  progress?: {
+    done: LessonAmounts;
+    pending: LessonAmounts;
+  };
+  // data related to uploading results of studied cards
   upload: {
+    // array of records to upload
     queue: {
       index: number;
       card: Card;
       review: InsertReviewData;
     }[];
+    // results of upload operations
     log: Record<number, LessonResultUploadStatus>;
   };
 };
@@ -78,7 +90,7 @@ const actions = {
   terminationRequested,
   paramsSet,
   todayReviewTotalsReceived,
-  lessonsDataReceived,
+  lessonsReceived,
   amountUpdated,
   lessonStarted,
   lessonDataReceived,
@@ -88,6 +100,10 @@ const actions = {
   resultUploaded,
 };
 
+/**
+ * Controls open/closed state for lesson modal
+ * Since root lesson components stays mounted resets reducer state on close
+ */
 function isOpenUpdated(draft: LessonReducerState, payload: boolean) {
   draft.meta.isOpen = payload;
   if (payload === false) {
@@ -103,10 +119,17 @@ function isOpenUpdated(draft: LessonReducerState, payload: boolean) {
   }
 }
 
+/**
+ * Sets termination request status for close dialog
+ */
 function terminationRequested(draft: LessonReducerState, payload: boolean) {
   draft.meta.isTerminationRequested = payload;
 }
 
+/**
+ * Sets lesson params received from lesson init form
+ * Makes filters for lesson query based on these params
+ */
 function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
   if (draft.meta.status === "init") {
     draft.meta.isOpen = true;
@@ -116,6 +139,9 @@ function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
   }
 }
 
+/**
+ * Calculates initial amounts of cards of each type for lesson init form
+ */
 function setupInitData(draft: LessonReducerState) {
   const { params, lessons, todayReviewTotals, amounts } = draft;
   if (!params || !lessons || !todayReviewTotals || amounts) return;
@@ -146,16 +172,29 @@ function setupInitData(draft: LessonReducerState) {
   }
 }
 
+/**
+ * Calculates the number of lesson cards based on available cards and daily limits
+ * @param available - The number of available cards of a specific type
+ * @param diff - The difference between daily limit and currently available cards
+ * @param remainder - The remainder of available total spots for cards
+ * @returns The calculated amount of cards to add to the lesson
+ */
 function getLessonCardsAmount(available: number, diff: number, remainder: number) {
   return available > minNumber(diff, remainder) ? minNumber(diff, remainder) : available;
 }
 
+/**
+ * Sets review totals for today received from storage
+ */
 function todayReviewTotalsReceived(draft: LessonReducerState, payload: TodaysReviewTotals) {
   draft.todayReviewTotals = payload;
   setupInitData(draft);
 }
 
-function lessonsDataReceived(draft: LessonReducerState, payload: Lesson[]) {
+/**
+ * Sets lessons data received from storage
+ */
+function lessonsReceived(draft: LessonReducerState, payload: Lesson[]) {
   draft.lessons = payload;
   setupInitData(draft);
 }
@@ -165,6 +204,9 @@ type AmountUpdatedPayload = {
   value: number;
 };
 
+/**
+ * Updates the lesson card amount for a specific type and recalculates total
+ */
 function amountUpdated(draft: LessonReducerState, { type, value }: AmountUpdatedPayload) {
   if (draft.amounts) {
     draft.amounts[type] = value;
@@ -173,16 +215,28 @@ function amountUpdated(draft: LessonReducerState, { type, value }: AmountUpdated
   }
 }
 
+/**
+ * Marks lesson as started
+ */
 function lessonStarted(draft: LessonReducerState) {
   draft.meta.status = "started";
 }
 
+/**
+ * Sets data required for current lesson (decks, cards, algorithms, templates)
+ */
 function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
   if (draft.content) return;
   draft.data = payload;
   moveToNextCard(draft);
 }
 
+/**
+ * Increments index of currently studied card (sets to 0 on the first call)
+ * Sets 'content' state with data related to that card
+ * Updates lesson progress data
+ * If there are no more cards, sets the lesson status to 'finished'
+ */
 function moveToNextCard(draft: LessonReducerState) {
   if (!draft.data) return;
 
@@ -226,6 +280,9 @@ function moveToNextCard(draft: LessonReducerState) {
   updateProgressAmounts(draft);
 }
 
+/**
+ * Marks current card as submitted
+ */
 function cardSubmitted(draft: LessonReducerState) {
   if (draft.content && !draft.content?.form.isSubmitted) draft.content.form.isSubmitted = true;
 }
@@ -235,10 +292,18 @@ type CardFormUpdatedPayload = {
   value: string;
 };
 
+/**
+ * Updates value for a single field in form data for current card
+ */
 function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpdatedPayload) {
   if (draft.content) draft.content.form.data[key] = value;
 }
 
+/**
+ * Submits grade for current card
+ * Adds card and review to the upload queue
+ * Proceeds to next card if any
+ */
 function gradeSelected(draft: LessonReducerState, payload: number) {
   if (draft.content) {
     const grade = draft.content.grades[payload];
@@ -253,6 +318,9 @@ function gradeSelected(draft: LessonReducerState, payload: number) {
   }
 }
 
+/**
+ * Updates the progress data for every lesson type
+ */
 function updateProgressAmounts(draft: LessonReducerState) {
   if (!draft?.data?.cards || !draft.content) return;
   const index = draft?.content?.index || 0;
@@ -271,7 +339,7 @@ function updateProgressAmounts(draft: LessonReducerState) {
       }
     }
   });
-  draft.content.progress = { done, pending };
+  draft.progress = { done, pending };
 }
 
 type ResultUploadedPayload = {
@@ -279,6 +347,10 @@ type ResultUploadedPayload = {
   status: LessonResultUploadStatus;
 };
 
+/**
+ * Updates the upload queue and log when a review result has been uploaded
+ * Removes the entry from the queue and adds result of upload operation to log
+ */
 function resultUploaded(draft: LessonReducerState, payload: ResultUploadedPayload) {
   const queueIndex = draft.upload.queue.findIndex(({ index }) => index === payload.index);
   if (queueIndex !== -1) {

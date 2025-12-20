@@ -5,9 +5,9 @@ const lessonProgressAmountSign = "pb-0.5 font-normal";
 type LessonProgressAmountsProps = { state: LessonReducerState };
 
 export function LessonProgressAmounts({ state }: LessonProgressAmountsProps) {
-  if (!state.content?.progress) return null;
+  if (!state.progress) return null;
 
-  const { done, pending } = state.content.progress;
+  const { done, pending } = state.progress;
 
   return (
     <div className="text-lg font-semibold tracking-wider">

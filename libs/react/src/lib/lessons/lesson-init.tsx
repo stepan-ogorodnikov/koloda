@@ -41,7 +41,7 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
   }, [dispatch, learnedToday]);
 
   useEffect(() => {
-    if (lessons) dispatch(["lessonsDataReceived", lessons]);
+    if (lessons) dispatch(["lessonsReceived", lessons]);
   }, [dispatch, lessons]);
 
   if (!state.todayReviewTotals || !state.lessons || !state.amounts) return null;
