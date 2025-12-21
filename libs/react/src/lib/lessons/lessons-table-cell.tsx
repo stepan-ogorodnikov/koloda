@@ -19,7 +19,7 @@ export function LessonsTableCell({ cell }: LessonTableCellProps) {
   }
 
   return (
-    <Table.CellContent variants={{ paddings: "none", size: "full" }}>
+    <Table.CellContent variants={{ paddings: "none", size: "full", class: "overflow-visible" }}>
       <LessonBadge type={id as LessonType} value={value} deckId={original.id} />
     </Table.CellContent>
   );

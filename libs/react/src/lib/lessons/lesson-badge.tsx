@@ -5,13 +5,13 @@ import { tv } from "tailwind-variants";
 import { lessonAtom } from "./lesson";
 
 export const lessonBadge = [
-  "group flex items-center w-full h-full text-left hover:bg-button-ghost-hover",
+  "group flex items-center w-full h-full px-1 max-tb:py-2 text-left hover:bg-button-ghost-hover",
   "cursor-pointer disabled:cursor-default no-focus-ring",
 ].join(" ");
 
 export const lessonBadgeContent = tv({
   base: [
-    "w-full px-2 max-tb:py-2 group-focus-ring rounded-sm",
+    "w-full px-1 group-focus-ring rounded-sm",
     "font-semibold text-lg leading-6 group-disabled:fg-level-4 max-tb:text-center",
   ],
   variants: {
