@@ -1,5 +1,5 @@
 import { parseTime } from "@internationalized/date";
-import { AlgorithmPicker, queriesAtom, TemplatePicker, useTitle } from "@koloda/react";
+import { AlgorithmPicker, queriesAtom, settingQueryKeys, TemplatePicker, useTitle } from "@koloda/react";
 import type { LearningSettings } from "@koloda/srs";
 import { learningSettingsMessages, learningSettingsValidation as schema } from "@koloda/srs";
 import { formLayout, Label, NumberField, TimeField, useAppForm } from "@koloda/ui";
@@ -15,7 +15,7 @@ export function SettingsLearning() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { patchSettingsMutation, getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ ...getSettingsQuery("learning"), queryKey: ["settings", "learning"] });
+  const { data } = useQuery({ ...getSettingsQuery("learning"), queryKey: settingQueryKeys.detail("learning") });
   const { mutate } = useMutation(patchSettingsMutation());
   const form = useAppForm({
     defaultValues: data?.content as LearningSettings,
@@ -29,7 +29,7 @@ export function SettingsLearning() {
     onSubmit: async (data) => {
       mutate({ name: "learning", content: schema.parse({ ...data.value }) }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["settings", "learning"] });
+          queryClient.invalidateQueries({ queryKey: settingQueryKeys.detail("learning") });
         },
       });
     },

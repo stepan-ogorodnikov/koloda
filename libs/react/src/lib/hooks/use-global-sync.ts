@@ -4,6 +4,7 @@ import {
   langAtom,
   motionSettingAtom,
   queriesAtom,
+  settingQueryKeys,
   themeAtom,
 } from "@koloda/react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,8 +13,8 @@ import { useEffect } from "react";
 
 export function useGlobalSync() {
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data: learning } = useQuery({ ...getSettingsQuery("learning"), queryKey: ["settings", "learning"] });
-  const { data } = useQuery({ ...getSettingsQuery("interface"), queryKey: ["settings", "interface"] });
+  const { data: learning } = useQuery({ ...getSettingsQuery("learning"), queryKey: settingQueryKeys.detail("learning") });
+  const { data } = useQuery({ ...getSettingsQuery("interface"), queryKey: settingQueryKeys.detail("interface") });
   const setDefaultAlgorithm = useSetAtom(defaultAlgorithmAtom);
   const setDefaultTemplate = useSetAtom(defaultTemplateAtom);
   const setTheme = useSetAtom(themeAtom);

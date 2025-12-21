@@ -1,4 +1,4 @@
-import { NotFound, queriesAtom, useTitle } from "@koloda/react";
+import { NotFound, deckQueryKeys, queriesAtom, useTitle } from "@koloda/react";
 import { BackButton, Link, Main, tab, TabIndicator, tabLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_/decks/$deckId")({
   },
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
     const { getDeckQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
+    queryClient.ensureQueryData({ queryKey: deckQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
   },
 });
 
@@ -30,7 +30,7 @@ function DeckRoute() {
   const { deckId } = Route.useParams();
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: ["decks", deckId], ...getDeckQuery(deckId) });
+  const { data, isSuccess } = useQuery({ queryKey: deckQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
 
   if (isSuccess && data === null) return <NotFound />;
 

@@ -1,4 +1,4 @@
-import { queriesAtom, Template } from "@koloda/react";
+import { queriesAtom, Template, templateQueryKeys } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_/templates/$templateId")({
   component: TemplateRoute,
   loader: ({ context: { queryClient, queries }, params: { templateId } }) => {
     const { getTemplateQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: ["templates", templateId], ...getTemplateQuery(templateId) });
+    queryClient.ensureQueryData({ queryKey: templateQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
   },
 });
 
@@ -16,7 +16,7 @@ function TemplateRoute() {
   const { templateId } = Route.useParams();
   const router = useRouter();
   const { getTemplateQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: ["templates", templateId], ...getTemplateQuery(templateId) });
+  const { data } = useQuery({ queryKey: templateQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
 
   return (
     <>

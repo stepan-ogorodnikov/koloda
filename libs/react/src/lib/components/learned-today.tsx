@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/react";
+import { lessonQueryKeys, queriesAtom } from "@koloda/react";
 import { LESSON_TYPE_LABELS, type LessonType } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -44,7 +44,7 @@ export function LearnedToday() {
   const { _ } = useLingui();
   const { getTodayReviewTotalsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({
-    queryKey: ["review_totals", "today"],
+    queryKey: lessonQueryKeys.todayReviewTotals(),
     ...getTodayReviewTotalsQuery(),
   });
 

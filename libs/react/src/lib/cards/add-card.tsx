@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/react";
+import { cardQueryKeys, queriesAtom, templateQueryKeys } from "@koloda/react";
 import type { Deck, InsertCardData, Template, ZodIssue } from "@koloda/srs";
 import { cardContentMessages, getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
@@ -19,8 +19,8 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const { _ } = useLingui();
   const { getTemplateQuery, addCardMutation } = useAtomValue(queriesAtom);
   const { data: template } = useQuery({
-    queryKey: ["templates", `${templateId}`],
-    ...getTemplateQuery(`${templateId}`),
+    queryKey: templateQueryKeys.detail(templateId),
+    ...getTemplateQuery(templateId),
   });
   const { mutate } = useMutation(addCardMutation());
   const content = useMemo(() => (
@@ -37,7 +37,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate(value, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["cards", `${deckId}`] });
+          queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId }) });
           formApi.reset();
           firstFieldRef.current?.focus();
         },

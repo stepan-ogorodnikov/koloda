@@ -1,3 +1,4 @@
+import { cardQueryKeys, queriesAtom, templateQueryKeys } from "@koloda/react";
 import type { Card, Deck, Template } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -7,7 +8,6 @@ import { getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/rea
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef } from "react";
-import { queriesAtom } from "../queries";
 import { AddCard } from "./add-card";
 import { CardsTableCell } from "./cards-table-cell";
 import { CardsViewToggle } from "./cards-view-toggle";
@@ -22,10 +22,10 @@ type CardsTableProps = {
 export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery, getTemplateQuery } = useAtomValue(queriesAtom);
-  const { data: cards = [] } = useQuery({ queryKey: ["cards", `${deckId}`], ...getCardsQuery({ deckId }) });
+  const { data: cards = [] } = useQuery({ queryKey: cardQueryKeys.all({ deckId }), ...getCardsQuery({ deckId }) });
   const { data: templateData } = useQuery({
-    queryKey: ["templates", `${templateId}`],
-    ...getTemplateQuery(`${templateId}`),
+    queryKey: templateQueryKeys.detail(templateId),
+    ...getTemplateQuery(templateId),
   });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const columns = useMemo<ColumnDef<Card>[]>(

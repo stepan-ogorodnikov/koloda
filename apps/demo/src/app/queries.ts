@@ -20,6 +20,7 @@ import type {
   PatchSettingsData,
   ResetCardProgressData,
   SettingsName,
+  Template,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -69,9 +70,7 @@ export const demoAppQueryOptions = {
   staleTime: Infinity,
 };
 
-export const demoSetupMutationOptions = {
-  mutationFn: setupFromScratch,
-};
+export const demoSetupMutationOptions = { mutationFn: setupFromScratch };
 
 export const queriesFn = (db: DB): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({ queryFn: () => getSettings<T>(db, name) }),
@@ -91,7 +90,7 @@ export const queriesFn = (db: DB): Queries => ({
   updateDeckMutation: () => ({ mutationFn: (data: UpdateDeckData) => updateDeck(db, data) }),
   deleteDeckMutation: () => ({ mutationFn: (data: DeleteDeckData) => deleteDeck(db, data) }),
   getTemplatesQuery: () => ({ queryFn: () => getTemplates(db) }),
-  getTemplateQuery: (id: string) => ({ queryFn: () => getTemplate(db, id) }),
+  getTemplateQuery: (id: Template["id"] | string) => ({ queryFn: () => getTemplate(db, id) }),
   addTemplateMutation: () => ({ mutationFn: (data: InsertTemplateData) => addTemplate(db, data) }),
   cloneTemplateMutation: () => ({ mutationFn: (data: CloneTemplateData) => cloneTemplate(db, data) }),
   updateTemplateMutation: () => ({ mutationFn: (data: UpdateTemplateData) => updateTemplate(db, data) }),
@@ -102,7 +101,7 @@ export const queriesFn = (db: DB): Queries => ({
   updateCardMutation: () => ({ mutationFn: (data: UpdateCardData) => updateCard(db, data) }),
   deleteCardMutation: () => ({ mutationFn: (data: DeleteCardData) => deleteCard(db, data) }),
   resetCardProgressMutation: () => ({ mutationFn: (data: ResetCardProgressData) => resetCardProgress(db, data) }),
-  getLessonsQuery: (filters: LessonFilters) => ({ queryFn: () => getLessons(db, new Date(), filters) }),
+  getLessonsQuery: (filters?: LessonFilters) => ({ queryFn: () => getLessons(db, new Date(), filters) }),
   getTodayReviewTotalsQuery: () => ({ queryFn: () => getTodaysReviewTotals(db) }),
   getLessonDataQuery: ({ filters, amounts }: GetLessonDataParams) => ({
     queryFn: () => getLessonData(db, new Date(), filters, amounts),

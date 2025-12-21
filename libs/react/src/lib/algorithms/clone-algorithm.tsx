@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/react";
+import { algorithmQueryKeys, queriesAtom } from "@koloda/react";
 import { algorithmsMessages, cloneAlgorithmSchema as schema } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -35,7 +35,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: ["algorithms"] });
+          queryClient.invalidateQueries({ queryKey: algorithmQueryKeys.all() });
         },
       });
     },

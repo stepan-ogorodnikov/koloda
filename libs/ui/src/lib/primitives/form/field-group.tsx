@@ -13,6 +13,9 @@ export const fieldGroup = tv({
     focusable: {
       true: "focus-within:focus-ring",
     },
+    size: {
+      default: "h-10",
+    },
   },
 });
 

@@ -1,3 +1,4 @@
+import { lessonQueryKeys, queriesAtom } from "@koloda/react";
 import { LESSON_TYPE_LABELS, LESSON_TYPES } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -7,8 +8,6 @@ import { useAtomValue } from "jotai";
 import type { ActionDispatch } from "react";
 import { useEffect } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { queriesAtom } from "../queries";
-import { lessonAtom } from "./lesson";
 import { LessonInitAmount } from "./lesson-init-amount";
 import { LessonInitAmountInput } from "./lesson-init-amount-input";
 import { LessonInitLabel } from "./lesson-init-label";
@@ -23,14 +22,13 @@ type LessonInitProps = {
 
 export function LessonInit({ state, dispatch }: LessonInitProps) {
   const { _ } = useLingui();
-  const { deckId } = useAtomValue(lessonAtom) || {};
   const { getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
   const { data: learnedToday } = useQuery({
-    queryKey: ["review_totals", "today"],
+    queryKey: lessonQueryKeys.todayReviewTotals(),
     ...getTodayReviewTotalsQuery(),
   });
   const { data: lessons } = useQuery({
-    queryKey: ["lessons", JSON.stringify({ deckId })],
+    queryKey: lessonQueryKeys.all(state.filters),
     ...getLessonsQuery(state.filters!),
   });
 

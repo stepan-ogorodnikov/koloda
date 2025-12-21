@@ -1,4 +1,4 @@
-import { AlgorithmPicker, queriesAtom, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker, deckQueryKeys, lessonQueryKeys, queriesAtom, TemplatePicker } from "@koloda/react";
 import { decksMessages, insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -33,8 +33,8 @@ export function AddDeck() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: ["decks"] });
-          queryClient.invalidateQueries({ queryKey: ["lessons"] });
+          queryClient.invalidateQueries({ queryKey: deckQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: lessonQueryKeys.all({}) });
         },
       });
     },
@@ -53,7 +53,7 @@ export function AddDeck() {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button variants={{ style: "primary", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
+      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
         <PlusIcon className="size-4 stroke-2" />
       </Button>
       <Dialog.Popover variants={{ class: "w-84" }}>

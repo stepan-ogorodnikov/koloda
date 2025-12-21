@@ -1,3 +1,4 @@
+import { lessonQueryKeys } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -56,7 +57,8 @@ export function Lesson() {
                       dispatch(["terminationRequested", true]);
                     } else {
                       dispatch(["isOpenUpdated", false]);
-                      queryClient.invalidateQueries({ queryKey: ["lessons"] });
+                      queryClient.invalidateQueries({ queryKey: lessonQueryKeys.all(state.filters) });
+                      queryClient.invalidateQueries({ queryKey: lessonQueryKeys.all() });
                     }
                   }}
                 />

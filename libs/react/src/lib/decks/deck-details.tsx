@@ -7,7 +7,7 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { queriesAtom } from "../queries";
+import { deckQueryKeys, queriesAtom } from "@koloda/react";
 import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
 
@@ -17,7 +17,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getDeckQuery, updateDeckMutation } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: ["decks", id], ...getDeckQuery(id) });
+  const { data } = useQuery({ queryKey: deckQueryKeys.detail(id), ...getDeckQuery(id) });
   const { mutate } = useMutation(updateDeckMutation());
   const form = useAppForm({
     defaultValues: data as UpdateDeckValues,
@@ -25,8 +25,8 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["decks"] });
-          queryClient.invalidateQueries({ queryKey: ["decks", id] });
+          queryClient.invalidateQueries({ queryKey: deckQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: deckQueryKeys.detail(id) });
           formApi.reset();
         },
       });

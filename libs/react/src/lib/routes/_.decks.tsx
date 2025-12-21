@@ -1,4 +1,4 @@
-import { AddDeck, queriesAtom, useTitle } from "@koloda/react";
+import { AddDeck, deckQueryKeys, queriesAtom, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_/decks")({
   component: DecksRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getDecksQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: ["decks"], ...getDecksQuery() });
+    queryClient.ensureQueryData({ queryKey: deckQueryKeys.all(), ...getDecksQuery() });
     return { title: msg`title.decks` };
   },
 });
@@ -21,7 +21,7 @@ function DecksRoute() {
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getDecksQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: ["decks"], ...getDecksQuery() });
+  const { data } = useQuery({ queryKey: deckQueryKeys.all(), ...getDecksQuery() });
   const hasContent = !(pathname === "/decks" || pathname === "/decks/");
 
   return (

@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { queriesAtom } from "../queries";
+import { algorithmQueryKeys, queriesAtom } from "@koloda/react";
 
 export function AddAlgorithm() {
   const queryClient = useQueryClient();
@@ -33,7 +33,7 @@ export function AddAlgorithm() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: ["algorithms"] });
+          queryClient.invalidateQueries({ queryKey: algorithmQueryKeys.all() });
         },
       });
     },
@@ -53,7 +53,7 @@ export function AddAlgorithm() {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button variants={{ style: "primary", size: "icon" }} aria-label={_(msg`add-algorithm.trigger`)}>
+      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-algorithm.trigger`)}>
         <PlusIcon className="size-4 stroke-2" />
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

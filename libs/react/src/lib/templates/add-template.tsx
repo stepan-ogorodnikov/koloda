@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/react";
+import { queriesAtom, templateQueryKeys } from "@koloda/react";
 import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, templatesMessages } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -33,7 +33,7 @@ export function AddTemplate() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: ["templates"] });
+          queryClient.invalidateQueries({ queryKey: templateQueryKeys.all() });
         },
       });
     },
@@ -53,7 +53,7 @@ export function AddTemplate() {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button variants={{ style: "primary", size: "icon" }} aria-label={_(msg`add-template.trigger`)}>
+      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-template.trigger`)}>
         <PlusIcon className="size-4 stroke-2" />
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>
