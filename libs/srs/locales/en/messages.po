@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/srs/src/lib/cards.ts:23
+#: ../../libs/srs/src/lib/cards.ts:22
 msgid "card.errors.field-empty"
 msgstr "This field can't be empty"
 

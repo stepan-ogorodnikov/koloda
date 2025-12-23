@@ -1,4 +1,4 @@
-import { cardQueryKeys, queriesAtom, templateQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom, templatesQueryKeys } from "@koloda/react";
 import type { Deck, InsertCardData, Template, ZodIssue } from "@koloda/srs";
 import { cardContentMessages, getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
@@ -19,7 +19,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const { _ } = useLingui();
   const { getTemplateQuery, addCardMutation } = useAtomValue(queriesAtom);
   const { data: template } = useQuery({
-    queryKey: templateQueryKeys.detail(templateId),
+    queryKey: templatesQueryKeys.detail(templateId),
     ...getTemplateQuery(templateId),
   });
   const { mutate } = useMutation(addCardMutation());
@@ -37,7 +37,8 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate(value, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId }) });
+          queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
+          queryClient.invalidateQueries({ queryKey: cardsQueryKeys.count({ deckId }) });
           formApi.reset();
           firstFieldRef.current?.focus();
         },
@@ -49,9 +50,15 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
 
   return (
     <Dialog.Root>
-      <Button variants={{ style: "dashed", size: "icon" }}>
+      <Button variants={{ style: "dashed", size: "default", class: "max-tb:hidden" }}>
         <Plus className="size-4" />
         <span className="max-tb:hidden">{_(msg`add-cards.trigger`)}</span>
+      </Button>
+      <Button
+        variants={{ style: "dashed", size: "icon", class: "tb:hidden" }}
+        aria-label={_(msg`add-cards.trigger`)}
+      >
+        <Plus className="size-4" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "min-w-84" }}>

@@ -1,4 +1,4 @@
-import { AlgorithmPicker, deckQueryKeys, lessonQueryKeys, queriesAtom, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker, decksQueryKeys, lessonsQueryKeys, queriesAtom, TemplatePicker } from "@koloda/react";
 import { decksMessages, insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -33,8 +33,8 @@ export function AddDeck() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: deckQueryKeys.all() });
-          queryClient.invalidateQueries({ queryKey: lessonQueryKeys.all({}) });
+          queryClient.invalidateQueries({ queryKey: decksQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all({}) });
         },
       });
     },

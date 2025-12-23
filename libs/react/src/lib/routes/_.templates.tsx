@@ -1,4 +1,4 @@
-import { AddTemplate, queriesAtom, templateQueryKeys, useTitle } from "@koloda/react";
+import { AddTemplate, queriesAtom, templatesQueryKeys, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_/templates")({
   component: TemplatesRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getTemplatesQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: templateQueryKeys.all(), ...getTemplatesQuery() });
+    queryClient.ensureQueryData({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
     return { title: msg`title.templates` };
   },
 });
@@ -20,7 +20,7 @@ function TemplatesRoute() {
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: templateQueryKeys.all(), ...getTemplatesQuery() });
+  const { data } = useQuery({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
   const hasContent = !(pathname === "/templates" || pathname === "/templates/");
 
   return (

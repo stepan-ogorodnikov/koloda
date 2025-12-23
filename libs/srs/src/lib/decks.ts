@@ -34,7 +34,12 @@ export type DeckWithOnlyTitle = Pick<Deck, "id" | "title">;
  * @returns Array of deck objects
  */
 export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
-  const result = await db.select().from(decks).where(filters);
+  const result = await db
+    .select()
+    .from(decks)
+    .where(filters)
+    .orderBy(decks.createdAt);
+
   return result as Deck[];
 }
 

@@ -1,4 +1,4 @@
-import { defaultTemplateAtom, queriesAtom, templateQueryKeys } from "@koloda/react";
+import { defaultTemplateAtom, queriesAtom, templatesQueryKeys } from "@koloda/react";
 import { DeleteDialog, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -14,14 +14,14 @@ export function DeleteTemplate({ id }: DeleteTemplateProps) {
   const navigate = useNavigate({ from: "/templates/$templateId" });
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { deleteTemplateMutation, getTemplateDecksQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: templateQueryKeys.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
+  const { data } = useQuery({ queryKey: templatesQueryKeys.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
   const { mutate } = useMutation(deleteTemplateMutation());
 
   const handleConfirm = () => {
     mutate({ id: Number(id) }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: templateQueryKeys.all() });
-        queryClient.removeQueries({ queryKey: templateQueryKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
+        queryClient.removeQueries({ queryKey: templatesQueryKeys.detail(id) });
         navigate({ to: "/templates" });
       },
     });

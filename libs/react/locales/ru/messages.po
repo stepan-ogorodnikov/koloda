@@ -18,80 +18,81 @@ msgstr ""
 msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:70
 #: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:75
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:80
 msgid "add-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:95
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:101
 msgid "add-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:106
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:112
 msgid "add-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:64
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:69
 msgid "add-algorithm.title"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:51
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:56
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:101
+#: ../../libs/react/src/lib/cards/add-card.tsx:108
 msgid "add-card.submit"
 msgstr "Добавить"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:60
+#: ../../libs/react/src/lib/cards/add-card.tsx:67
 msgid "add-cards.title"
 msgstr "Добавить карточку"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:54
+#: ../../libs/react/src/lib/cards/add-card.tsx:55
+#: ../../libs/react/src/lib/cards/add-card.tsx:59
 msgid "add-cards.trigger"
 msgstr "Добавить карточку"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:75
+#: ../../libs/react/src/lib/decks/add-deck.tsx:80
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:98
+#: ../../libs/react/src/lib/decks/add-deck.tsx:104
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:109
+#: ../../libs/react/src/lib/decks/add-deck.tsx:115
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:109
+#: ../../libs/react/src/lib/decks/add-deck.tsx:115
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:64
+#: ../../libs/react/src/lib/decks/add-deck.tsx:69
 msgid "add-deck.title"
 msgstr "Новая колода"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:51
+#: ../../libs/react/src/lib/decks/add-deck.tsx:56
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:75
+#: ../../libs/react/src/lib/templates/add-template.tsx:80
 msgid "add-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:90
+#: ../../libs/react/src/lib/templates/add-template.tsx:96
 msgid "add-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:101
+#: ../../libs/react/src/lib/templates/add-template.tsx:107
 msgid "add-template.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:64
+#: ../../libs/react/src/lib/templates/add-template.tsx:69
 msgid "add-template.title"
 msgstr "Новый шаблон"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:51
+#: ../../libs/react/src/lib/templates/add-template.tsx:56
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
@@ -99,73 +100,73 @@ msgstr "Новый шаблон"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:140
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:130
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:103
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:93
 msgid "algorithm.inputs.isFuzzEnabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:121
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:111
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:135
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:125
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:124
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:114
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:88
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:78
 msgid "algorithm.inputs.retention.label"
 msgstr "Коэфициент"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:73
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:63
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/algorithm.tsx:116
+#: ../../libs/react/src/lib/algorithms/algorithm.tsx:106
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:85
 msgid "algorithm.learning-steps.add"
 msgstr "Добавить интервал заучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:27
 msgid "algorithm.learning-steps.amount.{0}"
 msgstr "Количество для интервала заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:70
 msgid "algorithm.learning-steps.delete.{0}"
 msgstr "Удалить интервал заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:43
 msgid "algorithm.learning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала заучивания номер {0}"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:87
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
 msgid "algorithm.relearning-steps.add"
 msgstr "Добавить интервал переучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:29
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
 msgid "algorithm.relearning-steps.amount.{0}"
 msgstr "Количество для интервала переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:72
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
 msgid "algorithm.relearning-steps.delete.{0}"
 msgstr "Удалить интервал переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:45
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
@@ -189,11 +190,11 @@ msgstr "Срок"
 msgid "card.labels.state"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/cards/cards-stack.tsx:41
+#: ../../libs/react/src/lib/cards/cards-stack.tsx:44
 msgid "cards-stack.navigation.next"
 msgstr "Перейти к следующей карточке"
 
-#: ../../libs/react/src/lib/cards/cards-stack.tsx:33
+#: ../../libs/react/src/lib/cards/cards-stack.tsx:36
 msgid "cards-stack.navigation.prev"
 msgstr "Перейти к предыдущей карточке"
 
@@ -213,63 +214,63 @@ msgstr "Повтор"
 msgid "cards-table.state.untouched"
 msgstr "Новая"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:51
+#: ../../libs/react/src/lib/cards/cards-table.tsx:64
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:45
+#: ../../libs/react/src/lib/cards/cards-table.tsx:58
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:39
+#: ../../libs/react/src/lib/cards/cards-table.tsx:52
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:20
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
 msgid "cards.views.stack"
 msgstr "По одной"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:19
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:20
 msgid "cards.views.table"
 msgstr "Таблица"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:74
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:79
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:93
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:99
 msgid "clone-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:109
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:115
 msgid "clone-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:106
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:112
 msgid "clone-algorithm.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:54
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:59
 msgid "clone-algorithm.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:74
+#: ../../libs/react/src/lib/templates/clone-template.tsx:79
 msgid "clone-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:93
+#: ../../libs/react/src/lib/templates/clone-template.tsx:99
 msgid "clone-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:104
+#: ../../libs/react/src/lib/templates/clone-template.tsx:110
 msgid "clone-template.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:104
+#: ../../libs/react/src/lib/templates/clone-template.tsx:110
 msgid "clone-template.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:54
+#: ../../libs/react/src/lib/templates/clone-template.tsx:59
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
@@ -323,22 +324,22 @@ msgstr "Алгоритм наследник"
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:48
-#: ../../libs/react/src/lib/cards/delete-card.tsx:36
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
+#: ../../libs/react/src/lib/cards/delete-card.tsx:37
 msgid "delete-card.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:45
-#: ../../libs/react/src/lib/cards/delete-card.tsx:37
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/delete-card.tsx:38
 msgid "delete-card.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:43
-#: ../../libs/react/src/lib/cards/delete-card.tsx:34
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:44
+#: ../../libs/react/src/lib/cards/delete-card.tsx:35
 msgid "delete-card.message"
 msgstr "Подтвердите удаление карточки"
 
-#: ../../libs/react/src/lib/cards/delete-card.tsx:31
+#: ../../libs/react/src/lib/cards/delete-card.tsx:32
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
@@ -438,23 +439,23 @@ msgstr "Количество карт типа 'повтор'"
 msgid "lesson.init.amount-input.untouched"
 msgstr "Количество карт типа 'новые'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:93
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:91
 msgid "lesson.init.submit"
 msgstr "Начать"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:66
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:64
 msgid "lesson.init.table.columns.amount"
 msgstr "Количество"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:67
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:65
 msgid "lesson.init.table.columns.available"
 msgstr "Доступно"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:68
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:66
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:49
+#: ../../libs/react/src/lib/lessons/lesson.tsx:50
 msgid "lesson.init.title"
 msgstr "Начать изучение"
 

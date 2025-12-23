@@ -6,14 +6,14 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { CardsStack } from "../cards/cards-stack";
 import { CardsTable } from "../cards/cards-table";
-import { deckQueryKeys, queriesAtom } from "@koloda/react";
+import { decksQueryKeys, queriesAtom } from "@koloda/react";
 
 type DeckCardsProps = { deckId: string };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: deckQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
+  const { data } = useQuery({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
   const [view, setView] = useAtom(cardsViewAtom);
 
   useEffect(() => {

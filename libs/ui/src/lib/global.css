@@ -127,7 +127,7 @@
   --bg-main-sidebar-link-active: oklch(from var(--bg-level-1) calc(l + 0.02) c h);
   /* table */
   --border-table: oklch(100% 0 0 / 10%);
-  --bg-table-head: oklch(21.75% 0 0);
+  --bg-table-head: oklch(from var(--bg-level-1) calc(l + 0.02) c h);
   --fg-table-head: var(--fg-level-2);
   --fg-table-head-inactive: var(--fg-level-4);
   /* tabs */

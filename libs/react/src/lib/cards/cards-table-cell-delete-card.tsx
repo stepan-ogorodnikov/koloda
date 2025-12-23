@@ -1,4 +1,4 @@
-import { cardQueryKeys, queriesAtom } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom } from "@koloda/react";
 import type { Card, Deck } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -24,7 +24,8 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
     mutate({ id }, {
       onSuccess: () => {
         setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId }) });
+        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
+        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.count({ deckId }) });
       },
     });
   };

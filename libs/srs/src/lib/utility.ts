@@ -27,26 +27,6 @@ export type UpdateData<Entity, Id extends keyof Entity, Values> = Pick<Entity, I
  */
 
 /**
- * Returns the larger of two numbers
- * @param a - First number
- * @param b - Second number
- * @returns The larger of the two numbers
- */
-export function maxNumber(a: number, b: number): number {
-  return a > b ? a : b;
-}
-
-/**
- * Returns the smaller of two numbers
- * @param a - First number
- * @param b - Second number
- * @returns The smaller of the two numbers
- */
-export function minNumber(a: number, b: number): number {
-  return a < b ? a : b;
-}
-
-/**
  * Gets the next available numeric ID for an array of items with IDs
  * @param items - Array of objects with numeric ID
  * @returns The next available ID (max ID + 1, minimum of 1)

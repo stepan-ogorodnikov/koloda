@@ -1,4 +1,4 @@
-import { lessonQueryKeys, queriesAtom } from "@koloda/react";
+import { lessonsQueryKeys, queriesAtom } from "@koloda/react";
 import { LESSON_TYPE_LABELS, LESSON_TYPES } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -24,11 +24,11 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
   const { _ } = useLingui();
   const { getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
   const { data: learnedToday } = useQuery({
-    queryKey: lessonQueryKeys.todayReviewTotals(),
+    queryKey: lessonsQueryKeys.todayReviewTotals(),
     ...getTodayReviewTotalsQuery(),
   });
   const { data: lessons } = useQuery({
-    queryKey: lessonQueryKeys.all(state.filters),
+    queryKey: lessonsQueryKeys.all(state.filters),
     ...getLessonsQuery(state.filters!),
   });
 

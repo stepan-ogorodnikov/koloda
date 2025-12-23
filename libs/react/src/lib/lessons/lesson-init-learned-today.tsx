@@ -8,7 +8,7 @@ type LessonInitLearnedTodayProps = {
 export function LessonInitLearnedToday({ learned, limit }: LessonInitLearnedTodayProps) {
   return (
     <LessonInitTd>
-      <div className="flex flex-row items-center gap-1 px-3 text-lg leading-6 font-semibold tracking-wider">
+      <div className="flex flex-row items-center gap-1 px-3 numbers-text leading-6">
         <span>{learned}</span>
         <span className="fg-level-4 text-xs leading-6 font-normal">/</span>
         {limit === Infinity

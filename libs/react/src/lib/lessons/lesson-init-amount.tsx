@@ -5,7 +5,7 @@ type LessonInitAmountProps = { amount: number };
 export function LessonInitAmount({ amount }: LessonInitAmountProps) {
   return (
     <LessonInitTd>
-      <div className="flex items-center h-10 px-3 text-lg font-semibold tracking-wider">
+      <div className="flex items-center h-10 px-3 numbers-text">
         {amount}
       </div>
     </LessonInitTd>

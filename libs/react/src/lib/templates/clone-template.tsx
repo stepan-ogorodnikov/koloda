@@ -1,4 +1,4 @@
-import { queriesAtom, templateQueryKeys } from "@koloda/react";
+import { queriesAtom, templatesQueryKeys } from "@koloda/react";
 import { cloneTemplateSchema as schema, templatesMessages } from "@koloda/srs";
 import type { Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -35,7 +35,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: templateQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
         },
       });
     },

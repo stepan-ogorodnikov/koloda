@@ -33,7 +33,7 @@ export const textFieldInput = tv({
       inline: "border-2 border-transparent rounded-lg focus-ring",
     },
     content: {
-      number: "text-lg font-semibold tracking-wider",
+      number: "numbers-text",
     },
     layout: {
       form: [formLayoutSectionContent, "grow"],

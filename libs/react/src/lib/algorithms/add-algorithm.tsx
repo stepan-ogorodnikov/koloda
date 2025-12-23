@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { algorithmQueryKeys, queriesAtom } from "@koloda/react";
+import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
 
 export function AddAlgorithm() {
   const queryClient = useQueryClient();
@@ -33,7 +33,7 @@ export function AddAlgorithm() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: algorithmQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
         },
       });
     },

@@ -1,6 +1,6 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
@@ -30,22 +30,49 @@ const cardValidation = {
 export const selectCardSchema = createSelectSchema(cards, cardValidation);
 export type Card = z.input<typeof selectCardSchema>;
 
-export type GetCardsParams = { deckId: Deck["id"] | string };
+export type GetCardsParams = {
+  deckId: Deck["id"] | string;
+  page?: number;
+  pageSize?: number;
+};
 
 /**
  * Retrieves all cards from a specific deck
  * @param db - The database instance
  * @param deckId - The ID of the deck to retrieve cards from
+ * @param page - The page number (starting from 0)
+ * @param pageSize - The number of items per page
  * @returns Array of card objects
  */
-export async function getCards(db: DB, { deckId }: GetCardsParams) {
+export async function getCards(db: DB, { deckId, page = 0, pageSize = 50 }: GetCardsParams) {
+  const offset = page * pageSize;
+
   const result = await db
     .select()
     .from(cards)
     .where(eq(cards.deckId, Number(deckId)))
-    .orderBy(cards.createdAt);
+    .orderBy(cards.createdAt)
+    .limit(pageSize)
+    .offset(offset);
 
   return result as Card[];
+}
+
+export type GetCardsCountParams = { deckId: Deck["id"] | string };
+
+/**
+ * Retrieves the total count of cards in a specific deck
+ * @param db - The database instance
+ * @param deckId - The ID of the deck to count cards for
+ * @returns The total number of cards in the deck
+ */
+export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
+  const result = await db
+    .select({ count: count() })
+    .from(cards)
+    .where(eq(cards.deckId, Number(deckId)));
+
+  return result[0].count;
 }
 
 /**

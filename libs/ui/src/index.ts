@@ -21,6 +21,7 @@ export * from "./lib/primitives/table/table";
 export * from "./lib/primitives/table/table-body";
 export * from "./lib/primitives/table/table-cell-content";
 export * from "./lib/primitives/table/table-head";
+export * from "./lib/primitives/table/table-pagination";
 export * from "./lib/primitives/tabs";
 export * from "./lib/types";
 export * from "./lib/ui/back-button";

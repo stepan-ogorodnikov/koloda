@@ -1,4 +1,4 @@
-import { algorithmQueryKeys, defaultAlgorithmAtom, queriesAtom } from "@koloda/react";
+import { algorithmsQueryKeys, defaultAlgorithmAtom, queriesAtom } from "@koloda/react";
 import { DeleteDialog, Select, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -17,16 +17,16 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   const navigate = useNavigate({ from: "/algorithms/$algorithmId" });
   const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
   const { getAlgorithmsQuery, getAlgorithmDecksQuery, deleteAlgorithmMutation } = useAtomValue(queriesAtom);
-  const { data: algorithms } = useQuery({ queryKey: algorithmQueryKeys.all(), ...getAlgorithmsQuery() });
-  const { data: decks } = useQuery({ queryKey: algorithmQueryKeys.decks(id), ...getAlgorithmDecksQuery(id) });
+  const { data: algorithms } = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
+  const { data: decks } = useQuery({ queryKey: algorithmsQueryKeys.decks(id), ...getAlgorithmDecksQuery(id) });
   const { mutate } = useMutation(deleteAlgorithmMutation());
   const [successorId, setSuccessorId] = useState<Key | null>(null);
 
   const handleConfirm = () => {
     mutate({ id, successorId }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: algorithmQueryKeys.all() });
-        queryClient.removeQueries({ queryKey: algorithmQueryKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
+        queryClient.removeQueries({ queryKey: algorithmsQueryKeys.detail(id) });
         navigate({ to: "/algorithms" });
       },
     });

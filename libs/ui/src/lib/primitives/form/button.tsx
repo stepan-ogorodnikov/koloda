@@ -19,7 +19,7 @@ export const button = tv({
       ],
       bordered: [
         "bg-transparent fg-level-2 border-2 border-button-bordered",
-        "hover:bg-button-bordered-hover",
+        "hover:bg-button-bordered-hover disabled:opacity-25 animate-opacity",
       ],
       primary: [
         "bg-button-primary border-2 border-button-primary shadow-button-primary",

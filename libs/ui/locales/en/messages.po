@@ -30,3 +30,11 @@ msgstr "Save"
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:45
 msgid "form.updatedAt {0}"
 msgstr "Updated {0}"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:81
+msgid "table.pagination.page-size.label"
+msgstr "Per page:"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:42
+msgid "table.pagination.records.label"
+msgstr "of"

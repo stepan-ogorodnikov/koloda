@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react";
 import { TableBody } from "./table-body";
 import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";
+import { TablePagination } from "./table-pagination";
 
 type TableProps = { table: TanstackTable<any> };
 
@@ -27,3 +28,4 @@ Table.Root = TableRoot;
 Table.Head = TableHead;
 Table.Body = TableBody;
 Table.CellContent = TableCellContent;
+Table.Pagination = TablePagination;

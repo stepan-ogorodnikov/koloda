@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import type { ActionDispatch } from "react";
 import { FocusScope } from "react-aria";
 import { useHotkeys } from "react-hotkeys-hook";
-import { lessonQueryKeys, queriesAtom } from "@koloda/react";
+import { lessonsQueryKeys, queriesAtom } from "@koloda/react";
 import { LessonCardContentField } from "./lesson-card-content-field";
 import { LessonCardGrades } from "./lesson-card-grades";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
@@ -26,7 +26,7 @@ export function LessonContent({ state, dispatch }: LessonContentProps) {
   const { _ } = useLingui();
   const { getLessonDataQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({
-    queryKey: lessonQueryKeys.data({ amounts: state.amounts!, filters: state.filters! }),
+    queryKey: lessonsQueryKeys.data({ amounts: state.amounts!, filters: state.filters! }),
     ...getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }),
   });
   const submitRef = useRef<HTMLButtonElement>(null);

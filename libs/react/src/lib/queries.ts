@@ -10,6 +10,7 @@ import type {
   DeleteCardData,
   DeleteDeckData,
   DeleteTemplateData,
+  GetCardsCountParams,
   GetCardsParams,
   GetLessonDataParams,
   GetReviewsData,
@@ -65,6 +66,7 @@ export type Queries = {
   deleteTemplateMutation: () => UseMutationOptions<unknown, Error, DeleteTemplateData, unknown>;
   getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
+  getCardsCountQuery: (params: GetCardsCountParams) => QueryOptions<number>;
   addCardMutation: () => UseMutationOptions<Card | undefined, Error, InsertCardData, unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, Error, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, Error, DeleteCardData, unknown>;

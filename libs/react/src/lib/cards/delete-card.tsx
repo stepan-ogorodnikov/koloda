@@ -1,4 +1,4 @@
-import { cardQueryKeys, queriesAtom } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom } from "@koloda/react";
 import type { Card, Deck } from "@koloda/srs";
 import { DeleteDialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -20,7 +20,8 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
   const handleConfirm = () => {
     mutate({ id }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId }) });
+        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
+        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.count({ deckId }) });
       },
     });
   };

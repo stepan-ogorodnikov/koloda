@@ -1,4 +1,4 @@
-import { SettingsLearning, settingQueryKeys, useTitle } from "@koloda/react";
+import { SettingsLearning, settingsQueryKeys, useTitle } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_/settings/learning")({
   component: SettingsLearningRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: settingQueryKeys.detail("learning"), ...getSettingsQuery("learning") });
+    queryClient.ensureQueryData({ queryKey: settingsQueryKeys.detail("learning"), ...getSettingsQuery("learning") });
     return { title: msg`title.settings.learning` };
   },
 });

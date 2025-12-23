@@ -1,6 +1,6 @@
 import type { LessonAtomValue, ReducerAction } from "@koloda/react";
 import { dispatchReducerAction } from "@koloda/react";
-import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades, maxNumber, minNumber } from "@koloda/srs";
+import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } from "@koloda/srs";
 import type {
   Card,
   CardGrade,
@@ -149,10 +149,10 @@ function setupInitData(draft: LessonReducerState) {
   const { type } = params;
   const available = lessons[0];
   const diffs = {
-    untouched: maxNumber(dailyLimits.untouched - available.untouched, 0),
-    learn: maxNumber(dailyLimits.learn - available.learn, 0),
-    review: maxNumber(dailyLimits.review - available.review, 0),
-    total: maxNumber(dailyLimits.total - available.total, 0),
+    untouched: Math.max(dailyLimits.untouched - available.untouched, 0),
+    learn: Math.max(dailyLimits.learn - available.learn, 0),
+    review: Math.max(dailyLimits.review - available.review, 0),
+    total: Math.max(dailyLimits.total - available.total, 0),
   };
 
   if (params.type === "total") {
@@ -180,7 +180,7 @@ function setupInitData(draft: LessonReducerState) {
  * @returns The calculated amount of cards to add to the lesson
  */
 function getLessonCardsAmount(available: number, diff: number, remainder: number) {
-  return available > minNumber(diff, remainder) ? minNumber(diff, remainder) : available;
+  return available > Math.min(diff, remainder) ? Math.min(diff, remainder) : available;
 }
 
 /**

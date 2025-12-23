@@ -1,4 +1,4 @@
-import { Algorithm, algorithmQueryKeys, queriesAtom } from "@koloda/react";
+import { Algorithm, algorithmsQueryKeys, queriesAtom } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   component: AlgorithmRoute,
   loader: ({ context: { queryClient, queries }, params: { algorithmId } }) => {
     const { getAlgorithmQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: algorithmQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
+    queryClient.ensureQueryData({ queryKey: algorithmsQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
   },
 });
 
@@ -17,7 +17,7 @@ function AlgorithmRoute() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: algorithmQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
+  const { data } = useQuery({ queryKey: algorithmsQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
 
   return (
     <>

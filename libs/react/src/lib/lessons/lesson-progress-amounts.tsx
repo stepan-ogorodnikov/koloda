@@ -10,7 +10,7 @@ export function LessonProgressAmounts({ state }: LessonProgressAmountsProps) {
   const { done, pending } = state.progress;
 
   return (
-    <div className="text-lg font-semibold tracking-wider">
+    <div className="numbers-text">
       <div className="absolute right-1/2 flex flex-row items-center gap-1 mr-4">
         <div className="fg-lesson-type-blue">{done.untouched}</div>
         <div className={lessonProgressAmountSign}>+</div>

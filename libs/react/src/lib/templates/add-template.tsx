@@ -1,4 +1,4 @@
-import { queriesAtom, templateQueryKeys } from "@koloda/react";
+import { queriesAtom, templatesQueryKeys } from "@koloda/react";
 import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, templatesMessages } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
@@ -33,7 +33,7 @@ export function AddTemplate() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: templateQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
         },
       });
     },

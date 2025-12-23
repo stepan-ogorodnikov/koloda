@@ -1,4 +1,4 @@
-import { defaultTemplateAtom, queriesAtom, templateQueryKeys } from "@koloda/react";
+import { defaultTemplateAtom, queriesAtom, templatesQueryKeys } from "@koloda/react";
 import type { Template } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
@@ -17,7 +17,7 @@ export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProp
   const { _ } = useLingui();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
-  const { data } = useQuery({ queryKey: templateQueryKeys.all(), ...getTemplatesQuery() });
+  const { data } = useQuery({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
 
   useEffect(() => {
     if (!value) onChange(defaultTemplate);

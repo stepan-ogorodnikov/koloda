@@ -1,4 +1,4 @@
-import { cardQueryKeys, queriesAtom, templateQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom, templatesQueryKeys } from "@koloda/react";
 import type { Card, UpdateCardValues, ZodIssue } from "@koloda/srs";
 import { cardContentMessages, getUpdateCardSchema, updateCardSchema as schema } from "@koloda/srs";
 import { Button, FormLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -24,7 +24,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
   const { i18n, _ } = useLingui();
   const { getTemplateQuery, updateCardMutation, resetCardProgressMutation } = useAtomValue(queriesAtom);
   const { data: template } = useQuery({
-    queryKey: templateQueryKeys.detail(card.templateId),
+    queryKey: templatesQueryKeys.detail(card.templateId),
     ...getTemplateQuery(card.templateId),
   });
   const { mutate } = useMutation(updateCardMutation());
@@ -35,7 +35,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: card.id, values: value }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId: card.deckId }) });
+          queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
           formApi.reset(returning);
         },
       });
@@ -49,7 +49,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
   const handleProgressReset = () => {
     resetProgressMutation.mutate({ id: card.id }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: cardQueryKeys.all({ deckId: card.deckId }) });
+        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
       },
     });
   };
