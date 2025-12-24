@@ -1,7 +1,7 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
-const VALUES = [
+export const VALUES = [
   {
     t: msg`cards-table.state.untouched`,
     cn: "border-fg-lesson-type-blue bg-lesson-type-blue/25 fg-lesson-type-blue",

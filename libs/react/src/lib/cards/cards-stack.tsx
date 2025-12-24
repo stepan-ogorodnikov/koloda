@@ -20,7 +20,7 @@ export function CardsStack({ deckId, templateId }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery } = useAtomValue(queriesAtom);
   const { data: cards = [] } = useQuery({
-    queryKey: cardsQueryKeys.paginated({ deckId }),
+    queryKey: cardsQueryKeys.deck({ deckId }),
     ...getCardsQuery({ deckId }),
   });
   const [index, setIndex] = useState(0);

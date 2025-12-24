@@ -50,7 +50,7 @@ msgstr "Add card"
 #: ../../libs/react/src/lib/cards/add-card.tsx:55
 #: ../../libs/react/src/lib/cards/add-card.tsx:59
 msgid "add-cards.trigger"
-msgstr "Add card"
+msgstr "Add cards"
 
 #: ../../libs/react/src/lib/decks/add-deck.tsx:80
 msgid "add-deck.inputs.title.label"
@@ -183,10 +183,12 @@ msgid "card.labels.actions"
 msgstr "Actions"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:95
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:52
 msgid "card.labels.due-at"
 msgstr "Due"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:89
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:35
 msgid "card.labels.state"
 msgstr "Status"
 
@@ -197,6 +199,22 @@ msgstr "Go to next card"
 #: ../../libs/react/src/lib/cards/cards-stack.tsx:36
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:65
+msgid "cards-table.filters.due-at.values.false"
+msgstr "Not due yet"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:58
+msgid "cards-table.filters.due-at.values.true"
+msgstr "Overdue"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:69
+msgid "cards-table.filters.reset"
+msgstr "Reset filters"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:29
+msgid "cards-table.filters.trigger"
+msgstr "Filters"
 
 #: ../../libs/react/src/lib/cards/card-state.tsx:9
 msgid "cards-table.state.learn"
@@ -214,15 +232,15 @@ msgstr "Review"
 msgid "cards-table.state.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:64
+#: ../../libs/react/src/lib/cards/cards-table.tsx:78
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:58
+#: ../../libs/react/src/lib/cards/cards-table.tsx:63
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:52
+#: ../../libs/react/src/lib/cards/cards-table.tsx:55
 msgid "cards.table.columns.state"
 msgstr "Status"
 

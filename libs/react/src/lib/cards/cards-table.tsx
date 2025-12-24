@@ -3,18 +3,27 @@ import type { Card, Deck, Template } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getCoreRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import type { CellContext, ColumnDef } from "@tanstack/react-table";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import type { CellContext, ColumnDef, FilterFn } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef, useState } from "react";
 import { AddCard } from "./add-card";
 import { CardsTableCell } from "./cards-table-cell";
+import { CardsTableFilters } from "./cards-table-filters";
 import { CardsViewToggle } from "./cards-view-toggle";
 
 const PAGE_SIZES = [15, 20, 25];
 
 const cell = (cell: CellContext<Card, unknown>) => <CardsTableCell cell={cell} />;
+
+type CardState = NonNullable<Card["state"]>;
 
 type CardsTableProps = {
   deckId: Deck["id"] | string;
@@ -25,15 +34,17 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery, getCardsCountQuery, getTemplateQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
+  const [filters, setFilters] = useState({
+    state: [] as CardState[],
+    dueAt: { isOverdue: false, isNotDue: false },
+  });
   const { data: cards = [] } = useQuery({
-    queryKey: cardsQueryKeys.paginated({ deckId, page: pagination.pageIndex, pageSize: pagination.pageSize }),
-    ...getCardsQuery({ deckId, page: pagination.pageIndex, pageSize: pagination.pageSize }),
-    placeholderData: keepPreviousData,
+    queryKey: cardsQueryKeys.deck({ deckId }),
+    ...getCardsQuery({ deckId }),
   });
   const { data: totalCount = 0 } = useQuery({
     queryKey: cardsQueryKeys.count({ deckId }),
     ...getCardsCountQuery({ deckId }),
-    placeholderData: keepPreviousData,
   });
   const { data: templateData } = useQuery({
     queryKey: templatesQueryKeys.detail(templateId),
@@ -52,12 +63,23 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
           header: _(msg`cards.table.columns.state`),
           size: 8,
           cell,
+          filterFn: ((row, columnId, filterValue: CardState[]) =>
+            filterValue.length === 0 || filterValue.includes(row.getValue(columnId) as CardState)) as FilterFn<Card>,
         },
         {
           accessorKey: "dueAt",
           header: _(msg`cards.table.columns.due-at`),
           size: 14,
           cell,
+          filterFn: ((row, columnId, filterValue: CardsTableFilters["dueAt"]) => {
+            const value = row.getValue(columnId) as string | null;
+            const isDue = value ? (new Date(value)).getTime() <= (new Date()).getTime() : false;
+            const isNotDue = !value || new Date(value) > new Date();
+            if (filterValue.isOverdue && filterValue.isNotDue) return true;
+            if (filterValue.isOverdue) return isDue;
+            if (filterValue.isNotDue) return isNotDue;
+            return true;
+          }) as FilterFn<Card>,
         },
         {
           accessorKey: "createdAt",
@@ -79,13 +101,19 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const table = useReactTable({
     columns,
     data: cards,
-    state: { pagination },
+    state: {
+      pagination,
+      columnFilters: [
+        { id: "state", value: filters.state },
+        { id: "dueAt", value: filters.dueAt },
+      ],
+    },
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: true,
-    pageCount: Math.ceil(totalCount / pagination.pageSize),
+    autoResetPageIndex: false,
     defaultColumn: {
       minSize: 32,
       maxSize: 1024,
@@ -96,8 +124,10 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
 
   return (
     <>
-      <div className="flex flex-row items-center justify-between gap-4">
+      <div className="flex flex-row items-center gap-4">
         <CardsViewToggle />
+        <CardsTableFilters filters={filters} setFilters={setFilters} />
+        <div className="grow" />
         <AddCard deckId={Number(deckId)} templateId={Number(templateId)} />
       </div>
       <div className="flex flex-col gap-4" ref={wrapperRef}>

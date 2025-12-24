@@ -32,28 +32,20 @@ export type Card = z.input<typeof selectCardSchema>;
 
 export type GetCardsParams = {
   deckId: Deck["id"] | string;
-  page?: number;
-  pageSize?: number;
 };
 
 /**
  * Retrieves all cards from a specific deck
  * @param db - The database instance
  * @param deckId - The ID of the deck to retrieve cards from
- * @param page - The page number (starting from 0)
- * @param pageSize - The number of items per page
  * @returns Array of card objects
  */
-export async function getCards(db: DB, { deckId, page = 0, pageSize = 50 }: GetCardsParams) {
-  const offset = page * pageSize;
-
+export async function getCards(db: DB, { deckId }: GetCardsParams) {
   const result = await db
     .select()
     .from(cards)
     .where(eq(cards.deckId, Number(deckId)))
-    .orderBy(cards.createdAt)
-    .limit(pageSize)
-    .offset(offset);
+    .orderBy(cards.createdAt);
 
   return result as Card[];
 }

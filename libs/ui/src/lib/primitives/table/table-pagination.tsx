@@ -84,7 +84,7 @@ export function TablePagination({ table, pageSizes, totalCount }: TablePaginatio
           <Select.Popover variants={{ class: "w-16" }} placement="bottom right">
             <Select.ListBox>
               {pageSizes.map((size) => (
-                <Select.ListBoxItem key={size} id={size}>
+                <Select.ListBoxItem textValue={String(size)} id={size} key={size}>
                   {size}
                 </Select.ListBoxItem>
               ))}
