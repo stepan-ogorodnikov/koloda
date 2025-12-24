@@ -8,6 +8,7 @@ export * from "./lib/primitives/form/form-layout";
 export * from "./lib/primitives/form/label";
 export * from "./lib/primitives/form/number-field";
 export * from "./lib/primitives/form/switch";
+export * from "./lib/primitives/form/checkbox";
 export * from "./lib/primitives/form/text-field";
 export * from "./lib/primitives/form/time-field";
 export * from "./lib/primitives/form/toggle-group";

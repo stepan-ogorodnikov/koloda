@@ -32,13 +32,20 @@
   --bg-button-primary-disabled: transparent;
   --border-button-primary: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
   --shadow-button-primary: inset 0 0.5rem 0.5rem oklch(100% 0 0 / 30%);
-  /* switch */
-  --bg-switch: oklch(0% 0 0 / 5%);
-  --bg-switch-selected: oklch(from var(--color-green-700) calc(l + 0.06) calc(c - 0.02) h);
-  --shadow-switch: var(--shadow-input);
-  --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
-  --border-switch-selected: oklch(from var(--color-green-700) calc(l - 0.01) calc(c - 0.02) h);
-  --bg-switch-bullet: oklch(100% 0 0);
+   /* switch */
+   --bg-switch: oklch(0% 0 0 / 5%);
+   --bg-switch-selected: oklch(from var(--color-green-700) calc(l + 0.06) calc(c - 0.02) h);
+   --shadow-switch: var(--shadow-input);
+   --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+   --border-switch-selected: oklch(from var(--color-green-700) calc(l - 0.01) calc(c - 0.02) h);
+   --bg-switch-bullet: oklch(100% 0 0);
+   /* checkbox */
+   --bg-checkbox: oklch(0% 0 0 / 5%);
+   --bg-checkbox-selected: oklch(from var(--color-green-900) calc(l + 0.28) calc(c - 0.02) h);
+   --shadow-checkbox: var(--shadow-input);
+   --border-checkbox: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+   --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l - 0.08) c h);
+   --fg-checkbox-check: oklch(100% 0 0);
   /* pickers */
   --bg-picker-item-hover: oklch(50% 0 0 / 5%);
   /* toggle group */
@@ -105,13 +112,20 @@
   --bg-button-primary-disabled: transparent;
   --border-button-primary: oklch(100% 0 0 / 5%);
   --shadow-button-primary: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 1%);
-  /* switch */
-  --bg-switch: var(--bg-input);
-  --bg-switch-selected: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.04) h);
-  --shadow-switch: var(--shadow-input);
-  --border-switch: var(--border-input);
-  --border-switch-selected: oklch(from var(--color-green-500) calc(l - 0.21) calc(c - 0.04) h);
-  --bg-switch-bullet: var(--fg-level-1);
+   /* switch */
+   --bg-switch: var(--bg-input);
+   --bg-switch-selected: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.04) h);
+   --shadow-switch: var(--shadow-input);
+   --border-switch: var(--border-input);
+   --border-switch-selected: oklch(from var(--color-green-500) calc(l - 0.21) calc(c - 0.04) h);
+   --bg-switch-bullet: var(--fg-level-1);
+   /* checkbox */
+   --bg-checkbox: var(--bg-input);
+   --bg-checkbox-selected: oklch(from var(--color-green-900) calc(l + 0.08) calc(c + 0.04) h);
+   --shadow-checkbox: var(--shadow-input);
+   --border-checkbox: var(--border-input);
+   --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l + 0.04) c h);
+   --fg-checkbox-check: var(--fg-level-1);
   /* pickers */
   --bg-picker-item-hover: oklch(100% 0 0 / 4%);
   /* toggle group */
@@ -182,14 +196,21 @@
   --color-bg-button-primary-hover: var(--bg-button-primary-hover);
   --color-border-button-primary: var(--border-button-primary);
   --shadow-button-primary: var(--shadow-button-primary);
-  /* switch */
-  --color-bg-switch: var(--bg-switch);
-  --color-bg-switch-selected: var(--bg-switch-selected);
-  --shadow-switch: var(--shadow-switch);
-  --color-border-switch: var(--border-switch);
-  --color-border-switch-selected: var(--border-switch-selected);
-  --color-bg-switch-bullet: var(--bg-switch-bullet);
-  /* pickers */
+   /* switch */
+   --color-bg-switch: var(--bg-switch);
+   --color-bg-switch-selected: var(--bg-switch-selected);
+   --shadow-switch: var(--shadow-switch);
+   --color-border-switch: var(--border-switch);
+   --color-border-switch-selected: var(--border-switch-selected);
+   --color-bg-switch-bullet: var(--bg-switch-bullet);
+   /* checkbox */
+   --color-bg-checkbox: var(--bg-checkbox);
+   --color-bg-checkbox-selected: var(--bg-checkbox-selected);
+   --shadow-checkbox: var(--shadow-checkbox);
+   --color-border-checkbox: var(--border-checkbox);
+   --color-border-checkbox-selected: var(--border-checkbox-selected);
+   --color-fg-checkbox-check: var(--fg-checkbox-check);
+   /* pickers */
   --color-bg-picker-item-hover: var(--bg-picker-item-hover);
   /* toggle group */
   --color-bg-toggle-group: var(--bg-toggle-group);
