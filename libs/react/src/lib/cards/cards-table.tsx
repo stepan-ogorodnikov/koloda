@@ -1,6 +1,6 @@
 import { cardsQueryKeys, queriesAtom, templatesQueryKeys } from "@koloda/react";
 import type { Card, Deck, Template } from "@koloda/srs";
-import { Table } from "@koloda/ui";
+import { SearchField, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +41,7 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
     state: [] as CardState[],
     dueAt: { isOverdue: false, isNotDue: false },
   });
+  const [searchValue, setSearchValue] = useState("");
   const { data: cards = [] } = useQuery({
     queryKey: cardsQueryKeys.deck({ deckId }),
     ...getCardsQuery({ deckId }),
@@ -59,21 +60,26 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
     () =>
       [
         (templateData?.content?.fields || []).map((field) => (
-          { accessorKey: `content.${field.id}.text`, header: field.title, cell }
+          {
+            accessorFn: (row: Card) => row.content[field.id]?.text,
+            id: `content.${field.id}.text`,
+            header: field.title,
+            cell,
+          }
         )),
         {
           accessorKey: "state",
           header: _(msg`cards.table.columns.state`),
-          size: 8,
-          cell,
+          enableGlobalFilter: false,
           filterFn: ((row, columnId, filterValue: CardState[]) =>
             filterValue.length === 0 || filterValue.includes(row.getValue(columnId) as CardState)) as FilterFn<Card>,
+          size: 8,
+          cell,
         },
         {
           accessorKey: "dueAt",
           header: _(msg`cards.table.columns.due-at`),
-          size: 14,
-          cell,
+          enableGlobalFilter: false,
           filterFn: ((row, columnId, filterValue: CardsTableFilters["dueAt"]) => {
             const value = row.getValue(columnId) as string | null;
             const isDue = value ? (new Date(value)).getTime() <= (new Date()).getTime() : false;
@@ -83,16 +89,20 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
             if (filterValue.isNotDue) return isNotDue;
             return true;
           }) as FilterFn<Card>,
+          size: 14,
+          cell,
         },
         {
           accessorKey: "createdAt",
           header: _(msg`cards.table.columns.created-at`),
+          enableGlobalFilter: false,
           size: 14,
           cell,
         },
         {
           accessorKey: "updatedAt",
           header: _(msg`cards.table.columns.updated-at`),
+          enableGlobalFilter: false,
           size: 14,
           cell,
         },
@@ -100,6 +110,7 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
           id: "delete",
           header: "",
           enableHiding: false,
+          enableGlobalFilter: false,
           minSize: 4,
           size: 4,
           cell,
@@ -127,6 +138,7 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    globalFilterFn: "includesString",
     autoResetPageIndex: false,
     defaultColumn: {
       minSize: 32,
@@ -147,6 +159,26 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
           onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
         />
         <div className="grow" />
+        <SearchField
+          aria-label={_(msg`cards-table.search.label`)}
+          value={searchValue}
+          onChange={(value) => {
+            setSearchValue(value as string);
+            table.setGlobalFilter(value as string);
+          }}
+        >
+          <SearchField.Group>
+            <SearchField.Icon />
+            <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
+            <SearchField.ClearButton
+              isHidden={!searchValue}
+              onClick={() => {
+                setSearchValue("");
+                table.setGlobalFilter("");
+              }}
+            />
+          </SearchField.Group>
+        </SearchField>
         <AddCard deckId={Number(deckId)} templateId={Number(templateId)} />
       </div>
       <div className="flex flex-col gap-4" ref={wrapperRef}>

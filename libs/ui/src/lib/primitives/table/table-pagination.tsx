@@ -8,14 +8,14 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 type TablePaginationProps = {
   table: Table<any>;
   pageSizes: number[];
-  totalCount: number;
 };
 
-export function TablePagination({ table, pageSizes, totalCount }: TablePaginationProps) {
+export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps, "totalCount">) {
   const { _ } = useLingui();
   const { pagination } = table.getState();
-  const startIndex = pagination.pageIndex * pagination.pageSize + 1;
-  const endIndex = Math.min((pagination.pageIndex + 1) * pagination.pageSize, totalCount);
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const startIndex = filteredCount > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0;
+  const endIndex = Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredCount);
   const pageCount = table.getPageCount();
   const currentPage = pagination.pageIndex + 1;
   let startPage = Math.max(1, currentPage - 2);
@@ -40,7 +40,7 @@ export function TablePagination({ table, pageSizes, totalCount }: TablePaginatio
           <span className="numbers-text text-base">{endIndex}</span>
         </div>
         <span className="fg-level-4">{_(msg`table.pagination.records.label`)}</span>
-        <span className="numbers-text text-base">{totalCount}</span>
+        <span className="numbers-text text-base">{filteredCount}</span>
       </div>
       <div className="flex flex-row item-center gap-8">
         {pageNumbers.length > 1 && (

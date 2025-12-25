@@ -19,7 +19,7 @@ export const fieldGroup = tv({
   },
 });
 
-type FieldGroupProps = GroupProps & TWVProps<typeof fieldGroup>;
+export type FieldGroupProps = GroupProps & TWVProps<typeof fieldGroup>;
 
 export function FieldGroup({ variants, ...props }: FieldGroupProps) {
   return <Group className={fieldGroup(variants)} {...props} />;

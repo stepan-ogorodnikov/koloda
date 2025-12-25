@@ -17,6 +17,7 @@ export * from "./lib/primitives/overlay/dialog";
 export * from "./lib/primitives/overlay/overlay";
 export * from "./lib/primitives/overlay/popover";
 export * from "./lib/primitives/overlay/tooltip";
+export * from "./lib/primitives/search-field";
 export * from "./lib/primitives/select";
 export * from "./lib/primitives/table/table";
 export * from "./lib/primitives/table/table-body";

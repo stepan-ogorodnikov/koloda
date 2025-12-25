@@ -224,6 +224,14 @@ msgstr "Сбросить фильтры"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
+#: ../../libs/react/src/lib/cards/cards-table.tsx:163
+msgid "cards-table.search.label"
+msgstr "Поиск по карточкам"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:172
+msgid "cards-table.search.placeholder"
+msgstr "Поиск"
+
 #: ../../libs/react/src/lib/cards/card-state.tsx:9
 msgid "cards-table.state.learn"
 msgstr "Заучивание"
@@ -240,19 +248,19 @@ msgstr "Повтор"
 msgid "cards-table.state.untouched"
 msgstr "Новая"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:89
+#: ../../libs/react/src/lib/cards/cards-table.tsx:97
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:74
+#: ../../libs/react/src/lib/cards/cards-table.tsx:81
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:66
+#: ../../libs/react/src/lib/cards/cards-table.tsx:72
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:95
+#: ../../libs/react/src/lib/cards/cards-table.tsx:104
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 

@@ -33,9 +33,10 @@ export const button = tv({
     },
     size: {
       none: "rounded-lg",
-      icon: "h-10 min-w-10 p-2 rounded-lg",
       default: "h-10 px-4 rounded-lg",
       small: "h-8 px-3 rounded-md",
+      icon: "h-10 min-w-10 p-2 rounded-lg",
+      miniIcon: "h-6 min-w-6 rounded-md",
     },
   },
   defaultVariants: {
