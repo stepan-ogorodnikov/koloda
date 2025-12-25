@@ -45,12 +45,12 @@ msgstr "Добавить"
 
 #: ../../libs/react/src/lib/cards/add-card.tsx:67
 msgid "add-cards.title"
-msgstr "Добавить карточки"
+msgstr "Добавить карточку"
 
 #: ../../libs/react/src/lib/cards/add-card.tsx:55
 #: ../../libs/react/src/lib/cards/add-card.tsx:59
 msgid "add-cards.trigger"
-msgstr "Добавить карточку"
+msgstr "Добавить карточки"
 
 #: ../../libs/react/src/lib/decks/add-deck.tsx:80
 msgid "add-deck.inputs.title.label"
@@ -183,12 +183,12 @@ msgid "card.labels.actions"
 msgstr "Действия"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:95
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:52
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:51
 msgid "card.labels.due-at"
 msgstr "Срок"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:89
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:35
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:34
 msgid "card.labels.state"
 msgstr "Статус"
 
@@ -200,7 +200,15 @@ msgstr "Перейти к следующей карточке"
 msgid "cards-stack.navigation.prev"
 msgstr "Перейти к предыдущей карточке"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:65
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
+msgid "cards-table.columns-menu.title"
+msgstr "Столбцы таблицы"
+
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
+msgid "cards-table.columns-menu.trigger"
+msgstr "Столбцы"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:66
 msgid "cards-table.filters.due-at.values.false"
 msgstr "Не подошёл"
 
@@ -208,7 +216,7 @@ msgstr "Не подошёл"
 msgid "cards-table.filters.due-at.values.true"
 msgstr "Прошёл"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:69
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:70
 msgid "cards-table.filters.reset"
 msgstr "Сбросить фильтры"
 
@@ -232,17 +240,21 @@ msgstr "Повтор"
 msgid "cards-table.state.untouched"
 msgstr "Новая"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:78
+#: ../../libs/react/src/lib/cards/cards-table.tsx:89
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:63
+#: ../../libs/react/src/lib/cards/cards-table.tsx:74
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:55
+#: ../../libs/react/src/lib/cards/cards-table.tsx:66
 msgid "cards.table.columns.state"
 msgstr "Статус"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:95
+msgid "cards.table.columns.updated-at"
+msgstr "Обновлена"
 
 #: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
 msgid "cards.views.stack"
@@ -695,4 +707,3 @@ msgstr "Изучение"
 #: ../../libs/react/src/lib/routes/_.templates.tsx:14
 msgid "title.templates"
 msgstr "Шаблоны"
-

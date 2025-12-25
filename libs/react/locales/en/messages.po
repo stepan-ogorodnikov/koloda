@@ -183,12 +183,12 @@ msgid "card.labels.actions"
 msgstr "Actions"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:95
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:52
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:51
 msgid "card.labels.due-at"
 msgstr "Due"
 
 #: ../../libs/react/src/lib/cards/cards-stack-item.tsx:89
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:35
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:34
 msgid "card.labels.state"
 msgstr "Status"
 
@@ -200,7 +200,15 @@ msgstr "Go to next card"
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:65
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
+msgid "cards-table.columns-menu.title"
+msgstr "Table Columns"
+
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
+msgid "cards-table.columns-menu.trigger"
+msgstr "Columns"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:66
 msgid "cards-table.filters.due-at.values.false"
 msgstr "Not due yet"
 
@@ -208,7 +216,7 @@ msgstr "Not due yet"
 msgid "cards-table.filters.due-at.values.true"
 msgstr "Overdue"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:69
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:70
 msgid "cards-table.filters.reset"
 msgstr "Reset filters"
 
@@ -232,17 +240,21 @@ msgstr "Review"
 msgid "cards-table.state.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:78
+#: ../../libs/react/src/lib/cards/cards-table.tsx:89
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:63
+#: ../../libs/react/src/lib/cards/cards-table.tsx:74
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:55
+#: ../../libs/react/src/lib/cards/cards-table.tsx:66
 msgid "cards.table.columns.state"
 msgstr "Status"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:95
+msgid "cards.table.columns.updated-at"
+msgstr "Updated"
 
 #: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
 msgid "cards.views.stack"

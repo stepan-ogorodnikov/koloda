@@ -11,11 +11,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { CellContext, ColumnDef, FilterFn } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, FilterFn, VisibilityState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef, useState } from "react";
 import { AddCard } from "./add-card";
 import { CardsTableCell } from "./cards-table-cell";
+import { CardsTableColumnsVisibility } from "./cards-table-columns-visibility";
 import { CardsTableFilters } from "./cards-table-filters";
 import { CardsViewToggle } from "./cards-view-toggle";
 
@@ -34,6 +35,8 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery, getCardsCountQuery, getTemplateQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ createdAt: false, updatedAt: false });
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     state: [] as CardState[],
     dueAt: { isOverdue: false, isNotDue: false },
@@ -88,8 +91,15 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
           cell,
         },
         {
+          accessorKey: "updatedAt",
+          header: _(msg`cards.table.columns.updated-at`),
+          size: 14,
+          cell,
+        },
+        {
           id: "delete",
           header: "",
+          enableHiding: false,
           minSize: 4,
           size: 4,
           cell,
@@ -103,12 +113,16 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
     data: cards,
     state: {
       pagination,
+      columnVisibility,
+      columnOrder,
       columnFilters: [
         { id: "state", value: filters.state },
         { id: "dueAt", value: filters.dueAt },
       ],
     },
     onPaginationChange: setPagination,
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -127,6 +141,11 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle />
         <CardsTableFilters filters={filters} setFilters={setFilters} />
+        <CardsTableColumnsVisibility
+          columns={table.getAllColumns()}
+          onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
+          onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
+        />
         <div className="grow" />
         <AddCard deckId={Number(deckId)} templateId={Number(templateId)} />
       </div>
