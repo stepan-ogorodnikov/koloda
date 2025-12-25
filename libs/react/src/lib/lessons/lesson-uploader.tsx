@@ -31,7 +31,7 @@ export function LessonUploader({ state, dispatch }: LessonUploaderProps) {
 
   useEffect(() => {
     upload(index);
-  }, [index]);
+  }, [index]); // oxlint-disable-line react/exhaustive-deps
 
   return null;
 }
