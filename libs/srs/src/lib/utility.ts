@@ -41,6 +41,17 @@ export function getNextNumericId<T extends { id: number }>(items: T[] = []): num
  * @section Objects
  */
 
+export type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T];
+
+/**
+ * Gets object entries with types based on source object
+ * @param object - The source object
+ * @returns Array of entries: [key, value][]
+ */
+export function objectEntries<T extends object>(object: T): Entries<T>[] {
+  return Object.entries(object) as any;
+}
+
 export type ObjectPropertiesMapping<K, V> = Partial<Record<keyof K, keyof V>>;
 
 /**

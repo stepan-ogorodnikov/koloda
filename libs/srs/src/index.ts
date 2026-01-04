@@ -7,6 +7,7 @@ export * from "./lib/lessons";
 export * from "./lib/reviews";
 export * from "./lib/schema";
 export * from "./lib/settings";
+export * from "./lib/settings-hotkeys";
 export * from "./lib/settings-interface";
 export * from "./lib/settings-learning";
 export * from "./lib/templates";

@@ -97,6 +97,54 @@ msgstr "Enabled"
 msgid "motion.system"
 msgstr "Automatic"
 
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:6
+msgid "settings-hotkeys.unique-within-scope"
+msgstr "Hotkeys must be unique withing their group"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
+msgid "settings.hotkeys.grades.again"
+msgstr "Again"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:26
+msgid "settings.hotkeys.grades.easy"
+msgstr "Easy"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
+msgid "settings.hotkeys.grades.hard"
+msgstr "Hard"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
+msgid "settings.hotkeys.grades.normal"
+msgstr "Normal"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
+msgid "settings.hotkeys.navigation.algorithms"
+msgstr "Presets"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+msgid "settings.hotkeys.navigation.dashboard"
+msgstr "Dashboard"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+msgid "settings.hotkeys.navigation.decks"
+msgstr "Decks"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+msgid "settings.hotkeys.navigation.settings"
+msgstr "Settings"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+msgid "settings.hotkeys.navigation.templates"
+msgstr "Templates"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
+msgid "settings.hotkeys.scopes.grades"
+msgstr "Grade selection"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:10
+msgid "settings.hotkeys.scopes.navigation"
+msgstr "Navigation"
+
 #: ../../libs/srs/src/lib/settings-interface.ts:16
 msgid "theme.dark"
 msgstr "Dark"

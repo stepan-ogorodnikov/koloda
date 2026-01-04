@@ -19,6 +19,7 @@ import { Route as AlgorithmsRouteImport } from './routes/_.algorithms'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/_.templates.$templateId'
 import { Route as SettingsLearningRouteImport } from './routes/_.settings.learning'
 import { Route as SettingsInterfaceRouteImport } from './routes/_.settings.interface'
+import { Route as SettingsHotkeysRouteImport } from './routes/_.settings.hotkeys'
 import { Route as DecksDeckIdRouteImport } from './routes/_.decks.$deckId'
 import { Route as AlgorithmsAlgorithmIdRouteImport } from './routes/_.algorithms.$algorithmId'
 import { Route as DecksDeckIdDetailsRouteImport } from './routes/_.decks.$deckId.details'
@@ -73,6 +74,11 @@ const SettingsInterfaceRoute = SettingsInterfaceRouteImport.update({
   path: '/interface',
   getParentRoute: () => SettingsRoute,
 } as any)
+const SettingsHotkeysRoute = SettingsHotkeysRouteImport.update({
+  id: '/hotkeys',
+  path: '/hotkeys',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const DecksDeckIdRoute = DecksDeckIdRouteImport.update({
   id: '/$deckId',
   path: '/$deckId',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/_/': typeof IndexRoute
   '/_/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
   '/_/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/_/settings/hotkeys': typeof SettingsHotkeysRoute
   '/_/settings/interface': typeof SettingsInterfaceRoute
   '/_/settings/learning': typeof SettingsLearningRoute
   '/_/templates/$templateId': typeof TemplatesTemplateIdRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/algorithms/$algorithmId'
     | '/decks/$deckId'
+    | '/settings/hotkeys'
     | '/settings/interface'
     | '/settings/learning'
     | '/templates/$templateId'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/'
     | '/algorithms/$algorithmId'
     | '/decks/$deckId'
+    | '/settings/hotkeys'
     | '/settings/interface'
     | '/settings/learning'
     | '/templates/$templateId'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/_/'
     | '/_/algorithms/$algorithmId'
     | '/_/decks/$deckId'
+    | '/_/settings/hotkeys'
     | '/_/settings/interface'
     | '/_/settings/learning'
     | '/_/templates/$templateId'
@@ -266,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsInterfaceRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/_/settings/hotkeys': {
+      id: '/_/settings/hotkeys'
+      path: '/hotkeys'
+      fullPath: '/settings/hotkeys'
+      preLoaderRoute: typeof SettingsHotkeysRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/_/decks/$deckId': {
       id: '/_/decks/$deckId'
       path: '/$deckId'
@@ -334,11 +353,13 @@ const DecksRouteChildren: DecksRouteChildren = {
 const DecksRouteWithChildren = DecksRoute._addFileChildren(DecksRouteChildren)
 
 interface SettingsRouteChildren {
+  SettingsHotkeysRoute: typeof SettingsHotkeysRoute
   SettingsInterfaceRoute: typeof SettingsInterfaceRoute
   SettingsLearningRoute: typeof SettingsLearningRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsHotkeysRoute: SettingsHotkeysRoute,
   SettingsInterfaceRoute: SettingsInterfaceRoute,
   SettingsLearningRoute: SettingsLearningRoute,
 }

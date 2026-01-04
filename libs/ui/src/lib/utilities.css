@@ -31,6 +31,10 @@
   @apply outline-0 data-focus-visible:outline-2 outline-offset-3 outline-focus-ring;
 }
 
+@utility error-ring {
+  @apply outline-0 outline-2 outline-offset-3 outline-error-ring;
+}
+
 @utility no-focus-ring {
   @apply data-focus-visible:outline-0 focus-visible:outline-0;
 }

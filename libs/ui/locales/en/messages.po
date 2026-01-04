@@ -31,6 +31,30 @@ msgstr "Save"
 msgid "form.updatedAt {0}"
 msgstr "Updated {0}"
 
+#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:41
+msgid "hotkey-recorder.accept"
+msgstr "Accept this hotkey"
+
+#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:52
+msgid "hotkey-recorder.add-button.label"
+msgstr "Add another hotkey"
+
+#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:49
+msgid "hotkey-recorder.cancel"
+msgstr "Cancel"
+
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:94
+msgid "hotkey-recorder.delete-button.label"
+msgstr "Delete this hotkey"
+
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:85
+msgid "hotkey-recorder.edit-button.label"
+msgstr "Change this hotkey"
+
+#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:37
+msgid "hotkey-recorder.input.placeholder"
+msgstr "Expecting input"
+
 #: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:81
 msgid "table.pagination.page-size.label"
 msgstr "Per page:"

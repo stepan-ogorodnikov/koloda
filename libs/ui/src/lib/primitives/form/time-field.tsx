@@ -8,7 +8,7 @@ import { formLayoutSection } from "./form-layout";
 import { textFieldInput } from "./text-field";
 
 export const timeField = tv({
-  base: "select-none",
+  base: "",
   variants: {
     layout: {
       form: formLayoutSection(),

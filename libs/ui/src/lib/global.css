@@ -16,6 +16,7 @@
   --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
   --fg-error: oklch(from var(--color-red-500) calc(l - 0.12) calc(c - 0.04) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.15) calc(c - 0.03) h);
+  --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.08) c h);
   /* input */
   --bg-input: oklch(from var(--bg-level-1) calc(l - 0.0075) c h);
   --fg-input-placeholder: var(--fg-disabled);
@@ -96,6 +97,7 @@
   --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
   --fg-error: oklch(from var(--color-red-500) calc(l - 0.03) calc(c - 0.02) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.02) c h);
+  --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.05) c h);
   /* input */
   --bg-input: oklch(100% 0 0 / 2%);
   --fg-input-placeholder: oklch(100% 0 0 / 20%);
@@ -180,6 +182,7 @@
   --color-fg-link-hover: var(--fg-link-hover);
   --color-fg-error: var(--fg-error);
   --color-outline-focus-ring: var(--outline-focus-ring);
+  --color-outline-error-ring: var(--outline-error-ring);
   /* input */
   --color-bg-input: var(--bg-input);
   --color-fg-input-placeholder: var(--fg-input-placeholder);

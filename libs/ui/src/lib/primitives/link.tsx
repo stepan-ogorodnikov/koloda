@@ -1,8 +1,7 @@
-import { createLink } from "@tanstack/react-router";
-import { forwardRef } from "react";
-import type { ComponentProps } from "react";
-import { Link as ReactAriaLink } from "react-aria-components";
-import type { LinkProps as ReactAriaLinkProps } from "react-aria-components";
+import { Link as RouterLink } from "@tanstack/react-router";
+import type { LinkComponentProps } from "@tanstack/react-router";
+import { mergeProps } from "react-aria";
+import { useFocusRing } from "react-aria";
 import { tv } from "tailwind-variants";
 
 export const link = tv({
@@ -10,17 +9,16 @@ export const link = tv({
   variants: { type: { added: "p-2 rounded-lg font-medium" } },
 });
 
-export const Link = createLink(
-  forwardRef<HTMLAnchorElement, ReactAriaLinkProps>((props, ref) => (
-    <ReactAriaLink
-      {...props}
-      ref={ref}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") e.preventDefault();
-        props.onKeyDown?.(e);
-      }}
-    />
-  )),
-);
+type LinkProps = LinkComponentProps;
 
-export type LinkProps = ComponentProps<typeof Link>;
+export function Link(props: LinkProps) {
+  const { focusProps, isFocusVisible } = useFocusRing();
+
+  return (
+    <RouterLink
+      {...mergeProps(props, focusProps)}
+      activeProps={{ "data-current": "true" }}
+      data-focus-visible={isFocusVisible || undefined}
+    />
+  );
+}

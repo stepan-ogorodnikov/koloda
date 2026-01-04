@@ -224,11 +224,11 @@ msgstr "Сбросить фильтры"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:163
+#: ../../libs/react/src/lib/cards/cards-table.tsx:159
 msgid "cards-table.search.label"
 msgstr "Поиск по карточкам"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:172
+#: ../../libs/react/src/lib/cards/cards-table.tsx:168
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
@@ -248,19 +248,19 @@ msgstr "Повтор"
 msgid "cards-table.state.untouched"
 msgstr "Новая"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:97
+#: ../../libs/react/src/lib/cards/cards-table.tsx:93
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:81
+#: ../../libs/react/src/lib/cards/cards-table.tsx:77
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:72
+#: ../../libs/react/src/lib/cards/cards-table.tsx:68
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:104
+#: ../../libs/react/src/lib/cards/cards-table.tsx:100
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 
@@ -453,15 +453,15 @@ msgstr "Закрыть"
 msgid "lesson.completion.message"
 msgstr "Выполнено"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:99
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:100
 msgid "lesson.content.submit"
 msgstr "Продолжить"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:73
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:74
 msgid "lesson.content.termination.accept"
 msgstr "Завершить сессию"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:64
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:65
 msgid "lesson.content.termination.refuse"
 msgstr "Продолжить изучение"
 
@@ -493,7 +493,7 @@ msgstr "Доступно"
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:50
+#: ../../libs/react/src/lib/lessons/lesson.tsx:55
 msgid "lesson.init.title"
 msgstr "Начать изучение"
 
@@ -506,23 +506,23 @@ msgstr "Название"
 msgid "lessons.table.columns.title.all"
 msgstr "Все"
 
-#: ../../libs/react/src/lib/components/app.tsx:10
+#: ../../libs/react/src/lib/components/app.tsx:13
 msgid "nav.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/react/src/lib/components/app.tsx:9
+#: ../../libs/react/src/lib/components/app.tsx:12
 msgid "nav.decks"
 msgstr "Колоды"
 
-#: ../../libs/react/src/lib/components/app.tsx:8
+#: ../../libs/react/src/lib/components/app.tsx:11
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/react/src/lib/components/app.tsx:12
+#: ../../libs/react/src/lib/components/app.tsx:15
 msgid "nav.settings"
 msgstr "Настройки"
 
-#: ../../libs/react/src/lib/components/app.tsx:11
+#: ../../libs/react/src/lib/components/app.tsx:14
 msgid "nav.templates"
 msgstr "Шаблоны"
 
@@ -537,6 +537,11 @@ msgstr "Запрашиваемые данные не существуют"
 #: ../../libs/react/src/lib/components/not-found.tsx:14
 msgid "not-found.title"
 msgstr "Не найдено"
+
+#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:26
+#: ../../libs/react/src/lib/routes/_.settings.tsx:16
+msgid "settings.hotkeys"
+msgstr "Горячие клавиши"
 
 #: ../../libs/react/src/lib/routes/_.settings.interface.tsx:26
 #: ../../libs/react/src/lib/routes/_.settings.tsx:14
@@ -592,7 +597,7 @@ msgstr "Всего"
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:28
+#: ../../libs/react/src/lib/routes/_.settings.tsx:29
 msgid "settings.title"
 msgstr "Настройки"
 
@@ -703,6 +708,10 @@ msgstr "Колоды"
 #: ../../libs/react/src/lib/routes/_.settings.tsx:9
 msgid "title.settings"
 msgstr "Настройки"
+
+#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:12
+msgid "title.settings.hotkeys"
+msgstr "Горячие клавиши"
 
 #: ../../libs/react/src/lib/routes/_.settings.interface.tsx:12
 msgid "title.settings.interface"

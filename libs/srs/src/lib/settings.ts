@@ -3,12 +3,14 @@ import { handleDBError, settings, withUpdatedAt } from "@koloda/srs";
 import { eq, sql } from "drizzle-orm";
 import { createSelectSchema } from "drizzle-zod";
 import type { z } from "zod/v4";
+import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { interfaceSettingsValidation } from "./settings-interface";
 import { learningSettingsValidation } from "./settings-learning";
 
 export const allowedSettings = {
   interface: interfaceSettingsValidation,
   learning: learningSettingsValidation,
+  hotkeys: hotkeysSettingsValidation,
 } as const;
 
 export type SettingsName = keyof typeof allowedSettings;
@@ -32,7 +34,7 @@ export async function getSettings<T extends SettingsName>(
   name: SettingsName,
 ): Promise<AllowedSettings<T> | undefined> {
   const result = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
-  return result[0] as AllowedSettings<T>;
+  return result[0] as AllowedSettings<T> || null;
 }
 
 export type SetSettingsData<T extends SettingsName> = {

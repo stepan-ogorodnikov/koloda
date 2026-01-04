@@ -20,6 +20,7 @@ import type {
   LessonResultData,
   PatchSettingsData,
   ResetCardProgressData,
+  SetSettingsData,
   SettingsName,
   Template,
   UpdateAlgorithmData,
@@ -56,6 +57,7 @@ import {
   getTodaysReviewTotals,
   patchSettings,
   resetCardProgress,
+  setSettings,
   submitLessonResult,
   updateAlgorithm,
   updateCard,
@@ -76,6 +78,9 @@ export const demoSetupMutationOptions = { mutationFn: setupFromScratch };
 
 export const queriesFn = (db: DB): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({ queryFn: () => getSettings<T>(db, name) }),
+  setSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: (data: SetSettingsData<T>) => setSettings<T>(db, data),
+  }),
   patchSettingsMutation: <T extends SettingsName>() => ({
     mutationFn: (data: PatchSettingsData<T>) => patchSettings<T>(db, data),
   }),

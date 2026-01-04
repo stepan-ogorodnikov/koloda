@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_/settings")({
 const LINKS = [
   { id: "interface", t: msg`settings.interface`, url: "interface" },
   { id: "learning", t: msg`settings.learning`, url: "learning" },
+  { id: "hotkeys", t: msg`settings.hotkeys`, url: "hotkeys" },
 ];
 
 function SettingsRoute() {

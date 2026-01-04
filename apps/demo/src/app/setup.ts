@@ -2,9 +2,11 @@ import type { InterfaceSettings } from "@koloda/srs";
 import {
   addAlgorithm,
   addTemplate,
+  DEFAULT_HOTKEYS_SETTINGS,
   DEFAULT_INTERFACE_SETTINGS,
   DEFAULT_LEARNING_SETTINGS,
   DEFAULT_TEMPLATE,
+  hotkeysSettingsValidation,
   interfaceSettingsValidation,
   learningSettingsValidation,
   setSettings,
@@ -94,6 +96,11 @@ export async function setupFromScratch({ t, ...settings }: SetupFromScratchData)
         content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
       },
     );
+    await setSettings(
+      db,
+      { name: "hotkeys", content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS) },
+    );
+
     return true;
   } catch (e) {
     console.error(e);

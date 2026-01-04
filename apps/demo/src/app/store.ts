@@ -1,5 +1,6 @@
 import { appEntryAtom, langAtom, motionSettingAtom, queriesAtom, themeAtom } from "@koloda/react";
 import type { Queries } from "@koloda/react";
+import { hotkeysScopesAtom } from "@koloda/ui";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";
 import { DemoAppEntry } from "../components/demo-app-entry";
@@ -42,6 +43,8 @@ function onPrefersColorSchemeChange(e: MediaQueryListEvent | MediaQueryList) {
 store.set(themeAtom, "system");
 
 store.set(motionSettingAtom, "system");
+
+store.set(hotkeysScopesAtom, []);
 
 store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 

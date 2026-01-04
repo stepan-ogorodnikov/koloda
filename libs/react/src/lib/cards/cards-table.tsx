@@ -33,7 +33,7 @@ type CardsTableProps = {
 
 export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const { _ } = useLingui();
-  const { getCardsQuery, getCardsCountQuery, getTemplateQuery } = useAtomValue(queriesAtom);
+  const { getCardsQuery, getTemplateQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ createdAt: false, updatedAt: false });
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
@@ -45,10 +45,6 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
   const { data: cards = [] } = useQuery({
     queryKey: cardsQueryKeys.deck({ deckId }),
     ...getCardsQuery({ deckId }),
-  });
-  const { data: totalCount = 0 } = useQuery({
-    queryKey: cardsQueryKeys.count({ deckId }),
-    ...getCardsCountQuery({ deckId }),
   });
   const { data: templateData } = useQuery({
     queryKey: templatesQueryKeys.detail(templateId),
@@ -186,7 +182,7 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
           <Table.Head table={table} />
           <Table.Body table={table} />
         </Table.Root>
-        <Table.Pagination table={table} pageSizes={PAGE_SIZES} totalCount={totalCount} />
+        <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
       </div>
     </>
   );

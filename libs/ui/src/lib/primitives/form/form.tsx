@@ -126,15 +126,16 @@ export function Errors({ errors, translations, fallback }: FormErrorsProps) {
 
   if (!errors) return null;
 
-  const errorsArray = Object.values(errors).flat();
+  const flattenedErrors = Object.values(errors).flat();
+  const uniqueErrors = Array.from(new Map(flattenedErrors.map((error) => [error.message, error])).values());
 
   return (
     <div className="flex flex-col py-2" role="alert">
-      {errorsArray.map((error, i) => (
-        <em className="fg-error not-italic" key={i}>
+      {uniqueErrors.map(({ message }) => (
+        <em className="fg-error not-italic" key={message}>
           {translations
-            ? (translations[error.message] ? _(translations[error.message]) : (fallback ? _(fallback) : error.message))
-            : error.message}
+            ? (translations[message] ? _(translations[message]) : (fallback ? _(fallback) : message))
+            : message}
         </em>
       ))}
     </div>

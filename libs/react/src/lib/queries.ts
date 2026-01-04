@@ -26,6 +26,7 @@ import type {
   PatchSettingsData,
   ResetCardProgressData,
   Review,
+  SetSettingsData,
   SettingsName,
   Template,
   TodaysReviewTotals,
@@ -40,6 +41,12 @@ import { atom } from "jotai";
 
 export type Queries = {
   getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | undefined>;
+  setSettingsMutation: <T extends SettingsName>() => UseMutationOptions<
+    AllowedSettings<T> | undefined,
+    Error,
+    SetSettingsData<T>,
+    unknown
+  >;
   patchSettingsMutation: <T extends SettingsName>() => UseMutationOptions<
     AllowedSettings<T> | undefined,
     Error,

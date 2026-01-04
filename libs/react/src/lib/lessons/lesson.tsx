@@ -1,6 +1,6 @@
 import { lessonsQueryKeys } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
-import { Button, Dialog } from "@koloda/ui";
+import { Button, Dialog, useHotkeysStatus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ export const lessonAtom = atom<LessonAtomValue | null>(null);
 export function Lesson() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
+  const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
   const { status } = state.meta;
@@ -31,6 +32,10 @@ export function Lesson() {
   useEffect(() => {
     if (!state.meta.isOpen) setAtomValue(null);
   }, [state.meta.isOpen, setAtomValue]);
+
+  useEffect(() => {
+    (state.meta.isOpen ? disableScope : enableScope)("nav");
+  }, [state.meta.isOpen, disableScope, enableScope]);
 
   useEffect(() => {
     if (atomValue) dispatch(["paramsSet", atomValue]);

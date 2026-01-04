@@ -1,3 +1,4 @@
+import { lessonsQueryKeys, queriesAtom, useHotkeysSettings } from "@koloda/react";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -7,7 +8,6 @@ import { useEffect, useRef } from "react";
 import type { ActionDispatch } from "react";
 import { FocusScope } from "react-aria";
 import { useHotkeys } from "react-hotkeys-hook";
-import { lessonsQueryKeys, queriesAtom } from "@koloda/react";
 import { LessonCardContentField } from "./lesson-card-content-field";
 import { LessonCardGrades } from "./lesson-card-grades";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
@@ -25,16 +25,17 @@ type LessonContentProps = {
 export function LessonContent({ state, dispatch }: LessonContentProps) {
   const { _ } = useLingui();
   const { getLessonDataQuery } = useAtomValue(queriesAtom);
+  const { grades } = useHotkeysSettings();
   const { data } = useQuery({
     queryKey: lessonsQueryKeys.data({ amounts: state.amounts!, filters: state.filters! }),
     ...getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }),
   });
   const submitRef = useRef<HTMLButtonElement>(null);
 
-  useHotkeys("1", () => dispatch(["gradeSelected", 0]));
-  useHotkeys("2", () => dispatch(["gradeSelected", 1]));
-  useHotkeys("3, enter, space", () => dispatch(["gradeSelected", 2]));
-  useHotkeys("4", () => dispatch(["gradeSelected", 3]));
+  useHotkeys(grades.again, () => dispatch(["gradeSelected", 0]));
+  useHotkeys(grades.hard, () => dispatch(["gradeSelected", 1]));
+  useHotkeys(grades.normal, () => dispatch(["gradeSelected", 2]));
+  useHotkeys(grades.easy, () => dispatch(["gradeSelected", 3]));
   useHotkeys("enter, space", () => dispatch(["cardSubmitted"]));
   useHotkeys("esc", () => dispatch(["terminationRequested", true]));
 
