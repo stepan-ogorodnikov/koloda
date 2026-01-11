@@ -28,9 +28,7 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
           <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.due)}</div>
           <Button
             variants={{ style: "primary", class: "self-stretch max-tb:text-sm" }}
-            onClick={() => {
-              dispatch(["gradeSelected", i]);
-            }}
+            onClick={() => dispatch(["gradeSelected", i])}
             autoFocus={i === 2}
           >
             {_(GRADES[i])}

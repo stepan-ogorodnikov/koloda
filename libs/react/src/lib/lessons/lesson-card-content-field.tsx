@@ -46,6 +46,13 @@ export function LessonCardContentField(
                   aria-label={field.title}
                   value={userValue}
                   onChange={(value) => dispatch(["cardFormUpdated", { key: field.id, value }])}
+                  autoFocus={field.id === content.form.firstInputFieldId}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      dispatch(["cardSubmitted"]);
+                    }
+                  }}
                 >
                   <TextField.Input />
                 </TextField>

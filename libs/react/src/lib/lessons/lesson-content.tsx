@@ -37,15 +37,17 @@ export function LessonContent({ state, dispatch }: LessonContentProps) {
   useHotkeys(grades.normal, () => dispatch(["gradeSelected", 2]));
   useHotkeys(grades.easy, () => dispatch(["gradeSelected", 3]));
   useHotkeys("enter, space", () => dispatch(["cardSubmitted"]));
-  useHotkeys("esc", () => dispatch(["terminationRequested", true]));
+  useHotkeys("esc", () => dispatch(["terminationRequested", true]), { enableOnFormTags: true });
 
   useEffect(() => {
     if (data) dispatch(["lessonDataReceived", data]);
   }, [dispatch, data]);
 
   useEffect(() => {
-    if (state?.content?.form?.isSubmitted === false) submitRef?.current?.focus();
-  }, [state?.content?.form?.isSubmitted]);
+    if (!state?.content?.form?.firstInputFieldId && state?.content?.form?.isSubmitted === false) {
+      submitRef?.current?.focus();
+    }
+  }, [state?.content?.form?.firstInputFieldId, state?.content?.form?.isSubmitted]);
 
   if (!state.content) return null;
 
@@ -58,18 +60,14 @@ export function LessonContent({ state, dispatch }: LessonContentProps) {
               <Button
                 variants={{ style: "ghost" }}
                 ref={submitRef}
-                onClick={() => {
-                  dispatch(["terminationRequested", false]);
-                }}
+                onClick={() => dispatch(["terminationRequested", false])}
               >
                 {_(msg`lesson.content.termination.refuse`)}
               </Button>
               <Button
                 variants={{ style: "primary" }}
                 ref={submitRef}
-                onClick={() => {
-                  dispatch(["isOpenUpdated", false]);
-                }}
+                onClick={() => dispatch(["isOpenUpdated", false])}
               >
                 {_(msg`lesson.content.termination.accept`)}
               </Button>
@@ -93,9 +91,7 @@ export function LessonContent({ state, dispatch }: LessonContentProps) {
             <Button
               variants={{ style: "primary" }}
               ref={submitRef}
-              onClick={() => {
-                dispatch(["cardSubmitted"]);
-              }}
+              onClick={() => dispatch(["cardSubmitted"])}
             >
               {_(msg`lesson.content.submit`)}
             </Button>

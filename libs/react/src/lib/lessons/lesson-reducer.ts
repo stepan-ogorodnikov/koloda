@@ -50,6 +50,8 @@ export type LessonReducerState = {
     // form data for certain operations, e.g., 'type'
     form: {
       data: Record<number | string, string>;
+      // field id of the first field that should be autofocused
+      firstInputFieldId?: number;
       isSubmitted: boolean;
     };
     card: Card;
@@ -270,6 +272,7 @@ function moveToNextCard(draft: LessonReducerState) {
   draft.content = {
     index,
     form: {
+      firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
       data: {},
       isSubmitted: !canSubmit,
     },
