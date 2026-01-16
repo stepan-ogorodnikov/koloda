@@ -32,10 +32,10 @@ export function LessonContent({ state, dispatch }: LessonContentProps) {
   });
   const submitRef = useRef<HTMLButtonElement>(null);
 
-  useHotkeys(grades.again, () => dispatch(["gradeSelected", 0]));
-  useHotkeys(grades.hard, () => dispatch(["gradeSelected", 1]));
-  useHotkeys(grades.normal, () => dispatch(["gradeSelected", 2]));
-  useHotkeys(grades.easy, () => dispatch(["gradeSelected", 3]));
+  useHotkeys(grades.again, () => dispatch(["gradeSelected", 0]), { keyup: true });
+  useHotkeys(grades.hard, () => dispatch(["gradeSelected", 1]), { keyup: true });
+  useHotkeys(grades.normal, () => dispatch(["gradeSelected", 2]), { keyup: true });
+  useHotkeys(grades.easy, () => dispatch(["gradeSelected", 3]), { keyup: true });
   useHotkeys("enter, space", () => dispatch(["cardSubmitted"]));
   useHotkeys("esc", () => dispatch(["terminationRequested", true]), { enableOnFormTags: true });
 
