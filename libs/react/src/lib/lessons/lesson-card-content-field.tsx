@@ -2,15 +2,16 @@ import type { LessonTemplateLayoutItem } from "@koloda/srs";
 import { TextField } from "@koloda/ui";
 import type { ActionDispatch } from "react";
 import { tv } from "tailwind-variants";
+import { LessonCardContentFieldTextDiff, lessonCardContentFieldValue } from "./lesson-card-content-field-text-diff";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
 const lessonCardContentField = tv({
-  base: "text-xl",
+  base: "w-full text-xl text-center",
   variants: {
     operation: {
       display: "",
       reveal: "hidden data-is-submitted:flex",
-      type: "flex flex-col gap-2",
+      type: "flex flex-col",
     },
   },
 });
@@ -35,12 +36,7 @@ export function LessonCardContentField(
         ? (
           <>
             {content.form.isSubmitted
-              ? (
-                <>
-                  <div>{userValue}</div>
-                  <div>{actualValue}</div>
-                </>
-              )
+              ? <LessonCardContentFieldTextDiff userValue={userValue} correctValue={actualValue} />
               : (
                 <TextField
                   aria-label={field.title}
@@ -54,12 +50,12 @@ export function LessonCardContentField(
                     }
                   }}
                 >
-                  <TextField.Input />
+                  <TextField.TextArea variants={{ class: lessonCardContentFieldValue }} />
                 </TextField>
               )}
           </>
         )
-        : actualValue}
+        : <div className={lessonCardContentFieldValue}>{actualValue}</div>}
     </div>
   );
 }

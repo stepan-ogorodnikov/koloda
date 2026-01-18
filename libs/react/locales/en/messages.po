@@ -453,11 +453,11 @@ msgstr "Close"
 msgid "lesson.completion.message"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:100
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:96
 msgid "lesson.content.submit"
 msgstr "Continue"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:74
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:72
 msgid "lesson.content.termination.accept"
 msgstr "Close"
 
@@ -466,34 +466,41 @@ msgid "lesson.content.termination.refuse"
 msgstr "Continue studying"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:20
 msgid "lesson.init.amount-input.learn"
 msgstr "Amount of cards of type learn"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:14
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:21
 msgid "lesson.init.amount-input.review"
 msgstr "Amount of cards of type review"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:19
 msgid "lesson.init.amount-input.untouched"
 msgstr "Amount of cards of type new"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:91
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:63
+msgid "lesson.init.list.labels.available"
+msgstr "Available:"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:67
 msgid "lesson.init.submit"
 msgstr "Start"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:64
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:27
 msgid "lesson.init.table.columns.amount"
 msgstr "Amount"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
 msgid "lesson.init.table.columns.available"
 msgstr "Available"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:66
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
 msgid "lesson.init.table.columns.learned"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:55
+#: ../../libs/react/src/lib/lessons/lesson.tsx:59
 msgid "lesson.init.title"
 msgstr "Study cards"
 

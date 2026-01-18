@@ -1,6 +1,6 @@
 import type { LessonReducerState } from "./lesson-reducer";
 
-const lessonProgressAmountSign = "pb-0.5 font-normal";
+const lessonProgressAmountSign = "pb-0.5 fg-level-3 text-sm";
 
 type LessonProgressAmountsProps = { state: LessonReducerState };
 

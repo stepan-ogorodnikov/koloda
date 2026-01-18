@@ -453,11 +453,11 @@ msgstr "Закрыть"
 msgid "lesson.completion.message"
 msgstr "Выполнено"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:100
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:96
 msgid "lesson.content.submit"
 msgstr "Продолжить"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:74
+#: ../../libs/react/src/lib/lessons/lesson-content.tsx:72
 msgid "lesson.content.termination.accept"
 msgstr "Завершить сессию"
 
@@ -466,34 +466,41 @@ msgid "lesson.content.termination.refuse"
 msgstr "Продолжить изучение"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:20
 msgid "lesson.init.amount-input.learn"
 msgstr "Количество карт типа 'заучивание'"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:14
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:21
 msgid "lesson.init.amount-input.review"
 msgstr "Количество карт типа 'повтор'"
 
 #: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:19
 msgid "lesson.init.amount-input.untouched"
 msgstr "Количество карт типа 'новые'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:91
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:63
+msgid "lesson.init.list.labels.available"
+msgstr "Доступно:"
+
+#: ../../libs/react/src/lib/lessons/lesson-init.tsx:67
 msgid "lesson.init.submit"
 msgstr "Начать"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:64
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:27
 msgid "lesson.init.table.columns.amount"
 msgstr "Количество"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
 msgid "lesson.init.table.columns.available"
 msgstr "Доступно"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:66
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:55
+#: ../../libs/react/src/lib/lessons/lesson.tsx:59
 msgid "lesson.init.title"
 msgstr "Начать изучение"
 

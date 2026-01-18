@@ -21,6 +21,12 @@ export type LessonAtomValue = {
 
 export const lessonAtom = atom<LessonAtomValue | null>(null);
 
+const lessonModal = [
+  "max-tb:w-full tb:min-w-144",
+  "max-tb:h-full min-h-[min(36rem,100%)] max-h-screen",
+  "overflow-hidden",
+].join(" ");
+
 export function Lesson() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
@@ -45,17 +51,22 @@ export function Lesson() {
     <Dialog.Root isOpen={state.meta.isOpen} onOpenChange={(value) => dispatch(["isOpenUpdated", value])}>
       <Button className="hidden" />
       <Dialog.Overlay isKeyboardDismissDisabled>
-        <Dialog.Modal variants={{ class: "max-tb:w-full tb:min-w-112 min-h-96" }} isKeyboardDismissDisabled>
+        <Dialog.Modal
+          variants={{ class: lessonModal }}
+          isKeyboardDismissDisabled
+        >
           <Dialog.Body>
             <Dialog.Header variants={{ class: "relative flex-col items-stretch gap-2 overflow-hidden" }}>
               <div className="relative grow flex flex-row items-start justify-between">
-                {status === "init"
-                  ? (
-                    <Dialog.Title>
-                      {_(msg`lesson.init.title`)}
-                    </Dialog.Title>
-                  )
-                  : <LessonProgressAmounts state={state} />}
+                <div className="grow">
+                  {status === "init"
+                    ? (
+                      <Dialog.Title>
+                        {_(msg`lesson.init.title`)}
+                      </Dialog.Title>
+                    )
+                    : <LessonProgressAmounts state={state} />}
+                </div>
                 <Dialog.Close
                   onClick={() => {
                     if (status === "started") {

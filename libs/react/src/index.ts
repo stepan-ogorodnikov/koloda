@@ -17,6 +17,7 @@ export * from "./lib/hooks/use-hotkeys-settings";
 export * from "./lib/hooks/use-motion-setting";
 export * from "./lib/hooks/use-title";
 export * from "./lib/lessons/lesson";
+export * from "./lib/lessons/lesson-card-content-field-text-diff";
 export * from "./lib/lessons/lessons";
 export * from "./lib/lessons/lessons-query-keys";
 export * from "./lib/queries";

@@ -5,7 +5,6 @@ import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
 import type { ActionDispatch } from "react";
 import { lessonAtom } from "./lesson";
-import { LessonInitTd } from "./lesson-init-td";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
 const LABELS = {
@@ -27,20 +26,18 @@ export function LessonInitAmountInput({ state, dispatch, type }: LessonInitAmoun
   if (!state.lessons || !state.amounts) return null;
 
   return (
-    <LessonInitTd>
-      <NumberField
-        variants={{ class: "w-32 me-4" }}
-        aria-label={_(LABELS[type])}
-        value={state.amounts?.[type]}
-        minValue={0}
-        maxValue={state.lessons[0][type]}
-        onChange={(e) => {
-          dispatch(["amountUpdated", { type, value: e }]);
-        }}
-        autoFocus={currentlessonType === type || (currentlessonType === "total" && type === "untouched")}
-      >
-        <NumberField.Group />
-      </NumberField>
-    </LessonInitTd>
+    <NumberField
+      variants={{ class: "w-32 me-4" }}
+      aria-label={_(LABELS[type])}
+      value={state.amounts?.[type]}
+      minValue={0}
+      maxValue={state.lessons[0][type]}
+      onChange={(e) => {
+        dispatch(["amountUpdated", { type, value: e }]);
+      }}
+      autoFocus={currentlessonType === type || (currentlessonType === "total" && type === "untouched")}
+    >
+      <NumberField.Group />
+    </NumberField>
   );
 }

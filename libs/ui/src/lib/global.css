@@ -15,6 +15,7 @@
   --fg-link: oklch(from var(--color-blue-500) calc(l - 0.08) c h);
   --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
   --fg-error: oklch(from var(--color-red-500) calc(l - 0.12) calc(c - 0.04) h);
+  --fg-success: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.15) calc(c - 0.03) h);
   --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.08) c h);
   /* input */
@@ -96,6 +97,7 @@
   --fg-link: oklch(from var(--color-blue-900) calc(l + 0.21) c h);
   --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
   --fg-error: oklch(from var(--color-red-500) calc(l - 0.03) calc(c - 0.02) h);
+  --fg-success: oklch(from var(--color-green-500) calc(l - 0.13) calc(c - 0.06) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.02) c h);
   --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.05) c h);
   /* input */
@@ -181,6 +183,7 @@
   --color-fg-link: var(--fg-link);
   --color-fg-link-hover: var(--fg-link-hover);
   --color-fg-error: var(--fg-error);
+  --color-fg-success: var(--fg-success);
   --color-outline-focus-ring: var(--outline-focus-ring);
   --color-outline-error-ring: var(--outline-error-ring);
   /* input */
