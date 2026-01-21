@@ -32,7 +32,10 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button variants={{ style: "ghost", size: "icon", class: "group w-full p-1 rounded-none no-focus-ring" }}>
+      <Button
+        variants={{ style: "ghost", size: "icon", class: "group w-full p-1 rounded-none no-focus-ring" }}
+        aria-label={_(msg`delete-card.trigger`)}
+      >
         <div className="p-1 rounded-md group-focus-ring">
           <Trash2 className="size-5 stroke-1.75" />
         </div>

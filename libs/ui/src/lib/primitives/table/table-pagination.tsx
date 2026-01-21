@@ -46,12 +46,14 @@ export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps,
         {pageNumbers.length > 1 && (
           <div className="flex items-center space-x-2">
             <TablePaginationButton
+              aria-label={_(msg`table.pagination.buttons.first`)}
               onClick={() => goToPage(0)}
               isDisabled={currentPage === 1}
             >
               <ChevronsLeft className="size-5 min-w-5 stroke-2" />
             </TablePaginationButton>
             <TablePaginationButton
+              aria-label={_(msg`table.pagination.buttons.previous`)}
               onClick={() => table.previousPage()}
               isDisabled={!table.getCanPreviousPage()}
             >
@@ -59,12 +61,14 @@ export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps,
             </TablePaginationButton>
             <div className="w-8 numbers-text text-center fg-level-2">{currentPage}</div>
             <TablePaginationButton
+              aria-label={_(msg`table.pagination.buttons.next`)}
               onClick={() => table.nextPage()}
               isDisabled={!table.getCanNextPage()}
             >
               <ChevronRight className="size-4 min-w-4 stroke-2.5" />
             </TablePaginationButton>
             <TablePaginationButton
+              aria-label={_(msg`table.pagination.buttons.last`)}
               onClick={() => goToPage(pageCount - 1)}
               isDisabled={currentPage === pageCount}
             >

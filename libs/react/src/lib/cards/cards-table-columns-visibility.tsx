@@ -1,4 +1,5 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+import { Accessibility } from "@dnd-kit/dom";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { Button, Checkbox, Dialog, Draggable } from "@koloda/ui";
@@ -62,6 +63,7 @@ export function CardsTableColumnsVisibility<TData>({
           </h3>
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
+            plugins={[Accessibility]}
             modifiers={[RestrictToVerticalAxis] as any[]}
             onDragEnd={handleDragEnd}
           >

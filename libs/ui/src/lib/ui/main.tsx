@@ -2,10 +2,10 @@ import { tabs } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
-export const main = "grow flex flex-row min-w-0 rounded-xl bg-level-1 border-2 border-main";
+export const main = "grow flex flex-row min-w-0 rounded-xl bg-level-1 border-2 border-main no-focus-ring";
 
 export function Main({ children }: PropsWithChildren) {
-  return <div className={main}>{children}</div>;
+  return <div className={main} id="main" tabIndex={-1}>{children}</div>;
 }
 
 export const mainTitlebar =

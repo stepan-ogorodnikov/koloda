@@ -32,7 +32,7 @@
 }
 
 @utility error-ring {
-  @apply outline-0 outline-2 outline-offset-3 outline-error-ring;
+  @apply outline-2 outline-offset-3 outline-error-ring;
 }
 
 @utility no-focus-ring {

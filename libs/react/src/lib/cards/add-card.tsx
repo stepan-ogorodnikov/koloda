@@ -68,14 +68,14 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>
-            <Dialog.Content variants={{ class: "pb-6" }}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  form.handleSubmit();
-                }}
-              >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+            >
+              <Dialog.Content variants={{ class: "pb-6" }}>
                 {template.content.fields.map(({ id, title }, i) => (
                   <form.AppField name={`content.${id}.text`} key={id}>
                     {(field) => (
@@ -94,22 +94,21 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                     )}
                   </form.AppField>
                 ))}
-                <button className="hidden" type="submit" />
-              </form>
-            </Dialog.Content>
-            <Dialog.Footer>
-              <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
-                {([isDirty, canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    isDisabled={!canSubmit || !isDirty}
-                    onClick={form.handleSubmit}
-                  >
-                    {_(msg`add-card.submit`)}
-                  </Button>
-                )}
-              </form.Subscribe>
-            </Dialog.Footer>
+              </Dialog.Content>
+              <Dialog.Footer>
+                <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
+                  {([isDirty, canSubmit]) => (
+                    <Button
+                      variants={{ style: "primary" }}
+                      isDisabled={!canSubmit || !isDirty}
+                      onClick={form.handleSubmit}
+                    >
+                      {_(msg`add-card.submit`)}
+                    </Button>
+                  )}
+                </form.Subscribe>
+              </Dialog.Footer>
+            </form>
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

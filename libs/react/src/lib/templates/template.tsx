@@ -81,10 +81,10 @@ export function Template({ id }: TemplateProps) {
           </div>
         </FormLayout.Section.Content>
       </FormLayout.Section>
-      <FormLayout.Section term={_(msg`template.inputs.fields.label`)}>
+      <FormLayout.Section term={_(msg`template.fields.label`)}>
         <TemplateFields form={form} isLocked={data?.isLocked || false} />
       </FormLayout.Section>
-      <FormLayout.Section term={_(msg`template.inputs.layout.label`)}>
+      <FormLayout.Section term={_(msg`template.layout.label`)}>
         <TemplateLayout form={form} />
       </FormLayout.Section>
       <FormLayout.Section term={_(msg`template.actions.label`)}>

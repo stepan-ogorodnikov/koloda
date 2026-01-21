@@ -1,5 +1,6 @@
-import { Link } from "@koloda/ui";
+import { Button, Link } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent, PropsWithChildren, RefAttributes } from "react";
@@ -18,6 +19,26 @@ function DashboardContent({ children }: PropsWithChildren) {
   return <div className={dashboardContent}>{children}</div>;
 }
 
+const dashboardSkipLink =
+  "sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2";
+
+function DashboardSkipLink() {
+  const { _ } = useLingui();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.getElementById("main")?.focus();
+  };
+
+  return (
+    <Button
+      variants={{ style: "primary", class: dashboardSkipLink }}
+      onClick={handleClick}
+    >
+      {_(msg`dashboard.skip-link`)}
+    </Button>
+  );
+}
 const dashboardAside = [
   "fixed z-1 flex flex-col max-dt:items-center justify-center gap-4",
   "dt:static dt:justify-between bottom-0 inset-x-0 dt:min-w-48 dt:py-6 dt:px-2",
@@ -38,7 +59,7 @@ const dashboardNav = [
 
 function DashboardNav({ children }: PropsWithChildren) {
   return (
-    <nav className={dashboardNav} role="menu">
+    <nav className={dashboardNav}>
       {children}
     </nav>
   );
@@ -78,6 +99,7 @@ function DashboardControls({ children }: PropsWithChildren) {
 
 Dashboard.Aside = DashboardAside;
 Dashboard.Content = DashboardContent;
+Dashboard.SkipLink = DashboardSkipLink;
 Dashboard.Nav = DashboardNav;
 Dashboard.NavLink = DashboardNavLink;
 Dashboard.Controls = DashboardControls;

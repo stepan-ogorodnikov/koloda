@@ -1,3 +1,5 @@
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { CircleAlert, CircleCheck, CircleDot } from "lucide-react";
 import { motion } from "motion/react";
 import { tv } from "tailwind-variants";
@@ -22,11 +24,19 @@ const lessonProgressCardDot = tv({
 type LessonProgressDotsProps = { state: LessonReducerState };
 
 export function LessonProgressDots({ state }: LessonProgressDotsProps) {
+  const { _ } = useLingui();
   const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
   const { index } = state.content || { index: 0 };
+  const total = state.data?.cards.length || 0;
 
   return (
-    <div className="relative w-full h-4">
+    <div
+      className="relative w-full h-4"
+      aria-label={_(msg`lesson.progress.label ${index + 1} ${total}`)}
+      aria-valuenow={index + 1}
+      aria-valuemax={total}
+      role="progressbar"
+    >
       <motion.div
         className="absolute left-1/2 flex flex-row justify-center gap-2"
         initial={{ x: -0.5 * rem() }}
@@ -39,7 +49,7 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
           const status = state.upload.log[i];
 
           return (
-            <div className={lessonProgressCardDot({ isCurrent, type })} key={i}>
+            <div className={lessonProgressCardDot({ isCurrent, type })} key={i} aria-hidden="true">
               {status === "success" && <CircleCheck className="size-4 stroke-2 fg-level-1" />}
               {status === "error" && <CircleAlert className="size-4 stroke-2 fg-level-1" />}
               {!status && <CircleDot className="size-4 stroke-2 fg-level-1" />}

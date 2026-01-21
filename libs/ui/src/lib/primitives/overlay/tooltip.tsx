@@ -8,9 +8,9 @@ import { tv } from "tailwind-variants";
 
 export type TooltipProps = TooltipTriggerComponentProps & { content?: ReactNode };
 
-export function Tooltip({ children, content, ...props }: TooltipProps) {
+export function Tooltip({ children, content, delay = 700, closeDelay = 300, ...props }: TooltipProps) {
   return (
-    <TooltipTrigger {...props}>
+    <TooltipTrigger delay={delay} closeDelay={closeDelay} {...props}>
       {children}
       <TooltipContent>{content}</TooltipContent>
     </TooltipTrigger>

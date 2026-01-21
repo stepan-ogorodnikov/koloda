@@ -24,7 +24,7 @@ export function TemplateDraggable({ data, children }: TemplateDraggableProps) {
           controls.start(e);
         }}
       >
-        <GripVertical className="size-5 fg-level-2 stroke-1.25" />
+        <GripVertical className="size-5 fg-level-2 stroke-1.25" aria-hidden="true" />
       </td>
       {children}
     </Reorder.Item>

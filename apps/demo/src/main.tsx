@@ -3,9 +3,10 @@ import { langAtom, routeTree } from "@koloda/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import type { I18nProviderProps } from "@lingui/react";
+import { I18nProvider as ReactAriaI18nProvider } from "@react-aria/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
-import { Provider as JotaiProvider, useSetAtom } from "jotai";
+import { Provider as JotaiProvider, useAtom } from "jotai";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { activateLanguage, getLanguage } from "./app/i18n";
@@ -38,7 +39,7 @@ const root = createRoot(
 root.render(<App />);
 
 function App() {
-  const setLang = useSetAtom(langAtom);
+  const [lang, setLang] = useAtom(langAtom);
   const [isI18nReady, setIsI18nReady] = useState(false);
 
   useEffect(() => {
@@ -52,13 +53,15 @@ function App() {
 
   return (
     <StrictMode>
-      <I18nProvider i18n={i18n as unknown as I18nProviderProps["i18n"]}>
-        <QueryClientProvider client={queryClient}>
-          <JotaiProvider store={store}>
-            <RouterProvider router={router} />
-          </JotaiProvider>
-        </QueryClientProvider>
-      </I18nProvider>
+      <ReactAriaI18nProvider locale={lang}>
+        <I18nProvider i18n={i18n as unknown as I18nProviderProps["i18n"]}>
+          <QueryClientProvider client={queryClient}>
+            <JotaiProvider store={store}>
+              <RouterProvider router={router} />
+            </JotaiProvider>
+          </QueryClientProvider>
+        </I18nProvider>
+      </ReactAriaI18nProvider>
     </StrictMode>
   );
 }

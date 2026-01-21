@@ -26,7 +26,7 @@ export const searchFieldGroup = tv({
 export type SearchFieldGroupProps = TWVProps<typeof searchFieldGroup> & FieldGroupProps;
 
 export function SearchFieldGroup({ variants, ...props }: SearchFieldGroupProps) {
-  return <FieldGroup className={searchFieldGroup(variants)} {...props} />;
+  return <FieldGroup className={searchFieldGroup(variants)} role="group" {...props} />;
 }
 
 const searchFieldIcon = "size-4 min-w-4 ml-1 fg-inactive pointer-events-none";

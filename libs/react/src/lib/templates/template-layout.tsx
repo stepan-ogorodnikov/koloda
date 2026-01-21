@@ -1,4 +1,5 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+import { Accessibility } from "@dnd-kit/dom";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { DEFAULT_TEMPLATE, getTemplateFieldTitleById } from "@koloda/srs";
@@ -26,6 +27,7 @@ export const TemplateLayout = withForm({
         {(field) => (
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
+            plugins={[Accessibility]}
             modifiers={[RestrictToVerticalAxis] as any[]}
             onDragEnd={(event) => {
               const { operation, canceled } = event;
@@ -45,20 +47,20 @@ export const TemplateLayout = withForm({
                 <Draggable id={item.field} index={i} key={item.field}>
                   <div className="flex flex-row flex-wrap">
                     <TextField
-                      aria-label={_(msg`template.inputs.layout.field.label`)}
+                      aria-label={_(msg`template.layout.inputs.field.label`)}
                       value={getTemplateFieldTitleById(fieldsValue, field.state.value[i].field)}
                       isReadOnly
                       isDisabled
                     >
                       <TextField.Input
                         variants={{ style: "inline", class: "dt:w-72" }}
-                        placeholder={_(msg`template.inputs.layout.field.placeholder`)}
+                        placeholder={_(msg`template.fields.inputs.title.placeholder`)}
                       />
                     </TextField>
                     <form.Field name={`content.layout[${i}].operation`}>
                       {(operationField) => (
                         <Select.Root
-                          aria-label={_(msg`template.inputs.layout.operation.label`)}
+                          aria-label={_(msg`template.layout.inputs.operation.label`)}
                           selectedKey={operationField.state.value}
                           onSelectionChange={(e) => {
                             if (typeof e === "string") operationField.handleChange(e as TemplateOperation);

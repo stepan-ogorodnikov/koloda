@@ -39,7 +39,7 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:108
+#: ../../libs/react/src/lib/cards/add-card.tsx:106
 msgid "add-card.submit"
 msgstr "Create card"
 
@@ -200,11 +200,11 @@ msgstr "Go to next card"
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:62
 msgid "cards-table.columns-menu.title"
 msgstr "Table Columns"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:57
 msgid "cards-table.columns-menu.trigger"
 msgstr "Columns"
 
@@ -362,21 +362,22 @@ msgstr "Successor preset"
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
 #: ../../libs/react/src/lib/cards/delete-card.tsx:37
 msgid "delete-card.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
 #: ../../libs/react/src/lib/cards/delete-card.tsx:38
 msgid "delete-card.confirm"
 msgstr "Delete"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:44
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
 #: ../../libs/react/src/lib/cards/delete-card.tsx:35
 msgid "delete-card.message"
 msgstr "Delete this card with all it's reviews?"
 
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
 #: ../../libs/react/src/lib/cards/delete-card.tsx:32
 msgid "delete-card.trigger"
 msgstr "Delete card"
@@ -465,22 +466,19 @@ msgstr "Close"
 msgid "lesson.content.termination.refuse"
 msgstr "Continue studying"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:20
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
 msgid "lesson.init.amount-input.learn"
 msgstr "Amount of cards of type learn"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:14
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:21
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
 msgid "lesson.init.amount-input.review"
 msgstr "Amount of cards of type review"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:19
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:11
 msgid "lesson.init.amount-input.untouched"
 msgstr "Amount of cards of type new"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:63
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:37
 msgid "lesson.init.list.labels.available"
 msgstr "Available:"
 
@@ -488,21 +486,26 @@ msgstr "Available:"
 msgid "lesson.init.submit"
 msgstr "Start"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:27
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
 msgid "lesson.init.table.columns.amount"
 msgstr "Amount"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
 msgid "lesson.init.table.columns.available"
 msgstr "Available"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:30
 msgid "lesson.init.table.columns.learned"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:59
+#: ../../libs/react/src/lib/lessons/lesson.tsx:65
 msgid "lesson.init.title"
 msgstr "Study cards"
+
+#. placeholder {0}: index + 1
+#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:35
+msgid "lesson.progress.label {0} {total}"
+msgstr "Progress: card № {0} of {total} total"
 
 #: ../../libs/react/src/lib/lessons/lessons-table.tsx:22
 msgid "lessons.table.columns.title"
@@ -616,41 +619,42 @@ msgstr "Template"
 msgid "template.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:68
-msgid "template.inputs.fields.add"
-msgstr "Add"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:70
+msgid "template.fields.add-item"
+msgstr "Add field"
 
-#: ../../libs/react/src/lib/templates/template.tsx:84
-msgid "template.inputs.fields.label"
-msgstr "Fields"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:106
+msgid "template.fields.delete-item.label"
+msgstr "Delete field"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:93
-msgid "template.inputs.fields.title.label"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:95
+msgid "template.fields.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:99
-msgid "template.inputs.fields.title.placeholder"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:101
+#: ../../libs/react/src/lib/templates/template-layout.tsx:57
+msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:48
-msgid "template.inputs.layout.field.label"
-msgstr "Field"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:55
-msgid "template.inputs.layout.field.placeholder"
-msgstr "Untitled"
-
-#: ../../libs/react/src/lib/templates/template.tsx:87
-msgid "template.inputs.layout.label"
-msgstr "Layout"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:61
-msgid "template.inputs.layout.operation.label"
-msgstr "Operation"
+#: ../../libs/react/src/lib/templates/template.tsx:84
+msgid "template.fields.label"
+msgstr "Fields"
 
 #: ../../libs/react/src/lib/templates/template.tsx:63
 msgid "template.inputs.title.label"
 msgstr "Title"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:50
+msgid "template.layout.inputs.field.label"
+msgstr "Field"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:63
+msgid "template.layout.inputs.operation.label"
+msgstr "Operation"
+
+#: ../../libs/react/src/lib/templates/template.tsx:87
+msgid "template.layout.label"
+msgstr "Layout"
 
 #: ../../libs/react/src/lib/templates/template.tsx:76
 msgid "template.status.locked"
@@ -664,15 +668,15 @@ msgstr "Status"
 msgid "template.status.unlocked"
 msgstr "Not locked"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:13
+#: ../../libs/react/src/lib/templates/template-layout.tsx:14
 msgid "templates.operations.display"
 msgstr "Display"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:14
+#: ../../libs/react/src/lib/templates/template-layout.tsx:15
 msgid "templates.operations.reveal"
 msgstr "Reveal"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:15
+#: ../../libs/react/src/lib/templates/template-layout.tsx:16
 msgid "templates.operations.type"
 msgstr "Type"
 

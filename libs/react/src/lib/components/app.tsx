@@ -32,6 +32,7 @@ export function App({ children }: PropsWithChildren) {
 
   return (
     <Dashboard>
+      <Dashboard.SkipLink />
       <Dashboard.Aside>
         <Dashboard.Nav>
           {appMenu.map(({ cn, to, t, Icon }) => <Dashboard.NavLink cn={cn} to={to} msg={t} Icon={Icon} key={to} />)}

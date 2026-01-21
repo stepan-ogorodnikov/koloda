@@ -13,6 +13,22 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/ui/src/lib/ui/back-button.tsx:13
+msgid "back-button.label"
+msgstr "Go back"
+
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:38
+msgid "dashboard.skip-link"
+msgstr "Skip to content"
+
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:14
+msgid "drag-handle.description"
+msgstr "Drag to reorder this item"
+
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:13
+msgid "drag-handle.label"
+msgstr "Drag handle"
+
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
@@ -55,7 +71,23 @@ msgstr "Change this hotkey"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Expecting input"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:81
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:49
+msgid "table.pagination.buttons.first"
+msgstr "Go to first page"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:71
+msgid "table.pagination.buttons.last"
+msgstr "Go to last page"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:64
+msgid "table.pagination.buttons.next"
+msgstr "Go to next page"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:56
+msgid "table.pagination.buttons.previous"
+msgstr "Go to previous page"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:85
 msgid "table.pagination.page-size.label"
 msgstr "Per page:"
 

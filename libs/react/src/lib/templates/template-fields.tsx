@@ -1,4 +1,5 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+import { Accessibility } from "@dnd-kit/dom";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId } from "@koloda/srs";
@@ -22,6 +23,7 @@ export const TemplateFields = withForm({
         {(field) => (
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
+            plugins={[Accessibility]}
             modifiers={[RestrictToVerticalAxis] as any[]}
             onDragEnd={(event) => {
               const { operation, canceled } = event;
@@ -65,7 +67,7 @@ export const TemplateFields = withForm({
                     }}
                   >
                     <Plus className="size-4 mx-0.5" />
-                    {_(msg`template.inputs.fields.add`)}
+                    {_(msg`template.fields.add-item`)}
                   </Button>
                 </div>
               )}
@@ -90,17 +92,18 @@ function TemplateField({ title, onTitleChange, isLocked, onDelete }: TemplateFie
   return (
     <>
       <TextField
-        aria-label={_(msg`template.inputs.fields.title.label`)}
+        aria-label={_(msg`template.fields.inputs.title.label`)}
         value={title}
         onChange={onTitleChange}
       >
         <TextField.Input
           variants={{ style: "inline", class: "dt:w-72" }}
-          placeholder={_(msg`template.inputs.fields.title.placeholder`)}
+          placeholder={_(msg`template.fields.inputs.title.placeholder`)}
         />
       </TextField>
       {!isLocked && (
         <Button
+          aria-label={_(msg`template.fields.delete-item.label`)}
           variants={{ style: "ghost", size: "icon" }}
           onClick={onDelete}
         >

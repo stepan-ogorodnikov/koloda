@@ -39,7 +39,7 @@ msgstr "Новый алгоритм"
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:108
+#: ../../libs/react/src/lib/cards/add-card.tsx:106
 msgid "add-card.submit"
 msgstr "Добавить"
 
@@ -200,11 +200,11 @@ msgstr "Перейти к следующей карточке"
 msgid "cards-stack.navigation.prev"
 msgstr "Перейти к предыдущей карточке"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:62
 msgid "cards-table.columns-menu.title"
 msgstr "Столбцы таблицы"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:57
 msgid "cards-table.columns-menu.trigger"
 msgstr "Столбцы"
 
@@ -362,21 +362,22 @@ msgstr "Алгоритм наследник"
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
 #: ../../libs/react/src/lib/cards/delete-card.tsx:37
 msgid "delete-card.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
 #: ../../libs/react/src/lib/cards/delete-card.tsx:38
 msgid "delete-card.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:44
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
 #: ../../libs/react/src/lib/cards/delete-card.tsx:35
 msgid "delete-card.message"
 msgstr "Подтвердите удаление карточки"
 
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
 #: ../../libs/react/src/lib/cards/delete-card.tsx:32
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
@@ -465,22 +466,19 @@ msgstr "Завершить сессию"
 msgid "lesson.content.termination.refuse"
 msgstr "Продолжить изучение"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:20
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
 msgid "lesson.init.amount-input.learn"
 msgstr "Количество карт типа 'заучивание'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:14
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:21
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:13
 msgid "lesson.init.amount-input.review"
 msgstr "Количество карт типа 'повтор'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:12
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:19
+#: ../../libs/react/src/lib/lessons/lesson-init-amount-input.tsx:11
 msgid "lesson.init.amount-input.untouched"
 msgstr "Количество карт типа 'новые'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:63
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:37
 msgid "lesson.init.list.labels.available"
 msgstr "Доступно:"
 
@@ -488,21 +486,26 @@ msgstr "Доступно:"
 msgid "lesson.init.submit"
 msgstr "Начать"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:27
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
 msgid "lesson.init.table.columns.amount"
 msgstr "Количество"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:28
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
 msgid "lesson.init.table.columns.available"
 msgstr "Доступно"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:29
+#: ../../libs/react/src/lib/lessons/lesson-init-table.tsx:30
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:59
+#: ../../libs/react/src/lib/lessons/lesson.tsx:65
 msgid "lesson.init.title"
 msgstr "Начать изучение"
+
+#. placeholder {0}: index + 1
+#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:35
+msgid "lesson.progress.label {0} {total}"
+msgstr "Прогресс: карточка № {0}, всего {total}"
 
 #: ../../libs/react/src/lib/lessons/lessons-table.tsx:22
 msgid "lessons.table.columns.title"
@@ -616,41 +619,42 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:68
-msgid "template.inputs.fields.add"
-msgstr "Добавить"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:70
+msgid "template.fields.add-item"
+msgstr "Добавить поле"
 
-#: ../../libs/react/src/lib/templates/template.tsx:84
-msgid "template.inputs.fields.label"
-msgstr "Поля"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:106
+msgid "template.fields.delete-item.label"
+msgstr "Удалить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:93
-msgid "template.inputs.fields.title.label"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:95
+msgid "template.fields.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:99
-msgid "template.inputs.fields.title.placeholder"
+#: ../../libs/react/src/lib/templates/template-fields.tsx:101
+#: ../../libs/react/src/lib/templates/template-layout.tsx:57
+msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:48
-msgid "template.inputs.layout.field.label"
-msgstr "Поле"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:55
-msgid "template.inputs.layout.field.placeholder"
-msgstr "Без названия"
-
-#: ../../libs/react/src/lib/templates/template.tsx:87
-msgid "template.inputs.layout.label"
-msgstr "Раскладка"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:61
-msgid "template.inputs.layout.operation.label"
-msgstr "Действие"
+#: ../../libs/react/src/lib/templates/template.tsx:84
+msgid "template.fields.label"
+msgstr "Поля"
 
 #: ../../libs/react/src/lib/templates/template.tsx:63
 msgid "template.inputs.title.label"
 msgstr "Название"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:50
+msgid "template.layout.inputs.field.label"
+msgstr "Поле"
+
+#: ../../libs/react/src/lib/templates/template-layout.tsx:63
+msgid "template.layout.inputs.operation.label"
+msgstr "Действие"
+
+#: ../../libs/react/src/lib/templates/template.tsx:87
+msgid "template.layout.label"
+msgstr "Раскладка"
 
 #: ../../libs/react/src/lib/templates/template.tsx:76
 msgid "template.status.locked"
@@ -664,15 +668,15 @@ msgstr "Статус"
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:13
+#: ../../libs/react/src/lib/templates/template-layout.tsx:14
 msgid "templates.operations.display"
 msgstr "Показать"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:14
+#: ../../libs/react/src/lib/templates/template-layout.tsx:15
 msgid "templates.operations.reveal"
 msgstr "Раскрыть"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:15
+#: ../../libs/react/src/lib/templates/template-layout.tsx:16
 msgid "templates.operations.type"
 msgstr "Печатать"
 

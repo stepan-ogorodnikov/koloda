@@ -1,6 +1,6 @@
 import type { TWVProps } from "@koloda/ui";
 import type { ReactNode } from "react";
-import { type HTMLAttributes, type LabelHTMLAttributes } from "react";
+import { type HTMLAttributes } from "react";
 import { tv } from "tailwind-variants";
 
 export const formLayout = "grow flex flex-col py-2 px-4";
@@ -17,26 +17,26 @@ type FormLayoutSectionProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof f
   term?: ReactNode;
 };
 
-export function FormLayoutSection({ variants, term, children }: FormLayoutSectionProps) {
+export function FormLayoutSection({ variants, term, children, ...props }: FormLayoutSectionProps) {
   if (term) {
     return (
-      <div className={formLayoutSection(variants)}>
+      <fieldset className={formLayoutSection(variants)}>
         <FormLayoutSectionTerm>{term}</FormLayoutSectionTerm>
         <FormLayoutSectionContent>
           {children}
         </FormLayoutSectionContent>
-      </div>
+      </fieldset>
     );
   }
-  return <div className={formLayoutSection(variants)}>{children}</div>;
+  return <div className={formLayoutSection(variants)} {...props}>{children}</div>;
 }
 
 export const formLayoutSectionTerm = "tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold";
 
-type FormLayoutSectionTermProps = LabelHTMLAttributes<HTMLDivElement>;
+type FormLayoutSectionTermProps = HTMLAttributes<HTMLLegendElement>;
 
 export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
-  return <div className={formLayoutSectionTerm} {...props} />;
+  return <legend className={formLayoutSectionTerm} {...props} />;
 }
 
 export const formLayoutSectionContent = "flex flex-col items-baseline";

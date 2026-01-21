@@ -13,6 +13,22 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/ui/src/lib/ui/back-button.tsx:13
+msgid "back-button.label"
+msgstr "Перейти обратно"
+
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:38
+msgid "dashboard.skip-link"
+msgstr "Перейти к содержимому"
+
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:14
+msgid "drag-handle.description"
+msgstr "Перетащите для изменения порядка расположения элементов"
+
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:13
+msgid "drag-handle.label"
+msgstr "Контроллер перетаскивания"
+
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
@@ -55,7 +71,23 @@ msgstr "Изменить эту комбинацию клавиш"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:81
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:49
+msgid "table.pagination.buttons.first"
+msgstr "Перейти на первую страницу"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:71
+msgid "table.pagination.buttons.last"
+msgstr "Перейти на последнюю страницу"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:64
+msgid "table.pagination.buttons.next"
+msgstr "Перейти на следующую страницу"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:56
+msgid "table.pagination.buttons.previous"
+msgstr "Перейти на предыдущую страницу"
+
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:85
 msgid "table.pagination.page-size.label"
 msgstr "На странице:"
 
