@@ -52,15 +52,15 @@ function SubscribeButton(props: ButtonProps) {
   const { _ } = useLingui();
 
   return (
-    <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
-      {([isDirty, canSubmit]) => (
+    <form.Subscribe selector={(state) => [state.canSubmit]}>
+      {([canSubmit]) => (
         <Button
           variants={{
             style: "primary",
-            class: "w-full disabled:invisible",
+            class: "w-full",
           }}
           type="submit"
-          isDisabled={!canSubmit || !isDirty}
+          isDisabled={!canSubmit}
           {...props}
         >
           {_(msg`form.save`)}

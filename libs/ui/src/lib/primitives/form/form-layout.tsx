@@ -11,32 +11,38 @@ export function FormLayout({ children }: FormLayoutProps) {
   return <div className={formLayout}>{children}</div>;
 }
 
-export const formLayoutSection = tv({ base: "flex flex-col tb:flex-row flex-wrap tb:items-baseline tb:gap-4 py-2" });
+export const formLayoutSection = tv({
+  base: "flex flex-col tb:flex-row flex-wrap tb:items-baseline tb:gap-4 py-2",
+});
 
-type FormLayoutSectionProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof formLayoutSection> & {
-  term?: ReactNode;
-};
+type FormLayoutSectionProps =
+  & HTMLAttributes<HTMLDivElement>
+  & TWVProps<typeof formLayoutSection>
+  & {
+    term?: ReactNode;
+  };
 
 export function FormLayoutSection({ variants, term, children, ...props }: FormLayoutSectionProps) {
   if (term) {
     return (
-      <fieldset className={formLayoutSection(variants)}>
+      <div className={formLayoutSection(variants)}>
         <FormLayoutSectionTerm>{term}</FormLayoutSectionTerm>
         <FormLayoutSectionContent>
           {children}
         </FormLayoutSectionContent>
-      </fieldset>
+      </div>
     );
   }
+
   return <div className={formLayoutSection(variants)} {...props}>{children}</div>;
 }
 
-export const formLayoutSectionTerm = "tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold";
+export const formLayoutSectionTerm = "flex tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold";
 
 type FormLayoutSectionTermProps = HTMLAttributes<HTMLLegendElement>;
 
 export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
-  return <legend className={formLayoutSectionTerm} {...props} />;
+  return <div className={formLayoutSectionTerm} {...props} />;
 }
 
 export const formLayoutSectionContent = "flex flex-col items-baseline";
