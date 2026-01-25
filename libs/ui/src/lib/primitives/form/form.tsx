@@ -1,5 +1,5 @@
 import type { ZodIssue } from "@koloda/srs";
-import { Button, FormTextField } from "@koloda/ui";
+import { Button, Fade, FormTextField } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
@@ -7,6 +7,7 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
+import { AnimatePresence } from "motion/react";
 import type { PropsWithChildren } from "react";
 
 function Timestamps(props: PropsWithChildren) {
@@ -99,15 +100,18 @@ function ResetButton(props: ButtonProps) {
 
 function Controls() {
   const form = useFormContext();
+
   return (
     <form.Subscribe selector={(state) => [state.isDirty]}>
       {([isDirty]) => (
         <div className="sticky bottom-16 tb:bottom-4 flex flex-col items-center">
           {isDirty && (
-            <div className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1">
-              <SubscribeButton />
-              <ResetButton />
-            </div>
+            <AnimatePresence>
+              <Fade className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1">
+                <SubscribeButton />
+                <ResetButton />
+              </Fade>
+            </AnimatePresence>
           )}
         </div>
       )}

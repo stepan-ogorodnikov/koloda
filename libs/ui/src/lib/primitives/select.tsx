@@ -23,7 +23,7 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
   label?: ReactNode;
   icon?: ReactNode;
   items?: Iterable<T>;
-  onSelectionChange: (key: string | number | null) => void;
+  onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
 

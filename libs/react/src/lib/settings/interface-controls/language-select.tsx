@@ -33,8 +33,8 @@ export function LanguageSelect(
       withChevron={withChevron}
       icon={withIcon ? <Languages className="size-5" /> : undefined}
       items={LANGUAGES}
-      selectedKey={i18n.locale}
-      onSelectionChange={(key) => {
+      value={i18n.locale}
+      onChange={(key) => {
         if (key) {
           setLang(key.toString());
           if (isPersisted) mutate({ name: "interface", content: { language: key.toString() } });

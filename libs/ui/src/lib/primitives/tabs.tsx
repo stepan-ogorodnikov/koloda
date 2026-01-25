@@ -1,3 +1,4 @@
+import { useMotionSetting } from "@koloda/ui";
 import { motion } from "motion/react";
 
 export const tabs = "self-stretch flex flex-row gap-2 items-center px-2";
@@ -14,5 +15,13 @@ export const tabIndicator = "absolute -bottom-0.5 inset-x-0 h-0.5 w-full bg-fg-t
 type TabIndicatorProps = { id?: string };
 
 export function TabIndicator({ id }: TabIndicatorProps) {
-  return <motion.div className={tabIndicator} layoutId={id} />;
+  const isMotionOn = useMotionSetting();
+
+  return (
+    <motion.div
+      className={tabIndicator}
+      layoutId={id}
+      transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
+    />
+  );
 }

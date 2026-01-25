@@ -1,4 +1,4 @@
-import { Button, Link } from "@koloda/ui";
+import { Button, Link, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -84,9 +84,10 @@ type DashboardNavLinkProps = {
 
 function DashboardNavLink({ cn, to, msg, Icon }: DashboardNavLinkProps) {
   const { _ } = useLingui();
+  const isMotionOn = useMotionSetting();
 
   return (
-    <Link className={dashboardNavLink({ class: cn })} to={to} key={to}>
+    <Link className={dashboardNavLink({ class: cn })} to={to} viewTransition={isMotionOn} key={to}>
       <Icon className={dashboardNavLinkIcon} />
       <span className={dashboardNavLinkText}>{_(msg)}</span>
     </Link>

@@ -29,8 +29,8 @@ export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProp
     <Select
       label={_(msg`template-picker.label`)}
       items={data}
-      selectedKey={value || defaultTemplate}
-      onSelectionChange={(i) => onChange(Number(i))}
+      value={value || defaultTemplate}
+      onChange={(i) => onChange(Number(i))}
       {...props}
     >
       {({ id, title }) => (

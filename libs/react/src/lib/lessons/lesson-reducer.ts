@@ -25,11 +25,16 @@ type LessonResultUploadStatus = "success" | "error";
 
 export type LessonReducerState = {
   meta: {
-    status: "init" | "started" | "finished";
     isOpen?: boolean;
     isTerminationRequested?: boolean;
-    isInitDataReady?: boolean;
     isError?: boolean;
+    // user submitted amounts of cards for this lesson, proceed to load LessonData
+    isSubmitted?: boolean;
+    // all the LessonData is loaded and cards are ready to be displayed
+    isStarted?: boolean;
+    // all the cards for this lesson are reviewed and submitted
+    isFinished?: boolean;
+    // status: "init" | "started" | "ready" | "finished";
   };
   // values that define decks to study
   params?: LessonAtomValue;
@@ -80,7 +85,7 @@ export type LessonReducerState = {
 export type LessonAmounts = Record<LessonType, number>;
 
 export const lessonReducerDefault: LessonReducerState = {
-  meta: { status: "init" },
+  meta: {},
   upload: {
     queue: [],
     log: {},
@@ -94,7 +99,7 @@ const actions = {
   todayReviewTotalsReceived,
   lessonsReceived,
   amountUpdated,
-  lessonStarted,
+  lessonSubmitted,
   lessonDataReceived,
   cardSubmitted,
   cardFormUpdated,
@@ -109,12 +114,15 @@ const actions = {
 function isOpenUpdated(draft: LessonReducerState, payload: boolean) {
   draft.meta.isOpen = payload;
   if (payload === false) {
+    draft.meta.isSubmitted = undefined;
+    draft.meta.isStarted = undefined;
+    draft.meta.isFinished = undefined;
     draft.params = undefined;
     draft.lessons = undefined;
     draft.todayReviewTotals = undefined;
     draft.amounts = undefined;
+    draft.data = undefined;
     draft.content = undefined;
-    draft.meta.status = "init";
     draft.meta.isTerminationRequested = false;
     draft.upload.queue = [];
     draft.upload.log = {};
@@ -133,7 +141,7 @@ function terminationRequested(draft: LessonReducerState, payload: boolean) {
  * Makes filters for lesson query based on these params
  */
 function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
-  if (draft.meta.status === "init") {
+  if (!draft.meta.isOpen) {
     draft.meta.isOpen = true;
     draft.params = { ...payload };
     draft.filters = { deckIds: draft.params.deckId ? [draft.params.deckId] : [] };
@@ -218,19 +226,21 @@ function amountUpdated(draft: LessonReducerState, { type, value }: AmountUpdated
 }
 
 /**
- * Marks lesson as started
+ * Marks lesson as submitted to start loading LessonData
  */
-function lessonStarted(draft: LessonReducerState) {
-  draft.meta.status = "started";
+function lessonSubmitted(draft: LessonReducerState) {
+  draft.meta.isSubmitted = true;
 }
 
 /**
  * Sets data required for current lesson (decks, cards, algorithms, templates)
+ * Marks lesson as started since data is loaded
  */
 function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
   if (draft.content) return;
   draft.data = payload;
   moveToNextCard(draft);
+  draft.meta.isStarted = true;
 }
 
 /**
@@ -247,7 +257,7 @@ function moveToNextCard(draft: LessonReducerState) {
 
   if (index && index >= cards.length) {
     if (typeof draft.content?.index === "number") draft.content.index++;
-    draft.meta.status = "finished";
+    draft.meta.isFinished = true;
     updateProgressAmounts(draft);
     return;
   }

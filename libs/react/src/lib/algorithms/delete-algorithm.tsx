@@ -64,8 +64,8 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
               variants={{ class: "self-stretch" }}
               label={_(msg`delete-algorithm.successor.label`)}
               items={filteredAlgorithms}
-              selectedKey={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
-              onSelectionChange={setSuccessorId}
+              value={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
+              onChange={setSuccessorId}
               autoFocus
             >
               {({ id, title }) => (

@@ -51,6 +51,10 @@
   scrollbar-width: thin;
 }
 
+@utility numbers-text {
+  @apply text-lg font-semibold tracking-wider;
+}
+
 @utility animate-colors {
   @apply transition-colors duration-300 ease-in-out;
 }
@@ -67,8 +71,4 @@
     transparent calc(100% - --spacing(--modifier(number))),
     --value(--color-*) 100%
   );
-}
-
-@utility numbers-text {
-  @apply text-lg font-semibold tracking-wider;
 }

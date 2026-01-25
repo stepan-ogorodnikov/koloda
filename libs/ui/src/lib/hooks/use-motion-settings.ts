@@ -1,6 +1,8 @@
 import { useAtomValue } from "jotai";
+import { atom } from "jotai";
 import { useReducedMotion } from "motion/react";
-import { motionSettingAtom } from "../settings/settings";
+
+export const motionSettingAtom = atom("");
 
 export function useMotionSetting() {
   const isReducedOnDevice = useReducedMotion();

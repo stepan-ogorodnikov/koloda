@@ -1,5 +1,5 @@
 import { NotFound, decksQueryKeys, queriesAtom, useTitle } from "@koloda/react";
-import { BackButton, Link, Main, tab, TabIndicator, tabLink } from "@koloda/ui";
+import { BackButton, Link, Main, tab, TabIndicator, tabLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ function DeckRoute() {
   const { deckId } = Route.useParams();
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { data, isSuccess } = useQuery({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
 
   if (isSuccess && data === null) return <NotFound />;
@@ -43,7 +44,7 @@ function DeckRoute() {
         <Main.H2>{data?.title}</Main.H2>
         <Main.Tabs>
           {DECK_TABS.map(({ to, t }) => (
-            <Link className={tab} to={`/decks/$deckId/${to}`} params={{ deckId }} key={to}>
+            <Link className={tab} to={`/decks/$deckId/${to}`} params={{ deckId }} key={to} viewTransition={isMotionOn}>
               {({ isActive }) => (
                 <>
                   <span className={tabLink}>

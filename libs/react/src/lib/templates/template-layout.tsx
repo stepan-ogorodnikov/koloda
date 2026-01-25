@@ -1,5 +1,4 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
-import { Accessibility } from "@dnd-kit/dom";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { DEFAULT_TEMPLATE, getTemplateFieldTitleById } from "@koloda/srs";
@@ -27,7 +26,6 @@ export const TemplateLayout = withForm({
         {(field) => (
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
-            plugins={[Accessibility]}
             modifiers={[RestrictToVerticalAxis] as any[]}
             onDragEnd={(event) => {
               const { operation, canceled } = event;
@@ -61,8 +59,8 @@ export const TemplateLayout = withForm({
                       {(operationField) => (
                         <Select.Root
                           aria-label={_(msg`template.layout.inputs.operation.label`)}
-                          selectedKey={operationField.state.value}
-                          onSelectionChange={(e) => {
+                          value={operationField.state.value}
+                          onChange={(e) => {
                             if (typeof e === "string") operationField.handleChange(e as TemplateOperation);
                           }}
                         >

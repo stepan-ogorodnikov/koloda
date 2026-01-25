@@ -1,3 +1,4 @@
+import { useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { CircleAlert, CircleCheck, CircleDot } from "lucide-react";
@@ -25,17 +26,23 @@ type LessonProgressDotsProps = { state: LessonReducerState };
 
 export function LessonProgressDots({ state }: LessonProgressDotsProps) {
   const { _ } = useLingui();
+  const isMotionOn = useMotionSetting();
   const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
   const { index } = state.content || { index: 0 };
   const total = state.data?.cards.length || 0;
 
   return (
-    <div
+    <motion.div
       className="relative w-full h-4"
       aria-label={_(msg`lesson.progress.label ${index + 1} ${total}`)}
       aria-valuenow={index + 1}
       aria-valuemax={total}
       role="progressbar"
+      initial={{ opacity: 0, y: "200%" }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
+      key="progress-dots"
     >
       <motion.div
         className="absolute left-1/2 flex flex-row justify-center gap-2"
@@ -57,6 +64,6 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
           );
         })}
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 
-type AlgorithmPickerProps = Omit<SelectProps<Algorithm>, "selectedKey" | "onSelectionChange" | "items" | "children"> & {
+type AlgorithmPickerProps = Omit<SelectProps<Algorithm>, "value" | "onChange" | "items" | "children"> & {
   isNullable?: boolean;
   value: number | null;
   onChange: (key: number) => void;
@@ -30,8 +30,8 @@ export function AlgorithmPicker({ label, isNullable, value, onChange, ...props }
     <Select
       label={label || _(msg`algorithm-picker.label`)}
       items={data}
-      selectedKey={value || defaultAlgorithm}
-      onSelectionChange={(i) => onChange(Number(i))}
+      value={value || defaultAlgorithm}
+      onChange={(i) => onChange(Number(i))}
       {...props}
     >
       {({ id, title }) => (

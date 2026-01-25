@@ -1,6 +1,7 @@
-import { LanguageSelect, motionSettingAtom, queriesAtom, settingsQueryKeys, themeAtom, useTitle } from "@koloda/react";
+import { LanguageSelect, queriesAtom, settingsQueryKeys, themeAtom, useTitle } from "@koloda/react";
 import { MOTION_SETTINGS } from "@koloda/srs";
 import type { AllowedSettings } from "@koloda/srs";
+import { motionSettingAtom } from "@koloda/ui";
 import { FormLayout, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

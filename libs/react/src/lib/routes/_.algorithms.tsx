@@ -1,6 +1,6 @@
 import { algorithmsQueryKeys, queriesAtom, useTitle } from "@koloda/react";
 import { AddAlgorithm } from "@koloda/react";
-import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
+import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +22,7 @@ function AlgorithmsRoute() {
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { data } = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
   const hasContent = !(pathname === "/algorithms" || pathname === "/algorithms/");
 
@@ -37,7 +38,7 @@ function AlgorithmsRoute() {
         {data
           ? data.map(({ id, title }) => (
             <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/algorithms/$algorithmId" params={{ algorithmId: id }}>
+              <Link className={mainSidebarItemLink} to="/algorithms/$algorithmId" params={{ algorithmId: id }} viewTransition={isMotionOn}>
                 <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
               </Link>
             </Main.SidebarItem>

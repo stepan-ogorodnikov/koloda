@@ -1,7 +1,7 @@
 import { AlgorithmPicker, decksQueryKeys, lessonsQueryKeys, queriesAtom, TemplatePicker } from "@koloda/react";
 import { decksMessages, insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
+import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -14,6 +14,7 @@ export function AddDeck() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { addDeckMutation } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { mutate, isSuccess } = useMutation(addDeckMutation());
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Deck["id"] | null>(null);
@@ -83,10 +84,10 @@ export function AddDeck() {
                 )}
               </form.Field>
               <form.Field name="algorithmId">
-                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange} />}
+                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
               </form.Field>
               <form.Field name="templateId">
-                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange} />}
+                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
               </form.Field>
               <div className="min-h-10">
                 {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={decksMessages} />}
@@ -100,6 +101,7 @@ export function AddDeck() {
                   to="/decks/$deckId"
                   params={{ deckId: newId }}
                   onClick={() => setIsOpen(false)}
+                  viewTransition={isMotionOn}
                 >
                   {_(msg`add-deck.redirect.link`)}
                 </Link>

@@ -43,8 +43,8 @@ export const AlgorithmLearningSteps = withForm({
                           ? msg`algorithm.learning-steps.unit.${i + 1}`
                           : msg`algorithm.relearning-steps.unit.${i + 1}`,
                       )}
-                      selectedKey={field.state.value}
-                      onSelectionChange={(i) => field.handleChange(i as unknown as "s" | "m" | "h" | "d")}
+                      value={field.state.value}
+                      onChange={(i) => field.handleChange(i as unknown as "s" | "m" | "h" | "d")}
                     >
                       <Select.Button variants={{ style: "ghost" }}>
                         <Select.Value>

@@ -1,7 +1,7 @@
 import { formLayoutSection, formLayoutSectionContent, useFieldContext } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
 import { Errors } from "@koloda/ui";
-import type { ComponentProps, PropsWithChildren } from "react";
+import type { ComponentProps, PropsWithChildren, RefAttributes } from "react";
 import { Input, TextArea, TextField as ReactAriaTextField } from "react-aria-components";
 import type { InputProps, TextFieldProps as ReactAriaTextFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
@@ -48,7 +48,7 @@ function TextFieldContent({ children }: PropsWithChildren) {
   return <div className="grow flex flex-col">{children}</div>;
 }
 
-export type TextFieldInputProps = InputProps & TWVProps<typeof textFieldInput>;
+export type TextFieldInputProps = InputProps & RefAttributes<HTMLInputElement> & TWVProps<typeof textFieldInput>;
 
 export function TextFieldInput({ variants, ...props }: TextFieldInputProps) {
   return <Input className={textFieldInput(variants)} {...props} />;

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 @plugin "tailwindcss-react-aria-components";
 @import "./utilities";
 
@@ -282,3 +283,4 @@
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant motion (&:where(.motion, .motion *));

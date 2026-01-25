@@ -78,8 +78,8 @@ export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps,
         )}
         <Select.Root
           variants={{ class: "flex flex-row gap-2" }}
-          onSelectionChange={handlePageSizeChange}
-          selectedKey={pagination.pageSize}
+          value={pagination.pageSize}
+          onChange={handlePageSizeChange}
         >
           <Label variants={{ class: "font-semibold fg-level-2 whitespace-nowrap" }}>
             {_(msg`table.pagination.page-size.label`)}

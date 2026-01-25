@@ -1,18 +1,15 @@
-import { lessonsQueryKeys } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
-import { Button, Dialog, useHotkeysStatus } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
-import { useQueryClient } from "@tanstack/react-query";
+import { Dialog, Fade, overlayFrameContent, useHotkeysStatus } from "@koloda/ui";
 import { atom, useAtom } from "jotai";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useReducer } from "react";
 import { LessonCompletion } from "./lesson-completion";
-import { LessonContent } from "./lesson-content";
+import { LessonFooter } from "./lesson-footer";
+import { LessonHeader } from "./lesson-header";
 import { LessonInit } from "./lesson-init";
-import { LessonProgressAmounts } from "./lesson-progress-amounts";
-import { LessonProgressDots } from "./lesson-progress-dots";
 import { lessonReducer, lessonReducerDefault } from "./lesson-reducer";
-import { LessonUploader } from "./lesson-uploader";
+import { LessonStudying } from "./lesson-studying";
+import { LessonTermination } from "./lesson-termination";
 
 export type LessonAtomValue = {
   type: LessonType;
@@ -27,13 +24,13 @@ const lessonModal = [
   "overflow-hidden",
 ].join(" ");
 
+const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
+
 export function Lesson() {
-  const { _ } = useLingui();
-  const queryClient = useQueryClient();
   const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
-  const { status } = state.meta;
+  const { isSubmitted, isFinished } = state.meta;
 
   useEffect(() => {
     if (!state.meta.isOpen) setAtomValue(null);
@@ -48,46 +45,44 @@ export function Lesson() {
   }, [atomValue]);
 
   return (
-    <Dialog.Root isOpen={state.meta.isOpen} onOpenChange={(value) => dispatch(["isOpenUpdated", value])}>
-      <Button className="hidden" />
-      <Dialog.Overlay isKeyboardDismissDisabled>
-        <Dialog.Modal
-          variants={{ class: lessonModal }}
-          isKeyboardDismissDisabled
-        >
-          <Dialog.Body>
-            <Dialog.Header variants={{ class: "relative flex-col items-stretch gap-2 overflow-hidden" }}>
-              <div className="relative grow flex flex-row items-start justify-between">
-                <div className="grow">
-                  {status === "init"
-                    ? (
-                      <Dialog.Title>
-                        {_(msg`lesson.init.title`)}
-                      </Dialog.Title>
-                    )
-                    : <LessonProgressAmounts state={state} />}
-                </div>
-                <Dialog.Close
-                  onClick={() => {
-                    if (status === "started") {
-                      dispatch(["terminationRequested", true]);
-                    } else {
-                      dispatch(["isOpenUpdated", false]);
-                      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all(state.filters) });
-                      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all() });
-                    }
-                  }}
-                />
-              </div>
-              {status !== "init" && <LessonProgressDots state={state} />}
-              <LessonUploader state={state} dispatch={dispatch} />
-            </Dialog.Header>
-            {status === "init" && <LessonInit state={state} dispatch={dispatch} />}
-            {status === "started" && <LessonContent state={state} dispatch={dispatch} />}
-            {status === "finished" && <LessonCompletion state={state} dispatch={dispatch} />}
-          </Dialog.Body>
-        </Dialog.Modal>
-      </Dialog.Overlay>
-    </Dialog.Root>
+    <Dialog.Overlay
+      isOpen={state.meta.isOpen}
+      onOpenChange={(value) => dispatch(["isOpenUpdated", value])}
+      isKeyboardDismissDisabled
+    >
+      <Dialog.Modal variants={{ class: lessonModal }} isKeyboardDismissDisabled>
+        <Dialog.Body>
+          <form
+            className="grow flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              dispatch(["lessonSubmitted"]);
+            }}
+          >
+            <LessonHeader state={state} dispatch={dispatch} />
+            <AnimatePresence mode="wait">
+              {!isSubmitted && (
+                <Fade className={lessonContent} initial={{ opacity: 1 }} key="init">
+                  <LessonInit state={state} dispatch={dispatch} />
+                </Fade>
+              )}
+              {isSubmitted && !isFinished && (
+                <Fade className={lessonContent} key="content">
+                  <LessonStudying state={state} dispatch={dispatch} />
+                  <LessonTermination state={state} dispatch={dispatch} />
+                </Fade>
+              )}
+              {isFinished && (
+                <Fade className={lessonContent} key="finish">
+                  <LessonCompletion state={state} dispatch={dispatch} />
+                </Fade>
+              )}
+            </AnimatePresence>
+            <LessonFooter state={state} dispatch={dispatch} />
+          </form>
+        </Dialog.Body>
+      </Dialog.Modal>
+    </Dialog.Overlay>
   );
 }

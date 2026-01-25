@@ -1,4 +1,5 @@
 import { AlgorithmPicker } from "@koloda/react";
+import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import type { UpdateDeckValues } from "@koloda/srs";
 import { updateDeckSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -7,7 +8,6 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
 
@@ -65,7 +65,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           <AlgorithmPicker
             variants={{ layout: "form" }}
             value={Number(field.state.value)}
-            onChange={field.handleChange}
+            onChange={field.handleChange as any}
           />
         )}
       </form.Field>
@@ -74,7 +74,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           <TemplatePicker
             variants={{ layout: "form" }}
             value={Number(field.state.value)}
-            onChange={field.handleChange}
+            onChange={field.handleChange as any}
           />
         )}
       </form.Field>

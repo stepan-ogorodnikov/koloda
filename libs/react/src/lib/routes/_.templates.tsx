@@ -1,5 +1,5 @@
 import { AddTemplate, queriesAtom, templatesQueryKeys, useTitle } from "@koloda/react";
-import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
+import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ function TemplatesRoute() {
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { data } = useQuery({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
   const hasContent = !(pathname === "/templates" || pathname === "/templates/");
 
@@ -35,7 +36,7 @@ function TemplatesRoute() {
         {data
           ? data.map(({ id, title }) => (
             <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/templates/$templateId" params={{ templateId: id }}>
+              <Link className={mainSidebarItemLink} to="/templates/$templateId" params={{ templateId: id }} viewTransition={isMotionOn}>
                 <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
               </Link>
             </Main.SidebarItem>

@@ -1,4 +1,7 @@
 export * from "./lib/hooks/use-hotkeys-status";
+export * from "./lib/hooks/use-motion-settings";
+export * from "./lib/primitives/animations/fade";
+export * from "./lib/primitives/animations/number";
 export * from "./lib/primitives/dnd/drag-handle";
 export * from "./lib/primitives/dnd/draggable";
 export * from "./lib/primitives/form/button";

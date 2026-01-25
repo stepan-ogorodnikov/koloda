@@ -1,5 +1,4 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
-import { Accessibility } from "@dnd-kit/dom";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId } from "@koloda/srs";
@@ -23,7 +22,6 @@ export const TemplateFields = withForm({
         {(field) => (
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
-            plugins={[Accessibility]}
             modifiers={[RestrictToVerticalAxis] as any[]}
             onDragEnd={(event) => {
               const { operation, canceled } = event;

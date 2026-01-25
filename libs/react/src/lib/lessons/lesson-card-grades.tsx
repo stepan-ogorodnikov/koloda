@@ -1,4 +1,4 @@
-import { Button } from "@koloda/ui";
+import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { formatDistanceStrict } from "date-fns";
@@ -22,7 +22,7 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
   const { _ } = useLingui();
 
   return (
-    <div className="flex flex-row gap-1 tb:gap-2">
+    <Fade className="flex flex-row gap-1 tb:gap-2" key="grades">
       {grades.map(({ card, log }, i) => (
         <div className="flex flex-col items-center gap-1 tb:w-24" key={i}>
           <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.due)}</div>
@@ -35,6 +35,6 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
           </Button>
         </div>
       ))}
-    </div>
+    </Fade>
   );
 }

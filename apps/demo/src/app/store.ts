@@ -1,6 +1,6 @@
-import { appEntryAtom, langAtom, motionSettingAtom, queriesAtom, themeAtom } from "@koloda/react";
+import { appEntryAtom, langAtom, queriesAtom, themeAtom } from "@koloda/react";
 import type { Queries } from "@koloda/react";
-import { hotkeysScopesAtom } from "@koloda/ui";
+import { hotkeysScopesAtom, motionSettingAtom } from "@koloda/ui";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";
 import { DemoAppEntry } from "../components/demo-app-entry";
@@ -41,6 +41,22 @@ function onPrefersColorSchemeChange(e: MediaQueryListEvent | MediaQueryList) {
 }
 
 store.set(themeAtom, "system");
+
+store.sub(motionSettingAtom, () => {
+  const prefersQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  onReducedMotionChange(prefersQuery);
+  prefersQuery.addEventListener("change", onReducedMotionChange);
+
+  return () => {
+    prefersQuery.removeEventListener("change", onReducedMotionChange);
+  };
+});
+
+function onReducedMotionChange(e: MediaQueryListEvent | MediaQueryList) {
+  const motionSetting = store.get(motionSettingAtom);
+  const isOn = e.matches ? motionSetting === "on" : motionSetting !== "off";
+  document.documentElement.classList[isOn ? "add" : "remove"]("motion");
+}
 
 store.set(motionSettingAtom, "system");
 

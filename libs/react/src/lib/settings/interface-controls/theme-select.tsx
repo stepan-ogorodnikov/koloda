@@ -30,8 +30,8 @@ export function ThemeSelect({ variants, withChevron, isPersisted = true }: Theme
   return (
     <Select.Root
       aria-label={_(msg`theme-select.label`)}
-      selectedKey={theme}
-      onSelectionChange={(key) => {
+      value={theme}
+      onChange={(key) => {
         if (key) {
           setTheme(key.toString());
           if (isPersisted) mutate({ name: "interface", content: { theme: key.toString() } });

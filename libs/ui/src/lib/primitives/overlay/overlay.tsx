@@ -8,6 +8,7 @@ export const overlay = tv({
     "flex items-center justify-center",
     "fixed inset-0 z-10 overflow-y-auto min-h-full p-1 tb:p-4",
     "bg-overlay backdrop-blur-xs",
+    "motion:entering:fade-in-0 motion:exiting:fade-out-0",
   ],
 });
 
@@ -30,7 +31,7 @@ export function OverlayFrameTitle(props: HTMLAttributes<HTMLHeadingElement>) {
   return <Heading className="fg-level-1 font-semibold" slot="title" {...props} />;
 }
 
-const overlayFrameContent = tv({ base: "grow flex flex-col py-2 px-4" });
+export const overlayFrameContent = tv({ base: "grow flex flex-col py-2 px-4" });
 
 type OverlayFrameContentProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameContent>;
 

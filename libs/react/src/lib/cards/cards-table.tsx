@@ -14,11 +14,10 @@ import {
 import type { CellContext, ColumnDef, FilterFn, VisibilityState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef, useState } from "react";
-import { AddCard } from "./add-card";
+import { createPortal } from "react-dom";
 import { CardsTableCell } from "./cards-table-cell";
 import { CardsTableColumnsVisibility } from "./cards-table-columns-visibility";
 import { CardsTableFilters } from "./cards-table-filters";
-import { CardsViewToggle } from "./cards-view-toggle";
 
 const PAGE_SIZES = [15, 20, 25];
 
@@ -29,9 +28,10 @@ type CardState = NonNullable<Card["state"]>;
 type CardsTableProps = {
   deckId: Deck["id"] | string;
   templateId: Template["id"] | string;
+  controlsNode: HTMLDivElement | null;
 };
 
-export function CardsTable({ deckId, templateId }: CardsTableProps) {
+export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery, getTemplateQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
@@ -146,37 +146,38 @@ export function CardsTable({ deckId, templateId }: CardsTableProps) {
 
   return (
     <>
-      <div className="flex flex-row items-center gap-4">
-        <CardsViewToggle />
-        <CardsTableFilters filters={filters} setFilters={setFilters} />
-        <CardsTableColumnsVisibility
-          columns={table.getAllColumns()}
-          onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
-          onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
-        />
-        <div className="grow" />
-        <SearchField
-          aria-label={_(msg`cards-table.search.label`)}
-          value={searchValue}
-          onChange={(value) => {
-            setSearchValue(value as string);
-            table.setGlobalFilter(value as string);
-          }}
-        >
-          <SearchField.Group>
-            <SearchField.Icon />
-            <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
-            <SearchField.ClearButton
-              isHidden={!searchValue}
-              onClick={() => {
-                setSearchValue("");
-                table.setGlobalFilter("");
-              }}
-            />
-          </SearchField.Group>
-        </SearchField>
-        <AddCard deckId={Number(deckId)} templateId={Number(templateId)} />
-      </div>
+      {controlsNode && createPortal(
+        <div className="grow flex flex-row items-center gap-4">
+          <CardsTableFilters filters={filters} setFilters={setFilters} />
+          <CardsTableColumnsVisibility
+            columns={table.getAllColumns()}
+            onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
+            onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
+          />
+          <div className="grow" />
+          <SearchField
+            aria-label={_(msg`cards-table.search.label`)}
+            value={searchValue}
+            onChange={(value) => {
+              setSearchValue(value as string);
+              table.setGlobalFilter(value as string);
+            }}
+          >
+            <SearchField.Group>
+              <SearchField.Icon />
+              <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
+              <SearchField.ClearButton
+                isHidden={!searchValue}
+                onClick={() => {
+                  setSearchValue("");
+                  table.setGlobalFilter("");
+                }}
+              />
+            </SearchField.Group>
+          </SearchField>
+        </div>,
+        controlsNode,
+      )}
       <div className="flex flex-col gap-4" ref={wrapperRef}>
         <Table.Root>
           <Table.Head table={table} />

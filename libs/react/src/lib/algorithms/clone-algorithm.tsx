@@ -1,7 +1,7 @@
 import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
 import { algorithmsMessages, cloneAlgorithmSchema as schema } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, useAppForm } from "@koloda/ui";
+import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -16,6 +16,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { cloneAlgorithmMutation } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { mutate, isSuccess } = useMutation(cloneAlgorithmMutation());
   const linkRef = useRef<HTMLAnchorElement>(null);
   const [newId, setNewId] = useState<Algorithm["id"] | null>(null);
@@ -95,6 +96,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
                   to="/algorithms/$algorithmId"
                   params={{ algorithmId: newId }}
                   onClick={() => setIsOpen(false)}
+                  viewTransition={isMotionOn}
                 >
                   {_(msg`clone-algorithm.redirect.link`)}
                 </Link>

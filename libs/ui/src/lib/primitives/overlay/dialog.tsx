@@ -1,8 +1,9 @@
 import type { ButtonProps, TWVProps } from "@koloda/ui";
-import { Button, overlay, Popover } from "@koloda/ui";
+import { Button, button, overlay, Popover } from "@koloda/ui";
 import { X } from "lucide-react";
 import type { DialogProps, ModalOverlayProps } from "react-aria-components";
 import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
+import { tv } from "tailwind-variants";
 import { Modal } from "./modal";
 import { OverlayFrameContent, OverlayFrameFooter, OverlayFrameHeader, OverlayFrameTitle } from "./overlay";
 
@@ -20,9 +21,20 @@ function DialogBody(props: DialogProps) {
   return <ReactAriaDialog className="grow flex flex-col focus-ring" {...props} />;
 }
 
-function DialogClose(props: ButtonProps) {
+export const dialogClose = tv({
+  extend: button,
+  base: "z-10 size-8",
+  defaultVariants: {
+    style: "bordered",
+    size: "none",
+  },
+});
+
+type DialogCloseProps = TWVProps<typeof dialogClose> & ButtonProps;
+
+function DialogClose({ variants, ...props }: DialogCloseProps) {
   return (
-    <Button variants={{ style: "bordered", size: "none", class: "z-10 p-1" }} {...props}>
+    <Button className={dialogClose(variants)} {...props}>
       <X className="size-4" />
     </Button>
   );

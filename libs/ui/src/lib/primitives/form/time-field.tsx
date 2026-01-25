@@ -1,4 +1,4 @@
-import { Label } from "@koloda/ui";
+import { Label, Number } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren, ReactNode } from "react";
 import { DateInput, DateSegment, TimeField as ReactAriaTimeField } from "react-aria-components";
@@ -54,7 +54,12 @@ function TimeFieldInput(props: TimeFieldInputProps) {
             isEmpty: segment.type === "literal" && segment.isPlaceholder === false,
           })}
           segment={segment}
-        />
+        >
+          {({ type, text }) => {
+            if (!["hour", "minute", "second"].includes(type)) return text;
+            return <Number value={parseInt(text)} format={{ minimumIntegerDigits: 2 }} />;
+          }}
+        </DateSegment>
       )}
     </DateInput>
   );

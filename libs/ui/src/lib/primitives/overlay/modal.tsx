@@ -6,7 +6,12 @@ import { overlayFrame } from "./overlay";
 
 const modal = tv({
   extend: overlayFrame,
-  base: "rounded-xl",
+  base: [
+    "rounded-xl",
+    "motion:entering:animate-in motion:exiting:animate-out",
+    "motion:entering:fade-in-0 motion:exiting:fade-out-0",
+    "zoom-in-90 zoom-out-90",
+  ],
   variants: {
     size: {
       fullscreen: "absolute inset-1 flex items-center justify-center",

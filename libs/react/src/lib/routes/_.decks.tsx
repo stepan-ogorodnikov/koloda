@@ -1,5 +1,5 @@
 import { AddDeck, decksQueryKeys, queriesAtom, useTitle } from "@koloda/react";
-import { Link, Main, mainSidebarItemLink } from "@koloda/ui";
+import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ function DecksRoute() {
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getDecksQuery } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
   const { data } = useQuery({ queryKey: decksQueryKeys.all(), ...getDecksQuery() });
   const hasContent = !(pathname === "/decks" || pathname === "/decks/");
 
@@ -36,7 +37,7 @@ function DecksRoute() {
         {data
           ? data.map(({ id, title }) => (
             <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/decks/$deckId" params={{ deckId: id }}>
+              <Link className={mainSidebarItemLink} to="/decks/$deckId" params={{ deckId: id }} viewTransition={isMotionOn}>
                 <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
               </Link>
             </Main.SidebarItem>
