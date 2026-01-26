@@ -90,7 +90,8 @@ export async function getTemplates(db: DB) {
   try {
     const result = await db
       .select()
-      .from(templates);
+      .from(templates)
+      .orderBy(templates.createdAt);
 
     return result as Template[];
   } catch (e) {

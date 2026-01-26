@@ -33,7 +33,11 @@ export type Algorithm = z.infer<typeof selectAlgorithmSchema> & { content: z.inf
  */
 export async function getAlgorithms(db: DB) {
   try {
-    const result = await db.select().from(algorithms);
+    const result = await db
+      .select()
+      .from(algorithms)
+      .orderBy(algorithms.createdAt);
+
     return result as Algorithm[];
   } catch (e) {
     handleDBError(e);
