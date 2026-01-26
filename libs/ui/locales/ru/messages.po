@@ -21,29 +21,29 @@ msgstr "Перейти обратно"
 msgid "dashboard.skip-link"
 msgstr "Перейти к содержимому"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:14
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:20
 msgid "drag-handle.description"
 msgstr "Перетащите для изменения порядка расположения элементов"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:13
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:19
 msgid "drag-handle.label"
 msgstr "Контроллер перетаскивания"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:33
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:34
 msgid "form.createdAt {0}"
 msgstr "Создано {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:93
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:94
 msgid "form.reset"
 msgstr "Сбросить"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:66
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:67
 msgid "form.save"
 msgstr "Сохранить"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:45
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:46
 msgid "form.updatedAt {0}"
 msgstr "Обновлено {0}"
 

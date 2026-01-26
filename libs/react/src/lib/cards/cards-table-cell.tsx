@@ -5,6 +5,7 @@ import type { CellContext } from "@tanstack/react-table";
 import { isDate } from "date-fns";
 import { CardState } from "./card-state";
 import { CardsTableCellDeleteCard } from "./cards-table-cell-delete-card";
+import { CardsTableCellEditCard } from "./cards-table-cell-edit-card";
 
 const TIMESTAMP_OPTIONS = {
   year: "numeric",
@@ -21,6 +22,7 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
   const isDateValue = isDate(value);
   const formatted = isDateValue ? i18n.date(value, TIMESTAMP_OPTIONS) : value;
 
+  if (id === "edit") return <CardsTableCellEditCard card={card} />;
   if (id === "delete") return <CardsTableCellDeleteCard id={card.id} deckId={card.deckId} />;
 
   if (id === "state") {

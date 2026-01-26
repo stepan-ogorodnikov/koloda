@@ -18,24 +18,24 @@ msgstr ""
 msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:75
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:80
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:76
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:81
 msgid "add-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:101
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:103
 msgid "add-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:112
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:114
 msgid "add-algorithm.submit"
 msgstr "Create"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:69
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:70
 msgid "add-algorithm.title"
 msgstr "New preset"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:56
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:57
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
@@ -52,47 +52,47 @@ msgstr "Add card"
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:80
+#: ../../libs/react/src/lib/decks/add-deck.tsx:81
 msgid "add-deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:104
+#: ../../libs/react/src/lib/decks/add-deck.tsx:106
 msgid "add-deck.redirect.link"
 msgstr "Go to the new deck"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:115
+#: ../../libs/react/src/lib/decks/add-deck.tsx:117
 msgid "add-deck.submit"
 msgstr "Add deck"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:115
+#: ../../libs/react/src/lib/decks/add-deck.tsx:117
 msgid "add-deck.success"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:69
+#: ../../libs/react/src/lib/decks/add-deck.tsx:70
 msgid "add-deck.title"
 msgstr "New deck"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:56
+#: ../../libs/react/src/lib/decks/add-deck.tsx:57
 msgid "add-deck.trigger"
 msgstr "New deck"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:80
+#: ../../libs/react/src/lib/templates/add-template.tsx:81
 msgid "add-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:96
+#: ../../libs/react/src/lib/templates/add-template.tsx:98
 msgid "add-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:107
+#: ../../libs/react/src/lib/templates/add-template.tsx:109
 msgid "add-template.submit"
 msgstr "Create"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:69
+#: ../../libs/react/src/lib/templates/add-template.tsx:70
 msgid "add-template.title"
 msgstr "New template"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:56
+#: ../../libs/react/src/lib/templates/add-template.tsx:57
 msgid "add-template.trigger"
 msgstr "New template"
 
@@ -170,7 +170,7 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/react/src/lib/routes/_.algorithms.tsx:33
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:34
 msgid "algorithms.title"
 msgstr "Presets"
 
@@ -200,11 +200,11 @@ msgstr "Go to next card"
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:62
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
 msgid "cards-table.columns-menu.title"
 msgstr "Table Columns"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:57
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
 msgid "cards-table.columns-menu.trigger"
 msgstr "Columns"
 
@@ -224,11 +224,11 @@ msgstr "Reset filters"
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:159
+#: ../../libs/react/src/lib/cards/cards-table.tsx:168
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:168
+#: ../../libs/react/src/lib/cards/cards-table.tsx:177
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
@@ -272,51 +272,51 @@ msgstr "Stack"
 msgid "cards.views.table"
 msgstr "Table"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:79
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:80
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:99
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:101
 msgid "clone-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:115
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:117
 msgid "clone-algorithm.submit"
 msgstr "Clone"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:112
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:114
 msgid "clone-algorithm.success"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:59
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:60
 msgid "clone-algorithm.trigger"
 msgstr "Clone preset"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:79
+#: ../../libs/react/src/lib/templates/clone-template.tsx:80
 msgid "clone-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:99
+#: ../../libs/react/src/lib/templates/clone-template.tsx:101
 msgid "clone-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:110
+#: ../../libs/react/src/lib/templates/clone-template.tsx:112
 msgid "clone-template.submit"
 msgstr "Clone"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:110
+#: ../../libs/react/src/lib/templates/clone-template.tsx:112
 msgid "clone-template.success"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:59
+#: ../../libs/react/src/lib/templates/clone-template.tsx:60
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/react/src/lib/decks/deck-details.tsx:81
+#: ../../libs/react/src/lib/decks/deck-details.tsx:82
 msgid "deck.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/decks/deck-details.tsx:58
+#: ../../libs/react/src/lib/decks/deck-details.tsx:59
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
@@ -328,7 +328,7 @@ msgstr "Cards"
 msgid "deck.tabs.details"
 msgstr "Details"
 
-#: ../../libs/react/src/lib/routes/_.decks.tsx:32
+#: ../../libs/react/src/lib/routes/_.decks.tsx:33
 msgid "decks.title"
 msgstr "Decks"
 
@@ -422,6 +422,10 @@ msgstr "Are you sure you want to delete this template?"
 msgid "delete-template.trigger"
 msgstr "Delete template"
 
+#: ../../libs/react/src/lib/cards/cards-table-cell-edit-card.tsx:19
+msgid "edit-card.trigger"
+msgstr "Edit card"
+
 #: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:10
 msgid "fsrs.grades.again"
 msgstr "Again"
@@ -446,23 +450,23 @@ msgstr "Language"
 msgid "learned-today.title"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:30
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:69
 msgid "lesson.completion.close"
 msgstr "Close"
 
-#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:22
+#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:19
 msgid "lesson.completion.message"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:96
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:57
 msgid "lesson.content.submit"
 msgstr "Continue"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:72
+#: ../../libs/react/src/lib/lessons/lesson-termination.tsx:44
 msgid "lesson.content.termination.accept"
 msgstr "Close"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-termination.tsx:34
 msgid "lesson.content.termination.refuse"
 msgstr "Continue studying"
 
@@ -478,11 +482,11 @@ msgstr "Amount of cards of type review"
 msgid "lesson.init.amount-input.untouched"
 msgstr "Amount of cards of type new"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:37
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:34
 msgid "lesson.init.list.labels.available"
 msgstr "Available:"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:67
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:37
 msgid "lesson.init.submit"
 msgstr "Start"
 
@@ -498,12 +502,12 @@ msgstr "Available"
 msgid "lesson.init.table.columns.learned"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-header.tsx:50
 msgid "lesson.init.title"
 msgstr "Study cards"
 
 #. placeholder {0}: index + 1
-#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:35
+#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:37
 msgid "lesson.progress.label {0} {total}"
 msgstr "Progress: card № {0} of {total} total"
 
@@ -558,15 +562,15 @@ msgstr "Hotkeys"
 msgid "settings.interface"
 msgstr "Interface"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
 msgid "settings.interface.language"
 msgstr "Language"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:39
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:40
 msgid "settings.interface.motion"
 msgstr "Animations"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:28
 msgid "settings.interface.theme"
 msgstr "Theme"
 
@@ -607,7 +611,7 @@ msgstr "Total"
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:29
+#: ../../libs/react/src/lib/routes/_.settings.tsx:30
 msgid "settings.title"
 msgstr "Settings"
 
@@ -619,20 +623,20 @@ msgstr "Template"
 msgid "template.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:70
+#: ../../libs/react/src/lib/templates/template-fields.tsx:68
 msgid "template.fields.add-item"
 msgstr "Add field"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:106
+#: ../../libs/react/src/lib/templates/template-fields.tsx:104
 msgid "template.fields.delete-item.label"
 msgstr "Delete field"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:95
+#: ../../libs/react/src/lib/templates/template-fields.tsx:93
 msgid "template.fields.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:101
-#: ../../libs/react/src/lib/templates/template-layout.tsx:57
+#: ../../libs/react/src/lib/templates/template-fields.tsx:99
+#: ../../libs/react/src/lib/templates/template-layout.tsx:55
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
 
@@ -644,11 +648,11 @@ msgstr "Fields"
 msgid "template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:50
+#: ../../libs/react/src/lib/templates/template-layout.tsx:48
 msgid "template.layout.inputs.field.label"
 msgstr "Field"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:63
+#: ../../libs/react/src/lib/templates/template-layout.tsx:61
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 
@@ -668,19 +672,19 @@ msgstr "Status"
 msgid "template.status.unlocked"
 msgstr "Not locked"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:14
+#: ../../libs/react/src/lib/templates/template-layout.tsx:13
 msgid "templates.operations.display"
 msgstr "Display"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:15
+#: ../../libs/react/src/lib/templates/template-layout.tsx:14
 msgid "templates.operations.reveal"
 msgstr "Reveal"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:16
+#: ../../libs/react/src/lib/templates/template-layout.tsx:15
 msgid "templates.operations.type"
 msgstr "Type"
 
-#: ../../libs/react/src/lib/routes/_.templates.tsx:31
+#: ../../libs/react/src/lib/routes/_.templates.tsx:32
 msgid "templates.title"
 msgstr "Templates"
 
@@ -688,15 +692,15 @@ msgstr "Templates"
 msgid "theme-select.label"
 msgstr "Theme"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
 msgid "theme.dark"
 msgstr "Dark"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:34
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
 msgid "theme.light"
 msgstr "Light"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:37
 msgid "theme.system"
 msgstr "System"
 

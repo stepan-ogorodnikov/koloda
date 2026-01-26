@@ -104,7 +104,7 @@ function Controls() {
   return (
     <form.Subscribe selector={(state) => [state.isDirty]}>
       {([isDirty]) => (
-        <div className="sticky bottom-16 tb:bottom-4 flex flex-col items-center">
+        <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center">
           {isDirty && (
             <AnimatePresence>
               <Fade className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1">

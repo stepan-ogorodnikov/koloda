@@ -18,24 +18,24 @@ msgstr ""
 msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:75
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:80
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:76
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:81
 msgid "add-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:101
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:103
 msgid "add-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:112
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:114
 msgid "add-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:69
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:70
 msgid "add-algorithm.title"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:56
+#: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:57
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
@@ -52,47 +52,47 @@ msgstr "Добавить карточку"
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:80
+#: ../../libs/react/src/lib/decks/add-deck.tsx:81
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:104
+#: ../../libs/react/src/lib/decks/add-deck.tsx:106
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:115
+#: ../../libs/react/src/lib/decks/add-deck.tsx:117
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:115
+#: ../../libs/react/src/lib/decks/add-deck.tsx:117
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:69
+#: ../../libs/react/src/lib/decks/add-deck.tsx:70
 msgid "add-deck.title"
 msgstr "Новая колода"
 
-#: ../../libs/react/src/lib/decks/add-deck.tsx:56
+#: ../../libs/react/src/lib/decks/add-deck.tsx:57
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:80
+#: ../../libs/react/src/lib/templates/add-template.tsx:81
 msgid "add-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:96
+#: ../../libs/react/src/lib/templates/add-template.tsx:98
 msgid "add-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:107
+#: ../../libs/react/src/lib/templates/add-template.tsx:109
 msgid "add-template.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:69
+#: ../../libs/react/src/lib/templates/add-template.tsx:70
 msgid "add-template.title"
 msgstr "Новый шаблон"
 
-#: ../../libs/react/src/lib/templates/add-template.tsx:56
+#: ../../libs/react/src/lib/templates/add-template.tsx:57
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
@@ -170,7 +170,7 @@ msgstr "Удалить интервал переучивания номер {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
-#: ../../libs/react/src/lib/routes/_.algorithms.tsx:33
+#: ../../libs/react/src/lib/routes/_.algorithms.tsx:34
 msgid "algorithms.title"
 msgstr "Алгоритмы"
 
@@ -200,11 +200,11 @@ msgstr "Перейти к следующей карточке"
 msgid "cards-stack.navigation.prev"
 msgstr "Перейти к предыдущей карточке"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:62
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:61
 msgid "cards-table.columns-menu.title"
 msgstr "Столбцы таблицы"
 
-#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:57
+#: ../../libs/react/src/lib/cards/cards-table-columns-visibility.tsx:56
 msgid "cards-table.columns-menu.trigger"
 msgstr "Столбцы"
 
@@ -224,11 +224,11 @@ msgstr "Сбросить фильтры"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:159
+#: ../../libs/react/src/lib/cards/cards-table.tsx:168
 msgid "cards-table.search.label"
 msgstr "Поиск по карточкам"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:168
+#: ../../libs/react/src/lib/cards/cards-table.tsx:177
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
@@ -272,51 +272,51 @@ msgstr "По одной"
 msgid "cards.views.table"
 msgstr "Таблица"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:79
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:80
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:99
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:101
 msgid "clone-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:115
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:117
 msgid "clone-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:112
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:114
 msgid "clone-algorithm.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:59
+#: ../../libs/react/src/lib/algorithms/clone-algorithm.tsx:60
 msgid "clone-algorithm.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:79
+#: ../../libs/react/src/lib/templates/clone-template.tsx:80
 msgid "clone-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:99
+#: ../../libs/react/src/lib/templates/clone-template.tsx:101
 msgid "clone-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:110
+#: ../../libs/react/src/lib/templates/clone-template.tsx:112
 msgid "clone-template.submit"
 msgstr "Создать"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:110
+#: ../../libs/react/src/lib/templates/clone-template.tsx:112
 msgid "clone-template.success"
 msgstr "Успешно"
 
-#: ../../libs/react/src/lib/templates/clone-template.tsx:59
+#: ../../libs/react/src/lib/templates/clone-template.tsx:60
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/react/src/lib/decks/deck-details.tsx:81
+#: ../../libs/react/src/lib/decks/deck-details.tsx:82
 msgid "deck.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/decks/deck-details.tsx:58
+#: ../../libs/react/src/lib/decks/deck-details.tsx:59
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
@@ -328,7 +328,7 @@ msgstr "Карточки"
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/react/src/lib/routes/_.decks.tsx:32
+#: ../../libs/react/src/lib/routes/_.decks.tsx:33
 msgid "decks.title"
 msgstr "Колоды"
 
@@ -422,6 +422,10 @@ msgstr "Подтвердите удаление шаблона"
 msgid "delete-template.trigger"
 msgstr "Удалить шаблон"
 
+#: ../../libs/react/src/lib/cards/cards-table-cell-edit-card.tsx:19
+msgid "edit-card.trigger"
+msgstr "Редактировать карточку"
+
 #: ../../libs/react/src/lib/lessons/lesson-card-grades.tsx:10
 msgid "fsrs.grades.again"
 msgstr "Снова"
@@ -446,23 +450,23 @@ msgstr "Язык интерфейса"
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:30
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:69
 msgid "lesson.completion.close"
 msgstr "Закрыть"
 
-#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:22
+#: ../../libs/react/src/lib/lessons/lesson-completion.tsx:19
 msgid "lesson.completion.message"
 msgstr "Выполнено"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:96
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:57
 msgid "lesson.content.submit"
 msgstr "Продолжить"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:72
+#: ../../libs/react/src/lib/lessons/lesson-termination.tsx:44
 msgid "lesson.content.termination.accept"
 msgstr "Завершить сессию"
 
-#: ../../libs/react/src/lib/lessons/lesson-content.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-termination.tsx:34
 msgid "lesson.content.termination.refuse"
 msgstr "Продолжить изучение"
 
@@ -478,11 +482,11 @@ msgstr "Количество карт типа 'повтор'"
 msgid "lesson.init.amount-input.untouched"
 msgstr "Количество карт типа 'новые'"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:37
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:34
 msgid "lesson.init.list.labels.available"
 msgstr "Доступно:"
 
-#: ../../libs/react/src/lib/lessons/lesson-init.tsx:67
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:37
 msgid "lesson.init.submit"
 msgstr "Начать"
 
@@ -498,12 +502,12 @@ msgstr "Доступно"
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/react/src/lib/lessons/lesson.tsx:65
+#: ../../libs/react/src/lib/lessons/lesson-header.tsx:50
 msgid "lesson.init.title"
 msgstr "Начать изучение"
 
 #. placeholder {0}: index + 1
-#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:35
+#: ../../libs/react/src/lib/lessons/lesson-progress-dots.tsx:37
 msgid "lesson.progress.label {0} {total}"
 msgstr "Прогресс: карточка № {0}, всего {total}"
 
@@ -558,15 +562,15 @@ msgstr "Горячие клавиши"
 msgid "settings.interface"
 msgstr "Интерфейс"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:26
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:39
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:40
 msgid "settings.interface.motion"
 msgstr "Анимации"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:27
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:28
 msgid "settings.interface.theme"
 msgstr "Тема оформления"
 
@@ -607,7 +611,7 @@ msgstr "Всего"
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:29
+#: ../../libs/react/src/lib/routes/_.settings.tsx:30
 msgid "settings.title"
 msgstr "Настройки"
 
@@ -619,20 +623,20 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:70
+#: ../../libs/react/src/lib/templates/template-fields.tsx:68
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:106
+#: ../../libs/react/src/lib/templates/template-fields.tsx:104
 msgid "template.fields.delete-item.label"
 msgstr "Удалить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:95
+#: ../../libs/react/src/lib/templates/template-fields.tsx:93
 msgid "template.fields.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:101
-#: ../../libs/react/src/lib/templates/template-layout.tsx:57
+#: ../../libs/react/src/lib/templates/template-fields.tsx:99
+#: ../../libs/react/src/lib/templates/template-layout.tsx:55
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
@@ -644,11 +648,11 @@ msgstr "Поля"
 msgid "template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:50
+#: ../../libs/react/src/lib/templates/template-layout.tsx:48
 msgid "template.layout.inputs.field.label"
 msgstr "Поле"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:63
+#: ../../libs/react/src/lib/templates/template-layout.tsx:61
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
@@ -668,19 +672,19 @@ msgstr "Статус"
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:14
+#: ../../libs/react/src/lib/templates/template-layout.tsx:13
 msgid "templates.operations.display"
 msgstr "Показать"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:15
+#: ../../libs/react/src/lib/templates/template-layout.tsx:14
 msgid "templates.operations.reveal"
 msgstr "Раскрыть"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:16
+#: ../../libs/react/src/lib/templates/template-layout.tsx:15
 msgid "templates.operations.type"
 msgstr "Печатать"
 
-#: ../../libs/react/src/lib/routes/_.templates.tsx:31
+#: ../../libs/react/src/lib/routes/_.templates.tsx:32
 msgid "templates.title"
 msgstr "Шаблоны"
 
@@ -688,15 +692,15 @@ msgstr "Шаблоны"
 msgid "theme-select.label"
 msgstr "Тема оформления"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
 msgid "theme.dark"
 msgstr "Тёмная"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:34
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:35
 msgid "theme.light"
 msgstr "Светлая"
 
-#: ../../libs/react/src/lib/settings/settings-interface.tsx:36
+#: ../../libs/react/src/lib/settings/settings-interface.tsx:37
 msgid "theme.system"
 msgstr "Системная"
 

@@ -103,6 +103,15 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
           cell,
         },
         {
+          id: "edit",
+          header: "",
+          enableHiding: false,
+          enableGlobalFilter: false,
+          minSize: 4,
+          size: 4,
+          cell,
+        },
+        {
           id: "delete",
           header: "",
           enableHiding: false,
