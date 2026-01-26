@@ -24,9 +24,10 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: () => {
+        onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: decksQueryKeys.all() });
           queryClient.invalidateQueries({ queryKey: decksQueryKeys.detail(id) });
+          queryClient.setQueryData(decksQueryKeys.detail(id), returning);
           formApi.reset();
         },
       });

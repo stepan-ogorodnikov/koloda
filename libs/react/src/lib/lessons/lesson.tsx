@@ -30,15 +30,15 @@ export function Lesson() {
   const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
-  const { isSubmitted, isFinished } = state.meta;
+  const { isOpen, isSubmitted, isFinished } = state.meta;
 
   useEffect(() => {
-    if (!state.meta.isOpen) setAtomValue(null);
-  }, [state.meta.isOpen, setAtomValue]);
+    if (!isOpen) setAtomValue(null);
+  }, [isOpen, setAtomValue]);
 
   useEffect(() => {
-    (state.meta.isOpen ? disableScope : enableScope)("nav");
-  }, [state.meta.isOpen, disableScope, enableScope]);
+    (isOpen ? disableScope : enableScope)("nav");
+  }, [isOpen, disableScope, enableScope]);
 
   useEffect(() => {
     if (atomValue) dispatch(["paramsSet", atomValue]);

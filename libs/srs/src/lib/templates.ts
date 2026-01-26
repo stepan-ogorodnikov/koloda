@@ -173,7 +173,9 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
       .where(eq(templates.id, Number(id)))
       .returning();
 
-    return result[0] as Template;
+    const returning = getTemplate(db, id);
+
+    return returning || result[0] as Template;
   } catch (e) {
     handleDBError(e);
     return;
