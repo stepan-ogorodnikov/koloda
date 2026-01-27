@@ -22,8 +22,6 @@ import { Route as SettingsInterfaceRouteImport } from './routes/_.settings.inter
 import { Route as SettingsHotkeysRouteImport } from './routes/_.settings.hotkeys'
 import { Route as DecksDeckIdRouteImport } from './routes/_.decks.$deckId'
 import { Route as AlgorithmsAlgorithmIdRouteImport } from './routes/_.algorithms.$algorithmId'
-import { Route as DecksDeckIdDetailsRouteImport } from './routes/_.decks.$deckId.details'
-import { Route as DecksDeckIdCardsRouteImport } from './routes/_.decks.$deckId.cards'
 
 const Route = RouteImport.update({
   id: '/_',
@@ -89,16 +87,6 @@ const AlgorithmsAlgorithmIdRoute = AlgorithmsAlgorithmIdRouteImport.update({
   path: '/$algorithmId',
   getParentRoute: () => AlgorithmsRoute,
 } as any)
-const DecksDeckIdDetailsRoute = DecksDeckIdDetailsRouteImport.update({
-  id: '/details',
-  path: '/details',
-  getParentRoute: () => DecksDeckIdRoute,
-} as any)
-const DecksDeckIdCardsRoute = DecksDeckIdCardsRouteImport.update({
-  id: '/cards',
-  path: '/cards',
-  getParentRoute: () => DecksDeckIdRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/algorithms': typeof AlgorithmsRouteWithChildren
@@ -108,13 +96,11 @@ export interface FileRoutesByFullPath {
   '/templates': typeof TemplatesRouteWithChildren
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
-  '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/decks/$deckId': typeof DecksDeckIdRoute
   '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
-  '/decks/$deckId/cards': typeof DecksDeckIdCardsRoute
-  '/decks/$deckId/details': typeof DecksDeckIdDetailsRoute
 }
 export interface FileRoutesByTo {
   '/algorithms': typeof AlgorithmsRouteWithChildren
@@ -124,13 +110,11 @@ export interface FileRoutesByTo {
   '/templates': typeof TemplatesRouteWithChildren
   '/': typeof IndexRoute
   '/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
-  '/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/decks/$deckId': typeof DecksDeckIdRoute
   '/settings/hotkeys': typeof SettingsHotkeysRoute
   '/settings/interface': typeof SettingsInterfaceRoute
   '/settings/learning': typeof SettingsLearningRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
-  '/decks/$deckId/cards': typeof DecksDeckIdCardsRoute
-  '/decks/$deckId/details': typeof DecksDeckIdDetailsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,13 +126,11 @@ export interface FileRoutesById {
   '/_/templates': typeof TemplatesRouteWithChildren
   '/_/': typeof IndexRoute
   '/_/algorithms/$algorithmId': typeof AlgorithmsAlgorithmIdRoute
-  '/_/decks/$deckId': typeof DecksDeckIdRouteWithChildren
+  '/_/decks/$deckId': typeof DecksDeckIdRoute
   '/_/settings/hotkeys': typeof SettingsHotkeysRoute
   '/_/settings/interface': typeof SettingsInterfaceRoute
   '/_/settings/learning': typeof SettingsLearningRoute
   '/_/templates/$templateId': typeof TemplatesTemplateIdRoute
-  '/_/decks/$deckId/cards': typeof DecksDeckIdCardsRoute
-  '/_/decks/$deckId/details': typeof DecksDeckIdDetailsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -165,8 +147,6 @@ export interface FileRouteTypes {
     | '/settings/interface'
     | '/settings/learning'
     | '/templates/$templateId'
-    | '/decks/$deckId/cards'
-    | '/decks/$deckId/details'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/algorithms'
@@ -181,8 +161,6 @@ export interface FileRouteTypes {
     | '/settings/interface'
     | '/settings/learning'
     | '/templates/$templateId'
-    | '/decks/$deckId/cards'
-    | '/decks/$deckId/details'
   id:
     | '__root__'
     | '/_'
@@ -198,8 +176,6 @@ export interface FileRouteTypes {
     | '/_/settings/interface'
     | '/_/settings/learning'
     | '/_/templates/$templateId'
-    | '/_/decks/$deckId/cards'
-    | '/_/decks/$deckId/details'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -299,20 +275,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlgorithmsAlgorithmIdRouteImport
       parentRoute: typeof AlgorithmsRoute
     }
-    '/_/decks/$deckId/details': {
-      id: '/_/decks/$deckId/details'
-      path: '/details'
-      fullPath: '/decks/$deckId/details'
-      preLoaderRoute: typeof DecksDeckIdDetailsRouteImport
-      parentRoute: typeof DecksDeckIdRoute
-    }
-    '/_/decks/$deckId/cards': {
-      id: '/_/decks/$deckId/cards'
-      path: '/cards'
-      fullPath: '/decks/$deckId/cards'
-      preLoaderRoute: typeof DecksDeckIdCardsRouteImport
-      parentRoute: typeof DecksDeckIdRoute
-    }
   }
 }
 
@@ -328,26 +290,12 @@ const AlgorithmsRouteWithChildren = AlgorithmsRoute._addFileChildren(
   AlgorithmsRouteChildren,
 )
 
-interface DecksDeckIdRouteChildren {
-  DecksDeckIdCardsRoute: typeof DecksDeckIdCardsRoute
-  DecksDeckIdDetailsRoute: typeof DecksDeckIdDetailsRoute
-}
-
-const DecksDeckIdRouteChildren: DecksDeckIdRouteChildren = {
-  DecksDeckIdCardsRoute: DecksDeckIdCardsRoute,
-  DecksDeckIdDetailsRoute: DecksDeckIdDetailsRoute,
-}
-
-const DecksDeckIdRouteWithChildren = DecksDeckIdRoute._addFileChildren(
-  DecksDeckIdRouteChildren,
-)
-
 interface DecksRouteChildren {
-  DecksDeckIdRoute: typeof DecksDeckIdRouteWithChildren
+  DecksDeckIdRoute: typeof DecksDeckIdRoute
 }
 
 const DecksRouteChildren: DecksRouteChildren = {
-  DecksDeckIdRoute: DecksDeckIdRouteWithChildren,
+  DecksDeckIdRoute: DecksDeckIdRoute,
 }
 
 const DecksRouteWithChildren = DecksRoute._addFileChildren(DecksRouteChildren)

@@ -320,13 +320,17 @@ msgstr "Actions"
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:25
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:20
 msgid "deck.tabs.cards"
 msgstr "Cards"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:24
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:19
 msgid "deck.tabs.details"
 msgstr "Details"
+
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:40
+msgid "deck.tabs.label"
+msgstr "Deck tabs"
 
 #: ../../libs/react/src/lib/routes/_.decks.tsx:33
 msgid "decks.title"

@@ -320,13 +320,17 @@ msgstr "Действия"
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:25
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:20
 msgid "deck.tabs.cards"
 msgstr "Карточки"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:24
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:19
 msgid "deck.tabs.details"
 msgstr "Параметры"
+
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:40
+msgid "deck.tabs.label"
+msgstr "Вкладки колоды"
 
 #: ../../libs/react/src/lib/routes/_.decks.tsx:33
 msgid "decks.title"
