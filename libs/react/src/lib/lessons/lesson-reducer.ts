@@ -5,6 +5,7 @@ import type {
   Card,
   CardGrade,
   InsertReviewData,
+  LearningSettings,
   Lesson,
   LessonData,
   LessonFilters,
@@ -12,6 +13,7 @@ import type {
   LessonType,
   TodaysReviewTotals,
 } from "@koloda/srs";
+import { addHours, addMinutes } from "date-fns";
 import { produce } from "immer";
 
 export const LESSON_PROGRESS_STATES = {
@@ -36,6 +38,7 @@ export type LessonReducerState = {
     isFinished?: boolean;
     // status: "init" | "started" | "ready" | "finished";
   };
+  learnAheadLimit?: LearningSettings["learnAheadLimit"];
   // values that define decks to study
   params?: LessonAtomValue;
   // object to pass to lesson query based on params above
@@ -95,6 +98,7 @@ export const lessonReducerDefault: LessonReducerState = {
 const actions = {
   isOpenUpdated,
   terminationRequested,
+  learnAheadLimitReceived,
   paramsSet,
   todayReviewTotalsReceived,
   lessonsReceived,
@@ -134,6 +138,13 @@ function isOpenUpdated(draft: LessonReducerState, payload: boolean) {
  */
 function terminationRequested(draft: LessonReducerState, payload: boolean) {
   draft.meta.isTerminationRequested = payload;
+}
+
+/**
+ * Sets the learn ahead limit received from settings
+ */
+function learnAheadLimitReceived(draft: LessonReducerState, payload: LearningSettings["learnAheadLimit"]) {
+  draft.learnAheadLimit = payload;
 }
 
 /**
@@ -318,7 +329,7 @@ function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpda
  * Proceeds to next card if any
  */
 function gradeSelected(draft: LessonReducerState, payload: number) {
-  if (draft.content) {
+  if (draft.content && draft.data) {
     const grade = draft.content.grades[payload];
     const review = { ...createReviewFromReviewFSRS(grade.log), cardId: draft.content.card.id, isIgnored: false };
     const card = createCardFromCardFSRS(grade.card);
@@ -326,9 +337,24 @@ function gradeSelected(draft: LessonReducerState, payload: number) {
     const { index } = draft.content;
     draft.upload.queue.push({ index, card, review });
 
-    if (draft.data && [0, 1].includes(payload)) draft.data.cards.push(card);
+    if (doesLearnAheadMatch(draft, card)) draft.data.cards.push(card);
     moveToNextCard(draft);
   }
+}
+
+/**
+ * Checks if a card's due is over the learn ahead limit
+ * @param draft The lesson reducer state
+ * @param card The card to check
+ * @returns true if card's due is sooner than the learn ahead limit, false if it's later
+ */
+function doesLearnAheadMatch(draft: LessonReducerState, card: Card) {
+  if (!draft.learnAheadLimit || !card.dueAt) return false;
+
+  const [hours, minutes] = draft.learnAheadLimit;
+  const limitTimestamp = addMinutes(addHours(new Date(), hours), minutes);
+
+  return new Date(card.dueAt) < limitTimestamp;
 }
 
 /**

@@ -69,6 +69,14 @@ msgstr "с"
 msgid "layout.min-length"
 msgstr "Раскладка не может быть пустой"
 
+#: ../../libs/srs/src/lib/settings-learning.ts:11
+msgid "learn-ahead-limit.hours-range"
+msgstr "Часы должны быть от 0 до 48"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:12
+msgid "learn-ahead-limit.minutes-range"
+msgstr "Минуты должны быть от 0 до 59"
+
 #: ../../libs/srs/src/lib/lessons.ts:20
 msgid "lesson.init.labels.learn"
 msgstr "Изучение"

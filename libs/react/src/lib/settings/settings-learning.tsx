@@ -19,17 +19,13 @@ export function SettingsLearning() {
   const { mutate } = useMutation(patchSettingsMutation());
   const form = useAppForm({
     defaultValues: data?.content as LearningSettings,
-    validators: { onSubmit: schema, onChange: schema },
-    listeners: {
-      onChange: ({ formApi }) => {
-        if (formApi.state.isValid) formApi.handleSubmit();
-      },
-      onChangeDebounceMs: 300,
-    },
-    onSubmit: async (data) => {
-      mutate({ name: "learning", content: schema.parse({ ...data.value }) }, {
-        onSuccess: () => {
+    validators: { onSubmit: schema },
+    onSubmit: async ({ value }) => {
+      mutate({ name: "learning", content: schema.parse(value) }, {
+        onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("learning") });
+          queryClient.setQueryData(settingsQueryKeys.detail("learning"), returning);
+          form.reset();
         },
       });
     },
@@ -115,6 +111,40 @@ export function SettingsLearning() {
           )}
         </form.Field>
       </FormLayout.Section>
+      <FormLayout.Section term={_(msg`settings.learning.learn-ahead-limit`)}>
+        <div className="flex flex-row flex-wrap gap-4">
+          <form.Field name="learnAheadLimit[0]">
+            {(field) => (
+              <NumberField
+                variants={{ class: "flex-row items-center gap-2 max-w-32" }}
+                aria-label={_(msg`settings.learning.learn-ahead-limit.hours.label`)}
+                minValue={0}
+                maxValue={48}
+                value={field.state.value}
+                onChange={field.handleChange}
+              >
+                <NumberField.Group />
+                <span aria-hidden="true">{_(msg`settings.learning.learn-ahead-limit.hours.suffix`)}</span>
+              </NumberField>
+            )}
+          </form.Field>
+          <form.Field name="learnAheadLimit[1]">
+            {(field) => (
+              <NumberField
+                variants={{ class: "flex-row items-center gap-2 max-w-32" }}
+                aria-label={_(msg`settings.learning.learn-ahead-limit.minutes.label`)}
+                minValue={0}
+                maxValue={59}
+                value={field.state.value}
+                onChange={field.handleChange}
+              >
+                <NumberField.Group />
+                <span aria-hidden="true">{_(msg`settings.learning.learn-ahead-limit.minutes.suffix`)}</span>
+              </NumberField>
+            )}
+          </form.Field>
+        </div>
+      </FormLayout.Section>
       <form.Field name="dayStartsAt">
         {(field) => (
           <TimeField
@@ -129,6 +159,9 @@ export function SettingsLearning() {
       </form.Field>
       {formErrorMap.onChange && <form.Errors errors={formErrorMap.onChange} translations={learningSettingsMessages} />}
       {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={learningSettingsMessages} />}
+      <form.AppForm>
+        <form.Controls />
+      </form.AppForm>
     </form>
   );
 }

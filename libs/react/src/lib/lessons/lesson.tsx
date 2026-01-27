@@ -1,6 +1,9 @@
+import { queriesAtom, settingsQueryKeys } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent, useHotkeysStatus } from "@koloda/ui";
+import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useReducer } from "react";
 import { LessonCompletion } from "./lesson-completion";
@@ -30,6 +33,11 @@ export function Lesson() {
   const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
+  const { getSettingsQuery } = useAtomValue(queriesAtom);
+  const { data: learningSettings } = useQuery({
+    queryKey: settingsQueryKeys.detail("learning"),
+    ...getSettingsQuery("learning"),
+  });
   const { isOpen, isSubmitted, isFinished } = state.meta;
 
   useEffect(() => {
@@ -43,6 +51,12 @@ export function Lesson() {
   useEffect(() => {
     if (atomValue) dispatch(["paramsSet", atomValue]);
   }, [atomValue]);
+
+  useEffect(() => {
+    if (learningSettings?.content.learnAheadLimit) {
+      dispatch(["learnAheadLimitReceived", learningSettings.content.learnAheadLimit]);
+    }
+  }, [learningSettings]);
 
   return (
     <Dialog.Overlay

@@ -8,6 +8,8 @@ export const learningSettingsMessages: Record<string, MessageDescriptor> = {
   "daily-limits.untouched-more-than-total": msg`daily-limits.untouched-more-than-total`,
   "daily-limits.learn-more-than-total": msg`daily-limits.learn-more-than-total`,
   "daily-limits.review-more-than-total": msg`daily-limits.review-more-than-total`,
+  "learn-ahead-limit.hours-range": msg`learn-ahead-limit.hours-range`,
+  "learn-ahead-limit.minutes-range": msg`learn-ahead-limit.minutes-range`,
 };
 
 const dailyLimits = z.object({
@@ -24,12 +26,13 @@ const dailyLimits = z.object({
 });
 
 export const learningSettingsValidation = z.object({
-  dayStartsAt: z.iso.time({ precision: -1 }).default("05:00"),
-  dailyLimits,
   defaults: z.object({
     algorithm: selectAlgorithmSchema.shape.id,
     template: selectTemplateSchema.shape.id,
   }),
+  dailyLimits,
+  dayStartsAt: z.iso.time({ precision: -1 }).default("05:00"),
+  learnAheadLimit: z.tuple([z.number().min(0).max(48), z.number().min(0).max(59)]).default([0, 30]),
 });
 
 export type LearningSettings = z.input<typeof learningSettingsValidation>;

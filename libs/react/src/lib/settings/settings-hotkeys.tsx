@@ -28,8 +28,9 @@ export function SettingsHotkeys() {
     validators: { onSubmit: schema, onChange: schema },
     onSubmit: async ({ value }) => {
       mutate({ name: "hotkeys", content: schema.parse(value) }, {
-        onSuccess: () => {
+        onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("hotkeys") });
+          queryClient.setQueryData(settingsQueryKeys.detail("hotkeys"), returning);
           form.reset();
         },
       });

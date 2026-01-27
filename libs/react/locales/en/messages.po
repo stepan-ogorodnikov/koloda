@@ -579,35 +579,55 @@ msgstr "Theme"
 msgid "settings.learning"
 msgstr "Learning"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:122
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:152
 msgid "settings.learning.day-starts-at"
 msgstr "Start of the day"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:52
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:48
 msgid "settings.learning.defaults.algorithm"
 msgstr "Default algorithm"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:62
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:58
 msgid "settings.learning.defaults.template"
 msgstr "Default template"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:68
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:114
+msgid "settings.learning.learn-ahead-limit"
+msgstr "Learn ahead limit"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:120
+msgid "settings.learning.learn-ahead-limit.hours.label"
+msgstr "Hours"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:127
+msgid "settings.learning.learn-ahead-limit.hours.suffix"
+msgstr "h"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:135
+msgid "settings.learning.learn-ahead-limit.minutes.label"
+msgstr "Minutes"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:142
+msgid "settings.learning.learn-ahead-limit.minutes.suffix"
+msgstr "m"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:64
 msgid "settings.learning.limits"
 msgstr "Daily limits"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:100
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:96
 msgid "settings.learning.limits.learn"
 msgstr "Learn"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:112
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:108
 msgid "settings.learning.limits.review"
 msgstr "Review"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:76
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:72
 msgid "settings.learning.limits.total"
 msgstr "Total"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:88
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:84
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 

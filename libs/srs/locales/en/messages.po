@@ -69,6 +69,14 @@ msgstr "s"
 msgid "layout.min-length"
 msgstr "There has to be at least one layout item"
 
+#: ../../libs/srs/src/lib/settings-learning.ts:11
+msgid "learn-ahead-limit.hours-range"
+msgstr "Hours must be between 0 and 48"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:12
+msgid "learn-ahead-limit.minutes-range"
+msgstr "Minutes must be between 0 and 59"
+
 #: ../../libs/srs/src/lib/lessons.ts:20
 msgid "lesson.init.labels.learn"
 msgstr "Learn"
