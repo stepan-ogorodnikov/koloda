@@ -7,7 +7,7 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, LayoutGroup } from "motion/react";
 import type { PropsWithChildren } from "react";
 
 function Timestamps(props: PropsWithChildren) {
@@ -48,6 +48,33 @@ function UpdatedAt({ timestamp }: FormTimestampProps) {
   );
 }
 
+type FormErrorsProps = {
+  errors: Record<number | string, StandardSchemaV1Issue[]> | ZodIssue[] | undefined;
+  translations?: Record<string, MessageDescriptor>;
+  fallback?: MessageDescriptor;
+};
+
+export function Errors({ errors, translations, fallback }: FormErrorsProps) {
+  const { _ } = useLingui();
+
+  if (!errors) return null;
+
+  const flattenedErrors = Object.values(errors).flat();
+  const uniqueErrors = Array.from(new Map(flattenedErrors.map((error) => [error.message, error])).values());
+
+  return (
+    <div className="flex flex-col gap-2" role="alert">
+      {uniqueErrors.map(({ message }) => (
+        <em className="fg-error not-italic" key={message}>
+          {translations
+            ? (translations[message] ? _(translations[message]) : (fallback ? _(fallback) : message))
+            : message}
+        </em>
+      ))}
+    </div>
+  );
+}
+
 function SubscribeButton(props: ButtonProps) {
   const form = useFormContext();
   const { _ } = useLingui();
@@ -56,10 +83,7 @@ function SubscribeButton(props: ButtonProps) {
     <form.Subscribe selector={(state) => [state.canSubmit]}>
       {([canSubmit]) => (
         <Button
-          variants={{
-            style: "primary",
-            class: "w-full",
-          }}
+          variants={{ style: "primary", class: "w-full" }}
           type="submit"
           isDisabled={!canSubmit}
           {...props}
@@ -76,72 +100,57 @@ function ResetButton(props: ButtonProps) {
   const { _ } = useLingui();
 
   return (
-    <form.Subscribe selector={(state) => [state.isDirty]}>
-      {([isDirty]) => (
-        <Button
-          variants={{
-            style: "primary",
-            class: "w-full disabled:invisible",
-          }}
-          type="reset"
-          isDisabled={!isDirty}
-          onClick={(e) => {
-            e.preventDefault();
-            form.reset();
-          }}
-          {...props}
-        >
-          {_(msg`form.reset`)}
-        </Button>
-      )}
-    </form.Subscribe>
+    <Button
+      variants={{ style: "primary", class: "w-full disabled:invisible" }}
+      type="reset"
+      onClick={(e) => {
+        e.preventDefault();
+        form.reset();
+      }}
+      {...props}
+    >
+      {_(msg`form.reset`)}
+    </Button>
   );
 }
 
-function Controls() {
+type ControlsProps = Omit<FormErrorsProps, "errors"> & {
+  showErrors?: boolean;
+};
+
+function Controls({ showErrors = true, translations, fallback }: ControlsProps) {
   const form = useFormContext();
 
   return (
-    <form.Subscribe selector={(state) => [state.isDirty]}>
-      {([isDirty]) => (
-        <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center">
-          {isDirty && (
+    <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center gap-2">
+      <LayoutGroup>
+        <form.Subscribe selector={(state) => [state.errorMap]}>
+          {([{ onChange, onSubmit }]) => (
             <AnimatePresence>
-              <Fade className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1">
-                <SubscribeButton />
-                <ResetButton />
-              </Fade>
+              {showErrors && (onChange || onSubmit) && (
+                <Fade className="max-w-132 py-2 px-4 rounded-xl border-2 border-main bg-level-1" layout>
+                  {onChange && !onSubmit && (
+                    <Errors errors={onChange} translations={translations} fallback={fallback} />
+                  )}
+                  {onSubmit && <Errors errors={onSubmit} translations={translations} fallback={fallback} />}
+                </Fade>
+              )}
             </AnimatePresence>
           )}
-        </div>
-      )}
-    </form.Subscribe>
-  );
-}
-
-type FormErrorsProps = {
-  errors: Record<number | string, StandardSchemaV1Issue[]> | ZodIssue[] | undefined;
-  translations?: Record<string, MessageDescriptor>;
-  fallback?: MessageDescriptor;
-};
-
-export function Errors({ errors, translations, fallback }: FormErrorsProps) {
-  const { _ } = useLingui();
-
-  if (!errors) return null;
-
-  const flattenedErrors = Object.values(errors).flat();
-  const uniqueErrors = Array.from(new Map(flattenedErrors.map((error) => [error.message, error])).values());
-
-  return (
-    <div className="flex flex-col py-2" role="alert">
-      {uniqueErrors.map(({ message }) => (
-        <em className="fg-error not-italic" key={message}>
-          {translations
-            ? (translations[message] ? _(translations[message]) : (fallback ? _(fallback) : message))
-            : message}
-        </em>
-      ))}
+        </form.Subscribe>
+        <form.Subscribe selector={(state) => [state.isDirty]}>
+          {([isDirty]) => (
+            <AnimatePresence>
+              {isDirty && (
+                <Fade className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1" layout>
+                  <SubscribeButton />
+                  <ResetButton />
+                </Fade>
+              )}
+            </AnimatePresence>
+          )}
+        </form.Subscribe>
+      </LayoutGroup>
     </div>
   );
 }

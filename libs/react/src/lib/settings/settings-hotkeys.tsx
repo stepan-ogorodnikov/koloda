@@ -87,10 +87,8 @@ export function SettingsHotkeys() {
           })}
         </div>
       ))}
-      {formErrorMap.onChange && <form.Errors errors={formErrorMap.onChange} translations={hotkeysSettingsMessages} />}
-      {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={hotkeysSettingsMessages} />}
       <form.AppForm>
-        <form.Controls />
+        <form.Controls translations={hotkeysSettingsMessages} />
       </form.AppForm>
     </form>
   );

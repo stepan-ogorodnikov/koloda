@@ -6,7 +6,6 @@ import { formLayout, Label, NumberField, TimeField, useAppForm } from "@koloda/u
 import { FormLayout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
@@ -30,7 +29,6 @@ export function SettingsLearning() {
       });
     },
   });
-  const formErrorMap = useStore(form.store, (state) => state.errorMap);
 
   return (
     <form
@@ -157,10 +155,8 @@ export function SettingsLearning() {
           </TimeField>
         )}
       </form.Field>
-      {formErrorMap.onChange && <form.Errors errors={formErrorMap.onChange} translations={learningSettingsMessages} />}
-      {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={learningSettingsMessages} />}
       <form.AppForm>
-        <form.Controls />
+        <form.Controls translations={learningSettingsMessages} />
       </form.AppForm>
     </form>
   );

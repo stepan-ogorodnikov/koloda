@@ -60,7 +60,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
       )}
       <div className="flex flex-col relative">
         <AnimatePresence mode="popLayout">
-          <Fade key={card.id}>
+          <Fade key={card?.id}>
             {card && <CardsStackItem card={card} />}
           </Fade>
         </AnimatePresence>

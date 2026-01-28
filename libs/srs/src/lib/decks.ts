@@ -78,7 +78,7 @@ export async function addDeck(db: DB, data: InsertDeckData) {
   }
 }
 
-export const updateDeckSchema = createUpdateSchema(decks);
+export const updateDeckSchema = createUpdateSchema(decks, deckValidation);
 export type UpdateDeckValues = z.input<typeof updateDeckSchema>;
 export type UpdateDeckData = UpdateData<Deck, "id", UpdateDeckValues>;
 

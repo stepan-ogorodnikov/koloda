@@ -4,7 +4,6 @@ import { algorithmsMessages, updateAlgorithmSchema as schema } from "@koloda/srs
 import { FormLayout, formLayout, Label, NumberField, Switch, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
@@ -31,7 +30,6 @@ export function Algorithm({ id }: AlgorithmProps) {
       });
     },
   });
-  const formErrorMap = useStore(form.store, (state) => state.errorMap);
 
   if (isSuccess && data === null) return <NotFound />;
 
@@ -133,9 +131,8 @@ export function Algorithm({ id }: AlgorithmProps) {
           <DeleteAlgorithm id={id} />
         </div>
       </FormLayout.Section>
-      {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={algorithmsMessages} />}
       <form.AppForm>
-        <form.Controls />
+        <form.Controls translations={algorithmsMessages} />
       </form.AppForm>
     </form>
   );

@@ -1,11 +1,10 @@
 import { AlgorithmPicker } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import type { UpdateDeckValues } from "@koloda/srs";
-import { updateDeckSchema as schema } from "@koloda/srs";
+import { decksMessages, updateDeckSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { TemplatePicker } from "../templates/template-picker";
@@ -33,7 +32,6 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       });
     },
   });
-  const formErrorMap = useStore(form.store, (state) => state.errorMap);
 
   if (!data) return null;
 
@@ -82,9 +80,8 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       <FormLayout.Section term={_(msg`deck.actions.label`)}>
         <DeleteDeck id={id} />
       </FormLayout.Section>
-      {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
       <form.AppForm>
-        <form.Controls />
+        <form.Controls translations={decksMessages} />
       </form.AppForm>
     </form>
   );

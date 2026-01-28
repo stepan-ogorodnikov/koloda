@@ -4,7 +4,6 @@ import { templatesMessages, updateTemplateSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { TemplateFields } from "./template-fields";
@@ -31,7 +30,6 @@ export function Template({ id }: TemplateProps) {
       });
     },
   });
-  const formErrorMap = useStore(form.store, (state) => state.errorMap);
 
   if (isSuccess && data === null) return <NotFound />;
 
@@ -93,9 +91,8 @@ export function Template({ id }: TemplateProps) {
           <DeleteTemplate id={id} />
         </div>
       </FormLayout.Section>
-      {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={templatesMessages} />}
       <form.AppForm>
-        <form.Controls />
+        <form.Controls translations={templatesMessages} />
       </form.AppForm>
     </form>
   );

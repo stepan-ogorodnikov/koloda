@@ -112,7 +112,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
         </FormLayout.Section.Content>
       </FormLayout.Section>
       <form.AppForm>
-        <form.Controls />
+        <form.Controls showErrors={false} />
       </form.AppForm>
     </form>
   );
