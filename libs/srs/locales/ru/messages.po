@@ -33,6 +33,22 @@ msgstr "Лимит новых карточек не может быть боль
 msgid "fields.min-length"
 msgstr "Необходимо хотя бы одно поле"
 
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:16
+msgid "fsrs.grades.again"
+msgstr "Снова"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:19
+msgid "fsrs.grades.easy"
+msgstr "Легко"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:18
+msgid "fsrs.grades.good"
+msgstr "Хорошо"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:17
+msgid "fsrs.grades.hard"
+msgstr "Трудно"
+
 #: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
 msgid "fsrs.learning-steps.units.days.long"
 msgstr "д"
@@ -105,51 +121,35 @@ msgstr "Включено"
 msgid "motion.system"
 msgstr "Как в системе"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:6
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
 msgid "settings-hotkeys.unique-within-scope"
 msgstr "Комбинации клавиш не должны повторяться внутри своей группы"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
-msgid "settings.hotkeys.grades.again"
-msgstr "Снова"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:26
-msgid "settings.hotkeys.grades.easy"
-msgstr "Легко"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
-msgid "settings.hotkeys.grades.hard"
-msgstr "Трудно"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
-msgid "settings.hotkeys.grades.normal"
-msgstr "Хорошо"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Главная"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Колоды"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Настройки"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:12
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Выбор сложности"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:10
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Навигация"
 

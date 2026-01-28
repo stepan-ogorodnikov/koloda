@@ -1,6 +1,7 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod/v4";
+import { FSRS_GRADES } from "./algorithms-fsrs";
 
 export const hotkeysSettingsMessages: Record<string, MessageDescriptor> = {
   "settings-hotkeys.unique-within-scope": msg`settings-hotkeys.unique-within-scope`,
@@ -20,10 +21,10 @@ export const HOTKEYS_LABELS = {
     settings: msg`settings.hotkeys.navigation.settings`,
   },
   grades: {
-    again: msg`settings.hotkeys.grades.again`,
-    hard: msg`settings.hotkeys.grades.hard`,
-    normal: msg`settings.hotkeys.grades.normal`,
-    easy: msg`settings.hotkeys.grades.easy`,
+    again: FSRS_GRADES[0],
+    hard: FSRS_GRADES[1],
+    normal: FSRS_GRADES[2],
+    easy: FSRS_GRADES[3],
   },
 } as const;
 

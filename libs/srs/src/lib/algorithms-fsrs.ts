@@ -12,6 +12,13 @@ export const LEARNING_STEPS_UNITS = [
   { id: "d", short: msg`fsrs.learning-steps.units.days.short`, long: msg`fsrs.learning-steps.units.days.long` },
 ];
 
+export const FSRS_GRADES = [
+  msg`fsrs.grades.again`,
+  msg`fsrs.grades.hard`,
+  msg`fsrs.grades.good`,
+  msg`fsrs.grades.easy`,
+];
+
 const learningStepsValidation = z.array(
   z.tuple([z.int(), z.literal(["s", "m", "h", "d"])]),
 );

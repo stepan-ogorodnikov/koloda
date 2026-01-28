@@ -34,11 +34,11 @@ msgstr "Контроллер перетаскивания"
 msgid "form.createdAt {0}"
 msgstr "Создано {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:94
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:112
 msgid "form.reset"
 msgstr "Сбросить"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:67
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:91
 msgid "form.save"
 msgstr "Сохранить"
 

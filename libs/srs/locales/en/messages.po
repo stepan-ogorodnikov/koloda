@@ -33,6 +33,22 @@ msgstr "New can't be more than total"
 msgid "fields.min-length"
 msgstr "There has to be at least one field"
 
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:16
+msgid "fsrs.grades.again"
+msgstr "Again"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:19
+msgid "fsrs.grades.easy"
+msgstr "Easy"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:18
+msgid "fsrs.grades.good"
+msgstr "Good"
+
+#: ../../libs/srs/src/lib/algorithms-fsrs.ts:17
+msgid "fsrs.grades.hard"
+msgstr "Hard"
+
 #: ../../libs/srs/src/lib/algorithms-fsrs.ts:12
 msgid "fsrs.learning-steps.units.days.long"
 msgstr "days"
@@ -105,51 +121,35 @@ msgstr "Enabled"
 msgid "motion.system"
 msgstr "Automatic"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:6
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
 msgid "settings-hotkeys.unique-within-scope"
 msgstr "Hotkeys must be unique withing their group"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
-msgid "settings.hotkeys.grades.again"
-msgstr "Again"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:26
-msgid "settings.hotkeys.grades.easy"
-msgstr "Easy"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
-msgid "settings.hotkeys.grades.hard"
-msgstr "Hard"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
-msgid "settings.hotkeys.grades.normal"
-msgstr "Normal"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:12
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Grade selection"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:10
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Navigation"
 

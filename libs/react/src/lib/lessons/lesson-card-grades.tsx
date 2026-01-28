@@ -1,17 +1,10 @@
+import { FSRS_GRADES } from "@koloda/srs";
 import { Button, Fade } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { formatDistanceStrict } from "date-fns";
 import type { ActionDispatch } from "react";
 import type { RecordLogItem } from "ts-fsrs";
 import type { LessonReducerAction } from "./lesson-reducer";
-
-const GRADES = [
-  msg`fsrs.grades.again`,
-  msg`fsrs.grades.hard`,
-  msg`fsrs.grades.good`,
-  msg`fsrs.grades.easy`,
-];
 
 type LessonCardGradesProps = {
   grades: RecordLogItem[];
@@ -31,7 +24,7 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
             onClick={() => dispatch(["gradeSelected", i])}
             autoFocus={i === 2}
           >
-            {_(GRADES[i])}
+            {_(FSRS_GRADES[i])}
           </Button>
         </div>
       ))}
