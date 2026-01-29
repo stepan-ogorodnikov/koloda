@@ -7,7 +7,7 @@ export const client = new PGlite("idb://koloda", {});
 export const db = drizzle({ client, schema });
 
 const migrationsFiles: Record<string, { default: string }> = import.meta.glob(
-  "../../../../drizzle/*.sql",
+  "../../../../drizzle/pgsql/*.sql",
   {
     query: "?raw",
     eager: true,

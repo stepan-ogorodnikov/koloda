@@ -1,7 +1,5 @@
 import type { InterfaceSettings } from "@koloda/srs";
 import {
-  addAlgorithm,
-  addTemplate,
   DEFAULT_HOTKEYS_SETTINGS,
   DEFAULT_INTERFACE_SETTINGS,
   DEFAULT_LEARNING_SETTINGS,
@@ -9,9 +7,9 @@ import {
   hotkeysSettingsValidation,
   interfaceSettingsValidation,
   learningSettingsValidation,
-  setSettings,
 } from "@koloda/srs";
 import { DEFAULT_FSRS_ALGORITHM } from "@koloda/srs";
+import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import { sql } from "drizzle-orm";

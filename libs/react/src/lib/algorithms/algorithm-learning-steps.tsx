@@ -1,10 +1,11 @@
 import { DEFAULT_FSRS_ALGORITHM, LEARNING_STEPS_UNITS } from "@koloda/srs";
+import type { UpdateAlgorithmValues } from "@koloda/srs";
 import { Button, FieldGroup, NumberField, Select, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Plus, Trash2 } from "lucide-react";
 
-const defaultValues = { title: "", content: DEFAULT_FSRS_ALGORITHM };
+const defaultValues = { id: 0, title: "", content: DEFAULT_FSRS_ALGORITHM } as UpdateAlgorithmValues;
 
 export const AlgorithmLearningSteps = withForm({
   defaultValues,

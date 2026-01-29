@@ -1,19 +1,15 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { count, eq } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
 import { z } from "zod";
 import type { Algorithm } from "./algorithms";
 import { createFSRSAlgorithm } from "./algorithms-fsrs";
-import { handleDBError, TIMESTAMPS, withUpdatedAt } from "./db";
-import type { DB } from "./db";
-import type { Deck } from "./decks";
+import type { Timestamps } from "./db";
+import { type Deck, deckValidation } from "./decks";
 import type { ReviewFSRS } from "./reviews";
-import { cards, reviews } from "./schema";
 import type { Template, TemplateFields } from "./templates";
-import { getTemplate } from "./templates";
+import { templateValidation } from "./templates";
 import { mapObjectProperties, mapObjectPropertiesReverse } from "./utility";
 import type { ObjectPropertiesMapping, UpdateData } from "./utility";
 export type { Card as CardFSRS } from "ts-fsrs";
@@ -22,61 +18,29 @@ export const cardContentMessages: Record<string, MessageDescriptor> = {
   "field.min-length": msg`card.errors.field-empty`,
 };
 
-const cardValidation = {
+export const cardValidation = z.object({
+  id: z.int(),
+  deckId: deckValidation.shape.id,
+  templateId: templateValidation.shape.id,
   content: z.record(z.string(), z.object({ text: z.string() })),
   state: z.int().min(0).max(3).default(0),
-};
+  dueAt: z.date().optional(),
+  stability: z.number().default(0),
+  difficulty: z.number().default(0),
+  scheduledDays: z.int().default(0),
+  learningSteps: z.int().default(0),
+  reps: z.int().default(0),
+  lapses: z.int().default(0),
+  lastReviewedAt: z.date().optional(),
+});
 
-export const selectCardSchema = createSelectSchema(cards, cardValidation);
-export type Card = z.input<typeof selectCardSchema>;
+export type Card = z.input<typeof cardValidation> & Timestamps;
 
 export type GetCardsParams = {
   deckId: Deck["id"] | string;
 };
 
-/**
- * Retrieves all cards from a specific deck
- * @param db - The database instance
- * @param deckId - The ID of the deck to retrieve cards from
- * @returns Array of card objects
- */
-export async function getCards(db: DB, { deckId }: GetCardsParams) {
-  const result = await db
-    .select()
-    .from(cards)
-    .where(eq(cards.deckId, Number(deckId)))
-    .orderBy(cards.createdAt);
-
-  return result as Card[];
-}
-
 export type GetCardsCountParams = { deckId: Deck["id"] | string };
-
-/**
- * Retrieves the total count of cards in a specific deck
- * @param db - The database instance
- * @param deckId - The ID of the deck to count cards for
- * @returns The total number of cards in the deck
- */
-export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
-  const result = await db
-    .select({ count: count() })
-    .from(cards)
-    .where(eq(cards.deckId, Number(deckId)));
-
-  return result[0].count;
-}
-
-/**
- * Retrieves a specific card by ID
- * @param db - The database instance
- * @param id - The ID of the card to retrieve
- * @returns The card object if found, undefined otherwise
- */
-export async function getCard(db: DB, id: string | Card["id"]) {
-  const result = await db.select().from(cards).where(eq(cards.id, Number(id))).limit(1);
-  return result[0] as Card || undefined;
-}
 
 /**
  * Creates content validation schema based on template fields
@@ -98,36 +62,12 @@ export function getCardContentValidation(fields: TemplateFields) {
  */
 export function getInsertCardSchema(template: Template) {
   const contentValidation = getCardContentValidation(template.content.fields);
-  return createInsertSchema(cards, { ...cardValidation, ...contentValidation }).omit(TIMESTAMPS);
+  return z.object({ ...insertCardSchema.shape, ...contentValidation });
 }
 
-export const insertCardSchema = createInsertSchema(cards, cardValidation).omit(TIMESTAMPS);
+export const insertCardSchema = cardValidation.omit({ id: true });
+
 export type InsertCardData = z.input<typeof insertCardSchema>;
-
-/**
- * Adds a new card to the database
- * @param db - The database instance
- * @param data - The card data to insert
- * @returns The created card object
- */
-export async function addCard(db: DB, data: InsertCardData) {
-  try {
-    const template = await getTemplate(db, data.templateId);
-    if (!template) throw "Template not found";
-    const schema = getInsertCardSchema(template);
-    schema.parse(data);
-
-    const result = await db
-      .insert(cards)
-      .values(data)
-      .returning();
-
-    return result[0] as Card;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
 
 /**
  * Creates an update schema for a card based on a template
@@ -139,56 +79,13 @@ export function getUpdateCardSchema(template: Template) {
   return z.object(contentValidation);
 }
 
-export const updateCardSchema = createUpdateSchema(cards, cardValidation).pick({ content: true });
+export const updateCardSchema = cardValidation.pick({ content: true });
+
 export type UpdateCardValues = z.input<typeof updateCardSchema>;
+
 export type UpdateCardData = UpdateData<Card, "id", UpdateCardValues>;
 
-/**
- * Updates an existing card in the database
- * @param db - The database instance
- * @param id - The ID of the card to update
- * @param values - The updated card values
- * @returns The updated card object
- */
-export async function updateCard(db: DB, { id, values }: UpdateCardData) {
-  try {
-    const card = await getCard(db, id);
-    if (!card) throw "Card not found";
-    const template = await getTemplate(db, card.templateId);
-    if (!template?.content.fields) throw "Template not found";
-    const schema = getUpdateCardSchema(template);
-    const validated = schema.parse(values);
-
-    const result = await db
-      .update(cards)
-      .set(withUpdatedAt(validated))
-      .where(eq(cards.id, Number(id)))
-      .returning();
-
-    return result[0] as Card;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
-
 export type DeleteCardData = Pick<Card, "id">;
-
-/**
- * Deletes a card from the database
- * @param db - The database instance
- * @param id - The ID of the card to delete
- * @returns The result of the database delete operation
- */
-export async function deleteCard(db: DB, { id }: DeleteCardData) {
-  try {
-    const result = await db.delete(cards).where(eq(cards.id, Number(id)));
-    return result;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
 
 export type CardGrade = {
   card: CardFSRS;
@@ -239,40 +136,3 @@ export function createCardFromCardFSRS(input: CardFSRS) {
 }
 
 export type ResetCardProgressData = { id: Card["id"] };
-
-/**
- * Resets the progress of a card, clearing its review history and resetting scheduling data
- * @param db - The database instance
- * @param id - The ID of the card to reset
- * @returns The updated card object with reset progress
- */
-export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
-  try {
-    return db.transaction(async (tx) => {
-      await tx.delete(reviews).where(eq(reviews.cardId, Number(id)));
-
-      const data = {
-        state: 0,
-        dueAt: null,
-        stability: 0,
-        difficulty: 0,
-        scheduledDays: 0,
-        learningSteps: 0,
-        reps: 0,
-        lapses: 0,
-        lastReviewedAt: null,
-      };
-
-      const result = await tx
-        .update(cards)
-        .set(data)
-        .where(eq(cards.id, Number(id)))
-        .returning();
-
-      return result[0] as Card;
-    });
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}

@@ -1,62 +1,34 @@
-import { eq, sql } from "drizzle-orm";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
 import { z } from "zod/v4";
-import type { Card } from "./cards";
-import { handleDBError, TIMESTAMPS } from "./db";
-import type { DB } from "./db";
+import { type Card, cardValidation } from "./cards";
 import type { LessonType } from "./lessons";
-import { reviews } from "./schema";
-import { getSettings } from "./settings";
-import { learningSettingsValidation } from "./settings-learning";
+import type { AllowedSettings } from "./settings";
 import { mapObjectPropertiesReverse } from "./utility";
 import type { ObjectPropertiesMapping } from "./utility";
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 
-const reviewValidation = {
+export const reviewValidation = z.object({
+  id: z.bigint(),
+  cardId: cardValidation.shape.id,
   rating: z.int().min(0).max(4),
   state: z.int().min(0).max(3),
-};
+  dueAt: z.date(),
+  stability: z.number().default(0),
+  difficulty: z.number().default(0),
+  scheduledDays: z.int().default(0),
+  learningSteps: z.int().default(0),
+  isIgnored: z.boolean().default(false),
+  createdAt: z.date(),
+});
 
-export const selectReviewSchema = createSelectSchema(reviews, reviewValidation);
-export type Review = z.input<typeof selectReviewSchema>;
+export type Review = z.input<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] | string };
 
-/**
- * Retrieves all reviews for a specific card
- * @param db - The database instance
- * @param cardId - The ID of the card to retrieve reviews for
- * @returns Array of review objects
- */
-export async function getReviews(db: DB, { cardId }: GetReviewsData) {
-  const result = await db
-    .select()
-    .from(reviews)
-    .where(eq(reviews.cardId, Number(cardId)));
+export const insertReviewSchema = reviewValidation.omit({ id: true });
 
-  return result;
-}
-
-export const insertReviewSchema = createInsertSchema(reviews, reviewValidation).omit(TIMESTAMPS);
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
-
-/**
- * Adds a new review to the database
- * @param db - The database instance
- * @param data - The review data to insert
- * @returns The created review object
- */
-export async function addReview(db: DB, data: InsertReviewData) {
-  try {
-    const result = await db.insert(reviews).values(data).returning();
-    return result[0] as Review;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
 
 /**
  * Calculates the datetime range for the current learning day based on the dayStartsAt from learning settings
@@ -107,57 +79,27 @@ export async function getCurrentLearningDayRange(dayStartsAt: string) {
   };
 }
 
-type GetReviewTotalsProps = {
+export type GetReviewTotalsProps = {
   from: DateInput;
   to: DateInput;
 };
 
-type ReviewTotals = Record<LessonType, number>;
-
-/**
- * Gets the totals of different types of reviews within a date range
- * @param db - The database instance
- * @param from - Start datetime for the query
- * @param to - End datetime for the query
- * @returns Review totals object containing counts for every lesson type + total
- */
-export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps) {
-  try {
-    const result = await db.execute(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE state = 0) AS untouched,
-        COUNT(*) FILTER (WHERE state IN (1,3) AND due_at < ${to}) AS learn,
-        COUNT(*) FILTER (WHERE state = 2 AND due_at < ${to}) AS review,
-        COUNT(*) FILTER (WHERE state IN (0,1,2,3) AND due_at < ${to}) AS total
-      FROM reviews
-      WHERE is_ignored = false
-        AND created_at >= ${from}
-        AND created_at <  ${to}
-    `);
-    return result.rows[0] as ReviewTotals;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
-}
+export type ReviewTotals = Record<LessonType, number>;
 
 /**
  * Gets the review totals for the current learning day
- * @param db - The database instance
+ * @param learningSettings - User's learning settings
+ * @param reviewTotals - Review totals for current learning day
  * @returns Object containing daily limits, review totals, and metadata about limits
- * @throws {Error} If can't get learning settings or review totals
  */
-export async function getTodaysReviewTotals(db: DB) {
-  const learningSettings = await getSettings(db, "learning");
-  const content = learningSettingsValidation.parse(learningSettings?.content);
-  if (!learningSettingsValidation.parse(content)) throw new Error("Can't parse learning settings");
+export async function calculateTodaysReviewTotals(
+  learningSettings: AllowedSettings<"learning">["content"],
+  reviewTotals: ReviewTotals,
+) {
   // convert 0 to Infinity
   const dailyLimits = Object.fromEntries(
-    Object.entries(content.dailyLimits).map(([key, value]) => [key, value || Infinity]),
+    Object.entries(learningSettings.dailyLimits).map(([key, value]) => [key, value || Infinity]),
   );
-  const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
-  const reviewTotals = await getReviewTotals(db, { from, to });
-  if (!reviewTotals) throw new Error("Error while querying for review totals");
   const { untouched, learn, review, total } = reviewTotals;
   const meta = {
     isUntouchedOverTheLimit: (untouched > 0) && (untouched > dailyLimits.untouched || total > dailyLimits.total),
@@ -168,7 +110,7 @@ export async function getTodaysReviewTotals(db: DB) {
   return { dailyLimits, reviewTotals, meta };
 }
 
-export type TodaysReviewTotals = Awaited<ReturnType<typeof getTodaysReviewTotals>>;
+export type TodaysReviewTotals = Awaited<ReturnType<typeof calculateTodaysReviewTotals>>;
 
 const FSRS_REVIEW_PROPERTIES: ObjectPropertiesMapping<Review, ReviewFSRS> = {
   dueAt: "due",

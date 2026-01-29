@@ -1,8 +1,8 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod/v4";
-import { selectAlgorithmSchema } from "./algorithms";
-import { selectTemplateSchema } from "./templates";
+import { algorithmValidation } from "./algorithms";
+import { templateValidation } from "./templates";
 
 export const learningSettingsMessages: Record<string, MessageDescriptor> = {
   "daily-limits.untouched-more-than-total": msg`daily-limits.untouched-more-than-total`,
@@ -27,8 +27,8 @@ const dailyLimits = z.object({
 
 export const learningSettingsValidation = z.object({
   defaults: z.object({
-    algorithm: selectAlgorithmSchema.shape.id,
-    template: selectTemplateSchema.shape.id,
+    algorithm: algorithmValidation.shape.id,
+    template: templateValidation.shape.id,
   }),
   dailyLimits,
   dayStartsAt: z.iso.time({ precision: -1 }).default("05:00"),

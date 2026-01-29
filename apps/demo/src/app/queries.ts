@@ -63,7 +63,7 @@ import {
   updateCard,
   updateDeck,
   updateTemplate,
-} from "@koloda/srs";
+} from "@koloda/srs-pgsql";
 import { getStatus, setupFromScratch } from "./setup";
 
 export const demoAppQueryOptions = {
