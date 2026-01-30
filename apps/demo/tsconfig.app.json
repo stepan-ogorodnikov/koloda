@@ -40,13 +40,16 @@
   ],
   "references": [
     {
-      "path": "../../libs/react/tsconfig.lib.json"
-    },
-    {
       "path": "../../libs/ui/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/srs-pgsql/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/srs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/react/tsconfig.lib.json"
     }
   ]
 }

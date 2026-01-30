@@ -1,7 +1,7 @@
 {
   "sourceRoot": "apps/demo/src",
   "projectType": "application",
-  "tags": ["type:feature"],
+  "tags": ["type:app", "platform:web"],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",

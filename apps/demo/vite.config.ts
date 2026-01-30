@@ -4,7 +4,11 @@ import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -23,8 +27,8 @@ export default defineConfig(() => ({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
-      routesDirectory: "../../libs/react/src/lib/routes",
-      generatedRouteTree: "../../libs/react/src/lib/routeTree.gen.ts",
+      routesDirectory: resolve(__dirname, "../../libs/react/src/lib/routes"),
+      generatedRouteTree: resolve(__dirname, "../../libs/react/src/lib/routeTree.gen.ts"),
     }),
     react({
       plugins: [["@lingui/swc-plugin", {}]],
@@ -37,7 +41,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   build: {
-    outDir: "./dist",
+    outDir: "../../dist/apps/demo",
     emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
