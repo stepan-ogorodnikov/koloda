@@ -1,4 +1,5 @@
 import { algorithmsQueryKeys, defaultAlgorithmAtom, queriesAtom } from "@koloda/react";
+import type { Algorithm } from "@koloda/srs";
 import { DeleteDialog, Select, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -7,9 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import type { Key } from "react-aria-components";
 
-type DeleteAlgorithmProps = { id: string };
+type DeleteAlgorithmProps = { id: Algorithm["id"] };
 
 export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   const queryClient = useQueryClient();
@@ -20,7 +20,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   const { data: algorithms } = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
   const { data: decks } = useQuery({ queryKey: algorithmsQueryKeys.decks(id), ...getAlgorithmDecksQuery(id) });
   const { mutate } = useMutation(deleteAlgorithmMutation());
-  const [successorId, setSuccessorId] = useState<Key | null>(null);
+  const [successorId, setSuccessorId] = useState<Algorithm["id"] | null>(null);
 
   const handleConfirm = () => {
     mutate({ id, successorId }, {
@@ -65,7 +65,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
               label={_(msg`delete-algorithm.successor.label`)}
               items={filteredAlgorithms}
               value={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
-              onChange={setSuccessorId}
+              onChange={(e) => setSuccessorId(Number(e))}
               autoFocus
             >
               {({ id, title }) => (

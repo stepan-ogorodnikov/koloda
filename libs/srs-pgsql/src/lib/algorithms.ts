@@ -36,7 +36,7 @@ export async function getAlgorithms(db: DB) {
  * @param id - The ID of the algorithm to retrieve
  * @returns The algorithm object if found, null otherwise
  */
-export async function getAlgorithm(db: DB, id: Algorithm["id"] | string) {
+export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
   try {
     const result = await db.select().from(algorithms).where(eq(algorithms.id, Number(id))).limit(1);
     return result[0] as Algorithm || null;
@@ -158,7 +158,7 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
  * @param id - The ID of the algorithm
  * @returns Array of decks with only ID and title
  */
-export async function getAlgorithmDecks(db: DB, id: Algorithm["id"] | string) {
+export async function getAlgorithmDecks(db: DB, id: Algorithm["id"]) {
   try {
     const result = await db
       .select({ id: decks.id, title: decks.title })

@@ -1,5 +1,5 @@
 import { algorithmsQueryKeys, CloneAlgorithm, NotFound, queriesAtom } from "@koloda/react";
-import type { UpdateAlgorithmValues } from "@koloda/srs";
+import type { Algorithm, UpdateAlgorithmValues } from "@koloda/srs";
 import { algorithmsMessages, updateAlgorithmSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, NumberField, Switch, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
 import { DeleteAlgorithm } from "./delete-algorithm";
 
-type AlgorithmProps = { id: string };
+type AlgorithmProps = { id: Algorithm["id"] };
 
 export function Algorithm({ id }: AlgorithmProps) {
   const queryClient = useQueryClient();

@@ -132,41 +132,41 @@ msgstr "Название"
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:85
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
 msgid "algorithm.learning-steps.add"
 msgstr "Добавить интервал заучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:27
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
 msgid "algorithm.learning-steps.amount.{0}"
 msgstr "Количество для интервала заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:70
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
 msgid "algorithm.learning-steps.delete.{0}"
 msgstr "Удалить интервал заучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:43
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
 msgid "algorithm.learning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала заучивания номер {0}"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:87
 msgid "algorithm.relearning-steps.add"
 msgstr "Добавить интервал переучивания"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:29
 msgid "algorithm.relearning-steps.amount.{0}"
 msgstr "Количество для интервала переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:72
 msgid "algorithm.relearning-steps.delete.{0}"
 msgstr "Удалить интервал переучивания номер {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:45
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 

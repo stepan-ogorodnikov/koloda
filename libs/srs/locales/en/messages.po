@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/srs/src/lib/cards.ts:22
+#: ../../libs/srs/src/lib/cards.ts:18
 msgid "card.errors.field-empty"
 msgstr "This field can't be empty"
 
@@ -29,7 +29,7 @@ msgstr "Review can't be more than total"
 msgid "daily-limits.untouched-more-than-total"
 msgstr "New can't be more than total"
 
-#: ../../libs/srs/src/lib/templates.ts:15
+#: ../../libs/srs/src/lib/templates.ts:10
 msgid "fields.min-length"
 msgstr "There has to be at least one field"
 
@@ -81,7 +81,7 @@ msgstr "seconds"
 msgid "fsrs.learning-steps.units.seconds.short"
 msgstr "s"
 
-#: ../../libs/srs/src/lib/templates.ts:16
+#: ../../libs/srs/src/lib/templates.ts:11
 msgid "layout.min-length"
 msgstr "There has to be at least one layout item"
 
@@ -93,19 +93,19 @@ msgstr "Hours must be between 0 and 48"
 msgid "learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/srs/src/lib/lessons.ts:20
+#: ../../libs/srs/src/lib/lessons.ts:14
 msgid "lesson.init.labels.learn"
 msgstr "Learn"
 
-#: ../../libs/srs/src/lib/lessons.ts:21
+#: ../../libs/srs/src/lib/lessons.ts:15
 msgid "lesson.init.labels.review"
 msgstr "Review"
 
-#: ../../libs/srs/src/lib/lessons.ts:22
+#: ../../libs/srs/src/lib/lessons.ts:16
 msgid "lesson.init.labels.total"
 msgstr "Total"
 
-#: ../../libs/srs/src/lib/lessons.ts:19
+#: ../../libs/srs/src/lib/lessons.ts:13
 msgid "lesson.init.labels.untouched"
 msgstr "New"
 
@@ -165,14 +165,14 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/srs/src/lib/algorithms.ts:15
-#: ../../libs/srs/src/lib/decks.ts:15
-#: ../../libs/srs/src/lib/templates.ts:14
+#: ../../libs/srs/src/lib/algorithms.ts:10
+#: ../../libs/srs/src/lib/decks.ts:11
+#: ../../libs/srs/src/lib/templates.ts:9
 msgid "title.max-length"
 msgstr "Title can't be longer than 255 characters"
 
-#: ../../libs/srs/src/lib/algorithms.ts:14
-#: ../../libs/srs/src/lib/decks.ts:14
-#: ../../libs/srs/src/lib/templates.ts:13
+#: ../../libs/srs/src/lib/algorithms.ts:9
+#: ../../libs/srs/src/lib/decks.ts:10
+#: ../../libs/srs/src/lib/templates.ts:8
 msgid "title.min-length"
 msgstr "Title can't be empty"

@@ -96,9 +96,8 @@ export async function calculateTodaysReviewTotals(
   learningSettings: AllowedSettings<"learning">["content"],
   reviewTotals: ReviewTotals,
 ) {
-  // convert 0 to Infinity
   const dailyLimits = Object.fromEntries(
-    Object.entries(learningSettings.dailyLimits).map(([key, value]) => [key, value || Infinity]),
+    Object.entries(learningSettings.dailyLimits).map(([key, value]) => [key, value || 0]),
   );
   const { untouched, learn, review, total } = reviewTotals;
   const meta = {

@@ -35,9 +35,11 @@ export type UpdateAlgorithmData = UpdateData<Algorithm, "id", UpdateAlgorithmVal
 
 export type CloneAlgorithmData = z.infer<typeof cloneAlgorithmSchema>;
 
-export const cloneAlgorithmSchema = insertAlgorithmSchema.pick({ title: true }).extend({ sourceId: z.string() });
+export const cloneAlgorithmSchema = insertAlgorithmSchema.pick({ title: true }).extend({
+  sourceId: algorithmValidation.shape.id,
+});
 
 export type DeleteAlgorithmData = {
-  id: Algorithm["id"] | string;
-  successorId?: Algorithm["id"] | string | null;
+  id: Algorithm["id"];
+  successorId?: Algorithm["id"] | null;
 };

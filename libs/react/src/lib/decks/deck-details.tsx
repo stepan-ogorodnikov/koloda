@@ -1,6 +1,6 @@
 import { AlgorithmPicker } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
-import type { UpdateDeckValues } from "@koloda/srs";
+import type { Deck, UpdateDeckValues } from "@koloda/srs";
 import { decksMessages, updateDeckSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -10,7 +10,7 @@ import { useAtomValue } from "jotai";
 import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
 
-type DeckDetailsProps = { id: string };
+type DeckDetailsProps = { id: Deck["id"] };
 
 export function DeckDetails({ id }: DeckDetailsProps) {
   const queryClient = useQueryClient();

@@ -131,7 +131,9 @@ export function validateLockedTemplateFields(original: TemplateField[], updated:
   };
 }
 
-export const cloneTemplateSchema = insertTemplateSchema.pick({ title: true }).extend({ sourceId: z.string() });
+export const cloneTemplateSchema = insertTemplateSchema.pick({ title: true }).extend({
+  sourceId: templateValidation.shape.id,
+});
 
 export type CloneTemplateData = z.infer<typeof cloneTemplateSchema>;
 

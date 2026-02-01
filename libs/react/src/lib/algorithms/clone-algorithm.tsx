@@ -10,7 +10,7 @@ import { useAtomValue } from "jotai";
 import { Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-type CloneAlgorithmProps = { id: string };
+type CloneAlgorithmProps = { id: Algorithm["id"] };
 
 export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   const queryClient = useQueryClient();

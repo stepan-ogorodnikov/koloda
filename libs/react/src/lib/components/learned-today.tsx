@@ -55,7 +55,7 @@ export function LearnedToday() {
       <h2 className="max-tb:hidden font-medium leading-6">{_(msg`learned-today.title`)}</h2>
       <div className="flex flex-row tb:flex-col gap-6 py-2">
         {(["untouched", "learn", "review", "total"] as LessonType[]).map((type) => {
-          const percentage = (data.reviewTotals[type] / data.dailyLimits[type]) * 100;
+          const percentage = (data.reviewTotals[type] / (data.dailyLimits[type] || Infinity)) * 100;
 
           return (
             <div className="flex flex-col gap-2" key={type}>
@@ -68,7 +68,7 @@ export function LearnedToday() {
                 <div className="flex flex-row items-center gap-1 h-6">
                   <span className={learnedTodayAmount({ type })}>{`${data.reviewTotals[type]}`}</span>
                   <span className="fg-level-4 font-normal text-xs leading-6">/</span>
-                  {data.dailyLimits[type] === Infinity
+                  {data.dailyLimits[type] === 0
                     ? <span className={learnedTodayAmount({ type, isInfinity: true })}>∞</span>
                     : <span className={learnedTodayAmount({ type })}>{`${data.dailyLimits[type]}`}</span>}
                 </div>

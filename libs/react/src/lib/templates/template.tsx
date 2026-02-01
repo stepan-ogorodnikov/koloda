@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { TemplateFields } from "./template-fields";
 import { TemplateLayout } from "./template-layout";
 
-type TemplateProps = { id: string };
+type TemplateProps = { id: Template["id"] };
 
 export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();

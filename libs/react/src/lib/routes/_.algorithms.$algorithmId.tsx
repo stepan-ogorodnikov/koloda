@@ -1,4 +1,4 @@
-import { Algorithm, algorithmsQueryKeys, queriesAtom } from "@koloda/react";
+import { Algorithm, algorithmsQueryKeys, NotFound, queriesAtom } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
@@ -7,17 +7,21 @@ import { useAtomValue } from "jotai";
 export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   component: AlgorithmRoute,
   loader: ({ context: { queryClient, queries }, params: { algorithmId } }) => {
+    const id = Number(algorithmId);
     const { getAlgorithmQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: algorithmsQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
+    queryClient.ensureQueryData({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
   },
 });
 
 function AlgorithmRoute() {
   const { algorithmId } = Route.useParams();
+  const id = Number(algorithmId);
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: algorithmsQueryKeys.detail(algorithmId), ...getAlgorithmQuery(algorithmId) });
+  const { data, isSuccess } = useQuery({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
+
+  if ((isSuccess && data === null) || isNaN(id)) return <NotFound />;
 
   return (
     <>
@@ -25,7 +29,7 @@ function AlgorithmRoute() {
         {canGoBack && <BackButton onClick={() => router.navigate({ to: "/algorithms" })} />}
         <Main.H1>{data?.title}</Main.H1>
       </Main.Titlebar>
-      <Algorithm id={algorithmId} key={algorithmId} />
+      <Algorithm id={id} key={algorithmId} />
     </>
   );
 }

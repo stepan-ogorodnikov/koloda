@@ -12,7 +12,7 @@ import { createPortal } from "react-dom";
 import { CardsStackItem } from "./cards-stack-item";
 
 type CardsTableProps = {
-  deckId: Deck["id"] | string;
+  deckId: Deck["id"];
   controlsNode: HTMLDivElement | null;
 };
 

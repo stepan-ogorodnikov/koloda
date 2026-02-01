@@ -1,4 +1,5 @@
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
+import type { Deck } from "@koloda/srs";
 import { DeleteDialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -6,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
-type DeleteDeckProps = { id: string };
+type DeleteDeckProps = { id: Deck["id"] };
 
 export function DeleteDeck({ id }: DeleteDeckProps) {
   const queryClient = useQueryClient();

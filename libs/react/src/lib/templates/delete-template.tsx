@@ -1,4 +1,5 @@
 import { defaultTemplateAtom, queriesAtom, templatesQueryKeys } from "@koloda/react";
+import type { Template } from "@koloda/srs";
 import { DeleteDialog, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -6,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
-type DeleteTemplateProps = { id: string };
+type DeleteTemplateProps = { id: Template["id"] };
 
 export function DeleteTemplate({ id }: DeleteTemplateProps) {
   const queryClient = useQueryClient();

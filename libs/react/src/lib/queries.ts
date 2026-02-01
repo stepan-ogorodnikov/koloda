@@ -54,19 +54,19 @@ export type Queries = {
     unknown
   >;
   getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;
-  getAlgorithmQuery: (id: string) => QueryOptions<Algorithm | null | undefined>;
+  getAlgorithmQuery: (id: Algorithm["id"]) => QueryOptions<Algorithm | null | undefined>;
   addAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, Error, InsertAlgorithmData, unknown>;
   cloneAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, Error, CloneAlgorithmData, unknown>;
   updateAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, Error, UpdateAlgorithmData, unknown>;
   deleteAlgorithmMutation: () => UseMutationOptions<unknown, Error, DeleteAlgorithmData, unknown>;
-  getAlgorithmDecksQuery: (id: string) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
+  getAlgorithmDecksQuery: (id: Algorithm["id"]) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getDecksQuery: () => QueryOptions<Deck[] | undefined>;
-  getDeckQuery: (id: string) => QueryOptions<Deck | null | undefined>;
+  getDeckQuery: (id: Deck["id"]) => QueryOptions<Deck | null | undefined>;
   addDeckMutation: () => UseMutationOptions<Deck | undefined, Error, InsertDeckData, unknown>;
   updateDeckMutation: () => UseMutationOptions<Deck | undefined, Error, UpdateDeckData, unknown>;
   deleteDeckMutation: () => UseMutationOptions<unknown, Error, DeleteDeckData, unknown>;
   getTemplatesQuery: () => QueryOptions<Template[]>;
-  getTemplateQuery: (id: Template["id"] | string) => QueryOptions<Template | null | undefined>;
+  getTemplateQuery: (id: Template["id"]) => QueryOptions<Template | null | undefined>;
   addTemplateMutation: () => UseMutationOptions<Template | undefined, Error, InsertTemplateData, unknown>;
   cloneTemplateMutation: () => UseMutationOptions<Template | undefined, Error, CloneTemplateData, unknown>;
   updateTemplateMutation: () => UseMutationOptions<Template | undefined, Error, UpdateTemplateData, unknown>;

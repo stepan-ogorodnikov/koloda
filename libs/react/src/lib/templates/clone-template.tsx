@@ -10,7 +10,7 @@ import { useAtomValue } from "jotai";
 import { Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-type CloneTemplateProps = { id: string };
+type CloneTemplateProps = { id: Template["id"] };
 
 export function CloneTemplate({ id }: CloneTemplateProps) {
   const queryClient = useQueryClient();

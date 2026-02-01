@@ -9,9 +9,10 @@ import { useAtomValue } from "jotai";
 export const Route = createFileRoute("/_/decks/$deckId")({
   component: DeckRoute,
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
+    const id = Number(deckId);
     const { getDeckQuery, getCardsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
-    queryClient.ensureQueryData({ queryKey: cardsQueryKeys.deck({ deckId }), ...getCardsQuery({ deckId }) });
+    queryClient.ensureQueryData({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
+    queryClient.ensureQueryData({ queryKey: cardsQueryKeys.deck({ deckId: id }), ...getCardsQuery({ deckId: id }) });
   },
 });
 
@@ -24,11 +25,12 @@ function DeckRoute() {
   useTitle();
   const { _ } = useLingui();
   const { deckId } = Route.useParams();
+  const id = Number(deckId);
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
+  const { data, isSuccess } = useQuery({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
 
-  if (isSuccess && data === null) return <NotFound />;
+  if ((isSuccess && data === null) || isNaN(id)) return <NotFound />;
 
   if (!data) return null;
 
@@ -43,10 +45,10 @@ function DeckRoute() {
       </Main.Titlebar>
       <Tabs.Panels>
         <Tabs.Panel id="details">
-          <DeckDetails id={deckId} />
+          <DeckDetails id={id} />
         </Tabs.Panel>
         <Tabs.Panel id="cards">
-          <DeckCards deckId={deckId} />
+          <DeckCards deckId={id} />
         </Tabs.Panel>
       </Tabs.Panels>
     </Tabs>

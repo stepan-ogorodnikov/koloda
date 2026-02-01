@@ -1,5 +1,6 @@
 import { cardsViewAtom, CardsViewToggle } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
+import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +11,7 @@ import { AddCard } from "../cards/add-card";
 import { CardsStack } from "../cards/cards-stack";
 import { CardsTable } from "../cards/cards-table";
 
-type DeckCardsProps = { deckId: string };
+type DeckCardsProps = { deckId: Deck["id"] };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
@@ -30,7 +31,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
-        <AddCard deckId={Number(deckId)} templateId={Number(data.templateId)} key="add" />
+        <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
       <AnimatePresence mode="wait">
         {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}

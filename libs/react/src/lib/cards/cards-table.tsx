@@ -27,7 +27,7 @@ type CardState = NonNullable<Card["state"]>;
 
 type CardsTableProps = {
   deckId: Deck["id"] | string;
-  templateId: Template["id"] | string;
+  templateId: Template["id"];
   controlsNode: HTMLDivElement | null;
 };
 

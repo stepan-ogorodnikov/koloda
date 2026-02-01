@@ -132,41 +132,41 @@ msgstr "Title"
 msgid "algorithm.inputs.weights.label"
 msgstr "Weights"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:85
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
 msgid "algorithm.learning-steps.add"
 msgstr "Add learning step"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:27
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
 msgid "algorithm.learning-steps.amount.{0}"
 msgstr "Amount for learning step number {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:70
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
 msgid "algorithm.learning-steps.delete.{0}"
 msgstr "Delete learning step number {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:43
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
 msgid "algorithm.learning-steps.unit.{0}"
 msgstr "Time period for learning step number {0}"
 
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:86
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:87
 msgid "algorithm.relearning-steps.add"
 msgstr "Add relearning step"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:28
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:29
 msgid "algorithm.relearning-steps.amount.{0}"
 msgstr "Amount for relearning step number {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:71
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:72
 msgid "algorithm.relearning-steps.delete.{0}"
 msgstr "Delete relearning step number {0}"
 
 #. placeholder {0}: i + 1
-#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:44
+#: ../../libs/react/src/lib/algorithms/algorithm-learning-steps.tsx:45
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 

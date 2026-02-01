@@ -28,7 +28,7 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
  * @param id - The ID of the deck to retrieve
  * @returns The deck object if found, null otherwise
  */
-export async function getDeck(db: DB, id: string | Deck["id"]) {
+export async function getDeck(db: DB, id: Deck["id"]) {
   try {
     const result = await db.query.decks.findFirst({ where: eq(decks.id, Number(id)) });
     return result || null;
