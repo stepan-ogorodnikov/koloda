@@ -1,4 +1,4 @@
-import type { GetCardsCountParams, GetCardsParams } from "@koloda/srs";
+import type { Deck, GetCardsCountParams, GetCardsParams } from "@koloda/srs";
 
 export const cardsQueryKeys = {
   deck: ({ deckId }: GetCardsParams) => (
@@ -7,5 +7,5 @@ export const cardsQueryKeys = {
   count: ({ deckId }: GetCardsCountParams) => (
     ["cards_count", String(deckId)] as const
   ),
-  detail: (id: string | number) => ["cards", String(id)] as const,
+  detail: (id: Deck["id"]) => ["cards", String(id)] as const,
 } as const;

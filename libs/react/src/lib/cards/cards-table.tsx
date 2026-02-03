@@ -26,7 +26,7 @@ const cell = (cell: CellContext<Card, unknown>) => <CardsTableCell cell={cell} /
 type CardState = NonNullable<Card["state"]>;
 
 type CardsTableProps = {
-  deckId: Deck["id"] | string;
+  deckId: Deck["id"];
   templateId: Template["id"];
   controlsNode: HTMLDivElement | null;
 };

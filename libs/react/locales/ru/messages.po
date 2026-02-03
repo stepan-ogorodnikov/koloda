@@ -320,15 +320,15 @@ msgstr "Действия"
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:20
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:21
 msgid "deck.tabs.cards"
 msgstr "Карточки"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:19
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:20
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:40
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:42
 msgid "deck.tabs.label"
 msgstr "Вкладки колоды"
 
@@ -386,43 +386,43 @@ msgstr "Подтвердите удаление карточки"
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:36
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:37
 msgid "delete-deck.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:37
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:38
 msgid "delete-deck.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:34
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:35
 msgid "delete-deck.message"
 msgstr "Подтвердите удаление колоды"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:31
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:32
 msgid "delete-deck.trigger"
 msgstr "Удалить колоду"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:48
+#: ../../libs/react/src/lib/templates/delete-template.tsx:49
 msgid "delete-template.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:31
+#: ../../libs/react/src/lib/templates/delete-template.tsx:32
 msgid "delete-template.cant-delete-default"
 msgstr "Нельзя удалить шаблон по умолчанию"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:31
+#: ../../libs/react/src/lib/templates/delete-template.tsx:32
 msgid "delete-template.cant-delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:49
+#: ../../libs/react/src/lib/templates/delete-template.tsx:50
 msgid "delete-template.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:46
+#: ../../libs/react/src/lib/templates/delete-template.tsx:47
 msgid "delete-template.message"
 msgstr "Подтвердите удаление шаблона"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:37
+#: ../../libs/react/src/lib/templates/delete-template.tsx:38
 msgid "delete-template.trigger"
 msgstr "Удалить шаблон"
 
