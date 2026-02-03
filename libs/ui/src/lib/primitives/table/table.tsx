@@ -5,9 +5,9 @@ import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";
 import { TablePagination } from "./table-pagination";
 
-type TableProps = { table: TanstackTable<any> };
+type TableProps<TData> = { table: TanstackTable<TData> };
 
-export function Table({ table }: TableProps) {
+export function Table<TData>({ table }: TableProps<TData>) {
   return (
     <TableRoot>
       <TableHead table={table} />
