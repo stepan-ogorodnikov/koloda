@@ -30,8 +30,13 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
  */
 export async function getDeck(db: DB, id: Deck["id"]) {
   try {
-    const result = await db.query.decks.findFirst({ where: eq(decks.id, Number(id)) });
-    return result || null;
+    const result = await db
+      .select()
+      .from(decks)
+      .where(eq(decks.id, id))
+      .limit(1);
+
+    return result[0] as Deck || null;
   } catch (e) {
     handleDBError(e);
     return;
@@ -46,7 +51,11 @@ export async function getDeck(db: DB, id: Deck["id"]) {
  */
 export async function addDeck(db: DB, data: InsertDeckData) {
   try {
-    const result = await db.insert(decks).values(data).returning();
+    const result = await db
+      .insert(decks)
+      .values(data)
+      .returning();
+
     return result[0] as Deck;
   } catch (e) {
     handleDBError(e);
@@ -67,7 +76,7 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
     const result = await db
       .update(decks)
       .set(withUpdatedAt(payload))
-      .where(eq(decks.id, Number(id)))
+      .where(eq(decks.id, id))
       .returning();
 
     return result[0] as Deck;
@@ -85,7 +94,10 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
  */
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
   try {
-    const result = await db.delete(decks).where(eq(decks.id, Number(id)));
+    const result = await db
+      .delete(decks)
+      .where(eq(decks.id, id));
+
     return result;
   } catch (e) {
     handleDBError(e);

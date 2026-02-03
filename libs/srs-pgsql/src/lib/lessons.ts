@@ -57,6 +57,7 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
       FROM per_deck
       ORDER BY id NULLS FIRST
     `);
+
     return result.rows as Lesson[];
   } catch (e) {
     handleDBError(e);
@@ -125,6 +126,7 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
       JOIN decks d ON d.algorithm_id = a.id
       WHERE d.id IN (${sql.join(deckIds.map(id => sql`${id}`), sql`, `)})
     `);
+
     return result.rows as Algorithm[];
   } catch (e) {
     handleDBError(e);
@@ -194,6 +196,7 @@ export async function getLessonData(
   const lessonDecks = await getDecks(db, inArray(decks.id, deckIds));
   const lessonTemplates = await getLessonTemplates(db, deckIds);
   const lessonAlgorithms = await getLessonAlgorithms(db, deckIds);
+
   return lessonDecks && lessonTemplates && lessonAlgorithms
     ? { cards: lessonCards, decks: lessonDecks, templates: lessonTemplates, algorithms: lessonAlgorithms } as LessonData
     : null;
@@ -215,7 +218,11 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
         .set(data)
         .where(eq(cards.id, id));
 
-      const result = await tx.insert(reviews).values(review).returning();
+      const result = await tx
+        .insert(reviews)
+        .values(review)
+        .returning();
+
       return result[0] as Review;
     });
   } catch (e) {

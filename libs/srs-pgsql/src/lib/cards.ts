@@ -25,7 +25,7 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
   const result = await db
     .select()
     .from(cards)
-    .where(eq(cards.deckId, Number(deckId)))
+    .where(eq(cards.deckId, deckId))
     .orderBy(cards.createdAt);
 
   return result as Card[];
@@ -41,7 +41,7 @@ export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
   const result = await db
     .select({ count: count() })
     .from(cards)
-    .where(eq(cards.deckId, Number(deckId)));
+    .where(eq(cards.deckId, deckId));
 
   return result[0].count;
 }
@@ -52,11 +52,11 @@ export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
  * @param id - The ID of the card to retrieve
  * @returns The card object if found, undefined otherwise
  */
-export async function getCard(db: DB, id: string | Card["id"]) {
+async function getCard(db: DB, id: Card["id"]) {
   const result = await db
     .select()
     .from(cards)
-    .where(eq(cards.id, Number(id)))
+    .where(eq(cards.id, id))
     .limit(1);
 
   return result[0] as Card || undefined;
@@ -71,7 +71,7 @@ export async function getCard(db: DB, id: string | Card["id"]) {
 export async function addCard(db: DB, data: InsertCardData) {
   try {
     const template = await getTemplate(db, data.templateId);
-    if (!template) throw "Template not found";
+    if (!template) throw new Error("Template not found");
     const schema = getInsertCardSchema(template);
     schema.parse(data);
 
@@ -97,16 +97,16 @@ export async function addCard(db: DB, data: InsertCardData) {
 export async function updateCard(db: DB, { id, values }: UpdateCardData) {
   try {
     const card = await getCard(db, id);
-    if (!card) throw "Card not found";
+    if (!card) throw new Error("Card not found");
     const template = await getTemplate(db, card.templateId);
-    if (!template?.content.fields) throw "Template not found";
+    if (!template?.content.fields) throw new Error("Template not found");
     const schema = getUpdateCardSchema(template);
     const validated = schema.parse(values);
 
     const result = await db
       .update(cards)
       .set(withUpdatedAt(validated))
-      .where(eq(cards.id, Number(id)))
+      .where(eq(cards.id, id))
       .returning();
 
     return result[0] as Card;
@@ -124,7 +124,7 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
  */
 export async function deleteCard(db: DB, { id }: DeleteCardData) {
   try {
-    const result = await db.delete(cards).where(eq(cards.id, Number(id)));
+    const result = await db.delete(cards).where(eq(cards.id, id));
     return result;
   } catch (e) {
     handleDBError(e);
@@ -141,7 +141,9 @@ export async function deleteCard(db: DB, { id }: DeleteCardData) {
 export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
   try {
     return db.transaction(async (tx) => {
-      await tx.delete(reviews).where(eq(reviews.cardId, Number(id)));
+      await tx
+        .delete(reviews)
+        .where(eq(reviews.cardId, id));
 
       const data = {
         state: 0,
@@ -158,7 +160,7 @@ export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
       const result = await tx
         .update(cards)
         .set(data)
-        .where(eq(cards.id, Number(id)))
+        .where(eq(cards.id, id))
         .returning();
 
       return result[0] as Card;

@@ -1,9 +1,9 @@
 import type { Queries } from "@koloda/react";
+import type { DB } from "@koloda/srs-pgsql";
 import type {
   Algorithm,
   CloneAlgorithmData,
   CloneTemplateData,
-  DB,
   Deck,
   DeleteAlgorithmData,
   DeleteCardData,

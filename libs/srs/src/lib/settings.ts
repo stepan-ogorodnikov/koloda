@@ -1,5 +1,5 @@
 import type { DeepPartial, Timestamps } from "@koloda/srs";
-import type { z } from "zod/v4";
+import type { z } from "zod";
 import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { interfaceSettingsValidation } from "./settings-interface";
 import { learningSettingsValidation } from "./settings-learning";

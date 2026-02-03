@@ -1,5 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
-import { schema } from "@koloda/srs";
+import { schema } from "@koloda/srs-pgsql";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 

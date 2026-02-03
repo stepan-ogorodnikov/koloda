@@ -1,14 +1,14 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { z } from "zod/v4";
+import { z } from "zod";
 import type { Timestamps } from "./db";
 import type { UpdateData } from "./utility";
 
 export const templatesMessages: Record<string, MessageDescriptor> = {
-  "title.min-length": msg`title.min-length`,
-  "title.max-length": msg`title.max-length`,
-  "fields.min-length": msg`fields.min-length`,
-  "layout.min-length": msg`layout.min-length`,
+  "validation.common.title.too-short": msg`validation.common.title.too-short`,
+  "validation.common.title.too-long": msg`validation.common.title.too-long`,
+  "validation.templates.fields.too-few": msg`validation.templates.fields.too-few`,
+  "validation.templates.layout.too-few": msg`validation.templates.layout.too-few`,
 };
 
 export const TEMPLATE_FIELD_TYPES = ["text"] as const;
@@ -21,19 +21,19 @@ export const templateValidation = z.object({
   id: z.int(),
   title: z
     .string()
-    .min(1, "title.min-length")
-    .max(255, "title.max-length"),
+    .min(1, "validation.common.title.too-short")
+    .max(255, "validation.common.title.too-long"),
   content: z.object({
     fields: z.array(z.object({
       id: z.number(),
       title: z.string(),
       type: z.enum(TEMPLATE_FIELD_TYPES),
       isRequired: z.boolean(),
-    })).min(1, "fields.min-length"),
+    })).min(1, "validation.templates.fields.too-few"),
     layout: z.array(z.object({
       field: z.number(),
       operation: z.enum(TEMPLATE_OPERATIONS),
-    })).min(1, "layout.min-length"),
+    })).min(1, "validation.templates.layout.too-few"),
   }),
 });
 

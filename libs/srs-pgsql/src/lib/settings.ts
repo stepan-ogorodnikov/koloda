@@ -1,6 +1,9 @@
-import type { AllowedSettings, DB, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/srs";
-import { allowedSettings, handleDBError, settings, withUpdatedAt } from "@koloda/srs";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/srs";
+import { allowedSettings, handleDBError } from "@koloda/srs";
+import type { DB } from "./db";
+import { withUpdatedAt } from "./db";
 import { eq, sql } from "drizzle-orm";
+import { settings } from "./schema";
 
 /**
  * Retrieves settings by name from the database

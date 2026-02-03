@@ -23,11 +23,9 @@ export type Lesson = Record<LessonType, number> & {
   title: Deck["title"];
 };
 
-export type LessonFilters = { deckIds?: (Deck["id"] | string)[] };
+export type LessonFilters = { deckIds?: Deck["id"][] };
 
 export type LessonAmounts = Record<LessonType, number>;
-
-export type LessonCard = Pick<Card, "id" | "state" | "content" | "deckId">;
 
 export type LessonTemplateLayoutItem = Modify<TemplateLayoutItem, {
   field: TemplateField | undefined;

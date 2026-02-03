@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { Algorithm } from "./algorithms";
 import { createFSRSAlgorithm } from "./algorithms-fsrs";
 import type { Timestamps } from "./db";
-import { type Deck, deckValidation } from "./decks";
+import { deckValidation } from "./decks";
 import type { ReviewFSRS } from "./reviews";
 import type { Template, TemplateFields } from "./templates";
 import { templateValidation } from "./templates";
@@ -15,7 +15,7 @@ import type { ObjectPropertiesMapping, UpdateData } from "./utility";
 export type { Card as CardFSRS } from "ts-fsrs";
 
 export const cardContentMessages: Record<string, MessageDescriptor> = {
-  "field.min-length": msg`card.errors.field-empty`,
+  "validation.cards.content.field-empty": msg`validation.cards.content.field-empty`,
 };
 
 export const cardValidation = z.object({
@@ -24,23 +24,21 @@ export const cardValidation = z.object({
   templateId: templateValidation.shape.id,
   content: z.record(z.string(), z.object({ text: z.string() })),
   state: z.int().min(0).max(3).default(0),
-  dueAt: z.date().optional(),
+  dueAt: z.nullable(z.date()),
   stability: z.number().default(0),
   difficulty: z.number().default(0),
   scheduledDays: z.int().default(0),
   learningSteps: z.int().default(0),
   reps: z.int().default(0),
   lapses: z.int().default(0),
-  lastReviewedAt: z.date().optional(),
+  lastReviewedAt: z.nullable(z.date()),
 });
 
 export type Card = z.input<typeof cardValidation> & Timestamps;
 
-export type GetCardsParams = {
-  deckId: Deck["id"] | string;
-};
+export type GetCardsParams = { deckId: Card["deckId"] };
 
-export type GetCardsCountParams = { deckId: Deck["id"] | string };
+export type GetCardsCountParams = { deckId: Card["deckId"] };
 
 /**
  * Creates content validation schema based on template fields
@@ -49,7 +47,10 @@ export type GetCardsCountParams = { deckId: Deck["id"] | string };
  */
 export function getCardContentValidation(fields: TemplateFields) {
   const validation = fields.reduce((acc, x) => (
-    { ...acc, [`${x.id}`]: z.object({ text: x.isRequired ? z.string().min(1, "field.min-length") : z.string() }) }
+    {
+      ...acc,
+      [`${x.id}`]: z.object({ text: x.isRequired ? z.string().min(1, "validation.cards.content.field-empty") : z.string() }),
+    }
   ), {});
 
   return { content: z.object(validation) };

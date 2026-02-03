@@ -5,7 +5,6 @@ export * from "./lib/db";
 export * from "./lib/decks";
 export * from "./lib/lessons";
 export * from "./lib/reviews";
-export * from "./lib/schema";
 export * from "./lib/settings";
 export * from "./lib/settings-hotkeys";
 export * from "./lib/settings-interface";

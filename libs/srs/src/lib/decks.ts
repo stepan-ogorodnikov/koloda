@@ -1,22 +1,22 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import type { Timestamps } from "./db";
 import { type Template, templateValidation } from "./templates";
 import type { UpdateData } from "./utility";
 
 export const decksMessages: Record<string, MessageDescriptor> = {
-  "title.min-length": msg`title.min-length`,
-  "title.max-length": msg`title.max-length`,
+  "validation.common.title.too-short": msg`validation.common.title.too-short`,
+  "validation.common.title.too-long": msg`validation.common.title.too-long`,
 };
 
 export const deckValidation = z.object({
   id: z.int(),
   title: z
     .string()
-    .min(1, "title.min-length")
-    .max(255, "title.max-length"),
+    .min(1, "validation.common.title.too-short")
+    .max(255, "validation.common.title.too-long"),
   algorithmId: algorithmValidation.shape.id,
   templateId: templateValidation.shape.id,
 });

@@ -1,6 +1,6 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const LANGUAGES = [
   { id: "en", value: "English" },

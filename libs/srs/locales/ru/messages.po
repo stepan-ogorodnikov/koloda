@@ -13,26 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/srs/src/lib/cards.ts:18
-msgid "card.errors.field-empty"
-msgstr "Это поле не может быть пустым"
-
-#: ../../libs/srs/src/lib/settings-learning.ts:9
-msgid "daily-limits.learn-more-than-total"
-msgstr "Лимит карточек заучивания не может быть больше общего лимита"
-
-#: ../../libs/srs/src/lib/settings-learning.ts:10
-msgid "daily-limits.review-more-than-total"
-msgstr "Лимит карточек повтора не может быть больше общего лимита"
-
-#: ../../libs/srs/src/lib/settings-learning.ts:8
-msgid "daily-limits.untouched-more-than-total"
-msgstr "Лимит новых карточек не может быть больше общего лимита"
-
-#: ../../libs/srs/src/lib/templates.ts:10
-msgid "fields.min-length"
-msgstr "Необходимо хотя бы одно поле"
-
 #: ../../libs/srs/src/lib/algorithms-fsrs.ts:16
 msgid "fsrs.grades.again"
 msgstr "Снова"
@@ -81,18 +61,6 @@ msgstr "секунды"
 msgid "fsrs.learning-steps.units.seconds.short"
 msgstr "с"
 
-#: ../../libs/srs/src/lib/templates.ts:11
-msgid "layout.min-length"
-msgstr "Раскладка не может быть пустой"
-
-#: ../../libs/srs/src/lib/settings-learning.ts:11
-msgid "learn-ahead-limit.hours-range"
-msgstr "Часы должны быть от 0 до 48"
-
-#: ../../libs/srs/src/lib/settings-learning.ts:12
-msgid "learn-ahead-limit.minutes-range"
-msgstr "Минуты должны быть от 0 до 59"
-
 #: ../../libs/srs/src/lib/lessons.ts:14
 msgid "lesson.init.labels.learn"
 msgstr "Изучение"
@@ -120,10 +88,6 @@ msgstr "Включено"
 #: ../../libs/srs/src/lib/settings-interface.ts:25
 msgid "motion.system"
 msgstr "Как в системе"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
-msgid "settings-hotkeys.unique-within-scope"
-msgstr "Комбинации клавиш не должны повторяться внутри своей группы"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:19
 msgid "settings.hotkeys.navigation.algorithms"
@@ -165,14 +129,50 @@ msgstr "Светлая"
 msgid "theme.system"
 msgstr "Системная"
 
+#: ../../libs/srs/src/lib/cards.ts:18
+msgid "validation.cards.content.field-empty"
+msgstr "Это поле не может быть пустым"
+
 #: ../../libs/srs/src/lib/algorithms.ts:10
 #: ../../libs/srs/src/lib/decks.ts:11
 #: ../../libs/srs/src/lib/templates.ts:9
-msgid "title.max-length"
-msgstr "Название дожно быть не длинее 255 символов"
+msgid "validation.common.title.too-long"
+msgstr "Название должно быть не длиннее 255 символов"
 
 #: ../../libs/srs/src/lib/algorithms.ts:9
 #: ../../libs/srs/src/lib/decks.ts:10
 #: ../../libs/srs/src/lib/templates.ts:8
-msgid "title.min-length"
+msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
+msgid "validation.settings-hotkeys.duplicate-keys"
+msgstr "Комбинации клавиш не должны повторяться в пределах своей группы"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:9
+msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
+msgstr "Лимит карточек заучивания не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:10
+msgid "validation.settings-learning.daily-limits.review-exceeds-total"
+msgstr "Лимит карточек повтора не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:8
+msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
+msgstr "Лимит новых карточек не может быть больше общего лимита"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:11
+msgid "validation.settings-learning.learn-ahead-limit.hours-range"
+msgstr "Часы должны быть от 0 до 48"
+
+#: ../../libs/srs/src/lib/settings-learning.ts:12
+msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
+msgstr "Минуты должны быть от 0 до 59"
+
+#: ../../libs/srs/src/lib/templates.ts:10
+msgid "validation.templates.fields.too-few"
+msgstr "Необходимо хотя бы одно поле"
+
+#: ../../libs/srs/src/lib/templates.ts:11
+msgid "validation.templates.layout.too-few"
+msgstr "Раскладка не может быть пустой"

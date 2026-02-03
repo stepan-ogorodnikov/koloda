@@ -1,10 +1,10 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { FSRS_GRADES } from "./algorithms-fsrs";
 
 export const hotkeysSettingsMessages: Record<string, MessageDescriptor> = {
-  "settings-hotkeys.unique-within-scope": msg`settings-hotkeys.unique-within-scope`,
+  "validation.settings-hotkeys.duplicate-keys": msg`validation.settings-hotkeys.duplicate-keys`,
 };
 
 export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
@@ -29,7 +29,6 @@ export const HOTKEYS_LABELS = {
 } as const;
 
 const HotkeyEntry = z.array(z.string());
-
 export const hotkeysSettingsValidation = z.object({
   navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
   grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
@@ -41,7 +40,7 @@ export const hotkeysSettingsValidation = z.object({
         getDuplicateHotkeyPaths(scopeValue).forEach(([field, index]) => {
           ctx.addIssue({
             code: "custom",
-            message: "settings-hotkeys.unique-within-scope",
+            message: "validation.settings-hotkeys.duplicate-keys",
             path: [scopeKey, field, index],
           });
         });

@@ -1,15 +1,15 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import { templateValidation } from "./templates";
 
 export const learningSettingsMessages: Record<string, MessageDescriptor> = {
-  "daily-limits.untouched-more-than-total": msg`daily-limits.untouched-more-than-total`,
-  "daily-limits.learn-more-than-total": msg`daily-limits.learn-more-than-total`,
-  "daily-limits.review-more-than-total": msg`daily-limits.review-more-than-total`,
-  "learn-ahead-limit.hours-range": msg`learn-ahead-limit.hours-range`,
-  "learn-ahead-limit.minutes-range": msg`learn-ahead-limit.minutes-range`,
+  "validation.settings-learning.daily-limits.untouched-exceeds-total": msg`validation.settings-learning.daily-limits.untouched-exceeds-total`,
+  "validation.settings-learning.daily-limits.learn-exceeds-total": msg`validation.settings-learning.daily-limits.learn-exceeds-total`,
+  "validation.settings-learning.daily-limits.review-exceeds-total": msg`validation.settings-learning.daily-limits.review-exceeds-total`,
+  "validation.settings-learning.learn-ahead-limit.hours-range": msg`validation.settings-learning.learn-ahead-limit.hours-range`,
+  "validation.settings-learning.learn-ahead-limit.minutes-range": msg`validation.settings-learning.learn-ahead-limit.minutes-range`,
 };
 
 const dailyLimits = z.object({
@@ -18,11 +18,11 @@ const dailyLimits = z.object({
   learn: z.number().min(0).default(200),
   review: z.number().min(0).default(200),
 }).refine(({ total, untouched }) => ((total > 0) && (untouched <= total)), {
-  message: "daily-limits.untouched-more-than-total",
+  message: "validation.settings-learning.daily-limits.untouched-exceeds-total",
 }).refine(({ total, learn }) => ((total > 0) && (learn <= total)), {
-  message: "daily-limits.learn-more-than-total",
+  message: "validation.settings-learning.daily-limits.learn-exceeds-total",
 }).refine(({ total, review }) => ((total > 0) && (review <= total)), {
-  message: "daily-limits.review-more-than-total",
+  message: "validation.settings-learning.daily-limits.review-exceeds-total",
 });
 
 export const learningSettingsValidation = z.object({

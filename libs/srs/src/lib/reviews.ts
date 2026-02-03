@@ -1,5 +1,5 @@
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { type Card, cardValidation } from "./cards";
 import type { LessonType } from "./lessons";
 import type { AllowedSettings } from "./settings";
@@ -24,7 +24,7 @@ export const reviewValidation = z.object({
 
 export type Review = z.input<typeof reviewValidation>;
 
-export type GetReviewsData = { cardId: Card["id"] | string };
+export type GetReviewsData = { cardId: Card["id"] };
 
 export const insertReviewSchema = reviewValidation.omit({ id: true });
 

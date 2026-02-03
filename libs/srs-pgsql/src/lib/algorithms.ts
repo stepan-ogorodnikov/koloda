@@ -1,4 +1,4 @@
-import { handleDBError, insertAlgorithmSchema, updateAlgorithmSchema, withUpdatedAt } from "@koloda/srs";
+import { handleDBError, insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
 import type {
   Algorithm,
   CloneAlgorithmData,
@@ -8,6 +8,7 @@ import type {
   UpdateAlgorithmData,
 } from "@koloda/srs";
 import { eq } from "drizzle-orm";
+import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { algorithms, decks } from "./schema";
 
@@ -38,26 +39,16 @@ export async function getAlgorithms(db: DB) {
  */
 export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
   try {
-    const result = await db.select().from(algorithms).where(eq(algorithms.id, Number(id))).limit(1);
+    const result = await db
+      .select()
+      .from(algorithms)
+      .where(eq(algorithms.id, id))
+      .limit(1);
+
     return result[0] as Algorithm || null;
   } catch (e) {
     handleDBError(e);
     return undefined;
-  }
-}
-
-/**
- * Retrieves the default algorithm from the database
- * @param db - The database instance
- * @returns The default algorithm object
- */
-export async function getDefaultAlgorithm(db: DB) {
-  try {
-    const result = await db.select().from(algorithms).limit(1);
-    return result[0] as Algorithm;
-  } catch (e) {
-    handleDBError(e);
-    return;
   }
 }
 
@@ -69,7 +60,11 @@ export async function getDefaultAlgorithm(db: DB) {
  */
 export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
   try {
-    const result = await db.insert(algorithms).values(data).returning();
+    const result = await db
+      .insert(algorithms)
+      .values(data)
+      .returning();
+
     return result[0] as Algorithm;
   } catch (e) {
     handleDBError(e);
@@ -90,7 +85,7 @@ export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmDat
     const result = await db
       .update(algorithms)
       .set(withUpdatedAt(payload))
-      .where(eq(algorithms.id, Number(id)))
+      .where(eq(algorithms.id, id))
       .returning();
 
     return result[0] as Algorithm;
@@ -113,6 +108,7 @@ export async function cloneAlgorithm(db: DB, { title, sourceId }: CloneAlgorithm
     if (!sourceAlgorithm) throw ("Source algorithm not found");
     const data = insertAlgorithmSchema.parse({ ...sourceAlgorithm, title });
     const result = await addAlgorithm(db, data);
+
     return result as Algorithm;
   } catch (e) {
     handleDBError(e);
@@ -137,13 +133,16 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
         await tx
           .update(decks)
           .set({ algorithmId: Number(successorId) })
-          .where(eq(decks.algorithmId, Number(id)));
+          .where(eq(decks.algorithmId, id));
 
-        const result = await tx.delete(algorithms).where(eq(algorithms.id, Number(id)));
+        const result = await tx
+          .delete(algorithms)
+          .where(eq(algorithms.id, id));
+
         return result;
       });
     } else {
-      const result = await db.delete(algorithms).where(eq(algorithms.id, Number(id)));
+      const result = await db.delete(algorithms).where(eq(algorithms.id, id));
       return result;
     }
   } catch (e) {
@@ -163,7 +162,8 @@ export async function getAlgorithmDecks(db: DB, id: Algorithm["id"]) {
     const result = await db
       .select({ id: decks.id, title: decks.title })
       .from(decks)
-      .where(eq(decks.algorithmId, Number(id)));
+      .where(eq(decks.algorithmId, id));
+
     return result as DeckWithOnlyTitle[];
   } catch (e) {
     handleDBError(e);

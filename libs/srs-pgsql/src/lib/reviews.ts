@@ -33,7 +33,11 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
  */
 export async function addReview(db: DB, data: InsertReviewData) {
   try {
-    const result = await db.insert(reviews).values(data).returning();
+    const result = await db
+      .insert(reviews)
+      .values(data)
+      .returning();
+
     return result[0] as Review;
   } catch (e) {
     handleDBError(e);
@@ -61,6 +65,7 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
         AND created_at >= ${from}
         AND created_at <  ${to}
     `);
+
     return result.rows[0] as ReviewTotals;
   } catch (e) {
     handleDBError(e);
@@ -81,5 +86,6 @@ export async function getTodaysReviewTotals(db: DB) {
   const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
   const reviewTotals = await getReviewTotals(db, { from, to });
   if (!reviewTotals) throw new Error("Error while querying for review totals");
+
   return calculateTodaysReviewTotals(content, reviewTotals);
 }

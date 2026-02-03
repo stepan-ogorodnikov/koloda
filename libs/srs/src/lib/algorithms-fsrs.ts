@@ -1,7 +1,7 @@
 import { msg } from "@lingui/core/macro";
 import { fsrs, generatorParameters } from "ts-fsrs";
 import type { FSRSParameters } from "ts-fsrs";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { mapObjectProperties } from "./utility";
 import type { ObjectPropertiesMapping } from "./utility";
 
