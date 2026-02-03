@@ -19,9 +19,7 @@ export const algorithmValidation = z.object({
   content: algorithmFSRSValidation,
 });
 
-export type Algorithm = Timestamps & z.infer<typeof algorithmValidation> & {
-  id: number;
-};
+export type Algorithm = Timestamps & z.infer<typeof algorithmValidation>;
 
 export const insertAlgorithmSchema = algorithmValidation.omit({ id: true });
 
