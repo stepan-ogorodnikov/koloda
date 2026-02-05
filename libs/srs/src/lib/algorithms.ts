@@ -1,14 +1,7 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
 import type { Timestamps } from "./db";
 import type { UpdateData } from "./utility";
-
-export const algorithmsMessages: Record<string, MessageDescriptor> = {
-  "validation.common.title.too-short": msg`validation.common.title.too-short`,
-  "validation.common.title.too-long": msg`validation.common.title.too-long`,
-};
 
 export const algorithmValidation = z.object({
   id: z.int(),

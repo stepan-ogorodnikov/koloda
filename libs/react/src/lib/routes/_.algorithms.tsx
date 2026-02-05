@@ -1,4 +1,4 @@
-import { algorithmsQueryKeys, queriesAtom, useTitle } from "@koloda/react";
+import { algorithmsQueryKeys, queriesAtom, QueryState, useTitle } from "@koloda/react";
 import { AddAlgorithm } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -23,7 +23,7 @@ function AlgorithmsRoute() {
   const { pathname } = useLocation();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const { data } = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
+  const query = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
   const hasContent = !(pathname === "/algorithms" || pathname === "/algorithms/");
 
   return (
@@ -35,15 +35,24 @@ function AlgorithmsRoute() {
           </Main.H1>
           <AddAlgorithm />
         </Main.Titlebar>
-        {data
-          ? data.map(({ id, title }) => (
-            <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/algorithms/$algorithmId" params={{ algorithmId: id }} viewTransition={isMotionOn}>
-                <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
-              </Link>
-            </Main.SidebarItem>
-          ))
-          : null}
+        <QueryState query={query}>
+          {(data) => (
+            <div className="flex flex-col">
+              {data.map(({ id, title }) => (
+                <Main.SidebarItem key={id}>
+                  <Link
+                    className={mainSidebarItemLink}
+                    to="/algorithms/$algorithmId"
+                    params={{ algorithmId: id }}
+                    viewTransition={isMotionOn}
+                  >
+                    <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
+                  </Link>
+                </Main.SidebarItem>
+              ))}
+            </div>
+          )}
+        </QueryState>
       </Main.Sidebar>
       <Main.Content hasContent={hasContent}>
         <Outlet />

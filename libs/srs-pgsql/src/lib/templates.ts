@@ -6,7 +6,13 @@ import type {
   Template,
   UpdateTemplateData,
 } from "@koloda/srs";
-import { handleDBError, insertTemplateSchema, updateTemplateSchema, validateLockedTemplateFields } from "@koloda/srs";
+import {
+  AppError,
+  insertTemplateSchema,
+  throwKnownError,
+  updateTemplateSchema,
+  validateLockedTemplateFields,
+} from "@koloda/srs";
 import { count, eq, getTableColumns, gt } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
@@ -18,17 +24,14 @@ import { cards, decks, templates } from "./schema";
  * @returns Array of Template objects
  */
 export async function getTemplates(db: DB) {
-  try {
+  return throwKnownError("db.get", async () => {
     const result = await db
       .select()
       .from(templates)
       .orderBy(templates.createdAt);
 
     return result as Template[];
-  } catch (e) {
-    handleDBError(e);
-    return [];
-  }
+  });
 }
 
 /**
@@ -38,7 +41,7 @@ export async function getTemplates(db: DB) {
  * @returns The template object if found, null otherwise
  */
 export async function getTemplate(db: DB, id: Template["id"]) {
-  try {
+  return throwKnownError("db.get", async () => {
     const result = await db
       .select({
         ...getTableColumns(templates),
@@ -50,11 +53,8 @@ export async function getTemplate(db: DB, id: Template["id"]) {
       .groupBy(...Object.values(getTableColumns(templates)))
       .limit(1);
 
-    return result[0] as Template || null;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+    return (result[0] as Template) || null;
+  });
 }
 
 /**
@@ -64,17 +64,14 @@ export async function getTemplate(db: DB, id: Template["id"]) {
  * @returns The created Template object
  */
 export async function addTemplate(db: DB, data: InsertTemplateData) {
-  try {
+  return throwKnownError("db.add", async () => {
     const result = await db
       .insert(templates)
       .values(data)
       .returning();
 
     return result[0] as Template;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -85,14 +82,14 @@ export async function addTemplate(db: DB, data: InsertTemplateData) {
  * @returns The updated template object
  */
 export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData) {
-  try {
+  return throwKnownError("db.update", async () => {
     const payload = updateTemplateSchema.parse(values);
 
     const template = await getTemplate(db, id);
 
     if (template?.isLocked) {
       const { isValid, errors } = validateLockedTemplateFields(payload.content.fields, values.content.fields);
-      if (!isValid) throw new Error(errors.join(", "));
+      if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
     }
 
     const result = await db
@@ -103,11 +100,8 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
 
     const returning = getTemplate(db, id);
 
-    return returning || result[0] as Template;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+    return returning || (result[0] as Template);
+  });
 }
 
 /**
@@ -118,17 +112,14 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
  * @returns The created template object
  */
 export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateData) {
-  try {
+  return throwKnownError("db.clone", async () => {
     const sourceTemplate = await getTemplate(db, sourceId);
-    if (!sourceTemplate) throw new Error("Source template not found");
+    if (!sourceTemplate) throw new AppError("not-found.templates.clone.source");
     const data = insertTemplateSchema.parse({ ...sourceTemplate, title });
     const result = await addTemplate(db, data);
 
     return result as Template;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -138,20 +129,17 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
  * @returns The result of the database delete operation
  */
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
-  try {
+  return throwKnownError("db.delete", async () => {
     const template = await getTemplate(db, id);
 
-    if (template?.isLocked) throw new Error("Can't delete locked template");
+    if (template?.isLocked) throw new AppError("validation.templates.delete-locked");
 
     const result = await db
       .delete(templates)
       .where(eq(templates.id, id));
 
     return result;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -161,15 +149,12 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
  * @returns Array of decks with only ID and title
  */
 export async function getTemplateDecks(db: DB, { id }: DeleteTemplateData) {
-  try {
+  return throwKnownError("db.get", async () => {
     const result = await db
       .select({ id: decks.id, title: decks.title })
       .from(decks)
       .where(eq(decks.templateId, id));
 
     return result as DeckWithOnlyTitle[];
-  } catch (e) {
-    handleDBError(e);
-    return [];
-  }
+  });
 }

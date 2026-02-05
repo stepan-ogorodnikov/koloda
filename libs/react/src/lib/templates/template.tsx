@@ -1,6 +1,6 @@
 import { CloneTemplate, DeleteTemplate, NotFound, queriesAtom, templatesQueryKeys } from "@koloda/react";
-import type { Template, UpdateTemplateValues } from "@koloda/srs";
-import { templatesMessages, updateTemplateSchema as schema } from "@koloda/srs";
+import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
+import { toFormErrors, updateTemplateSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { TemplateFields } from "./template-fields";
 import { TemplateLayout } from "./template-layout";
 
-type TemplateProps = { id: Template["id"] };
+type TemplateProps = { id: TemplateType["id"] };
 
 export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();
@@ -26,6 +26,9 @@ export function Template({ id }: TemplateProps) {
           queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
           queryClient.setQueryData(templatesQueryKeys.detail(id), returning);
           formApi.reset(returning);
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -92,7 +95,7 @@ export function Template({ id }: TemplateProps) {
         </div>
       </FormLayout.Section>
       <form.AppForm>
-        <form.Controls translations={templatesMessages} />
+        <form.Controls />
       </form.AppForm>
     </form>
   );

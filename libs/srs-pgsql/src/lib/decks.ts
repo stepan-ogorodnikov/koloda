@@ -1,4 +1,4 @@
-import { handleDBError, updateDeckSchema } from "@koloda/srs";
+import { throwKnownError, updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
@@ -13,13 +13,15 @@ import { decks } from "./schema";
  * @returns Array of deck objects
  */
 export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
-  const result = await db
-    .select()
-    .from(decks)
-    .where(filters)
-    .orderBy(decks.createdAt);
+  return throwKnownError("db.get", async () => {
+    const result = await db
+      .select()
+      .from(decks)
+      .where(filters)
+      .orderBy(decks.createdAt);
 
-  return result as Deck[];
+    return result as Deck[];
+  });
 }
 
 /**
@@ -29,18 +31,15 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
  * @returns The deck object if found, null otherwise
  */
 export async function getDeck(db: DB, id: Deck["id"]) {
-  try {
+  return throwKnownError("db.get", async () => {
     const result = await db
       .select()
       .from(decks)
       .where(eq(decks.id, id))
       .limit(1);
 
-    return result[0] as Deck || null;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+    return (result[0] as Deck) || null;
+  });
 }
 
 /**
@@ -50,17 +49,14 @@ export async function getDeck(db: DB, id: Deck["id"]) {
  * @returns The created deck object
  */
 export async function addDeck(db: DB, data: InsertDeckData) {
-  try {
+  return throwKnownError("db.add", async () => {
     const result = await db
       .insert(decks)
       .values(data)
       .returning();
 
     return result[0] as Deck;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -71,7 +67,7 @@ export async function addDeck(db: DB, data: InsertDeckData) {
  * @returns The updated deck object
  */
 export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
-  try {
+  return throwKnownError("db.update", async () => {
     const payload = updateDeckSchema.parse(values);
     const result = await db
       .update(decks)
@@ -80,10 +76,7 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
       .returning();
 
     return result[0] as Deck;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -93,14 +86,11 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
  * @returns The result of the database delete operation
  */
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
-  try {
+  return throwKnownError("db.delete", async () => {
     const result = await db
       .delete(decks)
       .where(eq(decks.id, id));
 
     return result;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }

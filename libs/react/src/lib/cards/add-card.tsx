@@ -1,6 +1,6 @@
-import { cardsQueryKeys, queriesAtom, templatesQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom, QueryState, templatesQueryKeys } from "@koloda/react";
 import type { Deck, InsertCardData, Template, ZodIssue } from "@koloda/srs";
-import { cardContentMessages, getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
+import { getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -18,10 +18,8 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getTemplateQuery, addCardMutation } = useAtomValue(queriesAtom);
-  const { data: template } = useQuery({
-    queryKey: templatesQueryKeys.detail(templateId),
-    ...getTemplateQuery(templateId),
-  });
+  const query = useQuery({ queryKey: templatesQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
+  const template = query.data;
   const { mutate } = useMutation(addCardMutation());
   const content = useMemo(() => (
     template
@@ -46,8 +44,6 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
     },
   });
 
-  if (!template) return null;
-
   return (
     <Dialog.Root>
       <Button variants={{ style: "dashed", size: "default", class: "max-tb:hidden" }}>
@@ -68,47 +64,48 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <Dialog.Content variants={{ class: "pb-6" }}>
-                {template.content.fields.map(({ id, title }, i) => (
-                  <form.AppField name={`content.${id}.text`} key={id}>
-                    {(field) => (
-                      <field.TextField>
-                        <Label>{title}</Label>
-                        <TextField.Content>
-                          <TextField.TextArea ref={i === 0 ? firstFieldRef : undefined} />
-                          {!field.state.meta.isValid && (
-                            <TextField.Errors
-                              errors={field.state.meta.errors as ZodIssue[]}
-                              translations={cardContentMessages}
-                            />
-                          )}
-                        </TextField.Content>
-                      </field.TextField>
-                    )}
-                  </form.AppField>
-                ))}
-              </Dialog.Content>
-              <Dialog.Footer>
-                <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
-                  {([isDirty, canSubmit]) => (
-                    <Button
-                      variants={{ style: "primary" }}
-                      isDisabled={!canSubmit || !isDirty}
-                      onClick={form.handleSubmit}
-                    >
-                      {_(msg`add-card.submit`)}
-                    </Button>
-                  )}
-                </form.Subscribe>
-              </Dialog.Footer>
-            </form>
+            <QueryState query={query}>
+              {(data) => (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.handleSubmit();
+                  }}
+                >
+                  <Dialog.Content variants={{ class: "pb-6" }}>
+                    {data.content.fields.map(({ id, title }, i) => (
+                      <form.AppField name={`content.${id}.text`} key={id}>
+                        {(field) => (
+                          <field.TextField>
+                            <Label>{title}</Label>
+                            <TextField.Content>
+                              <TextField.TextArea ref={i === 0 ? firstFieldRef : undefined} />
+                              {!field.state.meta.isValid && (
+                                <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />
+                              )}
+                            </TextField.Content>
+                          </field.TextField>
+                        )}
+                      </form.AppField>
+                    ))}
+                  </Dialog.Content>
+                  <Dialog.Footer>
+                    <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
+                      {([isDirty, canSubmit]) => (
+                        <Button
+                          variants={{ style: "primary" }}
+                          isDisabled={!canSubmit || !isDirty}
+                          onClick={form.handleSubmit}
+                        >
+                          {_(msg`add-card.submit`)}
+                        </Button>
+                      )}
+                    </form.Subscribe>
+                  </Dialog.Footer>
+                </form>
+              )}
+            </QueryState>
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

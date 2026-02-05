@@ -3,10 +3,6 @@ import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import { FSRS_GRADES } from "./algorithms-fsrs";
 
-export const hotkeysSettingsMessages: Record<string, MessageDescriptor> = {
-  "validation.settings-hotkeys.duplicate-keys": msg`validation.settings-hotkeys.duplicate-keys`,
-};
-
 export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
   navigation: msg`settings.hotkeys.scopes.navigation`,
   grades: msg`settings.hotkeys.scopes.grades`,

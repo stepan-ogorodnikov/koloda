@@ -1,15 +1,8 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import type { Timestamps } from "./db";
 import { type Template, templateValidation } from "./templates";
 import type { UpdateData } from "./utility";
-
-export const decksMessages: Record<string, MessageDescriptor> = {
-  "validation.common.title.too-short": msg`validation.common.title.too-short`,
-  "validation.common.title.too-long": msg`validation.common.title.too-long`,
-};
 
 export const deckValidation = z.object({
   id: z.int(),

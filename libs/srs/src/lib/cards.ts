@@ -1,5 +1,3 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
 import { z } from "zod";
@@ -13,10 +11,6 @@ import { templateValidation } from "./templates";
 import { mapObjectProperties, mapObjectPropertiesReverse } from "./utility";
 import type { ObjectPropertiesMapping, UpdateData } from "./utility";
 export type { Card as CardFSRS } from "ts-fsrs";
-
-export const cardContentMessages: Record<string, MessageDescriptor> = {
-  "validation.cards.content.field-empty": msg`validation.cards.content.field-empty`,
-};
 
 export const cardValidation = z.object({
   id: z.int(),

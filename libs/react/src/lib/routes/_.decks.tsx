@@ -1,4 +1,4 @@
-import { AddDeck, decksQueryKeys, queriesAtom, useTitle } from "@koloda/react";
+import { AddDeck, decksQueryKeys, queriesAtom, QueryState, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -22,7 +22,7 @@ function DecksRoute() {
   const { pathname } = useLocation();
   const { getDecksQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const { data } = useQuery({ queryKey: decksQueryKeys.all(), ...getDecksQuery() });
+  const query = useQuery({ queryKey: decksQueryKeys.all(), ...getDecksQuery() });
   const hasContent = !(pathname === "/decks" || pathname === "/decks/");
 
   return (
@@ -34,15 +34,19 @@ function DecksRoute() {
           </Main.H1>
           <AddDeck />
         </Main.Titlebar>
-        {data
-          ? data.map(({ id, title }) => (
-            <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/decks/$deckId" params={{ deckId: id }} viewTransition={isMotionOn}>
-                <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
-              </Link>
-            </Main.SidebarItem>
-          ))
-          : null}
+        <QueryState query={query}>
+          {(data) => (
+            <div className="flex flex-col">
+              {data.map(({ id, title }) => (
+                <Main.SidebarItem key={id}>
+                  <Link className={mainSidebarItemLink} to="/decks/$deckId" params={{ deckId: id }} viewTransition={isMotionOn}>
+                    <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
+                  </Link>
+                </Main.SidebarItem>
+              ))}
+            </div>
+          )}
+        </QueryState>
       </Main.Sidebar>
       <Main.Content hasContent={hasContent}>
         <Outlet />

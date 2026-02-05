@@ -3,6 +3,7 @@ export * from "./lib/algorithms-fsrs";
 export * from "./lib/cards";
 export * from "./lib/db";
 export * from "./lib/decks";
+export * from "./lib/error";
 export * from "./lib/lessons";
 export * from "./lib/reviews";
 export * from "./lib/settings";

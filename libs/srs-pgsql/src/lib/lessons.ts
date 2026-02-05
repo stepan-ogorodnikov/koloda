@@ -13,7 +13,7 @@ import type {
   TemplateField,
   TemplateLayoutItem,
 } from "@koloda/srs";
-import { handleDBError } from "@koloda/srs";
+import { throwKnownError } from "@koloda/srs";
 import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { DB } from "./db";
@@ -28,7 +28,7 @@ import { cards, decks, reviews } from "./schema";
  * @returns Array of objects with counts per deck where the first row is sum of the rest of the rows
  */
 export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}) {
-  try {
+  return throwKnownError("db.get", async () => {
     const filtersSQL = filters.deckIds?.length
       ? sql`WHERE d.id IN (${sql.join(filters.deckIds.map(id => sql`${id}`), sql`, `)})`
       : sql``;
@@ -59,10 +59,7 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
     `);
 
     return result.rows as Lesson[];
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -79,7 +76,7 @@ export async function getLessonCards(
   filters: LessonFilters,
   amounts: LessonAmounts,
 ) {
-  try {
+  return throwKnownError("db.get", async () => {
     const deckFilter = filters.deckIds?.length ? inArray(cards.deckId, filters.deckIds.map(Number)) : undefined;
 
     const untouched = db
@@ -104,10 +101,7 @@ export async function getLessonCards(
       .limit(amounts.review);
 
     return unionAll(untouched, learn, review) as unknown as Card[];
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -117,7 +111,7 @@ export async function getLessonCards(
  * @returns Array of algorithms used by the specified decks
  */
 export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
-  try {
+  return throwKnownError("db.get", async () => {
     if (!deckIds.length) return Promise.resolve([]);
 
     const result = await db.execute(sql`
@@ -128,10 +122,7 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
     `);
 
     return result.rows as Algorithm[];
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 export type LessonTemplateLayoutItem = Modify<TemplateLayoutItem, {
@@ -149,7 +140,7 @@ export type LessonTemplate = Modify<Template, {
  * @returns Array of templates used by the specified decks
  */
 export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
-  try {
+  return throwKnownError("db.get", async () => {
     if (!deckIds.length) return Promise.resolve([]);
 
     const result = await db.execute(sql`
@@ -166,10 +157,7 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
       ));
       return { ...template, layout };
     }) as LessonTemplate[];
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -210,7 +198,7 @@ export async function getLessonData(
  * @returns The inserted review object
  */
 export async function submitLessonResult(db: DB, { card, review }: LessonResultData) {
-  try {
+  return throwKnownError("db.update", async () => {
     const { id, ...data } = card;
     return db.transaction(async (tx) => {
       await tx
@@ -225,8 +213,5 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
 
       return result[0] as Review;
     });
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }

@@ -1,6 +1,6 @@
 import { algorithmsQueryKeys, CloneAlgorithm, NotFound, queriesAtom } from "@koloda/react";
-import type { Algorithm, UpdateAlgorithmValues } from "@koloda/srs";
-import { algorithmsMessages, updateAlgorithmSchema as schema } from "@koloda/srs";
+import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
+import { toFormErrors, updateAlgorithmSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, NumberField, Switch, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
 import { DeleteAlgorithm } from "./delete-algorithm";
 
-type AlgorithmProps = { id: Algorithm["id"] };
+type AlgorithmProps = { id: AlgorithmType["id"] };
 
 export function Algorithm({ id }: AlgorithmProps) {
   const queryClient = useQueryClient();
@@ -26,6 +26,9 @@ export function Algorithm({ id }: AlgorithmProps) {
           queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
           queryClient.setQueryData(algorithmsQueryKeys.detail(id), algorithm);
           formApi.reset();
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -132,7 +135,7 @@ export function Algorithm({ id }: AlgorithmProps) {
         </div>
       </FormLayout.Section>
       <form.AppForm>
-        <form.Controls translations={algorithmsMessages} />
+        <form.Controls />
       </form.AppForm>
     </form>
   );

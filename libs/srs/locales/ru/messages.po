@@ -13,6 +13,26 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/srs/src/lib/error.ts:8
+msgid "db.add"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/srs/src/lib/error.ts:11
+msgid "db.clone"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/srs/src/lib/error.ts:10
+msgid "db.delete"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/srs/src/lib/error.ts:7
+msgid "db.get"
+msgstr "Не удалось загрузить данные"
+
+#: ../../libs/srs/src/lib/error.ts:9
+msgid "db.update"
+msgstr "Не удалось обновить данные"
+
 #: ../../libs/srs/src/lib/algorithms-fsrs.ts:16
 msgid "fsrs.grades.again"
 msgstr "Снова"
@@ -89,31 +109,55 @@ msgstr "Включено"
 msgid "motion.system"
 msgstr "Как в системе"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+#: ../../libs/srs/src/lib/error.ts:12
+msgid "not-found.algorithms.clone.source"
+msgstr "Исходный алгоритм не найден"
+
+#: ../../libs/srs/src/lib/error.ts:13
+msgid "not-found.algorithms.delete.successor"
+msgstr "Алгоритм-наследник не найден"
+
+#: ../../libs/srs/src/lib/error.ts:15
+msgid "not-found.cards.add.template"
+msgstr "Шаблон не найден"
+
+#: ../../libs/srs/src/lib/error.ts:16
+msgid "not-found.cards.update.card"
+msgstr "Карточка не найдена"
+
+#: ../../libs/srs/src/lib/error.ts:17
+msgid "not-found.cards.update.template"
+msgstr "Шаблон не найден"
+
+#: ../../libs/srs/src/lib/error.ts:14
+msgid "not-found.templates.clone.source"
+msgstr "Исходный шаблон не найден"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:13
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Главная"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:14
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Колоды"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Настройки"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:12
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Выбор сложности"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Навигация"
 
@@ -129,50 +173,62 @@ msgstr "Светлая"
 msgid "theme.system"
 msgstr "Системная"
 
-#: ../../libs/srs/src/lib/cards.ts:18
+#: ../../libs/srs/src/lib/error.ts:6
+msgid "unknown"
+msgstr "Произошла ошибка"
+
+#: ../../libs/srs/src/lib/error.ts:36
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
-#: ../../libs/srs/src/lib/algorithms.ts:10
-#: ../../libs/srs/src/lib/decks.ts:11
-#: ../../libs/srs/src/lib/templates.ts:9
+#: ../../libs/srs/src/lib/error.ts:19
 msgid "validation.common.title.too-long"
 msgstr "Название должно быть не длиннее 255 символов"
 
-#: ../../libs/srs/src/lib/algorithms.ts:9
-#: ../../libs/srs/src/lib/decks.ts:10
-#: ../../libs/srs/src/lib/templates.ts:8
+#: ../../libs/srs/src/lib/error.ts:18
 msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
+#: ../../libs/srs/src/lib/error.ts:31
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Комбинации клавиш не должны повторяться в пределах своей группы"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:9
+#: ../../libs/srs/src/lib/error.ts:23
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:10
+#: ../../libs/srs/src/lib/error.ts:25
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Лимит карточек повтора не может быть больше общего лимита"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:8
+#: ../../libs/srs/src/lib/error.ts:21
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "Лимит новых карточек не может быть больше общего лимита"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:11
+#: ../../libs/srs/src/lib/error.ts:30
+msgid "validation.settings-learning.day-starts-at"
+msgstr "Неверный формат настройки начала дня"
+
+#: ../../libs/srs/src/lib/error.ts:27
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Часы должны быть от 0 до 48"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:12
+#: ../../libs/srs/src/lib/error.ts:29
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/srs/src/lib/templates.ts:10
+#: ../../libs/srs/src/lib/error.ts:35
+msgid "validation.templates.delete-locked"
+msgstr "Нельзя удалить заблокированный шаблон"
+
+#: ../../libs/srs/src/lib/error.ts:32
 msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
-#: ../../libs/srs/src/lib/templates.ts:11
+#: ../../libs/srs/src/lib/error.ts:33
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
+
+#: ../../libs/srs/src/lib/error.ts:34
+msgid "validation.templates.update-locked"
+msgstr "Нельзя обновить заблокированный шаблон"

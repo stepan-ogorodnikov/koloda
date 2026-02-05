@@ -1,9 +1,10 @@
-import { AddTemplate, queriesAtom, templatesQueryKeys, useTitle } from "@koloda/react";
+import { AddTemplate, queriesAtom, QueryState, templatesQueryKeys, useTitle } from "@koloda/react";
 import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { Outlet, useLocation } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/templates")({
@@ -21,7 +22,7 @@ function TemplatesRoute() {
   const { pathname } = useLocation();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const { data } = useQuery({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
+  const query = useQuery({ queryKey: templatesQueryKeys.all(), ...getTemplatesQuery() });
   const hasContent = !(pathname === "/templates" || pathname === "/templates/");
 
   return (
@@ -33,15 +34,19 @@ function TemplatesRoute() {
           </Main.H1>
           <AddTemplate />
         </Main.Titlebar>
-        {data
-          ? data.map(({ id, title }) => (
-            <Main.SidebarItem key={id}>
-              <Link className={mainSidebarItemLink} to="/templates/$templateId" params={{ templateId: id }} viewTransition={isMotionOn}>
-                <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
-              </Link>
-            </Main.SidebarItem>
-          ))
-          : null}
+        <QueryState query={query}>
+          {(data) => (
+            <div className="flex flex-col">
+              {data.map(({ id, title }) => (
+                <Main.SidebarItem key={id}>
+                  <Link className={mainSidebarItemLink} to="/templates/$templateId" params={{ templateId: id }} viewTransition={isMotionOn}>
+                    <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
+                  </Link>
+                </Main.SidebarItem>
+              ))}
+            </div>
+          )}
+        </QueryState>
       </Main.Sidebar>
       <Main.Content hasContent={hasContent}>
         <Outlet />

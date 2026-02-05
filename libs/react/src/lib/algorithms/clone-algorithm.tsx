@@ -1,5 +1,5 @@
 import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
-import { algorithmsMessages, cloneAlgorithmSchema as schema } from "@koloda/srs";
+import { cloneAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -37,6 +37,9 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
             if (returning) setNewId(returning.id);
           });
           queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -84,7 +87,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
               </form.Field>
               <div className="min-h-10">
                 {formErrorMap.onSubmit && (
-                  <form.Errors errors={formErrorMap.onSubmit} translations={algorithmsMessages} />
+                  <form.Errors errors={formErrorMap.onSubmit} />
                 )}
               </div>
             </Dialog.Content>

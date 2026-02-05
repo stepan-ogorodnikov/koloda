@@ -1,4 +1,13 @@
-import { cardsQueryKeys, DeckCards, DeckDetails, decksQueryKeys, NotFound, queriesAtom, useTitle } from "@koloda/react";
+import {
+  cardsQueryKeys,
+  DeckCards,
+  DeckDetails,
+  decksQueryKeys,
+  NotFound,
+  queriesAtom,
+  QueryState,
+  useTitle,
+} from "@koloda/react";
 import { BackButton, Main, Tabs } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,29 +37,33 @@ function DeckRoute() {
   const id = Number(deckId);
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
+  const query = useQuery({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
 
-  if ((isSuccess && data === null) || isNaN(id)) return <NotFound />;
-
-  if (!data) return null;
+  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
     <Tabs>
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/decks" })} />
-        <Main.H2>{data?.title}</Main.H2>
-        <Tabs.List aria-label={_(msg`deck.tabs.label`)}>
-          {DECK_TABS.map(({ id, t }) => <Tabs.Tab id={id} key={id}>{_(t)}</Tabs.Tab>)}
-        </Tabs.List>
+        <Main.H2>{query.data?.title}</Main.H2>
+        {query.data && (
+          <Tabs.List aria-label={_(msg`deck.tabs.label`)}>
+            {DECK_TABS.map(({ id, t }) => <Tabs.Tab id={id} key={id}>{_(t)}</Tabs.Tab>)}
+          </Tabs.List>
+        )}
       </Main.Titlebar>
-      <Tabs.Panels>
-        <Tabs.Panel id="details">
-          <DeckDetails id={id} />
-        </Tabs.Panel>
-        <Tabs.Panel id="cards">
-          <DeckCards deckId={id} />
-        </Tabs.Panel>
-      </Tabs.Panels>
+      <QueryState query={query}>
+        {() => (
+          <Tabs.Panels>
+            <Tabs.Panel id="details">
+              <DeckDetails id={id} />
+            </Tabs.Panel>
+            <Tabs.Panel id="cards">
+              <DeckCards deckId={id} />
+            </Tabs.Panel>
+          </Tabs.Panels>
+        )}
+      </QueryState>
     </Tabs>
   );
 }

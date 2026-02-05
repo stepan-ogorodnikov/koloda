@@ -1,4 +1,4 @@
-import { cardsViewAtom, CardsViewToggle } from "@koloda/react";
+import { cardsQueryKeys, cardsViewAtom, CardsViewToggle, QueryState } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";
@@ -15,8 +15,9 @@ type DeckCardsProps = { deckId: Deck["id"] };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
-  const { getDeckQuery } = useAtomValue(queriesAtom);
+  const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
+  const query = useQuery({ queryKey: cardsQueryKeys.deck({ deckId }), ...getCardsQuery({ deckId }) });
   const [view, setView] = useAtom(cardsViewAtom);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
@@ -33,12 +34,16 @@ export function DeckCards({ deckId }: DeckCardsProps) {
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
         <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
-      <AnimatePresence mode="wait">
-        {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}
-        {view === "table" && (
-          <CardsTable deckId={deckId} templateId={data.templateId} controlsNode={portalContainer} key="table" />
+      <QueryState query={query}>
+        {() => (
+          <AnimatePresence mode="wait">
+            {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}
+            {view === "table" && (
+              <CardsTable deckId={deckId} templateId={data.templateId} controlsNode={portalContainer} key="table" />
+            )}
+          </AnimatePresence>
         )}
-      </AnimatePresence>
+      </QueryState>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { algorithmsMessages, DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema } from "@koloda/srs";
+import { DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -35,6 +35,9 @@ export function AddAlgorithm() {
             if (returning) setNewId(returning.id);
           });
           queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -84,10 +87,7 @@ export function AddAlgorithm() {
                 )}
               </form.Field>
               {formErrorMap.onSubmit && (
-                <form.Errors
-                  errors={formErrorMap.onSubmit}
-                  translations={algorithmsMessages}
-                />
+                <form.Errors errors={formErrorMap.onSubmit} />
               )}
             </Dialog.Content>
             <Dialog.Footer>

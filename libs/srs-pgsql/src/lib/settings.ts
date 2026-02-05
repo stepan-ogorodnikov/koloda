@@ -1,8 +1,8 @@
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/srs";
-import { allowedSettings, handleDBError } from "@koloda/srs";
+import { allowedSettings, throwKnownError } from "@koloda/srs";
+import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
-import { eq, sql } from "drizzle-orm";
 import { settings } from "./schema";
 
 /**
@@ -15,12 +15,14 @@ export async function getSettings<T extends SettingsName>(
   db: DB,
   name: SettingsName,
 ): Promise<AllowedSettings<T> | undefined> {
-  const result = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
-  // validate to inject default values if value is missing
-  // e.g. after introducing a new setting default value is returned until explicitly set
-  const { data, success } = allowedSettings[name].safeParse(result[0].content);
+  return throwKnownError("db.get", async () => {
+    const result = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
+    // validate to inject default values if value is missing
+    // e.g. after introducing a new setting default value is returned until explicitly set
+    const { data, success } = allowedSettings[name].safeParse(result[0].content);
 
-  return (success ? { ...result[0], content: data } : null) as unknown as AllowedSettings<T> || null;
+    return (success ? { ...result[0], content: data } : null) as unknown as AllowedSettings<T> || null;
+  });
 }
 
 /**
@@ -31,7 +33,7 @@ export async function getSettings<T extends SettingsName>(
  * @returns The stored settings object
  */
 export async function setSettings<T extends SettingsName>(db: DB, { name, content }: SetSettingsData<T>) {
-  try {
+  return throwKnownError("db.update", async () => {
     const result = await db
       .insert(settings)
       .values({ name, content })
@@ -39,10 +41,7 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
       .returning();
 
     return result[0] as AllowedSettings<T>;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -53,7 +52,7 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
  * @returns The updated settings object
  */
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
-  try {
+  return throwKnownError("db.update", async () => {
     const result = await db
       .update(settings)
       .set({
@@ -63,8 +62,5 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
       .returning();
 
     return result[0] as AllowedSettings<T>;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }

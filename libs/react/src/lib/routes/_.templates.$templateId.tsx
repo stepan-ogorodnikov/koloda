@@ -1,4 +1,4 @@
-import { NotFound, queriesAtom, Template, templatesQueryKeys } from "@koloda/react";
+import { NotFound, queriesAtom, QueryState, Template, templatesQueryKeys } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -18,17 +18,19 @@ function TemplateRoute() {
   const id = Number(templateId);
   const router = useRouter();
   const { getTemplateQuery } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: templatesQueryKeys.detail(id), ...getTemplateQuery(id) });
+  const query = useQuery({ queryKey: templatesQueryKeys.detail(id), ...getTemplateQuery(id) });
 
-  if ((isSuccess && data === null) || isNaN(id)) return <NotFound />;
+  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
     <>
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/templates" })} />
-        <Main.H1>{data?.title}</Main.H1>
+        <Main.H1>{query.data?.title}</Main.H1>
       </Main.Titlebar>
-      <Template id={id} key={templateId} />
+      <QueryState query={query}>
+        {() => <Template id={id} key={templateId} />}
+      </QueryState>
     </>
   );
 }

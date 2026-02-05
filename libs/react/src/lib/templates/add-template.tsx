@@ -1,5 +1,5 @@
 import { queriesAtom, templatesQueryKeys } from "@koloda/react";
-import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, templatesMessages } from "@koloda/srs";
+import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, toFormErrors } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -35,6 +35,9 @@ export function AddTemplate() {
             if (returning) setNewId(returning.id);
           });
           queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -83,7 +86,7 @@ export function AddTemplate() {
                   </TextField>
                 )}
               </form.Field>
-              {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={templatesMessages} />}
+                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
             </Dialog.Content>
             <Dialog.Footer>
               {isLinkVisible && (

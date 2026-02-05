@@ -1,16 +1,6 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import { templateValidation } from "./templates";
-
-export const learningSettingsMessages: Record<string, MessageDescriptor> = {
-  "validation.settings-learning.daily-limits.untouched-exceeds-total": msg`validation.settings-learning.daily-limits.untouched-exceeds-total`,
-  "validation.settings-learning.daily-limits.learn-exceeds-total": msg`validation.settings-learning.daily-limits.learn-exceeds-total`,
-  "validation.settings-learning.daily-limits.review-exceeds-total": msg`validation.settings-learning.daily-limits.review-exceeds-total`,
-  "validation.settings-learning.learn-ahead-limit.hours-range": msg`validation.settings-learning.learn-ahead-limit.hours-range`,
-  "validation.settings-learning.learn-ahead-limit.minutes-range": msg`validation.settings-learning.learn-ahead-limit.minutes-range`,
-};
 
 const dailyLimits = z.object({
   total: z.number().min(0).default(200),

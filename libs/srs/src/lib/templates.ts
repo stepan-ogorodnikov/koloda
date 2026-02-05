@@ -1,15 +1,6 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import type { Timestamps } from "./db";
 import type { UpdateData } from "./utility";
-
-export const templatesMessages: Record<string, MessageDescriptor> = {
-  "validation.common.title.too-short": msg`validation.common.title.too-short`,
-  "validation.common.title.too-long": msg`validation.common.title.too-long`,
-  "validation.templates.fields.too-few": msg`validation.templates.fields.too-few`,
-  "validation.templates.layout.too-few": msg`validation.templates.layout.too-few`,
-};
 
 export const TEMPLATE_FIELD_TYPES = ["text"] as const;
 

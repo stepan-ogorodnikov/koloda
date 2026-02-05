@@ -1,7 +1,7 @@
-import type { ZodIssue } from "@koloda/srs";
+import { ERROR_MESSAGES } from "@koloda/srs";
+import type { ErrorCode, ZodIssue } from "@koloda/srs";
 import { Button, Fade, FormTextField } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
-import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -50,11 +50,9 @@ function UpdatedAt({ timestamp }: FormTimestampProps) {
 
 type FormErrorsProps = {
   errors: Record<number | string, StandardSchemaV1Issue[]> | ZodIssue[] | undefined;
-  translations?: Record<string, MessageDescriptor>;
-  fallback?: MessageDescriptor;
 };
 
-export function Errors({ errors, translations, fallback }: FormErrorsProps) {
+export function Errors({ errors }: FormErrorsProps) {
   const { _ } = useLingui();
 
   if (!errors) return null;
@@ -66,9 +64,7 @@ export function Errors({ errors, translations, fallback }: FormErrorsProps) {
     <div className="flex flex-col gap-2" role="alert">
       {uniqueErrors.map(({ message }) => (
         <em className="fg-error not-italic" key={message}>
-          {translations
-            ? (translations[message] ? _(translations[message]) : (fallback ? _(fallback) : message))
-            : message}
+          {ERROR_MESSAGES[message as ErrorCode] ? _(ERROR_MESSAGES[message as ErrorCode]) : message}
         </em>
       ))}
     </div>
@@ -118,7 +114,7 @@ type ControlsProps = Omit<FormErrorsProps, "errors"> & {
   showErrors?: boolean;
 };
 
-function Controls({ showErrors = true, translations, fallback }: ControlsProps) {
+function Controls({ showErrors = true }: ControlsProps) {
   const form = useFormContext();
 
   return (
@@ -129,10 +125,8 @@ function Controls({ showErrors = true, translations, fallback }: ControlsProps) 
             <AnimatePresence>
               {showErrors && (onChange || onSubmit) && (
                 <Fade className="max-w-132 py-2 px-4 rounded-xl border-2 border-main bg-level-1" layout>
-                  {onChange && !onSubmit && (
-                    <Errors errors={onChange} translations={translations} fallback={fallback} />
-                  )}
-                  {onSubmit && <Errors errors={onSubmit} translations={translations} fallback={fallback} />}
+                  {onChange && !onSubmit && <Errors errors={onChange} />}
+                  {onSubmit && <Errors errors={onSubmit} />}
                 </Fade>
               )}
             </AnimatePresence>

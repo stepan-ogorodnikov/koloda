@@ -13,6 +13,26 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/srs/src/lib/error.ts:8
+msgid "db.add"
+msgstr "Failed to add data"
+
+#: ../../libs/srs/src/lib/error.ts:11
+msgid "db.clone"
+msgstr "Failed to clone data"
+
+#: ../../libs/srs/src/lib/error.ts:10
+msgid "db.delete"
+msgstr "Failed to delete data"
+
+#: ../../libs/srs/src/lib/error.ts:7
+msgid "db.get"
+msgstr "Failed to load data"
+
+#: ../../libs/srs/src/lib/error.ts:9
+msgid "db.update"
+msgstr "Failed to update data"
+
 #: ../../libs/srs/src/lib/algorithms-fsrs.ts:16
 msgid "fsrs.grades.again"
 msgstr "Again"
@@ -89,31 +109,55 @@ msgstr "Enabled"
 msgid "motion.system"
 msgstr "Automatic"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+#: ../../libs/srs/src/lib/error.ts:12
+msgid "not-found.algorithms.clone.source"
+msgstr "Source preset not found"
+
+#: ../../libs/srs/src/lib/error.ts:13
+msgid "not-found.algorithms.delete.successor"
+msgstr "Successor preset not found"
+
+#: ../../libs/srs/src/lib/error.ts:15
+msgid "not-found.cards.add.template"
+msgstr "Template not found"
+
+#: ../../libs/srs/src/lib/error.ts:16
+msgid "not-found.cards.update.card"
+msgstr "Card not found"
+
+#: ../../libs/srs/src/lib/error.ts:17
+msgid "not-found.cards.update.template"
+msgstr "Template not found"
+
+#: ../../libs/srs/src/lib/error.ts:14
+msgid "not-found.templates.clone.source"
+msgstr "Source template not found"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:13
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:14
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:12
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Grade selection"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:11
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Navigation"
 
@@ -129,50 +173,62 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/srs/src/lib/cards.ts:18
+#: ../../libs/srs/src/lib/error.ts:6
+msgid "unknown"
+msgstr "An error occurred"
+
+#: ../../libs/srs/src/lib/error.ts:36
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
-#: ../../libs/srs/src/lib/algorithms.ts:10
-#: ../../libs/srs/src/lib/decks.ts:11
-#: ../../libs/srs/src/lib/templates.ts:9
+#: ../../libs/srs/src/lib/error.ts:19
 msgid "validation.common.title.too-long"
 msgstr "Title can't be longer than 255 characters"
 
-#: ../../libs/srs/src/lib/algorithms.ts:9
-#: ../../libs/srs/src/lib/decks.ts:10
-#: ../../libs/srs/src/lib/templates.ts:8
+#: ../../libs/srs/src/lib/error.ts:18
 msgid "validation.common.title.too-short"
 msgstr "Title can't be empty"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
+#: ../../libs/srs/src/lib/error.ts:31
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Hotkeys must be unique within their group"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:9
+#: ../../libs/srs/src/lib/error.ts:23
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Learn can't be more than total"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:10
+#: ../../libs/srs/src/lib/error.ts:25
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Review can't be more than total"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:8
+#: ../../libs/srs/src/lib/error.ts:21
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "New can't be more than total"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:11
+#: ../../libs/srs/src/lib/error.ts:30
+msgid "validation.settings-learning.day-starts-at"
+msgstr "Start of the day is incorrect"
+
+#: ../../libs/srs/src/lib/error.ts:27
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Hours must be between 0 and 48"
 
-#: ../../libs/srs/src/lib/settings-learning.ts:12
+#: ../../libs/srs/src/lib/error.ts:29
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/srs/src/lib/templates.ts:10
+#: ../../libs/srs/src/lib/error.ts:35
+msgid "validation.templates.delete-locked"
+msgstr "Cannot delete locked template"
+
+#: ../../libs/srs/src/lib/error.ts:32
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/srs/src/lib/templates.ts:11
+#: ../../libs/srs/src/lib/error.ts:33
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
+
+#: ../../libs/srs/src/lib/error.ts:34
+msgid "validation.templates.update-locked"
+msgstr "Cannot update locked template"

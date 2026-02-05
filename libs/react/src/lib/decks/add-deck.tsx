@@ -1,5 +1,5 @@
 import { AlgorithmPicker, decksQueryKeys, lessonsQueryKeys, queriesAtom, TemplatePicker } from "@koloda/react";
-import { decksMessages, insertDeckSchema as schema } from "@koloda/srs";
+import { insertDeckSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -36,6 +36,9 @@ export function AddDeck() {
           });
           queryClient.invalidateQueries({ queryKey: decksQueryKeys.all() });
           queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all({}) });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -90,7 +93,7 @@ export function AddDeck() {
                 {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
               </form.Field>
               <div className="min-h-10">
-                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} translations={decksMessages} />}
+                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
               </div>
             </Dialog.Content>
             <Dialog.Footer>

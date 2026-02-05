@@ -1,7 +1,7 @@
 import { AlgorithmPicker } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import type { Deck, UpdateDeckValues } from "@koloda/srs";
-import { decksMessages, updateDeckSchema as schema } from "@koloda/srs";
+import { toFormErrors, updateDeckSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,6 +28,9 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           queryClient.invalidateQueries({ queryKey: decksQueryKeys.detail(id) });
           queryClient.setQueryData(decksQueryKeys.detail(id), returning);
           formApi.reset();
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -81,7 +84,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
         <DeleteDeck id={id} />
       </FormLayout.Section>
       <form.AppForm>
-        <form.Controls translations={decksMessages} />
+        <form.Controls />
       </form.AppForm>
     </form>
   );

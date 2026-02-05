@@ -1,6 +1,7 @@
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
 import { z } from "zod";
 import { type Card, cardValidation } from "./cards";
+import { AppError } from "./error";
 import type { LessonType } from "./lessons";
 import type { AllowedSettings } from "./settings";
 import { mapObjectPropertiesReverse } from "./utility";
@@ -38,14 +39,14 @@ export type InsertReviewData = z.infer<typeof insertReviewSchema>;
  */
 export async function getCurrentLearningDayRange(dayStartsAt: string) {
   const match = dayStartsAt.match(/^(\d{2}):(\d{2})$/);
-  if (!match) throw new Error("dayStartsAt must be 'hh:mm'");
+  if (!match) throw new AppError("validation.settings-learning.day-starts-at");
 
   const [_, hhStr, mmStr] = match;
   const hours = parseInt(hhStr);
   const minutes = parseInt(mmStr);
 
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    throw new Error("Invalid time in dayStartsAt");
+    throw new AppError("validation.settings-learning.day-starts-at");
   }
 
   const now = new Date();

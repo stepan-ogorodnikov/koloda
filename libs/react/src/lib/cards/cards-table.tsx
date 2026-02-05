@@ -1,4 +1,4 @@
-import { cardsQueryKeys, queriesAtom, templatesQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom, QueryState, templatesQueryKeys } from "@koloda/react";
 import type { Card, Deck, Template } from "@koloda/srs";
 import { SearchField, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -42,14 +42,9 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
     dueAt: { isOverdue: false, isNotDue: false },
   });
   const [searchValue, setSearchValue] = useState("");
-  const { data: cards = [] } = useQuery({
-    queryKey: cardsQueryKeys.deck({ deckId }),
-    ...getCardsQuery({ deckId }),
-  });
-  const { data: templateData } = useQuery({
-    queryKey: templatesQueryKeys.detail(templateId),
-    ...getTemplateQuery(templateId),
-  });
+  const { data: cards = [] } = useQuery({ queryKey: cardsQueryKeys.deck({ deckId }), ...getCardsQuery({ deckId }) });
+  const query = useQuery({ queryKey: templatesQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
+  const templateData = query.data;
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const columns = useMemo<ColumnDef<Card>[]>(
@@ -151,8 +146,6 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
     },
   });
 
-  if (!templateData) return null;
-
   return (
     <>
       {controlsNode && createPortal(
@@ -187,13 +180,17 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
         </div>,
         controlsNode,
       )}
-      <div className="flex flex-col gap-4" ref={wrapperRef}>
-        <Table.Root>
-          <Table.Head table={table} />
-          <Table.Body table={table} />
-        </Table.Root>
-        <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
-      </div>
+      <QueryState query={query}>
+        {() => (
+          <div className="flex flex-col gap-4" ref={wrapperRef}>
+            <Table.Root>
+              <Table.Head table={table} />
+              <Table.Body table={table} />
+            </Table.Root>
+            <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
+          </div>
+        )}
+      </QueryState>
     </>
   );
 }

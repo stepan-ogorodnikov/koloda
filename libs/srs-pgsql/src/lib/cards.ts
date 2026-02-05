@@ -1,4 +1,4 @@
-import { getInsertCardSchema, getUpdateCardSchema, handleDBError } from "@koloda/srs";
+import { AppError, getInsertCardSchema, getUpdateCardSchema, throwKnownError } from "@koloda/srs";
 import type {
   Card,
   DeleteCardData,
@@ -22,13 +22,15 @@ export type { Card as CardFSRS } from "ts-fsrs";
  * @returns Array of card objects
  */
 export async function getCards(db: DB, { deckId }: GetCardsParams) {
-  const result = await db
-    .select()
-    .from(cards)
-    .where(eq(cards.deckId, deckId))
-    .orderBy(cards.createdAt);
+  return throwKnownError("db.get", async () => {
+    const result = await db
+      .select()
+      .from(cards)
+      .where(eq(cards.deckId, deckId))
+      .orderBy(cards.createdAt);
 
-  return result as Card[];
+    return result as Card[];
+  });
 }
 
 /**
@@ -38,12 +40,14 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
  * @returns The total number of cards in the deck
  */
 export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
-  const result = await db
-    .select({ count: count() })
-    .from(cards)
-    .where(eq(cards.deckId, deckId));
+  return throwKnownError("db.get", async () => {
+    const result = await db
+      .select({ count: count() })
+      .from(cards)
+      .where(eq(cards.deckId, deckId));
 
-  return result[0].count;
+    return result[0].count;
+  });
 }
 
 /**
@@ -53,13 +57,15 @@ export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
  * @returns The card object if found, undefined otherwise
  */
 async function getCard(db: DB, id: Card["id"]) {
-  const result = await db
-    .select()
-    .from(cards)
-    .where(eq(cards.id, id))
-    .limit(1);
+  return throwKnownError("db.get", async () => {
+    const result = await db
+      .select()
+      .from(cards)
+      .where(eq(cards.id, id))
+      .limit(1);
 
-  return result[0] as Card || undefined;
+    return (result[0] as Card) || undefined;
+  });
 }
 
 /**
@@ -69,9 +75,9 @@ async function getCard(db: DB, id: Card["id"]) {
  * @returns The created card object
  */
 export async function addCard(db: DB, data: InsertCardData) {
-  try {
+  return throwKnownError("db.add", async () => {
     const template = await getTemplate(db, data.templateId);
-    if (!template) throw new Error("Template not found");
+    if (!template) throw new AppError("not-found.cards.add.template");
     const schema = getInsertCardSchema(template);
     schema.parse(data);
 
@@ -81,10 +87,7 @@ export async function addCard(db: DB, data: InsertCardData) {
       .returning();
 
     return result[0] as Card;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -95,11 +98,11 @@ export async function addCard(db: DB, data: InsertCardData) {
  * @returns The updated card object
  */
 export async function updateCard(db: DB, { id, values }: UpdateCardData) {
-  try {
+  return throwKnownError("db.update", async () => {
     const card = await getCard(db, id);
-    if (!card) throw new Error("Card not found");
+    if (!card) throw new AppError("not-found.cards.update.card");
     const template = await getTemplate(db, card.templateId);
-    if (!template?.content.fields) throw new Error("Template not found");
+    if (!template?.content.fields) throw new AppError("not-found.cards.update.template");
     const schema = getUpdateCardSchema(template);
     const validated = schema.parse(values);
 
@@ -110,10 +113,7 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
       .returning();
 
     return result[0] as Card;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -123,13 +123,10 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
  * @returns The result of the database delete operation
  */
 export async function deleteCard(db: DB, { id }: DeleteCardData) {
-  try {
+  return throwKnownError("db.delete", async () => {
     const result = await db.delete(cards).where(eq(cards.id, id));
     return result;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -139,7 +136,7 @@ export async function deleteCard(db: DB, { id }: DeleteCardData) {
  * @returns The updated card object with reset progress
  */
 export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
-  try {
+  return throwKnownError("db.update", async () => {
     return db.transaction(async (tx) => {
       await tx
         .delete(reviews)
@@ -165,8 +162,5 @@ export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
 
       return result[0] as Card;
     });
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }

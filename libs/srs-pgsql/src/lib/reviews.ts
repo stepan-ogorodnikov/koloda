@@ -1,8 +1,8 @@
 import {
   calculateTodaysReviewTotals,
   getCurrentLearningDayRange,
-  handleDBError,
   learningSettingsValidation,
+  throwKnownError,
 } from "@koloda/srs";
 import type { GetReviewsData, GetReviewTotalsProps, InsertReviewData, Review, ReviewTotals } from "@koloda/srs";
 import { eq, sql } from "drizzle-orm";
@@ -17,12 +17,13 @@ import { getSettings } from "./settings";
  * @returns Array of review objects
  */
 export async function getReviews(db: DB, { cardId }: GetReviewsData) {
-  const result = await db
-    .select()
-    .from(reviews)
-    .where(eq(reviews.cardId, Number(cardId)));
-
-  return result as Review[];
+  return throwKnownError("db.get", async () => {
+    const result = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.cardId, Number(cardId)));
+    return result as Review[];
+  });
 }
 
 /**
@@ -32,17 +33,10 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
  * @returns The created review object
  */
 export async function addReview(db: DB, data: InsertReviewData) {
-  try {
-    const result = await db
-      .insert(reviews)
-      .values(data)
-      .returning();
-
+  return throwKnownError("db.add", async () => {
+    const result = await db.insert(reviews).values(data).returning();
     return result[0] as Review;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -53,7 +47,7 @@ export async function addReview(db: DB, data: InsertReviewData) {
  * @returns Review totals object containing counts for every lesson type + total
  */
 export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps) {
-  try {
+  return throwKnownError("db.get", async () => {
     const result = await db.execute(sql`
       SELECT
         COUNT(*) FILTER (WHERE state = 0) AS untouched,
@@ -67,10 +61,7 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
     `);
 
     return result.rows[0] as ReviewTotals;
-  } catch (e) {
-    handleDBError(e);
-    return;
-  }
+  });
 }
 
 /**
@@ -80,12 +71,12 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
  * @throws {Error} If can't get learning settings or review totals
  */
 export async function getTodaysReviewTotals(db: DB) {
-  const learningSettings = await getSettings(db, "learning");
-  const content = learningSettingsValidation.parse(learningSettings?.content);
-  if (!learningSettingsValidation.parse(content)) throw new Error("Can't parse learning settings");
-  const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
-  const reviewTotals = await getReviewTotals(db, { from, to });
-  if (!reviewTotals) throw new Error("Error while querying for review totals");
+  return throwKnownError("db.get", async () => {
+    const learningSettings = await getSettings(db, "learning");
+    const content = learningSettingsValidation.parse(learningSettings?.content);
+    const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
+    const reviewTotals = await getReviewTotals(db, { from, to });
 
-  return calculateTodaysReviewTotals(content, reviewTotals);
+    return calculateTodaysReviewTotals(content, reviewTotals);
+  });
 }

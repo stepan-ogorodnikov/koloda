@@ -1,5 +1,5 @@
 import { queriesAtom, templatesQueryKeys } from "@koloda/react";
-import { cloneTemplateSchema as schema, templatesMessages } from "@koloda/srs";
+import { cloneTemplateSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -37,6 +37,9 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
             if (returning) setNewId(returning.id);
           });
           queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -84,7 +87,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
               </form.Field>
               <div className="min-h-10">
                 {formErrorMap.onSubmit && (
-                  <form.Errors errors={formErrorMap.onSubmit} translations={templatesMessages} />
+                  <form.Errors errors={formErrorMap.onSubmit} />
                 )}
               </div>
             </Dialog.Content>

@@ -1,4 +1,4 @@
-import { Algorithm, algorithmsQueryKeys, NotFound, queriesAtom } from "@koloda/react";
+import { Algorithm, algorithmsQueryKeys, NotFound, queriesAtom, QueryState } from "@koloda/react";
 import { BackButton, Main } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
@@ -19,17 +19,19 @@ function AlgorithmRoute() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
+  const query = useQuery({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
 
-  if ((isSuccess && data === null) || isNaN(id)) return <NotFound />;
+  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
     <>
       <Main.Titlebar>
         {canGoBack && <BackButton onClick={() => router.navigate({ to: "/algorithms" })} />}
-        <Main.H1>{data?.title}</Main.H1>
+        <Main.H1>{query.data?.title}</Main.H1>
       </Main.Titlebar>
-      <Algorithm id={id} key={algorithmId} />
+      <QueryState query={query}>
+        {() => <Algorithm id={id} key={algorithmId} />}
+      </QueryState>
     </>
   );
 }
