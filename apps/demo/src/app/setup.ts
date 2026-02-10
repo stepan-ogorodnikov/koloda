@@ -1,5 +1,7 @@
 import type { InterfaceSettings } from "@koloda/srs";
 import {
+  AppError,
+  DEFAULT_FSRS_ALGORITHM,
   DEFAULT_HOTKEYS_SETTINGS,
   DEFAULT_INTERFACE_SETTINGS,
   DEFAULT_LEARNING_SETTINGS,
@@ -8,7 +10,6 @@ import {
   interfaceSettingsValidation,
   learningSettingsValidation,
 } from "@koloda/srs";
-import { DEFAULT_FSRS_ALGORITHM } from "@koloda/srs";
 import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
@@ -77,11 +78,11 @@ export async function setupFromScratch({ t, ...settings }: SetupFromScratchData)
 
     const returningAlgorithm = await addAlgorithm(db, { title, content: DEFAULT_FSRS_ALGORITHM });
     const algorithm = returningAlgorithm?.id;
-    if (!algorithm) throw ("Couldn't add default algorithm");
+    if (!algorithm) throw new AppError("db.add");
 
     const returningTemplate = await addTemplate(db, { ...DEFAULT_TEMPLATE, title });
     const template = returningTemplate?.id;
-    if (!template) throw ("Couldn't add default template");
+    if (!template) throw new AppError("db.add");
 
     await setSettings(
       db,
