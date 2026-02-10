@@ -2,13 +2,12 @@ import { AppError, getInsertCardSchema, getUpdateCardSchema, throwKnownError } f
 import type {
   Card,
   DeleteCardData,
-  GetCardsCountParams,
   GetCardsParams,
   InsertCardData,
   ResetCardProgressData,
   UpdateCardData,
 } from "@koloda/srs";
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { cards, reviews } from "./schema";
@@ -30,23 +29,6 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
       .orderBy(cards.createdAt);
 
     return result as Card[];
-  });
-}
-
-/**
- * Retrieves the total count of cards in a specific deck
- * @param db - The database instance
- * @param deckId - The ID of the deck to count cards for
- * @returns The total number of cards in the deck
- */
-export async function getCardsCount(db: DB, { deckId }: GetCardsCountParams) {
-  return throwKnownError("db.get", async () => {
-    const result = await db
-      .select({ count: count() })
-      .from(cards)
-      .where(eq(cards.deckId, deckId));
-
-    return result[0].count;
   });
 }
 

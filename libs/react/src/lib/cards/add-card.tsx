@@ -4,6 +4,7 @@ import { getInsertCardSchema, insertCardSchema as schema } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
@@ -36,13 +37,13 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
       mutate(value, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
-          queryClient.invalidateQueries({ queryKey: cardsQueryKeys.count({ deckId }) });
           formApi.reset();
           firstFieldRef.current?.focus();
         },
       });
     },
   });
+  const formErrorMap = useStore(form.store, (state) => state.errorMap);
 
   return (
     <Dialog.Root>
@@ -91,6 +92,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                     ))}
                   </Dialog.Content>
                   <Dialog.Footer>
+                    {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
                     <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
                       {([isDirty, canSubmit]) => (
                         <Button

@@ -21,7 +21,6 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
     mutate({ id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
-        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.count({ deckId }) });
       },
     });
   };

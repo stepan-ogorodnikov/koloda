@@ -11,14 +11,12 @@ import type {
   DeleteCardData,
   DeleteDeckData,
   DeleteTemplateData,
-  GetCardsCountParams,
   GetCardsParams,
   GetLessonDataParams,
   GetReviewsData,
   InsertAlgorithmData,
   InsertCardData,
   InsertDeckData,
-  InsertReviewData,
   InsertTemplateData,
   Lesson,
   LessonData,
@@ -74,7 +72,6 @@ export type Queries = {
   deleteTemplateMutation: () => UseMutationOptions<unknown, AppError, DeleteTemplateData, unknown>;
   getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
-  getCardsCountQuery: (params: GetCardsCountParams) => QueryOptions<number>;
   addCardMutation: () => UseMutationOptions<Card | undefined, AppError, InsertCardData, unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, AppError, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
@@ -84,7 +81,6 @@ export type Queries = {
   getLessonDataQuery: (params: GetLessonDataParams) => QueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
   getReviewsQuery: (data: GetReviewsData) => QueryOptions<Review[] | undefined>;
-  addReviewMutation: () => UseMutationOptions<Review | undefined, AppError, InsertReviewData, unknown>;
 };
 
 export const queriesAtom = atom<Queries>(null!);

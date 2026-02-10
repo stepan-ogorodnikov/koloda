@@ -4,7 +4,7 @@ import {
   learningSettingsValidation,
   throwKnownError,
 } from "@koloda/srs";
-import type { GetReviewsData, GetReviewTotalsProps, InsertReviewData, Review, ReviewTotals } from "@koloda/srs";
+import type { GetReviewsData, GetReviewTotalsProps, Review, ReviewTotals } from "@koloda/srs";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";
 import { reviews } from "./schema";
@@ -23,19 +23,6 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
       .from(reviews)
       .where(eq(reviews.cardId, Number(cardId)));
     return result as Review[];
-  });
-}
-
-/**
- * Adds a new review to the database
- * @param db - The database instance
- * @param data - The review data to insert
- * @returns The created review object
- */
-export async function addReview(db: DB, data: InsertReviewData) {
-  return throwKnownError("db.add", async () => {
-    const result = await db.insert(reviews).values(data).returning();
-    return result[0] as Review;
   });
 }
 
