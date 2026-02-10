@@ -20,7 +20,7 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
   const { row: { original: card }, column: { id }, getValue } = cell;
   const value = getValue();
   const isDateValue = isDate(value);
-  const formatted = isDateValue ? i18n.date(value, TIMESTAMP_OPTIONS) : value;
+  const formatted = ["dueAt", "createdAt", "updatedAt"].includes(id) ? i18n.date(value, TIMESTAMP_OPTIONS) : value;
 
   if (id === "edit") return <CardsTableCellEditCard card={card} />;
   if (id === "delete") return <CardsTableCellDeleteCard id={card.id} deckId={card.deckId} />;

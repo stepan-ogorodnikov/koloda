@@ -18,21 +18,21 @@ export const cardValidation = z.object({
   templateId: templateValidation.shape.id,
   content: z.record(z.string(), z.object({ text: z.string() })),
   state: z.int().min(0).max(3).default(0),
-  dueAt: z.nullable(z.date()),
+  dueAt: z.nullable(z.date()).default(null),
   stability: z.number().default(0),
   difficulty: z.number().default(0),
   scheduledDays: z.int().default(0),
   learningSteps: z.int().default(0),
   reps: z.int().default(0),
   lapses: z.int().default(0),
-  lastReviewedAt: z.nullable(z.date()),
+  lastReviewedAt: z.nullable(z.date()).default(null),
 });
 
 export type Card = z.input<typeof cardValidation> & Timestamps;
 
 export type GetCardsParams = { deckId: Card["deckId"] };
 
-export type GetCardsCountParams = { deckId: Card["deckId"] };
+// export type GetCardsCountParams = { deckId: Card["deckId"] };
 
 /**
  * Creates content validation schema based on template fields
@@ -43,7 +43,9 @@ export function getCardContentValidation(fields: TemplateFields) {
   const validation = fields.reduce((acc, x) => (
     {
       ...acc,
-      [`${x.id}`]: z.object({ text: x.isRequired ? z.string().min(1, "validation.cards.content.field-empty") : z.string() }),
+      [`${x.id}`]: z.object({
+        text: x.isRequired ? z.string().min(1, "validation.cards.content.field-empty") : z.string(),
+      }),
     }
   ), {});
 

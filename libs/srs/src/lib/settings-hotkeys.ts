@@ -74,7 +74,7 @@ const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
 export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
 export type HotkeyScope = keyof HotkeysSettings;
 
-export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = {
+export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   navigation: {
     dashboard: ["keyh"],
     decks: ["keyd"],
@@ -88,4 +88,4 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = {
     normal: ["digit3"],
     easy: ["digit4"],
   },
-};
+});

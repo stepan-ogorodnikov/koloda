@@ -27,4 +27,7 @@ export const learningSettingsValidation = z.object({
 
 export type LearningSettings = z.input<typeof learningSettingsValidation>;
 
-export const DEFAULT_LEARNING_SETTINGS = { dailyLimits: {} };
+export const DEFAULT_LEARNING_SETTINGS = learningSettingsValidation.parse({
+  defaults: { algorithm: 0, template: 0 },
+  dailyLimits: {},
+});
