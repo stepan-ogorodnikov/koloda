@@ -7,9 +7,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
-type DeleteTemplateProps = { id: Template["id"] };
+type DeleteTemplateProps = {
+  id: Template["id"];
+  isLocked: boolean;
+};
 
-export function DeleteTemplate({ id }: DeleteTemplateProps) {
+export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const navigate = useNavigate({ from: "/templates/$templateId" });
@@ -27,9 +30,12 @@ export function DeleteTemplate({ id }: DeleteTemplateProps) {
       },
     });
   };
-  const isDefault = defaultTemplate === Number(id);
-  const isDisabled = !!(data?.length && data.length > 0) || isDefault;
-  const reason = isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-locked`;
+
+  const isDefault = defaultTemplate === id;
+  const isDisabled = !!(data?.length && data.length > 0) || isDefault || isLocked;
+  const reason = isLocked
+    ? msg`delete-template.cant-delete-locked`
+    : (isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-used`);
 
   return (
     <DeleteDialog>

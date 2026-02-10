@@ -37,6 +37,7 @@ export function Template({ id }: TemplateProps) {
   if (isSuccess && data === null) return <NotFound />;
 
   if (!data) return null;
+  console.log(data);
 
   return (
     <form
@@ -91,7 +92,7 @@ export function Template({ id }: TemplateProps) {
       <FormLayout.Section term={_(msg`template.actions.label`)}>
         <div className="flex flex-row flex-wrap items-center gap-2">
           <CloneTemplate id={id} />
-          <DeleteTemplate id={id} />
+          <DeleteTemplate id={id} isLocked={data.isLocked} />
         </div>
       </FormLayout.Section>
       <form.AppForm>

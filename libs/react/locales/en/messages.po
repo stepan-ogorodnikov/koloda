@@ -39,16 +39,16 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:101
+#: ../../libs/react/src/lib/cards/add-card.tsx:103
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:63
+#: ../../libs/react/src/lib/cards/add-card.tsx:64
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:51
-#: ../../libs/react/src/lib/cards/add-card.tsx:55
+#: ../../libs/react/src/lib/cards/add-card.tsx:52
+#: ../../libs/react/src/lib/cards/add-card.tsx:56
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
@@ -366,23 +366,23 @@ msgstr "Successor preset"
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
-#: ../../libs/react/src/lib/cards/delete-card.tsx:37
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:51
+#: ../../libs/react/src/lib/cards/delete-card.tsx:36
 msgid "delete-card.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
-#: ../../libs/react/src/lib/cards/delete-card.tsx:38
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:48
+#: ../../libs/react/src/lib/cards/delete-card.tsx:37
 msgid "delete-card.confirm"
 msgstr "Delete"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
-#: ../../libs/react/src/lib/cards/delete-card.tsx:35
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/delete-card.tsx:34
 msgid "delete-card.message"
 msgstr "Delete this card with all it's reviews?"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
-#: ../../libs/react/src/lib/cards/delete-card.tsx:32
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:36
+#: ../../libs/react/src/lib/cards/delete-card.tsx:31
 msgid "delete-card.trigger"
 msgstr "Delete card"
 
@@ -402,27 +402,31 @@ msgstr "Are you sure you want to delete this deck and all it's cards and reviews
 msgid "delete-deck.trigger"
 msgstr "Delete deck"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:49
+#: ../../libs/react/src/lib/templates/delete-template.tsx:55
 msgid "delete-template.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:32
+#: ../../libs/react/src/lib/templates/delete-template.tsx:38
 msgid "delete-template.cant-delete-default"
 msgstr "Default template can't be deleted"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:32
+#: ../../libs/react/src/lib/templates/delete-template.tsx:37
 msgid "delete-template.cant-delete-locked"
 msgstr "This template is locked and can't be deleted"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:50
+#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+msgid "delete-template.cant-delete-used"
+msgstr "This template is used by deck(s) and can't be deleted"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:56
 msgid "delete-template.confirm"
 msgstr "Delete template"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:47
+#: ../../libs/react/src/lib/templates/delete-template.tsx:53
 msgid "delete-template.message"
 msgstr "Are you sure you want to delete this template?"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+#: ../../libs/react/src/lib/templates/delete-template.tsx:44
 msgid "delete-template.trigger"
 msgstr "Delete template"
 
@@ -639,7 +643,7 @@ msgstr "Settings"
 msgid "template-picker.label"
 msgstr "Template"
 
-#: ../../libs/react/src/lib/templates/template.tsx:91
+#: ../../libs/react/src/lib/templates/template.tsx:92
 msgid "template.actions.label"
 msgstr "Actions"
 
@@ -660,11 +664,11 @@ msgstr "Title"
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/react/src/lib/templates/template.tsx:85
+#: ../../libs/react/src/lib/templates/template.tsx:86
 msgid "template.fields.label"
 msgstr "Fields"
 
-#: ../../libs/react/src/lib/templates/template.tsx:64
+#: ../../libs/react/src/lib/templates/template.tsx:65
 msgid "template.inputs.title.label"
 msgstr "Title"
 
@@ -676,19 +680,19 @@ msgstr "Field"
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 
-#: ../../libs/react/src/lib/templates/template.tsx:88
+#: ../../libs/react/src/lib/templates/template.tsx:89
 msgid "template.layout.label"
 msgstr "Layout"
 
-#: ../../libs/react/src/lib/templates/template.tsx:77
+#: ../../libs/react/src/lib/templates/template.tsx:78
 msgid "template.status.locked"
 msgstr "Locked"
 
-#: ../../libs/react/src/lib/templates/template.tsx:71
+#: ../../libs/react/src/lib/templates/template.tsx:72
 msgid "template.status.title"
 msgstr "Status"
 
-#: ../../libs/react/src/lib/templates/template.tsx:80
+#: ../../libs/react/src/lib/templates/template.tsx:81
 msgid "template.status.unlocked"
 msgstr "Not locked"
 

@@ -39,16 +39,16 @@ msgstr "Новый алгоритм"
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:101
+#: ../../libs/react/src/lib/cards/add-card.tsx:103
 msgid "add-card.submit"
 msgstr "Добавить"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:63
+#: ../../libs/react/src/lib/cards/add-card.tsx:64
 msgid "add-cards.title"
 msgstr "Добавить карточку"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:51
-#: ../../libs/react/src/lib/cards/add-card.tsx:55
+#: ../../libs/react/src/lib/cards/add-card.tsx:52
+#: ../../libs/react/src/lib/cards/add-card.tsx:56
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
@@ -366,23 +366,23 @@ msgstr "Алгоритм наследник"
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
-#: ../../libs/react/src/lib/cards/delete-card.tsx:37
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:51
+#: ../../libs/react/src/lib/cards/delete-card.tsx:36
 msgid "delete-card.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
-#: ../../libs/react/src/lib/cards/delete-card.tsx:38
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:48
+#: ../../libs/react/src/lib/cards/delete-card.tsx:37
 msgid "delete-card.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
-#: ../../libs/react/src/lib/cards/delete-card.tsx:35
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/delete-card.tsx:34
 msgid "delete-card.message"
 msgstr "Подтвердите удаление карточки"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
-#: ../../libs/react/src/lib/cards/delete-card.tsx:32
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:36
+#: ../../libs/react/src/lib/cards/delete-card.tsx:31
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
@@ -402,27 +402,31 @@ msgstr "Подтвердите удаление колоды"
 msgid "delete-deck.trigger"
 msgstr "Удалить колоду"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:49
+#: ../../libs/react/src/lib/templates/delete-template.tsx:55
 msgid "delete-template.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:32
+#: ../../libs/react/src/lib/templates/delete-template.tsx:38
 msgid "delete-template.cant-delete-default"
 msgstr "Нельзя удалить шаблон по умолчанию"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:32
+#: ../../libs/react/src/lib/templates/delete-template.tsx:37
 msgid "delete-template.cant-delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:50
+#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+msgid "delete-template.cant-delete-used"
+msgstr "Нельзя удалить используемый колодами шаблон"
+
+#: ../../libs/react/src/lib/templates/delete-template.tsx:56
 msgid "delete-template.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:47
+#: ../../libs/react/src/lib/templates/delete-template.tsx:53
 msgid "delete-template.message"
 msgstr "Подтвердите удаление шаблона"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+#: ../../libs/react/src/lib/templates/delete-template.tsx:44
 msgid "delete-template.trigger"
 msgstr "Удалить шаблон"
 
@@ -639,7 +643,7 @@ msgstr "Настройки"
 msgid "template-picker.label"
 msgstr "Шаблон"
 
-#: ../../libs/react/src/lib/templates/template.tsx:91
+#: ../../libs/react/src/lib/templates/template.tsx:92
 msgid "template.actions.label"
 msgstr "Действия"
 
@@ -660,11 +664,11 @@ msgstr "Название"
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/react/src/lib/templates/template.tsx:85
+#: ../../libs/react/src/lib/templates/template.tsx:86
 msgid "template.fields.label"
 msgstr "Поля"
 
-#: ../../libs/react/src/lib/templates/template.tsx:64
+#: ../../libs/react/src/lib/templates/template.tsx:65
 msgid "template.inputs.title.label"
 msgstr "Название"
 
@@ -676,19 +680,19 @@ msgstr "Поле"
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
-#: ../../libs/react/src/lib/templates/template.tsx:88
+#: ../../libs/react/src/lib/templates/template.tsx:89
 msgid "template.layout.label"
 msgstr "Раскладка"
 
-#: ../../libs/react/src/lib/templates/template.tsx:77
+#: ../../libs/react/src/lib/templates/template.tsx:78
 msgid "template.status.locked"
 msgstr "Заблокирован"
 
-#: ../../libs/react/src/lib/templates/template.tsx:71
+#: ../../libs/react/src/lib/templates/template.tsx:72
 msgid "template.status.title"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/templates/template.tsx:80
+#: ../../libs/react/src/lib/templates/template.tsx:81
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
 
