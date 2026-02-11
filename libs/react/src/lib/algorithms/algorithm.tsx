@@ -23,10 +23,10 @@ export function Algorithm({ id }: AlgorithmProps) {
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: (algorithm) => {
+        onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
-          queryClient.setQueryData(algorithmsQueryKeys.detail(id), algorithm);
-          formApi.reset();
+          queryClient.setQueryData(algorithmsQueryKeys.detail(id), returning);
+          formApi.reset(returning);
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });

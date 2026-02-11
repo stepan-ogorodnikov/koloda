@@ -35,9 +35,8 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
     validators: { onSubmit: template ? getUpdateCardSchema(template) : schema },
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: card.id, values: value }, {
-        onSuccess: (returning) => {
+        onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
-          formApi.reset(returning);
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });
@@ -48,7 +47,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
 
   useEffect(() => {
     form.reset();
-  }, [card.id, form]);
+  }, [card.id, card.updatedAt, form]);
 
   const handleProgressReset = () => {
     resetProgressMutation.mutate({ id: card.id }, {
