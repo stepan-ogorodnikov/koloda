@@ -20,7 +20,7 @@ export function LessonInitLearnedToday({ variants, learned, limit }: LessonInitL
     <div className={lessonInitLearnedToday(variants)}>
       <span>{learned}</span>
       <span className="fg-level-4 text-xs leading-6 font-normal">/</span>
-      {limit === Infinity
+      {limit === 0
         ? <span className="pb-1 text-3xl font-normal">∞</span>
         : <span>{limit}</span>}
     </div>

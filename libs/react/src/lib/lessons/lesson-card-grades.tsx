@@ -18,7 +18,7 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
     <Fade className="flex flex-row gap-1 tb:gap-2" key="grades">
       {grades.map(({ card, log }, i) => (
         <div className="flex flex-col items-center gap-1 tb:w-24" key={i}>
-          <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.due)}</div>
+          <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.review)}</div>
           <Button
             variants={{ style: "primary", class: "self-stretch max-tb:text-sm" }}
             onClick={() => dispatch(["gradeSelected", i])}

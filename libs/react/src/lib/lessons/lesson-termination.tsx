@@ -1,8 +1,6 @@
-import { lessonsQueryKeys } from "@koloda/react";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence } from "motion/react";
 import type { ActionDispatch } from "react";
 import { FocusScope } from "react-aria";
@@ -20,7 +18,6 @@ type LessonTerminationProps = {
 
 export function LessonTermination({ state, dispatch }: LessonTerminationProps) {
   const { _ } = useLingui();
-  const queryClient = useQueryClient();
 
   return (
     <AnimatePresence>
@@ -37,8 +34,6 @@ export function LessonTermination({ state, dispatch }: LessonTerminationProps) {
               variants={{ style: "primary" }}
               onClick={() => {
                 dispatch(["isOpenUpdated", false]);
-                queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all(state.filters) });
-                queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all() });
               }}
             >
               {_(msg`lesson.content.termination.accept`)}

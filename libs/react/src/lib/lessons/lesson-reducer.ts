@@ -170,10 +170,10 @@ function setupInitData(draft: LessonReducerState) {
   const { type } = params;
   const available = lessons[0];
   const diffs = {
-    untouched: Math.max(dailyLimits.untouched - available.untouched, 0),
-    learn: Math.max(dailyLimits.learn - available.learn, 0),
-    review: Math.max(dailyLimits.review - available.review, 0),
-    total: Math.max(dailyLimits.total - available.total, 0),
+    untouched: Math.max((dailyLimits.untouched || Infinity) - available.untouched, 0),
+    learn: Math.max((dailyLimits.learn || Infinity) - available.learn, 0),
+    review: Math.max((dailyLimits.review || Infinity) - available.review, 0),
+    total: Math.max((dailyLimits.total || Infinity) - available.total, 0),
   };
 
   if (params.type === "total") {

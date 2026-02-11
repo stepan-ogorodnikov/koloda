@@ -1,7 +1,7 @@
-import { queriesAtom, settingsQueryKeys } from "@koloda/react";
+import { lessonsQueryKeys, queriesAtom, settingsQueryKeys } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent, useHotkeysStatus } from "@koloda/ui";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
@@ -30,6 +30,7 @@ const lessonModal = [
 const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
 export function Lesson() {
+  const queryClient = useQueryClient();
   const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
@@ -45,6 +46,14 @@ export function Lesson() {
   }, [isOpen, setAtomValue]);
 
   useEffect(() => {
+    if (!isOpen) {
+      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all(state.filters) });
+      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all() });
+      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.todayReviewTotals() });
+    }
+  }, [isOpen, queryClient, state.filters]);
+
+  useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
   }, [isOpen, disableScope, enableScope]);
 
@@ -58,10 +67,14 @@ export function Lesson() {
     }
   }, [learningSettings]);
 
+  const handleIsOpenChange = (value: boolean) => {
+    dispatch(["isOpenUpdated", value]);
+  };
+
   return (
     <Dialog.Overlay
       isOpen={state.meta.isOpen}
-      onOpenChange={(value) => dispatch(["isOpenUpdated", value])}
+      onOpenChange={handleIsOpenChange}
       isKeyboardDismissDisabled
     >
       <Dialog.Modal variants={{ class: lessonModal }} isKeyboardDismissDisabled>

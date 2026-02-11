@@ -1,8 +1,6 @@
-import { lessonsQueryKeys } from "@koloda/react";
 import { Dialog, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import type { ActionDispatch } from "react";
 import { LessonProgressAmounts } from "./lesson-progress-amounts";
@@ -17,7 +15,6 @@ type LessonHeaderProps = {
 
 export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
   const { _ } = useLingui();
-  const queryClient = useQueryClient();
   const isMotionOn = useMotionSetting();
   const { isSubmitted, isStarted, isFinished } = state.meta;
 
@@ -31,8 +28,6 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
               dispatch(["terminationRequested", true]);
             } else {
               dispatch(["isOpenUpdated", false]);
-              queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all(state.filters) });
-              queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all() });
             }
           }}
         />
