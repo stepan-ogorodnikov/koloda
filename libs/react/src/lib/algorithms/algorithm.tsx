@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useEffect } from "react";
 import { AlgorithmLearningSteps } from "./algorithm-learning-steps";
 import { DeleteAlgorithm } from "./delete-algorithm";
 
@@ -33,6 +34,10 @@ export function Algorithm({ id }: AlgorithmProps) {
       });
     },
   });
+
+  useEffect(() => {
+    if (data?.id) form.reset();
+  }, [data?.id, form]);
 
   if (isSuccess && data === null) return <NotFound />;
 

@@ -7,6 +7,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useEffect } from "react";
 import { TemplatePicker } from "../templates/template-picker";
 import { DeleteDeck } from "./delete-deck";
 
@@ -35,6 +36,10 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       });
     },
   });
+
+  useEffect(() => {
+    if (data?.id) form.reset();
+  }, [data?.id, form]);
 
   if (!data) return null;
 
