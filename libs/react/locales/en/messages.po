@@ -643,7 +643,7 @@ msgstr "Settings"
 msgid "template-picker.label"
 msgstr "Template"
 
-#: ../../libs/react/src/lib/templates/template.tsx:92
+#: ../../libs/react/src/lib/templates/template.tsx:91
 msgid "template.actions.label"
 msgstr "Actions"
 
@@ -664,11 +664,11 @@ msgstr "Title"
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/react/src/lib/templates/template.tsx:86
+#: ../../libs/react/src/lib/templates/template.tsx:85
 msgid "template.fields.label"
 msgstr "Fields"
 
-#: ../../libs/react/src/lib/templates/template.tsx:65
+#: ../../libs/react/src/lib/templates/template.tsx:64
 msgid "template.inputs.title.label"
 msgstr "Title"
 
@@ -680,19 +680,19 @@ msgstr "Field"
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 
-#: ../../libs/react/src/lib/templates/template.tsx:89
+#: ../../libs/react/src/lib/templates/template.tsx:88
 msgid "template.layout.label"
 msgstr "Layout"
 
-#: ../../libs/react/src/lib/templates/template.tsx:78
+#: ../../libs/react/src/lib/templates/template.tsx:77
 msgid "template.status.locked"
 msgstr "Locked"
 
-#: ../../libs/react/src/lib/templates/template.tsx:72
+#: ../../libs/react/src/lib/templates/template.tsx:71
 msgid "template.status.title"
 msgstr "Status"
 
-#: ../../libs/react/src/lib/templates/template.tsx:81
+#: ../../libs/react/src/lib/templates/template.tsx:80
 msgid "template.status.unlocked"
 msgstr "Not locked"
 

@@ -1,3 +1,20 @@
+# Rust
+[[language]]
+name = "rust"
+language-servers = ["rust-analyzer"]
+formatter = { command = "rustfmt" }
+auto-format = true
+
+[language-server.rust-analyzer.config.check]
+command = "clippy"
+extraArgs = ["--all-targets", "--all-features", "--", "-D", "warnings"]
+
+[language-server.rust-analyzer.config]
+cargo = { allFeatures = true }
+procMacro = { enable = true }
+hover = { actions = { enable = true } }
+lens = { enable = true }
+
 # Emmet
 [language-server.emmet-ls]
 command = "emmet-language-server"
@@ -5,13 +22,17 @@ args = ["--stdio"]
 
 # Oxlint
 [language-server.oxlint]
-command = "oxc_language_server"
-args = ["--stdio"]
+command = "oxlint"
+args = ["--lsp"]
 
 # HTML
 [[language]]
 name = "html"
-language-servers = ["vscode-html-language-server", "tailwindcss-ls", "emmet-ls"]
+language-servers = [
+  "vscode-html-language-server",
+  "tailwindcss-ls",
+  "emmet-ls",
+]
 formatter = { command = "dprint", args = ["fmt", "--stdin", "html"] }
 auto-format = true
 

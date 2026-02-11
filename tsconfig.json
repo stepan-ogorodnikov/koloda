@@ -4,19 +4,25 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/demo"
+      "path": "./apps/demo",
     },
     {
-      "path": "./libs/ui"
+      "path": "./libs/ui",
     },
     {
-      "path": "./libs/srs"
+      "path": "./libs/srs",
     },
     {
-      "path": "./libs/react"
+      "path": "./libs/react",
     },
     {
-      "path": "./libs/srs-pgsql"
-    }
-  ]
+      "path": "./libs/srs-pgsql",
+    },
+    {
+      "path": "./libs/srs-sqlite",
+    },
+    {
+      "path": "./apps/native-tauri-react",
+    },
+  ],
 }

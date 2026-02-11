@@ -37,7 +37,6 @@ export function Template({ id }: TemplateProps) {
   if (isSuccess && data === null) return <NotFound />;
 
   if (!data) return null;
-  console.log(data);
 
   return (
     <form

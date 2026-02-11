@@ -1,10 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -27,10 +24,7 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": [
-        "libs/srs/*",
-        "libs/srs-pgsql/*"
-      ]
+      "exclude": ["libs/srs/*", "libs/srs-pgsql/*", "libs/srs-sqlite/*"]
     },
     {
       "plugin": "@nx/vite/plugin",
@@ -48,10 +42,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": [
-        "libs/srs/*",
-        "libs/srs-pgsql/*"
-      ],
+      "include": ["libs/srs/*", "libs/srs-pgsql/*", "libs/srs-sqlite/*"],
       "options": {
         "typecheck": {
           "targetName": "typecheck"

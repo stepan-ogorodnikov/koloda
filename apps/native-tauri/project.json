@@ -1,0 +1,53 @@
+{
+  "name": "@koloda/native-tauri",
+  "sourceRoot": "apps/native-tauri/src",
+  "projectType": "application",
+  "tags": ["type:app", "platform:desktop"],
+  "implicitDependencies": ["native-tauri-react"],
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["nx serve native-tauri-react", "tauri dev"],
+        "parallel": true,
+        "cwd": "apps/native-tauri"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/src-tauri/target/release",
+        "{projectRoot}/src-tauri/target/release/bundle"
+      ],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": ["native-tauri-react"],
+          "params": "forward"
+        }
+      ],
+      "options": {
+        "command": "tauri build",
+        "cwd": "apps/native-tauri"
+      },
+      "configurations": {
+        "production": {
+          "command": "tauri build --config src-tauri/tauri.conf.json"
+        }
+      }
+    },
+    "build-frontend": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx build native-tauri-react --configuration=production"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo clippy --all-targets --all-features -- -D warnings",
+        "cwd": "apps/native-tauri/src-tauri"
+      }
+    }
+  }
+}
