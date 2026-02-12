@@ -13,9 +13,9 @@ export function SettingsLearning() {
   useTitle();
   const queryClient = useQueryClient();
   const { _ } = useLingui();
-  const { patchSettingsMutation, getSettingsQuery } = useAtomValue(queriesAtom);
+  const { setSettingsMutation, getSettingsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ ...getSettingsQuery("learning"), queryKey: settingsQueryKeys.detail("learning") });
-  const { mutate } = useMutation(patchSettingsMutation());
+  const { mutate } = useMutation(setSettingsMutation<"learning">());
 
   return (
     <QueryState query={query}>
@@ -28,7 +28,7 @@ export function SettingsLearning() {
               onSuccess: (returning) => {
                 queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("learning") });
                 queryClient.setQueryData(settingsQueryKeys.detail("learning"), returning);
-                form.reset();
+                form.reset(returning?.content);
               },
               onError: (error) => {
                 form.setErrorMap({ onSubmit: toFormErrors(error) });

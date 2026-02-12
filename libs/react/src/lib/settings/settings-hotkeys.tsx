@@ -18,7 +18,7 @@ export function SettingsHotkeys() {
   const queryClient = useQueryClient();
   const { setSettingsMutation, getSettingsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ ...getSettingsQuery("hotkeys"), queryKey: settingsQueryKeys.detail("hotkeys") });
-  const { mutate } = useMutation(setSettingsMutation());
+  const { mutate } = useMutation(setSettingsMutation<"hotkeys">());
 
   return (
     <QueryState query={query}>
@@ -31,7 +31,7 @@ export function SettingsHotkeys() {
               onSuccess: (returning) => {
                 queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("hotkeys") });
                 queryClient.setQueryData(settingsQueryKeys.detail("hotkeys"), returning);
-                form.reset();
+                form.reset(returning?.content);
               },
               onError: (error) => {
                 form.setErrorMap({ onSubmit: toFormErrors(error) });
