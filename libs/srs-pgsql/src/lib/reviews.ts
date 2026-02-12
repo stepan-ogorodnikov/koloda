@@ -55,7 +55,7 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
  * Gets the review totals for the current learning day
  * @param db - The database instance
  * @returns Object containing daily limits, review totals, and metadata about limits
- * @throws {Error} If can't get learning settings or review totals
+ * @throws {ZodError} If can't get learning settings or review totals
  */
 export async function getTodaysReviewTotals(db: DB) {
   return throwKnownError("db.get", async () => {

@@ -1,4 +1,3 @@
-// import { tabs } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
@@ -85,12 +84,6 @@ function MainSidebarItemLinkContent({ children }: PropsWithChildren) {
   );
 }
 
-// export const mainTabs = "flex flex-row max-tb:w-full";
-
-// function MainTabs({ children }: PropsWithChildren) {
-//   return <div className={tabs}>{children}</div>;
-// }
-
 Main.Titlebar = MainTitlebar;
 Main.H1 = MainH1;
 Main.H2 = MainH2;
@@ -98,4 +91,3 @@ Main.Content = MainContent;
 Main.Sidebar = MainSidebar;
 Main.SidebarItem = MainSidebarItem;
 Main.SidebarItemLinkContent = MainSidebarItemLinkContent;
-// Main.Tabs = MainTabs;

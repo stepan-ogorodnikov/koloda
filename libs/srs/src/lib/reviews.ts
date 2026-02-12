@@ -35,7 +35,7 @@ export type InsertReviewData = z.infer<typeof insertReviewSchema>;
  * Calculates the datetime range for the current learning day based on the dayStartsAt from learning settings
  * @param dayStartsAt - Time in 'hh:mm' format when the learning day starts
  * @returns Object containing 'from' and 'to' timestamps in ISO string format
- * @throws {Error} If dayStartsAt is not in 'hh:mm' format or out of range
+ * @throws {AppError} If dayStartsAt is not in 'hh:mm' format or out of range
  */
 export async function getCurrentLearningDayRange(dayStartsAt: string) {
   const match = dayStartsAt.match(/^(\d{2}):(\d{2})$/);
