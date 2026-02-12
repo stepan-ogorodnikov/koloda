@@ -41,6 +41,72 @@ export function getNextNumericId<T extends { id: number }>(items: T[] = []): num
  * @section Objects
  */
 
+/**
+ * Deeply merges a partial object into a target object
+ * Primitives (including Date) in partial replace target
+ * Arrays are merged by index (source items overwrite target items)
+ * Plain objects are merged recursively
+ * Values that are undefined are ignored (target value is preserved)
+ */
+export function deepMerge<T extends Record<string, unknown>>(target: T, partial: DeepPartial<T>): T {
+  if (typeof partial !== "object" || partial === null) return target;
+  const output = { ...target };
+
+  for (const key in partial) {
+    if (Object.prototype.hasOwnProperty.call(partial, key)) {
+      const sourceValue = partial[key];
+      const targetValue = output[key];
+      if (sourceValue === undefined) continue;
+
+      // arrays
+      if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        (output as any)[key] = sourceValue.map((value, index) => {
+          if (typeof value === "object" && value !== null && !isSpecialObject(value)) {
+            // if the target has a corresponding object at this index, merge recursively
+            const targetItem = targetValue[index];
+            if (typeof targetItem === "object" && targetItem !== null && !Array.isArray(targetItem)) {
+              return deepMerge(targetItem, value);
+            }
+          }
+          // otherwise replace (primitive, null, or mismatched type)
+          return value;
+        });
+        continue;
+      }
+
+      // objects
+      if (
+        typeof sourceValue === "object"
+        && sourceValue !== null
+        && !Array.isArray(sourceValue)
+        && typeof targetValue === "object"
+        && targetValue !== null
+        && !Array.isArray(targetValue)
+        && !isSpecialObject(sourceValue)
+        && !isSpecialObject(targetValue)
+      ) {
+        (output as any)[key] = deepMerge(
+          targetValue as Record<string, unknown>,
+          sourceValue as DeepPartial<Record<string, unknown>>,
+        );
+        continue;
+      }
+
+      // primitives, dates, sets, maps or type mismatches
+      (output as any)[key] = sourceValue;
+    }
+  }
+
+  return output;
+}
+
+/**
+ * Helper to identify objects that should not be recursively merged (Date, Set, Map, etc.)
+ */
+function isSpecialObject(obj: unknown): boolean {
+  return obj instanceof Date || obj instanceof Set || obj instanceof Map;
+}
+
 export type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T];
 
 /**
