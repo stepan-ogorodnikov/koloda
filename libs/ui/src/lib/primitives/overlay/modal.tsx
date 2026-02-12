@@ -14,7 +14,11 @@ const modal = tv({
   ],
   variants: {
     size: {
-      fullscreen: "absolute inset-1 flex items-center justify-center",
+      large: [
+        "max-tb:w-full tb:min-w-144",
+        "max-tb:h-full min-h-[min(36rem,100%)] max-h-screen",
+        "overflow-hidden",
+      ],
     },
   },
 });

@@ -21,12 +21,6 @@ export type LessonAtomValue = {
 
 export const lessonAtom = atom<LessonAtomValue | null>(null);
 
-const lessonModal = [
-  "max-tb:w-full tb:min-w-144",
-  "max-tb:h-full min-h-[min(36rem,100%)] max-h-screen",
-  "overflow-hidden",
-].join(" ");
-
 const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
 export function Lesson() {
@@ -77,7 +71,7 @@ export function Lesson() {
       onOpenChange={handleIsOpenChange}
       isKeyboardDismissDisabled
     >
-      <Dialog.Modal variants={{ class: lessonModal }} isKeyboardDismissDisabled>
+      <Dialog.Modal variants={{ size: "large" }} isKeyboardDismissDisabled>
         <Dialog.Body>
           <form
             className="grow flex flex-col"
