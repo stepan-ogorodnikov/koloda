@@ -1,3 +1,4 @@
+import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
 import { DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
@@ -8,7 +9,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
 
 export function AddAlgorithm() {
   const queryClient = useQueryClient();
@@ -86,9 +86,9 @@ export function AddAlgorithm() {
                   </TextField>
                 )}
               </form.Field>
-              {formErrorMap.onSubmit && (
-                <form.Errors errors={formErrorMap.onSubmit} />
-              )}
+              <div className="min-h-10 mt-4">
+                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
+              </div>
             </Dialog.Content>
             <Dialog.Footer>
               {isLinkVisible && (

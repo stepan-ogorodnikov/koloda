@@ -3,9 +3,6 @@
   "include": [],
   "references": [
     {
-      "path": "../srs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ],

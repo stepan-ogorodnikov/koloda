@@ -92,7 +92,7 @@ export function AddDeck() {
               <form.Field name="templateId">
                 {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
               </form.Field>
-              <div className="min-h-10">
+              <div className="min-h-10 mt-4">
                 {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
               </div>
             </Dialog.Content>

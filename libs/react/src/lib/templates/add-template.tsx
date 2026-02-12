@@ -86,7 +86,9 @@ export function AddTemplate() {
                   </TextField>
                 )}
               </form.Field>
+              <div className="min-h-10 mt-4">
                 {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
+              </div>
             </Dialog.Content>
             <Dialog.Footer>
               {isLinkVisible && (
