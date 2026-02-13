@@ -1,4 +1,4 @@
-import { cardsQueryKeys, queriesAtom, QueryState, templatesQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom, QueryState, reviewsQueryKeys, templatesQueryKeys } from "@koloda/react";
 import type { Card, UpdateCardValues, ZodIssue } from "@koloda/srs";
 import { getUpdateCardSchema, toFormErrors, updateCardSchema as schema } from "@koloda/srs";
 import { Button, FormLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { RotateCcw } from "lucide-react";
 import { useEffect } from "react";
+import { CardReviews } from "./card-reviews";
 import { CardState } from "./card-state";
 import { DeleteCard } from "./delete-card";
 
@@ -15,11 +16,13 @@ const TIMESTAMP_OPTIONS = {
   year: "numeric",
   month: "long",
   day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
 } as Intl.DateTimeFormatOptions;
 
-type CardsStackItemProps = { card: Card };
+type CardDetailsProps = { card: Card };
 
-export function CardsStackItem({ card }: CardsStackItemProps) {
+export function CardDetails({ card }: CardDetailsProps) {
   const queryClient = useQueryClient();
   const { i18n, _ } = useLingui();
   const { getTemplateQuery, updateCardMutation, resetCardProgressMutation } = useAtomValue(queriesAtom);
@@ -53,6 +56,7 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
     resetProgressMutation.mutate({ id: card.id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
+        queryClient.invalidateQueries({ queryKey: reviewsQueryKeys.card({ cardId: card.id }) });
       },
     });
   };
@@ -87,15 +91,43 @@ export function CardsStackItem({ card }: CardsStackItemProps) {
               )}
             </form.AppField>
           ))}
-          <FormLayout.Section variants={{ class: "flex-row items-baseline gap-6" }} term={_(msg`card.labels.state`)}>
+          <FormLayout.Section term={_(msg`card.labels.state`)}>
             <FormLayout.Section.Content>
               <CardState value={card.state as number} />
             </FormLayout.Section.Content>
           </FormLayout.Section>
-          {!!card.dueAt && (
-            <FormLayout.Section variants={{ class: "flex-row items-baseline gap-6" }} term={_(msg`card.labels.due-at`)}>
-              <FormLayout.Section.Content>
+          {!!card.state && !!card.dueAt && (
+            <FormLayout.Section term={_(msg`card.labels.due-at`)}>
+              <FormLayout.Section.Content variants={{ class: "fg-level-3" }}>
                 {i18n.date(card.dueAt, TIMESTAMP_OPTIONS)}
+              </FormLayout.Section.Content>
+            </FormLayout.Section>
+          )}
+          {!!card.state && (
+            <FormLayout.Section term={_(msg`card.labels.stability`)}>
+              <FormLayout.Section.Content variants={{ class: "numbers-text" }}>
+                {(card.stability ?? 0).toFixed(2)}
+              </FormLayout.Section.Content>
+            </FormLayout.Section>
+          )}
+          {!!card.state && (
+            <FormLayout.Section term={_(msg`card.labels.difficulty`)}>
+              <FormLayout.Section.Content variants={{ class: "numbers-text" }}>
+                {(card.difficulty ?? 0).toFixed(2)}
+              </FormLayout.Section.Content>
+            </FormLayout.Section>
+          )}
+          {!!card.state && (
+            <FormLayout.Section term={_(msg`card.labels.lapses`)}>
+              <FormLayout.Section.Content variants={{ class: "numbers-text" }}>
+                {card.lapses}
+              </FormLayout.Section.Content>
+            </FormLayout.Section>
+          )}
+          {!!card.state && (
+            <FormLayout.Section term={_(msg`card.labels.reviews`)}>
+              <FormLayout.Section.Content>
+                <CardReviews card={card} />
               </FormLayout.Section.Content>
             </FormLayout.Section>
           )}

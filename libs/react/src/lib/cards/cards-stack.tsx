@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { CardsStackItem } from "./cards-stack-item";
+import { CardDetails } from "./card-details";
 
 type CardsTableProps = {
   deckId: Deck["id"];
@@ -61,7 +61,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
       <div className="flex flex-col relative">
         <AnimatePresence mode="popLayout">
           <Fade key={card?.id}>
-            {card && <CardsStackItem card={card} />}
+            {card && <CardDetails card={card} />}
           </Fade>
         </AnimatePresence>
       </div>

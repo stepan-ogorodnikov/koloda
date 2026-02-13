@@ -19,6 +19,9 @@ const modal = tv({
         "max-tb:h-full min-h-[min(36rem,100%)] max-h-screen",
         "overflow-hidden",
       ],
+      main: [
+        "w-full max-w-main h-full max-h-screen overflow-hidden",
+      ],
     },
   },
 });

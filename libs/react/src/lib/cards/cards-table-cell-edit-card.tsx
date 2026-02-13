@@ -4,7 +4,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
-import { CardsStackItem } from "./cards-stack-item";
+import { CardDetails } from "./card-details";
 
 type CardsTableCellEditCardProps = { card: Card };
 
@@ -23,12 +23,12 @@ export function CardsTableCellEditCard({ card }: CardsTableCellEditCardProps) {
         </div>
       </Button>
       <Dialog.Overlay>
-        <Dialog.Modal>
+        <Dialog.Modal variants={{ size: "main" }}>
           <Dialog.Body>
             <Dialog.Content>
-              <div className="relative">
+              <div className="relative fg-level-1">
                 <Dialog.Close variants={{ class: "absolute top-0 right-0" }} slot="close" />
-                <CardsStackItem card={card} />
+                <CardDetails card={card} />
               </div>
             </Dialog.Content>
           </Dialog.Body>

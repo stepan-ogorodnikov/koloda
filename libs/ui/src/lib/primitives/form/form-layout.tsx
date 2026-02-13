@@ -45,12 +45,12 @@ export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
   return <div className={formLayoutSectionTerm} {...props} />;
 }
 
-export const formLayoutSectionContent = "flex flex-col items-baseline";
+export const formLayoutSectionContent = tv({ base: "flex flex-col items-baseline" });
 
-type FormLayoutSectionContentProps = HTMLAttributes<HTMLDivElement>;
+type FormLayoutSectionContentProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof formLayoutSectionContent>;
 
-export function FormLayoutSectionContent(props: FormLayoutSectionContentProps) {
-  return <div className={formLayoutSectionContent} {...props} />;
+export function FormLayoutSectionContent({ variants, ...props }: FormLayoutSectionContentProps) {
+  return <div className={formLayoutSectionContent(variants)} {...props} />;
 }
 
 FormLayout.Section = FormLayoutSection;

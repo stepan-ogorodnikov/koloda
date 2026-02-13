@@ -2,13 +2,10 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
 export const VALUES = [
-  {
-    t: msg`cards-table.state.untouched`,
-    cn: "border-fg-lesson-type-blue bg-lesson-type-blue/25 fg-lesson-type-blue",
-  },
-  { t: msg`cards-table.state.learn`, cn: "border-fg-lesson-type-red bg-lesson-type-red/10 fg-lesson-type-red" },
-  { t: msg`cards-table.state.review`, cn: "border-fg-lesson-type-green bg-lesson-type-green/10 fg-lesson-type-green" },
-  { t: msg`cards-table.state.relearn`, cn: "border-fg-lesson-type-red bg-lesson-type-red/10 fg-lesson-type-red" },
+  { t: msg`card.state.untouched`, cn: "border-fg-lesson-type-blue bg-lesson-type-blue/25 fg-lesson-type-blue" },
+  { t: msg`card.state.learn`, cn: "border-fg-lesson-type-red bg-lesson-type-red/10 fg-lesson-type-red" },
+  { t: msg`card.state.review`, cn: "border-fg-lesson-type-green bg-lesson-type-green/10 fg-lesson-type-green" },
+  { t: msg`card.state.relearn`, cn: "border-fg-lesson-type-red bg-lesson-type-red/10 fg-lesson-type-red" },
 ];
 
 const cn = "inline-flex px-1 rounded-md border-2 font-semibold whitespace-nowrap";

@@ -171,6 +171,9 @@
   --breakpoint-tb: 48rem; /* tablet */
   --breakpoint-dt: 80rem; /* desktop */
   --font-family-sans: "Inter Variable", sans-serif;
+  /* containers */
+  --container-layout: --spacing(360);
+  --container-main: --spacing(235);
   /* colors */
   --color-bg-body: var(--bg-body);
   --color-bg-level-1: var(--bg-level-1);

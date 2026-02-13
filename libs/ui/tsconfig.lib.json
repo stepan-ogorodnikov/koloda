@@ -32,5 +32,9 @@
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../srs/tsconfig.lib.json"
+    }
+  ]
 }
