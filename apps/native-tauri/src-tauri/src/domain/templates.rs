@@ -6,7 +6,7 @@ use crate::app::utility::{serialize_optional_timestamp, serialize_timestamp};
 const TITLE_MIN_LENGTH: usize = 1;
 const TITLE_MAX_LENGTH: usize = 255;
 
-const FIELD_TYPES: &[&str] = &["text"];
+const FIELD_TYPES: &[&str] = &["text", "markdown"];
 const LAYOUT_OPERATIONS: &[&str] = &["display", "reveal", "type"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
