@@ -56,11 +56,11 @@
 }
 
 @utility animate-colors {
-  @apply transition-colors duration-300 ease-in-out;
+  @apply transition-colors duration-250 ease-in-out;
 }
 
 @utility animate-opacity {
-  @apply transition-opacity duration-300 ease-in-out;
+  @apply transition-opacity duration-250 ease-in-out;
 }
 
 @utility inline-fade-* {

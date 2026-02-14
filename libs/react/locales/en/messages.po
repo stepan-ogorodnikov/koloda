@@ -663,22 +663,26 @@ msgstr "Template"
 msgid "template.actions.label"
 msgstr "Actions"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:68
+#: ../../libs/react/src/lib/templates/template-fields.tsx:79
 msgid "template.fields.add-item"
 msgstr "Add field"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:104
+#: ../../libs/react/src/lib/templates/template-fields.tsx:135
 msgid "template.fields.delete-item.label"
 msgstr "Delete field"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:93
+#: ../../libs/react/src/lib/templates/template-fields.tsx:106
 msgid "template.fields.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:99
+#: ../../libs/react/src/lib/templates/template-fields.tsx:112
 #: ../../libs/react/src/lib/templates/template-layout.tsx:55
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:116
+msgid "template.fields.inputs.type.label"
+msgstr "Type"
 
 #: ../../libs/react/src/lib/templates/template.tsx:90
 msgid "template.fields.label"
@@ -711,6 +715,14 @@ msgstr "Status"
 #: ../../libs/react/src/lib/templates/template.tsx:85
 msgid "template.status.unlocked"
 msgstr "Not locked"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:14
+msgid "templates.field-types.markdown"
+msgstr "Markdown"
+
+#: ../../libs/react/src/lib/templates/template-fields.tsx:13
+msgid "templates.field-types.text"
+msgstr "Text"
 
 #: ../../libs/react/src/lib/templates/template-layout.tsx:13
 msgid "templates.operations.display"

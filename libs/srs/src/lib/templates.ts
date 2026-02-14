@@ -2,10 +2,10 @@ import { z } from "zod";
 import type { Timestamps } from "./db";
 import type { UpdateData } from "./utility";
 
-export const TEMPLATE_FIELD_TYPES = ["text"] as const;
-
+export const TEMPLATE_FIELD_TYPES = ["text", "markdown"] as const;
 export const TEMPLATE_OPERATIONS = ["display", "reveal", "type"] as const;
 
+export type TemplateFieldType = typeof TEMPLATE_FIELD_TYPES[number];
 export type TemplateOperation = typeof TEMPLATE_OPERATIONS[number];
 
 export const templateValidation = z.object({

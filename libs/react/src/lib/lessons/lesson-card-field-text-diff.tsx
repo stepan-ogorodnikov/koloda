@@ -1,8 +1,7 @@
-import { Fade } from "@koloda/ui";
 import { useMemo } from "react";
 import { tv } from "tailwind-variants";
 
-export const lessonCardFieldValue = "max-w-[65ch] w-full break-all";
+export const lessonCardFieldValue = "max-w-[65ch] w-full break-all whitespace-pre-wrap";
 
 const textDiffText = tv({
   base: lessonCardFieldValue,
@@ -25,9 +24,9 @@ export function LessonCardFieldTextDiff({ userValue, correctValue }: LessonCardF
   }, [userValue, correctValue]);
 
   return (
-    <Fade className="flex flex-col item-center gap-4" key="diff">
+    <div className="flex flex-col item-center gap-4">
       <span className={textDiffText({ type: isMatch ? "success" : "error" })}>{userValue}</span>
       {!isMatch && <span className={textDiffText()}>{correctValue}</span>}
-    </Fade>
+    </div>
   );
 }
