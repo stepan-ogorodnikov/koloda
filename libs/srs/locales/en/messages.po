@@ -161,6 +161,26 @@ msgstr "Grade selection"
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Navigation"
 
+#: ../../libs/srs/src/lib/templates.ts:14
+msgid "templates.field-types.markdown"
+msgstr "Markdown"
+
+#: ../../libs/srs/src/lib/templates.ts:13
+msgid "templates.field-types.text"
+msgstr "Text"
+
+#: ../../libs/srs/src/lib/templates.ts:18
+msgid "templates.operations.display"
+msgstr "Display"
+
+#: ../../libs/srs/src/lib/templates.ts:19
+msgid "templates.operations.reveal"
+msgstr "Reveal"
+
+#: ../../libs/srs/src/lib/templates.ts:20
+msgid "templates.operations.type"
+msgstr "Type"
+
 #: ../../libs/srs/src/lib/settings-interface.ts:16
 msgid "theme.dark"
 msgstr "Dark"

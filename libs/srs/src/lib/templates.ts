@@ -1,3 +1,4 @@
+import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import type { Timestamps } from "./db";
 import type { UpdateData } from "./utility";
@@ -7,6 +8,17 @@ export const TEMPLATE_OPERATIONS = ["display", "reveal", "type"] as const;
 
 export type TemplateFieldType = typeof TEMPLATE_FIELD_TYPES[number];
 export type TemplateOperation = typeof TEMPLATE_OPERATIONS[number];
+
+export const TEMPLATE_FIELD_TYPES_MESSAGES = [
+  { id: "text", value: msg`templates.field-types.text` },
+  { id: "markdown", value: msg`templates.field-types.markdown` },
+];
+
+export const TEMPLATE_OPERATIONS_MESSAGES = [
+  { id: "display", value: msg`templates.operations.display` },
+  { id: "reveal", value: msg`templates.operations.reveal` },
+  { id: "type", value: msg`templates.operations.type` },
+];
 
 export const templateValidation = z.object({
   id: z.int(),

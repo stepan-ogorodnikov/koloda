@@ -88,7 +88,7 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
     const template = await getTemplate(db, id);
 
     if (template?.isLocked) {
-      const { isValid, errors } = validateLockedTemplateFields(payload.content.fields, values.content.fields);
+      const { isValid, errors } = validateLockedTemplateFields(template.content.fields, values.content.fields);
       if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
     }
 

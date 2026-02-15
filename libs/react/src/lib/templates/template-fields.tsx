@@ -1,18 +1,13 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId } from "@koloda/srs";
+import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId, TEMPLATE_FIELD_TYPES_MESSAGES } from "@koloda/srs";
 import type { TemplateFieldType, UpdateTemplateValues } from "@koloda/srs";
 import { Button, Draggable, Select, TextField, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { Plus, Trash2 } from "lucide-react";
-
-const fieldTypes = [
-  { id: "text", value: msg`templates.field-types.text` },
-  { id: "markdown", value: msg`templates.field-types.markdown` },
-];
 
 export const TemplateFields = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
@@ -115,6 +110,7 @@ function TemplateFieldItem({ title, type, onTitleChange, onTypeChange, isLocked,
       <Select.Root
         aria-label={_(msg`template.fields.inputs.type.label`)}
         value={type}
+        isDisabled={isLocked ?? undefined}
         onChange={(e) => {
           if (typeof e === "string") onTypeChange?.(e as TemplateFieldType);
         }}
@@ -122,7 +118,7 @@ function TemplateFieldItem({ title, type, onTitleChange, onTypeChange, isLocked,
         <Select.Button variants={{ style: "ghost", class: "w-48" }} />
         <Select.Popover>
           <Select.ListBox>
-            {fieldTypes.map(({ id, value }) => (
+            {TEMPLATE_FIELD_TYPES_MESSAGES.map(({ id, value }) => (
               <Select.ListBoxItem id={id} textValue={_(value)} key={id}>
                 {_(value)}
               </Select.ListBoxItem>

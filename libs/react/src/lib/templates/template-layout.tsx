@@ -1,19 +1,13 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { DEFAULT_TEMPLATE, getTemplateFieldTitleById } from "@koloda/srs";
+import { DEFAULT_TEMPLATE, getTemplateFieldTitleById, TEMPLATE_OPERATIONS_MESSAGES } from "@koloda/srs";
 import type { TemplateOperation, UpdateTemplateValues } from "@koloda/srs";
 import { withForm } from "@koloda/ui";
 import { Draggable, Select, TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
-
-const operations = [
-  { id: "display", value: msg`templates.operations.display` },
-  { id: "reveal", value: msg`templates.operations.reveal` },
-  { id: "type", value: msg`templates.operations.type` },
-];
 
 export const TemplateLayout = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
@@ -67,7 +61,7 @@ export const TemplateLayout = withForm({
                           <Select.Button variants={{ style: "ghost", class: "w-48" }} />
                           <Select.Popover>
                             <Select.ListBox>
-                              {operations.map(({ id, value }) => (
+                              {TEMPLATE_OPERATIONS_MESSAGES.map(({ id, value }) => (
                                 <Select.ListBoxItem id={id} textValue={_(value)} key={id}>
                                   {_(value)}
                                 </Select.ListBoxItem>

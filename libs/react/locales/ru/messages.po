@@ -454,7 +454,7 @@ msgstr "Редактировать карточку"
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
-#: ../../libs/react/src/lib/components/learned-today.tsx:50
+#: ../../libs/react/src/lib/components/learned-today.tsx:53
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 
@@ -663,24 +663,24 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:79
+#: ../../libs/react/src/lib/templates/template-fields.tsx:74
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:135
+#: ../../libs/react/src/lib/templates/template-fields.tsx:131
 msgid "template.fields.delete-item.label"
 msgstr "Удалить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:106
+#: ../../libs/react/src/lib/templates/template-fields.tsx:101
 msgid "template.fields.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:112
-#: ../../libs/react/src/lib/templates/template-layout.tsx:55
+#: ../../libs/react/src/lib/templates/template-fields.tsx:107
+#: ../../libs/react/src/lib/templates/template-layout.tsx:49
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:116
+#: ../../libs/react/src/lib/templates/template-fields.tsx:111
 msgid "template.fields.inputs.type.label"
 msgstr "Тип"
 
@@ -692,11 +692,11 @@ msgstr "Поля"
 msgid "template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:48
+#: ../../libs/react/src/lib/templates/template-layout.tsx:42
 msgid "template.layout.inputs.field.label"
 msgstr "Поле"
 
-#: ../../libs/react/src/lib/templates/template-layout.tsx:61
+#: ../../libs/react/src/lib/templates/template-layout.tsx:55
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
@@ -715,26 +715,6 @@ msgstr "Статус"
 #: ../../libs/react/src/lib/templates/template.tsx:85
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
-
-#: ../../libs/react/src/lib/templates/template-fields.tsx:14
-msgid "templates.field-types.markdown"
-msgstr "Markdown"
-
-#: ../../libs/react/src/lib/templates/template-fields.tsx:13
-msgid "templates.field-types.text"
-msgstr "Текст"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:13
-msgid "templates.operations.display"
-msgstr "Показать"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:14
-msgid "templates.operations.reveal"
-msgstr "Раскрыть"
-
-#: ../../libs/react/src/lib/templates/template-layout.tsx:15
-msgid "templates.operations.type"
-msgstr "Печатать"
 
 #: ../../libs/react/src/lib/routes/_.templates.tsx:33
 msgid "templates.title"

@@ -161,6 +161,26 @@ msgstr "Выбор сложности"
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Навигация"
 
+#: ../../libs/srs/src/lib/templates.ts:14
+msgid "templates.field-types.markdown"
+msgstr "Markdown"
+
+#: ../../libs/srs/src/lib/templates.ts:13
+msgid "templates.field-types.text"
+msgstr "Текст"
+
+#: ../../libs/srs/src/lib/templates.ts:18
+msgid "templates.operations.display"
+msgstr "Показать"
+
+#: ../../libs/srs/src/lib/templates.ts:19
+msgid "templates.operations.reveal"
+msgstr "Раскрыть"
+
+#: ../../libs/srs/src/lib/templates.ts:20
+msgid "templates.operations.type"
+msgstr "Печатать"
+
 #: ../../libs/srs/src/lib/settings-interface.ts:16
 msgid "theme.dark"
 msgstr "Тёмная"
