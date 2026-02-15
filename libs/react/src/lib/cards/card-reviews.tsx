@@ -35,7 +35,7 @@ export function CardReviews({ card }: CardReviewsProps) {
                 <span className="py-2 fg-level-3">
                   {i18n.date(review.createdAt, TIMESTAMP_OPTIONS)}
                 </span>
-                <span className="py-2 font-medium">
+                <span className="py-2 font-semibold tracking-tight">
                   {_(FSRS_GRADES[review.rating - 1])}
                 </span>
               </>

@@ -11,8 +11,8 @@ export const lessonBadge = [
 
 export const lessonBadgeContent = tv({
   base: [
-    "w-full px-1 group-focus-ring rounded-sm",
-    "font-semibold text-lg leading-6 group-disabled:fg-level-4 max-tb:text-center",
+    "w-full px-1 rounded-sm max-tb:text-center group-focus-ring",
+    "numbers-text leading-6 group-disabled:fg-level-4",
   ],
   variants: {
     type: {

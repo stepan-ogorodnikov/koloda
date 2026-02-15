@@ -6,7 +6,7 @@ import { TableSortIcon } from "./table-sort-icon";
 
 export const tableHeadCellContent = tv({
   extend: tableCellContent,
-  base: ["flex flex-row items-center gap-1 whitespace-nowrap"],
+  base: "flex flex-row items-center gap-1 whitespace-nowrap",
   variants: {
     isSortable: {
       true: "cursor-pointer select-none",

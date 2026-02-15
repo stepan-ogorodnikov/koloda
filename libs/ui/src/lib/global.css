@@ -171,7 +171,7 @@
   --breakpoint-*: initial;
   --breakpoint-tb: 48rem; /* tablet */
   --breakpoint-dt: 80rem; /* desktop */
-  --font-family-sans: "Inter Variable", sans-serif;
+  --font-sans: "Inter Variable", sans-serif;
   /* containers */
   --container-layout: --spacing(360);
   --container-main: --spacing(235);
@@ -265,15 +265,15 @@
   }
 
   h1 {
-    @apply text-xl font-bold;
+    @apply text-xl font-bold tracking-tight;
   }
 
   h2 {
-    @apply text-xl font-bold;
+    @apply text-xl font-bold tracking-tight;
   }
 
   h3 {
-    @apply text-lg font-bold;
+    @apply text-lg font-bold tracking-tight;
   }
 
   input[type="search"]::-webkit-search-cancel-button,

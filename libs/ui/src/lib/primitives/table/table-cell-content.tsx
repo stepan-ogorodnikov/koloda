@@ -6,7 +6,7 @@ export const tableCellContent = tv({
   base: "overflow-hidden break-all",
   variants: {
     type: {
-      head: "fg-table-head font-semibold",
+      head: "fg-table-head font-semibold tracking-tight",
     },
     paddings: {
       none: "p-0",

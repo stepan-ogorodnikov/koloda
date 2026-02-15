@@ -8,7 +8,7 @@ export const VALUES = [
   { t: msg`card.state.relearn`, cn: "border-fg-lesson-type-red bg-lesson-type-red/10 fg-lesson-type-red" },
 ];
 
-const cn = "inline-flex px-1 rounded-md border-2 font-semibold whitespace-nowrap";
+const cn = "inline-flex px-1 rounded-md border-2 font-bold tracking-tighter whitespace-nowrap";
 
 type CardStateProps = { value: number };
 

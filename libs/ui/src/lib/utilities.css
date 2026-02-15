@@ -52,7 +52,7 @@
 }
 
 @utility numbers-text {
-  @apply text-lg font-semibold tracking-wider;
+  @apply text-lg font-bold tracking-wide;
 }
 
 @utility animate-colors {

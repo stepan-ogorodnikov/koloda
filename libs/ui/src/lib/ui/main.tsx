@@ -18,13 +18,13 @@ export function MainTitlebar({ children }: PropsWithChildren) {
   );
 }
 
-export const mainH1 = "grow px-2 text-lg font-semibold tracking-normal truncate";
+export const mainH1 = "grow px-2 text-lg truncate";
 
 function MainH1({ children }: PropsWithChildren) {
   return <h1 className={mainH1}>{children}</h1>;
 }
 
-export const mainH2 = "px-2 text-lg font-semibold tracking-normal truncate";
+export const mainH2 = "px-2 text-lg truncate";
 
 function MainH2({ children }: PropsWithChildren) {
   return <h2 className={mainH2}>{children}</h2>;
@@ -63,7 +63,7 @@ function MainSidebarItem({ children }: PropsWithChildren) {
 }
 
 export const mainSidebarItemLink = [
-  "group flex flex-col p-4 text-lg tracking-wide no-focus-ring animate-colors",
+  "group flex flex-col p-4 text-lg no-focus-ring animate-colors",
   "fg-level-3 current:bg-main-sidebar-link-active current:fg-level-1",
 ].join(" ");
 

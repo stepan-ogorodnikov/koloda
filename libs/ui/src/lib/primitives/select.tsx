@@ -60,7 +60,7 @@ export function SelectRoot<T extends object>({ variants, ...props }: SelectRootP
 
 const selectButton = tv({
   extend: button,
-  base: "justify-between w-full min-w-0",
+  base: "justify-between w-full min-w-0 font-normal",
   variants: {
     layout: { form: [formLayoutSectionContent, "flex-row items-center max-w-60"] },
     size: { default: "h-10 p-2" },

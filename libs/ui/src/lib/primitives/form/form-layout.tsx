@@ -37,7 +37,7 @@ export function FormLayoutSection({ variants, term, children, ...props }: FormLa
   return <div className={formLayoutSection(variants)} {...props}>{children}</div>;
 }
 
-export const formLayoutSectionTerm = "flex tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold";
+export const formLayoutSectionTerm = "flex tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold fg-level-2";
 
 type FormLayoutSectionTermProps = HTMLAttributes<HTMLLegendElement>;
 
