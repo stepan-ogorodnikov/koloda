@@ -37,7 +37,7 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
 
   return (
     <AnimatePresence mode="wait">
-      <Fade className=" self-stretch flex flex-col gap-6" key={state.content.index}>
+      <Fade className="self-stretch flex flex-col items-center gap-6" key={state.content.index}>
         {state.content.template.layout.map((item, i) => (
           <LessonCardField
             params={item}

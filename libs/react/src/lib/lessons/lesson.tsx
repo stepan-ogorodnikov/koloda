@@ -71,7 +71,7 @@ export function Lesson() {
       onOpenChange={handleIsOpenChange}
       isKeyboardDismissDisabled
     >
-      <Dialog.Modal variants={{ size: "large" }} isKeyboardDismissDisabled>
+      <Dialog.Modal variants={{ size: "main" }} isKeyboardDismissDisabled>
         <Dialog.Body>
           <form
             className="grow flex flex-col"

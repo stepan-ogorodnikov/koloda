@@ -7,7 +7,6 @@ export function LessonCardFieldMarkdown({ value }: FieldComponentProps) {
 
   return (
     <motion.div
-      className="prose dark:prose-invert max-w-none text-left"
       dangerouslySetInnerHTML={{ __html: html }}
       layout
     />

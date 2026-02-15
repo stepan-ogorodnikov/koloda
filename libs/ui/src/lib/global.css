@@ -286,5 +286,29 @@
   }
 }
 
+@utility prose {
+  --tw-prose-body: var(--fg-level-1);
+  --tw-prose-headings: var(--fg-level-1);
+  --tw-prose-lead: var(--fg-level-1);
+  --tw-prose-links: var(--fg-link);
+  --tw-prose-bold: var(--fg-level-1);
+  --tw-prose-counters: var(--fg-level-2);
+  --tw-prose-bullets: var(--fg-level-2);
+  --tw-prose-hr: var(--border-main);
+  --tw-prose-quotes: var(--fg-level-1);
+  --tw-prose-quote-borders: var(--border-main);
+  --tw-prose-captions: var(--fg-level-2);
+  --tw-prose-code: var(--fg-level-2);
+  --tw-prose-pre-code: var(--fg-level-2);
+  --tw-prose-pre-bg: var(--bg-level-2);
+  --tw-prose-th-borders: var(--border-table);
+  --tw-prose-td-borders: var(--border-table);
+}
+
+.prose code::before,
+.prose code::after {
+  content: none;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant motion (&:where(.motion, .motion *));

@@ -6,12 +6,12 @@ import { fieldTypeComponents } from "./lesson-card-field-types";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
 const lessonCardContentField = tv({
-  base: "w-full text-xl text-center",
+  base: "flex flex-col w-full prose tb:prose-xl",
   variants: {
     operation: {
       display: "",
       reveal: "opacity-0 data-is-submitted:opacity-100 animate-opacity",
-      type: "flex flex-col",
+      type: "",
     },
   },
 });

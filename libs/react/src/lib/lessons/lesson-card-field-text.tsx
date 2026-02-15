@@ -1,7 +1,9 @@
 import { Fade, TextField } from "@koloda/ui";
 import { AnimatePresence, motion } from "motion/react";
-import { LessonCardFieldTextDiff, lessonCardFieldValue } from "./lesson-card-field-text-diff";
+import { LessonCardFieldTextDiff } from "./lesson-card-field-text-diff";
 import type { FieldComponentProps } from "./lesson-card-field-types";
+
+const lessonCardFieldValue = "break-all whitespace-pre-wrap text-center";
 
 export function LessonCardFieldText(
   { value, operation, fieldId, fieldTitle, userValue, isSubmitted, isFirstInput, dispatch }: FieldComponentProps,
@@ -11,12 +13,12 @@ export function LessonCardFieldText(
       <AnimatePresence mode="wait">
         {isSubmitted
           ? (
-            <Fade key="diff">
+            <Fade className={lessonCardFieldValue} key="diff">
               <LessonCardFieldTextDiff userValue={userValue} correctValue={value} />
             </Fade>
           )
           : (
-            <Fade key="input">
+            <Fade className={lessonCardFieldValue} key="input">
               <TextField
                 aria-label={fieldTitle}
                 value={userValue}
@@ -29,7 +31,7 @@ export function LessonCardFieldText(
                   }
                 }}
               >
-                <TextField.TextArea variants={{ class: lessonCardFieldValue }} />
+                <TextField.TextArea />
               </TextField>
             </Fade>
           )}
