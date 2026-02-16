@@ -21,8 +21,9 @@ import { db, migrations, MIGRATIONS_TABLE } from "./db";
  * @returns "blank" if no migrations have been applied, "ok" otherwise
  */
 export async function getStatus() {
-  const appliedMigrations = await getMigrations();
+  const appliedMigrations = await getAppliedMigrations();
   if (appliedMigrations.length === 0) return "blank";
+  await migrate();
   return "ok";
 }
 
@@ -30,7 +31,7 @@ export async function getStatus() {
  * Retrieves the list of applied database migrations
  * @returns Array of migration records
  */
-async function getMigrations() {
+async function getAppliedMigrations() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
     	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "__migrations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
@@ -47,7 +48,7 @@ async function getMigrations() {
  * Applies missing database migrations
  */
 export async function migrate() {
-  const appliedMigrations = await getMigrations();
+  const appliedMigrations = await getAppliedMigrations();
 
   await db.transaction(async (tx) => {
     for (const [name, { default: migration }] of migrations) {
