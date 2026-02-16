@@ -39,7 +39,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
           <AnimatePresence mode="wait">
             {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}
             {view === "table" && (
-              <CardsTable deckId={deckId} templateId={data.templateId} controlsNode={portalContainer} key="table" />
+              <CardsTable deckId={deckId} controlsNode={portalContainer} key="table" />
             )}
           </AnimatePresence>
         )}

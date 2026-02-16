@@ -1,4 +1,4 @@
-import { cardsQueryKeys, queriesAtom, QueryState, templatesQueryKeys } from "@koloda/react";
+import { cardsQueryKeys, queriesAtom } from "@koloda/react";
 import type { Card, Deck, Template } from "@koloda/srs";
 import { SearchField, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -18,6 +18,8 @@ import { createPortal } from "react-dom";
 import { CardsTableCell } from "./cards-table-cell";
 import { CardsTableColumnsVisibility } from "./cards-table-columns-visibility";
 import { CardsTableFilters } from "./cards-table-filters";
+import { getCardsTableContentColumns } from "./cards-table-utility";
+import { useCardsTemplates } from "./use-cards-templates";
 
 const PAGE_SIZES = [15, 20, 25];
 
@@ -27,101 +29,108 @@ type CardState = NonNullable<Card["state"]>;
 
 type CardsTableProps = {
   deckId: Deck["id"];
-  templateId: Template["id"];
   controlsNode: HTMLDivElement | null;
 };
 
-export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps) {
+export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
-  const { getCardsQuery, getTemplateQuery } = useAtomValue(queriesAtom);
+  const { getCardsQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ createdAt: false, updatedAt: false });
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     state: [] as CardState[],
     dueAt: { isOverdue: false, isNotDue: false },
+    templateIds: [] as Template["id"][],
   });
   const [searchValue, setSearchValue] = useState("");
   const { data: cards = [] } = useQuery({ queryKey: cardsQueryKeys.deck({ deckId }), ...getCardsQuery({ deckId }) });
-  const query = useQuery({ queryKey: templatesQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
-  const templateData = query.data;
+  const { templates, templateMapRef, isReady } = useCardsTemplates(cards);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const columns = useMemo<ColumnDef<Card>[]>(
-    () =>
-      [
-        (templateData?.content?.fields || []).map((field) => (
-          {
-            accessorFn: (row: Card) => row.content[field.id]?.text,
-            id: `content.${field.id}.text`,
-            header: field.title,
-            cell,
-          }
-        )),
-        {
-          accessorKey: "state",
-          header: _(msg`cards.table.columns.state`),
-          enableGlobalFilter: false,
-          filterFn: ((row, columnId, filterValue: CardState[]) =>
-            filterValue.length === 0 || filterValue.includes(row.getValue(columnId) as CardState)) as FilterFn<Card>,
-          size: 8,
-          cell,
+    () => [
+      ...getCardsTableContentColumns(templates).map((field) => ({
+        accessorFn: (row: Card) => {
+          const template = templateMapRef.current.get(row.templateId);
+          const fieldId = field.getFieldId(template);
+          return fieldId ? (row.content[fieldId]?.text ?? "") : "";
         },
-        {
-          accessorKey: "dueAt",
-          header: _(msg`cards.table.columns.due-at`),
-          enableGlobalFilter: false,
-          filterFn: ((row, columnId, filterValue: CardsTableFilters["dueAt"]) => {
-            const value = row.getValue(columnId) as string | null;
-            const isDue = value ? (new Date(value)).getTime() <= (new Date()).getTime() : false;
-            const isNotDue = !value || new Date(value) > new Date();
-            if (filterValue.isOverdue && filterValue.isNotDue) return true;
-            if (filterValue.isOverdue) return isDue;
-            if (filterValue.isNotDue) return isNotDue;
-            return true;
-          }) as FilterFn<Card>,
-          size: 14,
-          cell,
-        },
-        {
-          accessorKey: "createdAt",
-          header: _(msg`cards.table.columns.created-at`),
-          enableGlobalFilter: false,
-          size: 14,
-          cell,
-        },
-        {
-          accessorKey: "updatedAt",
-          header: _(msg`cards.table.columns.updated-at`),
-          enableGlobalFilter: false,
-          size: 14,
-          cell,
-        },
-        {
-          id: "edit",
-          header: "",
-          enableHiding: false,
-          enableGlobalFilter: false,
-          minSize: 4,
-          size: 4,
-          cell,
-        },
-        {
-          id: "delete",
-          header: "",
-          enableHiding: false,
-          enableGlobalFilter: false,
-          minSize: 4,
-          size: 4,
-          cell,
-        },
-      ].flat(),
-    [_, templateData?.content?.fields],
+        id: `content.field.${field.index}`,
+        header: field.header,
+        cell,
+      })),
+      {
+        accessorKey: "state",
+        header: _(msg`cards.table.columns.state`),
+        enableGlobalFilter: false,
+        filterFn:
+          ((row, columnId, filterValue: CardState[]) =>
+            filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<Card>,
+        size: 8,
+        cell,
+      },
+      {
+        accessorKey: "dueAt",
+        header: _(msg`cards.table.columns.due-at`),
+        enableGlobalFilter: false,
+        filterFn: ((row, columnId, filterValue: { isOverdue: boolean; isNotDue: boolean }) => {
+          const value = row.getValue(columnId) as string | null;
+          const isDue = value ? (new Date(value)).getTime() <= (new Date()).getTime() : false;
+          const isNotDue = !value || new Date(value) > new Date();
+          if (filterValue.isOverdue && filterValue.isNotDue) return true;
+          if (filterValue.isOverdue) return isDue;
+          if (filterValue.isNotDue) return isNotDue;
+          return true;
+        }) as FilterFn<Card>,
+        size: 14,
+        cell,
+      },
+      {
+        accessorKey: "createdAt",
+        header: _(msg`cards.table.columns.created-at`),
+        enableGlobalFilter: false,
+        size: 14,
+        cell,
+      },
+      {
+        accessorKey: "updatedAt",
+        header: _(msg`cards.table.columns.updated-at`),
+        enableGlobalFilter: false,
+        size: 14,
+        cell,
+      },
+      {
+        id: "edit",
+        header: "",
+        enableHiding: false,
+        enableGlobalFilter: false,
+        minSize: 4,
+        size: 4,
+        cell,
+      },
+      {
+        id: "delete",
+        header: "",
+        enableHiding: false,
+        enableGlobalFilter: false,
+        minSize: 4,
+        size: 4,
+        cell,
+      },
+    ],
+    [_, templates, templateMapRef],
   );
+
+  const filteredCards = useMemo(() => (
+    filters.templateIds.length === 0
+      ? cards
+      : cards.filter((card) => filters.templateIds.includes(card.templateId))
+  ), [cards, filters.templateIds]);
 
   const table = useReactTable({
     columns,
-    data: cards,
+    data: filteredCards,
     state: {
       pagination,
       columnVisibility,
@@ -146,11 +155,13 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
     },
   });
 
+  if (!isReady) return null;
+
   return (
     <>
       {controlsNode && createPortal(
         <div className="grow flex flex-row items-center gap-4">
-          <CardsTableFilters filters={filters} setFilters={setFilters} />
+          <CardsTableFilters filters={filters} setFilters={setFilters} templates={templates} />
           <CardsTableColumnsVisibility
             columns={table.getAllColumns()}
             onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
@@ -180,17 +191,13 @@ export function CardsTable({ deckId, templateId, controlsNode }: CardsTableProps
         </div>,
         controlsNode,
       )}
-      <QueryState query={query}>
-        {() => (
-          <div className="flex flex-col gap-4" ref={wrapperRef}>
-            <Table.Root>
-              <Table.Head table={table} />
-              <Table.Body table={table} />
-            </Table.Root>
-            <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
-          </div>
-        )}
-      </QueryState>
+      <div className="flex flex-col gap-4" ref={wrapperRef}>
+        <Table.Root>
+          <Table.Head table={table} />
+          <Table.Body table={table} />
+        </Table.Root>
+        <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
+      </div>
     </>
   );
 }
