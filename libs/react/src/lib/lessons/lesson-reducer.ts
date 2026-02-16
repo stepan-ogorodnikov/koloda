@@ -23,6 +23,8 @@ export const LESSON_PROGRESS_STATES = {
   3: "learn",
 } as const;
 
+const MAX_REVIEW_TIME_MS = 60 * 60 * 1000;
+
 type LessonResultUploadStatus = "success" | "error";
 
 export type LessonReducerState = {
@@ -55,6 +57,8 @@ export type LessonReducerState = {
   content?: {
     // index of current card to study (in state.data.cards)
     index: number;
+    // timestamp when the card was first shown (for tracking review time)
+    startedAt: number;
     // form data for certain operations, e.g., 'type'
     form: {
       data: Record<number | string, string>;
@@ -292,6 +296,7 @@ function moveToNextCard(draft: LessonReducerState) {
 
   draft.content = {
     index,
+    startedAt: Date.now(),
     form: {
       firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
       data: {},
@@ -331,7 +336,13 @@ function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpda
 function gradeSelected(draft: LessonReducerState, payload: number) {
   if (draft.content && draft.data) {
     const grade = draft.content.grades[payload];
-    const review = { ...createReviewFromReviewFSRS(grade.log), cardId: draft.content.card.id, isIgnored: false };
+    const time = Math.min(Date.now() - draft.content.startedAt, MAX_REVIEW_TIME_MS);
+    const review = {
+      ...createReviewFromReviewFSRS(grade.log),
+      cardId: draft.content.card.id,
+      isIgnored: false,
+      time,
+    };
     const card = createCardFromCardFSRS(grade.card);
 
     const { index } = draft.content;

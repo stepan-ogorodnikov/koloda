@@ -180,6 +180,8 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
 }
 
 pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(), AppError> {
+    data.validate()?;
+
     let now = get_current_timestamp()?;
 
     db.with_transaction(|tx| {
@@ -208,8 +210,8 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
         tx.execute(
             r#"
             INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, is_ignored, created_at)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+                                scheduled_days, learning_steps, time, is_ignored, created_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
             "#,
             rusqlite::params![
                 data.review.card_id,
@@ -220,6 +222,7 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
                 data.review.difficulty,
                 data.review.scheduled_days,
                 data.review.learning_steps,
+                data.review.time,
                 data.review.is_ignored,
                 now
             ],

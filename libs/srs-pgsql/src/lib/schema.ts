@@ -103,6 +103,7 @@ export const reviews = table("reviews", {
   difficulty: real().notNull().default(0),
   scheduledDays: integer("scheduled_days").notNull().default(0),
   learningSteps: integer().notNull().default(0),
+  time: integer().notNull().default(0),
   isIgnored: boolean("is_ignored").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

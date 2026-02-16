@@ -22,8 +22,9 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
         difficulty: row.get(6)?,
         scheduled_days: row.get(7)?,
         learning_steps: row.get(8)?,
-        is_ignored: row.get(9)?,
-        created_at: row.get(10)?,
+        time: row.get(9)?,
+        is_ignored: row.get(10)?,
+        created_at: row.get(11)?,
     })
 }
 
@@ -32,7 +33,7 @@ pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, A
         let mut stmt = conn.prepare(
             r#"
             SELECT id, card_id, rating, state, due_at, stability, difficulty,
-                   scheduled_days, learning_steps, is_ignored, created_at
+                   scheduled_days, learning_steps, time, is_ignored, created_at
             FROM reviews
             WHERE card_id = ?1
             "#,

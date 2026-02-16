@@ -93,6 +93,7 @@ export const reviews = table("reviews", {
   difficulty: real("difficulty").notNull().default(0),
   scheduledDays: integer("scheduled_days").notNull().default(0),
   learningSteps: integer("learning_steps").notNull().default(0),
+  time: integer("time").notNull().default(0),
   isIgnored: integer("is_ignored", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" })
     .$defaultFn(() => new Date())

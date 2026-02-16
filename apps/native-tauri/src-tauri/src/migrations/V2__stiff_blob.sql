@@ -1,0 +1,1 @@
+ALTER TABLE reviews ADD time integer DEFAULT 0 NOT NULL;

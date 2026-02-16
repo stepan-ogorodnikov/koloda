@@ -19,6 +19,7 @@ pub struct Review {
     pub difficulty: f64,
     pub scheduled_days: i32,
     pub learning_steps: i32,
+    pub time: i32,
     pub is_ignored: bool,
     #[serde(serialize_with = "serialize_timestamp")]
     pub created_at: i64,
@@ -36,6 +37,7 @@ pub struct InsertReviewData {
     pub difficulty: f64,
     pub scheduled_days: i32,
     pub learning_steps: i32,
+    pub time: i32,
     pub is_ignored: bool,
 }
 

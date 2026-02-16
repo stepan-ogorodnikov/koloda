@@ -19,6 +19,7 @@ export const reviewValidation = z.object({
   difficulty: z.number().default(0),
   scheduledDays: z.int().default(0),
   learningSteps: z.int().default(0),
+  time: z.int().default(0),
   isIgnored: z.boolean().default(false),
   createdAt: z.date(),
 });
