@@ -33,6 +33,7 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT: &str = "validation.settings-learning.day-starts-at";
 
     pub const VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS: &str = "validation.settings-hotkeys.duplicate-keys";
+    pub const VALIDATION_SETTINGS_HOTKEYS_INVALID_KEY: &str = "validation.settings-hotkeys.invalid-key";
 
     pub const VALIDATION_SETTINGS_INTERFACE_LANGUAGE: &str = "validation.settings-interface.language";
     pub const VALIDATION_SETTINGS_INTERFACE_THEME: &str = "validation.settings-interface.theme";
@@ -53,6 +54,22 @@ pub mod error_codes {
     pub const VALIDATION_TEMPLATES_DELETE_LOCKED: &str = "validation.templates.delete-locked";
 
     pub const VALIDATION_CARDS_CONTENT_FIELD_EMPTY: &str = "validation.cards.content.field-empty";
+
+    pub const VALIDATION_REVIEWS_RATING: &str = "validation.reviews.rating";
+    pub const VALIDATION_REVIEWS_STATE: &str = "validation.reviews.state";
+    pub const VALIDATION_REVIEWS_STABILITY: &str = "validation.reviews.stability";
+    pub const VALIDATION_REVIEWS_DIFFICULTY: &str = "validation.reviews.difficulty";
+    pub const VALIDATION_REVIEWS_SCHEDULED_DAYS: &str = "validation.reviews.scheduled-days";
+    pub const VALIDATION_REVIEWS_LEARNING_STEPS: &str = "validation.reviews.learning-steps";
+    pub const VALIDATION_REVIEWS_TIME: &str = "validation.reviews.time";
+
+    pub const VALIDATION_CARDS_PROGRESS_STATE: &str = "validation.cards-progress.state";
+    pub const VALIDATION_CARDS_PROGRESS_STABILITY: &str = "validation.cards-progress.stability";
+    pub const VALIDATION_CARDS_PROGRESS_DIFFICULTY: &str = "validation.cards-progress.difficulty";
+    pub const VALIDATION_CARDS_PROGRESS_SCHEDULED_DAYS: &str = "validation.cards-progress.scheduled-days";
+    pub const VALIDATION_CARDS_PROGRESS_LEARNING_STEPS: &str = "validation.cards-progress.learning-steps";
+    pub const VALIDATION_CARDS_PROGRESS_REPS: &str = "validation.cards-progress.reps";
+    pub const VALIDATION_CARDS_PROGRESS_LAPSES: &str = "validation.cards-progress.lapses";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

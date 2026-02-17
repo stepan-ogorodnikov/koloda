@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::templates::TemplateField;
+use crate::app::error::AppError;
 use crate::app::utility::{default_now, serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::cards::{Card, UpdateCardProgress};
 use crate::domain::decks::Deck;
@@ -76,6 +77,13 @@ pub struct GetLessonDataParams {
 pub struct LessonResultData {
     pub card: UpdateCardProgress,
     pub review: InsertReviewData,
+}
+
+impl LessonResultData {
+    pub fn validate(&self) -> Result<(), AppError> {
+        self.card.validate()?;
+        self.review.validate()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
