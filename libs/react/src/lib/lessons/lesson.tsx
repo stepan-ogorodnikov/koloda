@@ -21,7 +21,7 @@ export type LessonAtomValue = {
 
 export const lessonAtom = atom<LessonAtomValue | null>(null);
 
-const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
+export const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
 export function Lesson() {
   const queryClient = useQueryClient();

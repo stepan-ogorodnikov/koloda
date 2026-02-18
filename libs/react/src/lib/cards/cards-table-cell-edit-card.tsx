@@ -19,7 +19,7 @@ export function CardsTableCellEditCard({ card }: CardsTableCellEditCardProps) {
         aria-label={_(msg`edit-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <Pencil className="size-5 stroke-1.5" />
+          <Pencil className="size-5 stroke-1.5" aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Overlay>

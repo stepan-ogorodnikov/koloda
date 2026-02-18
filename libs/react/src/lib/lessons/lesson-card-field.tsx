@@ -1,3 +1,4 @@
+import type { CardPreviewReducerAction } from "@koloda/react";
 import type { LessonTemplateLayoutItem } from "@koloda/srs";
 import { LayoutGroup } from "motion/react";
 import type { ActionDispatch } from "react";
@@ -19,7 +20,7 @@ const lessonCardContentField = tv({
 type LessonCardFieldProps = {
   params: LessonTemplateLayoutItem;
   content: LessonReducerState["content"];
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
+  dispatch: ActionDispatch<[action: LessonReducerAction]> | ActionDispatch<[action: CardPreviewReducerAction]>;
 };
 
 export function LessonCardField({ params: { field, operation }, content, dispatch }: LessonCardFieldProps) {

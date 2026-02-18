@@ -9,6 +9,8 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { LessonCardField } from "./lesson-card-field";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
+export const lessonStudying = "self-stretch flex flex-col items-center gap-6";
+
 type LessonStudyingProps = {
   state: LessonReducerState;
   dispatch: ActionDispatch<[action: LessonReducerAction]>;
@@ -37,7 +39,7 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
 
   return (
     <AnimatePresence mode="wait">
-      <Fade className="self-stretch flex flex-col items-center gap-6" key={state.content.index}>
+      <Fade className={lessonStudying} key={state.content.index}>
         {state.content.template.layout.map((item, i) => (
           <LessonCardField
             params={item}

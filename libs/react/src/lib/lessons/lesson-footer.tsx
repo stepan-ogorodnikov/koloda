@@ -2,7 +2,8 @@ import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
-import { type ActionDispatch, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import type { ActionDispatch, PropsWithChildren } from "react";
 import { LessonCardGrades } from "./lesson-card-grades";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 import { terminationDialogOverlay } from "./lesson-termination";
@@ -24,7 +25,7 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
   }, [state?.content?.form?.firstInputFieldId, state?.content?.form?.isSubmitted]);
 
   return (
-    <Dialog.Footer variants={{ justify: "center", class: "relative min-h-20" }}>
+    <LessonFooterLayout>
       <AnimatePresence mode="wait">
         {!isSubmitted && (
           <Fade key="submit">
@@ -74,6 +75,14 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
       <AnimatePresence>
         {state.meta.isTerminationRequested && <Fade className={terminationDialogOverlay} key="overlay" />}
       </AnimatePresence>
+    </LessonFooterLayout>
+  );
+}
+
+export function LessonFooterLayout({ children }: PropsWithChildren) {
+  return (
+    <Dialog.Footer variants={{ justify: "center", class: "relative min-h-20" }}>
+      {children}
     </Dialog.Footer>
   );
 }

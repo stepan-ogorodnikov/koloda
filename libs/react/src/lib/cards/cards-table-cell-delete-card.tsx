@@ -36,7 +36,7 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
         aria-label={_(msg`delete-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <Trash2 className="size-5 stroke-1.75" />
+          <Trash2 className="size-5 stroke-1.75" aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Popover placement="left">

@@ -101,6 +101,15 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         cell,
       },
       {
+        id: "preview",
+        header: "",
+        enableHiding: false,
+        enableGlobalFilter: false,
+        minSize: 4,
+        size: 4,
+        cell,
+      },
+      {
         id: "edit",
         header: "",
         enableHiding: false,

@@ -13,7 +13,7 @@ import type {
   TemplateField,
   TemplateLayoutItem,
 } from "@koloda/srs";
-import { throwKnownError } from "@koloda/srs";
+import { convertTemplateToLessonTemplate, throwKnownError } from "@koloda/srs";
 import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { DB } from "./db";
@@ -151,12 +151,7 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
     `);
     const templates = result.rows as Template[];
 
-    return templates.map((template) => {
-      const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => (
-        { ...entry, field: template.content.fields.find((x) => (x.id === entry.field)) }
-      ));
-      return { ...template, layout };
-    }) as LessonTemplate[];
+    return templates.map(convertTemplateToLessonTemplate);
   });
 }
 
