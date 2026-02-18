@@ -51,3 +51,13 @@ export type LessonResultData = {
   card: Card;
   review: InsertReviewData;
 };
+
+/**
+ * Converts template to a LessonTemplate format for lesson and card preview
+ */
+export function convertTemplateToLessonTemplate(template: Template): LessonTemplate {
+  const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => (
+    { ...entry, field: template.content.fields.find((x) => (x.id === entry.field)) }
+  ));
+  return { ...template, layout };
+}
