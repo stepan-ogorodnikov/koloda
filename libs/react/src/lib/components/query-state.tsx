@@ -5,12 +5,12 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 
 type QueryStateProps<TData> = {
-  query: Pick<UseQueryResult<TData>, "data" | "error" | "isLoading" | "refetch">;
+  query: UseQueryResult<TData>;
   children: (data: NonNullable<TData>) => ReactNode;
 };
 
 export function QueryState<TData>({ query, children }: QueryStateProps<TData>) {
-  const { data, error, isLoading, refetch } = query;
+  const { data, error, isLoading, isSuccess, refetch } = query;
 
   return (
     <AnimatePresence mode="wait">
@@ -24,7 +24,7 @@ export function QueryState<TData>({ query, children }: QueryStateProps<TData>) {
           <QueryLoading />
         </Fade>
       )}
-      {!isLoading && !error && data && (
+      {!isLoading && !error && isSuccess && (
         <Fade key="data">
           {children(data as NonNullable<TData>)}
         </Fade>

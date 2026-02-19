@@ -39,7 +39,7 @@ import { type QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 
 export type Queries = {
-  getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | undefined>;
+  getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | null>;
   setSettingsMutation: <T extends SettingsName>() => UseMutationOptions<
     AllowedSettings<T> | undefined,
     AppError,

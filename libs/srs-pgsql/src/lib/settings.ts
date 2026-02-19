@@ -11,16 +11,16 @@ import { settings } from "./schema";
  * @param name - The name of the settings to retrieve
  * @returns The settings object if found, undefined otherwise
  */
-export async function getSettings<T extends SettingsName>(
-  db: DB,
-  name: SettingsName,
-): Promise<AllowedSettings<T> | undefined> {
+export async function getSettings<T extends SettingsName>(db: DB, name: SettingsName) {
   return throwKnownError("db.get", async () => {
     const result = await db
       .select()
       .from(settings)
       .where(eq(settings.name, name))
       .limit(1);
+
+    if (!result[0]) return null;
+
     // validate to inject default values if value is missing
     // e.g. after introducing a new setting default value is returned until explicitly set
     const { data, success } = allowedSettings[name].safeParse(result[0].content);

@@ -1,6 +1,7 @@
 import type { LessonReducerState, ReducerAction } from "@koloda/react";
 import { dispatchReducerAction } from "@koloda/react";
-import { type Card, convertTemplateToLessonTemplate, type Template } from "@koloda/srs";
+import type { Card, Template } from "@koloda/srs";
+import { convertTemplateToLessonTemplate } from "@koloda/srs";
 import { produce } from "immer";
 
 export type CardPreviewReducerState = {
