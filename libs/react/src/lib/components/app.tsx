@@ -38,8 +38,8 @@ export function App({ children }: PropsWithChildren) {
           {appMenu.map(({ cn, to, t, Icon }) => <Dashboard.NavLink cn={cn} to={to} msg={t} Icon={Icon} key={to} />)}
         </Dashboard.Nav>
         <Dashboard.Controls>
-          <ThemeSelect variants={{ style: "ghost" }} withChevron={false} />
-          <LanguageSelect variants={{ style: "ghost" }} withChevron={false} />
+          <ThemeSelect buttonVariants={{ style: "ghost" }} withChevron={false} />
+          <LanguageSelect buttonVariants={{ style: "ghost" }} withChevron={false} />
         </Dashboard.Controls>
       </Dashboard.Aside>
       <Dashboard.Content>

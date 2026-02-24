@@ -2,14 +2,19 @@ import { Button, button, formLayoutSection, formLayoutSectionContent, Label, pop
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import { Check, ChevronDown } from "lucide-react";
-import type { PropsWithChildren, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
+  Autocomplete as ReactAriaAutocomplete,
   ListBox,
   ListBoxItem,
+  ListLayout,
   Select as ReactAriaSelect,
   SelectValue as ReactAriaSelectValue,
+  useFilter,
+  Virtualizer,
 } from "react-aria-components";
 import type {
+  AutocompleteProps as ReactAriaAutocompleteProps,
   ListBoxItemProps,
   ListBoxProps,
   PopoverProps,
@@ -17,27 +22,66 @@ import type {
   SelectValueProps as ReactAriaSelectValueProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { SearchField } from "./search-field";
 
 export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & {
+  buttonVariants?: SelectButtonProps["variants"];
+  popoverVariants?: SelectPopoverProps["variants"];
   withChevron?: boolean;
   label?: ReactNode;
   icon?: ReactNode;
   items?: Iterable<T>;
+  autocomplete?: boolean;
+  autocompleteFilter?: ReactAriaAutocompleteProps<T>["filter"];
+  searchLabel?: string;
+  searchPlaceholder?: string;
+  virtualized?: boolean;
   onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
 
-export function Select<T extends object>(
-  { variants, withChevron, label, icon, items, children, ...props }: SelectProps<T>,
-) {
+export function Select<T extends object>({
+  variants,
+  buttonVariants,
+  popoverVariants,
+  withChevron,
+  label,
+  icon,
+  items,
+  autocomplete,
+  autocompleteFilter,
+  searchLabel,
+  searchPlaceholder,
+  virtualized,
+  children,
+  ...props
+}: SelectProps<T>) {
+  const { contains } = useFilter({ sensitivity: "base" });
+
   return (
     <Select.Root variants={variants} {...props}>
       {label && <Label variants={variants?.layout === "form" ? { layout: "form" } : {}}>{label}</Label>}
-      <Select.Button variants={variants} withChevron={withChevron} icon={icon} />
-      <Select.Popover>
-        <Select.ListBox items={items}>
-          {children}
-        </Select.ListBox>
+      <Select.Button variants={{ layout: variants?.layout, ...buttonVariants }} withChevron={withChevron} icon={icon} />
+      <Select.Popover variants={popoverVariants}>
+        {autocomplete
+          ? (
+            <Select.Autocomplete filter={autocompleteFilter ?? contains}>
+              <SearchField variants={{ class: "w-full" }} aria-label={searchLabel} autoFocus>
+                <SearchField.Group variants={{ style: "ghost" }}>
+                  <SearchField.Icon />
+                  <SearchField.Input placeholder={searchPlaceholder} />
+                </SearchField.Group>
+              </SearchField>
+              <Select.ListBox items={items} virtualized={virtualized}>
+                {children}
+              </Select.ListBox>
+            </Select.Autocomplete>
+          )
+          : (
+            <Select.ListBox items={items} virtualized={virtualized}>
+              {children}
+            </Select.ListBox>
+          )}
       </Select.Popover>
     </Select.Root>
   );
@@ -68,9 +112,10 @@ const selectButton = tv({
   defaultVariants: { style: "bordered" },
 });
 
-export type SelectButtonProps = TWVProps<typeof selectButton> & ButtonProps & PropsWithChildren & {
+export type SelectButtonProps = TWVProps<typeof selectButton> & Omit<ButtonProps, "children"> & {
   withChevron?: boolean;
   icon?: ReactNode;
+  children?: ReactNode;
 };
 
 function SelectButton({ variants, withChevron = true, icon, children, ...props }: SelectButtonProps) {
@@ -95,8 +140,25 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
   );
 }
 
+const selectValue = tv({
+  base: "flex flex-row items-center gap-2 truncate",
+  variants: {
+    isPlaceholder: {
+      true: "fg-disabled",
+    },
+  },
+});
+
 function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
-  return <ReactAriaSelectValue className="flex flex-row items-center gap-2 truncate" {...props} />;
+  return (
+    <ReactAriaSelectValue {...props}>
+      {(state) => (
+        <span className={selectValue({ isPlaceholder: state.isPlaceholder })}>
+          {typeof props.children === "function" ? props.children(state) : state.defaultChildren}
+        </span>
+      )}
+    </ReactAriaSelectValue>
+  );
 }
 
 const selectPopover = tv({
@@ -110,17 +172,41 @@ function SelectPopover({ variants, ...props }: SelectPopoverProps) {
   return <Popover className={selectPopover(variants)} {...props} />;
 }
 
-const selectListBox = tv({ base: "py-1 rounded-lg" });
+const selectListBox = tv({ base: "py-1 rounded-lg max-h-96 overflow-y-auto overflow-x-hidden" });
+
+type SelectListBoxProps<T extends object> = ListBoxProps<T> & { virtualized?: boolean };
 
 function SelectListBox<T extends object>({
   children,
+  renderEmptyState,
+  virtualized,
   ...props
-}: ListBoxProps<T>) {
+}: SelectListBoxProps<T>) {
+  if (virtualized) {
+    return (
+      <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
+        <ListBox
+          className={selectListBox({ class: "overflow-x-hidden" })}
+          renderEmptyState={renderEmptyState}
+          {...props}
+        >
+          {children}
+        </ListBox>
+      </Virtualizer>
+    );
+  }
+
   return (
-    <ListBox className={selectListBox()} {...props}>
+    <ListBox className={selectListBox()} renderEmptyState={renderEmptyState} {...props}>
       {children}
     </ListBox>
   );
+}
+
+export type SelectAutocompleteProps<T extends object> = ReactAriaAutocompleteProps<T>;
+
+function SelectAutocomplete<T extends object>(props: SelectAutocompleteProps<T>) {
+  return <ReactAriaAutocomplete {...props} />;
 }
 
 const selectListBoxItem = tv({
@@ -148,5 +234,6 @@ Select.Root = SelectRoot;
 Select.Button = SelectButton;
 Select.Value = SelectValue;
 Select.Popover = SelectPopover;
+Select.Autocomplete = SelectAutocomplete;
 Select.ListBox = SelectListBox;
 Select.ListBoxItem = SelectListBoxItem;

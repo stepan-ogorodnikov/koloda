@@ -1,8 +1,8 @@
-import { Button, FieldGroup, fieldGroup, TextField } from "@koloda/ui";
-import type { ButtonProps, FieldGroupProps, TextFieldInputProps, TWVProps } from "@koloda/ui";
+import { Button, FieldGroup, fieldGroup } from "@koloda/ui";
+import type { ButtonProps, FieldGroupProps, TWVProps } from "@koloda/ui";
 import { Search as SearchIcon, X } from "lucide-react";
-import { SearchField as ReactAriaSearchField } from "react-aria-components";
-import type { SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
+import { Input, SearchField as ReactAriaSearchField } from "react-aria-components";
+import type { InputProps, SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const searchField = tv({ base: "flex" });
@@ -15,7 +15,7 @@ export function SearchField({ variants, ...props }: SearchFieldProps) {
 
 export const searchFieldGroup = tv({
   extend: fieldGroup,
-  base: "px-1",
+  base: "w-full px-2",
   defaultVariants: {
     style: "input",
     size: "default",
@@ -25,20 +25,24 @@ export const searchFieldGroup = tv({
 
 export type SearchFieldGroupProps = TWVProps<typeof searchFieldGroup> & FieldGroupProps;
 
-export function SearchFieldGroup({ variants, ...props }: SearchFieldGroupProps) {
+function SearchFieldGroup({ variants, ...props }: SearchFieldGroupProps) {
   return <FieldGroup className={searchFieldGroup(variants)} role="group" {...props} />;
 }
 
-const searchFieldIcon = "size-4 min-w-4 ml-1 fg-inactive pointer-events-none";
+export const searchFieldInput = tv({
+  base: "w-full min-w-0 px-2 border-0 bg-transparent outline-none",
+});
+
+export type SearchFieldInputProps = InputProps & TWVProps<typeof searchFieldInput>;
+
+export function SearchFieldInput({ variants, ...props }: SearchFieldInputProps) {
+  return <Input className={searchFieldInput(variants)} {...props} />;
+}
+
+const searchFieldIcon = "size-4 min-w-4 fg-inactive pointer-events-none";
 
 function SearchFieldIcon() {
   return <SearchIcon className={searchFieldIcon} />;
-}
-
-export type SearchFieldInputProps = TextFieldInputProps;
-
-export function SearchFieldInput(props: SearchFieldInputProps) {
-  return <TextField.Input variants={{ style: "inline", class: "px-1 no-focus-ring" }} {...props} />;
 }
 
 export type SearchFieldClearButtonProps = ButtonProps & {

@@ -52,8 +52,8 @@ export function DemoSetup() {
         </OverlayFrameFooter>
       </div>
       <div className="flex flex-row gap-2">
-        <ThemeSelect variants={{ style: "ghost" }} withChevron={false} />
-        <LanguageSelect variants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <ThemeSelect buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <LanguageSelect buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
       </div>
     </div>
   );
