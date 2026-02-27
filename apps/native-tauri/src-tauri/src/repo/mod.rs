@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod algorithms;
 pub mod cards;
 pub mod decks;

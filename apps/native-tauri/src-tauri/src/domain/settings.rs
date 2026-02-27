@@ -6,6 +6,7 @@ use serde_json::Value;
 use strum_macros::{Display, EnumString};
 
 use crate::app::error::{error_codes, AppError};
+use crate::domain::settings_ai::AISettings;
 use crate::domain::settings_hotkeys::HotkeysSettings;
 use crate::domain::settings_interface::InterfaceSettings;
 use crate::domain::settings_learning::LearningSettings;
@@ -17,6 +18,7 @@ pub enum SettingsName {
     Interface,
     Learning,
     Hotkeys,
+    Ai,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,6 +69,10 @@ impl SettingsName {
             }
             SettingsName::Hotkeys => {
                 let settings: HotkeysSettings = serde_json::from_value(content.clone())?;
+                settings.validate()
+            }
+            SettingsName::Ai => {
+                let settings: AISettings = serde_json::from_value(content.clone())?;
                 settings.validate()
             }
         }

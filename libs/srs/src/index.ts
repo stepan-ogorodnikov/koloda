@@ -1,3 +1,5 @@
+export * from "./lib/ai";
+export * from "./lib/ai-cards-generation";
 export * from "./lib/algorithms";
 export * from "./lib/algorithms-fsrs";
 export * from "./lib/cards";
@@ -8,6 +10,7 @@ export * from "./lib/lessons";
 export * from "./lib/markdown";
 export * from "./lib/reviews";
 export * from "./lib/settings";
+export * from "./lib/settings-ai";
 export * from "./lib/settings-hotkeys";
 export * from "./lib/settings-interface";
 export * from "./lib/settings-learning";

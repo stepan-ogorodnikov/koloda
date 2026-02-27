@@ -1,5 +1,7 @@
 import type { Queries } from "@koloda/react";
 import type {
+  AddAIProfileData,
+  AIProfile,
   Algorithm,
   AllowedSettings,
   CloneAlgorithmData,
@@ -21,17 +23,20 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
+  RemoveAIProfileData,
   ResetCardProgressData,
   Review,
   SetSettingsData,
   SettingsName,
   Template,
+  TouchAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
 import type { TodaysReviewTotals } from "@koloda/srs";
+import { getAIProfileModels } from "./ai";
 import { getStatus, seedDB } from "./setup";
 import { invoke } from "./tauri";
 
@@ -118,6 +123,9 @@ export const queriesFn = (): Queries => ({
   addCardMutation: () => ({
     mutationFn: (data: InsertCardData) => invoke("cmd_add_card", { data }),
   }),
+  addCardsMutation: () => ({
+    mutationFn: (data: InsertCardData[]) => invoke("cmd_add_cards", { data }),
+  }),
   updateCardMutation: () => ({
     mutationFn: (data: UpdateCardData) => invoke("cmd_update_card", { data }),
   }),
@@ -141,5 +149,20 @@ export const queriesFn = (): Queries => ({
   }),
   getReviewsQuery: (data: GetReviewsData) => ({
     queryFn: () => invoke("cmd_get_reviews", { data }),
+  }),
+  getAIProfilesQuery: () => ({
+    queryFn: () => invoke<AIProfile[]>("cmd_get_ai_profiles"),
+  }),
+  addAIProfileMutation: () => ({
+    mutationFn: (data: AddAIProfileData) => invoke("cmd_add_ai_profile", { data }),
+  }),
+  removeAIProfileMutation: () => ({
+    mutationFn: (data: RemoveAIProfileData) => invoke("cmd_remove_ai_profile", { data }),
+  }),
+  touchAIProfileMutation: () => ({
+    mutationFn: (data: TouchAIProfileData) => invoke("cmd_touch_ai_profile", { data }),
+  }),
+  getAIProfileModelsQuery: (profileId: string) => ({
+    queryFn: () => getAIProfileModels(profileId),
   }),
 });

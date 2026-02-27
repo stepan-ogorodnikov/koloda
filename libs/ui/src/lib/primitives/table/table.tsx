@@ -1,5 +1,7 @@
+import type { TWVProps } from "@koloda/ui";
 import type { Table as TanstackTable } from "@tanstack/react-table";
 import type { PropsWithChildren } from "react";
+import { tv } from "tailwind-variants";
 import { TableBody } from "./table-body";
 import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";
@@ -16,9 +18,15 @@ export function Table<TData>({ table }: TableProps<TData>) {
   );
 }
 
-function TableRoot({ children }: PropsWithChildren) {
+export const tableRoot = tv({
+  base: "rounded-md border-2 border-table table-fixed border-separate border-spacing-0 overflow-hidden",
+});
+
+type TableRootProps = PropsWithChildren & TWVProps<typeof tableRoot>;
+
+function TableRoot({ variants, children }: TableRootProps) {
   return (
-    <table className="rounded-md border-2 border-table table-fixed border-separate border-spacing-0 overflow-hidden">
+    <table className={tableRoot(variants)}>
       {children}
     </table>
   );

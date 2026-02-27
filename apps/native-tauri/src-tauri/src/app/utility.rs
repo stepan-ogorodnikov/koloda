@@ -6,6 +6,10 @@ pub fn get_current_timestamp() -> anyhow::Result<i64> {
         .as_millis() as i64)
 }
 
+pub fn generate_uuid() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
 pub fn default_now() -> i64 {
     get_current_timestamp().unwrap_or_default()
 }

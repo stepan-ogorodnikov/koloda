@@ -6,7 +6,7 @@ authors = ["you"]
 license = ""
 repository = ""
 edition = "2021"
-rust-version = "1.77.2"
+rust-version = "1.80.0"
 
 [dependencies]
 serde_json = "1.0"
@@ -19,6 +19,12 @@ json-patch = "4.0"
 strum = "0.27"
 strum_macros = "0.27"
 chrono = { version = "0.4", features = ["serde"] }
+keyring = "3"
+tauri-plugin-http = "2.5.7"
+tauri-plugin-cors-fetch = "5.0.0"
+uuid = { version = "1.0", features = ["v4"] }
+dirs = "6.0.0"
+windows-sys = { version = "0.61.2", features = ["Win32_Security_Credentials"] }
 
 [build-dependencies]
 tauri-build = { version = "2.5.3", features = [] }

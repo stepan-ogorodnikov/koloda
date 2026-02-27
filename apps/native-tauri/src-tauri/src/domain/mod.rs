@@ -1,3 +1,4 @@
+pub mod ai;
 pub mod algorithms;
 pub mod algorithms_fsrs;
 pub mod cards;
@@ -5,6 +6,7 @@ pub mod decks;
 pub mod lessons;
 pub mod reviews;
 pub mod settings;
+pub mod settings_ai;
 pub mod settings_hotkeys;
 pub mod settings_interface;
 pub mod settings_learning;

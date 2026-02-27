@@ -1,5 +1,6 @@
 import type { DeepPartial, Timestamps } from "@koloda/srs";
 import type { z } from "zod";
+import { aiSettingsValidation } from "./settings-ai";
 import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { interfaceSettingsValidation } from "./settings-interface";
 import { learningSettingsValidation } from "./settings-learning";
@@ -8,6 +9,7 @@ export const allowedSettings = {
   interface: interfaceSettingsValidation,
   learning: learningSettingsValidation,
   hotkeys: hotkeysSettingsValidation,
+  ai: aiSettingsValidation,
 } as const;
 
 export type SettingsName = keyof typeof allowedSettings;

@@ -1,5 +1,5 @@
 import { ERROR_MESSAGES } from "@koloda/srs";
-import type { ErrorCode, ZodIssue } from "@koloda/srs";
+import type { ErrorCode, FormError, ZodIssue } from "@koloda/srs";
 import { Button, Fade, FormTextField } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -53,21 +53,31 @@ type FormErrorsProps = {
 };
 
 export function Errors({ errors }: FormErrorsProps) {
-  const { _ } = useLingui();
-
   if (!errors) return null;
 
-  const flattenedErrors = Object.values(errors).flat();
+  const flattenedErrors = (Array.isArray(errors) ? errors : Object.values(errors).flat()) as FormError[];
   const uniqueErrors = Array.from(new Map(flattenedErrors.map((error) => [error.message, error])).values());
 
   return (
     <div className="flex flex-col gap-2" role="alert">
-      {uniqueErrors.map(({ message }) => (
-        <em className="fg-error not-italic" key={message}>
-          {ERROR_MESSAGES[message as ErrorCode] ? _(ERROR_MESSAGES[message as ErrorCode]) : message}
-        </em>
-      ))}
+      {uniqueErrors.map((error) => <ErrorsItem error={error} key={error.message} />)}
     </div>
+  );
+}
+
+type ErrorsItemProps = { error: FormError };
+
+function ErrorsItem({ error }: ErrorsItemProps) {
+  const { _ } = useLingui();
+  const content = ERROR_MESSAGES[error.message as ErrorCode];
+  const message = content
+    ? (typeof content === "function" ? _(content(error)) : _(content))
+    : content;
+
+  return (
+    <em className="fg-error not-italic">
+      {message}
+    </em>
   );
 }
 

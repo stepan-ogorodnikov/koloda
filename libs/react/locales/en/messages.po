@@ -18,6 +18,11 @@ msgstr ""
 msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
+#. placeholder {0}: cardsToCreate.length
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:186
+msgid "{0, plural, other {generate-cards.add.success}}"
+msgstr "{0, plural, one {# card added} other {# cards added}}"
+
 #: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:79
 #: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:84
 msgid "add-algorithm.inputs.title.label"
@@ -95,6 +100,47 @@ msgstr "New template"
 #: ../../libs/react/src/lib/templates/add-template.tsx:60
 msgid "add-template.trigger"
 msgstr "New template"
+
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:97
+msgid "ai.chat.input.label"
+msgstr "Prompt input"
+
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:104
+msgid "ai.chat.input.placeholder"
+msgstr "Type your prompt here"
+
+#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:10
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:36
+msgid "ai.chat.roles.assistant"
+msgstr "Assistant"
+
+#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:11
+msgid "ai.chat.roles.system"
+msgstr "System"
+
+#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:9
+msgid "ai.chat.roles.user"
+msgstr "You"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:25
+msgid "ai.model-picker.label"
+msgstr "Select a model"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:26
+msgid "ai.model-picker.placeholder"
+msgstr "Select a model"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:27
+msgid "ai.model-picker.search.label"
+msgstr "Search models"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
+msgid "ai.model-picker.search.placeholder"
+msgstr "Search models"
+
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:23
+msgid "ai.profile-picker.label"
+msgstr "Select AI profile"
 
 #: ../../libs/react/src/lib/algorithms/algorithm-picker.tsx:31
 msgid "algorithm-picker.label"
@@ -187,7 +233,7 @@ msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
 #: ../../libs/react/src/lib/cards/card-details.tsx:100
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:51
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:79
 msgid "card.labels.due-at"
 msgstr "Due"
 
@@ -204,7 +250,7 @@ msgid "card.labels.stability"
 msgstr "Stability"
 
 #: ../../libs/react/src/lib/cards/card-details.tsx:94
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:34
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:62
 msgid "card.labels.state"
 msgstr "Status"
 
@@ -240,43 +286,47 @@ msgstr "Table Columns"
 msgid "cards-table.columns-menu.trigger"
 msgstr "Columns"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:66
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:94
 msgid "cards-table.filters.due-at.values.false"
 msgstr "Not due yet"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:58
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:86
 msgid "cards-table.filters.due-at.values.true"
 msgstr "Overdue"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:70
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:98
 msgid "cards-table.filters.reset"
 msgstr "Reset filters"
 
-#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:29
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:41
+msgid "cards-table.filters.template"
+msgstr "Template"
+
+#: ../../libs/react/src/lib/cards/cards-table-filters.tsx:34
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:161
+#: ../../libs/react/src/lib/cards/cards-table.tsx:181
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:170
+#: ../../libs/react/src/lib/cards/cards-table.tsx:190
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:88
+#: ../../libs/react/src/lib/cards/cards-table.tsx:91
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:72
+#: ../../libs/react/src/lib/cards/cards-table.tsx:75
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:63
+#: ../../libs/react/src/lib/cards/cards-table.tsx:65
 msgid "cards.table.columns.state"
 msgstr "Status"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:95
+#: ../../libs/react/src/lib/cards/cards-table.tsx:98
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
@@ -450,7 +500,32 @@ msgstr "Delete template"
 msgid "edit-card.trigger"
 msgstr "Edit card"
 
-#: ../../libs/react/src/lib/settings/interface-controls/language-select.tsx:32
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:88
+msgid "generate-cards.add"
+msgstr "Add Cards"
+
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:195
+msgid "generate-cards.add.error"
+msgstr "Failed to add generated cards"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:99
+msgid "generate-cards.generated-no-cards"
+msgstr "Failed to retrieve cards from the response."
+
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:69
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:131
+msgid "generate-cards.generating"
+msgstr "Generating"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:58
+msgid "generate-cards.title"
+msgstr "Generate Cards"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:49
+msgid "generate-cards.trigger"
+msgstr "Generate cards with AI"
+
+#: ../../libs/react/src/lib/settings/interface-controls/language-select.tsx:27
 msgid "language-select.label"
 msgstr "Language"
 
@@ -458,7 +533,7 @@ msgstr "Language"
 msgid "learned-today.title"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:69
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:70
 msgid "lesson.completion.close"
 msgstr "Close"
 
@@ -466,7 +541,8 @@ msgstr "Close"
 msgid "lesson.completion.message"
 msgstr "Done"
 
-#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:57
+#: ../../libs/react/src/lib/cards/card-preview.tsx:73
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:58
 msgid "lesson.content.submit"
 msgstr "Continue"
 
@@ -494,7 +570,7 @@ msgstr "Amount of cards of type new"
 msgid "lesson.init.list.labels.available"
 msgstr "Available:"
 
-#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:37
+#: ../../libs/react/src/lib/lessons/lesson-footer.tsx:38
 msgid "lesson.init.submit"
 msgstr "Start"
 
@@ -510,7 +586,7 @@ msgstr "Available"
 msgid "lesson.init.table.columns.learned"
 msgstr "Learned today"
 
-#: ../../libs/react/src/lib/lessons/lesson-header.tsx:45
+#: ../../libs/react/src/lib/lessons/lesson-header.tsx:44
 msgid "lesson.init.title"
 msgstr "Study cards"
 
@@ -560,6 +636,10 @@ msgstr "Content you're trying to access doesn't exist"
 msgid "not-found.title"
 msgstr "Not found"
 
+#: ../../libs/react/src/lib/cards/cards-table-cell-preview-card.tsx:19
+msgid "preview-card.trigger"
+msgstr "Preview Card"
+
 #: ../../libs/react/src/lib/components/query-error.tsx:14
 msgid "query-error.message"
 msgstr "Something went wrong"
@@ -572,7 +652,78 @@ msgstr "Retry"
 msgid "query-loading.message"
 msgstr "Loading"
 
-#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:26
+#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:35
+#: ../../libs/react/src/lib/routes/_.settings.tsx:17
+msgid "settings.ai"
+msgstr "AI"
+
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:52
+msgid "settings.ai.add"
+msgstr "Add profile"
+
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:98
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:79
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:79
+msgid "settings.ai.add.submit"
+msgstr "Add"
+
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:59
+msgid "settings.ai.add.title"
+msgstr "Add AI Profile"
+
+#: ../../libs/react/src/lib/settings/settings-ai-delete-profile.tsx:51
+msgid "settings.ai.delete.cancel"
+msgstr "Cancel"
+
+#: ../../libs/react/src/lib/settings/settings-ai-delete-profile.tsx:48
+msgid "settings.ai.delete.confirm"
+msgstr "Delete"
+
+#: ../../libs/react/src/lib/settings/settings-ai-delete-profile.tsx:46
+msgid "settings.ai.delete.message"
+msgstr "Are you sure you want to delete this profile?"
+
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:82
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:63
+msgid "settings.ai.profiles.api-key.label"
+msgstr "API key"
+
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:68
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:63
+msgid "settings.ai.profiles.base-url.label"
+msgstr "Base URL"
+
+#: ../../libs/react/src/lib/settings/settings-ai-delete-profile.tsx:36
+msgid "settings.ai.profiles.delete.trigger"
+msgstr "Failed to add generated cards"
+
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:20
+msgid "settings.ai.profiles.empty"
+msgstr "No profiles"
+
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:65
+msgid "settings.ai.profiles.provider.label"
+msgstr "Provider"
+
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:16
+msgid "settings.ai.profiles.title"
+msgstr "AI Profiles"
+
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:53
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:48
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:48
+msgid "settings.ai.profiles.title.label"
+msgstr "Title"
+
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:29
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:54
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:49
+#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:49
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:26
+msgid "settings.ai.profiles.title.placeholder"
+msgstr "Untitled"
+
+#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:35
 #: ../../libs/react/src/lib/routes/_.settings.tsx:16
 msgid "settings.hotkeys"
 msgstr "Hotkeys"
@@ -594,64 +745,64 @@ msgstr "Animations"
 msgid "settings.interface.theme"
 msgstr "Theme"
 
-#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:26
+#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:35
 #: ../../libs/react/src/lib/routes/_.settings.tsx:15
 msgid "settings.learning"
 msgstr "Learning"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:157
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:154
 msgid "settings.learning.day-starts-at"
 msgstr "Start of the day"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:53
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:50
 msgid "settings.learning.defaults.algorithm"
 msgstr "Default algorithm"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:63
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:60
 msgid "settings.learning.defaults.template"
 msgstr "Default template"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:119
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:116
 msgid "settings.learning.learn-ahead-limit"
 msgstr "Learn ahead limit"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:125
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:122
 msgid "settings.learning.learn-ahead-limit.hours.label"
 msgstr "Hours"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:132
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:129
 msgid "settings.learning.learn-ahead-limit.hours.suffix"
 msgstr "h"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:140
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:137
 msgid "settings.learning.learn-ahead-limit.minutes.label"
 msgstr "Minutes"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:147
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:144
 msgid "settings.learning.learn-ahead-limit.minutes.suffix"
 msgstr "m"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:69
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:66
 msgid "settings.learning.limits"
 msgstr "Daily limits"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:101
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:98
 msgid "settings.learning.limits.learn"
 msgstr "Learn"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:113
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:110
 msgid "settings.learning.limits.review"
 msgstr "Review"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:77
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:74
 msgid "settings.learning.limits.total"
 msgstr "Total"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:89
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:86
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
-#: ../../libs/react/src/lib/routes/_.settings.tsx:30
+#: ../../libs/react/src/lib/routes/_.settings.tsx:31
 msgid "settings.title"
 msgstr "Settings"
 
@@ -720,7 +871,7 @@ msgstr "Not locked"
 msgid "templates.title"
 msgstr "Templates"
 
-#: ../../libs/react/src/lib/settings/interface-controls/theme-select.tsx:32
+#: ../../libs/react/src/lib/settings/interface-controls/theme-select.tsx:30
 msgid "theme-select.label"
 msgstr "Theme"
 
@@ -756,7 +907,11 @@ msgstr "Decks"
 msgid "title.settings"
 msgstr "Settings"
 
-#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:12
+#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:16
+msgid "title.settings.ai"
+msgstr "AI"
+
+#: ../../libs/react/src/lib/routes/_.settings.hotkeys.tsx:16
 msgid "title.settings.hotkeys"
 msgstr "Hotkeys"
 
@@ -764,7 +919,7 @@ msgstr "Hotkeys"
 msgid "title.settings.interface"
 msgstr "Interface"
 
-#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:12
+#: ../../libs/react/src/lib/routes/_.settings.learning.tsx:16
 msgid "title.settings.learning"
 msgstr "Learning"
 

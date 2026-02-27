@@ -34,11 +34,11 @@ msgstr "Drag handle"
 msgid "form.createdAt {0}"
 msgstr "Created {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:108
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:118
 msgid "form.reset"
 msgstr "Discard"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:87
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:97
 msgid "form.save"
 msgstr "Save"
 

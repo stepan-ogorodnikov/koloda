@@ -31,7 +31,7 @@ export function OverlayFrameTitle(props: HTMLAttributes<HTMLHeadingElement>) {
   return <Heading className="fg-level-1 font-semibold" slot="title" {...props} />;
 }
 
-export const overlayFrameContent = tv({ base: "grow flex flex-col py-2 px-4" });
+export const overlayFrameContent = tv({ base: "grow min-h-0 flex flex-col py-2 px-4" });
 
 type OverlayFrameContentProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameContent>;
 

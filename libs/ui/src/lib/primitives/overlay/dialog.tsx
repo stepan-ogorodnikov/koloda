@@ -18,7 +18,7 @@ function DialogOverlay({ variants, ...props }: DialogOverlayProps) {
 }
 
 function DialogBody(props: DialogProps) {
-  return <ReactAriaDialog className="grow flex flex-col focus-ring" {...props} />;
+  return <ReactAriaDialog className="grow min-h-0 flex flex-col focus-ring" {...props} />;
 }
 
 export const dialogClose = tv({

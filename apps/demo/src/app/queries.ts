@@ -1,5 +1,6 @@
 import type { Queries } from "@koloda/react";
 import type {
+  AddAIProfileData,
   Algorithm,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -18,10 +19,12 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
+  RemoveAIProfileData,
   ResetCardProgressData,
   SetSettingsData,
   SettingsName,
   Template,
+  TouchAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -31,6 +34,7 @@ import type { DB } from "@koloda/srs-pgsql";
 import {
   addAlgorithm,
   addCard,
+  addCards,
   addDeck,
   addTemplate,
   cloneAlgorithm,
@@ -62,6 +66,7 @@ import {
   updateDeck,
   updateTemplate,
 } from "@koloda/srs-pgsql";
+import { addAIProfile, getAIProfileModels, getAIProfiles, removeAIProfile, touchAIProfile } from "./ai";
 import { getStatus, setupFromScratch } from "./setup";
 
 export const demoAppQueryOptions = {
@@ -92,6 +97,7 @@ export const queriesFn = (db: DB): Queries => ({
   getDecksQuery: () => ({ queryFn: () => getDecks(db) }),
   getDeckQuery: (id: Deck["id"]) => ({ queryFn: () => getDeck(db, id) }),
   addDeckMutation: () => ({ mutationFn: (data: InsertDeckData) => addDeck(db, data) }),
+  addCardsMutation: () => ({ mutationFn: (data: InsertCardData[]) => addCards(db, data) }),
   updateDeckMutation: () => ({ mutationFn: (data: UpdateDeckData) => updateDeck(db, data) }),
   deleteDeckMutation: () => ({ mutationFn: (data: DeleteDeckData) => deleteDeck(db, data) }),
   getTemplatesQuery: () => ({ queryFn: () => getTemplates(db) }),
@@ -113,4 +119,9 @@ export const queriesFn = (db: DB): Queries => ({
   }),
   submitLessonResultMutation: () => ({ mutationFn: (data: LessonResultData) => submitLessonResult(db, data) }),
   getReviewsQuery: (data: GetReviewsData) => ({ queryFn: () => getReviews(db, data) }),
+  addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
+  removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
+  touchAIProfileMutation: () => ({ mutationFn: (data: TouchAIProfileData) => touchAIProfile(db, data) }),
+  getAIProfileModelsQuery: (profileId: string) => ({ queryFn: () => getAIProfileModels(db, profileId) }),
+  getAIProfilesQuery: () => ({ queryFn: () => getAIProfiles(db) }),
 });

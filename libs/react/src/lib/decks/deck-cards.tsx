@@ -1,4 +1,4 @@
-import { cardsQueryKeys, cardsViewAtom, CardsViewToggle, QueryState } from "@koloda/react";
+import { cardsQueryKeys, cardsViewAtom, CardsViewToggle, GenerateCards, QueryState } from "@koloda/react";
 import { decksQueryKeys, queriesAtom } from "@koloda/react";
 import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";
@@ -32,15 +32,14 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
+        <GenerateCards deckId={Number(deckId)} templateId={data.templateId} key="generate" />
         <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
       <QueryState query={query}>
         {() => (
           <AnimatePresence mode="wait">
             {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}
-            {view === "table" && (
-              <CardsTable deckId={deckId} controlsNode={portalContainer} key="table" />
-            )}
+            {view === "table" && <CardsTable deckId={deckId} controlsNode={portalContainer} key="table" />}
           </AnimatePresence>
         )}
       </QueryState>

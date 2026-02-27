@@ -1,39 +1,4 @@
-import type {
-  Algorithm,
-  AllowedSettings,
-  AppError,
-  Card,
-  CloneAlgorithmData,
-  CloneTemplateData,
-  Deck,
-  DeckWithOnlyTitle,
-  DeleteAlgorithmData,
-  DeleteCardData,
-  DeleteDeckData,
-  DeleteTemplateData,
-  GetCardsParams,
-  GetLessonDataParams,
-  GetReviewsData,
-  InsertAlgorithmData,
-  InsertCardData,
-  InsertDeckData,
-  InsertTemplateData,
-  Lesson,
-  LessonData,
-  LessonFilters,
-  LessonResultData,
-  PatchSettingsData,
-  ResetCardProgressData,
-  Review,
-  SetSettingsData,
-  SettingsName,
-  Template,
-  TodaysReviewTotals,
-  UpdateAlgorithmData,
-  UpdateCardData,
-  UpdateDeckData,
-  UpdateTemplateData,
-} from "@koloda/srs";
+import type { AIProfile, AddAIProfileData, AIModel, Algorithm, AllowedSettings, AppError, Card, CloneAlgorithmData, CloneTemplateData, Deck, DeckWithOnlyTitle, DeleteAlgorithmData, DeleteCardData, DeleteDeckData, DeleteTemplateData, GetCardsParams, GetLessonDataParams, GetReviewsData, InsertAlgorithmData, InsertCardData, InsertDeckData, InsertTemplateData, Lesson, LessonData, LessonFilters, LessonResultData, PatchSettingsData, RemoveAIProfileData, ResetCardProgressData, Review, SetSettingsData, SettingsName, Template, TodaysReviewTotals, TouchAIProfileData, UpdateAlgorithmData, UpdateCardData, UpdateDeckData, UpdateTemplateData } from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { type QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
@@ -73,6 +38,7 @@ export type Queries = {
   getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
   addCardMutation: () => UseMutationOptions<Card | undefined, AppError, InsertCardData, unknown>;
+  addCardsMutation: () => UseMutationOptions<Card[], AppError, InsertCardData[], unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, AppError, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
   resetCardProgressMutation: () => UseMutationOptions<unknown, AppError, ResetCardProgressData, unknown>;
@@ -81,6 +47,11 @@ export type Queries = {
   getLessonDataQuery: (params: GetLessonDataParams) => QueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
   getReviewsQuery: (data: GetReviewsData) => QueryOptions<Review[] | undefined>;
+  addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
+  removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;
+  touchAIProfileMutation: () => UseMutationOptions<void, AppError, TouchAIProfileData, unknown>;
+  getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;
+  getAIProfilesQuery: () => QueryOptions<AIProfile[]>;
 };
 
 export const queriesAtom = atom<Queries>(null!);

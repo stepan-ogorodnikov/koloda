@@ -23,9 +23,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const { mutate, error, reset } = useMutation(addCardMutation());
   const content = useMemo(() => (
     template
-      ? template.content.fields.reduce((acc, x) => (
-        { ...acc, [x.id.toString()]: { text: "" } }
-      ), {})
+      ? template.content.fields.reduce((acc, x) => ({ ...acc, [`${x.id}`]: { text: "" } }), {})
       : {}
   ), [template]);
   const firstFieldRef = useRef<HTMLTextAreaElement>(null);
@@ -54,12 +52,8 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Button variants={{ style: "dashed", size: "default", class: "max-tb:hidden" }}>
-        <Plus className="size-4" />
-        <span className="max-tb:hidden">{_(msg`add-cards.trigger`)}</span>
-      </Button>
       <Button
-        variants={{ style: "dashed", size: "icon", class: "tb:hidden" }}
+        variants={{ style: "dashed", size: "icon" }}
         aria-label={_(msg`add-cards.trigger`)}
       >
         <Plus className="size-4" />

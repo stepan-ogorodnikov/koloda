@@ -23,8 +23,8 @@ export function TextField({ variants, ...props }: TextFieldProps) {
 
 export const textFieldInput = tv({
   base: [
-    "min-w-0 h-10 p-2 border-0",
-    "placeholder:fg-input-placeholder scrollbar-thin",
+    "min-w-0 h-10 p-2 border-0 scrollbar-thin",
+    "placeholder:fg-input-placeholder",
   ],
   variants: {
     style: {

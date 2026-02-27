@@ -14,6 +14,7 @@ const LINKS = [
   { id: "interface", t: msg`settings.interface`, url: "interface" },
   { id: "learning", t: msg`settings.learning`, url: "learning" },
   { id: "hotkeys", t: msg`settings.hotkeys`, url: "hotkeys" },
+  { id: "ai", t: msg`settings.ai`, url: "ai" },
 ];
 
 function SettingsRoute() {

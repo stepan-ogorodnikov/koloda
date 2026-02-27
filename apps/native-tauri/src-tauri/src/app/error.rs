@@ -70,6 +70,9 @@ pub mod error_codes {
     pub const VALIDATION_CARDS_PROGRESS_LEARNING_STEPS: &str = "validation.cards-progress.learning-steps";
     pub const VALIDATION_CARDS_PROGRESS_REPS: &str = "validation.cards-progress.reps";
     pub const VALIDATION_CARDS_PROGRESS_LAPSES: &str = "validation.cards-progress.lapses";
+
+    pub const VALIDATION_AI_PROVIDERS_PROVIDER: &str = "validation.ai-providers.provider";
+    pub const VALIDATION_AI_PROVIDERS_TITLE: &str = "validation.ai-providers.title";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

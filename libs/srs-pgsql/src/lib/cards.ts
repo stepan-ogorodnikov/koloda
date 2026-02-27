@@ -73,6 +73,32 @@ export async function addCard(db: DB, data: InsertCardData) {
 }
 
 /**
+ * Adds multiple cards to the database in a batch
+ * @param db - The database instance
+ * @param dataArray - Array of card data to insert
+ * @returns Array of created card objects
+ */
+export async function addCards(db: DB, dataArray: InsertCardData[]) {
+  return throwKnownError("db.add", async () => {
+    if (dataArray.length === 0) return [];
+
+    const templateId = dataArray[0].templateId;
+    const template = await getTemplate(db, templateId);
+    if (!template) throw new AppError("not-found.cards.add.template");
+    const schema = getInsertCardSchema(template);
+
+    const validatedData = dataArray.map((data) => schema.parse(data));
+
+    const result = await db
+      .insert(cards)
+      .values(validatedData)
+      .returning();
+
+    return result as Card[];
+  });
+}
+
+/**
  * Updates an existing card in the database
  * @param db - The database instance
  * @param id - The ID of the card to update

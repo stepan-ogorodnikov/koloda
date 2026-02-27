@@ -1,5 +1,3 @@
-import type { ZodError } from "zod";
-
 /**
  * @section Types
  */
@@ -17,8 +15,6 @@ export type DeepPartial<T> = T extends string | number | bigint | boolean | null
   };
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
-
-export type ZodIssue = ZodError["issues"][number];
 
 export type UpdateData<Entity, Id extends keyof Entity, Values> = Pick<Entity, Id> & { values: Values };
 

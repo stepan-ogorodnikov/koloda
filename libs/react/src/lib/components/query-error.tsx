@@ -18,7 +18,7 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
       <div className="flex flex-col items-center gap-4">
         <BadgeAlert className="size-6 stroke-1.5 fg-level-2" aria-hidden="true" />
         <p className="fg-level-2 text-center">
-          {_(message)}
+          {typeof message === "function" ? _(message(error)) : _(message)}
         </p>
         {onRetry && (
           <Button variants={{ style: "ghost", class: "fg-link" }} onClick={onRetry}>
