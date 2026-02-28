@@ -38,11 +38,7 @@ pub fn get_settings(db: &Database, name: SettingsName) -> Result<Option<Settings
 }
 
 pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result<Settings, AppError> {
-    // validation is skipped for AI cause it misfires in case some secrets are required, but not stored in db
-    // TODO: find a better way
-    if name != SettingsName::Ai {
-        name.validate(&content)?;
-    }
+    name.validate(&content)?;
     let now = get_current_timestamp()?;
 
     db.with_conn(|conn| {

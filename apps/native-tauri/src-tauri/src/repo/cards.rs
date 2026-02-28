@@ -112,6 +112,15 @@ pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
     get_card(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
 }
 
+pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<Vec<Card>, AppError> {
+    let mut cards = Vec::with_capacity(data.len());
+    for card_data in data {
+        cards.push(add_card(db, card_data)?);
+    }
+
+    Ok(cards)
+}
+
 pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError> {
     let original = get_card(db, data.id)?.ok_or_else(|| {
         AppError::new(

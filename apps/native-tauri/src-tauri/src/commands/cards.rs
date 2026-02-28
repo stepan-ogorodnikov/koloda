@@ -24,11 +24,7 @@ pub fn cmd_add_card(db: DB<'_>, data: InsertCardData) -> Result<Card, AppError> 
 
 #[command]
 pub fn cmd_add_cards(db: DB<'_>, data: Vec<InsertCardData>) -> Result<Vec<Card>, AppError> {
-    let mut cards = Vec::with_capacity(data.len());
-    for card_data in data {
-        cards.push(repo::add_card(&db, card_data)?);
-    }
-    Ok(cards)
+    repo::add_cards(&db, data)
 }
 
 #[command]

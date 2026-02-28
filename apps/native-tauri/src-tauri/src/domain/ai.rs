@@ -61,6 +61,10 @@ impl AISecrets {
     }
 
     pub fn validate(&self) -> Result<(), AppError> {
+        self.validate_for_input()
+    }
+
+    pub fn validate_for_input(&self) -> Result<(), AppError> {
         match self {
             AISecrets::OpenRouter { api_key } => {
                 if api_key.trim().is_empty() {
@@ -90,10 +94,45 @@ impl AISecrets {
 
         Ok(())
     }
+
+    pub fn validate_for_storage(&self) -> Result<(), AppError> {
+        match self {
+            AISecrets::OpenRouter { api_key } => {
+                if !api_key.is_empty() && api_key.trim().is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        Some("openrouter.apiKey cannot be whitespace only".to_string()),
+                    ));
+                }
+            }
+            AISecrets::Ollama { base_url } => {
+                if !base_url.is_empty() && base_url.trim().is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        Some("ollama.baseUrl cannot be whitespace only".to_string()),
+                    ));
+                }
+            }
+            AISecrets::LmStudio { base_url, .. } => {
+                if !base_url.is_empty() && base_url.trim().is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        Some("lmstudio.baseUrl cannot be whitespace only".to_string()),
+                    ));
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl AIProfile {
     pub fn validate(&self) -> Result<(), AppError> {
+        self.validate_for_storage()
+    }
+
+    pub fn validate_for_input(&self) -> Result<(), AppError> {
         if self.id.is_empty() {
             return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_PROVIDER, None));
         }
@@ -105,7 +144,25 @@ impl AIProfile {
         }
 
         if let Some(secrets) = &self.secrets {
-            secrets.validate()?;
+            secrets.validate_for_input()?;
+        }
+
+        Ok(())
+    }
+
+    pub fn validate_for_storage(&self) -> Result<(), AppError> {
+        if self.id.is_empty() {
+            return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_PROVIDER, None));
+        }
+
+        if let Some(title) = &self.title {
+            if title.len() > 128 {
+                return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_TITLE, None));
+            }
+        }
+
+        if let Some(secrets) = &self.secrets {
+            secrets.validate_for_storage()?;
         }
 
         Ok(())

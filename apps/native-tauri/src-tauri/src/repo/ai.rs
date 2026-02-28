@@ -102,7 +102,7 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
     let profile_id = generate_uuid();
 
     if let Some(ref secrets) = secrets {
-        secrets.validate()?;
+        secrets.validate_for_input()?;
         if let Some(api_key) = secrets.api_key() {
             set_api_key(&profile_id, api_key)?;
         }
