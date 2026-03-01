@@ -1,12 +1,12 @@
 import { AIChat } from "@koloda/react";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Dialog } from "@koloda/ui";
+import { Button, Dialog, useHotkeysStatus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
 
@@ -17,6 +17,7 @@ export type GenerateCardsProps = {
 
 export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   const { _ } = useLingui();
+  const { disableScope, enableScope } = useHotkeysStatus();
   const {
     isOpen,
     profileId,
@@ -34,6 +35,10 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleGenerate,
     getGeneratedCardsProps,
   } = useGenerateCardsDialog(deckId, templateId);
+
+  useEffect(() => {
+    (isOpen ? disableScope : enableScope)("nav");
+  }, [isOpen, disableScope, enableScope]);
 
   const renderMessage = useCallback((message: UIMessage, content: ReactNode) => {
     const props = getGeneratedCardsProps(message);

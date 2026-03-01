@@ -4,7 +4,7 @@ import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { Forward } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
-import { Fragment } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useEffect } from "react";
 import { AIChatMessage } from "./ai-chat-message";
 import { AIModelPicker } from "./ai-model-picker";
@@ -51,6 +51,8 @@ export function AIChat({
 }: AIChatProps) {
   const { _ } = useLingui();
   const { defaultProfileId } = useAIProfiles();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [hasInput, setHasInput] = useState(false);
 
   useEffect(() => {
     if (autoSelectDefaultProfile && defaultProfileId && !profileId) {
@@ -58,13 +60,17 @@ export function AIChat({
     }
   }, [autoSelectDefaultProfile, defaultProfileId, profileId, onProfileChange]);
 
-  const canSubmit = !!(profileId && modelId && input.trim() && !isLoading);
-
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!canSubmit) return;
-    onSubmit();
+    if (!inputRef.current) return;
+    const value = inputRef.current.value.trim();
+    if (profileId && modelId && value && !isLoading) {
+      onInputChange(value);
+      onSubmit();
+    }
   };
+
+  const canSubmit = !!(profileId && modelId && hasInput && !isLoading);
 
   return (
     <section className="flex flex-col h-full min-h-0">
@@ -95,13 +101,24 @@ export function AIChat({
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <TextField
           aria-label={_(msg`ai.chat.input.label`)}
-          value={input}
-          onChange={onInputChange}
+          defaultValue={input}
         >
           <TextField.TextArea
             variants={{ style: "inline", class: "resize-none" }}
             rows={4}
             placeholder={_(msg`ai.chat.input.placeholder`)}
+            ref={inputRef}
+            onInput={(e) => setHasInput(!!e.currentTarget.value.trim())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                const value = inputRef.current?.value.trim();
+                if (profileId && modelId && value && !isLoading) {
+                  onInputChange(value);
+                  onSubmit();
+                }
+              }
+            }}
           />
         </TextField>
         <div className="flex items-center gap-3">
