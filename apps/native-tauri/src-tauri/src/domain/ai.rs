@@ -43,6 +43,34 @@ pub struct ApiKeySecret {
     pub api_key: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddProfileData {
+    pub title: Option<String>,
+    pub secrets: Option<AISecrets>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProfileData {
+    pub id: String,
+    pub title: Option<String>,
+    pub secrets: Option<AISecrets>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveProfileData {
+    pub id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TouchProfileData {
+    pub id: String,
+    pub model_id: Option<String>,
+}
+
 impl AISecrets {
     pub fn provider(&self) -> &'static str {
         match self {

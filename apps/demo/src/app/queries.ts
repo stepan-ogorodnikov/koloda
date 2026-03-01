@@ -25,6 +25,7 @@ import type {
   SettingsName,
   Template,
   TouchAIProfileData,
+  UpdateAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -66,7 +67,14 @@ import {
   updateDeck,
   updateTemplate,
 } from "@koloda/srs-pgsql";
-import { addAIProfile, getAIProfileModels, getAIProfiles, removeAIProfile, touchAIProfile } from "./ai";
+import {
+  addAIProfile,
+  getAIProfileModels,
+  getAIProfiles,
+  removeAIProfile,
+  touchAIProfile,
+  updateAIProfile,
+} from "./ai";
 import { getStatus, setupFromScratch } from "./setup";
 
 export const demoAppQueryOptions = {
@@ -120,6 +128,7 @@ export const queriesFn = (db: DB): Queries => ({
   submitLessonResultMutation: () => ({ mutationFn: (data: LessonResultData) => submitLessonResult(db, data) }),
   getReviewsQuery: (data: GetReviewsData) => ({ queryFn: () => getReviews(db, data) }),
   addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
+  updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),
   removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
   touchAIProfileMutation: () => ({ mutationFn: (data: TouchAIProfileData) => touchAIProfile(db, data) }),
   getAIProfileModelsQuery: (profileId: string) => ({ queryFn: () => getAIProfileModels(db, profileId) }),

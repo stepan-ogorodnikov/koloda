@@ -1,31 +1,16 @@
-use serde::{Deserialize, Serialize};
 use tauri::command;
 
 use crate::{
     app::db::DB,
     app::error::AppError,
-    domain::settings_ai::{AIProfile, AISecrets},
+    domain::ai::{AddProfileData, RemoveProfileData, TouchProfileData, UpdateProfileData},
+    domain::settings_ai::AIProfile,
     repo::ai as repo,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AddProfileData {
-    pub title: Option<String>,
-    pub secrets: Option<AISecrets>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RemoveProfileData {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TouchProfileData {
-    pub id: String,
-    pub model_id: Option<String>,
+#[command]
+pub fn cmd_get_ai_profiles(db: DB<'_>) -> Result<Vec<AIProfile>, AppError> {
+    repo::get_ai_profiles(&db)
 }
 
 #[command]
@@ -34,8 +19,8 @@ pub fn cmd_add_ai_profile(db: DB<'_>, data: AddProfileData) -> Result<AIProfile,
 }
 
 #[command]
-pub fn cmd_get_ai_profiles(db: DB<'_>) -> Result<Vec<AIProfile>, AppError> {
-    repo::get_ai_profiles(&db)
+pub fn cmd_update_ai_profile(db: DB<'_>, data: UpdateProfileData) -> Result<AIProfile, AppError> {
+    repo::update_ai_profile(&db, &data.id, data.title, data.secrets)
 }
 
 #[command]

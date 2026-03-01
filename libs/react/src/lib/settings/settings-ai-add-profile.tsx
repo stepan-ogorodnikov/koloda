@@ -37,9 +37,9 @@ export function SettingsAIAddProfile() {
     });
   };
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (!open) reset();
+  const handleOpenChange = (isOpen: boolean) => {
+    setIsOpen(isOpen);
+    if (!isOpen) reset();
   };
 
   useEffect(() => {

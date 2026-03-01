@@ -44,16 +44,15 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:114
+#: ../../libs/react/src/lib/cards/add-card.tsx:108
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:71
+#: ../../libs/react/src/lib/cards/add-card.tsx:65
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:59
-#: ../../libs/react/src/lib/cards/add-card.tsx:63
+#: ../../libs/react/src/lib/cards/add-card.tsx:57
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
@@ -110,7 +109,7 @@ msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
 #: ../../libs/react/src/lib/ai/ai-chat-message.tsx:10
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:36
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:34
 msgid "ai.chat.roles.assistant"
 msgstr "Assistant"
 
@@ -500,7 +499,7 @@ msgstr "Delete template"
 msgid "edit-card.trigger"
 msgstr "Edit card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:88
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:86
 msgid "generate-cards.add"
 msgstr "Add Cards"
 
@@ -508,11 +507,11 @@ msgstr "Add Cards"
 msgid "generate-cards.add.error"
 msgstr "Failed to add generated cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:99
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:97
 msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:69
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:67
 #: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:131
 msgid "generate-cards.generating"
 msgstr "Generating"
@@ -652,22 +651,22 @@ msgstr "Retry"
 msgid "query-loading.message"
 msgstr "Loading"
 
-#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:35
+#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:30
 #: ../../libs/react/src/lib/routes/_.settings.tsx:17
 msgid "settings.ai"
 msgstr "AI"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:52
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:53
 msgid "settings.ai.add"
 msgstr "Add profile"
 
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:98
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:79
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:79
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:93
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:74
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:74
 msgid "settings.ai.add.submit"
 msgstr "Add"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:59
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:60
 msgid "settings.ai.add.title"
 msgstr "Add AI Profile"
 
@@ -683,13 +682,31 @@ msgstr "Delete"
 msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:82
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:63
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:90
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:71
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:66
+msgid "settings.ai.edit.submit"
+msgstr "Save"
+
+#: ../../libs/react/src/lib/settings/settings-ai-edit-profile.tsx:63
+msgid "settings.ai.edit.title"
+msgstr "Edit AI profile"
+
+#: ../../libs/react/src/lib/settings/settings-ai-edit-profile.tsx:53
+msgid "settings.ai.edit.trigger"
+msgstr "Edit profile"
+
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:77
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:58
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:73
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:49
 msgid "settings.ai.profiles.api-key.label"
 msgstr "API key"
 
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:68
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:63
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:63
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:58
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:64
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:55
 msgid "settings.ai.profiles.base-url.label"
 msgstr "Base URL"
 
@@ -697,29 +714,39 @@ msgstr "Base URL"
 msgid "settings.ai.profiles.delete.trigger"
 msgstr "Failed to add generated cards"
 
-#: ../../libs/react/src/lib/settings/settings-ai.tsx:20
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:21
 msgid "settings.ai.profiles.empty"
 msgstr "No profiles"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:65
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:66
 msgid "settings.ai.profiles.provider.label"
 msgstr "Provider"
 
-#: ../../libs/react/src/lib/settings/settings-ai.tsx:16
+#: ../../libs/react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:46
+msgid "settings.ai.profiles.replace"
+msgstr "Replace with a new value"
+
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:17
 msgid "settings.ai.profiles.title"
 msgstr "AI Profiles"
 
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:53
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:48
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:48
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:48
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:43
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:43
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:49
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:40
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:40
 msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
 #: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:29
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-lmstudio.tsx:54
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-ollama.tsx:49
-#: ../../libs/react/src/lib/settings/ai-profiles/add-ai-profile-openrouter.tsx:49
-#: ../../libs/react/src/lib/settings/settings-ai.tsx:26
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:49
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:44
+#: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:44
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:50
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:41
+#: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:41
+#: ../../libs/react/src/lib/settings/settings-ai.tsx:27
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Untitled"
 
@@ -907,7 +934,7 @@ msgstr "Decks"
 msgid "title.settings"
 msgstr "Settings"
 
-#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:16
+#: ../../libs/react/src/lib/routes/_.settings.ai.tsx:14
 msgid "title.settings.ai"
 msgstr "AI"
 

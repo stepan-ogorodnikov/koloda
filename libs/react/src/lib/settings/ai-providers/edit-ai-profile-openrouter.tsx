@@ -1,9 +1,10 @@
-import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
+import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
 import { aiProfileValidation, openRouterSecretsValidation } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
+import { AIProfileSecretsField } from "./ai-profile-secrets-field";
 
 const formSchema = openRouterSecretsValidation.extend({
   title: aiProfileValidation.shape.title,
@@ -11,20 +12,16 @@ const formSchema = openRouterSecretsValidation.extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultValues: FormValues = {
-  title: "",
-  apiKey: "",
-};
-
-export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
   const { _ } = useLingui();
+  const apiKey = profile.secrets?.provider === "openrouter" ? profile.secrets.apiKey : "";
 
   const form = useAppForm({
-    defaultValues,
+    defaultValues: { title: profile.title, apiKey } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }) => {
       onSubmit({
-        title: value.title || undefined,
+        title: value.title,
         secrets: { provider: "openrouter", apiKey: value.apiKey },
       });
     },
@@ -48,17 +45,12 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
         </form.Field>
         <form.Field name="apiKey">
           {(field) => (
-            <TextField
-              type="password"
+            <AIProfileSecretsField
+              label={_(msg`settings.ai.profiles.api-key.label`)}
               value={field.state.value}
-              onBlur={field.handleBlur}
               onChange={field.handleChange}
-              isRequired
-            >
-              <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
-              <TextField.Input />
-              {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
-            </TextField>
+              errors={!field.state.meta.isValid ? field.state.meta.errors as ZodIssue[] : undefined}
+            />
           )}
         </form.Field>
       </Dialog.Content>
@@ -71,7 +63,7 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
               onClick={form.handleSubmit}
               isDisabled={!canSubmit || isPending}
             >
-              {_(msg`settings.ai.add.submit`)}
+              {_(msg`settings.ai.edit.submit`)}
             </Button>
           )}
         </form.Subscribe>

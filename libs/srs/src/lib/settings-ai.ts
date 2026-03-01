@@ -62,6 +62,12 @@ export type AddAIProfileFormProps = {
   isPending: boolean;
 };
 
+export type EditAIProfileFormProps = {
+  profile: AIProfile;
+  onSubmit: (data: { title?: string; secrets?: AISecrets }) => void;
+  isPending: boolean;
+};
+
 export type AddAIProfileData = {
   title?: string;
   secrets?: AISecrets;
@@ -69,6 +75,12 @@ export type AddAIProfileData = {
 
 export type RemoveAIProfileData = {
   id: string;
+};
+
+export type UpdateAIProfileData = {
+  id: string;
+  title?: string;
+  secrets?: AISecrets;
 };
 
 export type TouchAIProfileData = {
@@ -81,19 +93,6 @@ export type AIProviderFieldConfig = {
   type: "password" | "url" | "text";
   required: boolean;
   placeholder?: string;
-};
-
-export const AI_PROVIDER_FIELD_CONFIGS: Record<AiProvider, AIProviderFieldConfig[]> = {
-  openrouter: [
-    { name: "apiKey", type: "password", required: true },
-  ],
-  ollama: [
-    { name: "baseUrl", type: "url", required: true, placeholder: "http://localhost:11434" },
-  ],
-  lmstudio: [
-    { name: "baseUrl", type: "url", required: true, placeholder: "http://localhost:1234" },
-    { name: "apiKey", type: "password", required: false },
-  ],
 };
 
 export const aiProfileFormSchema = z.object({

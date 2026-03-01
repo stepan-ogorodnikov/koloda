@@ -1,31 +1,37 @@
-import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, openRouterSecretsValidation } from "@koloda/srs";
+import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
+import { aiProfileValidation, lmstudioSecretsValidation } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
+import { AIProfileSecretsField } from "./ai-profile-secrets-field";
 
-const formSchema = openRouterSecretsValidation.extend({
+const formSchema = lmstudioSecretsValidation.extend({
   title: aiProfileValidation.shape.title,
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultValues: FormValues = {
-  title: "",
-  apiKey: "",
-};
-
-export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
   const { _ } = useLingui();
+  const secrets = profile.secrets?.provider === "lmstudio" ? profile.secrets : undefined;
 
   const form = useAppForm({
-    defaultValues,
+    defaultValues: {
+      title: profile.title,
+      baseUrl: secrets?.baseUrl,
+      apiKey: secrets?.apiKey,
+    } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }) => {
+      const secrets = {
+        provider: "lmstudio" as const,
+        baseUrl: value.baseUrl,
+        apiKey: value.apiKey,
+      };
       onSubmit({
-        title: value.title || undefined,
-        secrets: { provider: "openrouter", apiKey: value.apiKey },
+        title: value.title,
+        secrets,
       });
     },
   });
@@ -46,19 +52,29 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
             </TextField>
           )}
         </form.Field>
-        <form.Field name="apiKey">
+        <form.Field name="baseUrl">
           {(field) => (
             <TextField
-              type="password"
+              type="url"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
               isRequired
             >
-              <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
-              <TextField.Input />
+              <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
+              <TextField.Input placeholder="http://localhost:1234/v1" />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
             </TextField>
+          )}
+        </form.Field>
+        <form.Field name="apiKey">
+          {(field) => (
+            <AIProfileSecretsField
+              label={_(msg`settings.ai.profiles.api-key.label`)}
+              value={field.state.value}
+              onChange={field.handleChange}
+              errors={!field.state.meta.isValid ? field.state.meta.errors as ZodIssue[] : undefined}
+            />
           )}
         </form.Field>
       </Dialog.Content>
@@ -71,7 +87,7 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
               onClick={form.handleSubmit}
               isDisabled={!canSubmit || isPending}
             >
-              {_(msg`settings.ai.add.submit`)}
+              {_(msg`settings.ai.edit.submit`)}
             </Button>
           )}
         </form.Subscribe>

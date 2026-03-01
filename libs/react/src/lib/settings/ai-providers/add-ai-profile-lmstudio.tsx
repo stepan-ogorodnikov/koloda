@@ -43,7 +43,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormPr
             <TextField
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e)}
+              onChange={field.handleChange}
             >
               <Label>{_(msg`settings.ai.profiles.title.label`)}</Label>
               <TextField.Input placeholder={_(msg`settings.ai.profiles.title.placeholder`)} />
@@ -57,7 +57,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormPr
               type="url"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e)}
+              onChange={field.handleChange}
               isRequired
             >
               <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
@@ -72,7 +72,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormPr
               type="password"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e)}
+              onChange={field.handleChange}
             >
               <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
               <TextField.Input />
@@ -87,7 +87,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormPr
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={() => form.handleSubmit()}
+              onClick={form.handleSubmit}
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.add.submit`)}

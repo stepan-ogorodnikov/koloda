@@ -135,6 +135,55 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
     })
 }
 
+pub fn update_ai_profile(
+    db: &Database,
+    id: &str,
+    title: Option<String>,
+    secrets: Option<AISecrets>,
+) -> Result<AIProfile, AppError> {
+    let mut settings = get_ai_settings_or_default(db)?;
+
+    let profile_idx = settings.profiles.iter().position(|p| p.id == id);
+    let profile_idx = profile_idx.ok_or_else(|| {
+        AppError::new(
+            crate::app::error::error_codes::NOT_FOUND_AI_PROFILE,
+            Some("Profile not found".to_string()),
+        )
+    })?;
+
+    if let Some(ref secrets) = secrets {
+        secrets.validate_for_input()?;
+    }
+
+    let existing_profile = &mut settings.profiles[profile_idx];
+
+    if let Some(new_secrets) = secrets {
+        if let Some(api_key) = new_secrets.api_key() {
+            set_api_key(id, api_key)?;
+        }
+        existing_profile.secrets = Some(redact_secrets(&new_secrets));
+    }
+
+    if title.is_some() {
+        existing_profile.title = title;
+    }
+
+    let updated_profile = existing_profile.clone();
+    set_ai_settings(db, settings)?;
+
+    let api_key = get_api_key(id)?;
+    let secrets_with_key = match (&updated_profile.secrets, api_key) {
+        (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
+        (Some(s), None) => Some(s.clone()),
+        _ => None,
+    };
+
+    Ok(AIProfile {
+        secrets: secrets_with_key,
+        ..updated_profile
+    })
+}
+
 pub fn remove_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
     let _ = remove_api_key(id);
 

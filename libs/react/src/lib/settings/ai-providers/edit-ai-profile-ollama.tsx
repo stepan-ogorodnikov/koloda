@@ -1,31 +1,28 @@
-import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, openRouterSecretsValidation } from "@koloda/srs";
+import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
+import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
 
-const formSchema = openRouterSecretsValidation.extend({
+const formSchema = ollamaSecretsValidation.extend({
   title: aiProfileValidation.shape.title,
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultValues: FormValues = {
-  title: "",
-  apiKey: "",
-};
-
-export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
   const { _ } = useLingui();
+  const title = profile.title || undefined;
+  const baseUrl = profile.secrets?.provider === "ollama" ? profile.secrets.baseUrl : "";
 
   const form = useAppForm({
-    defaultValues,
+    defaultValues: { title, baseUrl } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }) => {
       onSubmit({
-        title: value.title || undefined,
-        secrets: { provider: "openrouter", apiKey: value.apiKey },
+        title: value.title,
+        secrets: { provider: "ollama", baseUrl: value.baseUrl },
       });
     },
   });
@@ -46,17 +43,17 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
             </TextField>
           )}
         </form.Field>
-        <form.Field name="apiKey">
+        <form.Field name="baseUrl">
           {(field) => (
             <TextField
-              type="password"
+              type="url"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
               isRequired
             >
-              <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
-              <TextField.Input />
+              <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
+              <TextField.Input placeholder="http://localhost:11434" />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
             </TextField>
           )}
@@ -71,7 +68,7 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
               onClick={form.handleSubmit}
               isDisabled={!canSubmit || isPending}
             >
-              {_(msg`settings.ai.add.submit`)}
+              {_(msg`settings.ai.edit.submit`)}
             </Button>
           )}
         </form.Subscribe>

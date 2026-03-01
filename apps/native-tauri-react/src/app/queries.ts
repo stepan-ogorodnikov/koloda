@@ -30,6 +30,7 @@ import type {
   SettingsName,
   Template,
   TouchAIProfileData,
+  UpdateAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -155,6 +156,9 @@ export const queriesFn = (): Queries => ({
   }),
   addAIProfileMutation: () => ({
     mutationFn: (data: AddAIProfileData) => invoke("cmd_add_ai_profile", { data }),
+  }),
+  updateAIProfileMutation: () => ({
+    mutationFn: (data: UpdateAIProfileData) => invoke("cmd_update_ai_profile", { data }),
   }),
   removeAIProfileMutation: () => ({
     mutationFn: (data: RemoveAIProfileData) => invoke("cmd_remove_ai_profile", { data }),

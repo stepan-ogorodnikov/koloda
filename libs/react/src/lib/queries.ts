@@ -1,4 +1,45 @@
-import type { AIProfile, AddAIProfileData, AIModel, Algorithm, AllowedSettings, AppError, Card, CloneAlgorithmData, CloneTemplateData, Deck, DeckWithOnlyTitle, DeleteAlgorithmData, DeleteCardData, DeleteDeckData, DeleteTemplateData, GetCardsParams, GetLessonDataParams, GetReviewsData, InsertAlgorithmData, InsertCardData, InsertDeckData, InsertTemplateData, Lesson, LessonData, LessonFilters, LessonResultData, PatchSettingsData, RemoveAIProfileData, ResetCardProgressData, Review, SetSettingsData, SettingsName, Template, TodaysReviewTotals, TouchAIProfileData, UpdateAlgorithmData, UpdateCardData, UpdateDeckData, UpdateTemplateData } from "@koloda/srs";
+import type {
+  AddAIProfileData,
+  AIModel,
+  AIProfile,
+  Algorithm,
+  AllowedSettings,
+  AppError,
+  Card,
+  CloneAlgorithmData,
+  CloneTemplateData,
+  Deck,
+  DeckWithOnlyTitle,
+  DeleteAlgorithmData,
+  DeleteCardData,
+  DeleteDeckData,
+  DeleteTemplateData,
+  GetCardsParams,
+  GetLessonDataParams,
+  GetReviewsData,
+  InsertAlgorithmData,
+  InsertCardData,
+  InsertDeckData,
+  InsertTemplateData,
+  Lesson,
+  LessonData,
+  LessonFilters,
+  LessonResultData,
+  PatchSettingsData,
+  RemoveAIProfileData,
+  ResetCardProgressData,
+  Review,
+  SetSettingsData,
+  SettingsName,
+  Template,
+  TodaysReviewTotals,
+  TouchAIProfileData,
+  UpdateAIProfileData,
+  UpdateAlgorithmData,
+  UpdateCardData,
+  UpdateDeckData,
+  UpdateTemplateData,
+} from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { type QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
@@ -48,6 +89,7 @@ export type Queries = {
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
   getReviewsQuery: (data: GetReviewsData) => QueryOptions<Review[] | undefined>;
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
+  updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;
   touchAIProfileMutation: () => UseMutationOptions<void, AppError, TouchAIProfileData, unknown>;
   getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;

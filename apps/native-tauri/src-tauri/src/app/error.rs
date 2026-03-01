@@ -16,6 +16,7 @@ pub mod error_codes {
     pub const NOT_FOUND_CARDS_ADD_TEMPLATE: &str = "not-found.cards.add.template";
     pub const NOT_FOUND_CARDS_UPDATE_CARD: &str = "not-found.cards.update.card";
     pub const NOT_FOUND_CARDS_UPDATE_TEMPLATE: &str = "not-found.cards.update.template";
+    pub const NOT_FOUND_AI_PROFILE: &str = "not-found.ai.profile";
 
     pub const VALIDATION_COMMON_TITLE_TOO_SHORT: &str = "validation.common.title.too-short";
     pub const VALIDATION_COMMON_TITLE_TOO_LONG: &str = "validation.common.title.too-long";

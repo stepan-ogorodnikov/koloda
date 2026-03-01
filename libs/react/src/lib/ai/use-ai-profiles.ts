@@ -18,10 +18,9 @@ function getApiKey(secrets: AISecrets): string | null {
 }
 
 export function useAIProfiles(profileId?: string | null) {
-  const queries = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: aiQueryKeys.profiles(), ...queries.getAIProfilesQuery() });
+  const { getAIProfilesQuery } = useAtomValue(queriesAtom);
+  const query = useQuery({ queryKey: aiQueryKeys.profiles(), ...getAIProfilesQuery() });
   const profiles = useMemo(() => (query.data ?? []), [query.data]);
-
   const defaultProfileId = useMemo(() => {
     if (profiles.length === 0) return null;
 
