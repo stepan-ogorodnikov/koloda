@@ -24,7 +24,6 @@ export type UseGenerateCardsDialogReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
-  prompt: string;
   messages: UIMessage[];
   template: Template | null | undefined;
   hasProfiles: boolean;
@@ -33,8 +32,8 @@ export type UseGenerateCardsDialogReturn = {
   handleOpenChange: (open: boolean) => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
-  handlePromptChange: (value: string) => void;
-  handleGenerate: () => Promise<void>;
+  handleGenerate: (value?: string) => Promise<void>;
+  handleCancel: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
 };
 
@@ -54,6 +53,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [generatedRuns, setGeneratedRuns] = useState<Record<string, GeneratedCard[]>>({});
+  const [canceledRuns, setCanceledRuns] = useState<Record<string, boolean>>({});
   const [addingRunId, setAddingRunId] = useState<string | null>(null);
   const [mutationResult, setMutationResult] = useState<Record<string, AddCardsMutationResult | null>>({});
   const cardsMutation = useMutation(addCardsMutation());
@@ -94,6 +94,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       setMessages([]);
       setActiveRunId(null);
       setGeneratedRuns({});
+      setCanceledRuns({});
       setAddingRunId(null);
       setMutationResult({});
       clearCards();
@@ -111,17 +112,14 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setModelId(value);
   }, []);
 
-  const handlePromptChange = useCallback((value: string) => {
-    setPrompt(value);
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    const promptText = prompt.trim();
+  const handleGenerate = useCallback(async (value?: string) => {
+    const promptText = (value ?? prompt).trim();
     if (!promptText || !profileId || !modelId) return;
     const runId = `${Date.now()}`;
 
     setActiveRunId(runId);
     setGeneratedRuns((prev) => ({ ...prev, [runId]: [] }));
+    setCanceledRuns((prev) => ({ ...prev, [runId]: false }));
     setMutationResult((prev) => ({ ...prev, [runId]: null }));
     clearCards();
     setPrompt("");
@@ -144,6 +142,13 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     };
     await generate(input);
   }, [prompt, clearCards, touchProfileMutation, profileId, modelId, deckId, templateId, generate, _]);
+
+  const handleCancel = useCallback(() => {
+    if (activeRunId) {
+      setCanceledRuns((prev) => ({ ...prev, [activeRunId]: true }));
+    }
+    cancel();
+  }, [activeRunId, cancel]);
 
   useEffect(() => {
     if (!profileId) {
@@ -221,10 +226,12 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       canCreate,
       isCreating,
       isGenerating: isCurrentRun && isGenerating,
+      isCanceled: !!canceledRuns[generatedCardsMetadata.runId],
       mutationResult: mutationResult[generatedCardsMetadata.runId] ?? null,
     };
   }, [
     generatedRuns,
+    canceledRuns,
     activeRunId,
     isGenerating,
     cardsMutation.isPending,
@@ -240,7 +247,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     profileId,
     modelId,
     modelName,
-    prompt,
     messages,
     template,
     hasProfiles,
@@ -249,8 +255,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleOpenChange,
     handleProfileChange,
     handleModelChange,
-    handlePromptChange,
     handleGenerate,
+    handleCancel,
     getGeneratedCardsProps,
   };
 }

@@ -17,6 +17,7 @@ export type GeneratedCardsMessageProps = {
   canCreate: boolean;
   isCreating: boolean;
   isGenerating: boolean;
+  isCanceled: boolean;
   mutationResult: AddCardsMutationResult | null;
 };
 
@@ -28,6 +29,7 @@ export function GeneratedCardsMessage({
   canCreate,
   isCreating,
   isGenerating,
+  isCanceled,
   mutationResult,
 }: GeneratedCardsMessageProps) {
   const { _ } = useLingui();
@@ -61,44 +63,43 @@ export function GeneratedCardsMessage({
 
   return (
     <AIChatMessageLayout role="assistant" label={label}>
-      {isGenerating
-        ? (
-          <span className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
-            {_(msg`generate-cards.generating`)}
-          </span>
-        )
-        : (
-          <div className="flex flex-col gap-2">
-            {cards.length > 0
-              ? (
-                <>
-                  <div className="w-full overflow-x-auto">
-                    <Table.Root variants={{ class: "w-full" }}>
-                      <Table.Head table={table} />
-                      <Table.Body table={table} />
-                    </Table.Root>
-                  </div>
-                  <Button
-                    variants={{ style: "primary", size: "small", class: "self-start" }}
-                    isDisabled={!canCreate || isCreating || !!mutationResult}
-                    onPress={onAddCards}
-                  >
-                    {_(msg`generate-cards.add`)}
-                  </Button>
-                  {mutationResult && (
-                    <p className={mutationResult.type === "success" ? "fg-success" : "fg-error"}>
-                      {mutationResult.message}
-                    </p>
-                  )}
-                </>
-              )
-              : (
-                <p className="fg-level-3">
-                  {_(msg`generate-cards.generated-no-cards`)}
-                </p>
-              )}
+      {isGenerating && (
+        <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
+          {_(msg`generate-cards.generating`)}
+        </p>
+      )}
+      {isCanceled && (
+        <p className="fg-level-4">
+          {_(msg`generate-cards.canceled`)}
+        </p>
+      )}
+      {!isGenerating && !isCanceled && (cards.length > 0) && (
+        <div className="flex flex-col gap-2">
+          <div className="w-full overflow-x-auto">
+            <Table.Root variants={{ class: "w-full" }}>
+              <Table.Head table={table} />
+              <Table.Body table={table} />
+            </Table.Root>
           </div>
-        )}
+          <Button
+            variants={{ style: "primary", size: "small", class: "self-start" }}
+            isDisabled={!canCreate || isCreating || !!mutationResult}
+            onPress={onAddCards}
+          >
+            {_(msg`generate-cards.add`)}
+          </Button>
+          {mutationResult && (
+            <p className={mutationResult.type === "success" ? "fg-success" : "fg-error"}>
+              {mutationResult.message}
+            </p>
+          )}
+        </div>
+      )}
+      {!isGenerating && !isCanceled && !cards.length && (
+        <p className="fg-level-3">
+          {_(msg`generate-cards.generated-no-cards`)}
+        </p>
+      )}
     </AIChatMessageLayout>
   );
 }

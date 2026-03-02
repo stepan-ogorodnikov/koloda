@@ -23,7 +23,6 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     profileId,
     modelId,
     modelName,
-    prompt,
     messages,
     hasProfiles,
     isGenerating,
@@ -31,8 +30,8 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleOpenChange,
     handleProfileChange,
     handleModelChange,
-    handlePromptChange,
     handleGenerate,
+    handleCancel,
     getGeneratedCardsProps,
   } = useGenerateCardsDialog(deckId, templateId);
 
@@ -69,12 +68,11 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                 profileId={profileId}
                 modelId={modelId}
                 modelName={modelName}
-                input={prompt}
                 messages={messages}
                 onProfileChange={handleProfileChange}
                 onModelChange={handleModelChange}
-                onInputChange={handlePromptChange}
                 onSubmit={handleGenerate}
+                onCancel={handleCancel}
                 isLoading={isGenerating}
                 error={generateError?.message}
                 renderMessage={renderMessage}

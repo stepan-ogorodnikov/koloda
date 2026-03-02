@@ -2,7 +2,7 @@ import { Button, TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
-import { Forward } from "lucide-react";
+import { Forward, Square } from "lucide-react";
 import type { FormEvent, ReactNode } from "react";
 import { Fragment, useRef, useState } from "react";
 import { useEffect } from "react";
@@ -21,11 +21,10 @@ export type AIChatProps = {
   profileId: string;
   modelId: string;
   modelName?: string;
-  input: string;
   onProfileChange: (value: string) => void;
   onModelChange: (value: string) => void;
-  onInputChange: (value: string) => void;
-  onSubmit: () => void | Promise<void>;
+  onSubmit: (value: string) => void | Promise<void>;
+  onCancel?: () => void;
   isLoading?: boolean;
   error?: string | null;
   autoSelectDefaultProfile?: boolean;
@@ -38,11 +37,10 @@ export function AIChat({
   profileId,
   modelId,
   modelName,
-  input,
   onProfileChange,
   onModelChange,
-  onInputChange,
   onSubmit,
+  onCancel,
   isLoading = false,
   error,
   autoSelectDefaultProfile = true,
@@ -52,7 +50,7 @@ export function AIChat({
   const { _ } = useLingui();
   const { defaultProfileId } = useAIProfiles();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [hasInput, setHasInput] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
     if (autoSelectDefaultProfile && defaultProfileId && !profileId) {
@@ -60,17 +58,22 @@ export function AIChat({
     }
   }, [autoSelectDefaultProfile, defaultProfileId, profileId, onProfileChange]);
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    if (!inputRef.current) return;
-    const value = inputRef.current.value.trim();
+  const submit = () => {
+    const value = inputValue.trim();
     if (profileId && modelId && value && !isLoading) {
-      onInputChange(value);
-      onSubmit();
+      onSubmit(value);
+      setInputValue("");
     }
   };
 
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    submit();
+  };
+
+  const hasInput = !!inputValue.trim();
   const canSubmit = !!(profileId && modelId && hasInput && !isLoading);
+  const canCancel = isLoading && !!onCancel;
 
   return (
     <section className="flex flex-col h-full min-h-0">
@@ -101,22 +104,25 @@ export function AIChat({
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <TextField
           aria-label={_(msg`ai.chat.input.label`)}
-          defaultValue={input}
+          value={inputValue}
+          onChange={setInputValue}
+          autoFocus
         >
           <TextField.TextArea
             variants={{ style: "inline", class: "resize-none" }}
             rows={4}
             placeholder={_(msg`ai.chat.input.placeholder`)}
             ref={inputRef}
-            onInput={(e) => setHasInput(!!e.currentTarget.value.trim())}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+            onKeyDownCapture={(e) => {
+              if (
+                e.key === "Enter"
+                && !e.shiftKey
+                && !e.ctrlKey
+                && !e.altKey
+                && !e.metaKey
+              ) {
                 e.preventDefault();
-                const value = inputRef.current?.value.trim();
-                if (profileId && modelId && value && !isLoading) {
-                  onInputChange(value);
-                  onSubmit();
-                }
+                submit();
               }
             }}
           />
@@ -125,9 +131,21 @@ export function AIChat({
           <AIProfilePicker value={profileId} onChange={onProfileChange} />
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} />
           <div className="grow" />
-          <Button variants={{ style: "primary", size: "icon" }} type="submit" isDisabled={!canSubmit}>
-            <Forward className="size-5 min-w-5 mb-1 stroke-2" />
-          </Button>
+          {canCancel
+            ? (
+              <Button
+                variants={{ style: "primary", size: "icon" }}
+                aria-label={_(msg`ai-chat.cancel.label`)}
+                onPress={() => onCancel?.()}
+              >
+                <Square className="size-4 min-w-4 stroke-2" />
+              </Button>
+            )
+            : (
+              <Button variants={{ style: "primary", size: "icon" }} type="submit" isDisabled={!canSubmit}>
+                <Forward className="size-5 min-w-5 mb-1 stroke-2" />
+              </Button>
+            )}
         </div>
       </form>
     </section>

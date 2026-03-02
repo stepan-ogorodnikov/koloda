@@ -31,8 +31,10 @@ export function AIProfilePicker({ value, onChange }: AIProfilePickerProps) {
 
         return (
           <Select.ListBoxItem id={item.id} textValue={`${title} ${provider}`} key={item.id}>
-            <span className={item.title ? undefined : "fg-disabled"}>{title}</span>
-            <span className="fg-level-3">{provider}</span>
+            <div className="grow flex flex-row gap-2">
+              <span className={item.title ? "truncate" : "fg-disabled truncate"}>{title}</span>
+              <span className="fg-level-3">{provider}</span>
+            </div>
           </Select.ListBoxItem>
         );
       }}
