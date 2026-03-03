@@ -13,7 +13,7 @@ import type {
   TemplateField,
   TemplateLayoutItem,
 } from "@koloda/srs";
-import { convertTemplateToLessonTemplate, throwKnownError } from "@koloda/srs";
+import { AppError, convertTemplateToLessonTemplate, throwKnownError } from "@koloda/srs";
 import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { DB } from "./db";
@@ -193,6 +193,8 @@ export async function getLessonData(
  * @returns The inserted review object
  */
 export async function submitLessonResult(db: DB, { card, review }: LessonResultData) {
+  if (card.id !== review.cardId) throw new AppError("validation.lessons.result.card-review-mismatch");
+
   return throwKnownError("db.update", async () => {
     const { id, ...data } = card;
     return db.transaction(async (tx) => {

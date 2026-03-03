@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::templates::TemplateField;
+use crate::app::error::error_codes;
 use crate::app::error::AppError;
 use crate::app::utility::{default_now, serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::cards::{Card, UpdateCardProgress};
@@ -82,7 +83,16 @@ pub struct LessonResultData {
 impl LessonResultData {
     pub fn validate(&self) -> Result<(), AppError> {
         self.card.validate()?;
-        self.review.validate()
+        self.review.validate()?;
+
+        if self.card.id != self.review.card_id {
+            return Err(AppError::new(
+                error_codes::VALIDATION_LESSONS_RESULT_CARD_REVIEW_MISMATCH,
+                None,
+            ));
+        }
+
+        Ok(())
     }
 }
 
