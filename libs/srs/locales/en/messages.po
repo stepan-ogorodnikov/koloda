@@ -201,7 +201,7 @@ msgstr "System"
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/srs/src/lib/error.ts:42
+#: ../../libs/srs/src/lib/error.ts:43
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
@@ -209,15 +209,19 @@ msgstr "This field can't be empty"
 msgid "validation.common.title.too-short"
 msgstr "Title can't be empty"
 
-#: ../../libs/srs/src/lib/error.ts:36
+#: ../../libs/srs/src/lib/error.ts:35
+msgid "validation.lessons.result.card-review-mismatch"
+msgstr "Card id and review card id don't match"
+
+#: ../../libs/srs/src/lib/error.ts:37
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key can't be empty"
 
-#: ../../libs/srs/src/lib/error.ts:37
+#: ../../libs/srs/src/lib/error.ts:38
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Invalid URL"
 
-#: ../../libs/srs/src/lib/error.ts:35
+#: ../../libs/srs/src/lib/error.ts:36
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Hotkeys must be unique within their group"
 
@@ -245,18 +249,18 @@ msgstr "Hours must be between 0 and 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/srs/src/lib/error.ts:41
+#: ../../libs/srs/src/lib/error.ts:42
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/srs/src/lib/error.ts:38
+#: ../../libs/srs/src/lib/error.ts:39
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/srs/src/lib/error.ts:39
+#: ../../libs/srs/src/lib/error.ts:40
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/srs/src/lib/error.ts:40
+#: ../../libs/srs/src/lib/error.ts:41
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"
