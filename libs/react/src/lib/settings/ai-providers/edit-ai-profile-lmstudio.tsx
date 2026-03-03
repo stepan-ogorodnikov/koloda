@@ -37,7 +37,13 @@ export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIPr
   });
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
@@ -84,7 +90,7 @@ export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIPr
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={form.handleSubmit}
+              type="submit"
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.edit.submit`)}
@@ -92,6 +98,6 @@ export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIPr
           )}
         </form.Subscribe>
       </Dialog.Footer>
-    </>
+    </form>
   );
 }

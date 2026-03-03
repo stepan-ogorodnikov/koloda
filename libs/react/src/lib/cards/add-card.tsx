@@ -102,8 +102,8 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                   {([isDirty, canSubmit]) => (
                     <Button
                       variants={{ style: "primary" }}
+                      type="submit"
                       isDisabled={!canSubmit || !isDirty}
-                      onClick={form.handleSubmit}
                     >
                       {_(msg`add-card.submit`)}
                     </Button>

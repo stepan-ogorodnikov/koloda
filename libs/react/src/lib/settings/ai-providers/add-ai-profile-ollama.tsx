@@ -31,7 +31,13 @@ export function AddAIProfileOllama({ onSubmit, isPending }: AddAIProfileFormProp
   });
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
@@ -68,7 +74,7 @@ export function AddAIProfileOllama({ onSubmit, isPending }: AddAIProfileFormProp
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={form.handleSubmit}
+              type="submit"
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.add.submit`)}
@@ -76,6 +82,6 @@ export function AddAIProfileOllama({ onSubmit, isPending }: AddAIProfileFormProp
           )}
         </form.Subscribe>
       </Dialog.Footer>
-    </>
+    </form>
   );
 }

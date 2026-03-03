@@ -28,7 +28,13 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProf
   });
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
@@ -65,7 +71,7 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProf
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={form.handleSubmit}
+              type="submit"
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.edit.submit`)}
@@ -73,6 +79,6 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProf
           )}
         </form.Subscribe>
       </Dialog.Footer>
-    </>
+    </form>
   );
 }

@@ -31,7 +31,13 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
   });
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
@@ -68,7 +74,7 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={form.handleSubmit}
+              type="submit"
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.add.submit`)}
@@ -76,6 +82,6 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
           )}
         </form.Subscribe>
       </Dialog.Footer>
-    </>
+    </form>
   );
 }

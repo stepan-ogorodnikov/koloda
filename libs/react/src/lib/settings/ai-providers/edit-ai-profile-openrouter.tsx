@@ -28,7 +28,13 @@ export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAI
   });
 
   return (
-    <>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+    >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
@@ -60,7 +66,7 @@ export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAI
           {([canSubmit]) => (
             <Button
               variants={{ style: "primary" }}
-              onClick={form.handleSubmit}
+              type="submit"
               isDisabled={!canSubmit || isPending}
             >
               {_(msg`settings.ai.edit.submit`)}
@@ -68,6 +74,6 @@ export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAI
           )}
         </form.Subscribe>
       </Dialog.Footer>
-    </>
+    </form>
   );
 }
