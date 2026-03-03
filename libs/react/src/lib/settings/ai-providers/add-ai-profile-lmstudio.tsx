@@ -1,5 +1,5 @@
 import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, lmstudioSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, lmstudioSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -17,7 +17,7 @@ const defaultValues: FormValues = {
   apiKey: "",
 };
 
-export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function AddAIProfileLMStudio({ onSubmit, isPending, error }: AddAIProfileFormProps) {
   const { _ } = useLingui();
 
   const form = useAppForm({
@@ -86,6 +86,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending }: AddAIProfileFormPr
             </TextField>
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />

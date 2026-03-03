@@ -76,8 +76,7 @@ export function SettingsAIAddProfile() {
                 ))}
               </Select>
             </div>
-            {error && <p className="fg-error">{error.details || error.message}</p>}
-            <Form onSubmit={handleSubmit} isPending={isPending} />
+            <Form onSubmit={handleSubmit} isPending={isPending} error={error} />
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

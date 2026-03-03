@@ -1,5 +1,5 @@
 import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, openRouterSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, openRouterSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -16,7 +16,7 @@ const defaultValues: FormValues = {
   apiKey: "",
 };
 
-export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function AddAIProfileOpenRouter({ onSubmit, isPending, error }: AddAIProfileFormProps) {
   const { _ } = useLingui();
 
   const form = useAppForm({
@@ -67,6 +67,7 @@ export function AddAIProfileOpenRouter({ onSubmit, isPending }: AddAIProfileForm
             </TextField>
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />

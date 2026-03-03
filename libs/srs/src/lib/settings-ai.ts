@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AppError } from "./error";
 
 export const AI_PROVIDER_LABELS = {
   openrouter: "OpenRouter",
@@ -60,12 +61,14 @@ export const DEFAULT_AI_SETTINGS: AISettings = aiSettingsValidation.parse({
 export type AddAIProfileFormProps = {
   onSubmit: (data: { title?: string; secrets: AISecrets }) => void;
   isPending: boolean;
+  error?: AppError | null;
 };
 
 export type EditAIProfileFormProps = {
   profile: AIProfile;
   onSubmit: (data: { title?: string; secrets?: AISecrets }) => void;
   isPending: boolean;
+  error?: AppError | null;
 };
 
 export type AddAIProfileData = {

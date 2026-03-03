@@ -1,5 +1,5 @@
 import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, lmstudioSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, lmstudioSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -12,7 +12,7 @@ const formSchema = lmstudioSecretsValidation.extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
+export function EditAIProfileLMStudio({ profile, onSubmit, isPending, error }: EditAIProfileFormProps) {
   const { _ } = useLingui();
   const secrets = profile.secrets?.provider === "lmstudio" ? profile.secrets : undefined;
 
@@ -83,6 +83,7 @@ export function EditAIProfileLMStudio({ profile, onSubmit, isPending }: EditAIPr
             />
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />

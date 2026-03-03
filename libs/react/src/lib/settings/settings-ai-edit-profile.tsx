@@ -65,7 +65,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
               <Dialog.Close slot="close" />
             </Dialog.Header>
             {error && <p className="fg-error">{error.details || error.message}</p>}
-            <Form profile={profile} onSubmit={handleSubmit} isPending={isPending} />
+            <Form profile={profile} onSubmit={handleSubmit} isPending={isPending} error={error} />
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

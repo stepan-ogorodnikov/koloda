@@ -1,5 +1,5 @@
 import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, ollamaSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -11,7 +11,7 @@ const formSchema = ollamaSecretsValidation.extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
+export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: EditAIProfileFormProps) {
   const { _ } = useLingui();
   const title = profile.title || undefined;
   const baseUrl = profile.secrets?.provider === "ollama" ? profile.secrets.baseUrl : "";
@@ -64,6 +64,7 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending }: EditAIProf
             </TextField>
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />

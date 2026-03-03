@@ -1,5 +1,5 @@
 import type { AddAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, ollamaSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -16,7 +16,7 @@ const defaultValues: FormValues = {
   baseUrl: "",
 };
 
-export function AddAIProfileOllama({ onSubmit, isPending }: AddAIProfileFormProps) {
+export function AddAIProfileOllama({ onSubmit, isPending, error }: AddAIProfileFormProps) {
   const { _ } = useLingui();
 
   const form = useAppForm({
@@ -67,6 +67,7 @@ export function AddAIProfileOllama({ onSubmit, isPending }: AddAIProfileFormProp
             </TextField>
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />

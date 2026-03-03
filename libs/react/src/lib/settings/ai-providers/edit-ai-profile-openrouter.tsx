@@ -1,5 +1,5 @@
 import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, openRouterSecretsValidation } from "@koloda/srs";
+import { aiProfileValidation, openRouterSecretsValidation, toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -12,7 +12,7 @@ const formSchema = openRouterSecretsValidation.extend({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAIProfileFormProps) {
+export function EditAIProfileOpenRouter({ profile, onSubmit, isPending, error }: EditAIProfileFormProps) {
   const { _ } = useLingui();
   const apiKey = profile.secrets?.provider === "openrouter" ? profile.secrets.apiKey : "";
 
@@ -59,6 +59,7 @@ export function EditAIProfileOpenRouter({ profile, onSubmit, isPending }: EditAI
             />
           )}
         </form.Field>
+        {error && <form.Errors errors={toFormErrors(error)} />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />
