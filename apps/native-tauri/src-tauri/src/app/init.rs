@@ -47,14 +47,18 @@ pub fn get_db_status(db: tauri::State<'_, Database>) -> Result<DbStatus, AppErro
 
 #[tauri::command]
 pub fn seed_db(db: tauri::State<'_, Database>, data: SeedData) -> Result<(), AppError> {
-    let algorithm_id = match get_oldest_algorithm_id(&db)? {
+    seed_db_with_database(&db, data)
+}
+
+pub fn seed_db_with_database(db: &Database, data: SeedData) -> Result<(), AppError> {
+    let algorithm_id = match get_oldest_algorithm_id(db)? {
         Some(id) => id,
-        None => add_algorithm(&db, data.algorithm)?.id,
+        None => add_algorithm(db, data.algorithm)?.id,
     };
 
-    let template_id = match get_oldest_template_id(&db)? {
+    let template_id = match get_oldest_template_id(db)? {
         Some(id) => id,
-        None => add_template(&db, data.template)?.id,
+        None => add_template(db, data.template)?.id,
     };
 
     let mut learning_settings = data.settings.learning;
@@ -66,9 +70,9 @@ pub fn seed_db(db: tauri::State<'_, Database>, data: SeedData) -> Result<(), App
         }
     }
 
-    set_settings(&db, SettingsName::Interface, data.settings.interface)?;
-    set_settings(&db, SettingsName::Learning, learning_settings)?;
-    set_settings(&db, SettingsName::Hotkeys, data.settings.hotkeys)?;
+    set_settings(db, SettingsName::Interface, data.settings.interface)?;
+    set_settings(db, SettingsName::Learning, learning_settings)?;
+    set_settings(db, SettingsName::Hotkeys, data.settings.hotkeys)?;
 
     Ok(())
 }

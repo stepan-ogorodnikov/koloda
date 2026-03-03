@@ -58,6 +58,19 @@ impl Database {
 
         Ok(())
     }
+
+    pub fn from_connection(conn: Connection) -> Self {
+        Self {
+            conn: Arc::new(Mutex::new(conn)),
+        }
+    }
+
+    pub fn in_memory() -> Result<Self, AppError> {
+        let mut conn = Connection::open_in_memory().map_err(AppError::from)?;
+        conn.pragma_update(None, "foreign_keys", "ON").ok();
+        migrations::runner().run(&mut conn).map_err(AppError::from)?;
+        Ok(Self::from_connection(conn))
+    }
 }
 
 pub fn get_db_path(app_handle: &AppHandle) -> anyhow::Result<PathBuf> {

@@ -1,33 +1,27 @@
 use chrono::Utc;
 use serde_json::Value;
-use std::sync::LazyLock;
 
 use crate::app::db::Database;
 use crate::app::error::AppError;
-use crate::app::secrets::create_secret_store;
+use crate::app::secrets::get_secret_store;
 use crate::app::utility::generate_uuid;
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_ai::{AIProfile, AISecrets, AISettings};
-
-const STORE_ID: &str = "koloda";
-
-static SECRET_STORE: LazyLock<Box<dyn crate::app::secrets::SecretStore + 'static>> =
-    LazyLock::new(|| create_secret_store(STORE_ID));
 
 fn get_ai_profile_store_key(profile_id: &str) -> String {
     format!("ai-profile-{}", profile_id)
 }
 
 fn set_api_key(profile_id: &str, api_key: &str) -> Result<(), AppError> {
-    SECRET_STORE.set(&get_ai_profile_store_key(profile_id), api_key)
+    get_secret_store().set(&get_ai_profile_store_key(profile_id), api_key)
 }
 
 fn get_api_key(profile_id: &str) -> Result<Option<String>, AppError> {
-    SECRET_STORE.get(&get_ai_profile_store_key(profile_id))
+    get_secret_store().get(&get_ai_profile_store_key(profile_id))
 }
 
 fn remove_api_key(profile_id: &str) -> Result<(), AppError> {
-    SECRET_STORE.remove(&get_ai_profile_store_key(profile_id))
+    get_secret_store().remove(&get_ai_profile_store_key(profile_id))
 }
 
 fn redact_secrets(secrets: &AISecrets) -> AISecrets {
@@ -185,7 +179,7 @@ pub fn update_ai_profile(
 }
 
 pub fn remove_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
-    let _ = remove_api_key(id);
+    remove_api_key(id)?;
 
     let mut settings = get_ai_settings_or_default(db)?;
     settings.profiles.retain(|profile| profile.id != id);

@@ -1,6 +1,34 @@
 use crate::app::error::AppError;
 use std::collections::HashMap;
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{LazyLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
+
+const STORE_ID: &str = "koloda";
+
+struct TestStore(std::ptr::NonNull<dyn SecretStore>);
+
+unsafe impl Send for TestStore {}
+unsafe impl Sync for TestStore {}
+
+static TEST_SECRET_STORE: LazyLock<RwLock<Option<TestStore>>> = LazyLock::new(|| RwLock::new(None));
+
+pub fn set_test_secret_store(store: Option<Box<dyn SecretStore>>) {
+    let mut guard = TEST_SECRET_STORE.write().unwrap();
+    *guard = store.map(|b| TestStore(std::ptr::NonNull::new(Box::into_raw(b)).unwrap()));
+}
+
+pub fn clear_test_secret_store() {
+    let mut guard = TEST_SECRET_STORE.write().unwrap();
+    *guard = None;
+}
+
+pub fn get_secret_store() -> &'static dyn SecretStore {
+    let guard = TEST_SECRET_STORE.read().unwrap();
+    if let Some(ref ptr) = *guard {
+        return unsafe { ptr.0.as_ref() };
+    }
+    let real_store: &dyn SecretStore = &**REAL_SECRET_STORE;
+    real_store
+}
 
 pub trait SecretStore: Send + Sync {
     fn get(&self, key: &str) -> Result<Option<String>, AppError>;
@@ -292,6 +320,8 @@ mod windows_store {
 
 #[cfg(target_os = "windows")]
 pub use windows_store::WindowsCredentialStore;
+
+static REAL_SECRET_STORE: LazyLock<Box<dyn SecretStore>> = LazyLock::new(|| create_secret_store(STORE_ID));
 
 #[cfg(target_os = "windows")]
 pub fn create_secret_store(service: &'static str) -> Box<dyn SecretStore> {
