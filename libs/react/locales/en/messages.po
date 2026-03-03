@@ -19,7 +19,7 @@ msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
 #. placeholder {0}: cardsToCreate.length
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:191
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:200
 msgid "{0, plural, other {generate-cards.add.success}}"
 msgstr "{0, plural, one {# card added} other {# cards added}}"
 
@@ -507,7 +507,7 @@ msgstr "Edit card"
 msgid "generate-cards.add"
 msgstr "Add Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:200
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:209
 msgid "generate-cards.add.error"
 msgstr "Failed to add generated cards"
 
@@ -520,15 +520,35 @@ msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:68
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:129
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:137
 msgid "generate-cards.generating"
 msgstr "Generating"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:62
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:42
+msgid "generate-cards.settings.provider-prompt.label"
+msgstr "Provider prompt"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:80
+msgid "generate-cards.settings.show-chat"
+msgstr "Show chat"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:81
+msgid "generate-cards.settings.show-settings"
+msgstr "Show settings"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:34
+msgid "generate-cards.settings.system-prompt.label"
+msgstr "System prompt"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:56
+msgid "generate-cards.settings.temperature.label"
+msgstr "Temperature"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:74
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:53
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:65
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

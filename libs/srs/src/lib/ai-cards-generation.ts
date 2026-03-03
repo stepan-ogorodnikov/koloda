@@ -2,7 +2,7 @@ import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText, Output, streamText } from "ai";
 import { z } from "zod";
 import type { InsertCardData } from "./cards";
-import type { AISecrets } from "./settings-ai";
+import type { AiProvider, AISecrets } from "./settings-ai";
 import type { Template, TemplateFields } from "./templates";
 
 export const GENERATION_TEMPERATURE = 0.2;
@@ -11,6 +11,7 @@ export const generateCardsInputSchema = z.object({
   credentialId: z.uuid(),
   modelId: z.string().min(1),
   prompt: z.string().min(1),
+  temperature: z.number().min(0).max(2).optional(),
   deckId: z.int().positive(),
   templateId: z.int().positive(),
 });
@@ -27,19 +28,58 @@ export type GeneratedCard = { content: Record<string, { text: string }> };
 export type OnCardGenerated = (card: GeneratedCard) => void;
 export type GenerateCardsFunction = (request: CardGenerationRequest) => Promise<void>;
 
+export function buildSystemPrompt(fields: TemplateFields, providerPrompt = ""): string {
+  const fieldDescriptions = fields
+    .map((f) => `- key "${f.id}" => ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
+    .join("\n");
+
+  const corePrompt = [
+    "You are a flashcard generator that must produce strictly structured flashcard data.",
+    "The flashcards have the following fields:",
+    fieldDescriptions,
+    "Rules:",
+    "- Output must match the provided schema exactly.",
+    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
+    "- \"content\" keys must be ONLY the field keys listed above.",
+    "- Do not add extra keys, comments, explanations, markdown, headings, or prose.",
+    "- Keep text concise, educational, and accurate.",
+    "- For required fields, never return empty text.",
+    "- Follow the requested card count exactly when specified.",
+  ].join("\n");
+
+  return providerPrompt ? `${corePrompt}\n\n${providerPrompt}` : corePrompt;
+}
+
+export function buildProviderFormatPrompt(fields: TemplateFields) {
+  return [
+    "Provider-specific format instructions:",
+    "When not using native structured output, format each card exactly as:",
+    "## Card <number>",
+    ...fields.map((field) => `**${field.title}**: <value>`),
+    "Only output cards in this exact format.",
+  ].join("\n");
+}
+
+export function buildSystemPromptForProvider(fields: TemplateFields, provider?: AiProvider | null) {
+  if (!provider || provider === "openrouter") return buildSystemPrompt(fields);
+  return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
+}
+
 export function generateCardsWithOpenRouter(request: CardGenerationRequest, openrouter: OpenRouterProvider) {
   return runStructuredCardGeneration((modelId) => openrouter(modelId), request);
 }
 
 export function generateCardsWithOllama(request: CardGenerationRequest, baseUrl: string) {
   return runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+    const temperature = resolveGenerationTemperature(input.temperature);
     const response = await fetch(new URL("/api/generate", baseUrl), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: input.modelId,
-        system: buildSystemPrompt(template.content.fields),
-        prompt: buildFormatFallbackPrompt(template, input.prompt),
+        system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+        prompt: input.prompt,
+        temperature,
         stream: false,
       }),
       signal: abortSignal,
@@ -63,6 +103,7 @@ export function generateCardsWithLMStudio(
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ) {
   return runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+    const temperature = resolveGenerationTemperature(input.temperature);
     const response = await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
       method: "POST",
       headers: {
@@ -71,12 +112,15 @@ export function generateCardsWithLMStudio(
       },
       body: JSON.stringify({
         model: input.modelId,
-        temperature: GENERATION_TEMPERATURE,
+        temperature,
         messages: [
-          { role: "system", content: buildSystemPrompt(template.content.fields) },
+          {
+            role: "system",
+            content: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+          },
           {
             role: "user",
-            content: buildFormatFallbackPrompt(template, input.prompt),
+            content: input.prompt,
           },
         ],
       }),
@@ -88,35 +132,6 @@ export function generateCardsWithLMStudio(
     const data = await response.json() as OpenAICompatibleChatCompletionsResponse;
     return data.choices?.[0]?.message?.content ?? "";
   }, request);
-}
-
-export function buildSystemPrompt(fields: TemplateFields): string {
-  const fieldDescriptions = fields
-    .map((f) => `- key "${f.id}" => ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
-    .join("\n");
-
-  return [
-    "You are a flashcard generator that must produce strictly structured flashcard data.",
-    "The flashcards have the following fields:",
-    fieldDescriptions,
-    "Rules:",
-    "- Output must match the provided schema exactly.",
-    "- Each card must be an object with a \"content\" object.",
-    "- \"content\" keys must be ONLY the field keys listed above.",
-    "- Each field value must be an object with a single string property: { \"text\": \"...\" }.",
-    "- Do not add extra keys, comments, explanations, markdown, headings, or prose.",
-    "- Do not wrap output in code fences.",
-    "- Keep text concise, educational, and accurate.",
-    "- For required fields, never return empty text.",
-    "- Follow the requested card count exactly when specified.",
-  ].join("\n");
-}
-
-export function buildUserPrompt(prompt: string): string {
-  return [
-    "Generate an appropriate number of flashcards.",
-    `Topic/content: ${prompt}`,
-  ].join("\n");
 }
 
 export function getCardContentSchema(fields: TemplateFields) {
@@ -135,16 +150,8 @@ function normalizeLabel(value: string): string {
   return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
-function buildFormatFallbackPrompt(template: Template, prompt: string): string {
-  return [
-    "Generate an appropriate number of flashcards based on the user's request.",
-    `Topic/content: ${prompt}`,
-    "Output format (strict):",
-    "For each card:",
-    "## Card <number>",
-    ...template.content.fields.map((field) => `**${field.title}**: <value>`),
-    "Only output cards in this exact format.",
-  ].join("\n");
+function resolveGenerationTemperature(value?: number) {
+  return typeof value === "number" ? value : GENERATION_TEMPERATURE;
 }
 
 function extractCardsFromJsonArray(text: string, template: Template): GeneratedCard[] {
@@ -229,13 +236,14 @@ async function runStructuredCardGeneration(
   { template, input, onCard, abortSignal }: CardGenerationRequest,
 ): Promise<void> {
   const elementSchema = getCardContentSchema(template.content.fields);
+  const temperature = resolveGenerationTemperature(input.temperature);
 
   const result = streamText({
     model: modelFactory(input.modelId),
-    temperature: GENERATION_TEMPERATURE,
+    temperature,
     output: Output.array({ element: elementSchema }),
     system: buildSystemPrompt(template.content.fields),
-    prompt: buildUserPrompt(input.prompt),
+    prompt: input.prompt,
     abortSignal,
   });
 
@@ -259,9 +267,9 @@ async function runStructuredCardGeneration(
 
   const fallbackTextResult = await generateText({
     model: modelFactory(input.modelId),
-    temperature: GENERATION_TEMPERATURE,
-    system: buildSystemPrompt(template.content.fields),
-    prompt: buildFormatFallbackPrompt(template, input.prompt),
+    temperature,
+    system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+    prompt: input.prompt,
     abortSignal,
   });
   const fallbackCards = [

@@ -19,7 +19,7 @@ msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
 #. placeholder {0}: cardsToCreate.length
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:191
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:200
 msgid "{0, plural, other {generate-cards.add.success}}"
 msgstr "{0, plural, one {# карточка добавлена} few {# карточки добавлены} many {# карточен добавлено} other {# карточки добавлены} }"
 
@@ -507,7 +507,7 @@ msgstr "Редактировать карточку"
 msgid "generate-cards.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:200
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:209
 msgid "generate-cards.add.error"
 msgstr "Не удалось добавить карточки"
 
@@ -520,15 +520,35 @@ msgid "generate-cards.generated-no-cards"
 msgstr "Ответ был получен, но не удалось извлечь из него карточки."
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:68
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:129
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:137
 msgid "generate-cards.generating"
 msgstr "Генерирую"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:62
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:42
+msgid "generate-cards.settings.provider-prompt.label"
+msgstr "Промпт провайдера"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:80
+msgid "generate-cards.settings.show-chat"
+msgstr "Показать чат"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:81
+msgid "generate-cards.settings.show-settings"
+msgstr "Показать настройки"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:34
+msgid "generate-cards.settings.system-prompt.label"
+msgstr "Системный промпт"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:56
+msgid "generate-cards.settings.temperature.label"
+msgstr "Температура"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:74
 msgid "generate-cards.title"
 msgstr "Генерация карточек"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:53
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:65
 msgid "generate-cards.trigger"
 msgstr "Сгенерировать карточки с помощью ИИ"
 

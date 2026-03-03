@@ -6,8 +6,8 @@ import {
   useAIModels,
   useAIProfiles,
 } from "@koloda/react";
-import type { Deck, GenerateCardsInput, GeneratedCard, InsertCardData, Template } from "@koloda/srs";
-import { createAIGenerationClient, transformGeneratedCards } from "@koloda/srs";
+import type { AISecrets, Deck, GenerateCardsInput, GeneratedCard, InsertCardData, Template } from "@koloda/srs";
+import { createAIGenerationClient, GENERATION_TEMPERATURE, transformGeneratedCards } from "@koloda/srs";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,8 @@ export type UseGenerateCardsDialogReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
+  provider: AISecrets["provider"] | null;
+  temperature: number;
   messages: UIMessage[];
   template: Template | null | undefined;
   hasProfiles: boolean;
@@ -32,6 +34,7 @@ export type UseGenerateCardsDialogReturn = {
   handleOpenChange: (open: boolean) => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
+  handleTemperatureChange: (value: number) => void;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
@@ -49,6 +52,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [isOpen, setIsOpen] = useState(false);
   const [profileId, setProfileId] = useState("");
   const [modelId, setModelId] = useState("");
+  const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
@@ -112,6 +116,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setModelId(value);
   }, []);
 
+  const handleTemperatureChange = useCallback((value: number) => {
+    setTemperature(Number.isNaN(value) ? GENERATION_TEMPERATURE : Math.min(2, Math.max(0, value)));
+  }, []);
+
   const handleGenerate = useCallback(async (value?: string) => {
     const promptText = (value ?? prompt).trim();
     if (!promptText || !profileId || !modelId) return;
@@ -133,15 +141,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     ]);
 
     touchProfileMutation.mutate({ id: profileId, modelId });
-    const input: GenerateCardsInput = {
+    const input = {
       credentialId: profileId,
       modelId,
       prompt: promptText,
+      temperature,
       deckId,
       templateId,
-    };
+    } as GenerateCardsInput;
     await generate(input);
-  }, [prompt, clearCards, touchProfileMutation, profileId, modelId, deckId, templateId, generate, _]);
+  }, [prompt, clearCards, touchProfileMutation, profileId, modelId, deckId, templateId, temperature, generate, _]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
@@ -247,6 +256,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     profileId,
     modelId,
     modelName,
+    provider: selectedProfile?.secrets?.provider ?? null,
+    temperature,
     messages,
     template,
     hasProfiles,
@@ -255,6 +266,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleOpenChange,
     handleProfileChange,
     handleModelChange,
+    handleTemperatureChange,
     handleGenerate,
     handleCancel,
     getGeneratedCardsProps,
