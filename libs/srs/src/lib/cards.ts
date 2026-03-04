@@ -133,3 +133,5 @@ export function createCardFromCardFSRS(input: CardFSRS) {
 }
 
 export type ResetCardProgressData = { id: Card["id"] };
+
+export type AddCardsResult = Array<{ error?: string }>;

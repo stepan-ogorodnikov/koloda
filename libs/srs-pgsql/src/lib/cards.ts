@@ -78,24 +78,29 @@ export async function addCard(db: DB, data: InsertCardData) {
  * @param dataArray - Array of card data to insert
  * @returns Array of created card objects
  */
-export async function addCards(db: DB, dataArray: InsertCardData[]) {
-  return throwKnownError("db.add", async () => {
-    if (dataArray.length === 0) return [];
+export type AddCardsResult = Array<{ error?: string }>;
 
-    const templateId = dataArray[0].templateId;
-    const template = await getTemplate(db, templateId);
-    if (!template) throw new AppError("not-found.cards.add.template");
-    const schema = getInsertCardSchema(template);
+export async function addCards(db: DB, dataArray: InsertCardData[]): Promise<AddCardsResult> {
+  if (dataArray.length === 0) return [];
 
-    const validatedData = dataArray.map((data) => schema.parse(data));
+  const templateId = dataArray[0].templateId;
+  const template = await getTemplate(db, templateId);
+  if (!template) throw new AppError("not-found.cards.add.template");
+  const schema = getInsertCardSchema(template);
 
-    const result = await db
-      .insert(cards)
-      .values(validatedData)
-      .returning();
+  const results: AddCardsResult = [];
 
-    return result as Card[];
-  });
+  for (let i = 0; i < dataArray.length; i++) {
+    try {
+      const validated = schema.parse(dataArray[i]);
+      await db.insert(cards).values(validated).returning();
+      results.push({});
+    } catch (e) {
+      results.push({ error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  return results;
 }
 
 /**

@@ -1,5 +1,6 @@
 import type {
   AddAIProfileData,
+  AddCardsResult,
   AIModel,
   AIProfile,
   Algorithm,
@@ -79,7 +80,7 @@ export type Queries = {
   getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
   getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
   addCardMutation: () => UseMutationOptions<Card | undefined, AppError, InsertCardData, unknown>;
-  addCardsMutation: () => UseMutationOptions<Card[], AppError, InsertCardData[], unknown>;
+  addCardsMutation: () => UseMutationOptions<AddCardsResult, AppError, InsertCardData[], unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, AppError, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
   resetCardProgressMutation: () => UseMutationOptions<unknown, AppError, ResetCardProgressData, unknown>;

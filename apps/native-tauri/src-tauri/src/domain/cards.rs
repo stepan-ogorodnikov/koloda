@@ -108,6 +108,28 @@ pub struct ResetCardProgressData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct AddCardsResult {
+    pub added: Vec<Card>,
+    pub failed: Vec<CardInsertError>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardInsertError {
+    pub index: usize,
+    pub error: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddCardsItemResult {
+    pub error: Option<String>,
+}
+
+pub type AddCardsResponse = Vec<AddCardsItemResult>;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetCardsParams {
     pub deck_id: i64,
 }

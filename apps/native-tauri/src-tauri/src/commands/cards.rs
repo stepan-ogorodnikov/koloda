@@ -3,7 +3,9 @@ use tauri::command;
 use crate::{
     app::db::DB,
     app::error::AppError,
-    domain::cards::{Card, DeleteCardData, GetCardsParams, InsertCardData, ResetCardProgressData, UpdateCardData},
+    domain::cards::{
+        AddCardsResponse, Card, DeleteCardData, GetCardsParams, InsertCardData, ResetCardProgressData, UpdateCardData,
+    },
     repo::cards as repo,
 };
 
@@ -23,7 +25,7 @@ pub fn cmd_add_card(db: DB<'_>, data: InsertCardData) -> Result<Card, AppError> 
 }
 
 #[command]
-pub fn cmd_add_cards(db: DB<'_>, data: Vec<InsertCardData>) -> Result<Vec<Card>, AppError> {
+pub fn cmd_add_cards(db: DB<'_>, data: Vec<InsertCardData>) -> Result<AddCardsResponse, AppError> {
     repo::add_cards(&db, data)
 }
 

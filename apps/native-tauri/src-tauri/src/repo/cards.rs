@@ -1,9 +1,12 @@
+use crate::domain::cards::AddCardsItemResult;
+use crate::domain::cards::AddCardsResponse;
 use rusqlite::{params, OptionalExtension};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::{Card, CardContent, DeleteCardData, InsertCardData, ResetCardProgressData, UpdateCardData};
+use crate::domain::templates::Template;
 use crate::repo::templates::get_template;
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
@@ -112,13 +115,67 @@ pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
     get_card(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
 }
 
-pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<Vec<Card>, AppError> {
-    let mut cards = Vec::with_capacity(data.len());
-    for card_data in data {
-        cards.push(add_card(db, card_data)?);
+pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsResponse, AppError> {
+    if data.is_empty() {
+        return Ok(Vec::new());
     }
 
-    Ok(cards)
+    let template_id = data[0].template_id;
+    let template = get_template(db, template_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
+            Some(format!("Template id: {}", template_id)),
+        )
+    })?;
+
+    let mut results = Vec::with_capacity(data.len());
+
+    for card_data in data.into_iter() {
+        match insert_card_data(db, &card_data, &template) {
+            Ok(_) => results.push(AddCardsItemResult { error: None }),
+            Err(e) => results.push(AddCardsItemResult {
+                error: Some(format!("{}", e)),
+            }),
+        }
+    }
+
+    Ok(results)
+}
+
+fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -> Result<Card, AppError> {
+    data.validate(&template.content.fields)?;
+
+    let now = get_current_timestamp()?;
+
+    let id = db.with_conn(|conn| {
+        conn.execute(
+            r#"
+            INSERT INTO cards (deck_id, template_id, content, state, due_at, stability,
+                              difficulty, scheduled_days, learning_steps, reps, lapses,
+                              last_reviewed_at, created_at, updated_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, NULL)
+            "#,
+            params![
+                data.deck_id,
+                data.template_id,
+                serde_json::to_string(&data.content)?,
+                data.state.unwrap_or(0),
+                data.due_at,
+                data.stability,
+                data.difficulty,
+                data.scheduled_days.unwrap_or(0),
+                data.learning_steps.unwrap_or(0),
+                data.reps.unwrap_or(0),
+                data.lapses.unwrap_or(0),
+                data.last_reviewed_at,
+                now
+            ],
+        )?;
+
+        Ok(conn.last_insert_rowid())
+    })?;
+
+    get_card(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
 }
 
 pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError> {

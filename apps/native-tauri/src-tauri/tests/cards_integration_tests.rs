@@ -8,7 +8,7 @@ use common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use common::test_db;
 
 #[test]
-fn add_cards_is_not_atomic_and_keeps_previously_inserted_cards() {
+fn add_cards_keeps_previously_inserted_cards_on_failure() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
@@ -48,7 +48,12 @@ fn add_cards_is_not_atomic_and_keeps_previously_inserted_cards() {
         ],
     );
 
-    assert!(result.is_err());
+    assert!(result.is_ok());
+    let results = result.unwrap();
+    assert_eq!(results.len(), 2);
+
+    assert!(results[0].error.is_none(), "first card should succeed");
+    assert!(results[1].error.is_some(), "second card should fail");
 
     let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
     assert_eq!(
