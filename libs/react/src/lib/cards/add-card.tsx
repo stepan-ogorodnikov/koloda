@@ -7,7 +7,8 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { Plus } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FocusScope, useFocusManager } from "react-aria";
 
 type AddCardProps = {
   deckId: Deck["id"];
@@ -28,6 +29,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   ), [template]);
   const firstFieldRef = useRef<HTMLTextAreaElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+
   const form = useAppForm({
     defaultValues: { content, deckId, templateId } as InsertCardData,
     validators: { onSubmit: template ? getInsertCardSchema(template) : schema },
@@ -61,56 +63,64 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "large" }}>
           <Dialog.Body>
-            <Dialog.Header>
-              <Dialog.Title>{_(msg`add-cards.title`)}</Dialog.Title>
-              <div className="grow" />
-              <Dialog.Close slot="close" />
-            </Dialog.Header>
-            <form
-              className="grow flex flex-col"
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-            >
-              <Dialog.Content variants={{ class: "justify-center pb-6" }}>
-                <QueryState query={query}>
-                  {(data) => (
-                    data.content.fields.map(({ id, title }, i) => (
-                      <form.AppField name={`content.${id}.text`} key={id}>
-                        {(field) => (
-                          <field.TextField>
-                            <Label>{title}</Label>
-                            <TextField.Content>
-                              <TextField.TextArea ref={i === 0 ? firstFieldRef : undefined} />
-                              {!field.state.meta.isValid && (
-                                <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />
-                              )}
-                            </TextField.Content>
-                          </field.TextField>
-                        )}
-                      </form.AppField>
-                    ))
-                  )}
-                </QueryState>
-              </Dialog.Content>
-              <Dialog.Footer>
-                {error && <form.Errors errors={toFormErrors(error)} />}
+            <FocusScope contain>
+              <Dialog.Header>
+                <Dialog.Title>{_(msg`add-cards.title`)}</Dialog.Title>
                 <div className="grow" />
-                <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
-                  {([isDirty, canSubmit]) => (
-                    <Button
-                      variants={{ style: "primary" }}
-                      type="submit"
-                      isDisabled={!canSubmit || !isDirty}
-                    >
-                      {_(msg`add-card.submit`)}
-                    </Button>
-                  )}
-                </form.Subscribe>
-              </Dialog.Footer>
-            </form>
+                <Dialog.Close slot="close" />
+              </Dialog.Header>
+              <form
+                className="grow flex flex-col"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  form.handleSubmit();
+                }}
+              >
+                <Dialog.Content variants={{ class: "justify-center pb-6" }}>
+                  <QueryState query={query}>
+                    {(data) => {
+                      const focusManager = useFocusManager();
+
+                      useEffect(() => {
+                        focusManager?.focusNext();
+                      }, [focusManager]);
+
+                      return data.content.fields.map(({ id, title }, i) => (
+                        <form.AppField name={`content.${id}.text`} key={id}>
+                          {(field) => (
+                            <field.TextField>
+                              <Label>{title}</Label>
+                              <TextField.Content>
+                                <TextField.TextArea ref={i === 0 ? firstFieldRef : undefined} />
+                                {!field.state.meta.isValid && (
+                                  <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />
+                                )}
+                              </TextField.Content>
+                            </field.TextField>
+                          )}
+                        </form.AppField>
+                      ));
+                    }}
+                  </QueryState>
+                </Dialog.Content>
+                <Dialog.Footer>
+                  {error && <form.Errors errors={toFormErrors(error)} />}
+                  <div className="grow" />
+                  <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
+                    {([isDirty, canSubmit]) => (
+                      <Button
+                        variants={{ style: "primary" }}
+                        type="submit"
+                        isDisabled={!canSubmit || !isDirty}
+                      >
+                        {_(msg`add-card.submit`)}
+                      </Button>
+                    )}
+                  </form.Subscribe>
+                </Dialog.Footer>
+              </form>
+            </FocusScope>
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>
