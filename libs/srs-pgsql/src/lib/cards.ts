@@ -4,6 +4,7 @@ import type {
   DeleteCardData,
   GetCardsParams,
   InsertCardData,
+  InsertCardsResponse,
   ResetCardProgressData,
   UpdateCardData,
 } from "@koloda/srs";
@@ -78,21 +79,19 @@ export async function addCard(db: DB, data: InsertCardData) {
  * @param dataArray - Array of card data to insert
  * @returns Array of created card objects
  */
-export type AddCardsResult = Array<{ error?: string }>;
+export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCardsResponse> {
+  if (data.length === 0) return [];
 
-export async function addCards(db: DB, dataArray: InsertCardData[]): Promise<AddCardsResult> {
-  if (dataArray.length === 0) return [];
-
-  const templateId = dataArray[0].templateId;
+  const templateId = data[0].templateId;
   const template = await getTemplate(db, templateId);
   if (!template) throw new AppError("not-found.cards.add.template");
   const schema = getInsertCardSchema(template);
 
-  const results: AddCardsResult = [];
+  const results: InsertCardsResponse = [];
 
-  for (let i = 0; i < dataArray.length; i++) {
+  for (let i = 0; i < data.length; i++) {
     try {
-      const validated = schema.parse(dataArray[i]);
+      const validated = schema.parse(data[i]);
       await db.insert(cards).values(validated).returning();
       results.push({});
     } catch (e) {

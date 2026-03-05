@@ -1,16 +1,9 @@
-import {
-  cardsQueryKeys,
-  queriesAtom,
-  settingsQueryKeys,
-  templatesQueryKeys,
-  useAIModels,
-  useAIProfiles,
-} from "@koloda/react";
-import type { AISecrets, Deck, GenerateCardsInput, GeneratedCard, InsertCardData, Template } from "@koloda/srs";
-import { createAIGenerationClient, GENERATION_TEMPERATURE, transformGeneratedCards } from "@koloda/srs";
-import { msg, plural } from "@lingui/core/macro";
+import { queriesAtom, templatesQueryKeys, useAIModels, useAIProfiles } from "@koloda/react";
+import type { AISecrets, Deck, GenerateCardsInput, GeneratedCard, Template } from "@koloda/srs";
+import { createAIGenerationClient, GENERATION_TEMPERATURE } from "@koloda/srs";
+import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
@@ -40,15 +33,9 @@ export type UseGenerateCardsDialogReturn = {
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
 };
 
-export type AddCardsMutationResult = {
-  type: "success" | "error";
-  message: string;
-};
-
 export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
   const { _ } = useLingui();
-  const queryClient = useQueryClient();
-  const { getTemplateQuery, addCardsMutation, touchAIProfileMutation } = useAtomValue(queriesAtom);
+  const { getTemplateQuery, touchAIProfileMutation } = useAtomValue(queriesAtom);
   const [isOpen, setIsOpen] = useState(false);
   const [profileId, setProfileId] = useState("");
   const [modelId, setModelId] = useState("");
@@ -58,9 +45,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [generatedRuns, setGeneratedRuns] = useState<Record<string, GeneratedCard[]>>({});
   const [canceledRuns, setCanceledRuns] = useState<Record<string, boolean>>({});
-  const [addingRunId, setAddingRunId] = useState<string | null>(null);
-  const [mutationResult, setMutationResult] = useState<Record<string, AddCardsMutationResult | null>>({});
-  const cardsMutation = useMutation(addCardsMutation());
   const touchProfileMutation = useMutation(touchAIProfileMutation());
   const templateQuery = useQuery({ queryKey: templatesQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
   const template = templateQuery.data;
@@ -99,8 +83,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       setActiveRunId(null);
       setGeneratedRuns({});
       setCanceledRuns({});
-      setAddingRunId(null);
-      setMutationResult({});
       clearCards();
       cancel();
     }
@@ -128,7 +110,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setActiveRunId(runId);
     setGeneratedRuns((prev) => ({ ...prev, [runId]: [] }));
     setCanceledRuns((prev) => ({ ...prev, [runId]: false }));
-    setMutationResult((prev) => ({ ...prev, [runId]: null }));
     clearCards();
     setPrompt("");
     setMessages((prev) => [
@@ -182,40 +163,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setGeneratedRuns((prev) => ({ ...prev, [activeRunId]: cards }));
   }, [activeRunId, cards]);
 
-  const handleAddCards = useCallback((runId: string) => {
-    const runCards = generatedRuns[runId] ?? [];
-    if (!template || runCards.length === 0) return;
-
-    const cardsToCreate: InsertCardData[] = transformGeneratedCards(runCards, deckId, templateId);
-
-    setAddingRunId(runId);
-    cardsMutation.mutate(cardsToCreate, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
-        queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("ai") });
-        setMutationResult((prev) => ({
-          ...prev,
-          [runId]: {
-            type: "success",
-            message: _(msg`${plural(cardsToCreate.length, { other: "generate-cards.add.success" })}`),
-          },
-        }));
-      },
-      onError: (error) => {
-        setMutationResult((prev) => ({
-          ...prev,
-          [runId]: {
-            type: "error",
-            message: error instanceof Error ? error.message : _(msg`generate-cards.add.error`),
-          },
-        }));
-      },
-      onSettled: () => {
-        setAddingRunId(null);
-      },
-    });
-  }, [_, generatedRuns, template, deckId, templateId, cardsMutation, queryClient]);
-
   const hasProfiles = profiles.length > 0;
 
   const getGeneratedCardsProps = useCallback((message: UIMessage): GeneratedCardsMessageProps | null => {
@@ -224,31 +171,27 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
     const runCards = generatedRuns[generatedCardsMetadata.runId] ?? [];
     const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
-    const canCreate = runCards.length > 0 && (!isCurrentRun || !isGenerating);
-    const isCreating = cardsMutation.isPending && addingRunId === generatedCardsMetadata.runId;
+    const canAdd = runCards.length > 0 && (!isCurrentRun || !isGenerating);
 
     return {
       cards: runCards,
       template,
+      deckId,
+      templateId,
       modelName,
-      onAddCards: () => handleAddCards(generatedCardsMetadata.runId),
-      canCreate,
-      isCreating,
+      canAdd,
       isGenerating: isCurrentRun && isGenerating,
       isCanceled: !!canceledRuns[generatedCardsMetadata.runId],
-      mutationResult: mutationResult[generatedCardsMetadata.runId] ?? null,
     };
   }, [
     generatedRuns,
     canceledRuns,
     activeRunId,
     isGenerating,
-    cardsMutation.isPending,
-    addingRunId,
+    deckId,
+    templateId,
     template,
     modelName,
-    handleAddCards,
-    mutationResult,
   ]);
 
   return {

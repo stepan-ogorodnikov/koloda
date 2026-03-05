@@ -32,8 +32,6 @@ export type Card = z.input<typeof cardValidation> & Timestamps;
 
 export type GetCardsParams = { deckId: Card["deckId"] };
 
-// export type GetCardsCountParams = { deckId: Card["deckId"] };
-
 /**
  * Creates content validation schema based on template fields
  * @param fields - Array of template fields to validate
@@ -65,6 +63,8 @@ export function getInsertCardSchema(template: Template) {
 export const insertCardSchema = cardValidation.omit({ id: true });
 
 export type InsertCardData = z.input<typeof insertCardSchema>;
+
+export type InsertCardsResponse = Array<{ error?: string }>;
 
 /**
  * Creates an update schema for a card based on a template
@@ -133,5 +133,3 @@ export function createCardFromCardFSRS(input: CardFSRS) {
 }
 
 export type ResetCardProgressData = { id: Card["id"] };
-
-export type AddCardsResult = Array<{ error?: string }>;
