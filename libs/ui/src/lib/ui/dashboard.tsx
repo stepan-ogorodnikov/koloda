@@ -22,7 +22,7 @@ function DashboardContent({ children }: PropsWithChildren) {
 }
 
 const dashboardSkipLink =
-  "sr-only focus:not-sr-only focus:fixed focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2";
+  "sr-only focus:not-sr-only focus:fixed focus:z-100 focus:top-4 focus:left-4 focus:px-4 focus:py-2";
 
 function DashboardSkipLink() {
   const { _ } = useLingui();
@@ -56,12 +56,12 @@ function DashboardAside({ children }: PropsWithChildren) {
 
 const dashboardNav = [
   "flex grow dt:flex-col dt:overflow-y-auto gap-1",
-  "max-dt:p-2 max-dt:rounded-t-xl max-dt:border-2 max-dt:border-b-0 max-dt:border-main max-dt:bg-level-1",
+  "p-2 max-dt:rounded-t-xl max-dt:border-2 max-dt:border-b-0 max-dt:border-main max-dt:bg-level-1",
 ].join(" ");
 
 function DashboardNav({ children }: PropsWithChildren) {
   return (
-    <nav className={dashboardNav} tabIndex={0} aria-label="Dashboard navigation">
+    <nav className={dashboardNav}>
       {children}
     </nav>
   );
