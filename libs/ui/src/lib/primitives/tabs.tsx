@@ -1,3 +1,4 @@
+import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import {
   SelectionIndicator,
@@ -7,11 +8,21 @@ import {
   TabPanels as ReactAriaTabPanels,
   Tabs as ReactAriaTabs,
 } from "react-aria-components";
-import type { TabListProps, TabPanelProps, TabPanelsProps, TabProps, TabsProps } from "react-aria-components";
+import type {
+  TabListProps,
+  TabPanelProps,
+  TabPanelsProps,
+  TabProps,
+  TabsProps as ReactAriaTabsProps,
+} from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-export function Tabs(props: TabsProps) {
-  return <ReactAriaTabs {...props} />;
+const tabs = tv({ base: "", variants: { location: { mainContent: "grow min-h-0 flex flex-col" } } });
+
+type TabsProps = ReactAriaTabsProps & TWVProps<typeof tabs>;
+
+export function Tabs({ variants, ...props }: TabsProps) {
+  return <ReactAriaTabs className={tabs(variants)} {...props} />;
 }
 
 const tabsList = tv({ base: "self-stretch flex flex-row gap-2 items-center px-2" });

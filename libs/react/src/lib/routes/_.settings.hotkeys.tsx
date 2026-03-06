@@ -34,9 +34,11 @@ function SettingsHotkeysRoute() {
         {canGoBack && <BackButton onClick={() => router.history.back()} />}
         <Main.H1>{_(msg`settings.hotkeys`)}</Main.H1>
       </Main.Titlebar>
-      <QueryState query={query}>
-        {(data) => <SettingsHotkeys data={data?.content || DEFAULT_HOTKEYS_SETTINGS} />}
-      </QueryState>
+      <Main.Container>
+        <QueryState query={query}>
+          {(data) => <SettingsHotkeys data={data?.content || DEFAULT_HOTKEYS_SETTINGS} />}
+        </QueryState>
+      </Main.Container>
     </>
   );
 }

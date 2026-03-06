@@ -1,7 +1,11 @@
+import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
-export const main = "grow flex flex-row min-w-0 rounded-xl bg-level-1 border-2 border-main no-focus-ring";
+export const main = [
+  "grow flex flex-row h-full min-h-0 min-w-0 rounded-xl bg-level-1",
+  "border-2 border-main no-focus-ring [clip-path:inset(0_round_0.75rem)]",
+].join(" ");
 
 export function Main({ children }: PropsWithChildren) {
   return <div className={main} id="main" tabIndex={-1}>{children}</div>;
@@ -12,7 +16,7 @@ export const mainTitlebar =
 
 export function MainTitlebar({ children }: PropsWithChildren) {
   return (
-    <div className="overflow-hidden">
+    <div className="min-h-14 overflow-hidden">
       <div className={mainTitlebar}>{children}</div>
     </div>
   );
@@ -31,7 +35,7 @@ function MainH2({ children }: PropsWithChildren) {
 }
 
 const mainContent = tv({
-  base: "grow flex-col min-w-0",
+  base: "grow flex-col h-full min-h-0 min-w-0 overflow-hidden",
   variants: { hasContent: { true: "flex", false: "hidden tb:flex" } },
 });
 
@@ -42,7 +46,11 @@ function MainContent({ hasContent, children }: MainContentProps) {
 }
 
 const mainSidebar = tv({
-  base: "flex-col overflow-hidden tb:min-w-48 tb:max-w-48 dt:min-w-72 dt:max-w-72 tb:border-r-2 tb:border-main",
+  base: [
+    "flex-col h-full overflow-hidden",
+    "tb:min-w-48 tb:max-w-48 tb:border-r-2 tb:border-main",
+    "dt:min-w-72 dt:max-w-72 dt:overflow-hidden",
+  ],
   variants: { hasContent: { true: "hidden tb:flex", false: "max-tb:grow" } },
 });
 
@@ -69,19 +77,24 @@ export const mainSidebarItemLink = [
 
 export const mainSidebarItemLinkContent = "z-2 absolute inset-2 p-2 rounded-lg group-focus-ring";
 
-const mainSidebarItemFade = [
-  "z-1 absolute inset-0 pointer-events-none",
-  "group-not-current:inline-fade-bg-level-1/4 group-current:inline-fade-bg-main-sidebar-link-active/4",
-].join(" ");
-
 function MainSidebarItemLinkContent({ children }: PropsWithChildren) {
   return (
     <>
       <div className={mainSidebarItemLinkContent} />
-      <div className={mainSidebarItemFade} />
       {children}
     </>
   );
+}
+
+const mainContainer = tv({
+  base: "grow flex flex-col min-w-0 min-h-0 overflow-y-auto",
+  variants: { location: { sidebar: "-mb-0.5" } },
+});
+
+type MainContainerProps = PropsWithChildren & TWVProps<typeof mainContainer>;
+
+function MainContainer({ variants, children }: MainContainerProps) {
+  return <div className={mainContainer(variants)}>{children}</div>;
 }
 
 Main.Titlebar = MainTitlebar;
@@ -91,3 +104,4 @@ Main.Content = MainContent;
 Main.Sidebar = MainSidebar;
 Main.SidebarItem = MainSidebarItem;
 Main.SidebarItemLinkContent = MainSidebarItemLinkContent;
+Main.Container = MainContainer;

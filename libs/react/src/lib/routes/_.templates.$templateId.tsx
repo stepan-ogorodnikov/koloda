@@ -23,7 +23,7 @@ function TemplateRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <>
+    <Main.Container>
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/templates" })} />
         <Main.H1>{query.data?.title}</Main.H1>
@@ -31,6 +31,6 @@ function TemplateRoute() {
       <QueryState query={query}>
         {() => <Template id={id} key={templateId} />}
       </QueryState>
-    </>
+    </Main.Container>
   );
 }

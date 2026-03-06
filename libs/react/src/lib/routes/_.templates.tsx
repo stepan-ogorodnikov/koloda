@@ -34,19 +34,26 @@ function TemplatesRoute() {
           </Main.H1>
           <AddTemplate />
         </Main.Titlebar>
-        <QueryState query={query}>
-          {(data) => (
-            <div className="flex flex-col">
-              {data.map(({ id, title }) => (
-                <Main.SidebarItem key={id}>
-                  <Link className={mainSidebarItemLink} to="/templates/$templateId" params={{ templateId: id }} viewTransition={isMotionOn}>
-                    <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
-                  </Link>
-                </Main.SidebarItem>
-              ))}
-            </div>
-          )}
-        </QueryState>
+        <Main.Container variants={{ location: "sidebar" }}>
+          <QueryState query={query}>
+            {(data) => (
+              <div className="flex flex-col">
+                {data.map(({ id, title }) => (
+                  <Main.SidebarItem key={id}>
+                    <Link
+                      className={mainSidebarItemLink}
+                      to="/templates/$templateId"
+                      params={{ templateId: id }}
+                      viewTransition={isMotionOn}
+                    >
+                      <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
+                    </Link>
+                  </Main.SidebarItem>
+                ))}
+              </div>
+            )}
+          </QueryState>
+        </Main.Container>
       </Main.Sidebar>
       <Main.Content hasContent={hasContent}>
         <Outlet />

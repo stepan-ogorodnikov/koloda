@@ -1,4 +1,5 @@
-import { LearnedToday, lessonsQueryKeys, Lessons, useTitle } from "@koloda/react";
+import { LearnedToday, Lessons, lessonsQueryKeys, useTitle } from "@koloda/react";
+import { Main } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -15,9 +16,9 @@ function DashboardRoute() {
   useTitle();
 
   return (
-    <div className="grow flex flex-col tb:flex-row items-start gap-4 tb:p-4">
+    <Main.Container variants={{ class: "tb:flex-row items-start gap-4 tb:p-4" }}>
       <Lessons />
       <LearnedToday />
-    </div>
+    </Main.Container>
   );
 }

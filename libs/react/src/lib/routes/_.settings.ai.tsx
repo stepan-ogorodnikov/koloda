@@ -29,9 +29,11 @@ function SettingsAiRoute() {
         {canGoBack && <BackButton onClick={() => router.history.back()} />}
         <Main.H1>{_(msg`settings.ai`)}</Main.H1>
       </Main.Titlebar>
-      <QueryState query={query}>
-        {(data) => <SettingsAi data={data || []} />}
-      </QueryState>
+      <Main.Container>
+        <QueryState query={query}>
+          {(data) => <SettingsAi data={data || []} />}
+        </QueryState>
+      </Main.Container>
     </>
   );
 }

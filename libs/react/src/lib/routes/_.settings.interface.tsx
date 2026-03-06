@@ -25,7 +25,9 @@ function SettingsInterfaceRoute() {
         {canGoBack && <BackButton onClick={() => router.history.back()} />}
         <Main.H1>{_(msg`settings.interface`)}</Main.H1>
       </Main.Titlebar>
-      <SettingsInterface />
+      <Main.Container>
+        <SettingsInterface />
+      </Main.Container>
     </>
   );
 }

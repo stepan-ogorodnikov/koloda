@@ -6,14 +6,16 @@ import type { LucideProps } from "lucide-react";
 import type { ForwardRefExoticComponent, PropsWithChildren, RefAttributes } from "react";
 import { tv } from "tailwind-variants";
 
-const dashboard = "grow flex flex-row w-full min-w-80 max-w-360";
+const dashboard = "grow flex flex-row h-full w-full min-w-80 max-w-360 dt:h-screen dt:overflow-hidden";
 
 export function Dashboard({ children }: PropsWithChildren) {
   return <div className={dashboard}>{children}</div>;
 }
 
-const dashboardContent =
-  "grow flex flex-col min-w-0 max-w-screen p-1 tb:px-2 tb:pt-2 max-dt:pb-16 dt:pb-2 bg-transparent";
+const dashboardContent = [
+  "grow flex flex-col h-full min-h-0 min-w-0 max-w-screen dt:overflow-hidden",
+  "p-1 tb:px-2 tb:pt-2 max-dt:pb-16 dt:pb-2 bg-transparent",
+].join(" ");
 
 function DashboardContent({ children }: PropsWithChildren) {
   return <div className={dashboardContent}>{children}</div>;
@@ -41,7 +43,7 @@ function DashboardSkipLink() {
 }
 const dashboardAside = [
   "fixed z-1 flex flex-col max-dt:items-center justify-center gap-4",
-  "dt:static dt:justify-between bottom-0 inset-x-0 dt:min-w-48 dt:py-6 dt:px-2",
+  "dt:static dt:h-full dt:justify-between dt:overflow-y-auto bottom-0 inset-x-0 dt:min-w-48 dt:py-6 dt:pl-2",
 ].join(" ");
 
 function DashboardAside({ children }: PropsWithChildren) {
@@ -53,13 +55,13 @@ function DashboardAside({ children }: PropsWithChildren) {
 }
 
 const dashboardNav = [
-  "flex dt:flex-col gap-1",
+  "flex grow dt:flex-col dt:overflow-y-auto gap-1",
   "max-dt:p-2 max-dt:rounded-t-xl max-dt:border-2 max-dt:border-b-0 max-dt:border-main max-dt:bg-level-1",
 ].join(" ");
 
 function DashboardNav({ children }: PropsWithChildren) {
   return (
-    <nav className={dashboardNav}>
+    <nav className={dashboardNav} tabIndex={0} aria-label="Dashboard navigation">
       {children}
     </nav>
   );

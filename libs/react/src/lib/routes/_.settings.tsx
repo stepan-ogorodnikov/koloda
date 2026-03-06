@@ -30,17 +30,19 @@ function SettingsRoute() {
         <Main.Titlebar>
           <Main.H1>{_(msg`settings.title`)}</Main.H1>
         </Main.Titlebar>
-        {LINKS.map(({ id, t, url }) => (
-          <Main.SidebarItem key={id}>
-            <Link
-              className={mainSidebarItemLink}
-              to={`/settings/${url}`}
-              viewTransition={isMotionOn}
-            >
-              <Main.SidebarItemLinkContent>{_(t)}</Main.SidebarItemLinkContent>
-            </Link>
-          </Main.SidebarItem>
-        ))}
+        <Main.Container variants={{ location: "sidebar" }}>
+          {LINKS.map(({ id, t, url }) => (
+            <Main.SidebarItem key={id}>
+              <Link
+                className={mainSidebarItemLink}
+                to={`/settings/${url}`}
+                viewTransition={isMotionOn}
+              >
+                <Main.SidebarItemLinkContent>{_(t)}</Main.SidebarItemLinkContent>
+              </Link>
+            </Main.SidebarItem>
+          ))}
+        </Main.Container>
       </Main.Sidebar>
       <Main.Content hasContent={hasContent}>
         <Outlet />

@@ -29,9 +29,11 @@ function AlgorithmRoute() {
         {canGoBack && <BackButton onClick={() => router.navigate({ to: "/algorithms" })} />}
         <Main.H1>{query.data?.title}</Main.H1>
       </Main.Titlebar>
-      <QueryState query={query}>
-        {() => <Algorithm id={id} key={algorithmId} />}
-      </QueryState>
+      <Main.Container>
+        <QueryState query={query}>
+          {() => <Algorithm id={id} key={algorithmId} />}
+        </QueryState>
+      </Main.Container>
     </>
   );
 }

@@ -267,7 +267,7 @@
 
 @layer base {
   body {
-    @apply flex min-h-screen scheme-light dark:scheme-dark antialiased bg-body fg-level-1 font-sans font-medium
+    @apply flex h-screen scheme-light dark:scheme-dark antialiased bg-body fg-level-1 font-sans font-medium
       dark:font-normal;
   }
 

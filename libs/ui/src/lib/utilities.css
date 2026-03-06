@@ -63,16 +63,6 @@
   @apply transition-opacity duration-250 ease-in-out;
 }
 
-@utility inline-fade-* {
-  background-image: linear-gradient(
-    to right,
-    --value(--color-*) 0,
-    transparent --spacing(--modifier(number)),
-    transparent calc(100% - --spacing(--modifier(number))),
-    --value(--color-*) 100%
-  );
-}
-
 @keyframes shimmer-text {
   0% {
     background-position: 200% 50%;

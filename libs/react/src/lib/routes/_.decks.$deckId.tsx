@@ -42,7 +42,7 @@ function DeckRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <Tabs defaultSelectedKey="cards">
+    <Tabs variants={{ location: "mainContent" }} defaultSelectedKey="cards">
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/decks" })} />
         <Main.H2>{query.data?.title}</Main.H2>
@@ -52,18 +52,20 @@ function DeckRoute() {
           </Tabs.List>
         )}
       </Main.Titlebar>
-      <QueryState query={query}>
-        {() => (
-          <Tabs.Panels>
-            <Tabs.Panel id="details">
-              <DeckDetails id={id} />
-            </Tabs.Panel>
-            <Tabs.Panel id="cards">
-              <DeckCards deckId={id} />
-            </Tabs.Panel>
-          </Tabs.Panels>
-        )}
-      </QueryState>
+      <Main.Container>
+        <QueryState query={query}>
+          {() => (
+            <Tabs.Panels>
+              <Tabs.Panel id="details">
+                <DeckDetails id={id} />
+              </Tabs.Panel>
+              <Tabs.Panel id="cards">
+                <DeckCards deckId={id} />
+              </Tabs.Panel>
+            </Tabs.Panels>
+          )}
+        </QueryState>
+      </Main.Container>
     </Tabs>
   );
 }

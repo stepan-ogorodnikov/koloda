@@ -34,9 +34,11 @@ function SettingsLearningRoute() {
         {canGoBack && <BackButton onClick={() => router.history.back()} />}
         <Main.H1>{_(msg`settings.learning`)}</Main.H1>
       </Main.Titlebar>
-      <QueryState query={query}>
-        {(data) => <SettingsLearning data={data?.content || DEFAULT_LEARNING_SETTINGS} />}
-      </QueryState>
+      <Main.Container>
+        <QueryState query={query}>
+          {(data) => <SettingsLearning data={data?.content || DEFAULT_LEARNING_SETTINGS} />}
+        </QueryState>
+      </Main.Container>
     </>
   );
 }
