@@ -1,6 +1,6 @@
 import type { TWVProps } from "@koloda/ui";
+import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { tv } from "tailwind-variants";
-import { MAC_SYMBOLS, normalizeDisplayValue } from "./hotkey-utility";
 
 const hotkey = tv({
   base: [
@@ -22,16 +22,10 @@ export type HotkeyProps = TWVProps<typeof hotkey> & {
   value: string;
 };
 
-export function Hotkey({ variants, value }: HotkeyProps) {
-  const platform: "mac" | "other" = /mac/i.test(navigator.userAgent) ? "mac" : "other";
-  const normalized = normalizeDisplayValue(value);
-  const lower = normalized.toLowerCase();
-  const content = platform === "mac" && MAC_SYMBOLS[lower] ? MAC_SYMBOLS[lower] : normalized;
-  const useSymbol = platform === "mac" && MAC_SYMBOLS[lower];
-
+export function HotKey({ variants, value }: HotkeyProps) {
   return (
     <kbd className={hotkey(variants)}>
-      <span className={useSymbol ? "text-sm" : ""}>{content}</span>
+      <span>{formatForDisplay(value)}</span>
     </kbd>
   );
 }

@@ -1,7 +1,9 @@
 import { atom, useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 
-export const hotkeysScopesAtom = atom<string[]>([]);
+export const DEFAULT_HOTKEYS_SCOPES = [];
+
+export const hotkeysScopesAtom = atom<string[]>(DEFAULT_HOTKEYS_SCOPES);
 export const areHotkeysDisabledAtom = atom<boolean>(false);
 
 export function useHotkeysStatus() {

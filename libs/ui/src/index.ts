@@ -1,4 +1,3 @@
-export * from "./lib/hooks/use-hotkeys-status";
 export * from "./lib/hooks/use-motion-settings";
 export * from "./lib/primitives/animations/fade";
 export * from "./lib/primitives/animations/number";
@@ -36,9 +35,6 @@ export * from "./lib/ui/dashboard";
 export * from "./lib/ui/delete-dialog";
 export * from "./lib/ui/hotkey";
 export * from "./lib/ui/hotkey-recorder";
-export * from "./lib/ui/hotkey-recorder-popover";
-export * from "./lib/ui/hotkey-utility";
 export * from "./lib/ui/layout";
 export * from "./lib/ui/main";
-export * from "./lib/ui/use-hotkey-recording";
 export * from "./lib/utility";

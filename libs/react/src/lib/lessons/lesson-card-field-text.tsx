@@ -29,6 +29,7 @@ export function LessonCardFieldText(
                     e.preventDefault();
                     dispatch(["cardSubmitted"]);
                   }
+                  e.continuePropagation();
                 }}
               >
                 <TextField.TextArea />

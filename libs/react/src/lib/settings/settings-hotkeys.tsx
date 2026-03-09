@@ -7,11 +7,12 @@ import {
   objectEntries,
   toFormErrors,
 } from "@koloda/srs";
-import { AddHotkeyButton, FormLayout, formLayout, HotkeyRecorder, useAppForm } from "@koloda/ui";
+import { AddHotkeyButton, FormLayout, formLayout, useAppForm } from "@koloda/ui";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { SettingsHotkeysHotkey } from "./settings-hotkeys-hotkey";
 
 export type SettingsHotkeysProps = { data: HotkeysSettings };
 
@@ -63,7 +64,7 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
                     <FormLayout.Section term={_(label)}>
                       <div className="flex flex-row items-center gap-4 flex-wrap">
                         {value.map((hotkey, index) => (
-                          <HotkeyRecorder
+                          <SettingsHotkeysHotkey
                             value={hotkey}
                             onChange={(v) => {
                               const newValue = [...value];

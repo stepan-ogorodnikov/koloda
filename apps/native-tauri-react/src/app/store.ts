@@ -1,6 +1,13 @@
-import { appEntryAtom, langAtom, queriesAtom, themeAtom } from "@koloda/react";
+import {
+  appEntryAtom,
+  DEFAULT_HOTKEYS_SCOPES,
+  hotkeysScopesAtom,
+  langAtom,
+  queriesAtom,
+  themeAtom,
+} from "@koloda/react";
 import type { Queries } from "@koloda/react";
-import { hotkeysScopesAtom, motionSettingAtom } from "@koloda/ui";
+import { motionSettingAtom } from "@koloda/ui";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";
 import { AppEntry } from "../components/app-entry";
@@ -56,7 +63,7 @@ function onReducedMotionChange(e: MediaQueryListEvent | MediaQueryList) {
 
 store.set(motionSettingAtom, "system");
 
-store.set(hotkeysScopesAtom, []);
+store.set(hotkeysScopesAtom, DEFAULT_HOTKEYS_SCOPES);
 
 store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 

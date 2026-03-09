@@ -1,11 +1,10 @@
-import { lessonsQueryKeys, queriesAtom } from "@koloda/react";
+import { lessonsQueryKeys, queriesAtom, useAppHotkey } from "@koloda/react";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import type { ActionDispatch } from "react";
 import { useEffect } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import { LessonInitList } from "./lesson-init-list";
 import { LessonInitTable } from "./lesson-init-table";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
@@ -27,7 +26,7 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
     ...getLessonsQuery(state.filters!),
   });
 
-  useHotkeys("esc", () => dispatch(["isOpenUpdated", false]), { enableOnFormTags: true });
+  useAppHotkey(["Escape"], () => dispatch(["isOpenUpdated", false]), "lesson", { ignoreInputs: false });
 
   useEffect(() => {
     if (learnedToday) dispatch(["todayReviewTotalsReceived", learnedToday]);

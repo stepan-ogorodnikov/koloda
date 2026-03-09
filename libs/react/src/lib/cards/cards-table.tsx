@@ -184,6 +184,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
               setSearchValue(value as string);
               table.setGlobalFilter(value as string);
             }}
+            onKeyDown={(e) => e.continuePropagation()}
           >
             <SearchField.Group>
               <SearchField.Icon />

@@ -1,5 +1,6 @@
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
+import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
 import { z } from "zod";
 import { FSRS_GRADES } from "./algorithms-fsrs";
 
@@ -25,6 +26,7 @@ export const HOTKEYS_LABELS = {
 } as const;
 
 const HotkeyEntry = z.array(z.string());
+
 export const hotkeysSettingsValidation = z.object({
   navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
   grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
@@ -73,6 +75,13 @@ const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
 
 export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
 export type HotkeyScope = keyof HotkeysSettings;
+export type HotkeyEntry = RegisterableHotkey[];
+
+export type AppHotkeys = {
+  [K in HotkeyScope]: {
+    [L in keyof HotkeysSettings[K]]: HotkeyEntry;
+  };
+};
 
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   navigation: {

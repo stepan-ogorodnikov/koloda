@@ -1,102 +1,65 @@
-import { Button, useHotkeysStatus } from "@koloda/ui";
+import { Button, Dialog, HotKey } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Pencil, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { Hotkey } from "./hotkey";
-import { HotkeyRecorderPopover } from "./hotkey-recorder-popover";
-import { canonicalToEventCode, formatCanonical, formatDisplay, isModifier, parseCanonical } from "./hotkey-utility";
-import { useHotkeyRecording } from "./use-hotkey-recording";
+import { useHotkeyRecorder } from "@tanstack/react-hotkeys";
+import type { Hotkey } from "@tanstack/react-hotkeys";
+import { Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 export type HotkeyRecorderProps = {
-  value: string | null;
-  onChange: (value: string | null) => void;
-  hasError?: boolean;
-  isDisabled?: boolean;
-  autoFocus?: boolean;
+  onAccept: (hotkey: Hotkey | null) => void;
+  children: ReactNode;
 };
 
-export function HotkeyRecorder({ value, onChange, hasError, isDisabled, autoFocus }: HotkeyRecorderProps) {
+export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
   const { _ } = useLingui();
-  const [isOpen, setIsOpen] = useState(Boolean(autoFocus && !value && !isDisabled));
-  const { modKeys, mainKey, partialDisplay, platform, reset, resetOnOpen } = useHotkeyRecording(
-    isOpen,
-    !!isDisabled,
-  );
-  const { disableHotkeys, enableHotkeys } = useHotkeysStatus();
+  const [isOpen, setIsOpen] = useState(false);
+  const [value, setValue] = useState<Hotkey | null>(null);
+  const { startRecording, stopRecording } = useHotkeyRecorder({
+    onRecord: (hotkey) => setValue(hotkey),
+  });
 
   useEffect(() => {
-    (isOpen ? disableHotkeys : enableHotkeys)();
-  }, [isOpen, disableHotkeys, enableHotkeys]);
+    (isOpen ? startRecording : stopRecording)();
+    if (!isOpen) setValue(null);
+    return () => stopRecording();
+  }, [isOpen, startRecording, stopRecording]);
 
-  const handleAccept = useCallback(() => {
-    if (mainKey || modKeys.size > 0) {
-      const combo = formatCanonical(Array.from(modKeys), mainKey);
-      onChange(combo);
-      setIsOpen(false);
-    }
-  }, [mainKey, modKeys, onChange]);
-
-  const handleCancel = useCallback(() => {
+  const handleAccept = () => {
+    onAccept(value);
     setIsOpen(false);
-  }, []);
-
-  const handleDelete = useCallback(() => {
-    onChange(null);
-    setIsOpen(false);
-  }, [onChange]);
-
-  const handleEdit = useCallback(() => {
-    setIsOpen(true);
-    resetOnOpen();
-  }, [resetOnOpen]);
-
-  const parts = value ? parseCanonical(value) : [];
-  const parsedModifiers = parts.filter(isModifier);
-  const parsedMainKey = parts.find((k) => !isModifier(k)) || null;
-  const mainKeyCode = parsedMainKey ? canonicalToEventCode(parsedMainKey) : null;
-  const keys = formatDisplay(
-    parsedModifiers,
-    mainKeyCode,
-    platform,
-  ).split("+");
+  };
 
   return (
-    <div className="flex flex-row items-center gap-1">
-      <div
-        className="flex flex-row items-center gap-1 rounded-md data-has-error:error-ring"
-        data-has-error={hasError || undefined}
-      >
-        {keys.map((key) => <Hotkey key={key} value={key} />)}
-      </div>
-      <HotkeyRecorderPopover
-        isOpen={isOpen}
-        onOpenChange={(open) => {
-          setIsOpen(open);
-          if (!open) reset();
-        }}
-        partialDisplay={partialDisplay}
-        onAccept={handleAccept}
-        onCancel={handleCancel}
-        isAcceptDisabled={!mainKey && modKeys.size === 0}
-      >
-        <Button
-          variants={{ size: "smallIcon", style: "ghost" }}
-          aria-label={_(msg`hotkey-recorder.edit-button.label`)}
-          onPress={handleEdit}
-          isDisabled={isDisabled}
-        >
-          <Pencil className="size-4 stroke-2" />
-        </Button>
-      </HotkeyRecorderPopover>
-      <Button
-        variants={{ size: "smallIcon", style: "ghost" }}
-        aria-label={_(msg`hotkey-recorder.delete-button.label`)}
-        onPress={handleDelete}
-        isDisabled={isDisabled}
-      >
-        <X className="size-4 stroke-2" />
-      </Button>
-    </div>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
+      {children}
+      <Dialog.Popover>
+        <Dialog.Body>
+          <div className="flex flex-row items-center gap-2 p-3 min-w-84">
+            <div className="grow flex flex-row justify-center gap-1">
+              {value
+                ? <HotKey value={value} />
+                : <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>}
+            </div>
+            <Button
+              variants={{ size: "icon", style: "primary" }}
+              aria-label={_(msg`hotkey-recorder.accept`)}
+              onPress={handleAccept}
+              isDisabled={!value}
+            >
+              <Check className="size-4 stroke-2" />
+            </Button>
+            <Button
+              variants={{ size: "icon", style: "ghost" }}
+              aria-label={_(msg`hotkey-recorder.cancel`)}
+              onPress={() => setIsOpen(false)}
+            >
+              <X className="size-4 stroke-2" />
+            </Button>
+          </div>
+        </Dialog.Body>
+      </Dialog.Popover>
+    </Dialog.Root>
   );
 }

@@ -1,6 +1,6 @@
-import { lessonsQueryKeys, queriesAtom, settingsQueryKeys } from "@koloda/react";
+import { lessonsQueryKeys, queriesAtom, settingsQueryKeys, useHotkeysStatus } from "@koloda/react";
 import type { Deck, LessonType } from "@koloda/srs";
-import { Dialog, Fade, overlayFrameContent, useHotkeysStatus } from "@koloda/ui";
+import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { useAtomValue } from "jotai";
@@ -49,6 +49,7 @@ export function Lesson() {
 
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
+    (isOpen ? enableScope : disableScope)("lesson");
   }, [isOpen, disableScope, enableScope]);
 
   useEffect(() => {
