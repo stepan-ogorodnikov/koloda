@@ -308,7 +308,7 @@ msgstr "Filters"
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:190
+#: ../../libs/react/src/lib/cards/cards-table.tsx:191
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
@@ -511,7 +511,7 @@ msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:37
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:123
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:118
 msgid "generate-cards.generating"
 msgstr "Generating"
 
@@ -554,6 +554,14 @@ msgstr "Generate Cards"
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:65
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
+
+#: ../../libs/react/src/lib/settings/settings-hotkeys-hotkey.tsx:39
+msgid "hotkey-recorder.delete-button.label"
+msgstr "Delete hotkey"
+
+#: ../../libs/react/src/lib/settings/settings-hotkeys-hotkey.tsx:32
+msgid "hotkey-recorder.edit-button.label"
+msgstr "Change hotkey"
 
 #: ../../libs/react/src/lib/settings/interface-controls/language-select.tsx:27
 msgid "language-select.label"
@@ -634,23 +642,23 @@ msgstr "Deck"
 msgid "lessons.table.columns.title.all"
 msgstr "All"
 
-#: ../../libs/react/src/lib/components/app.tsx:13
+#: ../../libs/react/src/lib/components/app.tsx:11
 msgid "nav.algorithms"
 msgstr "Presets"
 
-#: ../../libs/react/src/lib/components/app.tsx:12
+#: ../../libs/react/src/lib/components/app.tsx:10
 msgid "nav.decks"
 msgstr "Decks"
 
-#: ../../libs/react/src/lib/components/app.tsx:11
+#: ../../libs/react/src/lib/components/app.tsx:9
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/react/src/lib/components/app.tsx:15
+#: ../../libs/react/src/lib/components/app.tsx:13
 msgid "nav.settings"
 msgstr "Settings"
 
-#: ../../libs/react/src/lib/components/app.tsx:14
+#: ../../libs/react/src/lib/components/app.tsx:12
 msgid "nav.templates"
 msgstr "Templates"
 
@@ -953,7 +961,7 @@ msgstr "Presets"
 msgid "title.base"
 msgstr "Koloda"
 
-#: ../../libs/react/src/lib/routes/_.dashboard.tsx:10
+#: ../../libs/react/src/lib/routes/_.dashboard.tsx:11
 msgid "title.dashboard"
 msgstr "Dashboard"
 

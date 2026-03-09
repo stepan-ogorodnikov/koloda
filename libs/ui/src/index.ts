@@ -1,3 +1,4 @@
+export * from "./lib/core/focus";
 export * from "./lib/hooks/use-motion-settings";
 export * from "./lib/primitives/animations/fade";
 export * from "./lib/primitives/animations/number";

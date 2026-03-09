@@ -5,11 +5,16 @@ import { z } from "zod";
 import { FSRS_GRADES } from "./algorithms-fsrs";
 
 export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
+  ui: msg`settings.hotkeys.scopes.ui`,
   navigation: msg`settings.hotkeys.scopes.navigation`,
   grades: msg`settings.hotkeys.scopes.grades`,
 } as const;
 
-export const HOTKEYS_LABELS = {
+export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
+  ui: {
+    focusNext: msg`settings.hotkeys.ui.focusNext`,
+    focusPrev: msg`settings.hotkeys.ui.focusPrev`,
+  },
   navigation: {
     dashboard: msg`settings.hotkeys.navigation.dashboard`,
     decks: msg`settings.hotkeys.navigation.decks`,
@@ -28,6 +33,7 @@ export const HOTKEYS_LABELS = {
 const HotkeyEntry = z.array(z.string());
 
 export const hotkeysSettingsValidation = z.object({
+  ui: z.record(z.literal(["focusNext", "focusPrev"]), HotkeyEntry),
   navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
   grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
 }).superRefine(
@@ -41,6 +47,52 @@ export const hotkeysSettingsValidation = z.object({
             message: "validation.settings-hotkeys.duplicate-keys",
             path: [scopeKey, field, index],
           });
+        });
+      }
+    });
+
+    // validate ui scope hotkeys are unique across all scopes
+    const uiHotkeys = Object.entries(data.ui).flatMap(([field, hotkeys]) =>
+      hotkeys.map((hotkey) => [hotkey, field] as [string, string]),
+    );
+    const otherScopesHotkeys = Object.entries(data)
+      .filter(([scopeKey]) => scopeKey !== "ui")
+      .flatMap(([scopeKey, scopeValue]) =>
+        Object.entries(scopeValue).flatMap(([field, hotkeys]) =>
+          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string]),
+        ),
+      );
+
+    const allHotkeysMap = new Map<string, Array<{ scope: string; field: string }>>();
+    uiHotkeys.forEach(([hotkey, field]) => {
+      allHotkeysMap.set(hotkey, [...(allHotkeysMap.get(hotkey) || []), { scope: "ui", field }]);
+    });
+    otherScopesHotkeys.forEach(([hotkey, scope, field]) => {
+      if (allHotkeysMap.has(hotkey)) {
+        allHotkeysMap.get(hotkey)!.push({ scope, field });
+      }
+    });
+
+    allHotkeysMap.forEach((locations, hotkey) => {
+      const hasUiScope = locations.some((loc) => loc.scope === "ui");
+      if (hasUiScope && locations.length > 1) {
+        locations.forEach((loc) => {
+          if (loc.scope === "ui") {
+            const index = data.ui[loc.field as keyof typeof data.ui].indexOf(hotkey);
+            ctx.addIssue({
+              code: "custom",
+              message: "validation.settings-hotkeys.duplicate-keys",
+              path: ["ui", loc.field, index],
+            });
+          } else {
+            const scopeData = data[loc.scope as keyof typeof data] as Record<string, string[]>;
+            const index = scopeData[loc.field].indexOf(hotkey);
+            ctx.addIssue({
+              code: "custom",
+              message: "validation.settings-hotkeys.duplicate-keys",
+              path: [loc.scope, loc.field, index],
+            });
+          }
         });
       }
     });
@@ -77,13 +129,19 @@ export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
 export type HotkeyScope = keyof HotkeysSettings;
 export type HotkeyEntry = RegisterableHotkey[];
 
-export type AppHotkeys = {
+export type HotkeysSettingsGeneric<T> = {
   [K in HotkeyScope]: {
-    [L in keyof HotkeysSettings[K]]: HotkeyEntry;
+    [L in keyof HotkeysSettings[K]]: T;
   };
 };
 
+export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
+
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
+  ui: {
+    focusNext: ["Alt+J"],
+    focusPrev: ["Alt+K"],
+  },
   navigation: {
     dashboard: ["H"],
     decks: ["D"],

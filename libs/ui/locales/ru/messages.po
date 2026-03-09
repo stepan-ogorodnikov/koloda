@@ -17,7 +17,7 @@ msgstr ""
 msgid "back-button.label"
 msgstr "Перейти обратно"
 
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:38
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:40
 msgid "dashboard.skip-link"
 msgstr "Перейти к содержимому"
 
@@ -47,27 +47,19 @@ msgstr "Сохранить"
 msgid "form.updatedAt {0}"
 msgstr "Обновлено {0}"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:41
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:47
 msgid "hotkey-recorder.accept"
 msgstr "Сохранить эту комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:52
+#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:19
 msgid "hotkey-recorder.add-button.label"
 msgstr "Добавить комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:49
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:55
 msgid "hotkey-recorder.cancel"
 msgstr "Отменить"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:94
-msgid "hotkey-recorder.delete-button.label"
-msgstr "Удалить эту комбинацию клавиш"
-
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:85
-msgid "hotkey-recorder.edit-button.label"
-msgstr "Изменить эту комбинацию клавиш"
-
-#: ../../libs/ui/src/lib/ui/hotkey-recorder-popover.tsx:37
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:43
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 

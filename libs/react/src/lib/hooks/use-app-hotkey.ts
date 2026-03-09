@@ -17,7 +17,7 @@ export function useAppHotkey(
   const onHotkeysChange = useEffectEvent((updated: HotkeyEntry) => {
     handles.current.forEach((handle) => handle.unregister());
     handles.current = updated.map((hotkey) => (
-      hotkeyManager.register(hotkey, callback, { ...options, enabled: !!scopes[scope] })
+      hotkeyManager.register(hotkey, callback, getOptions(options, scope, scopes))
     ));
   });
 
@@ -75,6 +75,14 @@ function setHandlesOptions(
   scope: string,
   scopes: Record<string, boolean>,
 ) {
-  const value = { ...options, enabled: !scope || !!scopes[scope] };
+  const value = getOptions(options, scope, scopes);
   handles.forEach((handle) => handle.setOptions(value));
+}
+
+function getOptions(
+  options: HotkeyOptions | undefined,
+  scope: string,
+  scopes: Record<string, boolean>,
+) {
+  return { ...options, enabled: !scope || !!scopes[scope] };
 }

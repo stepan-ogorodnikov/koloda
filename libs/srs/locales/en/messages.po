@@ -137,33 +137,45 @@ msgstr "Template not found"
 msgid "not-found.templates.clone.source"
 msgstr "Source template not found"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:13
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:14
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:10
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Grade selection"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:9
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Navigation"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.scopes.ui"
+msgstr "Interface"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
+msgid "settings.hotkeys.ui.focusNext"
+msgstr "Focus forward"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+msgid "settings.hotkeys.ui.focusPrev"
+msgstr "Focus backward"
 
 #: ../../libs/srs/src/lib/templates.ts:14
 msgid "templates.field-types.markdown"
@@ -223,7 +235,7 @@ msgstr "Invalid URL"
 
 #: ../../libs/srs/src/lib/error.ts:36
 msgid "validation.settings-hotkeys.duplicate-keys"
-msgstr "Hotkeys must be unique within their group"
+msgstr "There are conflicting hotkeys"
 
 #: ../../libs/srs/src/lib/error.ts:27
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"

@@ -137,33 +137,45 @@ msgstr "Шаблон не найден"
 msgid "not-found.templates.clone.source"
 msgstr "Исходный шаблон не найден"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:13
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Главная"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:14
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Колоды"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Настройки"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:10
 msgid "settings.hotkeys.scopes.grades"
 msgstr "Выбор сложности"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:7
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:9
 msgid "settings.hotkeys.scopes.navigation"
 msgstr "Навигация"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.scopes.ui"
+msgstr "Интерфейс"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:15
+msgid "settings.hotkeys.ui.focusNext"
+msgstr "Фокус далее"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+msgid "settings.hotkeys.ui.focusPrev"
+msgstr "Фокус назад"
 
 #: ../../libs/srs/src/lib/templates.ts:14
 msgid "templates.field-types.markdown"
@@ -223,7 +235,7 @@ msgstr "Некорректный URL"
 
 #: ../../libs/srs/src/lib/error.ts:36
 msgid "validation.settings-hotkeys.duplicate-keys"
-msgstr "Комбинации клавиш не должны повторяться в пределах своей группы"
+msgstr "Есть конфликтующие комбинации клавиш"
 
 #: ../../libs/srs/src/lib/error.ts:27
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"

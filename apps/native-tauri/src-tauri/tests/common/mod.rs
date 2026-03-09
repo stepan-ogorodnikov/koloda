@@ -127,6 +127,10 @@ pub fn learning_settings_with_day_start(
 
 pub fn hotkeys_settings() -> serde_json::Value {
     json!({
+        "ui": {
+            "focusNext": ["Alt+J"],
+            "focusPrev": ["Alt+K"],
+        },
         "navigation": {
             "dashboard": ["H"],
             "decks": ["D"],
