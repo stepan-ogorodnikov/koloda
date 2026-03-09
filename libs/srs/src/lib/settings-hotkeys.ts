@@ -85,16 +85,16 @@ export type AppHotkeys = {
 
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   navigation: {
-    dashboard: ["keyh"],
-    decks: ["keyd"],
-    algorithms: ["keyp"],
-    templates: ["keyt"],
-    settings: ["control+comma"],
+    dashboard: ["H"],
+    decks: ["D"],
+    algorithms: ["P"],
+    templates: ["T"],
+    settings: ["Mod+,"],
   },
   grades: {
-    again: ["digit1"],
-    hard: ["digit2"],
-    normal: ["digit3"],
-    easy: ["digit4"],
+    again: ["1"],
+    hard: ["2"],
+    normal: ["3"],
+    easy: ["4"],
   },
 });

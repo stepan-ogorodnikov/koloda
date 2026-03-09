@@ -128,17 +128,17 @@ pub fn learning_settings_with_day_start(
 pub fn hotkeys_settings() -> serde_json::Value {
     json!({
         "navigation": {
-            "dashboard": ["KeyH"],
-            "decks": ["KeyD"],
-            "algorithms": ["KeyP"],
-            "templates": ["KeyT"],
-            "settings": ["Control+Comma"],
+            "dashboard": ["H"],
+            "decks": ["D"],
+            "algorithms": ["P"],
+            "templates": ["T"],
+            "settings": ["Mod+,"],
         },
         "grades": {
-            "again": ["Digit1"],
-            "hard": ["Digit2"],
-            "normal": ["Digit3"],
-            "easy": ["Digit4"],
+            "again": ["1"],
+            "hard": ["2"],
+            "normal": ["3"],
+            "easy": ["4"],
         },
     })
 }
