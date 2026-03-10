@@ -8,7 +8,7 @@ import {
   QueryState,
   useTitle,
 } from "@koloda/react";
-import { BackButton, Main, Tabs } from "@koloda/ui";
+import { BackButton, Main, Tabs, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -34,6 +34,7 @@ function DeckRoute() {
   useTitle();
   const { _ } = useLingui();
   const { deckId } = Route.useParams();
+  const ref = useRouteFocus(deckId);
   const id = Number(deckId);
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
@@ -52,7 +53,7 @@ function DeckRoute() {
           </Tabs.List>
         )}
       </Main.Titlebar>
-      <Main.Container>
+      <Main.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
           {() => (
             <Tabs.Panels>

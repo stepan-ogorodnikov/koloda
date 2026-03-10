@@ -1,5 +1,5 @@
 import { Algorithm, algorithmsQueryKeys, NotFound, queriesAtom, QueryState } from "@koloda/react";
-import { BackButton, Main } from "@koloda/ui";
+import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
 
 function AlgorithmRoute() {
   const { algorithmId } = Route.useParams();
+  const ref = useRouteFocus(algorithmId);
   const id = Number(algorithmId);
   const router = useRouter();
   const canGoBack = useCanGoBack();
@@ -29,7 +30,7 @@ function AlgorithmRoute() {
         {canGoBack && <BackButton onClick={() => router.navigate({ to: "/algorithms" })} />}
         <Main.H1>{query.data?.title}</Main.H1>
       </Main.Titlebar>
-      <Main.Container>
+      <Main.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
           {() => <Algorithm id={id} key={algorithmId} />}
         </QueryState>

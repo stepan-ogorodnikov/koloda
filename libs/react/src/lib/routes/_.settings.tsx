@@ -1,5 +1,5 @@
 import { NotFound, useTitle } from "@koloda/react";
-import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
+import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
@@ -19,6 +19,7 @@ const LINKS = [
 
 function SettingsRoute() {
   useTitle();
+  const ref = useRouteFocus();
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const { pathname } = useLocation();
@@ -30,7 +31,7 @@ function SettingsRoute() {
         <Main.Titlebar>
           <Main.H1>{_(msg`settings.title`)}</Main.H1>
         </Main.Titlebar>
-        <Main.Container variants={{ location: "sidebar" }}>
+        <Main.Container variants={{ location: "sidebar" }} ref={ref} tabIndex={-1}>
           {LINKS.map(({ id, t, url }) => (
             <Main.SidebarItem key={id}>
               <Link

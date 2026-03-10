@@ -1,5 +1,5 @@
 import { NotFound, queriesAtom, QueryState, Template, templatesQueryKeys } from "@koloda/react";
-import { BackButton, Main } from "@koloda/ui";
+import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_/templates/$templateId")({
 
 function TemplateRoute() {
   const { templateId } = Route.useParams();
+  const ref = useRouteFocus(templateId);
   const id = Number(templateId);
   const router = useRouter();
   const { getTemplateQuery } = useAtomValue(queriesAtom);
@@ -23,7 +24,7 @@ function TemplateRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <Main.Container>
+    <Main.Container ref={ref} tabIndex={-1}>
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/templates" })} />
         <Main.H1>{query.data?.title}</Main.H1>

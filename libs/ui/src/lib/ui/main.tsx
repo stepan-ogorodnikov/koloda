@@ -87,14 +87,14 @@ function MainSidebarItemLinkContent({ children }: PropsWithChildren) {
 }
 
 const mainContainer = tv({
-  base: "grow flex flex-col min-w-0 min-h-0 overflow-y-auto",
+  base: "grow flex flex-col min-w-0 min-h-0 overflow-y-auto no-focus-ring",
   variants: { location: { sidebar: "-mb-0.5" } },
 });
 
 type MainContainerProps = ComponentProps<"div"> & TWVProps<typeof mainContainer>;
 
-function MainContainer({ variants, children }: MainContainerProps) {
-  return <div className={mainContainer(variants)}>{children}</div>;
+function MainContainer({ variants, ...props }: MainContainerProps) {
+  return <div className={mainContainer(variants)} {...props} />;
 }
 
 Main.Titlebar = MainTitlebar;

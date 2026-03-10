@@ -1,5 +1,5 @@
 import { AddTemplate, queriesAtom, QueryState, templatesQueryKeys, useTitle } from "@koloda/react";
-import { Link, Main, mainSidebarItemLink, useMotionSetting } from "@koloda/ui";
+import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_/templates")({
 
 function TemplatesRoute() {
   useTitle();
+  const ref = useRouteFocus();
   const { _ } = useLingui();
   const { pathname } = useLocation();
   const { getTemplatesQuery } = useAtomValue(queriesAtom);
@@ -34,7 +35,7 @@ function TemplatesRoute() {
           </Main.H1>
           <AddTemplate />
         </Main.Titlebar>
-        <Main.Container variants={{ location: "sidebar" }}>
+        <Main.Container variants={{ location: "sidebar" }} ref={ref} tabIndex={-1}>
           <QueryState query={query}>
             {(data) => (
               <div className="flex flex-col">

@@ -1,5 +1,6 @@
 export * from "./lib/core/focus";
 export * from "./lib/hooks/use-motion-settings";
+export * from "./lib/hooks/use-route-focus";
 export * from "./lib/primitives/animations/fade";
 export * from "./lib/primitives/animations/number";
 export * from "./lib/primitives/dnd/drag-handle";
