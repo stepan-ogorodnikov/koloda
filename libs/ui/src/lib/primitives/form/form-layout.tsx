@@ -1,11 +1,11 @@
 import type { TWVProps } from "@koloda/ui";
 import type { ReactNode } from "react";
-import { type HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { tv } from "tailwind-variants";
 
 export const formLayout = "grow flex flex-col py-2 px-4";
 
-type FormLayoutProps = HTMLAttributes<HTMLDivElement>;
+type FormLayoutProps = ComponentProps<"div">;
 
 export function FormLayout({ children }: FormLayoutProps) {
   return <div className={formLayout}>{children}</div>;
@@ -16,11 +16,9 @@ export const formLayoutSection = tv({
 });
 
 type FormLayoutSectionProps =
-  & HTMLAttributes<HTMLDivElement>
+  & ComponentProps<"div">
   & TWVProps<typeof formLayoutSection>
-  & {
-    term?: ReactNode;
-  };
+  & { term?: ReactNode };
 
 export function FormLayoutSection({ variants, term, children, ...props }: FormLayoutSectionProps) {
   if (term) {
@@ -39,7 +37,7 @@ export function FormLayoutSection({ variants, term, children, ...props }: FormLa
 
 export const formLayoutSectionTerm = "flex tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold fg-level-2";
 
-type FormLayoutSectionTermProps = HTMLAttributes<HTMLLegendElement>;
+type FormLayoutSectionTermProps = ComponentProps<"div">;
 
 export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
   return <div className={formLayoutSectionTerm} {...props} />;
@@ -47,7 +45,7 @@ export function FormLayoutSectionTerm(props: FormLayoutSectionTermProps) {
 
 export const formLayoutSectionContent = tv({ base: "flex flex-col items-baseline" });
 
-type FormLayoutSectionContentProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof formLayoutSectionContent>;
+type FormLayoutSectionContentProps = ComponentProps<"div"> & TWVProps<typeof formLayoutSectionContent>;
 
 export function FormLayoutSectionContent({ variants, ...props }: FormLayoutSectionContentProps) {
   return <div className={formLayoutSectionContent(variants)} {...props} />;

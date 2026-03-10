@@ -1,5 +1,5 @@
 import type { TWVProps } from "@koloda/ui";
-import type { PropsWithChildren } from "react";
+import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
 export const main = [
@@ -91,7 +91,7 @@ const mainContainer = tv({
   variants: { location: { sidebar: "-mb-0.5" } },
 });
 
-type MainContainerProps = PropsWithChildren & TWVProps<typeof mainContainer>;
+type MainContainerProps = ComponentProps<"div"> & TWVProps<typeof mainContainer>;
 
 function MainContainer({ variants, children }: MainContainerProps) {
   return <div className={mainContainer(variants)}>{children}</div>;

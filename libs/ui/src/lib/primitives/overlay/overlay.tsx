@@ -1,5 +1,5 @@
 import type { TWVProps } from "@koloda/ui";
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { Heading } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
@@ -21,19 +21,19 @@ export const overlayFrame = tv({
 
 const overlayFrameHeader = tv({ base: "flex flex-row items-center min-h-14 p-2 tb:px-4 border-b-2 border-main" });
 
-type OverlayFrameHeaderProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameHeader>;
+type OverlayFrameHeaderProps = ComponentProps<"div"> & TWVProps<typeof overlayFrameHeader>;
 
 export function OverlayFrameHeader({ variants, ...props }: OverlayFrameHeaderProps) {
   return <div className={overlayFrameHeader(variants)} {...props} />;
 }
 
-export function OverlayFrameTitle(props: HTMLAttributes<HTMLHeadingElement>) {
+export function OverlayFrameTitle(props: ComponentProps<"h1">) {
   return <Heading className="fg-level-1 font-semibold" slot="title" {...props} />;
 }
 
 export const overlayFrameContent = tv({ base: "grow min-h-0 flex flex-col py-2 px-4" });
 
-type OverlayFrameContentProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameContent>;
+type OverlayFrameContentProps = ComponentProps<"div"> & TWVProps<typeof overlayFrameContent>;
 
 export function OverlayFrameContent({ variants, ...props }: OverlayFrameContentProps) {
   return <div className={overlayFrameContent(variants)} {...props} />;
@@ -52,7 +52,7 @@ const overlayFrameFooter = tv({
   },
 });
 
-type OverlayFrameFooterProps = HTMLAttributes<HTMLDivElement> & TWVProps<typeof overlayFrameFooter>;
+type OverlayFrameFooterProps = ComponentProps<"div"> & TWVProps<typeof overlayFrameFooter>;
 
 export function OverlayFrameFooter({ variants, ...props }: OverlayFrameFooterProps) {
   return <div className={overlayFrameFooter(variants)} {...props} />;
