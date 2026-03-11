@@ -1,4 +1,4 @@
-import { cardsQueryKeys, queriesAtom, settingsQueryKeys } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck, GeneratedCard, Template } from "@koloda/srs";
 import { transformGeneratedCards } from "@koloda/srs";
 import { Table } from "@koloda/ui";
@@ -97,8 +97,8 @@ export function useGeneratedCardsTable(options: UseGeneratedCardsTableOptions) {
 
     mutation.mutate(cardsToCreate, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId }) });
-        queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("ai") });
+        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
         updateCardsStatus(selectedIndices, "success");
         table.toggleAllRowsSelected(false);
       },

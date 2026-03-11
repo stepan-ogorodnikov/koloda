@@ -1,4 +1,5 @@
-import { appMenu, useTitle } from "@koloda/react";
+import { appMenu } from "@koloda/react";
+import { useTitle } from "@koloda/react-base";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 

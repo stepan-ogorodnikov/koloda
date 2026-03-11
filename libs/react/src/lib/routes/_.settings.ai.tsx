@@ -1,4 +1,5 @@
-import { aiQueryKeys, queriesAtom, QueryState, SettingsAi, useTitle } from "@koloda/react";
+import { QueryState, SettingsAi } from "@koloda/react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_/settings/ai")({
   component: SettingsAiRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: aiQueryKeys.profiles(), ...getAIProfilesQuery() });
+    queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
     return { title: msg`title.settings.ai` };
   },
 });
@@ -22,7 +23,7 @@ function SettingsAiRoute() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ ...getAIProfilesQuery(), queryKey: aiQueryKeys.profiles() });
+  const query = useQuery({ ...getAIProfilesQuery(), queryKey: queryKeys.ai.profiles() });
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { lessonsQueryKeys, queriesAtom, settingsQueryKeys, useHotkeysStatus } from "@koloda/react";
+import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/react-base";
 import type { Deck, LessonType } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,7 +30,7 @@ export function Lesson() {
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const { data: learningSettings } = useQuery({
-    queryKey: settingsQueryKeys.detail("learning"),
+    queryKey: queryKeys.settings.detail("learning"),
     ...getSettingsQuery("learning"),
   });
   const { isOpen, isSubmitted, isFinished } = state.meta;
@@ -41,9 +41,9 @@ export function Lesson() {
 
   useEffect(() => {
     if (!isOpen) {
-      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all(state.filters) });
-      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.all() });
-      queryClient.invalidateQueries({ queryKey: lessonsQueryKeys.todayReviewTotals() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all(state.filters) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
     }
   }, [isOpen, queryClient, state.filters]);
 

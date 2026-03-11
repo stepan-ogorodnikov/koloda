@@ -3,13 +3,7 @@
   "include": [],
   "references": [
     {
-      "path": "../react-base"
-    },
-    {
       "path": "../srs"
-    },
-    {
-      "path": "../ui"
     },
     {
       "path": "./tsconfig.lib.json"

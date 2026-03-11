@@ -1,4 +1,4 @@
-import type { Queries } from "@koloda/react";
+import type { Queries } from "@koloda/react-base";
 import type {
   AddAIProfileData,
   AIProfile,

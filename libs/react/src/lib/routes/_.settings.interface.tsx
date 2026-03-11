@@ -1,4 +1,5 @@
-import { SettingsInterface, settingsQueryKeys, useTitle } from "@koloda/react";
+import { SettingsInterface } from "@koloda/react";
+import { queryKeys, useTitle } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_/settings/interface")({
   component: SettingsInterfaceRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: settingsQueryKeys.detail("interface"), ...getSettingsQuery("interface") });
+    queryClient.ensureQueryData({ queryKey: queryKeys.settings.detail("interface"), ...getSettingsQuery("interface") });
     return { title: msg`title.settings.interface` };
   },
 });

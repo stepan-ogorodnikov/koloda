@@ -1,5 +1,6 @@
-import { NotFound, type Queries, queriesAtom } from "@koloda/react";
-import { langAtom, routeTree } from "@koloda/react";
+import { langAtom, NotFound, routeTree } from "@koloda/react";
+import type { Queries } from "@koloda/react-base";
+import { queriesAtom } from "@koloda/react-base";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import type { I18nProviderProps } from "@lingui/react";

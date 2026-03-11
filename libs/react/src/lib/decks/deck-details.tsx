@@ -1,5 +1,5 @@
 import { AlgorithmPicker } from "@koloda/react";
-import { decksQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck, UpdateDeckValues } from "@koloda/srs";
 import { toFormErrors, updateDeckSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -17,7 +17,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getDeckQuery, updateDeckMutation } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
+  const { data } = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
   const { mutate } = useMutation(updateDeckMutation());
   const form = useAppForm({
     defaultValues: data as UpdateDeckValues,
@@ -25,9 +25,9 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: decksQueryKeys.all() });
-          queryClient.invalidateQueries({ queryKey: decksQueryKeys.detail(id) });
-          queryClient.setQueryData(decksQueryKeys.detail(id), returning);
+          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.decks.detail(id) });
+          queryClient.setQueryData(queryKeys.decks.detail(id), returning);
           formApi.reset();
         },
         onError: (error) => {

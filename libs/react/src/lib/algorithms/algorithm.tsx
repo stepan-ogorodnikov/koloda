@@ -1,4 +1,5 @@
-import { algorithmsQueryKeys, CloneAlgorithm, NotFound, queriesAtom } from "@koloda/react";
+import { CloneAlgorithm, NotFound } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
 import { toFormErrors, updateAlgorithmSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, NumberField, Switch, TextField, useAppForm } from "@koloda/ui";
@@ -16,7 +17,7 @@ export function Algorithm({ id }: AlgorithmProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getAlgorithmQuery, updateAlgorithmMutation } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
+  const { data, isSuccess } = useQuery({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
   const { mutate } = useMutation(updateAlgorithmMutation());
   const form = useAppForm({
     defaultValues: data as UpdateAlgorithmValues,
@@ -24,8 +25,8 @@ export function Algorithm({ id }: AlgorithmProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
-          queryClient.setQueryData(algorithmsQueryKeys.detail(id), returning);
+          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
+          queryClient.setQueryData(queryKeys.algorithms.detail(id), returning);
           formApi.reset(returning);
         },
         onError: (error) => {

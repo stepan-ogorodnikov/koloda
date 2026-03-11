@@ -1,4 +1,5 @@
-import { queriesAtom, QueryState, settingsQueryKeys, useTitle } from "@koloda/react";
+import { QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/srs";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/_/settings/learning")({
   component: SettingsLearningRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: settingsQueryKeys.detail("learning"), ...getSettingsQuery("learning") });
+    queryClient.ensureQueryData({ queryKey: queryKeys.settings.detail("learning"), ...getSettingsQuery("learning") });
     return { title: msg`title.settings.learning` };
   },
 });
@@ -26,7 +27,7 @@ function SettingsLearningRoute() {
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
     ...getSettingsQuery<"learning">("learning"),
-    queryKey: settingsQueryKeys.detail("learning"),
+    queryKey: queryKeys.settings.detail("learning"),
   });
 
   return (

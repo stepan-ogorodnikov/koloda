@@ -6,13 +6,16 @@
       "path": "../../libs/ui"
     },
     {
+      "path": "../../libs/react"
+    },
+    {
+      "path": "../../libs/react-base"
+    },
+    {
       "path": "../../libs/srs-pgsql"
     },
     {
       "path": "../../libs/srs"
-    },
-    {
-      "path": "../../libs/react"
     },
     {
       "path": "./tsconfig.app.json"

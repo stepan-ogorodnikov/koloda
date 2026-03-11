@@ -1,4 +1,5 @@
-import { langAtom, queriesAtom } from "@koloda/react";
+import { langAtom } from "@koloda/react";
+import { queriesAtom } from "@koloda/react-base";
 import { LANGUAGES } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";

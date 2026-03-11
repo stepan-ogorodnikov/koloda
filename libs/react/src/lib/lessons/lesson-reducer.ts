@@ -1,5 +1,6 @@
-import type { LessonAtomValue, ReducerAction } from "@koloda/react";
-import { dispatchReducerAction } from "@koloda/react";
+import type { LessonAtomValue } from "@koloda/react";
+import type { ReducerAction } from "@koloda/react-base";
+import { dispatchReducerAction } from "@koloda/react-base";
 import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } from "@koloda/srs";
 import type {
   Card,

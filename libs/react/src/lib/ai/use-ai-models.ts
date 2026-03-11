@@ -1,4 +1,4 @@
-import { aiQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
@@ -6,7 +6,7 @@ import { useMemo } from "react";
 export function useAIModels(credentialId: string | null) {
   const { getAIProfileModelsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
-    queryKey: aiQueryKeys.models(credentialId || ""),
+    queryKey: queryKeys.ai.models(credentialId || ""),
     ...getAIProfileModelsQuery(credentialId || ""),
     enabled: !!credentialId,
   });

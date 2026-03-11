@@ -1,4 +1,5 @@
-import { cardsQueryKeys, queriesAtom, QueryState, reviewsQueryKeys, templatesQueryKeys } from "@koloda/react";
+import { QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, UpdateCardValues, ZodIssue } from "@koloda/srs";
 import { getUpdateCardSchema, toFormErrors, updateCardSchema as schema } from "@koloda/srs";
 import { Button, FormLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -27,7 +28,7 @@ export function CardDetails({ card }: CardDetailsProps) {
   const { i18n, _ } = useLingui();
   const { getTemplateQuery, updateCardMutation, resetCardProgressMutation } = useAtomValue(queriesAtom);
   const query = useQuery({
-    queryKey: templatesQueryKeys.detail(card.templateId),
+    queryKey: queryKeys.templates.detail(card.templateId),
     ...getTemplateQuery(card.templateId),
   });
   const template = query.data;
@@ -39,7 +40,7 @@ export function CardDetails({ card }: CardDetailsProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: card.id, values: value }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });
@@ -55,8 +56,8 @@ export function CardDetails({ card }: CardDetailsProps) {
   const handleProgressReset = () => {
     resetProgressMutation.mutate({ id: card.id }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: cardsQueryKeys.deck({ deckId: card.deckId }) });
-        queryClient.invalidateQueries({ queryKey: reviewsQueryKeys.card({ cardId: card.id }) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.reviews.card({ cardId: card.id }) });
       },
     });
   };

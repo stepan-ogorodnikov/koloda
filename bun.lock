@@ -103,6 +103,10 @@
       "name": "@koloda/react",
       "version": "0.0.1",
     },
+    "libs/react-base": {
+      "name": "@koloda/react-base",
+      "version": "0.0.1",
+    },
     "libs/srs": {
       "name": "@koloda/srs",
       "version": "0.0.1",
@@ -514,6 +518,8 @@
     "@koloda/native-tauri-react": ["@koloda/native-tauri-react@workspace:apps/native-tauri-react"],
 
     "@koloda/react": ["@koloda/react@workspace:libs/react"],
+
+    "@koloda/react-base": ["@koloda/react-base@workspace:libs/react-base"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 

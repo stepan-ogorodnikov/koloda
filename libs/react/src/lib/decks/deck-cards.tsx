@@ -1,5 +1,5 @@
-import { cardsQueryKeys, cardsViewAtom, CardsViewToggle, GenerateCards, QueryState } from "@koloda/react";
-import { decksQueryKeys, queriesAtom } from "@koloda/react";
+import { cardsViewAtom, CardsViewToggle, GenerateCards, QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -16,8 +16,8 @@ type DeckCardsProps = { deckId: Deck["id"] };
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: decksQueryKeys.detail(deckId), ...getDeckQuery(deckId) });
-  const query = useQuery({ queryKey: cardsQueryKeys.deck({ deckId }), ...getCardsQuery({ deckId }) });
+  const { data } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
+  const query = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
   const [view, setView] = useAtom(cardsViewAtom);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 

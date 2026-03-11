@@ -9,6 +9,9 @@
       "path": "../../libs/react"
     },
     {
+      "path": "../../libs/react-base"
+    },
+    {
       "path": "../../libs/srs"
     },
     {

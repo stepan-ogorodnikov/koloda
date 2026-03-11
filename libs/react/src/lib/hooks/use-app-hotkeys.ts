@@ -1,7 +1,7 @@
-import { useHotkeysSettings } from "@koloda/react";
+import { useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey } from "@koloda/react-base";
 import { focusNext, focusPrev } from "@koloda/ui";
 import { useNavigate } from "@tanstack/react-router";
-import { useAppHotkey } from "./use-app-hotkey";
 
 export function useAppHotkeys() {
   const { navigation, ui } = useHotkeysSettings();

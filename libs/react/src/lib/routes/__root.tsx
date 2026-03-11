@@ -1,9 +1,10 @@
-import { App, NotFound, useTitle } from "@koloda/react";
+import { App, NotFound } from "@koloda/react";
+import { useTitle } from "@koloda/react-base";
+import type { Queries } from "@koloda/react-base";
 import { type QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent } from "@tanstack/react-router";
 import { atom, useAtomValue } from "jotai";
 import { type JSX } from "react";
-import type { Queries } from "../queries";
 
 export const appEntryAtom = atom<{ component: (() => JSX.Element) | null }>({ component: null });
 

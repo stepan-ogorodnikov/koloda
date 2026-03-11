@@ -1,4 +1,5 @@
-import { LanguageSelect, queriesAtom, settingsQueryKeys, themeAtom, useTitle } from "@koloda/react";
+import { LanguageSelect, themeAtom } from "@koloda/react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { MOTION_SETTINGS } from "@koloda/srs";
 import type { AllowedSettings } from "@koloda/srs";
 import { motionSettingAtom } from "@koloda/ui";
@@ -17,7 +18,7 @@ export function SettingsInterface() {
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation({
     onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
-      queryClient.setQueryData(settingsQueryKeys.detail("interface"), settings);
+      queryClient.setQueryData(queryKeys.settings.detail("interface"), settings);
     },
     ...patchSettingsMutation(),
   });

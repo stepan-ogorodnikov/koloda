@@ -1,4 +1,4 @@
-import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { cloneAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
@@ -36,7 +36,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });
@@ -86,9 +86,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
                 )}
               </form.Field>
               <div className="min-h-10">
-                {formErrorMap.onSubmit && (
-                  <form.Errors errors={formErrorMap.onSubmit} />
-                )}
+                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
               </div>
             </Dialog.Content>
             <Dialog.Footer>

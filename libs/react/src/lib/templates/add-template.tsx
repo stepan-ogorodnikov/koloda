@@ -1,4 +1,4 @@
-import { queriesAtom, templatesQueryKeys } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { DEFAULT_TEMPLATE, insertTemplateSchema as schema, toFormErrors } from "@koloda/srs";
 import type { InsertTemplateData, Template } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
@@ -34,7 +34,7 @@ export function AddTemplate() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });

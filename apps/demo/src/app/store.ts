@@ -1,12 +1,6 @@
-import {
-  appEntryAtom,
-  DEFAULT_HOTKEYS_SCOPES,
-  hotkeysScopesAtom,
-  langAtom,
-  queriesAtom,
-  themeAtom,
-} from "@koloda/react";
-import type { Queries } from "@koloda/react";
+import { appEntryAtom, langAtom, themeAtom } from "@koloda/react";
+import { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, queriesAtom } from "@koloda/react-base";
+import type { Queries } from "@koloda/react-base";
 import { motionSettingAtom } from "@koloda/ui";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";

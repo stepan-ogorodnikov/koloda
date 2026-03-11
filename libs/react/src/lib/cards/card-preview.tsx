@@ -1,12 +1,5 @@
-import {
-  LessonCardField,
-  lessonContent,
-  LessonFooterLayout,
-  LessonHeaderLayout,
-  lessonStudying,
-  queriesAtom,
-  templatesQueryKeys,
-} from "@koloda/react";
+import { LessonCardField, lessonContent, LessonFooterLayout, LessonHeaderLayout, lessonStudying } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -29,7 +22,7 @@ export function CardPreview({ isOpen, onOpenChange, card, templateId }: PreviewC
   const [state, dispatch] = useReducer(cardPreviewReducer, cardPreviewReducerDefault);
   const { getTemplateQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
-    queryKey: templatesQueryKeys.detail(templateId),
+    queryKey: queryKeys.templates.detail(templateId),
     ...getTemplateQuery(templateId),
   });
 

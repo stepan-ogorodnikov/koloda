@@ -1,4 +1,4 @@
-import { queriesAtom, settingsQueryKeys } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { HotkeysSettings } from "@koloda/srs";
 import {
   HOTKEY_SCOPE_LABELS,
@@ -28,8 +28,8 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
     onSubmit: async ({ value }) => {
       mutate({ name: "hotkeys", content: schema.parse(value) }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("hotkeys") });
-          queryClient.setQueryData(settingsQueryKeys.detail("hotkeys"), returning);
+          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("hotkeys") });
+          queryClient.setQueryData(queryKeys.settings.detail("hotkeys"), returning);
           form.reset(returning?.content);
         },
         onError: (error) => {

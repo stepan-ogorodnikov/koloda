@@ -1,5 +1,6 @@
 import { parseTime } from "@internationalized/date";
-import { AlgorithmPicker, queriesAtom, settingsQueryKeys, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker, TemplatePicker } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { LearningSettings } from "@koloda/srs";
 import { learningSettingsValidation as schema, toFormErrors } from "@koloda/srs";
 import { formLayout, Label, NumberField, TimeField, useAppForm } from "@koloda/ui";
@@ -23,8 +24,8 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
     onSubmit: async ({ value }) => {
       mutate({ name: "learning", content: schema.parse(value) }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("learning") });
-          queryClient.setQueryData(settingsQueryKeys.detail("learning"), returning);
+          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("learning") });
+          queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
           form.reset(returning?.content);
         },
         onError: (error) => {

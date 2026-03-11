@@ -1,4 +1,5 @@
-import { queriesAtom, templatesQueryKeys, useAIModels, useAIProfiles } from "@koloda/react";
+import { useAIModels, useAIProfiles } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AISecrets, Deck, GenerateCardsInput, GeneratedCard, Template } from "@koloda/srs";
 import { createAIGenerationClient, GENERATION_TEMPERATURE } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
@@ -46,7 +47,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [generatedRuns, setGeneratedRuns] = useState<Record<string, GeneratedCard[]>>({});
   const [canceledRuns, setCanceledRuns] = useState<Record<string, boolean>>({});
   const touchProfileMutation = useMutation(touchAIProfileMutation());
-  const templateQuery = useQuery({ queryKey: templatesQueryKeys.detail(templateId), ...getTemplateQuery(templateId) });
+  const templateQuery = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
   const template = templateQuery.data;
   const { profiles, selectedProfile } = useAIProfiles(profileId);
   const { models } = useAIModels(profileId);

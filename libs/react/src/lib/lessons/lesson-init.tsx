@@ -1,4 +1,4 @@
-import { lessonsQueryKeys, queriesAtom, useAppHotkey } from "@koloda/react";
+import { queriesAtom, queryKeys, useAppHotkey } from "@koloda/react-base";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
@@ -18,11 +18,11 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
   const { getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
   const { data: learnedToday } = useQuery({
-    queryKey: lessonsQueryKeys.todayReviewTotals(),
+    queryKey: queryKeys.lessons.todayReviewTotals(),
     ...getTodayReviewTotalsQuery(),
   });
   const { data: lessons } = useQuery({
-    queryKey: lessonsQueryKeys.all(state.filters),
+    queryKey: queryKeys.lessons.all(state.filters),
     ...getLessonsQuery(state.filters!),
   });
 

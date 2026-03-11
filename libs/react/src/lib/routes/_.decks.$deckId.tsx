@@ -1,13 +1,5 @@
-import {
-  cardsQueryKeys,
-  DeckCards,
-  DeckDetails,
-  decksQueryKeys,
-  NotFound,
-  queriesAtom,
-  QueryState,
-  useTitle,
-} from "@koloda/react";
+import { DeckCards, DeckDetails, NotFound, QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { BackButton, Main, Tabs, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -20,8 +12,8 @@ export const Route = createFileRoute("/_/decks/$deckId")({
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
     const id = Number(deckId);
     const { getDeckQuery, getCardsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
-    queryClient.ensureQueryData({ queryKey: cardsQueryKeys.deck({ deckId: id }), ...getCardsQuery({ deckId: id }) });
+    queryClient.ensureQueryData({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
+    queryClient.ensureQueryData({ queryKey: queryKeys.cards.deck({ deckId: id }), ...getCardsQuery({ deckId: id }) });
   },
 });
 
@@ -38,7 +30,7 @@ function DeckRoute() {
   const id = Number(deckId);
   const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: decksQueryKeys.detail(id), ...getDeckQuery(id) });
+  const query = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
 
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 

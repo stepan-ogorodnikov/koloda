@@ -1,4 +1,5 @@
-import { LanguageSelect, ThemeSelect, useAppHotkeys, useGlobalSync, useHotkeysStatus } from "@koloda/react";
+import { LanguageSelect, ThemeSelect, useAppHotkeys, useGlobalSync } from "@koloda/react";
+import { useHotkeysStatus } from "@koloda/react-base";
 import { Dashboard, Main } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { AlignVerticalJustifyCenter, FileSliders, House, Layers, Settings } from "lucide-react";

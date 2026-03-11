@@ -1,4 +1,4 @@
-import { aiQueryKeys, queriesAtom, settingsQueryKeys } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AddAIProfileFormProps, AiProvider, AISecrets } from "@koloda/srs";
 import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/srs";
 import { Button, Dialog, Select } from "@koloda/ui";
@@ -31,8 +31,8 @@ export function SettingsAIAddProfile() {
     mutate(data, {
       onSuccess: () => {
         setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: settingsQueryKeys.detail("ai") });
-        queryClient.invalidateQueries({ queryKey: aiQueryKeys.profiles() });
+        queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
+        queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
       },
     });
   };

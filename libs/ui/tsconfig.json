@@ -3,6 +3,9 @@
   "include": [],
   "references": [
     {
+      "path": "../react-base"
+    },
+    {
       "path": "../srs"
     },
     {

@@ -1,4 +1,5 @@
-import { defaultTemplateAtom, queriesAtom, templatesQueryKeys } from "@koloda/react";
+import { defaultTemplateAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Template } from "@koloda/srs";
 import { DeleteDialog, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -18,14 +19,14 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   const navigate = useNavigate({ from: "/templates/$templateId" });
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { deleteTemplateMutation, getTemplateDecksQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: templatesQueryKeys.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
+  const { data } = useQuery({ queryKey: queryKeys.templates.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
   const { mutate } = useMutation(deleteTemplateMutation());
 
   const handleConfirm = () => {
     mutate({ id: Number(id) }, {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
-        queryClient.removeQueries({ queryKey: templatesQueryKeys.detail(id) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
+        queryClient.removeQueries({ queryKey: queryKeys.templates.detail(id) });
         navigate({ to: "/templates" });
       },
     });

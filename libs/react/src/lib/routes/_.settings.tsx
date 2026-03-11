@@ -1,4 +1,5 @@
-import { NotFound, useTitle } from "@koloda/react";
+import { NotFound } from "@koloda/react";
+import { useTitle } from "@koloda/react-base";
 import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

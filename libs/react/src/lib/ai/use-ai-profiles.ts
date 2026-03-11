@@ -1,4 +1,4 @@
-import { aiQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AIProfile, AISecrets } from "@koloda/srs";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -19,7 +19,7 @@ function getApiKey(secrets: AISecrets): string | null {
 
 export function useAIProfiles(profileId?: string | null) {
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: aiQueryKeys.profiles(), ...getAIProfilesQuery() });
+  const query = useQuery({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
   const profiles = useMemo(() => (query.data ?? []), [query.data]);
   const defaultProfileId = useMemo(() => {
     if (profiles.length === 0) return null;

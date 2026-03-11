@@ -1,5 +1,5 @@
-import { algorithmsQueryKeys, queriesAtom, QueryState, useTitle } from "@koloda/react";
-import { AddAlgorithm } from "@koloda/react";
+import { AddAlgorithm, QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/algorithms")({
   component: AlgorithmsRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getAlgorithmsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
+    queryClient.ensureQueryData({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
     return { title: msg`title.algorithms` };
   },
 });
@@ -24,7 +24,7 @@ function AlgorithmsRoute() {
   const { pathname } = useLocation();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const query = useQuery({ queryKey: algorithmsQueryKeys.all(), ...getAlgorithmsQuery() });
+  const query = useQuery({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
   const hasContent = !(pathname === "/algorithms" || pathname === "/algorithms/");
 
   return (

@@ -1,4 +1,5 @@
-import { AIChat, useHotkeysStatus } from "@koloda/react";
+import { AIChat } from "@koloda/react";
+import { useHotkeysStatus } from "@koloda/react-base";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

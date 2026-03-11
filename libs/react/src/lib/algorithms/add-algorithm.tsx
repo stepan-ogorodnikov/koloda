@@ -1,4 +1,4 @@
-import { algorithmsQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
 import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
@@ -34,7 +34,7 @@ export function AddAlgorithm() {
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
-          queryClient.invalidateQueries({ queryKey: algorithmsQueryKeys.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
         },
         onError: (error) => {
           formApi.setErrorMap({ onSubmit: toFormErrors(error) });

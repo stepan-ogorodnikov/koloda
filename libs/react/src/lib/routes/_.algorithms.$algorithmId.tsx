@@ -1,4 +1,5 @@
-import { Algorithm, algorithmsQueryKeys, NotFound, queriesAtom, QueryState } from "@koloda/react";
+import { Algorithm, NotFound, QueryState } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   loader: ({ context: { queryClient, queries }, params: { algorithmId } }) => {
     const id = Number(algorithmId);
     const { getAlgorithmQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
+    queryClient.ensureQueryData({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
   },
 });
 
@@ -20,7 +21,7 @@ function AlgorithmRoute() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: algorithmsQueryKeys.detail(id), ...getAlgorithmQuery(id) });
+  const query = useQuery({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
 
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 

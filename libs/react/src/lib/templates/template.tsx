@@ -1,4 +1,5 @@
-import { CloneTemplate, DeleteTemplate, NotFound, queriesAtom, templatesQueryKeys } from "@koloda/react";
+import { CloneTemplate, DeleteTemplate, NotFound } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
 import { toFormErrors, updateTemplateSchema as schema } from "@koloda/srs";
 import { FormLayout, formLayout, Label, TextField, useAppForm } from "@koloda/ui";
@@ -16,7 +17,7 @@ export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getTemplateQuery, updateTemplateMutation } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: templatesQueryKeys.detail(id), ...getTemplateQuery(id) });
+  const { data, isSuccess } = useQuery({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) });
   const { mutate } = useMutation(updateTemplateMutation());
   const form = useAppForm({
     defaultValues: data as UpdateTemplateValues,
@@ -24,8 +25,8 @@ export function Template({ id }: TemplateProps) {
     onSubmit: async ({ formApi, value }) => {
       mutate({ id: Number(id), values: schema.parse(value) }, {
         onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: templatesQueryKeys.all() });
-          queryClient.setQueryData(templatesQueryKeys.detail(id), returning);
+          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
+          queryClient.setQueryData(queryKeys.templates.detail(id), returning);
           formApi.reset(returning);
         },
         onError: (error) => {

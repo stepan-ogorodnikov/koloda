@@ -1,8 +1,8 @@
-import { useHotkeysStatus } from "@koloda/react";
 import type { HotkeyEntry } from "@koloda/srs";
 import { getHotkeyManager } from "@tanstack/react-hotkeys";
 import type { HotkeyCallback, HotkeyOptions, HotkeyRegistrationHandle } from "@tanstack/react-hotkeys";
 import { useEffect, useEffectEvent, useRef } from "react";
+import { useHotkeysStatus } from "./use-hotkeys-status";
 
 export function useAppHotkey(
   hotkeys: HotkeyEntry,

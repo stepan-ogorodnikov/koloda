@@ -1,4 +1,4 @@
-import { cardsQueryKeys, queriesAtom } from "@koloda/react";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck } from "@koloda/srs";
 import { Button, Fade, Number } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -20,7 +20,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery } = useAtomValue(queriesAtom);
   const { data: cards = [] } = useQuery({
-    queryKey: cardsQueryKeys.deck({ deckId }),
+    queryKey: queryKeys.cards.deck({ deckId }),
     ...getCardsQuery({ deckId }),
   });
   const [index, setIndex] = useState(0);

@@ -1,5 +1,5 @@
-import { queriesAtom } from "@koloda/react";
 import { themeAtom } from "@koloda/react";
+import { queriesAtom } from "@koloda/react-base";
 import { THEMES } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";

@@ -10,7 +10,6 @@
     "rootDir": "src",
     "jsx": "react-jsx",
     "module": "esnext",
-    "moduleResolution": "bundler",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo"
   },
   "exclude": [
@@ -33,9 +32,6 @@
     "src/**/*.tsx"
   ],
   "references": [
-    {
-      "path": "../react-base/tsconfig.lib.json"
-    },
     {
       "path": "../srs/tsconfig.lib.json"
     }
