@@ -1,6 +1,6 @@
 import { useHotkeysSettings } from "@koloda/react-base";
 import { useAppHotkey } from "@koloda/react-base";
-import { focusNext, focusPrev } from "@koloda/ui";
+import { focusNext, focusPrev, goToNextTab, goToPrevTab } from "@koloda/ui";
 import { useNavigate } from "@tanstack/react-router";
 
 export function useAppHotkeys() {
@@ -13,6 +13,8 @@ export function useAppHotkeys() {
   useAppHotkey(navigation.settings, () => navigate({ to: "/settings" }), "nav");
   useAppHotkey(ui.focusNext, focusNext, "", { ignoreInputs: false });
   useAppHotkey(ui.focusPrev, focusPrev, "", { ignoreInputs: false });
+  useAppHotkey(ui.nextTab, goToNextTab, "");
+  useAppHotkey(ui.prevTab, goToPrevTab, "");
 
   return null;
 }

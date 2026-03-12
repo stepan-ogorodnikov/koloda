@@ -14,6 +14,8 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
   ui: {
     focusNext: msg`settings.hotkeys.ui.focusNext`,
     focusPrev: msg`settings.hotkeys.ui.focusPrev`,
+    nextTab: msg`settings.hotkeys.ui.nextTab`,
+    prevTab: msg`settings.hotkeys.ui.prevTab`,
   },
   navigation: {
     dashboard: msg`settings.hotkeys.navigation.dashboard`,
@@ -33,7 +35,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 const HotkeyEntry = z.array(z.string());
 
 export const hotkeysSettingsValidation = z.object({
-  ui: z.record(z.literal(["focusNext", "focusPrev"]), HotkeyEntry),
+  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab"]), HotkeyEntry),
   navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
   grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
 }).superRefine(
@@ -53,14 +55,14 @@ export const hotkeysSettingsValidation = z.object({
 
     // validate ui scope hotkeys are unique across all scopes
     const uiHotkeys = Object.entries(data.ui).flatMap(([field, hotkeys]) =>
-      hotkeys.map((hotkey) => [hotkey, field] as [string, string]),
+      hotkeys.map((hotkey) => [hotkey, field] as [string, string])
     );
     const otherScopesHotkeys = Object.entries(data)
       .filter(([scopeKey]) => scopeKey !== "ui")
       .flatMap(([scopeKey, scopeValue]) =>
         Object.entries(scopeValue).flatMap(([field, hotkeys]) =>
-          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string]),
-        ),
+          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string])
+        )
       );
 
     const allHotkeysMap = new Map<string, Array<{ scope: string; field: string }>>();
@@ -141,6 +143,8 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
   ui: {
     focusNext: ["Alt+J"],
     focusPrev: ["Alt+K"],
+    nextTab: ["J"],
+    prevTab: ["K"],
   },
   navigation: {
     dashboard: ["H"],

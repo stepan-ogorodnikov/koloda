@@ -130,6 +130,8 @@ pub fn hotkeys_settings() -> serde_json::Value {
         "ui": {
             "focusNext": ["Alt+J"],
             "focusPrev": ["Alt+K"],
+            "nextTab": ["J"],
+            "prevTab": ["K"],
         },
         "navigation": {
             "dashboard": ["H"],

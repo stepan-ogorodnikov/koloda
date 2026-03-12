@@ -89,3 +89,32 @@ export function focusPrev(e: KeyboardEvent) {
   e.preventDefault();
   focusByOffset(-1);
 }
+
+function moveFocusedTab(offset: 1 | -1) {
+  const active = document.activeElement as HTMLElement | null;
+  if (!active) return false;
+
+  const tab = active.closest<HTMLElement>("[role=\"tab\"]");
+  if (!tab) return false;
+
+  const tabList = tab.closest<HTMLElement>("[role=\"tablist\"]");
+  if (!tabList) return false;
+
+  const orientation = tabList.getAttribute("aria-orientation") || tabList.getAttribute("data-orientation");
+  const isVertical = orientation === "vertical";
+  const key = offset > 0
+    ? (isVertical ? "ArrowDown" : "ArrowRight")
+    : (isVertical ? "ArrowUp" : "ArrowLeft");
+
+  const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+  tab.dispatchEvent(event);
+  return true;
+}
+
+export function goToNextTab(e: KeyboardEvent) {
+  if (moveFocusedTab(1)) e.preventDefault();
+}
+
+export function goToPrevTab(e: KeyboardEvent) {
+  if (moveFocusedTab(-1)) e.preventDefault();
+}
