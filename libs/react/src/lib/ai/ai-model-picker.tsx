@@ -30,7 +30,7 @@ export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps
           value={value}
           onChange={(key) => key && onChange(key.toString())}
           autocomplete
-          virtualized
+          isVirtualized
         >
           {(item) => (
             <Select.ListBoxItem id={item.id} textValue={item.name} key={item.id}>

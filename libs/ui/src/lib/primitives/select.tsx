@@ -1,14 +1,29 @@
-import { Button, button, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
+import { useHotkeysSettings } from "@koloda/react-base";
+import {
+  Button,
+  button,
+  dispatchArrowKey,
+  formLayoutSection,
+  formLayoutSectionContent,
+  isComposingEvent,
+  isPrintableKey,
+  Label,
+  matchesAnyHotkey,
+  popover,
+} from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
+import type { Key, KeyboardDelegate } from "@react-types/shared";
 import { Check, ChevronDown } from "lucide-react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
   ListBox,
   ListBoxItem,
   ListLayout,
   Select as ReactAriaSelect,
+  SelectStateContext,
   SelectValue as ReactAriaSelectValue,
   useFilter,
   Virtualizer,
@@ -21,8 +36,11 @@ import type {
   SelectProps as ReactAriaSelectProps,
   SelectValueProps as ReactAriaSelectValueProps,
 } from "react-aria-components";
+import type { SelectState as ReactAriaSelectState } from "react-stately";
 import { tv } from "tailwind-variants";
 import { SearchField } from "./search-field";
+
+type SelectState = ReactAriaSelectState<unknown, "single" | "multiple"> | null;
 
 export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & {
   buttonVariants?: SelectButtonProps["variants"];
@@ -30,12 +48,14 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
   withChevron?: boolean;
   label?: ReactNode;
   icon?: ReactNode;
+  disableTypeahead?: boolean;
   items?: Iterable<T>;
   autocomplete?: boolean;
   autocompleteFilter?: ReactAriaAutocompleteProps<T>["filter"];
   searchLabel?: string;
   searchPlaceholder?: string;
-  virtualized?: boolean;
+  isVirtualized?: boolean;
+  onKeyDownCapture?: (e: ReactKeyboardEvent<HTMLElement>) => void;
   onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
@@ -47,21 +67,36 @@ export function Select<T extends object>({
   withChevron,
   label,
   icon,
+  disableTypeahead,
   items,
   autocomplete,
   autocompleteFilter,
   searchLabel,
   searchPlaceholder,
-  virtualized,
+  isVirtualized,
   children,
   ...props
 }: SelectProps<T>) {
   const { contains } = useFilter({ sensitivity: "base" });
+  const [isOpen, setIsOpen] = useState(false);
+  const selectStateRef = useRef<SelectState>(null);
+  const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
 
   return (
-    <Select.Root variants={variants} {...props}>
+    <Select.Root
+      variants={variants}
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
+      keyboardDelegate={keyboardDelegate}
+      {...props}
+    >
+      <SelectStateBridge stateRef={selectStateRef} />
       {label && <Label variants={variants?.layout === "form" ? { layout: "form" } : {}}>{label}</Label>}
-      <Select.Button variants={{ layout: variants?.layout, ...buttonVariants }} withChevron={withChevron} icon={icon} />
+      <Select.Button
+        variants={{ layout: variants?.layout, ...buttonVariants }}
+        withChevron={withChevron}
+        icon={icon}
+      />
       <Select.Popover variants={popoverVariants}>
         {autocomplete
           ? (
@@ -72,13 +107,25 @@ export function Select<T extends object>({
                   <SearchField.Input placeholder={searchPlaceholder} />
                 </SearchField.Group>
               </SearchField>
-              <Select.ListBox items={items} virtualized={virtualized}>
+              <Select.ListBox
+                items={items}
+                isVirtualized={isVirtualized}
+                isOpen={isOpen}
+                onOpenChange={setIsOpen}
+                disableTypeahead={disableTypeahead}
+              >
                 {children}
               </Select.ListBox>
             </Select.Autocomplete>
           )
           : (
-            <Select.ListBox items={items} virtualized={virtualized}>
+            <Select.ListBox
+              items={items}
+              isVirtualized={isVirtualized}
+              isOpen={isOpen}
+              onOpenChange={setIsOpen}
+              disableTypeahead={disableTypeahead}
+            >
               {children}
             </Select.ListBox>
           )}
@@ -96,7 +143,9 @@ export const selectRoot = tv({
   },
 });
 
-export type SelectRootProps<T extends object> = TWVProps<typeof selectRoot> & ReactAriaSelectProps<T>;
+export type SelectRootProps<T extends object> = TWVProps<typeof selectRoot> & ReactAriaSelectProps<T> & {
+  keyboardDelegate?: KeyboardDelegate;
+};
 
 export function SelectRoot<T extends object>({ variants, ...props }: SelectRootProps<T>) {
   return <ReactAriaSelect className={selectRoot(variants)} {...props} />;
@@ -172,34 +221,90 @@ function SelectPopover({ variants, ...props }: SelectPopoverProps) {
   return <Popover className={selectPopover(variants)} {...props} />;
 }
 
-const selectListBox = tv({ base: "py-1 rounded-lg max-h-96 overflow-y-auto overflow-x-hidden" });
+const selectListBox = tv({
+  base: "py-1 rounded-lg max-h-96 overflow-y-auto overflow-x-hidden",
+  variants: { isVirtualized: { true: "overflow-x-hidden", false: "" } },
+});
 
-type SelectListBoxProps<T extends object> = ListBoxProps<T> & { virtualized?: boolean };
+type SelectListBoxProps<T extends object> = ListBoxProps<T> & {
+  isVirtualized?: boolean;
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+  disableTypeahead?: boolean;
+};
 
-function SelectListBox<T extends object>({
-  children,
-  renderEmptyState,
-  virtualized,
-  ...props
-}: SelectListBoxProps<T>) {
-  if (virtualized) {
+function SelectListBox<T extends object>(
+  { children, renderEmptyState, isVirtualized, isOpen, onOpenChange, disableTypeahead, ...props }: SelectListBoxProps<
+    T
+  >,
+) {
+  const { ui } = useHotkeysSettings();
+  const listBoxRef = useRef<HTMLDivElement>(null);
+
+  const onKeyDown = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented || isComposingEvent(e) || !isOpen) return;
+
+    // Optionally disable typeahead when the listbox is open.
+    if (disableTypeahead && isPrintableKey(e)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Navigate next (move down) hotkey
+    if (ui.focusNext.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusNext)) {
+      if (e.key !== "ArrowDown") {
+        e.preventDefault();
+        e.stopPropagation();
+        dispatchArrowKey(listBoxRef, "ArrowDown");
+      }
+      return;
+    }
+
+    // Navigate previous (move up) hotkey
+    if (ui.focusPrev.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusPrev)) {
+      if (e.key !== "ArrowUp") {
+        e.preventDefault();
+        e.stopPropagation();
+        dispatchArrowKey(listBoxRef, "ArrowUp");
+      }
+      return;
+    }
+
+    // Close hotkey
+    if (isOpen && ui.close.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.close)) {
+      e.preventDefault();
+      e.stopPropagation();
+      onOpenChange?.(false);
+      return;
+    }
+  }, [disableTypeahead, ui, isOpen, onOpenChange]);
+
+  const listBox = (
+    <ListBox
+      className={selectListBox({ isVirtualized })}
+      renderEmptyState={renderEmptyState}
+      ref={listBoxRef}
+      {...props}
+    >
+      {children}
+    </ListBox>
+  );
+
+  if (isVirtualized) {
     return (
-      <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
-        <ListBox
-          className={selectListBox({ class: "overflow-x-hidden" })}
-          renderEmptyState={renderEmptyState}
-          {...props}
-        >
-          {children}
-        </ListBox>
-      </Virtualizer>
+      <div onKeyDownCapture={onKeyDown} style={{ display: "contents" }}>
+        <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
+          {listBox}
+        </Virtualizer>
+      </div>
     );
   }
 
   return (
-    <ListBox className={selectListBox()} renderEmptyState={renderEmptyState} {...props}>
-      {children}
-    </ListBox>
+    <div onKeyDownCapture={onKeyDown} style={{ display: "contents" }}>
+      {listBox}
+    </div>
   );
 }
 
@@ -228,6 +333,43 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
       )}
     </ListBoxItem>
   );
+}
+
+// Delegate for Select that:
+// Preserves arrow navigation
+// Omits getKeyForSearch, preventing RAC typeahead on the trigger when closed
+function createSelectKeyboardDelegate(stateRef: RefObject<SelectState>): KeyboardDelegate {
+  const getState = () => stateRef.current;
+
+  return {
+    getKeyAbove(key: Key) {
+      const state = getState();
+      return state?.collection.getKeyBefore(key) ?? null;
+    },
+    getKeyBelow(key: Key) {
+      const state = getState();
+      return state?.collection.getKeyAfter(key) ?? null;
+    },
+    getFirstKey() {
+      const state = getState();
+      return state?.collection.getFirstKey() ?? null;
+    },
+    getLastKey() {
+      const state = getState();
+      return state?.collection.getLastKey() ?? null;
+    },
+  };
+}
+
+// Store Select state from context to build a keyboard delegate
+function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
+  const state = useContext(SelectStateContext);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state, stateRef]);
+
+  return null;
 }
 
 Select.Root = SelectRoot;

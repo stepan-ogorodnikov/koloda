@@ -1,4 +1,5 @@
 export * from "./lib/core/focus";
+export * from "./lib/core/hotkeys";
 export * from "./lib/hooks/use-motion-settings";
 export * from "./lib/hooks/use-route-focus";
 export * from "./lib/primitives/animations/fade";
