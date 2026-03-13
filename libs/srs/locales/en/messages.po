@@ -137,23 +137,23 @@ msgstr "Template not found"
 msgid "not-found.templates.clone.source"
 msgstr "Source template not found"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:26
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
 
@@ -168,6 +168,10 @@ msgstr "Navigation"
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:8
 msgid "settings.hotkeys.scopes.ui"
 msgstr "Interface"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:19
+msgid "settings.hotkeys.ui.close"
+msgstr "Close popover"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:15
 msgid "settings.hotkeys.ui.focusNext"

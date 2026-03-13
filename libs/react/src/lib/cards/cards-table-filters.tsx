@@ -28,7 +28,7 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
   const showTemplateFilter = templates && templates.length > 1;
 
   return (
-    <Dialog.Root>
+    <Dialog.Root dismissableWithHotkey>
       <Button variants={{ style: "bordered", size: "default" }}>
         <SlidersHorizontal className="size-4 stroke-2" />
         <span>{_(msg`cards-table.filters.trigger`)}</span>

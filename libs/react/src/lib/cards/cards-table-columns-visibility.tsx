@@ -50,7 +50,7 @@ export function CardsTableColumnsVisibility<TData>({
   };
 
   return (
-    <Dialog.Root>
+    <Dialog.Root dismissableWithHotkey>
       <Button variants={{ style: "bordered", size: "default" }}>
         <Columns3Cog className="size-5 stroke-1.5" />
         <span>{_(msg`cards-table.columns-menu.trigger`)}</span>

@@ -16,6 +16,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     focusPrev: msg`settings.hotkeys.ui.focusPrev`,
     nextTab: msg`settings.hotkeys.ui.nextTab`,
     prevTab: msg`settings.hotkeys.ui.prevTab`,
+    close: msg`settings.hotkeys.ui.close`,
   },
   navigation: {
     dashboard: msg`settings.hotkeys.navigation.dashboard`,
@@ -35,7 +36,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 const HotkeyEntry = z.array(z.string());
 
 export const hotkeysSettingsValidation = z.object({
-  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab"]), HotkeyEntry),
+  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab", "close"]), HotkeyEntry),
   navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
   grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
 }).superRefine(
@@ -141,6 +142,7 @@ export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
 
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   ui: {
+    close: ["Alt+C"],
     focusNext: ["Alt+J"],
     focusPrev: ["Alt+K"],
     nextTab: ["J"],

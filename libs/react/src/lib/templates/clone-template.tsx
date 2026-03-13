@@ -57,7 +57,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   }, [isOpen, form]);
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
       <Button variants={{ style: "primary" }}>
         <Copy className="size-4" />
         {_(msg`clone-template.trigger`)}

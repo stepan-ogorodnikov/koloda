@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 
 export function DeleteDialog({ children }: PropsWithChildren) {
   return (
-    <Dialog.Root>
+    <Dialog.Root dismissableWithHotkey>
       {children}
     </Dialog.Root>
   );
