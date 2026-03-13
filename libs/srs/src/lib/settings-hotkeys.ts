@@ -33,12 +33,12 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
   },
 } as const;
 
-const HotkeyEntry = z.array(z.string());
+const hotkeyEntry = z.array(z.string()).default([]);
 
 export const hotkeysSettingsValidation = z.object({
-  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab", "close"]), HotkeyEntry),
-  navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), HotkeyEntry),
-  grades: z.record(z.literal(["again", "hard", "normal", "easy"]), HotkeyEntry),
+  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab", "close"]), hotkeyEntry),
+  navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), hotkeyEntry),
+  grades: z.record(z.literal(["again", "hard", "normal", "easy"]), hotkeyEntry),
 }).superRefine(
   (data, ctx) => {
     // validate all scopes for duplicate hotkeys (within each scope)
@@ -111,9 +111,11 @@ const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {
 
 /** Gets the error paths for duplicate hotkeys within given scope */
 const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
+  if (!scope) return [];
   const hotkeyToLocations = new Map<string, Array<[string, number]>>();
 
   Object.entries(scope).forEach(([field, hotkeys]) => {
+    if (!hotkeys) return;
     hotkeys.forEach((hotkey, index) => {
       if (!hotkeyToLocations.has(hotkey)) hotkeyToLocations.set(hotkey, []);
       hotkeyToLocations.get(hotkey)!.push([field, index]);
@@ -142,11 +144,11 @@ export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
 
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   ui: {
-    close: ["Alt+C"],
     focusNext: ["Alt+J"],
     focusPrev: ["Alt+K"],
     nextTab: ["J"],
     prevTab: ["K"],
+    close: ["Alt+C"],
   },
   navigation: {
     dashboard: ["H"],

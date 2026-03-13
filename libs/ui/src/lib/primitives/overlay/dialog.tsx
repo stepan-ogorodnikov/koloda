@@ -3,7 +3,7 @@ import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Button, button, matchesAnyHotkey, overlay, Popover } from "@koloda/ui";
 import { X } from "lucide-react";
 import { useCallback, useContext, useEffect } from "react";
-import type { DialogProps, DialogTriggerProps, ModalOverlayProps, PopoverProps } from "react-aria-components";
+import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components";
 import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
 import { OverlayTriggerStateContext } from "react-aria-components";
 import { tv } from "tailwind-variants";
@@ -83,21 +83,10 @@ function DialogClose({ variants, ...props }: DialogCloseProps) {
 Dialog.Root = DialogRoot;
 Dialog.Overlay = DialogOverlay;
 Dialog.Modal = Modal;
-Dialog.Popover = DialogPopover;
+Dialog.Popover = Popover;
 Dialog.Body = DialogBody;
 Dialog.Close = DialogClose;
 Dialog.Header = OverlayFrameHeader;
 Dialog.Title = OverlayFrameTitle;
 Dialog.Content = OverlayFrameContent;
 Dialog.Footer = OverlayFrameFooter;
-
-type DialogPopoverProps = PopoverProps & { dismissableWithHotkey?: boolean };
-
-function DialogPopover({ dismissableWithHotkey = true, ...props }: DialogPopoverProps) {
-  return (
-    <>
-      <DialogHotkeyListener enabled={dismissableWithHotkey} />
-      <Popover {...props} />
-    </>
-  );
-}

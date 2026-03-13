@@ -66,6 +66,7 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
             <Button
               variants={{ style: "primary" }}
               onClick={() => dispatch(["isOpenUpdated", false])}
+              autoFocus
             >
               {_(msg`lesson.completion.close`)}
             </Button>
