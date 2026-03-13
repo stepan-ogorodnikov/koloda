@@ -14,9 +14,18 @@ type LinkProps = LinkComponentProps;
 export function Link(props: LinkProps) {
   const { focusProps, isFocusVisible } = useFocusRing();
 
+  const onKeyDown: LinkProps["onKeyDown"] = (event) => {
+    props.onKeyDown?.(event);
+    if (event.defaultPrevented) return;
+    if (event.key === " " || event.key === "Spacebar") {
+      event.preventDefault();
+      event.currentTarget.click();
+    }
+  };
+
   return (
     <RouterLink
-      {...mergeProps(props, focusProps)}
+      {...mergeProps(props, focusProps, { onKeyDown })}
       activeProps={{ "data-current": "true" }}
       data-focus-visible={isFocusVisible || undefined}
     />
