@@ -16,7 +16,7 @@ import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import { Check, ChevronDown } from "lucide-react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from "react";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
   ListBox,
@@ -48,14 +48,13 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
   withChevron?: boolean;
   label?: ReactNode;
   icon?: ReactNode;
-  disableTypeahead?: boolean;
   items?: Iterable<T>;
   autocomplete?: boolean;
   autocompleteFilter?: ReactAriaAutocompleteProps<T>["filter"];
   searchLabel?: string;
   searchPlaceholder?: string;
+  isTypeaheadEnabled?: boolean;
   isVirtualized?: boolean;
-  onKeyDownCapture?: (e: ReactKeyboardEvent<HTMLElement>) => void;
   onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
@@ -67,26 +66,23 @@ export function Select<T extends object>({
   withChevron,
   label,
   icon,
-  disableTypeahead,
   items,
   autocomplete,
   autocompleteFilter,
   searchLabel,
   searchPlaceholder,
+  isTypeaheadEnabled,
   isVirtualized,
   children,
   ...props
 }: SelectProps<T>) {
   const { contains } = useFilter({ sensitivity: "base" });
-  const [isOpen, setIsOpen] = useState(false);
   const selectStateRef = useRef<SelectState>(null);
   const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
 
   return (
     <Select.Root
       variants={variants}
-      isOpen={isOpen}
-      onOpenChange={setIsOpen}
       keyboardDelegate={keyboardDelegate}
       {...props}
     >
@@ -110,9 +106,7 @@ export function Select<T extends object>({
               <Select.ListBox
                 items={items}
                 isVirtualized={isVirtualized}
-                isOpen={isOpen}
-                onOpenChange={setIsOpen}
-                disableTypeahead={disableTypeahead}
+                isTypeaheadEnabled={isTypeaheadEnabled}
               >
                 {children}
               </Select.ListBox>
@@ -122,9 +116,7 @@ export function Select<T extends object>({
             <Select.ListBox
               items={items}
               isVirtualized={isVirtualized}
-              isOpen={isOpen}
-              onOpenChange={setIsOpen}
-              disableTypeahead={disableTypeahead}
+              isTypeaheadEnabled={isTypeaheadEnabled}
             >
               {children}
             </Select.ListBox>
@@ -228,16 +220,14 @@ const selectListBox = tv({
 
 type SelectListBoxProps<T extends object> = ListBoxProps<T> & {
   isVirtualized?: boolean;
-  isOpen?: boolean;
-  onOpenChange?: (isOpen: boolean) => void;
-  disableTypeahead?: boolean;
+  isTypeaheadEnabled?: boolean;
 };
 
 function SelectListBox<T extends object>(
-  { children, renderEmptyState, isVirtualized, isOpen, onOpenChange, disableTypeahead, ...props }: SelectListBoxProps<
-    T
-  >,
+  { children, renderEmptyState, isVirtualized, isTypeaheadEnabled, ...props }: SelectListBoxProps<T>,
 ) {
+  const state = useContext(SelectStateContext);
+  const isOpen = state?.isOpen ?? false;
   const { ui } = useHotkeysSettings();
   const listBoxRef = useRef<HTMLDivElement>(null);
 
@@ -245,7 +235,7 @@ function SelectListBox<T extends object>(
     if (e.defaultPrevented || isComposingEvent(e) || !isOpen) return;
 
     // Optionally disable typeahead when the listbox is open.
-    if (disableTypeahead && isPrintableKey(e)) {
+    if (!isTypeaheadEnabled && isPrintableKey(e)) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -253,21 +243,17 @@ function SelectListBox<T extends object>(
 
     // Navigate next (move down) hotkey
     if (ui.focusNext.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusNext)) {
-      if (e.key !== "ArrowDown") {
-        e.preventDefault();
-        e.stopPropagation();
-        dispatchArrowKey(listBoxRef, "ArrowDown");
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      dispatchArrowKey(listBoxRef, "ArrowDown");
       return;
     }
 
     // Navigate previous (move up) hotkey
     if (ui.focusPrev.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusPrev)) {
-      if (e.key !== "ArrowUp") {
-        e.preventDefault();
-        e.stopPropagation();
-        dispatchArrowKey(listBoxRef, "ArrowUp");
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      dispatchArrowKey(listBoxRef, "ArrowUp");
       return;
     }
 
@@ -275,10 +261,10 @@ function SelectListBox<T extends object>(
     if (isOpen && ui.close.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.close)) {
       e.preventDefault();
       e.stopPropagation();
-      onOpenChange?.(false);
+      state?.setOpen(false);
       return;
     }
-  }, [disableTypeahead, ui, isOpen, onOpenChange]);
+  }, [isTypeaheadEnabled, ui, isOpen, state]);
 
   const listBox = (
     <ListBox
