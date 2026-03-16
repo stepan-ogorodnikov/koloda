@@ -10,7 +10,7 @@ export function matchesAnyHotkey(event: KeyboardEvent, hotkeys: RegisterableHotk
   return hotkeys.some((hotkey) => matchesKeyboardEvent(event, toMatchableHotkey(hotkey)));
 }
 
-export function dispatchArrowKey(ref: RefObject<HTMLDivElement | null>, key: "ArrowDown" | "ArrowUp") {
+export function dispatchKey(ref: RefObject<HTMLElement | null>, key: string) {
   const target = ref.current;
   if (!target) return;
   const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });

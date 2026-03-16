@@ -29,7 +29,7 @@ export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps
           items={models}
           value={value}
           onChange={(key) => key && onChange(key.toString())}
-          autocomplete
+          hasAutocomplete
           isVirtualized
         >
           {(item) => (

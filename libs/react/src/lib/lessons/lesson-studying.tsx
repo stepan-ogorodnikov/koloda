@@ -27,7 +27,7 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   useAppHotkey(grades.hard, () => dispatch(["gradeSelected", 1]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.normal, () => dispatch(["gradeSelected", 2]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.easy, () => dispatch(["gradeSelected", 3]), "lesson", { eventType: "keyup" });
-  useAppHotkey(["Enter", "Space"], () => dispatch(["cardSubmitted"]), "lesson");
+  useAppHotkey(["Enter", "Space"], () => dispatch(["cardSubmitted"]), "lesson", { conflictBehavior: "allow" });
   useAppHotkey(["Escape"], () => dispatch(["terminationRequested", true]), "lesson", { ignoreInputs: false });
 
   useEffect(() => {

@@ -11,10 +11,10 @@ export function useAppHotkeys() {
   useAppHotkey(navigation.algorithms, () => navigate({ to: "/algorithms" }), "nav");
   useAppHotkey(navigation.templates, () => navigate({ to: "/templates" }), "nav");
   useAppHotkey(navigation.settings, () => navigate({ to: "/settings" }), "nav");
-  useAppHotkey(ui.focusNext, focusNext, "", { ignoreInputs: false });
-  useAppHotkey(ui.focusPrev, focusPrev, "", { ignoreInputs: false });
-  useAppHotkey(ui.nextTab, goToNextTab, "");
-  useAppHotkey(ui.prevTab, goToPrevTab, "");
+  useAppHotkey(ui.focusNext, focusNext, "", { ignoreInputs: false, conflictBehavior: "allow" });
+  useAppHotkey(ui.focusPrev, focusPrev, "", { ignoreInputs: false, conflictBehavior: "allow" });
+  useAppHotkey(ui.nextTab, goToNextTab, "", { preventDefault: false, conflictBehavior: "allow" });
+  useAppHotkey(ui.prevTab, goToPrevTab, "", { preventDefault: false, conflictBehavior: "allow" });
 
   return null;
 }

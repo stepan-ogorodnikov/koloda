@@ -1,22 +1,12 @@
-import { useHotkeysSettings } from "@koloda/react-base";
-import {
-  Button,
-  button,
-  dispatchArrowKey,
-  formLayoutSection,
-  formLayoutSectionContent,
-  isComposingEvent,
-  isPrintableKey,
-  Label,
-  matchesAnyHotkey,
-  popover,
-} from "@koloda/ui";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
+import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import { Check, ChevronDown } from "lucide-react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from "react";
-import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import type { ReactNode, RefObject } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
   ListBox,
@@ -29,7 +19,6 @@ import {
   Virtualizer,
 } from "react-aria-components";
 import type {
-  AutocompleteProps as ReactAriaAutocompleteProps,
   ListBoxItemProps,
   ListBoxProps,
   PopoverProps,
@@ -42,19 +31,20 @@ import { SearchField } from "./search-field";
 
 type SelectState = ReactAriaSelectState<unknown, "single" | "multiple"> | null;
 
-export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & {
+type SelectOptions = {
+  hasAutocomplete?: boolean;
+  isVirtualized?: boolean;
+};
+
+export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & SelectOptions & {
   buttonVariants?: SelectButtonProps["variants"];
   popoverVariants?: SelectPopoverProps["variants"];
   withChevron?: boolean;
   label?: ReactNode;
   icon?: ReactNode;
   items?: Iterable<T>;
-  autocomplete?: boolean;
-  autocompleteFilter?: ReactAriaAutocompleteProps<T>["filter"];
   searchLabel?: string;
   searchPlaceholder?: string;
-  isTypeaheadEnabled?: boolean;
-  isVirtualized?: boolean;
   onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
@@ -67,11 +57,9 @@ export function Select<T extends object>({
   label,
   icon,
   items,
-  autocomplete,
-  autocompleteFilter,
+  hasAutocomplete,
   searchLabel,
   searchPlaceholder,
-  isTypeaheadEnabled,
   isVirtualized,
   children,
   ...props
@@ -80,12 +68,14 @@ export function Select<T extends object>({
   const selectStateRef = useRef<SelectState>(null);
   const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
 
+  const listBox = (
+    <Select.ListBox items={items} isVirtualized={isVirtualized}>
+      {children}
+    </Select.ListBox>
+  );
+
   return (
-    <Select.Root
-      variants={variants}
-      keyboardDelegate={keyboardDelegate}
-      {...props}
-    >
+    <Select.Root variants={variants} keyboardDelegate={keyboardDelegate} {...props}>
       <SelectStateBridge stateRef={selectStateRef} />
       {label && <Label variants={variants?.layout === "form" ? { layout: "form" } : {}}>{label}</Label>}
       <Select.Button
@@ -94,32 +84,13 @@ export function Select<T extends object>({
         icon={icon}
       />
       <Select.Popover variants={popoverVariants}>
-        {autocomplete
-          ? (
-            <Select.Autocomplete filter={autocompleteFilter ?? contains}>
-              <SearchField variants={{ class: "w-full" }} aria-label={searchLabel} autoFocus>
-                <SearchField.Group variants={{ style: "ghost" }}>
-                  <SearchField.Icon />
-                  <SearchField.Input placeholder={searchPlaceholder} />
-                </SearchField.Group>
-              </SearchField>
-              <Select.ListBox
-                items={items}
-                isVirtualized={isVirtualized}
-                isTypeaheadEnabled={isTypeaheadEnabled}
-              >
-                {children}
-              </Select.ListBox>
-            </Select.Autocomplete>
-          )
+        {!hasAutocomplete
+          ? listBox
           : (
-            <Select.ListBox
-              items={items}
-              isVirtualized={isVirtualized}
-              isTypeaheadEnabled={isTypeaheadEnabled}
-            >
-              {children}
-            </Select.ListBox>
+            <Select.Autocomplete filter={contains}>
+              <Select.SearchField label={searchLabel} placeholder={searchPlaceholder} />
+              {listBox}
+            </Select.Autocomplete>
           )}
       </Select.Popover>
     </Select.Root>
@@ -128,11 +99,7 @@ export function Select<T extends object>({
 
 export const selectRoot = tv({
   base: "flex flex-col items-start select-none",
-  variants: {
-    layout: {
-      form: formLayoutSection(),
-    },
-  },
+  variants: { layout: { form: formLayoutSection() } },
 });
 
 export type SelectRootProps<T extends object> = TWVProps<typeof selectRoot> & ReactAriaSelectProps<T> & {
@@ -172,11 +139,7 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
           )}
         </SelectValue>
       )}
-      {withChevron && (
-        <div aria-hidden="true">
-          <ChevronDown className="size-4 min-w-4" />
-        </div>
-      )}
+      {withChevron && <ChevronDown className="size-4 min-w-4" aria-hidden="true" />}
     </Button>
   );
 }
@@ -213,91 +176,47 @@ function SelectPopover({ variants, ...props }: SelectPopoverProps) {
   return <Popover className={selectPopover(variants)} {...props} />;
 }
 
+type SelectSearchFieldProps = {
+  label?: string;
+  placeholder?: string;
+};
+
+function SelectSearchField({ label, placeholder }: SelectSearchFieldProps) {
+  return (
+    <SearchField variants={{ class: "w-full" }} aria-label={label}>
+      <SearchField.Group variants={{ style: "ghost", focusable: false }}>
+        <SearchField.Icon />
+        <SearchField.Input placeholder={placeholder} />
+      </SearchField.Group>
+    </SearchField>
+  );
+}
+
 const selectListBox = tv({
   base: "py-1 rounded-lg max-h-96 overflow-y-auto overflow-x-hidden",
   variants: { isVirtualized: { true: "overflow-x-hidden", false: "" } },
 });
 
-type SelectListBoxProps<T extends object> = ListBoxProps<T> & {
-  isVirtualized?: boolean;
-  isTypeaheadEnabled?: boolean;
-};
+type SelectListBoxProps<T extends object> = ListBoxProps<T> & SelectOptions;
 
-function SelectListBox<T extends object>(
-  { children, renderEmptyState, isVirtualized, isTypeaheadEnabled, ...props }: SelectListBoxProps<T>,
-) {
-  const state = useContext(SelectStateContext);
-  const isOpen = state?.isOpen ?? false;
-  const { ui } = useHotkeysSettings();
-  const listBoxRef = useRef<HTMLDivElement>(null);
-
-  const onKeyDown = useCallback((e: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (e.defaultPrevented || isComposingEvent(e) || !isOpen) return;
-
-    // Optionally disable typeahead when the listbox is open.
-    if (!isTypeaheadEnabled && isPrintableKey(e)) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
-    // Navigate next (move down) hotkey
-    if (ui.focusNext.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusNext)) {
-      e.preventDefault();
-      e.stopPropagation();
-      dispatchArrowKey(listBoxRef, "ArrowDown");
-      return;
-    }
-
-    // Navigate previous (move up) hotkey
-    if (ui.focusPrev.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.focusPrev)) {
-      e.preventDefault();
-      e.stopPropagation();
-      dispatchArrowKey(listBoxRef, "ArrowUp");
-      return;
-    }
-
-    // Close hotkey
-    if (isOpen && ui.close.length > 0 && matchesAnyHotkey(e.nativeEvent, ui.close)) {
-      e.preventDefault();
-      e.stopPropagation();
-      state?.setOpen(false);
-      return;
-    }
-  }, [isTypeaheadEnabled, ui, isOpen, state]);
+function SelectListBox<T extends object>({ renderEmptyState, isVirtualized, ...props }: SelectListBoxProps<T>) {
+  const ref = useRef<HTMLDivElement>(null);
+  useSelectHotkeys(ref);
 
   const listBox = (
     <ListBox
       className={selectListBox({ isVirtualized })}
       renderEmptyState={renderEmptyState}
-      ref={listBoxRef}
+      ref={ref}
       {...props}
-    >
-      {children}
-    </ListBox>
+    />
   );
 
-  if (isVirtualized) {
-    return (
-      <div onKeyDownCapture={onKeyDown} style={{ display: "contents" }}>
-        <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
-          {listBox}
-        </Virtualizer>
-      </div>
-    );
-  }
-
-  return (
-    <div onKeyDownCapture={onKeyDown} style={{ display: "contents" }}>
+  return !isVirtualized ? listBox : (
+    <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
       {listBox}
-    </div>
+    </Virtualizer>
   );
-}
-
-export type SelectAutocompleteProps<T extends object> = ReactAriaAutocompleteProps<T>;
-
-function SelectAutocomplete<T extends object>(props: SelectAutocompleteProps<T>) {
-  return <ReactAriaAutocomplete {...props} />;
 }
 
 const selectListBoxItem = tv({
@@ -323,7 +242,6 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
 
 // Delegate for Select that:
 // Preserves arrow navigation
-// Omits getKeyForSearch, preventing RAC typeahead on the trigger when closed
 function createSelectKeyboardDelegate(stateRef: RefObject<SelectState>): KeyboardDelegate {
   const getState = () => stateRef.current;
 
@@ -358,10 +276,44 @@ function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
   return null;
 }
 
+function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
+  const { ui } = useHotkeysSettings();
+  const state = useContext(SelectStateContext);
+  const options: HotkeyOptions = { target: ref.current, ignoreInputs: false, conflictBehavior: "allow" };
+  useAppHotkey(ui.focusNext, () => dispatchKey(ref, "ArrowDown"), "", options);
+  useAppHotkey(ui.focusPrev, () => dispatchKey(ref, "ArrowUp"), "", options);
+  useAppHotkey(ui.close, () => dispatchKey(ref, "Escape"), "", options);
+
+  // Fix for hotkeys with 'Alt' modifier breaking selecting with 'Space'
+  useEffect(() => {
+    if (!state?.isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT") return;
+
+      if (e.key === " " || e.key === "Space") {
+        const focusedKey = state?.selectionManager.focusedKey;
+        if (focusedKey) {
+          e.preventDefault();
+          e.stopPropagation();
+          state.selectionManager.select(focusedKey);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [state]);
+
+  return null;
+}
+
 Select.Root = SelectRoot;
 Select.Button = SelectButton;
 Select.Value = SelectValue;
 Select.Popover = SelectPopover;
-Select.Autocomplete = SelectAutocomplete;
+Select.Autocomplete = ReactAriaAutocomplete;
+Select.SearchField = SelectSearchField;
 Select.ListBox = SelectListBox;
 Select.ListBoxItem = SelectListBoxItem;
