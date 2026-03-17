@@ -177,8 +177,8 @@ const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
 
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
   form: {
-    save: ["Mod+S"],
-    discard: ["Mod+D"],
+    submit: ["Mod+S"],
+    reset: ["Mod+D"],
   },
   ui: {
     focusNext: ["Alt+J"],
