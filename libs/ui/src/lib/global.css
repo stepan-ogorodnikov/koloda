@@ -115,10 +115,10 @@
   --bg-button-ghost-hover: oklch(100% 0 0 / 3%);
   --bg-button-ghost-pressed: oklch(100% 0 0 / 5%);
   --shadow-button-ghost: var(--shadow-input);
-  --bg-button-primary: oklch(50% 0 0 / 5%);
-  --bg-button-primary-hover: oklch(50% 0 0 / 9%);
+  --bg-button-primary: oklch(from var(--bg-level-1) calc(l + 0.01) c h);
+  --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l + 0.01) c h);
   --bg-button-primary-disabled: transparent;
-  --border-button-primary: oklch(100% 0 0 / 5%);
+  --border-button-primary: oklch(from var(--bg-level-1) calc(l + 0.06) c h);
   --shadow-button-primary: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 1%);
    /* switch */
    --bg-switch: var(--bg-input);
