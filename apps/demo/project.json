@@ -15,7 +15,19 @@
         "script": "lingui extract"
       }
     },
+    "linge": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui extract --clean"
+      }
+    },
     "lingui-compile": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui compile"
+      }
+    },
+    "lingc": {
       "executor": "nx:run-script",
       "options": {
         "script": "lingui compile"
