@@ -5,12 +5,17 @@ import { z } from "zod";
 import { FSRS_GRADES } from "./algorithms-fsrs";
 
 export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
+  form: msg`settings.hotkeys.scopes.form`,
   ui: msg`settings.hotkeys.scopes.ui`,
   navigation: msg`settings.hotkeys.scopes.navigation`,
   grades: msg`settings.hotkeys.scopes.grades`,
 } as const;
 
 export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
+  form: {
+    submit: msg`settings.hotkeys.form.submit`,
+    reset: msg`settings.hotkeys.form.reset`,
+  },
   ui: {
     focusNext: msg`settings.hotkeys.ui.focusNext`,
     focusPrev: msg`settings.hotkeys.ui.focusPrev`,
@@ -33,12 +38,51 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
   },
 } as const;
 
+const hotkeys = {
+  form: ["submit", "reset"],
+  ui: ["focusNext", "focusPrev", "nextTab", "prevTab", "close"],
+  navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
+  grades: ["again", "hard", "normal", "easy"],
+} as const;
+
+type Hotkeys = typeof hotkeys;
+
+type ScopeHotkey<T extends HotkeyScope> = Hotkeys[T][number];
+
+export type HotkeyScope = keyof Hotkeys;
+
+export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
+
+export type HotkeyEntry = RegisterableHotkey[];
+
+export type HotkeysSettingsGeneric<T> = {
+  [K in HotkeyScope]: { [L in Hotkeys[K][number]]: T };
+};
+
+export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
+
 const hotkeyEntry = z.array(z.string()).default([]);
 
+function scopeSchema<T extends HotkeyScope>(scope: T) {
+  const shape = Object.fromEntries(hotkeys[scope].map((key) => [key, hotkeyEntry])) as Record<
+    ScopeHotkey<T>,
+    typeof hotkeyEntry
+  >;
+  return z.object(shape);
+}
+
+function scopeDefault<T extends HotkeyScope>(scope: T) {
+  return Object.fromEntries(hotkeys[scope].map((v) => [v, []])) as unknown as Record<
+    ScopeHotkey<T>,
+    string[]
+  >;
+}
+
 export const hotkeysSettingsValidation = z.object({
-  ui: z.record(z.literal(["focusNext", "focusPrev", "nextTab", "prevTab", "close"]), hotkeyEntry),
-  navigation: z.record(z.literal(["dashboard", "decks", "algorithms", "templates", "settings"]), hotkeyEntry),
-  grades: z.record(z.literal(["again", "hard", "normal", "easy"]), hotkeyEntry),
+  form: scopeSchema("form").default(scopeDefault("form")),
+  ui: scopeSchema("ui").default(scopeDefault("ui")),
+  navigation: scopeSchema("navigation").default(scopeDefault("navigation")),
+  grades: scopeSchema("grades").default(scopeDefault("grades")),
 }).superRefine(
   (data, ctx) => {
     // validate all scopes for duplicate hotkeys (within each scope)
@@ -104,6 +148,7 @@ export const hotkeysSettingsValidation = z.object({
 
 /** Checks if all hotkeys within given scope are unique */
 const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {
+  if (!scope) return true;
   const allHotkeys = Object.values(scope).flat();
   const uniqueHotkeys = new Set(allHotkeys);
   return allHotkeys.length === uniqueHotkeys.size;
@@ -130,19 +175,11 @@ const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
   return duplicates;
 };
 
-export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
-export type HotkeyScope = keyof HotkeysSettings;
-export type HotkeyEntry = RegisterableHotkey[];
-
-export type HotkeysSettingsGeneric<T> = {
-  [K in HotkeyScope]: {
-    [L in keyof HotkeysSettings[K]]: T;
-  };
-};
-
-export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
-
 export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidation.parse({
+  form: {
+    save: ["Mod+S"],
+    discard: ["Mod+D"],
+  },
   ui: {
     focusNext: ["Alt+J"],
     focusPrev: ["Alt+K"],

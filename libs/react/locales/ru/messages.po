@@ -876,7 +876,7 @@ msgstr "Настройки"
 msgid "template-picker.label"
 msgstr "Шаблон"
 
-#: ../../libs/react/src/lib/templates/template.tsx:97
+#: ../../libs/react/src/lib/templates/template.tsx:93
 msgid "template.actions.label"
 msgstr "Действия"
 
@@ -901,7 +901,7 @@ msgstr "Без названия"
 msgid "template.fields.inputs.type.label"
 msgstr "Тип"
 
-#: ../../libs/react/src/lib/templates/template.tsx:91
+#: ../../libs/react/src/lib/templates/template.tsx:87
 msgid "template.fields.label"
 msgstr "Поля"
 
@@ -917,11 +917,11 @@ msgstr "Поле"
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
-#: ../../libs/react/src/lib/templates/template.tsx:94
+#: ../../libs/react/src/lib/templates/template.tsx:90
 msgid "template.layout.label"
 msgstr "Раскладка"
 
-#: ../../libs/react/src/lib/templates/template.tsx:83
+#: ../../libs/react/src/lib/templates/template.tsx:82
 msgid "template.status.locked"
 msgstr "Заблокирован"
 
@@ -929,7 +929,7 @@ msgstr "Заблокирован"
 msgid "template.status.title"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/templates/template.tsx:86
+#: ../../libs/react/src/lib/templates/template.tsx:83
 msgid "template.status.unlocked"
 msgstr "Не заблокирован"
 

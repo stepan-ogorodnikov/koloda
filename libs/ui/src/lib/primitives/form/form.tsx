@@ -1,3 +1,4 @@
+import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
 import { ERROR_MESSAGES } from "@koloda/srs";
 import type { ErrorCode, FormError, ZodIssue } from "@koloda/srs";
 import { Button, Fade, FormTextField } from "@koloda/ui";
@@ -81,7 +82,7 @@ function ErrorsItem({ error }: ErrorsItemProps) {
   );
 }
 
-function SubscribeButton(props: ButtonProps) {
+function SubmitButton(props: ButtonProps) {
   const form = useFormContext();
   const { _ } = useLingui();
 
@@ -126,6 +127,13 @@ type ControlsProps = Omit<FormErrorsProps, "errors"> & {
 
 function Controls({ showErrors = true }: ControlsProps) {
   const form = useFormContext();
+  const { form: { submit, reset } } = useHotkeysSettings();
+  useAppHotkey(submit, () => {
+    if (form.state.canSubmit) form.handleSubmit();
+  }, "");
+  useAppHotkey(reset, () => {
+    if (form.state.isDirty) form.reset();
+  }, "");
 
   return (
     <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center gap-2">
@@ -147,7 +155,7 @@ function Controls({ showErrors = true }: ControlsProps) {
             <AnimatePresence>
               {isDirty && (
                 <Fade className="flex flex-row gap-2 p-2 rounded-xl border-2 border-main bg-level-1" layout>
-                  <SubscribeButton />
+                  <SubmitButton />
                   <ResetButton />
                 </Fade>
               )}
@@ -165,7 +173,7 @@ const { useAppForm, withForm } = createFormHook({
   fieldComponents: { TextField: FormTextField },
   formComponents: {
     Controls,
-    SubscribeButton,
+    SubmitButton,
     ResetButton,
     Timestamp,
     Timestamps,

@@ -30,20 +30,20 @@ msgid "drag-handle.label"
 msgstr "Drag handle"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:34
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:35
 msgid "form.createdAt {0}"
 msgstr "Created {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:118
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:119
 msgid "form.reset"
 msgstr "Discard"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:97
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:98
 msgid "form.save"
 msgstr "Save"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:46
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:47
 msgid "form.updatedAt {0}"
 msgstr "Updated {0}"
 
