@@ -11,13 +11,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { CellContext, ColumnDef, FilterFn, VisibilityState } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, FilterFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
+import { AnimatePresence } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardsTableCell } from "./cards-table-cell";
 import { CardsTableColumnsVisibility } from "./cards-table-columns-visibility";
 import { CardsTableFilters } from "./cards-table-filters";
+import { CardsTableHeaderSelect } from "./cards-table-header-select";
+import { CardsTableSelectionControls } from "./cards-table-selection-controls";
 import { getCardsTableContentColumns } from "./cards-table-utility";
 import { useCardsTemplates } from "./use-cards-templates";
 
@@ -44,12 +47,21 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     templateIds: [] as Template["id"][],
   });
   const [searchValue, setSearchValue] = useState("");
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data: cards = [] } = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
   const { templates, templateMapRef, isReady } = useCardsTemplates(cards);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const columns = useMemo<ColumnDef<Card>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => <CardsTableHeaderSelect table={table} />,
+        size: 2,
+        minSize: 2,
+        enableSorting: false,
+        cell,
+      },
       ...getCardsTableContentColumns(templates).map((field) => ({
         accessorFn: (row: Card) => {
           const template = templateMapRef.current.get(row.templateId);
@@ -148,10 +160,12 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         { id: "state", value: filters.state },
         { id: "dueAt", value: filters.dueAt },
       ],
+      rowSelection,
     },
     onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnOrderChange: setColumnOrder,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -207,6 +221,16 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
           <Table.Body table={table} />
         </Table.Root>
         <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
+        <AnimatePresence>
+          {Object.keys(rowSelection).length > 0 && (
+            <CardsTableSelectionControls
+              rowSelection={rowSelection}
+              filteredCards={filteredCards}
+              deckId={deckId}
+              onClearSelection={() => setRowSelection({})}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </>
   );

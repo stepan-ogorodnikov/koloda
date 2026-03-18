@@ -84,6 +84,8 @@ export type UpdateCardData = UpdateData<Card, "id", UpdateCardValues>;
 
 export type DeleteCardData = Pick<Card, "id">;
 
+export type DeleteCardsData = { ids: Card["id"][] };
+
 export type CardGrade = {
   card: CardFSRS;
   log: ReviewFSRS;

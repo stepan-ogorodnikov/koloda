@@ -13,8 +13,8 @@ use commands::{
         cmd_get_algorithms, cmd_update_algorithm,
     },
     cards::{
-        cmd_add_card, cmd_add_cards, cmd_delete_card, cmd_get_card, cmd_get_cards, cmd_reset_card_progress,
-        cmd_update_card,
+        cmd_add_card, cmd_add_cards, cmd_delete_card, cmd_delete_cards, cmd_get_card, cmd_get_cards,
+        cmd_reset_card_progress, cmd_update_card,
     },
     decks::{cmd_add_deck, cmd_delete_deck, cmd_get_deck, cmd_get_decks, cmd_update_deck},
     lessons::{cmd_get_lesson_data, cmd_get_lessons, cmd_submit_lesson_result},
@@ -84,6 +84,7 @@ pub fn run() {
             cmd_add_cards,
             cmd_update_card,
             cmd_delete_card,
+            cmd_delete_cards,
             cmd_reset_card_progress,
             cmd_get_reviews,
             cmd_get_review_totals,

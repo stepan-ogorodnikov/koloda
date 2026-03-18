@@ -18,6 +18,10 @@ msgstr ""
 msgid "{0, plural, other {algorithm-used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:54
+msgid "{selectedCount, plural, other {cards-table.selection.label}}"
+msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
+
 #: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:79
 #: ../../libs/react/src/lib/algorithms/add-algorithm.tsx:84
 msgid "add-algorithm.inputs.title.label"
@@ -304,29 +308,49 @@ msgstr "Шаблон"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:181
+#: ../../libs/react/src/lib/cards/cards-table.tsx:195
 msgid "cards-table.search.label"
 msgstr "Поиск по карточкам"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:191
+#: ../../libs/react/src/lib/cards/cards-table.tsx:205
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:91
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:82
+msgid "cards-table.selection.clear"
+msgstr "Сбросить выбор"
+
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:73
+msgid "cards-table.selection.delete.cancel"
+msgstr "Отменить"
+
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:70
+msgid "cards-table.selection.delete.confirm"
+msgstr "Удалить"
+
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:61
+msgid "cards-table.selection.delete.trigger"
+msgstr "Удалить"
+
+#: ../../libs/react/src/lib/cards/cards-table.tsx:103
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:75
+#: ../../libs/react/src/lib/cards/cards-table.tsx:87
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:65
+#: ../../libs/react/src/lib/cards/cards-table.tsx:77
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:98
+#: ../../libs/react/src/lib/cards/cards-table.tsx:110
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
+
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:67
+msgid "cards.table.selection.delete-confirm"
+msgstr "Вы уверены, что хотите удалить выбранные карточки?"
 
 #: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
 msgid "cards.views.stack"
@@ -876,19 +900,19 @@ msgstr "Настройки"
 msgid "template-picker.label"
 msgstr "Шаблон"
 
-#: ../../libs/react/src/lib/templates/template.tsx:93
+#: ../../libs/react/src/lib/templates/template.tsx:103
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:65
+#: ../../libs/react/src/lib/templates/template-fields.tsx:67
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields-item.tsx:71
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:72
 msgid "template.fields.delete-item.label"
 msgstr "Удалить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields-item.tsx:64
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:65
 msgid "template.fields.inputs.is-required.label"
 msgstr "Обязательное"
 
@@ -905,7 +929,7 @@ msgstr "Без названия"
 msgid "template.fields.inputs.type.label"
 msgstr "Тип"
 
-#: ../../libs/react/src/lib/templates/template.tsx:87
+#: ../../libs/react/src/lib/templates/template.tsx:89
 msgid "template.fields.label"
 msgstr "Поля"
 
@@ -921,7 +945,7 @@ msgstr "Поле"
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 
-#: ../../libs/react/src/lib/templates/template.tsx:90
+#: ../../libs/react/src/lib/templates/template.tsx:97
 msgid "template.layout.label"
 msgstr "Раскладка"
 

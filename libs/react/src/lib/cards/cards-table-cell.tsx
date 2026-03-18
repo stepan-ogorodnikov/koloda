@@ -7,6 +7,7 @@ import { CardState } from "./card-state";
 import { CardsTableCellDeleteCard } from "./cards-table-cell-delete-card";
 import { CardsTableCellEditCard } from "./cards-table-cell-edit-card";
 import { CardsTableCellPreviewCard } from "./cards-table-cell-preview-card";
+import { CardsTableCellSelect } from "./cards-table-cell-select";
 
 const TIMESTAMP_OPTIONS = {
   year: "numeric",
@@ -24,6 +25,7 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
   const isTimestampColumn = ["dueAt", "createdAt", "updatedAt"].includes(id);
   const formatted = isTimestampColumn && value ? i18n.date(value, TIMESTAMP_OPTIONS) : value;
 
+  if (id === "select") return <CardsTableCellSelect row={cell.row} />;
   if (id === "preview") return <CardsTableCellPreviewCard card={card} />;
   if (id === "edit") return <CardsTableCellEditCard card={card} />;
   if (id === "delete") return <CardsTableCellDeleteCard id={card.id} deckId={card.deckId} />;

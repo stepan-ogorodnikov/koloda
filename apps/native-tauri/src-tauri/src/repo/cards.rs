@@ -5,7 +5,9 @@ use rusqlite::{params, OptionalExtension};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
 use crate::app::utility::get_current_timestamp;
-use crate::domain::cards::{Card, CardContent, DeleteCardData, InsertCardData, ResetCardProgressData, UpdateCardData};
+use crate::domain::cards::{
+    Card, CardContent, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData,
+};
 use crate::domain::templates::Template;
 use crate::repo::templates::get_template;
 
@@ -216,6 +218,28 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
 pub fn delete_card(db: &Database, data: DeleteCardData) -> Result<(), AppError> {
     db.with_conn(|conn| {
         conn.execute("DELETE FROM cards WHERE id = ?1", params![data.id])?;
+
+        Ok(())
+    })
+}
+
+pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError> {
+    if data.ids.is_empty() {
+        return Ok(());
+    }
+
+    let placeholders: Vec<String> = data
+        .ids
+        .iter()
+        .enumerate()
+        .map(|(i, _)| format!("?{}", i + 1))
+        .collect();
+    let sql = format!("DELETE FROM cards WHERE id IN ({})", placeholders.join(", "));
+
+    let params: Vec<&dyn rusqlite::ToSql> = data.ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+
+    db.with_conn(|conn| {
+        conn.execute(&sql, params.as_slice())?;
 
         Ok(())
     })

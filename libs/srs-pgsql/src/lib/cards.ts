@@ -2,13 +2,14 @@ import { AppError, getInsertCardSchema, getUpdateCardSchema, throwKnownError } f
 import type {
   Card,
   DeleteCardData,
+  DeleteCardsData,
   GetCardsParams,
   InsertCardData,
   InsertCardsResponse,
   ResetCardProgressData,
   UpdateCardData,
 } from "@koloda/srs";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { cards, reviews } from "./schema";
@@ -137,6 +138,20 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
 export async function deleteCard(db: DB, { id }: DeleteCardData) {
   return throwKnownError("db.delete", async () => {
     const result = await db.delete(cards).where(eq(cards.id, id));
+    return result;
+  });
+}
+
+/**
+ * Deletes multiple cards from the database
+ * @param db - The database instance
+ * @param data - Object that contains array of cards ids to delete
+ * @returns The result of the database delete operation
+ */
+export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
+  if (ids.length === 0) return;
+  return throwKnownError("db.delete", async () => {
+    const result = await db.delete(cards).where(inArray(cards.id, ids));
     return result;
   });
 }

@@ -4,7 +4,8 @@ use crate::{
     app::db::DB,
     app::error::AppError,
     domain::cards::{
-        AddCardsResponse, Card, DeleteCardData, GetCardsParams, InsertCardData, ResetCardProgressData, UpdateCardData,
+        AddCardsResponse, Card, DeleteCardData, DeleteCardsData, GetCardsParams, InsertCardData, ResetCardProgressData,
+        UpdateCardData,
     },
     repo::cards as repo,
 };
@@ -37,6 +38,11 @@ pub fn cmd_update_card(db: DB<'_>, data: UpdateCardData) -> Result<Card, AppErro
 #[command]
 pub fn cmd_delete_card(db: DB<'_>, data: DeleteCardData) -> Result<(), AppError> {
     repo::delete_card(&db, data)
+}
+
+#[command]
+pub fn cmd_delete_cards(db: DB<'_>, data: DeleteCardsData) -> Result<(), AppError> {
+    repo::delete_cards(&db, data)
 }
 
 #[command]

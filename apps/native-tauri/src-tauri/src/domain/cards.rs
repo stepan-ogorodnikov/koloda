@@ -102,6 +102,12 @@ pub struct DeleteCardData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DeleteCardsData {
+    pub ids: Vec<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ResetCardProgressData {
     pub id: i64,
 }
