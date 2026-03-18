@@ -79,20 +79,26 @@ export function Template({ id }: TemplateProps) {
         <FormLayout.Section.Content>
           <div className="fg-level-2 font-medium tracking-wide">
             {data?.isLocked
-              ? (
-                _(msg`template.status.locked`)
-              )
-              : (
-                _(msg`template.status.unlocked`)
-              )}
+              ? _(msg`template.status.locked`)
+              : _(msg`template.status.unlocked`)}
           </div>
         </FormLayout.Section.Content>
       </FormLayout.Section>
-      <FormLayout.Section term={_(msg`template.fields.label`)}>
-        <TemplateFields form={form} isLocked={data?.isLocked || false} />
+      <FormLayout.Section>
+        <FormLayout.Section.Term>
+          {_(msg`template.fields.label`)}
+        </FormLayout.Section.Term>
+        <FormLayout.Section.Content variants={{ class: "w-full" }}>
+          <TemplateFields form={form} isLocked={data?.isLocked || false} />
+        </FormLayout.Section.Content>
       </FormLayout.Section>
-      <FormLayout.Section term={_(msg`template.layout.label`)}>
-        <TemplateLayout form={form} />
+      <FormLayout.Section>
+        <FormLayout.Section.Term>
+          {_(msg`template.layout.label`)}
+        </FormLayout.Section.Term>
+        <FormLayout.Section.Content variants={{ class: "w-full" }}>
+          <TemplateLayout form={form} />
+        </FormLayout.Section.Content>
       </FormLayout.Section>
       <FormLayout.Section term={_(msg`template.actions.label`)}>
         <div className="flex flex-row flex-wrap items-center gap-2">

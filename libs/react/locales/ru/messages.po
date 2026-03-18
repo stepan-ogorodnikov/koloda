@@ -880,24 +880,28 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:74
+#: ../../libs/react/src/lib/templates/template-fields.tsx:65
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:131
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:71
 msgid "template.fields.delete-item.label"
 msgstr "Удалить поле"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:101
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:64
+msgid "template.fields.inputs.is-required.label"
+msgstr "Обязательное"
+
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:21
 msgid "template.fields.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:107
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:27
 #: ../../libs/react/src/lib/templates/template-layout.tsx:49
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/react/src/lib/templates/template-fields.tsx:111
+#: ../../libs/react/src/lib/templates/template-fields-item.tsx:35
 msgid "template.fields.inputs.type.label"
 msgstr "Тип"
 

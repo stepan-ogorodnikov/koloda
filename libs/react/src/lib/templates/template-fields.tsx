@@ -1,13 +1,14 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId, TEMPLATE_FIELD_TYPES_MESSAGES } from "@koloda/srs";
-import type { TemplateFieldType, UpdateTemplateValues } from "@koloda/srs";
-import { Button, Draggable, Select, TextField, withForm } from "@koloda/ui";
+import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId } from "@koloda/srs";
+import type { UpdateTemplateValues } from "@koloda/srs";
+import { Button, Draggable, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
+import { TemplateFieldsItem } from "./template-fields-item";
 
 export const TemplateFields = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
@@ -39,25 +40,17 @@ export const TemplateFields = withForm({
             <div className="flex flex-col gap-2">
               {field.state.value.map((item, i) => (
                 <Draggable id={item.id} index={i} key={item.id}>
-                  <form.Field name={`content.fields[${i}].title`}>
-                    {(titleField) => (
-                      <form.Field name={`content.fields[${i}].type`}>
-                        {(typeField) => (
-                          <TemplateFieldItem
-                            title={fieldsValue[i].title}
-                            type={fieldsValue[i].type}
-                            onTitleChange={titleField.handleChange}
-                            onTypeChange={(value) => typeField.handleChange(value as TemplateFieldType)}
-                            isLocked={isLocked}
-                            onDelete={() => {
-                              field.removeValue(i);
-                              form.setFieldValue("content.layout", layoutValue.filter((x) => x.field !== item.id));
-                            }}
-                          />
-                        )}
-                      </form.Field>
-                    )}
-                  </form.Field>
+                  <div className="flex flex-row flex-wrap">
+                    <TemplateFieldsItem
+                      index={i}
+                      isLocked={isLocked}
+                      form={form}
+                      onDelete={() => {
+                        field.removeValue(i);
+                        form.setFieldValue("content.layout", layoutValue.filter((x) => x.field !== item.id));
+                      }}
+                    />
+                  </div>
                 </Draggable>
               ))}
               {!isLocked && (
@@ -82,59 +75,3 @@ export const TemplateFields = withForm({
     );
   },
 });
-
-type TemplateFieldItemProps = {
-  title: string;
-  type: TemplateFieldType;
-  onTitleChange?: (x: string) => void;
-  onTypeChange?: (x: TemplateFieldType) => void;
-  isLocked?: boolean | null;
-  onDelete?: () => void;
-};
-
-function TemplateFieldItem({ title, type, onTitleChange, onTypeChange, isLocked, onDelete }: TemplateFieldItemProps) {
-  const { _ } = useLingui();
-
-  return (
-    <>
-      <TextField
-        aria-label={_(msg`template.fields.inputs.title.label`)}
-        value={title}
-        onChange={onTitleChange}
-      >
-        <TextField.Input
-          variants={{ style: "inline", class: "dt:w-72" }}
-          placeholder={_(msg`template.fields.inputs.title.placeholder`)}
-        />
-      </TextField>
-      <Select.Root
-        aria-label={_(msg`template.fields.inputs.type.label`)}
-        value={type}
-        isDisabled={isLocked ?? undefined}
-        onChange={(e) => {
-          if (typeof e === "string") onTypeChange?.(e as TemplateFieldType);
-        }}
-      >
-        <Select.Button variants={{ style: "ghost", class: "w-48" }} />
-        <Select.Popover>
-          <Select.ListBox>
-            {TEMPLATE_FIELD_TYPES_MESSAGES.map(({ id, value }) => (
-              <Select.ListBoxItem id={id} textValue={_(value)} key={id}>
-                {_(value)}
-              </Select.ListBoxItem>
-            ))}
-          </Select.ListBox>
-        </Select.Popover>
-      </Select.Root>
-      {!isLocked && (
-        <Button
-          aria-label={_(msg`template.fields.delete-item.label`)}
-          variants={{ style: "ghost", size: "icon" }}
-          onClick={onDelete}
-        >
-          <Trash2 className="stroke-1.75" />
-        </Button>
-      )}
-    </>
-  );
-}
