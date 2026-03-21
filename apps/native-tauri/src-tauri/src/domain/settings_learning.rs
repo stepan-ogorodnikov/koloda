@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 use crate::app::error::{error_codes, AppError};
@@ -65,9 +65,9 @@ fn validate_day_starts_at(value: &str) -> Result<(), AppError> {
 #[serde(rename_all = "camelCase")]
 pub struct DailyLimits {
     pub total: u32,
-    pub untouched: u32,
-    pub learn: u32,
-    pub review: u32,
+    pub untouched: CountedDailyLimit,
+    pub learn: CountedDailyLimit,
+    pub review: CountedDailyLimit,
 }
 
 impl DailyLimits {
@@ -75,25 +75,63 @@ impl DailyLimits {
         if self.total == 0 {
             return Ok(());
         }
-        if self.untouched > self.total {
+        if self.untouched.counts && self.untouched.value > self.total {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_UNTOUCHED_EXCEEDS_TOTAL,
                 None,
             ));
         }
-        if self.learn > self.total {
+        if self.learn.counts && self.learn.value > self.total {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_LEARN_EXCEEDS_TOTAL,
                 None,
             ));
         }
-        if self.review > self.total {
+        if self.review.counts && self.review.value > self.total {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_REVIEW_EXCEEDS_TOTAL,
                 None,
             ));
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CountedDailyLimit {
+    pub value: u32,
+    pub counts: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", untagged)]
+enum CountedDailyLimitInput {
+    Value(u32),
+    Object {
+        value: u32,
+        counts: bool,
+    },
+}
+
+impl<'de> Deserialize<'de> for CountedDailyLimit {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        match CountedDailyLimitInput::deserialize(deserializer)? {
+            CountedDailyLimitInput::Value(value) => Ok(Self {
+                value,
+                counts: true,
+            }),
+            CountedDailyLimitInput::Object {
+                value,
+                counts,
+            } => Ok(Self {
+                value,
+                counts,
+            }),
+        }
     }
 }
 
@@ -121,3 +159,4 @@ impl LearnAheadLimit {
         Ok(())
     }
 }
+

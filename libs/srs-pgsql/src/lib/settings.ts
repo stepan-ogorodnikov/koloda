@@ -1,6 +1,6 @@
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/srs";
 import { allowedSettings, AppError, deepMerge, throwKnownError } from "@koloda/srs";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
 import { settings } from "./schema";
@@ -38,12 +38,12 @@ export async function getSettings<T extends SettingsName>(db: DB, name: Settings
  */
 export async function setSettings<T extends SettingsName>(db: DB, { name, content }: SetSettingsData<T>) {
   return throwKnownError("db.update", async () => {
-    allowedSettings[name].parse(content);
+    const parsed = allowedSettings[name].parse(content);
 
     const result = await db
       .insert(settings)
-      .values({ name, content })
-      .onConflictDoUpdate({ target: settings.name, set: withUpdatedAt({ name, content }) })
+      .values({ name, content: parsed })
+      .onConflictDoUpdate({ target: settings.name, set: withUpdatedAt({ name, content: parsed }) })
       .returning();
 
     return result[0] as AllowedSettings<T>;
@@ -68,13 +68,11 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
     const base = original[0].content as Record<string, unknown>;
     if (!base) throw new AppError("db.update");
     const merged = deepMerge(base, content);
-    allowedSettings[name].parse(merged);
+    const parsed = allowedSettings[name].parse(merged);
 
     const result = await db
       .update(settings)
-      .set({
-        content: sql`COALESCE(${settings.content}, '{}')::jsonb || ${JSON.stringify(content)}::jsonb`,
-      })
+      .set(withUpdatedAt({ content: parsed }))
       .where(eq(settings.name, name))
       .returning();
 

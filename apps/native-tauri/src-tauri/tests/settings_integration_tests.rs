@@ -4,7 +4,7 @@ use koloda_native_tauri::repo::settings;
 use serde_json::json;
 
 mod common;
-use common::{interface_settings, learning_settings, test_db};
+use common::{counted_daily_limit, interface_settings, learning_settings, test_db};
 
 #[test]
 fn set_settings_updates_row_and_sets_updated_at() {
@@ -40,7 +40,9 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
         SettingsName::Learning,
         json!({
             "dailyLimits": {
-                "learn": 7
+                "learn": {
+                    "value": 7
+                }
             },
             "defaults": {
                 "algorithm": 123
@@ -50,11 +52,41 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
     .expect("patch should succeed");
 
     assert_eq!(patched.content["dailyLimits"]["total"], 100);
-    assert_eq!(patched.content["dailyLimits"]["untouched"], 20);
-    assert_eq!(patched.content["dailyLimits"]["learn"], 7);
-    assert_eq!(patched.content["dailyLimits"]["review"], 50);
+    assert_eq!(patched.content["dailyLimits"]["untouched"], counted_daily_limit(20, true));
+    assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(7, true));
+    assert_eq!(patched.content["dailyLimits"]["review"], counted_daily_limit(50, true));
     assert_eq!(patched.content["defaults"]["algorithm"], 123);
     assert!(patched.updated_at.is_some());
+}
+
+#[test]
+fn set_settings_preserves_false_counts_flag() {
+    let db = test_db();
+
+    let saved = settings::set_settings(
+        &db,
+        SettingsName::Learning,
+        json!({
+            "defaults": {
+                "algorithm": 0,
+                "template": 0
+            },
+            "dailyLimits": {
+                "total": 100,
+                "untouched": {
+                    "value": 20,
+                    "counts": false
+                },
+                "learn": counted_daily_limit(30, true),
+                "review": counted_daily_limit(50, true)
+            },
+            "dayStartsAt": "04:00",
+            "learnAheadLimit": [0, 30]
+        }),
+    )
+    .expect("learning settings insert should succeed");
+
+    assert_eq!(saved.content["dailyLimits"]["untouched"], counted_daily_limit(20, false));
 }
 
 #[test]

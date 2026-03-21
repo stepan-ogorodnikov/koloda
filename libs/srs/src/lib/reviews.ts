@@ -4,6 +4,7 @@ import { type Card, cardValidation } from "./cards";
 import { AppError } from "./error";
 import type { LessonType } from "./lessons";
 import type { AllowedSettings } from "./settings";
+import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "./settings-learning";
 import { mapObjectPropertiesReverse } from "./utility";
 import type { ObjectPropertiesMapping } from "./utility";
 
@@ -98,17 +99,28 @@ export async function calculateTodaysReviewTotals(
   learningSettings: AllowedSettings<"learning">["content"],
   reviewTotals: ReviewTotals,
 ) {
-  const dailyLimits = Object.fromEntries(
-    Object.entries(learningSettings.dailyLimits).map(([key, value]) => [key, value || 0]),
-  );
-  const { untouched, learn, review, total } = reviewTotals;
+  const { dailyLimits } = learningSettingsValidation.parse(learningSettings);
+  const countedTotal = LEARNING_DAILY_LIMIT_TYPES.reduce((total, type) => (
+    dailyLimits[type].counts ? total + Number(reviewTotals[type] || 0) : total
+  ), 0);
+  const normalizedReviewTotals = { ...reviewTotals, total: countedTotal };
+  const { untouched, learn, review, total } = normalizedReviewTotals;
   const meta = {
-    isUntouchedOverTheLimit: (untouched > 0) && (untouched > dailyLimits.untouched || total > dailyLimits.total),
-    isLearnOverTheLimit: (learn > 0) && (learn > dailyLimits.learn || total > dailyLimits.total),
-    isReviewOverTheLimit: (review > 0) && (review > dailyLimits.review || total > dailyLimits.total),
-    isTotalOverTheLimit: (total > 0) && (total >= dailyLimits.total),
+    isUntouchedOverTheLimit: (untouched > 0) && (
+      (untouched > dailyLimits.untouched.value)
+      || (dailyLimits.total > 0 && dailyLimits.untouched.counts && total >= dailyLimits.total)
+    ),
+    isLearnOverTheLimit: (learn > 0) && (
+      (learn > dailyLimits.learn.value)
+      || (dailyLimits.total > 0 && dailyLimits.learn.counts && total >= dailyLimits.total)
+    ),
+    isReviewOverTheLimit: (review > 0) && (
+      (review > dailyLimits.review.value)
+      || (dailyLimits.total > 0 && dailyLimits.review.counts && total >= dailyLimits.total)
+    ),
+    isTotalOverTheLimit: (dailyLimits.total > 0) && (total > 0) && (total >= dailyLimits.total),
   };
-  return { dailyLimits, reviewTotals, meta };
+  return { dailyLimits, reviewTotals: normalizedReviewTotals, meta };
 }
 
 export type TodaysReviewTotals = Awaited<ReturnType<typeof calculateTodaysReviewTotals>>;
@@ -127,3 +139,4 @@ const FSRS_REVIEW_PROPERTIES: ObjectPropertiesMapping<Review, ReviewFSRS> = {
 export function createReviewFromReviewFSRS(input: ReviewFSRS) {
   return mapObjectPropertiesReverse(input, FSRS_REVIEW_PROPERTIES) as Omit<InsertReviewData, "cardId" | "isIgnored">;
 }
+

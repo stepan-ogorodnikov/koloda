@@ -628,7 +628,7 @@ msgstr "Amount of cards of type review"
 msgid "lesson.init.amount-input.untouched"
 msgstr "Amount of cards of type new"
 
-#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:34
+#: ../../libs/react/src/lib/lessons/lesson-init-list.tsx:37
 msgid "lesson.init.list.labels.available"
 msgstr "Available:"
 
@@ -840,55 +840,61 @@ msgstr "Theme"
 msgid "settings.learning"
 msgstr "Learning"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:155
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:204
 msgid "settings.learning.day-starts-at"
 msgstr "Start of the day"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:51
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:52
 msgid "settings.learning.defaults.algorithm"
 msgstr "Default algorithm"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:61
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:62
 msgid "settings.learning.defaults.template"
 msgstr "Default template"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:117
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:166
 msgid "settings.learning.learn-ahead-limit"
 msgstr "Learn ahead limit"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:123
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:172
 msgid "settings.learning.learn-ahead-limit.hours.label"
 msgstr "Hours"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:130
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:179
 msgid "settings.learning.learn-ahead-limit.hours.suffix"
 msgstr "h"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:138
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:187
 msgid "settings.learning.learn-ahead-limit.minutes.label"
 msgstr "Minutes"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:145
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:194
 msgid "settings.learning.learn-ahead-limit.minutes.suffix"
 msgstr "m"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:67
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:68
 msgid "settings.learning.limits"
 msgstr "Daily limits"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:99
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:103
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:131
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:159
+msgid "settings.learning.limits.counts-towards-total"
+msgstr "Counts towards total"
+
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:116
 msgid "settings.learning.limits.learn"
 msgstr "Learn"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:111
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:144
 msgid "settings.learning.limits.review"
 msgstr "Review"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:75
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:76
 msgid "settings.learning.limits.total"
 msgstr "Total"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:87
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:88
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 

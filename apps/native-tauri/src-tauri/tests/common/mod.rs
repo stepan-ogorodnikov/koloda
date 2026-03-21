@@ -91,14 +91,21 @@ pub fn interface_settings(language: &str, theme: &str, motion: &str) -> serde_js
     })
 }
 
+pub fn counted_daily_limit(value: u32, counts: bool) -> serde_json::Value {
+    json!({
+        "value": value,
+        "counts": counts,
+    })
+}
+
 pub fn learning_settings(total: u32, untouched: u32, learn: u32, review: u32) -> serde_json::Value {
     json!({
         "defaults": {},
         "dailyLimits": {
             "total": total,
-            "untouched": untouched,
-            "learn": learn,
-            "review": review,
+            "untouched": counted_daily_limit(untouched, true),
+            "learn": counted_daily_limit(learn, true),
+            "review": counted_daily_limit(review, true),
         },
         "dayStartsAt": "04:00",
         "learnAheadLimit": [4, 0],
@@ -116,9 +123,9 @@ pub fn learning_settings_with_day_start(
         "defaults": {},
         "dailyLimits": {
             "total": total,
-            "untouched": untouched,
-            "learn": learn,
-            "review": review,
+            "untouched": counted_daily_limit(untouched, true),
+            "learn": counted_daily_limit(learn, true),
+            "review": counted_daily_limit(review, true),
         },
         "dayStartsAt": day_starts_at,
         "learnAheadLimit": [4, 0],
@@ -170,3 +177,4 @@ pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda_native_t
         },
     }
 }
+

@@ -1,35 +1,36 @@
 import { parseTime } from "@internationalized/date";
 import { AlgorithmPicker, TemplatePicker } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { LearningSettings } from "@koloda/srs";
-import { learningSettingsValidation as schema, toFormErrors } from "@koloda/srs";
-import { formLayout, Label, NumberField, TimeField, useAppForm } from "@koloda/ui";
+import type { ResolvedLearningSettings } from "@koloda/srs";
+import { learningSettingsValidation, resolvedLearningSettingsValidation, toFormErrors } from "@koloda/srs";
+import { formLayout, Label, NumberField, Switch, TimeField, useAppForm } from "@koloda/ui";
 import { FormLayout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
-export type SettingsLearningProps = { data: LearningSettings };
+export type SettingsLearningProps = { data: ResolvedLearningSettings };
 
 export function SettingsLearning({ data }: SettingsLearningProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { setSettingsMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation(setSettingsMutation<"learning">());
+  const initialValues = learningSettingsValidation.parse(data);
 
   const form = useAppForm({
-    defaultValues: data,
-    validators: { onSubmit: schema },
-    onSubmit: async ({ value }) => {
-      mutate({ name: "learning", content: schema.parse(value) }, {
+    defaultValues: initialValues,
+    validators: { onSubmit: resolvedLearningSettingsValidation },
+    onSubmit: async ({ formApi, value }) => {
+      mutate({ name: "learning", content: value }, {
         onSuccess: (returning) => {
           queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("learning") });
           queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
-          form.reset(returning?.content);
+          formApi.reset(returning?.content ? learningSettingsValidation.parse(returning.content) : undefined);
         },
         onError: (error) => {
-          form.setErrorMap({ onSubmit: toFormErrors(error) });
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
         },
       });
     },
@@ -77,42 +78,81 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             </NumberField>
           )}
         </form.Field>
-        <form.Field name="dailyLimits.untouched">
-          {(field) => (
-            <NumberField
-              minValue={0}
-              value={field.state.value}
-              onChange={field.handleChange}
-            >
-              <Label>{_(msg`settings.learning.limits.untouched`)}</Label>
-              <NumberField.Group />
-            </NumberField>
-          )}
-        </form.Field>
-        <form.Field name="dailyLimits.learn">
-          {(field) => (
-            <NumberField
-              minValue={0}
-              value={field.state.value}
-              onChange={field.handleChange}
-            >
-              <Label>{_(msg`settings.learning.limits.learn`)}</Label>
-              <NumberField.Group />
-            </NumberField>
-          )}
-        </form.Field>
-        <form.Field name="dailyLimits.review">
-          {(field) => (
-            <NumberField
-              minValue={0}
-              value={field.state.value}
-              onChange={field.handleChange}
-            >
-              <Label>{_(msg`settings.learning.limits.review`)}</Label>
-              <NumberField.Group />
-            </NumberField>
-          )}
-        </form.Field>
+        <div className="flex flex-row flex-wrap items-end gap-4">
+          <form.Field name="dailyLimits.untouched.value">
+            {(field) => (
+              <NumberField
+                minValue={0}
+                value={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Label>{_(msg`settings.learning.limits.untouched`)}</Label>
+                <NumberField.Group />
+              </NumberField>
+            )}
+          </form.Field>
+          <form.Field name="dailyLimits.untouched.counts">
+            {(field) => (
+              <Switch
+                isSelected={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Switch.Indicator />
+                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
+              </Switch>
+            )}
+          </form.Field>
+        </div>
+        <div className="flex flex-row flex-wrap items-end gap-4">
+          <form.Field name="dailyLimits.learn.value">
+            {(field) => (
+              <NumberField
+                minValue={0}
+                value={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Label>{_(msg`settings.learning.limits.learn`)}</Label>
+                <NumberField.Group />
+              </NumberField>
+            )}
+          </form.Field>
+          <form.Field name="dailyLimits.learn.counts">
+            {(field) => (
+              <Switch
+                isSelected={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Switch.Indicator />
+                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
+              </Switch>
+            )}
+          </form.Field>
+        </div>
+        <div className="flex flex-row flex-wrap items-end gap-4">
+          <form.Field name="dailyLimits.review.value">
+            {(field) => (
+              <NumberField
+                minValue={0}
+                value={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Label>{_(msg`settings.learning.limits.review`)}</Label>
+                <NumberField.Group />
+              </NumberField>
+            )}
+          </form.Field>
+          <form.Field name="dailyLimits.review.counts">
+            {(field) => (
+              <Switch
+                isSelected={field.state.value}
+                onChange={field.handleChange}
+              >
+                <Switch.Indicator />
+                <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
+              </Switch>
+            )}
+          </form.Field>
+        </div>
       </FormLayout.Section>
       <FormLayout.Section term={_(msg`settings.learning.learn-ahead-limit`)}>
         <div className="flex flex-row flex-wrap gap-4">
@@ -154,7 +194,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             variants={{ layout: "form" }}
             label={_(msg`settings.learning.day-starts-at`)}
             value={field.state.value ? parseTime(field.state.value + ":00") : null}
-            onChange={(value) => field.handleChange(value?.toString().slice(0, 5) ?? undefined)}
+            onChange={(value) => field.handleChange(value?.toString().slice(0, 5) ?? field.state.value)}
           >
             <TimeField.Input />
           </TimeField>

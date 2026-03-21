@@ -124,22 +124,47 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
 
     let daily_limits = DailyLimits {
         total: learning_settings.daily_limits.total,
-        untouched: learning_settings.daily_limits.untouched,
-        learn: learning_settings.daily_limits.learn,
-        review: learning_settings.daily_limits.review,
+        untouched: learning_settings.daily_limits.untouched.clone(),
+        learn: learning_settings.daily_limits.learn.clone(),
+        review: learning_settings.daily_limits.review.clone(),
+    };
+    let counted_total = [
+        (daily_limits.untouched.counts, review_totals.untouched),
+        (daily_limits.learn.counts, review_totals.learn),
+        (daily_limits.review.counts, review_totals.review),
+    ]
+    .into_iter()
+    .fold(0_i64, |total, (counts, value)| {
+        if counts {
+            total + value
+        } else {
+            total
+        }
+    });
+    let review_totals = ReviewTotals {
+        total: counted_total,
+        ..review_totals
     };
 
     let meta = TodaysReviewTotalsMeta {
         is_untouched_over_the_limit: review_totals.untouched > 0
-            && (review_totals.untouched > i64::from(daily_limits.untouched)
-                || review_totals.total >= i64::from(daily_limits.total)),
+            && (review_totals.untouched > i64::from(daily_limits.untouched.value)
+                || (daily_limits.total > 0
+                    && daily_limits.untouched.counts
+                    && review_totals.total >= i64::from(daily_limits.total))),
         is_learn_over_the_limit: review_totals.learn > 0
-            && (review_totals.learn > i64::from(daily_limits.learn)
-                || review_totals.total >= i64::from(daily_limits.total)),
+            && (review_totals.learn > i64::from(daily_limits.learn.value)
+                || (daily_limits.total > 0
+                    && daily_limits.learn.counts
+                    && review_totals.total >= i64::from(daily_limits.total))),
         is_review_over_the_limit: review_totals.review > 0
-            && (review_totals.review > i64::from(daily_limits.review)
-                || review_totals.total >= i64::from(daily_limits.total)),
-        is_total_over_the_limit: review_totals.total > 0 && review_totals.total >= i64::from(daily_limits.total),
+            && (review_totals.review > i64::from(daily_limits.review.value)
+                || (daily_limits.total > 0
+                    && daily_limits.review.counts
+                    && review_totals.total >= i64::from(daily_limits.total))),
+        is_total_over_the_limit: daily_limits.total > 0
+            && review_totals.total > 0
+            && review_totals.total >= i64::from(daily_limits.total),
     };
 
     Ok(TodaysReviewTotals {
@@ -148,3 +173,4 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         meta,
     })
 }
+

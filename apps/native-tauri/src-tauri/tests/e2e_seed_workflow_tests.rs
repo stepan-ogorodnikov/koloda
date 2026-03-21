@@ -5,7 +5,7 @@ use koloda_native_tauri::repo::{algorithms, settings};
 use serde_json::json;
 
 mod common;
-use common::{fsrs_content, simple_template, test_db};
+use common::{counted_daily_limit, fsrs_content, simple_template, test_db};
 
 #[test]
 fn e2e_seed_and_review_workflow() {
@@ -23,7 +23,12 @@ fn e2e_seed_and_review_workflow() {
                 interface: json!({"language": "en", "theme": "system", "motion": "system"}),
                 learning: json!({
                     "defaults": {},
-                    "dailyLimits": {"total": 100, "untouched": 20, "learn": 30, "review": 50},
+                    "dailyLimits": {
+                        "total": 100,
+                        "untouched": counted_daily_limit(20, true),
+                        "learn": counted_daily_limit(30, true),
+                        "review": counted_daily_limit(50, true)
+                    },
                     "dayStartsAt": "04:00",
                     "learnAheadLimit": [4, 0],
                 }),

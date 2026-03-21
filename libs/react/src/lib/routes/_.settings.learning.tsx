@@ -1,6 +1,6 @@
 import { QueryState } from "@koloda/react";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
-import { DEFAULT_LEARNING_SETTINGS } from "@koloda/srs";
+import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/srs";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -38,7 +38,7 @@ function SettingsLearningRoute() {
       </Main.Titlebar>
       <Main.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
-          {(data) => <SettingsLearning data={data?.content || DEFAULT_LEARNING_SETTINGS} />}
+          {(data) => <SettingsLearning data={learningSettingsValidation.parse(data?.content || DEFAULT_LEARNING_SETTINGS)} />}
         </QueryState>
       </Main.Container>
     </>

@@ -77,4 +77,17 @@ impl SettingsName {
             }
         }
     }
+
+    pub fn normalize(&self, content: Value) -> Result<Value, AppError> {
+        match self {
+            SettingsName::Learning => {
+                let settings: LearningSettings = serde_json::from_value(content)?;
+                Ok(serde_json::to_value(settings)?)
+            }
+            _ => {
+                self.validate(&content)?;
+                Ok(content)
+            }
+        }
+    }
 }

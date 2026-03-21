@@ -1,7 +1,7 @@
 import type { LessonAtomValue } from "@koloda/react";
 import type { ReducerAction } from "@koloda/react-base";
 import { dispatchReducerAction } from "@koloda/react-base";
-import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } from "@koloda/srs";
+import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades, LEARNING_DAILY_LIMIT_TYPES } from "@koloda/srs";
 import type {
   Card,
   CardGrade,
@@ -171,30 +171,41 @@ function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
 function setupInitData(draft: LessonReducerState) {
   const { params, lessons, todayReviewTotals, amounts } = draft;
   if (!params || !lessons || !todayReviewTotals || amounts) return;
-  const { dailyLimits } = todayReviewTotals;
+  const { dailyLimits, reviewTotals } = todayReviewTotals;
   const { type } = params;
   const available = lessons[0];
+  const countedReviewTotal = LEARNING_DAILY_LIMIT_TYPES.reduce((total, limitType) => (
+    dailyLimits[limitType].counts ? total + reviewTotals[limitType] : total
+  ), 0);
   const diffs = {
-    untouched: Math.max((dailyLimits.untouched || Infinity) - available.untouched, 0),
-    learn: Math.max((dailyLimits.learn || Infinity) - available.learn, 0),
-    review: Math.max((dailyLimits.review || Infinity) - available.review, 0),
-    total: Math.max((dailyLimits.total || Infinity) - available.total, 0),
+    untouched: Math.max((dailyLimits.untouched.value || Infinity) - reviewTotals.untouched, 0),
+    learn: Math.max((dailyLimits.learn.value || Infinity) - reviewTotals.learn, 0),
+    review: Math.max((dailyLimits.review.value || Infinity) - reviewTotals.review, 0),
+    total: Math.max((dailyLimits.total || Infinity) - countedReviewTotal, 0),
   };
 
   if (params.type === "total") {
     let remainder = diffs.total;
     let amounts: LessonAmounts = { untouched: 0, learn: 0, review: 0, total: 0 };
-    const types = ["untouched", "learn", "review"] as const;
-    types.forEach((x) => {
-      const amount = getLessonCardsAmount(available[x], diffs[x], remainder);
+    LEARNING_DAILY_LIMIT_TYPES.forEach((x) => {
+      const amount = getLessonCardsAmount(
+        available[x],
+        diffs[x],
+        dailyLimits[x].counts ? remainder : Infinity,
+      );
       amounts[x] = amount;
-      remainder = remainder - amount;
+      if (dailyLimits[x].counts) remainder = remainder - amount;
     });
     amounts.total = Number(amounts.untouched) + Number(amounts.learn) + Number(amounts.review);
     draft.amounts = amounts;
   } else {
-    const amount = getLessonCardsAmount(available[type], diffs[type], diffs.total);
-    draft.amounts = { untouched: 0, learn: 0, review: 0, total: amount, [type]: amount };
+    const limitType = type as Exclude<LessonType, "total">;
+    const amount = getLessonCardsAmount(
+      available[limitType],
+      diffs[limitType],
+      dailyLimits[limitType].counts ? diffs.total : Infinity,
+    );
+    draft.amounts = { untouched: 0, learn: 0, review: 0, total: amount, [limitType]: amount };
   }
 }
 
@@ -416,3 +427,4 @@ export const lessonReducer = produce((draft: LessonReducerState, action: LessonR
   dispatchReducerAction(draft, actions, action);
   return draft;
 });
+

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
 use crate::app::utility::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
+use crate::domain::settings_learning::CountedDailyLimit;
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
@@ -87,10 +88,10 @@ pub struct ReviewTotals {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DailyLimits {
-    pub untouched: u32,
-    pub learn: u32,
-    pub review: u32,
     pub total: u32,
+    pub untouched: CountedDailyLimit,
+    pub learn: CountedDailyLimit,
+    pub review: CountedDailyLimit,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

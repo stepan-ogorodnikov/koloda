@@ -24,7 +24,10 @@ export function LessonInitList({ state, dispatch }: LessonInitListProps) {
         <div key={type} className="flex flex-col gap-2 text-lg">
           <div className="flex flex-row items-center justify-between">
             <div className="font-medium fg-level-2">{_(LESSON_TYPE_LABELS[type])}</div>
-            <LessonInitLearnedToday learned={reviewTotals[type]} limit={dailyLimits[type]} />
+            <LessonInitLearnedToday
+              learned={reviewTotals[type]}
+              limit={type === "total" ? dailyLimits.total : dailyLimits[type].value}
+            />
           </div>
           <div className="flex flex-row items-center justify-between">
             {type === "total"

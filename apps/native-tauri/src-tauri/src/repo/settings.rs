@@ -34,11 +34,18 @@ pub fn get_settings(db: &Database, name: SettingsName) -> Result<Option<Settings
         )
         .optional()
         .map_err(AppError::from)
+        .and_then(|settings| match settings {
+            Some(mut settings) => {
+                settings.content = name.normalize(settings.content)?;
+                Ok(Some(settings))
+            }
+            None => Ok(None),
+        })
     })
 }
 
 pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result<Settings, AppError> {
-    name.validate(&content)?;
+    let content = name.normalize(content)?;
     let now = get_current_timestamp()?;
 
     db.with_conn(|conn| {
@@ -62,7 +69,7 @@ pub fn patch_settings(db: &Database, name: SettingsName, patch: Value) -> Result
     let existing = get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))?;
     let mut merged = existing.content.clone();
     json_patch::merge(&mut merged, &patch);
-    name.validate(&merged)?;
+    let merged = name.normalize(merged)?;
 
     set_settings(db, name, merged)
 }

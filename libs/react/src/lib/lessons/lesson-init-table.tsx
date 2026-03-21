@@ -52,7 +52,7 @@ export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
               <LessonInitLearnedToday
                 variants={{ table: true }}
                 learned={reviewTotals[type]}
-                limit={dailyLimits[type]}
+                limit={type === "total" ? dailyLimits.total : dailyLimits[type].value}
               />
             </LessonInitTd>
           </tr>
