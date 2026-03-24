@@ -99,15 +99,15 @@ msgstr "Новый шаблон"
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:138
+#: ../../libs/react/src/lib/ai/ai-chat-submit.tsx:19
 msgid "ai-chat.cancel.label"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:106
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:26
 msgid "ai.chat.input.label"
 msgstr "Поле ввода сообщения"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:114
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:34
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
@@ -840,7 +840,7 @@ msgstr "Тема оформления"
 msgid "settings.learning"
 msgstr "Изучение"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:204
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:195
 msgid "settings.learning.day-starts-at"
 msgstr "Начало дня"
 
@@ -852,23 +852,23 @@ msgstr "Алгоритм по умолчанию"
 msgid "settings.learning.defaults.template"
 msgstr "Шаблон по умолчанию"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:166
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:157
 msgid "settings.learning.learn-ahead-limit"
 msgstr "Лимит изучения наперёд"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:172
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:163
 msgid "settings.learning.learn-ahead-limit.hours.label"
 msgstr "Часы"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:179
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:170
 msgid "settings.learning.learn-ahead-limit.hours.suffix"
 msgstr "ч"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:187
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:178
 msgid "settings.learning.learn-ahead-limit.minutes.label"
 msgstr "Минуты"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:194
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:185
 msgid "settings.learning.learn-ahead-limit.minutes.suffix"
 msgstr "м"
 
@@ -876,17 +876,17 @@ msgstr "м"
 msgid "settings.learning.limits"
 msgstr "Дневные лимиты"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:103
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:131
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:159
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:101
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:126
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:151
 msgid "settings.learning.limits.counts-towards-total"
 msgstr "Идёт в счёт всего"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:116
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:114
 msgid "settings.learning.limits.learn"
 msgstr "Заучивание"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:144
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:139
 msgid "settings.learning.limits.review"
 msgstr "Повтор"
 
@@ -894,7 +894,7 @@ msgstr "Повтор"
 msgid "settings.learning.limits.total"
 msgstr "Всего"
 
-#: ../../libs/react/src/lib/settings/settings-learning.tsx:88
+#: ../../libs/react/src/lib/settings/settings-learning.tsx:89
 msgid "settings.learning.limits.untouched"
 msgstr "Новые"
 
