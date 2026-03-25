@@ -1,3 +1,5 @@
+import { SquareLock01Icon, SquareUnlock01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { CloneTemplate, DeleteTemplate, NotFound } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
@@ -77,10 +79,11 @@ export function Template({ id }: TemplateProps) {
           {_(msg`template.status.title`)}
         </FormLayout.Section.Term>
         <FormLayout.Section.Content>
-          <div className="fg-level-2 font-medium tracking-wide">
+          <div className="flex flex-row gap-2 fg-level-2 font-medium tracking-wide">
             {data?.isLocked
-              ? _(msg`template.status.locked`)
-              : _(msg`template.status.unlocked`)}
+              ? <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareLock01Icon} />
+              : <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareUnlock01Icon} />}
+            {data?.isLocked ? _(msg`template.status.locked`) : _(msg`template.status.unlocked`)}
           </div>
         </FormLayout.Section.Content>
       </FormLayout.Section>

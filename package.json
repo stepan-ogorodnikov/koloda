@@ -19,6 +19,8 @@
     "@dnd-kit/react": "^0.1.21",
     "@electric-sql/pglite": "^0.3.14",
     "@fontsource-variable/inter": "^5.2.6",
+    "@hugeicons/core-free-icons": "^4.0.0",
+    "@hugeicons/react": "^1.1.6",
     "@lingui/core": "^5.6.0",
     "@lingui/detect-locale": "^5.6.0",
     "@lingui/macro": "^5.6.0",
