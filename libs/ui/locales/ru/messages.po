@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ui/src/lib/ui/back-button.tsx:13
+#: ../../libs/ui/src/lib/ui/back-button.tsx:14
 msgid "back-button.label"
 msgstr "Перейти обратно"
 
@@ -21,11 +21,11 @@ msgstr "Перейти обратно"
 msgid "dashboard.skip-link"
 msgstr "Перейти к содержимому"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:20
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:21
 msgid "drag-handle.description"
 msgstr "Перетащите для изменения порядка расположения элементов"
 
-#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:19
+#: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:20
 msgid "drag-handle.label"
 msgstr "Контроллер перетаскивания"
 
@@ -47,42 +47,42 @@ msgstr "Сохранить"
 msgid "form.updatedAt {0}"
 msgstr "Обновлено {0}"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:47
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:48
 msgid "hotkey-recorder.accept"
 msgstr "Сохранить эту комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:19
+#: ../../libs/ui/src/lib/ui/add-hotkey-button.tsx:20
 msgid "hotkey-recorder.add-button.label"
 msgstr "Добавить комбинацию клавиш"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:55
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:56
 msgid "hotkey-recorder.cancel"
 msgstr "Отменить"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:43
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:44
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:49
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:55
 msgid "table.pagination.buttons.first"
 msgstr "Перейти на первую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:71
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:92
 msgid "table.pagination.buttons.last"
 msgstr "Перейти на последнюю страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:64
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:80
 msgid "table.pagination.buttons.next"
 msgstr "Перейти на следующую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:56
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:67
 msgid "table.pagination.buttons.previous"
 msgstr "Перейти на предыдущую страницу"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:85
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:111
 msgid "table.pagination.page-size.label"
 msgstr "На странице:"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:42
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:48
 msgid "table.pagination.records.label"
 msgstr "из"

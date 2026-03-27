@@ -88,12 +88,8 @@ export async function touchAIProfile(db: DB, data: TouchAIProfileData): Promise<
 }
 
 export async function getAIProfileModels(db: DB, profileId: string) {
-  try {
-    const aiSettings = await getSettings<"ai">(db, "ai");
-    const profile = aiSettings?.content?.profiles.find((item) => item.id === profileId) ?? null;
+  const aiSettings = await getSettings<"ai">(db, "ai");
+  const profile = aiSettings?.content?.profiles.find((item) => item.id === profileId) ?? null;
 
-    return profile ? await fetchModels(profile.secrets) : [];
-  } catch {
-    return [];
-  }
+  return profile ? await fetchModels(profile.secrets) : [];
 }

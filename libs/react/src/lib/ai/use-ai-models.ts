@@ -9,6 +9,10 @@ export function useAIModels(credentialId: string | null) {
     queryKey: queryKeys.ai.models(credentialId || ""),
     ...getAIProfileModelsQuery(credentialId || ""),
     enabled: !!credentialId,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
   const models = useMemo(() => (query.data || []), [query.data]);
 
