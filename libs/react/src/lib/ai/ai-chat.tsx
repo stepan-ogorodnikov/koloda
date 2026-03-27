@@ -1,4 +1,6 @@
+import { Fade } from "@koloda/ui";
 import type { UIMessage } from "ai";
+import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
 import { Fragment, useState } from "react";
 import { useEffect } from "react";
@@ -12,6 +14,11 @@ import { useAIProfiles } from "./use-ai-profiles";
 const aiChatPanel = [
   "flex flex-col gap-2 w-full max-w-3xl mx-auto p-2",
   "rounded-t-xl border-2 border-b-0 border-input bg-input shadow-input",
+].join(" ");
+
+const aiChatError = [
+  "w-full max-w-3xl mx-auto my-2 px-4 py-2",
+  "rounded-xl border-2 border-main bg-level-1",
 ].join(" ");
 
 export type AIChatProps = {
@@ -95,7 +102,13 @@ export function AIChat({
             </div>
           )}
       </div>
-      {error && <p className="fg-error">{error}</p>}
+      <AnimatePresence>
+        {error && (
+          <Fade className={aiChatError}>
+            <p className="fg-error">{error}</p>
+          </Fade>
+        )}
+      </AnimatePresence>
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex items-center gap-3">
