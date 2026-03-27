@@ -1,3 +1,5 @@
+import { Cancel01Icon, Delete03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, Deck } from "@koloda/srs";
 import { Button, Dialog, Fade, Number } from "@koloda/ui";
@@ -6,7 +8,6 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RowSelectionState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
-import { Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 type CardsTableSelectionControlsProps = {
@@ -56,7 +57,7 @@ export function CardsTableSelectionControls({
         </div>
         <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
           <Button variants={{ style: "ghost" }} onClick={() => setIsOpen(true)}>
-            <Trash2 className="size-5 stroke-1.75" aria-hidden="true" />
+            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
             <span>
               {_(msg`cards-table.selection.delete.trigger`)}
             </span>
@@ -82,7 +83,7 @@ export function CardsTableSelectionControls({
           aria-label={_(msg`cards-table.selection.clear`)}
           onClick={onClearSelection}
         >
-          <X className="size-5 stroke-1.75" aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
         </Button>
       </div>
     </Fade>

@@ -1,9 +1,15 @@
+import {
+  ArrowLeft01Icon,
+  ArrowLeftDoubleIcon,
+  ArrowRight01Icon,
+  ArrowRightDoubleIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Label, Select } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Table } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 type TablePaginationProps = {
   table: Table<any>;
@@ -50,14 +56,24 @@ export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps,
               onClick={() => goToPage(0)}
               isDisabled={currentPage === 1}
             >
-              <ChevronsLeft className="size-5 min-w-5 stroke-2" />
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={2}
+                icon={ArrowLeftDoubleIcon}
+                aria-hidden="true"
+              />
             </TablePaginationButton>
             <TablePaginationButton
               aria-label={_(msg`table.pagination.buttons.previous`)}
               onClick={() => table.previousPage()}
               isDisabled={!table.getCanPreviousPage()}
             >
-              <ChevronLeft className="size-4 min-w-4 stroke-2.5" />
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={2}
+                icon={ArrowLeft01Icon}
+                aria-hidden="true"
+              />
             </TablePaginationButton>
             <div className="w-8 numbers-text text-center fg-level-2">{currentPage}</div>
             <TablePaginationButton
@@ -65,14 +81,24 @@ export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps,
               onClick={() => table.nextPage()}
               isDisabled={!table.getCanNextPage()}
             >
-              <ChevronRight className="size-4 min-w-4 stroke-2.5" />
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={2}
+                icon={ArrowRight01Icon}
+                aria-hidden="true"
+              />
             </TablePaginationButton>
             <TablePaginationButton
               aria-label={_(msg`table.pagination.buttons.last`)}
               onClick={() => goToPage(pageCount - 1)}
               isDisabled={currentPage === pageCount}
             >
-              <ChevronsRight className="size-5 min-w-5 stroke-2" />
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={2}
+                icon={ArrowRightDoubleIcon}
+                aria-hidden="true"
+              />
             </TablePaginationButton>
           </div>
         )}

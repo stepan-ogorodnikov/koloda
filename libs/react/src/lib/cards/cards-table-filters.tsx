@@ -1,8 +1,9 @@
+import { PreferenceHorizontalIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Template } from "@koloda/srs";
 import { Button, Checkbox, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { SlidersHorizontal } from "lucide-react";
 import { VALUES } from "./card-state";
 
 const INITIAL_FILTERS = { state: [], dueAt: { isOverdue: false, isNotDue: false }, templateIds: [] };
@@ -30,7 +31,12 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
   return (
     <Dialog.Root dismissableWithHotkey>
       <Button variants={{ style: "bordered", size: "default" }}>
-        <SlidersHorizontal className="size-4 stroke-2" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={1.75}
+          icon={PreferenceHorizontalIcon}
+          aria-hidden="true"
+        />
         <span>{_(msg`cards-table.filters.trigger`)}</span>
       </Button>
       <Dialog.Popover>

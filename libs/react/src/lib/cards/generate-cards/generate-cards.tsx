@@ -1,3 +1,5 @@
+import { AiMagicIcon, Chat01Icon, Settings05Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
 import type { Deck, Template } from "@koloda/srs";
@@ -5,7 +7,6 @@ import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
-import { MessageSquareText, Settings2, Sparkles } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -66,7 +67,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
         aria-label={_(msg`generate-cards.trigger`)}
         isDisabled={!hasProfiles}
       >
-        <Sparkles className="size-4" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "main" }}>
@@ -76,13 +77,29 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
               <div className="grow" />
               <div className="flex flex-row gap-2">
                 <Button
-                  variants={{ style: "bordered", size: "none", class: "size-8" }}
+                  variants={{ style: "ghost", size: "none", class: "size-8" }}
                   aria-label={areSettingsOpen
                     ? _(msg`generate-cards.settings.show-chat`)
                     : _(msg`generate-cards.settings.show-settings`)}
                   onPress={() => setAreSettingsOpen((prev) => !prev)}
                 >
-                  {areSettingsOpen ? <MessageSquareText className="size-4" /> : <Settings2 className="size-4" />}
+                  {areSettingsOpen
+                    ? (
+                      <HugeiconsIcon
+                        className="size-5 min-w-5"
+                        strokeWidth={1.75}
+                        icon={Chat01Icon}
+                        aria-hidden="true"
+                      />
+                    )
+                    : (
+                      <HugeiconsIcon
+                        className="size-5 min-w-5"
+                        strokeWidth={1.75}
+                        icon={Settings05Icon}
+                        aria-hidden="true"
+                      />
+                    )}
                 </Button>
                 <Dialog.Close slot="close" />
               </div>

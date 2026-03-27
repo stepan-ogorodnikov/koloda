@@ -1,9 +1,10 @@
+import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Dialog, HotKey } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useHotkeyRecorder } from "@tanstack/react-hotkeys";
 import type { Hotkey } from "@tanstack/react-hotkeys";
-import { Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -48,14 +49,14 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               onPress={handleAccept}
               isDisabled={!value}
             >
-              <Check className="size-4 stroke-2" />
+              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Tick02Icon} aria-hidden="true" />
             </Button>
             <Button
               variants={{ size: "icon", style: "ghost" }}
               aria-label={_(msg`hotkey-recorder.cancel`)}
               onPress={() => setIsOpen(false)}
             >
-              <X className="size-4 stroke-2" />
+              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
             </Button>
           </div>
         </Dialog.Body>

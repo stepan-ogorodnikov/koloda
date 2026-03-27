@@ -1,3 +1,5 @@
+import { ClipboardIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { cloneTemplateSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Template } from "@koloda/srs";
@@ -7,7 +9,6 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 type CloneTemplateProps = { id: Template["id"] };
@@ -59,7 +60,12 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
       <Button variants={{ style: "primary" }}>
-        <Copy className="size-4" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={1.75}
+          icon={ClipboardIcon}
+          aria-hidden="true"
+        />
         {_(msg`clone-template.trigger`)}
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>

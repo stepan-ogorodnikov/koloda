@@ -1,7 +1,8 @@
+import { AlertCircleIcon, CheckmarkCircle02Icon, CircleIcon, PlayCircle02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { CircleAlert, CircleCheck, CircleDot } from "lucide-react";
 import { motion } from "motion/react";
 import { tv } from "tailwind-variants";
 import type { LessonReducerState } from "./lesson-reducer";
@@ -57,9 +58,38 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
 
           return (
             <div className={lessonProgressCardDot({ isCurrent, type })} key={i} aria-hidden="true">
-              {status === "success" && <CircleCheck className="size-4 stroke-2 fg-level-1" />}
-              {status === "error" && <CircleAlert className="size-4 stroke-2 fg-level-1" />}
-              {!status && <CircleDot className="size-4 stroke-2 fg-level-1" />}
+              {status === "success" && (
+                <HugeiconsIcon
+                  className="size-4 min-w-4"
+                  strokeWidth={2}
+                  icon={CheckmarkCircle02Icon}
+                  aria-hidden="true"
+                />
+              )}
+              {status === "error" && (
+                <HugeiconsIcon
+                  className="size-4 min-w-4"
+                  strokeWidth={2}
+                  icon={AlertCircleIcon}
+                  aria-hidden="true"
+                />
+              )}
+              {!status && !isCurrent && (
+                <HugeiconsIcon
+                  className="size-4 min-w-4"
+                  strokeWidth={2}
+                  icon={CircleIcon}
+                  aria-hidden="true"
+                />
+              )}
+              {!status && isCurrent && (
+                <HugeiconsIcon
+                  className="size-4 min-w-4"
+                  strokeWidth={2}
+                  icon={PlayCircle02Icon}
+                  aria-hidden="true"
+                />
+              )}
             </div>
           );
         })}

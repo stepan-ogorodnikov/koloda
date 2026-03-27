@@ -1,8 +1,9 @@
+import { ViewIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Card } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Eye } from "lucide-react";
 import { useState } from "react";
 import { CardPreview } from "./card-preview";
 
@@ -19,7 +20,7 @@ export function CardsTableCellPreviewCard({ card }: CardsTableCellPreviewCardPro
         aria-label={_(msg`preview-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <Eye className="size-5 stroke-1.5" aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ViewIcon} aria-hidden="true" />
         </div>
       </Button>
       <CardPreview isOpen={isOpen} onOpenChange={setIsOpen} templateId={card.templateId} card={card} />

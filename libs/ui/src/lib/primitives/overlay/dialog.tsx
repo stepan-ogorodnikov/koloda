@@ -1,7 +1,8 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useHotkeysSettings } from "@koloda/react-base";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Button, button, matchesAnyHotkey, overlay, Popover } from "@koloda/ui";
-import { X } from "lucide-react";
 import { useCallback, useContext, useEffect } from "react";
 import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components";
 import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
@@ -75,7 +76,7 @@ type DialogCloseProps = TWVProps<typeof dialogClose> & ButtonProps;
 function DialogClose({ variants, ...props }: DialogCloseProps) {
   return (
     <Button className={dialogClose(variants)} {...props}>
-      <X className="size-4" />
+      <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
     </Button>
   );
 }

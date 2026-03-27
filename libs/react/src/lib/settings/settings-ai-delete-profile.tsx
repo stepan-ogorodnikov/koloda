@@ -1,3 +1,5 @@
+import { Delete03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AIProfile } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
@@ -5,7 +7,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 type SettingsAIDeleteProfileProps = {
@@ -36,7 +37,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
         aria-label={_(msg`settings.ai.profiles.delete.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <Trash2 className="size-5 stroke-1.75" aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Popover placement="left">

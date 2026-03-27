@@ -1,8 +1,9 @@
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { ChevronLeft } from "lucide-react";
 
 export function BackButton(props: ButtonProps) {
   const { _ } = useLingui();
@@ -13,7 +14,7 @@ export function BackButton(props: ButtonProps) {
       aria-label={_(msg`back-button.label`)}
       {...props}
     >
-      <ChevronLeft className="size-5" />
+      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeft01Icon} aria-hidden="true" />
     </Button>
   );
 }

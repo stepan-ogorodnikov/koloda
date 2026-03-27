@@ -1,3 +1,5 @@
+import { Undo02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { QueryState } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, UpdateCardValues, ZodIssue } from "@koloda/srs";
@@ -7,7 +9,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { RotateCcw } from "lucide-react";
 import { useEffect } from "react";
 import { CardReviews } from "./card-reviews";
 import { CardState } from "./card-state";
@@ -137,7 +138,12 @@ export function CardDetails({ card }: CardDetailsProps) {
               <div className="flex flex-row flex-wrap items-center gap-2">
                 {!!card.state && (
                   <Button variants={{ style: "primary" }} onClick={handleProgressReset}>
-                    <RotateCcw className="size-4 stroke-1.5" />
+                    <HugeiconsIcon
+                      className="size-4 min-w-4"
+                      strokeWidth={2}
+                      icon={Undo02Icon}
+                      aria-hidden="true"
+                    />
                     {_(msg`card.action.reset-progress`)}
                   </Button>
                 )}

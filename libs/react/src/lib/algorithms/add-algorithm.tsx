@@ -7,7 +7,8 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { PlusIcon } from "lucide-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
 export function AddAlgorithm() {
@@ -58,7 +59,7 @@ export function AddAlgorithm() {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-algorithm.trigger`)}>
-        <PlusIcon className="size-4 stroke-2" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} />
       </Button>
       <Dialog.Popover variants={{ class: "min-w-84" }}>
         <Dialog.Body>

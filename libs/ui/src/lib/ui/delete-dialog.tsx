@@ -1,6 +1,7 @@
+import { Delete03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, button, Dialog } from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
-import { Trash2 } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
@@ -22,7 +23,7 @@ type DeleteDialogTriggerProps = PropsWithChildren & ButtonProps & TWVProps<typeo
 function DeleteDialogTrigger({ children, ...props }: DeleteDialogTriggerProps) {
   return (
     <Button className={deleteButtonTrigger({ style: "primary" })} {...props}>
-      <Trash2 className="size-4.5 stroke-1.75" />
+      <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
       {children}
     </Button>
   );

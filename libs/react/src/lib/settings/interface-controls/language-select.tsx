@@ -1,3 +1,5 @@
+import { TranslationIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { langAtom } from "@koloda/react";
 import { queriesAtom } from "@koloda/react-base";
 import { LANGUAGES } from "@koloda/srs";
@@ -7,7 +9,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Languages } from "lucide-react";
 
 type LanguageSelectProps = Partial<SelectProps<typeof LANGUAGES[number]>> & {
   withIcon?: boolean;
@@ -26,7 +27,9 @@ export function LanguageSelect(
     <Select
       label={label}
       aria-label={!label ? _(msg`language-select.label`) : undefined}
-      icon={withIcon ? <Languages className="size-5" /> : undefined}
+      icon={withIcon
+        ? <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={TranslationIcon} aria-hidden="true" />
+        : undefined}
       items={LANGUAGES}
       value={i18n.locale}
       onChange={(key) => {

@@ -1,3 +1,5 @@
+import { ComputerSettingsIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { themeAtom } from "@koloda/react";
 import { queriesAtom } from "@koloda/react-base";
 import { THEMES } from "@koloda/srs";
@@ -7,12 +9,11 @@ import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
-import { Monitor, Moon, Sun } from "lucide-react";
 
 const ITEMS = [
-  { id: "light", Icon: Sun },
-  { id: "dark", Icon: Moon },
-  { id: "system", Icon: Monitor },
+  { id: "light", Icon: Sun03Icon },
+  { id: "dark", Icon: Moon02Icon },
+  { id: "system", Icon: ComputerSettingsIcon },
 ] as const;
 
 type ThemeSelectProps = Partial<SelectProps<typeof ITEMS[number]>> & {
@@ -41,7 +42,7 @@ export function ThemeSelect({ isPersisted = true, ...props }: ThemeSelectProps) 
       {({ id, Icon }) => (
         <Select.ListBoxItem id={id} textValue={_(THEMES[id])} key={id}>
           <span className="flex flex-row items-center gap-2">
-            <Icon className="size-5" />
+            <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={Icon} aria-hidden="true" />
             <Trans id={THEMES[id].id} />
           </span>
         </Select.ListBoxItem>

@@ -1,3 +1,5 @@
+import { Delete03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { TemplateFieldType } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
 import { DEFAULT_TEMPLATE, TEMPLATE_FIELD_TYPES_MESSAGES } from "@koloda/srs";
@@ -5,7 +7,6 @@ import { Checkbox, withForm } from "@koloda/ui";
 import { Button, Select, TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Trash2 } from "lucide-react";
 
 export const TemplateFieldsItem = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
@@ -73,7 +74,7 @@ export const TemplateFieldsItem = withForm({
             variants={{ style: "ghost", size: "icon" }}
             onClick={onDelete}
           >
-            <Trash2 className="stroke-1.75" />
+            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
           </Button>
         )}
       </>

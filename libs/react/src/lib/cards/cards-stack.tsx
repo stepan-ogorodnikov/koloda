@@ -1,3 +1,5 @@
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck } from "@koloda/srs";
 import { Button, Fade, Number } from "@koloda/ui";
@@ -5,7 +7,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
@@ -37,7 +38,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
               isDisabled={index === 0}
               onClick={() => setIndex((prev) => (prev - 1))}
             >
-              <ChevronLeft className="size-5" />
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowLeft01Icon} aria-hidden="true" />
             </Button>
             <Button
               variants={{ style: "bordered", size: "icon" }}
@@ -45,7 +46,7 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
               isDisabled={index >= cards.length - 1}
               onClick={() => setIndex((prev) => (prev + 1))}
             >
-              <ChevronRight className="size-5" />
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={ArrowRight01Icon} aria-hidden="true" />
             </Button>
           </div>
           {cards.length > 0 && (

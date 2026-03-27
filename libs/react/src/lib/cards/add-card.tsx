@@ -1,3 +1,5 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { QueryState } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck, InsertCardData, Template, ZodIssue } from "@koloda/srs";
@@ -7,7 +9,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FocusScope, useFocusManager } from "react-aria";
 
@@ -59,7 +60,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
         variants={{ style: "dashed", size: "icon" }}
         aria-label={_(msg`add-cards.trigger`)}
       >
-        <Plus className="size-4" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "large" }}>

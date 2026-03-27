@@ -1,11 +1,12 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
+import { ColumnsThreeCogIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Checkbox, Dialog, Draggable } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Column } from "@tanstack/react-table";
-import { Columns3Cog } from "lucide-react";
 import { useState } from "react";
 
 type CardsTableColumnsVisibilityProps<TData> = {
@@ -52,7 +53,12 @@ export function CardsTableColumnsVisibility<TData>({
   return (
     <Dialog.Root dismissableWithHotkey>
       <Button variants={{ style: "bordered", size: "default" }}>
-        <Columns3Cog className="size-5 stroke-1.5" />
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={1.75}
+          icon={ColumnsThreeCogIcon}
+          aria-hidden="true"
+        />
         <span>{_(msg`cards-table.columns-menu.trigger`)}</span>
       </Button>
       <Dialog.Popover>

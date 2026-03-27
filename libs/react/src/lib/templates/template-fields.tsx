@@ -1,13 +1,14 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD, getNextNumericId } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
 import { Button, Draggable, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
-import { Plus } from "lucide-react";
 import { TemplateFieldsItem } from "./template-fields-item";
 
 export const TemplateFields = withForm({
@@ -63,7 +64,12 @@ export const TemplateFields = withForm({
                       form.pushFieldValue("content.layout", { field: id, operation: "display" });
                     }}
                   >
-                    <Plus className="size-4 mx-0.5" />
+                    <HugeiconsIcon
+                      className="size-4 min-w-4 mx-0.5"
+                      strokeWidth={3}
+                      icon={Add01Icon}
+                      aria-hidden="true"
+                    />
                     {_(msg`template.fields.add-item`)}
                   </Button>
                 </div>

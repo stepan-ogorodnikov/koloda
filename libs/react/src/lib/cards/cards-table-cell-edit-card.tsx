@@ -1,8 +1,9 @@
+import { Edit03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Card } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { CardDetails } from "./card-details";
 
@@ -19,7 +20,7 @@ export function CardsTableCellEditCard({ card }: CardsTableCellEditCardProps) {
         aria-label={_(msg`edit-card.trigger`)}
       >
         <div className="p-1 rounded-md group-focus-ring">
-          <Pencil className="size-5 stroke-1.5" aria-hidden="true" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Edit03Icon} aria-hidden="true" />
         </div>
       </Button>
       <Dialog.Overlay>

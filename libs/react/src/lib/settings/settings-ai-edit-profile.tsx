@@ -1,3 +1,5 @@
+import { Edit03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AIProfile, AISecrets } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
@@ -5,7 +7,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
 import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
@@ -52,7 +53,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
         aria-label={_(msg`settings.ai.edit.trigger`)}
         onClick={() => setIsOpen(true)}
       >
-        <Pencil className="size-5 stroke-1.5" aria-hidden="true" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Edit03Icon} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-96" }}>

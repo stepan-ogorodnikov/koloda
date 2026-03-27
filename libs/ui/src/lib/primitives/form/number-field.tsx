@@ -1,6 +1,7 @@
+import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { TWVProps } from "@koloda/ui";
 import { Number } from "@koloda/ui";
-import { MinusIcon, PlusIcon } from "lucide-react";
 import { useContext, useRef, useState } from "react";
 import { Button, NumberField as ReactAriaNumberField, NumberFieldStateContext } from "react-aria-components";
 import type { ButtonProps, NumberFieldProps as ReactAriaNumberFieldProps } from "react-aria-components";
@@ -35,10 +36,10 @@ function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
     <FieldGroup className={numberFieldGroup(variants)}>
       <NumberFieldInput {...props} />
       <NumberFieldDecrement>
-        <MinusIcon className="size-4" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={MinusSignIcon} aria-hidden="true" />
       </NumberFieldDecrement>
       <NumberFieldIncrement>
-        <PlusIcon className="size-4" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={Add01Icon} aria-hidden="true" />
       </NumberFieldIncrement>
     </FieldGroup>
   );

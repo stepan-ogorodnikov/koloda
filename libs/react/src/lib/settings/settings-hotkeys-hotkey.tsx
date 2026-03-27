@@ -1,8 +1,9 @@
+import { Cancel01Icon, Edit03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, HotKey, HotkeyRecorder } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Hotkey } from "@tanstack/react-hotkeys";
-import { Pencil, X } from "lucide-react";
 import { useCallback } from "react";
 
 export type SettingsHotkeysHotkeyProps = {
@@ -28,18 +29,18 @@ export function SettingsHotkeysHotkey({ value, onChange, hasError }: SettingsHot
       </div>
       <HotkeyRecorder onAccept={onChange}>
         <Button
-          variants={{ size: "smallIcon", style: "ghost" }}
+          variants={{ size: "icon", style: "ghost" }}
           aria-label={_(msg`hotkey-recorder.edit-button.label`)}
         >
-          <Pencil className="size-4 stroke-2" />
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Edit03Icon} aria-hidden="true" />
         </Button>
       </HotkeyRecorder>
       <Button
-        variants={{ size: "smallIcon", style: "ghost" }}
+        variants={{ size: "icon", style: "ghost" }}
         aria-label={_(msg`hotkey-recorder.delete-button.label`)}
         onPress={handleDelete}
       >
-        <X className="size-4 stroke-2" />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={Cancel01Icon} aria-hidden="true" />
       </Button>
     </div>
   );

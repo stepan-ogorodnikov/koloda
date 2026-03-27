@@ -1,6 +1,7 @@
+import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, FieldGroup, fieldGroup } from "@koloda/ui";
 import type { ButtonProps, FieldGroupProps, TWVProps } from "@koloda/ui";
-import { Search as SearchIcon, X } from "lucide-react";
 import { Input, SearchField as ReactAriaSearchField } from "react-aria-components";
 import type { InputProps, SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
@@ -42,7 +43,7 @@ export function SearchFieldInput({ variants, ...props }: SearchFieldInputProps) 
 const searchFieldIcon = "size-4 min-w-4 fg-inactive pointer-events-none";
 
 function SearchFieldIcon() {
-  return <SearchIcon className={searchFieldIcon} />;
+  return <HugeiconsIcon className={searchFieldIcon} strokeWidth={2} icon={Search01Icon} aria-hidden="true" />;
 }
 
 export type SearchFieldClearButtonProps = ButtonProps & {
@@ -54,7 +55,7 @@ function SearchFieldClearButton({ isHidden, ...props }: SearchFieldClearButtonPr
 
   return (
     <Button variants={{ style: "ghost", size: "miniIcon", class: cn }} {...props}>
-      <X className="size-4 min-w-4" />
+      <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
     </Button>
   );
 }

@@ -1,5 +1,6 @@
+import { MinusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { TWVProps } from "@koloda/ui";
-import { Check, Minus } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { Checkbox as ReactAriaCheckbox } from "react-aria-components";
 import type { CheckboxProps as ReactAriaCheckboxProps } from "react-aria-components";
@@ -22,18 +23,18 @@ const checkboxIndicator = [
 ].join(" ");
 
 const checkboxIndicatorCheck = [
-  "size-3 min-w-3 stroke-4 fg-checkbox-check opacity-0 group-selected:opacity-100 animate-opacity",
+  "absolute size-3 min-w-3 fg-checkbox-check opacity-0 group-selected:opacity-100 animate-opacity",
 ].join(" ");
 
 const checkboxIndicatorMinus = [
-  "size-3 min-w-3 stroke-4 fg-checkbox-check opacity-0 group-indeterminate:opacity-100 animate-opacity absolute",
+  "absolute size-3 min-w-3 fg-checkbox-check opacity-0 group-indeterminate:opacity-100 animate-opacity",
 ].join(" ");
 
 function CheckboxIndicator() {
   return (
     <div className={checkboxIndicator}>
-      <Minus className={checkboxIndicatorMinus} />
-      <Check className={checkboxIndicatorCheck} />
+      <HugeiconsIcon className={checkboxIndicatorMinus} strokeWidth={4} icon={MinusSignIcon} />
+      <HugeiconsIcon className={checkboxIndicatorCheck} strokeWidth={4} icon={Tick02Icon} />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AddAIProfileFormProps, AiProvider, AISecrets } from "@koloda/srs";
 import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/srs";
@@ -6,7 +8,6 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { PlusIcon } from "lucide-react";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
@@ -51,7 +52,7 @@ export function SettingsAIAddProfile() {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`settings.ai.add`)}>
-        <PlusIcon className="size-4" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
       </Button>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-96" }}>

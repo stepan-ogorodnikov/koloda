@@ -1,10 +1,11 @@
+import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
 import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
-import { Check, ChevronDown } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 import { useContext, useEffect, useMemo, useRef } from "react";
 import {
@@ -139,7 +140,14 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
           )}
         </SelectValue>
       )}
-      {withChevron && <ChevronDown className="size-4 min-w-4" aria-hidden="true" />}
+      {withChevron && (
+        <HugeiconsIcon
+          className="size-4 min-w-4 rotate-90"
+          strokeWidth={2}
+          icon={ChevronDoubleCloseIcon}
+          aria-hidden="true"
+        />
+      )}
     </Button>
   );
 }
@@ -233,7 +241,14 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
       {(state) => (
         <>
           {typeof children === "function" ? children(state) : children}
-          {state.isSelected && <Check className="size-4 min-w-4" aria-hidden="true" />}
+          {state.isSelected && (
+            <HugeiconsIcon
+              className="size-4 min-w-4"
+              strokeWidth={2.5}
+              icon={Tick02Icon}
+              aria-hidden="true"
+            />
+          )}
         </>
       )}
     </ListBoxItem>

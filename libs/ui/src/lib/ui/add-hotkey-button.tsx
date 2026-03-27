@@ -1,7 +1,8 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Plus } from "lucide-react";
 import { HotkeyRecorder } from "./hotkey-recorder";
 
 type AddHotkeyButtonProps = {
@@ -19,7 +20,7 @@ export function AddHotkeyButton({ onAdd, isDisabled }: AddHotkeyButtonProps) {
         aria-label={_(msg`hotkey-recorder.add-button.label`)}
         isDisabled={isDisabled}
       >
-        <Plus className="size-4 stroke-2" />
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
       </Button>
     </HotkeyRecorder>
   );

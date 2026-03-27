@@ -1,9 +1,9 @@
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Button, Link, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { LucideProps } from "lucide-react";
-import type { ForwardRefExoticComponent, PropsWithChildren, RefAttributes } from "react";
+import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
 const dashboard = "grow flex flex-row h-full w-full min-w-80 max-w-360 dt:h-screen dt:overflow-hidden";
@@ -74,23 +74,23 @@ const dashboardNavLink = tv({
   ],
 });
 
-const dashboardNavLinkIcon = "size-6 dt:size-5 stroke-1.5";
+const dashboardNavLinkIcon = "size-6 dt:size-5 min-w-6 dt:min-w-5";
 const dashboardNavLinkText = "max-dt:hidden";
 
 type DashboardNavLinkProps = {
   cn?: string;
   to: string;
   msg: MessageDescriptor;
-  Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref">> & RefAttributes<SVGSVGElement>;
+  icon: IconSvgElement;
 };
 
-function DashboardNavLink({ cn, to, msg, Icon }: DashboardNavLinkProps) {
+function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
 
   return (
     <Link className={dashboardNavLink({ class: cn })} to={to} viewTransition={isMotionOn} key={to}>
-      <Icon className={dashboardNavLinkIcon} />
+      <HugeiconsIcon className={dashboardNavLinkIcon} strokeWidth={1.75} icon={icon} aria-hidden="true" />
       <span className={dashboardNavLinkText}>{_(msg)}</span>
     </Link>
   );
