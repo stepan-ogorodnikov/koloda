@@ -124,27 +124,31 @@ msgstr "System"
 msgid "ai.chat.roles.user"
 msgstr "You"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:31
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:35
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:44
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:50
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:56
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:51
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
+msgid "ai.model-picker.loading.label"
+msgstr "Loading"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:57
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:52
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:53
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 

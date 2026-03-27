@@ -124,27 +124,31 @@ msgstr "Система"
 msgid "ai.chat.roles.user"
 msgstr "Вы"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:31
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:35
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:44
 msgid "ai.model-picker.error.retry"
 msgstr "Обновить"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:50
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:56
 msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:51
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
+msgid "ai.model-picker.loading.label"
+msgstr "Загрузка"
+
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:57
 msgid "ai.model-picker.placeholder"
 msgstr "Выберите модель"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:52
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
 msgid "ai.model-picker.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:53
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
 
