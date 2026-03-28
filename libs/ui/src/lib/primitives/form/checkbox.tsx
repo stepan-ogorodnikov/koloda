@@ -16,7 +16,8 @@ export function Checkbox({ variants, ...props }: CheckboxProps) {
 }
 
 const checkboxIndicator = [
-  "flex items-center justify-center size-5 min-w-5 rounded border-2 border-checkbox bg-checkbox shadow-checkbox",
+  "relative flex items-center justify-center",
+  "size-5 min-w-5 rounded border-2 border-checkbox bg-checkbox shadow-checkbox",
   "group-selected:bg-checkbox-selected group-selected:border-checkbox-selected",
   "group-indeterminate:bg-checkbox-selected group-indeterminate:border-checkbox-selected",
   "animate-colors",
