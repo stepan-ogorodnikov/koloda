@@ -124,31 +124,31 @@ msgstr "System"
 msgid "ai.chat.roles.user"
 msgstr "You"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:21
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:44
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:50
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:56
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:62
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:32
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:57
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:63
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:64
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:65
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 
@@ -555,11 +555,11 @@ msgstr "Generating"
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Provider prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:82
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -583,11 +583,11 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:67
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

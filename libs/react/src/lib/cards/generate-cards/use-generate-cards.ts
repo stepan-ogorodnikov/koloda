@@ -1,4 +1,5 @@
 import type { GenerateCardsInput, GeneratedCard } from "@koloda/srs";
+import { isAbortError } from "@koloda/srs";
 import { useCallback, useRef, useState } from "react";
 
 export type StreamGenerator = (
@@ -56,8 +57,4 @@ export function useGenerateCards(streamGenerator: StreamGenerator): UseGenerateC
   }, []);
 
   return { cards, isGenerating, error, generate, clearCards, cancel };
-}
-
-function isAbortError(error: unknown) {
-  return error instanceof DOMException && error.name === "AbortError";
 }

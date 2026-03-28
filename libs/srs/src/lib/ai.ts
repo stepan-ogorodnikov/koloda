@@ -1,6 +1,8 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { throwForAIResponse, wrapAIError } from "./ai-error";
 import type { GenerateCardsFunction } from "./ai-cards-generation";
 import { generateCardsWithLMStudio, generateCardsWithOllama, generateCardsWithOpenRouter } from "./ai-cards-generation";
+import { AppError } from "./error";
 import type { AISecrets } from "./settings-ai";
 
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
@@ -41,57 +43,59 @@ type OllamaModelsResponse = {
 };
 
 export async function fetchOpenRouterModels(): Promise<AIModel[]> {
-  const response = await fetch(OPENROUTER_MODELS_URL, {
-    headers: { "Content-Type": "application/json" },
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(await fetch(OPENROUTER_MODELS_URL, {
+      headers: { "Content-Type": "application/json" },
+    }));
+
+    const data: OpenRouterModelsResponse = await response.json();
+    if (!Array.isArray(data.data)) throw new AppError("ai.invalid-response");
+
+    return data.data
+      .filter((model) => model.id.includes("/"))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
-
-  if (!response.ok) throw new Error(`Failed to fetch OpenRouter models: ${response.statusText}`);
-
-  const data: OpenRouterModelsResponse = await response.json();
-  return data.data
-    .filter((model) => model.id.includes("/"))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
-  const response = await fetch(new URL("/v1/models", baseUrl), {
-    headers: {
-      "Content-Type": "application/json",
-      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-    },
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(await fetch(new URL("/v1/models", baseUrl), {
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+    }));
+
+    const data: OpenAICompatibleModelsResponse = await response.json();
+    if (!Array.isArray(data.data)) throw new AppError("ai.invalid-response");
+
+    return data.data
+      .map((model) => ({
+        id: model.id,
+        name: model.id,
+        context_length: 0,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
-
-  if (!response.ok) throw new Error(`Failed to fetch models: ${response.statusText}`);
-
-  const data: OpenAICompatibleModelsResponse = await response.json();
-  return data.data
-    .map((model) => ({
-      id: model.id,
-      name: model.id,
-      context_length: 0,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
-  const response = await fetch(new URL("/api/tags", baseUrl), {
-    headers: { "Content-Type": "application/json" },
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(await fetch(new URL("/api/tags", baseUrl), {
+      headers: { "Content-Type": "application/json" },
+    }));
+
+    const data: OllamaModelsResponse = await response.json();
+    if (!Array.isArray(data.models)) throw new AppError("ai.invalid-response");
+
+    return data.models
+      .map((model) => ({
+        id: model.model,
+        name: model.name ?? model.model,
+        context_length: 0,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Ollama models: ${response.statusText}`);
-  }
-
-  const data: OllamaModelsResponse = await response.json();
-  const models = data.models ?? [];
-
-  return models
-    .map((model) => ({
-      id: model.model,
-      name: model.name ?? model.model,
-      context_length: 0,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {

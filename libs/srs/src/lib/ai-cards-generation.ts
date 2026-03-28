@@ -1,7 +1,9 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
 import { generateText, Output, streamText } from "ai";
 import { z } from "zod";
+import { throwForAIResponse, wrapAIError } from "./ai-error";
 import type { InsertCardData } from "./cards";
+import { AppError } from "./error";
 import type { AiProvider, AISecrets } from "./settings-ai";
 import type { Template, TemplateFields } from "./templates";
 
@@ -66,30 +68,34 @@ export function buildSystemPromptForProvider(fields: TemplateFields, provider?: 
 }
 
 export function generateCardsWithOpenRouter(request: CardGenerationRequest, openrouter: OpenRouterProvider) {
-  return runStructuredCardGeneration((modelId) => openrouter(modelId), request);
+  return wrapAIError(() => runStructuredCardGeneration((modelId) => openrouter(modelId), request));
 }
 
 export function generateCardsWithOllama(request: CardGenerationRequest, baseUrl: string) {
-  return runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
-    const temperature = resolveGenerationTemperature(input.temperature);
-    const response = await fetch(new URL("/api/generate", baseUrl), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: input.modelId,
-        system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
-        prompt: input.prompt,
-        temperature,
-        stream: false,
-      }),
-      signal: abortSignal,
-    });
+  return wrapAIError(() =>
+    runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+      const temperature = resolveGenerationTemperature(input.temperature);
+      const response = throwForAIResponse(
+        await fetch(new URL("/api/generate", baseUrl), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: input.modelId,
+            system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+            prompt: input.prompt,
+            temperature,
+            stream: false,
+          }),
+          signal: abortSignal,
+        }),
+      );
 
-    if (!response.ok) throw new Error(`Failed to generate cards with Ollama: ${response.statusText}`);
+      const data = await response.json() as { response?: string };
+      if (typeof data.response !== "string") throw new AppError("ai.invalid-response");
 
-    const data = await response.json() as { response?: string };
-    return data.response ?? "";
-  }, request);
+      return data.response;
+    }, request)
+  );
 }
 
 export type OpenAICompatibleChatCompletionsResponse = {
@@ -102,36 +108,40 @@ export function generateCardsWithLMStudio(
   request: CardGenerationRequest,
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ) {
-  return runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
-    const temperature = resolveGenerationTemperature(input.temperature);
-    const response = await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model: input.modelId,
-        temperature,
-        messages: [
-          {
-            role: "system",
-            content: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+  return wrapAIError(() =>
+    runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+      const temperature = resolveGenerationTemperature(input.temperature);
+      const response = throwForAIResponse(
+        await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
           },
-          {
-            role: "user",
-            content: input.prompt,
-          },
-        ],
-      }),
-      signal: abortSignal,
-    });
+          body: JSON.stringify({
+            model: input.modelId,
+            temperature,
+            messages: [
+              {
+                role: "system",
+                content: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+              },
+              {
+                role: "user",
+                content: input.prompt,
+              },
+            ],
+          }),
+          signal: abortSignal,
+        }),
+      );
 
-    if (!response.ok) throw new Error(`Failed to generate cards with LM Studio: ${response.statusText}`);
-
-    const data = await response.json() as OpenAICompatibleChatCompletionsResponse;
-    return data.choices?.[0]?.message?.content ?? "";
-  }, request);
+      const data = await response.json() as OpenAICompatibleChatCompletionsResponse;
+      const content = data.choices?.[0]?.message?.content;
+      if (content == null) throw new AppError("ai.invalid-response");
+      return content;
+    }, request)
+  );
 }
 
 export function getCardContentSchema(fields: TemplateFields) {
@@ -237,48 +247,56 @@ async function runStructuredCardGeneration(
 ): Promise<void> {
   const elementSchema = getCardContentSchema(template.content.fields);
   const temperature = resolveGenerationTemperature(input.temperature);
+  let streamedError: unknown = null;
 
-  const result = streamText({
-    model: modelFactory(input.modelId),
-    temperature,
-    output: Output.array({ element: elementSchema }),
-    system: buildSystemPrompt(template.content.fields),
-    prompt: input.prompt,
-    abortSignal,
-  });
+  try {
+    const result = streamText({
+      model: modelFactory(input.modelId),
+      temperature,
+      output: Output.array({ element: elementSchema }),
+      system: buildSystemPrompt(template.content.fields),
+      prompt: input.prompt,
+      abortSignal,
+      onError: ({ error }) => {
+        streamedError = error;
+      },
+    });
 
-  let cardsCount = 0;
-  for await (const card of result.elementStream) {
-    cardsCount += 1;
-    onCard(card as GeneratedCard);
-  }
+    let cardsCount = 0;
+    for await (const card of result.elementStream) {
+      cardsCount += 1;
+      onCard(card as GeneratedCard);
+    }
 
-  if (cardsCount > 0) return;
+    if (cardsCount > 0) return;
 
-  const streamedText = await result.text;
-  const streamedTextCards = [
-    ...extractCardsFromJsonArray(streamedText, template),
-    ...extractCardsFromMarkdownText(streamedText, template),
-  ];
-  if (streamedTextCards.length > 0) {
-    for (const card of streamedTextCards) onCard(card);
-    return;
-  }
+    const streamedText = await result.text;
+    const streamedTextCards = [
+      ...extractCardsFromJsonArray(streamedText, template),
+      ...extractCardsFromMarkdownText(streamedText, template),
+    ];
+    if (streamedTextCards.length > 0) {
+      for (const card of streamedTextCards) onCard(card);
+      return;
+    }
 
-  const fallbackTextResult = await generateText({
-    model: modelFactory(input.modelId),
-    temperature,
-    system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
-    prompt: input.prompt,
-    abortSignal,
-  });
-  const fallbackCards = [
-    ...extractCardsFromJsonArray(fallbackTextResult.text, template),
-    ...extractCardsFromMarkdownText(fallbackTextResult.text, template),
-  ];
+    const fallbackTextResult = await generateText({
+      model: modelFactory(input.modelId),
+      temperature,
+      system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
+      prompt: input.prompt,
+      abortSignal,
+    });
+    const fallbackCards = [
+      ...extractCardsFromJsonArray(fallbackTextResult.text, template),
+      ...extractCardsFromMarkdownText(fallbackTextResult.text, template),
+    ];
 
-  for (const card of fallbackCards) {
-    onCard(card);
+    for (const card of fallbackCards) {
+      onCard(card);
+    }
+  } catch (error) {
+    throw streamedError ?? error;
   }
 }
 

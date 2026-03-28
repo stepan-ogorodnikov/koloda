@@ -124,31 +124,31 @@ msgstr "Система"
 msgid "ai.chat.roles.user"
 msgstr "Вы"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:21
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:44
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:50
 msgid "ai.model-picker.error.retry"
 msgstr "Обновить"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:56
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:62
 msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:32
 msgid "ai.model-picker.loading.label"
 msgstr "Загрузка"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:57
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:63
 msgid "ai.model-picker.placeholder"
 msgstr "Выберите модель"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:64
 msgid "ai.model-picker.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:65
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
 
@@ -555,11 +555,11 @@ msgstr "Генерирую"
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Промпт провайдера"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:82
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
 msgid "generate-cards.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
 msgid "generate-cards.settings.show-settings"
 msgstr "Показать настройки"
 
@@ -583,11 +583,11 @@ msgstr "Карточка добавляется"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Карточка успешно добавлена"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
 msgid "generate-cards.title"
 msgstr "Генерация карточек"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:67
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
 msgid "generate-cards.trigger"
 msgstr "Сгенерировать карточки с помощью ИИ"
 

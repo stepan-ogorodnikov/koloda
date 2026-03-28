@@ -7,6 +7,22 @@ export type FormError = StandardSchemaV1Issue | ZodIssue;
 
 export const ERROR_MESSAGES = {
   "unknown": msg`unknown`,
+  "ai.http": ({ status }: any) => msg`ai.http ${status}`,
+  "ai.network": msg`ai.network`,
+  "ai.invalid-response": msg`ai.invalid-response`,
+  "ai.http.400": msg`ai.http.400`,
+  "ai.http.401": msg`ai.http.401`,
+  "ai.http.402": msg`ai.http.402`,
+  "ai.http.403": msg`ai.http.403`,
+  "ai.http.404": msg`ai.http.404`,
+  "ai.http.408": msg`ai.http.408`,
+  "ai.http.413": msg`ai.http.413`,
+  "ai.http.422": msg`ai.http.422`,
+  "ai.http.429": msg`ai.http.429`,
+  "ai.http.500": msg`ai.http.500`,
+  "ai.http.502": msg`ai.http.502`,
+  "ai.http.503": msg`ai.http.503`,
+  "ai.http.504": msg`ai.http.504`,
   "db.get": msg`db.get`,
   "db.add": msg`db.add`,
   "db.update": msg`db.update`,
@@ -61,6 +77,10 @@ export class AppError extends Error {
 
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
+}
+
+export function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 /**

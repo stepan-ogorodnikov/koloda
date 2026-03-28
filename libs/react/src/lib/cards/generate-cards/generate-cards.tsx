@@ -2,6 +2,7 @@ import { AiMagicIcon, Chat01Icon, Settings05Icon } from "@hugeicons/core-free-ic
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
+import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -129,7 +130,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                         onSubmit={handleGenerate}
                         onCancel={handleCancel}
                         isLoading={isGenerating}
-                        error={generateError?.message}
+                        error={getGenerateErrorMessage(generateError, _)}
                         renderMessage={renderMessage}
                       />
                     </Fade>

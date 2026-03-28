@@ -106,6 +106,14 @@ function isSpecialObject(obj: unknown): boolean {
 export type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T];
 
 /**
+ * Safely reads a property from an object with unknown shape after an `object` type guard.
+ * Returns `undefined` when the property does not exist.
+ */
+export function getObjectProperty(obj: object, key: string): unknown {
+  return key in obj ? (obj as Record<string, unknown>)[key] : undefined;
+}
+
+/**
  * Gets object entries with types based on source object
  * @param object - The source object
  * @returns Array of entries: [key, value][]
