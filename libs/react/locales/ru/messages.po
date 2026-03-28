@@ -111,6 +111,10 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:138
+msgid "ai.chat.jump-to-latest"
+msgstr "К последнему сообщению"
+
 #: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"

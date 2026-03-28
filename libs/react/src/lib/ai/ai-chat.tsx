@@ -1,9 +1,12 @@
-import { Fade } from "@koloda/ui";
+import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Button, Fade } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
-import { Fragment, useState } from "react";
-import { useEffect } from "react";
+import { Fragment, useEffect, useEffectEvent, useRef, useState } from "react";
 import { AIChatMessage } from "./ai-chat-message";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
 import { AIChatSubmit } from "./ai-chat-submit";
@@ -11,14 +14,11 @@ import { AIModelPicker } from "./ai-model-picker";
 import { AIProfilePicker } from "./ai-profile-picker";
 import { useAIProfiles } from "./use-ai-profiles";
 
+const AUTO_SCROLL_THRESHOLD = 80;
+
 const aiChatPanel = [
   "flex flex-col gap-2 w-full max-w-3xl mx-auto p-2",
   "rounded-t-xl border-2 border-b-0 border-input bg-input shadow-input",
-].join(" ");
-
-const aiChatError = [
-  "sticky bottom-2 mt-auto w-full px-4 py-2",
-  "rounded-xl border-2 border-main bg-level-1",
 ].join(" ");
 
 export type AIChatProps = {
@@ -52,9 +52,43 @@ export function AIChat({
   emptyState = null,
   renderMessage,
 }: AIChatProps) {
+  const { _ } = useLingui();
   const { defaultProfileId } = useAIProfiles();
   const [inputValue, setInputValue] = useState("");
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const shouldAutoScrollRef = useRef(true);
   const prompt = inputValue.trim();
+
+  const getIsNearBottom = useEffectEvent(() => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return true;
+
+    const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    return distanceFromBottom <= AUTO_SCROLL_THRESHOLD;
+  });
+
+  const syncScrollState = useEffectEvent(() => {
+    const nextIsNearBottom = getIsNearBottom();
+    shouldAutoScrollRef.current = nextIsNearBottom;
+    setIsNearBottom((current) => current === nextIsNearBottom ? current : nextIsNearBottom);
+  });
+
+  const scrollToBottom = useEffectEvent((behavior: ScrollBehavior = "auto") => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+  });
+
+  const startFollowingLatest = useEffectEvent((behavior: ScrollBehavior = "smooth") => {
+    shouldAutoScrollRef.current = true;
+    isProgrammaticScrollRef.current = behavior === "smooth";
+    setIsNearBottom(true);
+    scrollToBottom(behavior);
+  });
 
   useEffect(() => {
     if (autoSelectDefaultProfile && defaultProfileId && !profileId) {
@@ -62,10 +96,41 @@ export function AIChat({
     }
   }, [autoSelectDefaultProfile, defaultProfileId, profileId, onProfileChange]);
 
+  useEffect(() => {
+    syncScrollState();
+  }, []);
+
+  useEffect(() => {
+    const messagesElement = messagesRef.current;
+    if (!messagesElement) return;
+
+    const handleMessagesResize = () => {
+      if (shouldAutoScrollRef.current) {
+        startFollowingLatest("auto");
+        return;
+      }
+
+      syncScrollState();
+    };
+
+    const resizeObserver = new ResizeObserver(handleMessagesResize);
+    resizeObserver.observe(messagesElement);
+    handleMessagesResize();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   const submit = () => {
     if (profileId && modelId && prompt && !isLoading) {
+      const shouldFollow = getIsNearBottom();
+      shouldAutoScrollRef.current = shouldFollow;
       onSubmit(prompt);
       setInputValue("");
+      if (shouldFollow) {
+        startFollowingLatest("smooth");
+      }
     }
   };
 
@@ -74,45 +139,87 @@ export function AIChat({
     submit();
   };
 
+  const handleScroll = () => {
+    if (isProgrammaticScrollRef.current) {
+      if (getIsNearBottom()) {
+        isProgrammaticScrollRef.current = false;
+        shouldAutoScrollRef.current = true;
+        setIsNearBottom(true);
+      }
+      return;
+    }
+
+    syncScrollState();
+  };
+
+  const handleJumpToLatest = () => {
+    startFollowingLatest("smooth");
+  };
+
   const canSubmit = !!(profileId && modelId && !!prompt && !isLoading);
   const canCancel = isLoading && !!onCancel;
+  const showJumpToLatest = messages.length > 0 && !isNearBottom;
 
   return (
-    <section className="flex flex-col h-full min-h-0 px-4">
-      <div className="grow min-h-0 -mx-4 px-4 overflow-y-auto [scrollbar-gutter:stable_both-edges]">
-        <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl mx-auto py-2">
-          {messages.length === 0
-            ? emptyState
-            : (
-              <>
-                {messages.map((message) => {
-                  const content = (
-                    <AIChatMessage
-                      role={message.role}
-                      modelName={modelName}
-                      parts={message.parts}
-                      key={message.id}
-                    />
-                  );
-                  return (
-                    <Fragment key={message.id}>
-                      {renderMessage ? renderMessage(message, content) : content}
-                    </Fragment>
-                  );
-                })}
-              </>
-            )}
+    <section className="relative flex flex-col h-full min-h-0 px-4">
+      <div className="relative grow min-h-0 -mx-4 px-4">
+        <div
+          className="flex flex-col items-center h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]"
+          ref={scrollViewportRef}
+          onScroll={handleScroll}
+        >
+          <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2" ref={messagesRef}>
+            {messages.length === 0
+              ? emptyState
+              : (
+                <>
+                  {messages.map((message) => {
+                    const content = (
+                      <AIChatMessage
+                        role={message.role}
+                        modelName={modelName}
+                        parts={message.parts}
+                        key={message.id}
+                      />
+                    );
+                    return (
+                      <Fragment key={message.id}>
+                        {renderMessage ? renderMessage(message, content) : content}
+                      </Fragment>
+                    );
+                  })}
+                </>
+              )}
+          </div>
           <AnimatePresence>
-            {error && (
-              <Fade className={aiChatError}>
-                <em className="fg-error not-italic">
-                  {error}
-                </em>
+            {showJumpToLatest && (
+              <Fade className="absolute bottom-2 z-10 flex flex-col items-center w-full max-w-3xl">
+                <Button
+                  variants={{ style: "primary", size: "icon", class: "rounded-full" }}
+                  aria-label={_(msg`ai.chat.jump-to-latest`)}
+                  onPress={handleJumpToLatest}
+                >
+                  <HugeiconsIcon
+                    className="size-5 min-w-5"
+                    strokeWidth={1.75}
+                    icon={ArrowDown02Icon}
+                    aria-hidden="true"
+                  />
+                </Button>
               </Fade>
             )}
           </AnimatePresence>
         </div>
       </div>
+      <AnimatePresence>
+        {error && (
+          <Fade className="self-center w-full max-w-3xl mb-2 px-4 py-2 rounded-xl border-2 border-main bg-level-1">
+            <em className="fg-error not-italic">
+              {error}
+            </em>
+          </Fade>
+        )}
+      </AnimatePresence>
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex items-center gap-3">
