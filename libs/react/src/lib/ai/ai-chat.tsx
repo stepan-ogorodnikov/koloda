@@ -17,7 +17,7 @@ const aiChatPanel = [
 ].join(" ");
 
 const aiChatError = [
-  "w-full max-w-3xl mx-auto my-2 px-4 py-2",
+  "sticky bottom-2 mt-auto w-full px-4 py-2",
   "rounded-xl border-2 border-main bg-level-1",
 ].join(" ");
 
@@ -78,37 +78,41 @@ export function AIChat({
   const canCancel = isLoading && !!onCancel;
 
   return (
-    <section className="flex flex-col h-full min-h-0">
-      <div className="min-h-0 grow overflow-y-auto p-4">
-        {messages.length === 0
-          ? emptyState
-          : (
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-              {messages.map((message) => {
-                const content = (
-                  <AIChatMessage
-                    role={message.role}
-                    modelName={modelName}
-                    parts={message.parts}
-                    key={message.id}
-                  />
-                );
-                return (
-                  <Fragment key={message.id}>
-                    {renderMessage ? renderMessage(message, content) : content}
-                  </Fragment>
-                );
-              })}
-            </div>
-          )}
+    <section className="flex flex-col h-full min-h-0 px-4">
+      <div className="grow min-h-0 -mx-4 px-4 overflow-y-auto [scrollbar-gutter:stable_both-edges]">
+        <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl mx-auto py-2">
+          {messages.length === 0
+            ? emptyState
+            : (
+              <>
+                {messages.map((message) => {
+                  const content = (
+                    <AIChatMessage
+                      role={message.role}
+                      modelName={modelName}
+                      parts={message.parts}
+                      key={message.id}
+                    />
+                  );
+                  return (
+                    <Fragment key={message.id}>
+                      {renderMessage ? renderMessage(message, content) : content}
+                    </Fragment>
+                  );
+                })}
+              </>
+            )}
+          <AnimatePresence>
+            {error && (
+              <Fade className={aiChatError}>
+                <em className="fg-error not-italic">
+                  {error}
+                </em>
+              </Fade>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-      <AnimatePresence>
-        {error && (
-          <Fade className={aiChatError}>
-            <p className="fg-error">{error}</p>
-          </Fade>
-        )}
-      </AnimatePresence>
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex items-center gap-3">
