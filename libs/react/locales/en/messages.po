@@ -111,44 +111,31 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:10
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:29
-msgid "ai.chat.roles.assistant"
-msgstr "Assistant"
-
-#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:11
-msgid "ai.chat.roles.system"
-msgstr "System"
-
-#: ../../libs/react/src/lib/ai/ai-chat-message.tsx:9
-msgid "ai.chat.roles.user"
-msgstr "You"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:21
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:50
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:44
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:62
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:56
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:32
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:28
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:63
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:57
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:64
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:65
+#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 
@@ -538,15 +525,15 @@ msgstr "Edit card"
 msgid "generate-cards.add"
 msgstr "Add Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:42
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:39
 msgid "generate-cards.canceled"
 msgstr "Interrupted"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:57
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:54
 msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:37
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:34
 #: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:119
 msgid "generate-cards.generating"
 msgstr "Generating"
@@ -555,11 +542,11 @@ msgstr "Generating"
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Provider prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:84
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -583,11 +570,11 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:77
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:68
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

@@ -85,7 +85,7 @@
   --fg-lesson-type-red: oklch(from var(--color-red-900) calc(l + 0.18) c h);
   --fg-lesson-type-green: oklch(from var(--color-green-900) calc(l + 0.18) c h);
   /* chat */
-  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l - 0.01) c h);
+  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l - 0.02) c h);
 }
 
 :root.dark {
@@ -168,7 +168,7 @@
   --fg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.13) calc(c - 0.08) h);
   --fg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
   /* chat */
-  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l + 0.015) c h);
+  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l + 0.02) c h);
 }
 
 @theme {

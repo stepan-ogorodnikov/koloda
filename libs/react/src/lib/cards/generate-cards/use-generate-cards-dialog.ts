@@ -179,7 +179,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       template,
       deckId,
       templateId,
-      modelName,
       canAdd,
       isGenerating: isCurrentRun && isGenerating,
       isCanceled: !!canceledRuns[generatedCardsMetadata.runId],
@@ -192,7 +191,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     deckId,
     templateId,
     template,
-    modelName,
   ]);
 
   return {

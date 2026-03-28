@@ -1,15 +1,6 @@
-import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
 import type { UIMessage, UIMessagePart } from "ai";
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
-
-export const AI_ROLE_LABELS: Record<UIMessage["role"], MessageDescriptor> = {
-  user: msg`ai.chat.roles.user`,
-  assistant: msg`ai.chat.roles.assistant`,
-  system: msg`ai.chat.roles.system`,
-};
 
 export type AIChatMessageProps = {
   role: UIMessage["role"];
@@ -17,32 +8,33 @@ export type AIChatMessageProps = {
   parts: UIMessagePart<any, any>[];
 };
 
-export function AIChatMessage({ role, modelName, parts }: AIChatMessageProps) {
-  const { _ } = useLingui();
+export function AIChatMessage({ role, parts }: AIChatMessageProps) {
   const filteredParts = getMessageParts(parts);
-  const label = (role === "assistant") && modelName ? modelName : _(AI_ROLE_LABELS[role]);
 
   return (
-    <AIChatMessageLayout role={role} label={label}>
+    <AIChatMessageLayout role={role}>
       {filteredParts.map((part, index) => <MessagePart key={index} part={part} />)}
     </AIChatMessageLayout>
   );
 }
 
 const aiChatMessage = tv({
-  base: "flex flex-col gap-4 p-3 rounded-xl bg-chat-message border-2 border-chat-message",
-  variants: { isUser: { true: "self-end max-w-5/6", false: "self-start w-full" } },
+  base: "flex flex-col gap-4 py-2",
+  variants: {
+    isUser: {
+      true: "self-end max-w-5/6 px-3 border-2 rounded-xl bg-chat-message border-chat-message",
+      false: "self-start w-full",
+    },
+  },
 });
 
 type AIChatMessageLayoutProps = PropsWithChildren & {
   role: UIMessage["role"];
-  label: ReactNode;
 };
 
-export function AIChatMessageLayout({ role, label, children }: AIChatMessageLayoutProps) {
+export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps) {
   return (
     <div className={aiChatMessage({ isUser: role === "user" })}>
-      <div className="fg-level-3 font-bold">{label}</div>
       <div className="flex flex-col gap-2">
         {children}
       </div>

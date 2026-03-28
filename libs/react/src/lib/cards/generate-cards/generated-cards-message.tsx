@@ -9,7 +9,6 @@ export type GeneratedCardsMessageProps = {
   template: Template | null | undefined;
   deckId: Deck["id"];
   templateId: Template["id"];
-  modelName?: string;
   canAdd: boolean;
   isGenerating: boolean;
   isCanceled: boolean;
@@ -20,18 +19,16 @@ export function GeneratedCardsMessage({
   template,
   deckId,
   templateId,
-  modelName,
   canAdd,
   isGenerating,
   isCanceled,
 }: GeneratedCardsMessageProps) {
   const { _ } = useLingui();
-  const label = modelName ?? _(msg`ai.chat.roles.assistant`);
 
   if (!template) return null;
 
   return (
-    <AIChatMessageLayout role="assistant" label={label}>
+    <AIChatMessageLayout role="assistant">
       {isGenerating && (
         <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
           {_(msg`generate-cards.generating`)}
