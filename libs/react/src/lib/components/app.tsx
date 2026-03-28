@@ -1,9 +1,9 @@
 import {
   AlignBoxMiddleCenterIcon,
-  FileSlidersIcon,
   FolderLibraryIcon,
   Home07Icon,
   Settings01Icon,
+  Settings05Icon,
 } from "@hugeicons/core-free-icons";
 import { LanguageSelect, ThemeSelect, useAppHotkeys, useGlobalSync } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
@@ -15,7 +15,7 @@ import { useEffect } from "react";
 export const appMenu = [
   { to: "/dashboard", t: msg`nav.home`, icon: Home07Icon, cn: "max-dt:order-2" },
   { to: "/decks", t: msg`nav.decks`, icon: FolderLibraryIcon, cn: "max-dt:order-0" },
-  { to: "/algorithms", t: msg`nav.algorithms`, icon: FileSlidersIcon, cn: "max-dt:order-1" },
+  { to: "/algorithms", t: msg`nav.algorithms`, icon: Settings05Icon, cn: "max-dt:order-1" },
   { to: "/templates", t: msg`nav.templates`, icon: AlignBoxMiddleCenterIcon, cn: "max-dt:order-3" },
   { to: "/settings", t: msg`nav.settings`, icon: Settings01Icon, cn: "max-dt:order-4" },
 ];
