@@ -36,6 +36,7 @@ export type UseGenerateCardsDialogReturn = {
   handleTemperatureChange: (value: number) => void;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
+  handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
 };
 
@@ -87,22 +88,30 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     cancel,
   } = useGenerateCards(streamGenerator);
 
+  const resetConversation = useCallback(() => {
+    setPrompt("");
+    setMessages([]);
+    setActiveRunId(null);
+    setGeneratedRuns({});
+    setCanceledRuns({});
+    canceledRunsRef.current = {};
+    setFailedRuns({});
+    clearCards();
+    cancel();
+  }, [clearCards, cancel]);
+
   const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
     if (!open) {
       setProfileId("");
       setModelId("");
-      setPrompt("");
-      setMessages([]);
-      setActiveRunId(null);
-      setGeneratedRuns({});
-      setCanceledRuns({});
-      canceledRunsRef.current = {};
-      setFailedRuns({});
-      clearCards();
-      cancel();
+      resetConversation();
     }
-  }, [clearCards, cancel]);
+  }, [resetConversation]);
+
+  const handleReset = useCallback(() => {
+    resetConversation();
+  }, [resetConversation]);
 
   const handleProfileChange = useCallback((value: string) => {
     setProfileId(value);
@@ -267,6 +276,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleTemperatureChange,
     handleGenerate,
     handleCancel,
+    handleReset,
     getGeneratedCardsProps,
   };
 }

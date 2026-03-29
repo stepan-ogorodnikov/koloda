@@ -1,4 +1,4 @@
-import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown02Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -30,6 +30,7 @@ export type AIChatProps = {
   onModelChange: (value: string) => void;
   onSubmit: (value: string) => void | Promise<void>;
   onCancel?: () => void;
+  onReset?: () => void;
   isLoading?: boolean;
   error?: string | null;
   autoSelectDefaultProfile?: boolean;
@@ -46,6 +47,7 @@ export function AIChat({
   onModelChange,
   onSubmit,
   onCancel,
+  onReset,
   isLoading = false,
   error,
   autoSelectDefaultProfile = true,
@@ -152,12 +154,21 @@ export function AIChat({
     syncScrollState();
   };
 
-  const handleJumpToLatest = () => {
+  const handleScrollToLatest = () => {
     startFollowingLatest("smooth");
+  };
+
+  const handleReset = () => {
+    setInputValue("");
+    shouldAutoScrollRef.current = true;
+    isProgrammaticScrollRef.current = false;
+    setIsNearBottom(true);
+    onReset?.();
   };
 
   const canSubmit = !!(profileId && modelId && !!prompt && !isLoading);
   const canCancel = isLoading && !!onCancel;
+  const canReset = messages.length > 0 || isLoading;
   const showJumpToLatest = messages.length > 0 && !isNearBottom;
 
   return (
@@ -196,8 +207,8 @@ export function AIChat({
               <Fade className="absolute bottom-2 z-10 flex flex-col items-center w-full max-w-3xl">
                 <Button
                   variants={{ style: "primary", size: "icon", class: "rounded-full" }}
-                  aria-label={_(msg`ai.chat.jump-to-latest`)}
-                  onPress={handleJumpToLatest}
+                  aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
+                  onPress={handleScrollToLatest}
                 >
                   <HugeiconsIcon
                     className="size-5 min-w-5"
@@ -226,6 +237,19 @@ export function AIChat({
           <AIProfilePicker value={profileId} onChange={onProfileChange} />
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} />
           <div className="grow" />
+          <Button
+            variants={{ style: "ghost", size: "icon" }}
+            aria-label={_(msg`ai.chat.reset.label`)}
+            isDisabled={!canReset}
+            onPress={handleReset}
+          >
+            <HugeiconsIcon
+              className="size-5 min-w-5"
+              strokeWidth={1.75}
+              icon={Undo02Icon}
+              aria-hidden="true"
+            />
+          </Button>
           <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
         </div>
       </form>

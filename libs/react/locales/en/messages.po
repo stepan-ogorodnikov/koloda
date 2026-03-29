@@ -111,8 +111,12 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:138
-msgid "ai.chat.jump-to-latest"
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:242
+msgid "ai.chat.reset.label"
+msgstr "Clear conversation"
+
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:210
+msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 
 #: ../../libs/react/src/lib/ai/ai-model-picker.tsx:40
@@ -538,7 +542,7 @@ msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:34
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:119
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:157
 msgid "generate-cards.generating"
 msgstr "Generating"
 
@@ -546,11 +550,11 @@ msgstr "Generating"
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Provider prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:84
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -574,11 +578,11 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:77
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:68
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

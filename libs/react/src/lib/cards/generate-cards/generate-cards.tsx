@@ -42,6 +42,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleTemperatureChange,
     handleGenerate,
     handleCancel,
+    handleReset,
     getGeneratedCardsProps,
   } = useGenerateCardsDialog(deckId, templateId);
 
@@ -60,6 +61,13 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
     return <GeneratedCardsMessage {...props} />;
   }, [getGeneratedCardsProps]);
+
+  const emptyState = (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 p-4 fg-level-3">
+      <p>Generate cards, then use follow-up prompts to refine the previous result.</p>
+      <p>Reset starts a fresh thread. Closing this dialog resets it too.</p>
+    </div>
+  );
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
@@ -129,8 +137,10 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                         onModelChange={handleModelChange}
                         onSubmit={handleGenerate}
                         onCancel={handleCancel}
+                        onReset={handleReset}
                         isLoading={isGenerating}
                         error={getGenerateErrorMessage(generateError, _)}
+                        emptyState={emptyState}
                         renderMessage={renderMessage}
                       />
                     </Fade>
