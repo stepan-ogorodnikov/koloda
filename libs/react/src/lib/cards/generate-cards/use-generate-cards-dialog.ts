@@ -5,13 +5,18 @@ import { createAIGenerationClient, GENERATION_TEMPERATURE } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { UIMessage } from "ai";
+import type { ModelMessage, UIMessage } from "ai";
 import { useAtomValue } from "jotai";
-import { useCallback, useEffect, useState } from "react";
-import { createTextMessage, getGeneratedCardsMetadata } from "./generate-cards-utility";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createTextMessage,
+  getGeneratedCardsMetadata,
+  getTextMessageContent,
+  serializeGeneratedCards,
+} from "./generate-cards-utility";
 import type { GeneratedCardsMessageProps } from "./generated-cards-message";
 import { useGenerateCards } from "./use-generate-cards";
-import type { StreamGenerator } from "./use-generate-cards";
+import type { GenerateCardsRequest, StreamGenerator } from "./use-generate-cards";
 
 export type UseGenerateCardsDialogReturn = {
   isOpen: boolean;
@@ -46,6 +51,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [generatedRuns, setGeneratedRuns] = useState<Record<string, GeneratedCard[]>>({});
   const [canceledRuns, setCanceledRuns] = useState<Record<string, boolean>>({});
+  const [failedRuns, setFailedRuns] = useState<Record<string, boolean>>({});
+  const canceledRunsRef = useRef<Record<string, boolean>>({});
   const touchProfileMutation = useMutation(touchAIProfileMutation());
   const templateQuery = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
   const template = templateQuery.data;
@@ -54,13 +61,19 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const modelName = models.find((m) => m.id === modelId)?.name;
 
   const streamGenerator = useCallback<StreamGenerator>(
-    async (input, onCard, abortSignal) => {
+    async (request, onCard, abortSignal) => {
       if (!selectedProfile) throw new Error("No AI profile selected");
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
       if (!template) throw new Error("No template loaded");
 
       const client = createAIGenerationClient(selectedProfile.secrets);
-      await client.generateCards({ template, input, onCard, abortSignal });
+      await client.generateCards({
+        template,
+        input: request.input,
+        messages: request.messages,
+        onCard,
+        abortSignal,
+      });
     },
     [selectedProfile, template],
   );
@@ -84,6 +97,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       setActiveRunId(null);
       setGeneratedRuns({});
       setCanceledRuns({});
+      canceledRunsRef.current = {};
+      setFailedRuns({});
       clearCards();
       cancel();
     }
@@ -105,12 +120,26 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
   const handleGenerate = useCallback(async (value?: string) => {
     const promptText = (value ?? prompt).trim();
-    if (!promptText || !profileId || !modelId) return;
+    if (!promptText || !profileId || !modelId || !template) return;
     const runId = `${Date.now()}`;
+    const conversationMessages = buildConversationMessages({
+      messages,
+      template,
+      generatedRuns,
+      canceledRuns,
+      failedRuns,
+      activeRunId,
+      isGenerating,
+    });
 
     setActiveRunId(runId);
     setGeneratedRuns((prev) => ({ ...prev, [runId]: [] }));
-    setCanceledRuns((prev) => ({ ...prev, [runId]: false }));
+    setCanceledRuns((prev) => {
+      const next = { ...prev, [runId]: false };
+      canceledRunsRef.current = next;
+      return next;
+    });
+    setFailedRuns((prev) => ({ ...prev, [runId]: false }));
     clearCards();
     setPrompt("");
     setMessages((prev) => [
@@ -131,12 +160,39 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       deckId,
       templateId,
     } as GenerateCardsInput;
-    await generate(input);
-  }, [prompt, clearCards, touchProfileMutation, profileId, modelId, deckId, templateId, temperature, generate, _]);
+    const request: GenerateCardsRequest = { input, messages: conversationMessages };
+    const isSuccess = await generate(request);
+
+    if (!isSuccess && !canceledRunsRef.current[runId]) {
+      setFailedRuns((prev) => ({ ...prev, [runId]: true }));
+    }
+  }, [
+    prompt,
+    template,
+    messages,
+    generatedRuns,
+    canceledRuns,
+    failedRuns,
+    activeRunId,
+    isGenerating,
+    clearCards,
+    touchProfileMutation,
+    profileId,
+    modelId,
+    deckId,
+    templateId,
+    temperature,
+    generate,
+    _,
+  ]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
-      setCanceledRuns((prev) => ({ ...prev, [activeRunId]: true }));
+      setCanceledRuns((prev) => {
+        const next = { ...prev, [activeRunId]: true };
+        canceledRunsRef.current = next;
+        return next;
+      });
     }
     cancel();
   }, [activeRunId, cancel]);
@@ -213,4 +269,49 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleCancel,
     getGeneratedCardsProps,
   };
+}
+
+type BuildConversationMessagesOptions = {
+  messages: UIMessage[];
+  template: Template;
+  generatedRuns: Record<string, GeneratedCard[]>;
+  canceledRuns: Record<string, boolean>;
+  failedRuns: Record<string, boolean>;
+  activeRunId: string | null;
+  isGenerating: boolean;
+};
+
+function buildConversationMessages({
+  messages,
+  template,
+  generatedRuns,
+  canceledRuns,
+  failedRuns,
+  activeRunId,
+  isGenerating,
+}: BuildConversationMessagesOptions) {
+  const conversation: ModelMessage[] = [];
+
+  for (const message of messages) {
+    if (message.role === "user") {
+      const content = getTextMessageContent(message);
+      if (content) conversation.push({ role: "user", content });
+      continue;
+    }
+
+    if (message.role !== "assistant") continue;
+
+    const metadata = getGeneratedCardsMetadata(message);
+    if (!metadata) continue;
+
+    const { runId } = metadata;
+    const runCards = generatedRuns[runId] ?? [];
+    const isActiveRun = runId === activeRunId;
+    if ((isActiveRun && isGenerating) || canceledRuns[runId] || failedRuns[runId] || runCards.length === 0) continue;
+
+    const content = serializeGeneratedCards(runCards, template);
+    if (content) conversation.push({ role: "assistant", content });
+  }
+
+  return conversation;
 }

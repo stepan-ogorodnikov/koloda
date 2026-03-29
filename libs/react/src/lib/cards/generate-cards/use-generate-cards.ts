@@ -1,9 +1,15 @@
 import type { GenerateCardsInput, GeneratedCard } from "@koloda/srs";
 import { isAbortError } from "@koloda/srs";
+import type { ModelMessage } from "ai";
 import { useCallback, useRef, useState } from "react";
 
+export type GenerateCardsRequest = {
+  input: GenerateCardsInput;
+  messages: ModelMessage[];
+};
+
 export type StreamGenerator = (
-  input: GenerateCardsInput,
+  request: GenerateCardsRequest,
   onCard: (card: GeneratedCard) => void,
   signal: AbortSignal,
 ) => Promise<void>;
@@ -12,7 +18,7 @@ export type UseGenerateCardsReturn = {
   cards: GeneratedCard[];
   isGenerating: boolean;
   error: Error | null;
-  generate: (input: GenerateCardsInput) => Promise<boolean>;
+  generate: (request: GenerateCardsRequest) => Promise<boolean>;
   clearCards: () => void;
   cancel: () => void;
 };
@@ -23,7 +29,7 @@ export function useGenerateCards(streamGenerator: StreamGenerator): UseGenerateC
   const [error, setError] = useState<Error | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
-  const generate = useCallback(async (input: GenerateCardsInput) => {
+  const generate = useCallback(async (request: GenerateCardsRequest) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -32,7 +38,7 @@ export function useGenerateCards(streamGenerator: StreamGenerator): UseGenerateC
     setError(null);
 
     try {
-      await streamGenerator(input, (card) => {
+      await streamGenerator(request, (card) => {
         if (!controller.signal.aborted) setCards((prev) => [...prev, card]);
       }, controller.signal);
       return true;

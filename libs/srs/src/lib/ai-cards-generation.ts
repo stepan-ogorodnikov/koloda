@@ -1,5 +1,5 @@
 import type { OpenRouterProvider } from "@openrouter/ai-sdk-provider";
-import { generateText, Output, streamText } from "ai";
+import { generateText, type ModelMessage, Output, streamText } from "ai";
 import { z } from "zod";
 import { throwForAIResponse, wrapAIError } from "./ai-error";
 import type { InsertCardData } from "./cards";
@@ -21,6 +21,7 @@ export const generateCardsInputSchema = z.object({
 export type CardGenerationRequest = {
   template: Template;
   input: GenerateCardsInput;
+  messages?: ModelMessage[];
   onCard: OnCardGenerated;
   abortSignal?: AbortSignal;
 };
@@ -73,27 +74,32 @@ export function generateCardsWithOpenRouter(request: CardGenerationRequest, open
 
 export function generateCardsWithOllama(request: CardGenerationRequest, baseUrl: string) {
   return wrapAIError(() =>
-    runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal }) => {
       const temperature = resolveGenerationTemperature(input.temperature);
       const response = throwForAIResponse(
-        await fetch(new URL("/api/generate", baseUrl), {
+        await fetch(new URL("/api/chat", baseUrl), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: input.modelId,
-            system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
-            prompt: input.prompt,
-            temperature,
+            messages: getTextCompletionMessages({
+              template,
+              prompt: input.prompt,
+              messages,
+              provider: "ollama",
+            }),
+            options: { temperature },
             stream: false,
           }),
           signal: abortSignal,
         }),
       );
 
-      const data = await response.json() as { response?: string };
-      if (typeof data.response !== "string") throw new AppError("ai.invalid-response");
+      const data = await response.json() as OllamaChatResponse;
+      const content = data.message?.content;
+      if (typeof content !== "string") throw new AppError("ai.invalid-response");
 
-      return data.response;
+      return content;
     }, request)
   );
 }
@@ -109,7 +115,7 @@ export function generateCardsWithLMStudio(
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ) {
   return wrapAIError(() =>
-    runTextCompletionCardGeneration(async ({ template, input, abortSignal }) => {
+    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal }) => {
       const temperature = resolveGenerationTemperature(input.temperature);
       const response = throwForAIResponse(
         await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
@@ -121,16 +127,12 @@ export function generateCardsWithLMStudio(
           body: JSON.stringify({
             model: input.modelId,
             temperature,
-            messages: [
-              {
-                role: "system",
-                content: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
-              },
-              {
-                role: "user",
-                content: input.prompt,
-              },
-            ],
+            messages: getTextCompletionMessages({
+              template,
+              prompt: input.prompt,
+              messages,
+              provider: "lmstudio",
+            }),
           }),
           signal: abortSignal,
         }),
@@ -243,7 +245,7 @@ function extractCardsFromMarkdownText(text: string, template: Template): Generat
 
 async function runStructuredCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
-  { template, input, onCard, abortSignal }: CardGenerationRequest,
+  { template, input, messages = [], onCard, abortSignal }: CardGenerationRequest,
 ): Promise<void> {
   const elementSchema = getCardContentSchema(template.content.fields);
   const temperature = resolveGenerationTemperature(input.temperature);
@@ -255,7 +257,7 @@ async function runStructuredCardGeneration(
       temperature,
       output: Output.array({ element: elementSchema }),
       system: buildSystemPrompt(template.content.fields),
-      prompt: input.prompt,
+      messages: getConversationMessages(messages, input.prompt),
       abortSignal,
       onError: ({ error }) => {
         streamedError = error;
@@ -283,8 +285,8 @@ async function runStructuredCardGeneration(
     const fallbackTextResult = await generateText({
       model: modelFactory(input.modelId),
       temperature,
-      system: buildSystemPrompt(template.content.fields, buildProviderFormatPrompt(template.content.fields)),
-      prompt: input.prompt,
+      system: buildSystemPromptForProvider(template.content.fields, "openrouter"),
+      messages: getConversationMessages(messages, input.prompt),
       abortSignal,
     });
     const fallbackCards = [
@@ -335,4 +337,31 @@ export function transformGeneratedCards(
     lapses: 0,
     lastReviewedAt: null,
   }));
+}
+
+type OllamaChatResponse = {
+  message?: {
+    content?: string | null;
+  };
+};
+
+function getConversationMessages(messages: ModelMessage[], prompt: string) {
+  return [...messages, { role: "user", content: prompt }] as ModelMessage[];
+}
+
+type GetTextCompletionMessagesParams = {
+  template: Template;
+  prompt: string;
+  messages?: ModelMessage[];
+  provider: Exclude<AiProvider, "openrouter">;
+};
+
+function getTextCompletionMessages({ template, prompt, messages = [], provider }: GetTextCompletionMessagesParams) {
+  return [
+    {
+      role: "system",
+      content: buildSystemPromptForProvider(template.content.fields, provider),
+    },
+    ...getConversationMessages(messages, prompt),
+  ];
 }
