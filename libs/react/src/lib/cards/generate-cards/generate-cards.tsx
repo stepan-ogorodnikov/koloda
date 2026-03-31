@@ -80,7 +80,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
           <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
         </Button>
         {!hasProfiles && (
-          <Tooltip content={_(msg`generate-cards.no-profiles`)} delay={0} isDisabled={hasProfiles}>
+          <Tooltip content={_(msg`generate-cards.no-profiles`)} delay={0}>
             <Tooltip.HiddenTrigger />
           </Tooltip>
         )}

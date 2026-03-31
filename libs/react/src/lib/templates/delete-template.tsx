@@ -45,7 +45,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
           {_(msg`delete-template.trigger`)}
         </DeleteDialog.Trigger>
         {isDisabled && (
-          <Tooltip content={_(reason)} delay={0} isDisabled={!isDisabled}>
+          <Tooltip content={_(reason)} delay={0}>
             <Tooltip.HiddenTrigger />
           </Tooltip>
         )}
