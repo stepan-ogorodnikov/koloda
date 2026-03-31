@@ -11,9 +11,10 @@ export const Route = createFileRoute("/_/decks/$deckId")({
   component: DeckRoute,
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
     const id = Number(deckId);
-    const { getDeckQuery, getCardsQuery } = queries;
+    const { getDeckQuery, getCardsQuery, getAIProfilesQuery } = queries;
     queryClient.ensureQueryData({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
     queryClient.ensureQueryData({ queryKey: queryKeys.cards.deck({ deckId: id }), ...getCardsQuery({ deckId: id }) });
+    queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
   },
 });
 

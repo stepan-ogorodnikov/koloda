@@ -415,15 +415,15 @@ msgstr "Actions"
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:22
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:23
 msgid "deck.tabs.cards"
 msgstr "Cards"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:21
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:22
 msgid "deck.tabs.details"
 msgstr "Details"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:43
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:44
 msgid "deck.tabs.label"
 msgstr "Deck tabs"
 
@@ -546,15 +546,19 @@ msgstr "Failed to retrieve cards from the response."
 msgid "generate-cards.generating"
 msgstr "Generating"
 
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+msgid "generate-cards.no-profiles"
+msgstr "Add AI profile first to generate cards"
+
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:42
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Provider prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:98
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:99
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -578,11 +582,11 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:77
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

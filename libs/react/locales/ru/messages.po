@@ -415,15 +415,15 @@ msgstr "Действия"
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:22
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:23
 msgid "deck.tabs.cards"
 msgstr "Карточки"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:21
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:22
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:43
+#: ../../libs/react/src/lib/routes/_.decks.$deckId.tsx:44
 msgid "deck.tabs.label"
 msgstr "Вкладки колоды"
 
@@ -546,15 +546,19 @@ msgstr "Ответ был получен, но не удалось извлеч�
 msgid "generate-cards.generating"
 msgstr "Генерирую"
 
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+msgid "generate-cards.no-profiles"
+msgstr "Сначала добавьте ИИ профиль, чтобы генерировать карточки"
+
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards-prompt-settings.tsx:42
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Промпт провайдера"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:91
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:98
 msgid "generate-cards.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:99
 msgid "generate-cards.settings.show-settings"
 msgstr "Показать настройки"
 
@@ -578,11 +582,11 @@ msgstr "Карточка добавляется"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Карточка успешно добавлена"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:85
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
 msgid "generate-cards.title"
 msgstr "Генерация карточек"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:77
 msgid "generate-cards.trigger"
 msgstr "Сгенерировать карточки с помощью ИИ"
 

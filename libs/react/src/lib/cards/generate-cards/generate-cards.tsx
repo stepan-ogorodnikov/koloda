@@ -4,7 +4,7 @@ import { AIChat } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Dialog, Fade } from "@koloda/ui";
+import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -71,13 +71,20 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
-      <Button
-        variants={{ style: "dashed", size: "icon", class: "max-tb:hidden" }}
-        aria-label={_(msg`generate-cards.trigger`)}
-        isDisabled={!hasProfiles}
-      >
-        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
-      </Button>
+      <div className="relative">
+        <Button
+          variants={{ style: "dashed", size: "icon", class: "max-tb:hidden" }}
+          aria-label={_(msg`generate-cards.trigger`)}
+          isDisabled={!hasProfiles}
+        >
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
+        </Button>
+        {!hasProfiles && (
+          <Tooltip content={_(msg`generate-cards.no-profiles`)} delay={0} isDisabled={hasProfiles}>
+            <Tooltip.HiddenTrigger />
+          </Tooltip>
+        )}
+      </div>
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "main" }}>
           <Dialog.Body>
