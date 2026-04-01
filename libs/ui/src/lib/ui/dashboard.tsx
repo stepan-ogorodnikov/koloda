@@ -6,7 +6,7 @@ import { useLingui } from "@lingui/react";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
-const dashboard = "grow flex flex-row h-full w-full min-w-80 max-w-360 dt:h-screen dt:overflow-hidden";
+const dashboard = "grow flex flex-col dt:flex-row h-full w-full min-w-80 max-w-360 dt:h-screen dt:overflow-hidden";
 
 export function Dashboard({ children }: PropsWithChildren) {
   return <div className={dashboard}>{children}</div>;

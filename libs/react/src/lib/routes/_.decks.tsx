@@ -36,7 +36,7 @@ function DecksRoute() {
           </Main.H1>
           <AddDeck />
         </Main.Titlebar>
-        <Main.Container variants={{ location: "sidebar" }} ref={ref} tabIndex={-1}>
+        <Main.Container ref={ref} tabIndex={-1}>
           <QueryState query={query}>
             {(data) => (
               <div className="flex flex-col">

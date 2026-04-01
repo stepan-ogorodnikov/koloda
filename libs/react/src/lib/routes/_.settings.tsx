@@ -32,7 +32,7 @@ function SettingsRoute() {
         <Main.Titlebar>
           <Main.H1>{_(msg`settings.title`)}</Main.H1>
         </Main.Titlebar>
-        <Main.Container variants={{ location: "sidebar" }} ref={ref} tabIndex={-1}>
+        <Main.Container ref={ref} tabIndex={-1}>
           {LINKS.map(({ id, t, url }) => (
             <Main.SidebarItem key={id}>
               <Link

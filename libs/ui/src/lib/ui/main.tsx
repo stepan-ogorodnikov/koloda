@@ -3,7 +3,7 @@ import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
 export const main = [
-  "grow flex flex-row h-full min-h-0 min-w-0 rounded-xl bg-level-1",
+  "grow flex flex-row h-full min-h-0 min-w-0 items-stretch rounded-xl bg-level-1",
   "border-2 border-main no-focus-ring [clip-path:inset(0_round_0.75rem)]",
 ].join(" ");
 
@@ -47,11 +47,11 @@ function MainContent({ hasContent, children }: MainContentProps) {
 
 const mainSidebar = tv({
   base: [
-    "flex-col h-full overflow-hidden",
+    "flex flex-col overflow-hidden",
     "tb:min-w-48 tb:max-w-48 tb:border-r-2 tb:border-main",
     "dt:min-w-72 dt:max-w-72 dt:overflow-hidden",
   ],
-  variants: { hasContent: { true: "hidden tb:flex", false: "max-tb:grow" } },
+  variants: { hasContent: { true: "hidden tb:flex", false: "grow" } },
 });
 
 type MainSidebarProps = PropsWithChildren & { hasContent?: boolean };
@@ -88,7 +88,6 @@ function MainSidebarItemLinkContent({ children }: PropsWithChildren) {
 
 const mainContainer = tv({
   base: "grow flex flex-col min-w-0 min-h-0 overflow-y-auto no-focus-ring",
-  variants: { location: { sidebar: "-mb-0.5" } },
 });
 
 type MainContainerProps = ComponentProps<"div"> & TWVProps<typeof mainContainer>;
