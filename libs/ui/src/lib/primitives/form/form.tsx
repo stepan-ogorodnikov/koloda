@@ -128,12 +128,22 @@ type ControlsProps = Omit<FormErrorsProps, "errors"> & {
 function Controls({ showErrors = true }: ControlsProps) {
   const form = useFormContext();
   const { form: { submit, reset } } = useHotkeysSettings();
-  useAppHotkey(submit, () => {
-    if (form.state.canSubmit) form.handleSubmit();
-  }, "");
-  useAppHotkey(reset, () => {
-    if (form.state.isDirty) form.reset();
-  }, "");
+  useAppHotkey(
+    submit,
+    () => {
+      if (form.state.canSubmit) form.handleSubmit();
+    },
+    "",
+    { conflictBehavior: "replace" },
+  );
+  useAppHotkey(
+    reset,
+    () => {
+      if (form.state.isDirty) form.reset();
+    },
+    "",
+    { conflictBehavior: "replace" },
+  );
 
   return (
     <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center gap-2">

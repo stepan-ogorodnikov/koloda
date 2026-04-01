@@ -59,6 +59,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         header: ({ table }) => <CardsTableHeaderSelect table={table} />,
         size: 2,
         minSize: 2,
+        enableHiding: false,
         enableSorting: false,
         cell,
       },
