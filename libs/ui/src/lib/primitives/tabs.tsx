@@ -17,7 +17,7 @@ import type {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-const tabs = tv({ base: "", variants: { location: { mainContent: "grow min-h-0 flex flex-col" } } });
+const tabs = tv({ base: "grow flex flex-col min-h-0" });
 
 type TabsProps = ReactAriaTabsProps & TWVProps<typeof tabs>;
 
@@ -67,10 +67,10 @@ const tabsPanels = tv({
   base: "relative h-(--tab-panel-height) overflow-clip motion:transition-[height] duration-250",
 });
 
-type TabsPanelsProps<T extends object> = TabPanelsProps<T> & { variants?: never };
+type TabsPanelsProps<T extends object> = TabPanelsProps<T> & TWVProps<typeof tabsPanels>;
 
-function TabsPanels<T extends object>(props: TabsPanelsProps<T>) {
-  return <ReactAriaTabPanels className={tabsPanels()} {...props} />;
+function TabsPanels<T extends object>({ variants, ...props }: TabsPanelsProps<T>) {
+  return <ReactAriaTabPanels className={tabsPanels(variants)} {...props} />;
 }
 
 const tabsPanel = tv({

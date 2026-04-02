@@ -1,14 +1,13 @@
-import { AiMagicIcon, Chat01Icon, Settings05Icon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
+import { Button, Dialog, Tabs, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
-import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { GenerateCardsPromptSettings } from "./generate-cards-prompt-settings";
@@ -23,7 +22,7 @@ export type GenerateCardsProps = {
 export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   const { _ } = useLingui();
   const { disableScope, enableScope } = useHotkeysStatus();
-  const [areSettingsOpen, setAreSettingsOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<"chat" | "settings">("chat");
   const {
     isOpen,
     profileId,
@@ -51,7 +50,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   }, [isOpen, disableScope, enableScope]);
 
   const handleDialogOpenChange = useCallback((open: boolean) => {
-    if (open) setAreSettingsOpen(false);
+    if (open) setSelectedTab("chat");
     handleOpenChange(open);
   }, [handleOpenChange]);
 
@@ -88,53 +87,32 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "main" }}>
           <Dialog.Body>
-            <Dialog.Header>
-              <Dialog.Title>{_(msg`generate-cards.title`)}</Dialog.Title>
-              <div className="grow" />
-              <div className="flex flex-row gap-2">
-                <Button
-                  variants={{ style: "ghost", size: "none", class: "size-8" }}
-                  aria-label={areSettingsOpen
-                    ? _(msg`generate-cards.settings.show-chat`)
-                    : _(msg`generate-cards.settings.show-settings`)}
-                  onPress={() => setAreSettingsOpen((prev) => !prev)}
-                >
-                  {areSettingsOpen
-                    ? (
-                      <HugeiconsIcon
-                        className="size-5 min-w-5"
-                        strokeWidth={1.75}
-                        icon={Chat01Icon}
-                        aria-hidden="true"
-                      />
-                    )
-                    : (
-                      <HugeiconsIcon
-                        className="size-5 min-w-5"
-                        strokeWidth={1.75}
-                        icon={Settings05Icon}
-                        aria-hidden="true"
-                      />
-                    )}
-                </Button>
+            <Tabs
+              selectedKey={selectedTab}
+              onSelectionChange={(key) => setSelectedTab(key === "settings" ? "settings" : "chat")}
+            >
+              <Dialog.Header variants={{ class: "gap-4 py-0" }}>
+                <Dialog.Title>{_(msg`generate-cards.title`)}</Dialog.Title>
+                <Tabs.List aria-label={_(msg`generate-cards.title`)}>
+                  <Tabs.Tab id="chat" aria-label={_(msg`generate-cards.settings.show-chat`)}>
+                    <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.75} icon={Chat01Icon} aria-hidden="true" />
+                  </Tabs.Tab>
+                  <Tabs.Tab id="settings" aria-label={_(msg`generate-cards.settings.show-settings`)}>
+                    <HugeiconsIcon
+                      className="size-6 min-w-6"
+                      strokeWidth={1.75}
+                      icon={Settings01Icon}
+                      aria-hidden="true"
+                    />
+                  </Tabs.Tab>
+                </Tabs.List>
+                <div className="grow" />
                 <Dialog.Close slot="close" />
-              </div>
-            </Dialog.Header>
-            <Dialog.Content variants={{ class: "grow min-h-0 py-0" }}>
-              <AnimatePresence mode="wait">
-                {areSettingsOpen
-                  ? (
-                    <Fade className="overflow-auto" key="settings">
-                      <GenerateCardsPromptSettings
-                        template={template}
-                        provider={provider}
-                        temperature={temperature}
-                        onTemperatureChange={handleTemperatureChange}
-                      />
-                    </Fade>
-                  )
-                  : (
-                    <Fade className="flex h-full min-h-0 flex-col" key="chat">
+              </Dialog.Header>
+              <Dialog.Content variants={{ class: "grow min-h-0 py-0" }}>
+                <Tabs.Panels variants={{ class: "grow flex flex-col" }}>
+                  <Tabs.Panel id="chat">
+                    <div className="flex h-full min-h-0 flex-col">
                       <AIChat
                         profileId={profileId}
                         modelId={modelId}
@@ -150,10 +128,21 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                         emptyState={emptyState}
                         renderMessage={renderMessage}
                       />
-                    </Fade>
-                  )}
-              </AnimatePresence>
-            </Dialog.Content>
+                    </div>
+                  </Tabs.Panel>
+                  <Tabs.Panel id="settings">
+                    <div className="grow overflow-auto">
+                      <GenerateCardsPromptSettings
+                        template={template}
+                        provider={provider}
+                        temperature={temperature}
+                        onTemperatureChange={handleTemperatureChange}
+                      />
+                    </div>
+                  </Tabs.Panel>
+                </Tabs.Panels>
+              </Dialog.Content>
+            </Tabs>
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

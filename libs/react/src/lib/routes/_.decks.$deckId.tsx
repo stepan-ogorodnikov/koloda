@@ -36,7 +36,7 @@ function DeckRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <Tabs variants={{ location: "mainContent" }} defaultSelectedKey="cards">
+    <Tabs defaultSelectedKey="cards">
       <Main.Titlebar>
         <BackButton onClick={() => router.navigate({ to: "/decks" })} />
         <Main.H2>{query.data?.title}</Main.H2>
