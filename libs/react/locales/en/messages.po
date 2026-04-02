@@ -15,7 +15,7 @@ msgstr ""
 
 #. placeholder {0}: decks.length
 #: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:60
-msgid "{0, plural, other {algorithm-used-by-#-decks}}"
+msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
 #: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:55
@@ -315,11 +315,11 @@ msgstr "Template"
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:195
+#: ../../libs/react/src/lib/cards/cards-table.tsx:196
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:205
+#: ../../libs/react/src/lib/cards/cards-table.tsx:206
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
@@ -339,19 +339,19 @@ msgstr "Delete"
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:103
+#: ../../libs/react/src/lib/cards/cards-table.tsx:104
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:87
+#: ../../libs/react/src/lib/cards/cards-table.tsx:88
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:77
+#: ../../libs/react/src/lib/cards/cards-table.tsx:78
 msgid "cards.table.columns.state"
 msgstr "Status"
 
-#: ../../libs/react/src/lib/cards/cards-table.tsx:110
+#: ../../libs/react/src/lib/cards/cards-table.tsx:111
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
@@ -546,7 +546,7 @@ msgstr "Failed to retrieve cards from the response."
 msgid "generate-cards.generating"
 msgstr "Generating"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:83
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:82
 msgid "generate-cards.no-profiles"
 msgstr "Add AI profile first to generate cards"
 
@@ -554,11 +554,11 @@ msgstr "Add AI profile first to generate cards"
 msgid "generate-cards.settings.provider-prompt.label"
 msgstr "Provider prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:98
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:97
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:99
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:100
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -582,11 +582,12 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:92
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:95
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:96
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:77
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:76
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

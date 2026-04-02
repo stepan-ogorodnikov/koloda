@@ -2,9 +2,8 @@ import { defaultAlgorithmAtom } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Algorithm } from "@koloda/srs";
 import { DeleteDialog, Select, Tooltip } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
+import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { Plural } from "@lingui/react/macro";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -57,7 +56,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
           <DeleteDialog.Frame>
             <div className="flex flex-col gap-6">
               <p>
-                <Plural value={decks.length} other="algorithm-used-by-#-decks" />
+                {_(msg`${plural(decks.length, { other: "delete-algrorithm.used-by-#-decks" })}`)}
               </p>
               <p>{_(msg`delete-algorithm.successor-message`)}</p>
             </div>
