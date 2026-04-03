@@ -1,10 +1,12 @@
-use koloda_native_tauri::domain::cards::{InsertCardData, ResetCardProgressData, UpdateCardProgress};
+use koloda_native_tauri::domain::cards::{
+    DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
+};
 use koloda_native_tauri::domain::lessons::LessonResultData;
 use koloda_native_tauri::domain::reviews::{GetReviewsData, InsertReviewData};
 use koloda_native_tauri::repo::{cards, lessons, reviews};
 
 mod common;
-use common::fixtures::{add_algorithm, add_card, add_deck, add_template};
+use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use common::test_db;
 
 #[test]
@@ -115,4 +117,73 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
 
     let saved_reviews = reviews::get_reviews(&db, GetReviewsData { card_id }).expect("reviews query should succeed");
     assert!(saved_reviews.is_empty(), "reset should delete prior reviews");
+}
+
+#[test]
+fn delete_card_removes_card_and_cascades_reviews() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let card_id = add_card(&db, deck_id, template_id, "question");
+
+    insert_review_row(&db, card_id, 2, 0, 1_800_000_000_000);
+
+    cards::delete_card(&db, DeleteCardData { id: card_id }).expect("delete should succeed");
+
+    let deleted_card = cards::get_card(&db, card_id).expect("card lookup should succeed");
+    assert!(deleted_card.is_none(), "deleted card should no longer exist");
+
+    let remaining_cards = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    assert!(
+        remaining_cards.is_empty(),
+        "deleted card should be removed from the deck"
+    );
+
+    let saved_reviews = reviews::get_reviews(&db, GetReviewsData { card_id }).expect("reviews query should succeed");
+    assert!(
+        saved_reviews.is_empty(),
+        "deleting a card should cascade to its reviews"
+    );
+}
+
+#[test]
+fn delete_cards_removes_only_selected_cards() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let first_card_id = add_card(&db, deck_id, template_id, "first");
+    let second_card_id = add_card(&db, deck_id, template_id, "second");
+    let third_card_id = add_card(&db, deck_id, template_id, "third");
+
+    cards::delete_cards(
+        &db,
+        DeleteCardsData {
+            ids: vec![first_card_id, third_card_id],
+        },
+    )
+    .expect("batch delete should succeed");
+
+    let remaining_cards = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    assert_eq!(remaining_cards.len(), 1);
+    assert_eq!(remaining_cards[0].id, second_card_id);
+    assert_eq!(
+        remaining_cards[0].content.get("1").map(|value| value.text.as_str()),
+        Some("second")
+    );
+}
+
+#[test]
+fn delete_cards_with_empty_ids_is_a_noop() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let card_id = add_card(&db, deck_id, template_id, "question");
+
+    cards::delete_cards(&db, DeleteCardsData { ids: vec![] }).expect("empty batch delete should succeed");
+
+    let saved_card = cards::get_card(&db, card_id).expect("card lookup should succeed");
+    assert!(saved_card.is_some(), "empty batch delete should not remove cards");
 }
