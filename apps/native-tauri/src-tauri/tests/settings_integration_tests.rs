@@ -52,7 +52,10 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
     .expect("patch should succeed");
 
     assert_eq!(patched.content["dailyLimits"]["total"], 100);
-    assert_eq!(patched.content["dailyLimits"]["untouched"], counted_daily_limit(20, true));
+    assert_eq!(
+        patched.content["dailyLimits"]["untouched"],
+        counted_daily_limit(20, true)
+    );
     assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(7, true));
     assert_eq!(patched.content["dailyLimits"]["review"], counted_daily_limit(50, true));
     assert_eq!(patched.content["defaults"]["algorithm"], 123);
@@ -86,7 +89,10 @@ fn set_settings_preserves_false_counts_flag() {
     )
     .expect("learning settings insert should succeed");
 
-    assert_eq!(saved.content["dailyLimits"]["untouched"], counted_daily_limit(20, false));
+    assert_eq!(
+        saved.content["dailyLimits"]["untouched"],
+        counted_daily_limit(20, false)
+    );
 }
 
 #[test]

@@ -201,7 +201,10 @@ fn test_non_counted_limit_can_exceed_total() {
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok(), "Non-counted limits should not be capped by total");
+    assert!(
+        settings.validate().is_ok(),
+        "Non-counted limits should not be capped by total"
+    );
 }
 
 #[test]
@@ -370,4 +373,3 @@ fn test_settings_name_learning_validation_valid() {
     let result = SettingsName::Learning.validate(&content);
     assert!(result.is_ok());
 }
-

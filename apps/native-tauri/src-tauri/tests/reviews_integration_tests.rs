@@ -5,8 +5,8 @@ use serde_json::json;
 
 mod common;
 use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
-use common::{counted_daily_limit, learning_settings_with_day_start};
 use common::test_db;
+use common::{counted_daily_limit, learning_settings_with_day_start};
 
 fn get_todays_timestamp() -> i64 {
     koloda_native_tauri::app::utility::get_current_timestamp().expect("timestamp should be available")
@@ -115,8 +115,8 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
             "dailyLimits": {
                 "total": 1,
                 "untouched": counted_daily_limit(5, false),
-                "learn": counted_daily_limit(5, true),
-                "review": counted_daily_limit(5, true)
+                "learn": counted_daily_limit(1, true),
+                "review": counted_daily_limit(1, true)
             },
             "dayStartsAt": "00:00",
             "learnAheadLimit": [4, 0],
@@ -134,8 +134,14 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
     assert_eq!(totals.review_totals.untouched, 1);
     assert_eq!(totals.review_totals.learn, 1);
     assert_eq!(totals.review_totals.total, 1, "only counted types contribute to total");
-    assert!(!totals.meta.is_untouched_over_the_limit, "non-counted type should ignore total limit");
-    assert!(totals.meta.is_learn_over_the_limit, "counted type should still respect total limit");
+    assert!(
+        !totals.meta.is_untouched_over_the_limit,
+        "non-counted type should ignore total limit"
+    );
+    assert!(
+        totals.meta.is_learn_over_the_limit,
+        "counted type should still respect total limit"
+    );
     assert!(totals.meta.is_total_over_the_limit);
 }
 

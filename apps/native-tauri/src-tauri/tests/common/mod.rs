@@ -177,4 +177,3 @@ pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda_native_t
         },
     }
 }
-

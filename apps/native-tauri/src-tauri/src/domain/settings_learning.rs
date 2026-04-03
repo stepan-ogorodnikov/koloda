@@ -108,10 +108,7 @@ pub struct CountedDailyLimit {
 #[serde(rename_all = "camelCase", untagged)]
 enum CountedDailyLimitInput {
     Value(u32),
-    Object {
-        value: u32,
-        counts: bool,
-    },
+    Object { value: u32, counts: bool },
 }
 
 impl<'de> Deserialize<'de> for CountedDailyLimit {
@@ -120,17 +117,8 @@ impl<'de> Deserialize<'de> for CountedDailyLimit {
         D: Deserializer<'de>,
     {
         match CountedDailyLimitInput::deserialize(deserializer)? {
-            CountedDailyLimitInput::Value(value) => Ok(Self {
-                value,
-                counts: true,
-            }),
-            CountedDailyLimitInput::Object {
-                value,
-                counts,
-            } => Ok(Self {
-                value,
-                counts,
-            }),
+            CountedDailyLimitInput::Value(value) => Ok(Self { value, counts: true }),
+            CountedDailyLimitInput::Object { value, counts } => Ok(Self { value, counts }),
         }
     }
 }
@@ -159,4 +147,3 @@ impl LearnAheadLimit {
         Ok(())
     }
 }
-

@@ -134,13 +134,16 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         (daily_limits.review.counts, review_totals.review),
     ]
     .into_iter()
-    .fold(0_i64, |total, (counts, value)| {
-        if counts {
-            total + value
-        } else {
-            total
-        }
-    });
+    .fold(
+        0_i64,
+        |total, (counts, value)| {
+            if counts {
+                total + value
+            } else {
+                total
+            }
+        },
+    );
     let review_totals = ReviewTotals {
         total: counted_total,
         ..review_totals
@@ -173,4 +176,3 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         meta,
     })
 }
-
