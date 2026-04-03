@@ -12,9 +12,13 @@ const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HotkeysSettings {
+    #[serde(default)]
     pub form: HashMap<String, Vec<String>>,
+    #[serde(default)]
     pub ui: HashMap<String, Vec<String>>,
+    #[serde(default)]
     pub navigation: HashMap<String, Vec<String>>,
+    #[serde(default)]
     pub grades: HashMap<String, Vec<String>>,
 }
 
@@ -34,53 +38,19 @@ impl HotkeysSettings {
             }
         }
 
-        let mut all_keys = HashSet::new();
-        for keys in self.ui.values() {
-            for key in keys {
-                if all_keys.contains(key) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS,
-                        None,
-                    ));
-                }
-                all_keys.insert(key);
-            }
-        }
-
-        for keys in self.form.values() {
-            for key in keys {
-                if all_keys.contains(key) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS,
-                        None,
-                    ));
-                }
-                all_keys.insert(key);
-            }
-        }
-
-        for keys in self.navigation.values() {
-            for key in keys {
-                if all_keys.contains(key) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS,
-                        None,
-                    ));
-                }
-                all_keys.insert(key);
-            }
-        }
-
-        for keys in self.grades.values() {
-            for key in keys {
-                if all_keys.contains(key) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS,
-                        None,
-                    ));
-                }
-                all_keys.insert(key);
-            }
+        let ui_hotkeys: HashSet<&String> = self.ui.values().flat_map(|keys| keys.iter()).collect();
+        if self
+            .form
+            .values()
+            .chain(self.navigation.values())
+            .chain(self.grades.values())
+            .flat_map(|keys| keys.iter())
+            .any(|key| ui_hotkeys.contains(key))
+        {
+            return Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS,
+                None,
+            ));
         }
 
         Ok(())

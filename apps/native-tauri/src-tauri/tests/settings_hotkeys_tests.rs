@@ -123,35 +123,35 @@ fn test_key_bindings_with_modifiers() {
 // ============================================================================
 
 #[test]
-fn test_missing_navigation_fails() {
+fn test_missing_navigation_defaults_to_empty_scope() {
     let json = r#"{
         "grades": {
             "again": ["Digit1"]
         }
     }"#;
 
-    let result: Result<HotkeysSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when navigation is missing");
+    let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok(), "Missing navigation should default to empty scope");
 }
 
 #[test]
-fn test_missing_grades_fails() {
+fn test_missing_grades_defaults_to_empty_scope() {
     let json = r#"{
         "navigation": {
             "dashboard": ["ArrowRight"]
         }
     }"#;
 
-    let result: Result<HotkeysSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when grades is missing");
+    let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok(), "Missing grades should default to empty scope");
 }
 
 #[test]
-fn test_empty_json_object_fails() {
+fn test_empty_json_object_defaults_all_scopes() {
     let json = r#"{}"#;
 
-    let result: Result<HotkeysSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail with empty JSON");
+    let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok(), "Empty JSON should default all scopes");
 }
 
 // ============================================================================
@@ -254,6 +254,27 @@ fn test_duplicate_keys_between_scopes_allowed() {
         settings.validate().is_ok(),
         "Same key in different scopes should be allowed"
     );
+}
+
+#[test]
+fn test_duplicate_keys_between_ui_and_navigation_fails() {
+    let json = r#"{
+        "ui": {
+            "focusNext": ["Space"]
+        },
+        "navigation": {
+            "dashboard": ["Space"]
+        },
+        "grades": {}
+    }"#;
+
+    let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(
+        result.is_err(),
+        "Same key in ui and navigation should fail"
+    );
+    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }
 
 #[test]
@@ -436,10 +457,7 @@ fn test_settings_name_hotkeys_validation_with_duplicates() {
 
 #[test]
 fn test_settings_name_hotkeys_validation_empty() {
-    let json = r#"{
-        "navigation": {},
-        "grades": {}
-    }"#;
+    let json = r#"{}"#;
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
@@ -454,5 +472,22 @@ fn test_settings_name_hotkeys_validation_missing_field() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_settings_name_hotkeys_validation_rejects_ui_collision() {
+    let json = r#"{
+        "ui": {
+            "focusNext": ["Space"]
+        },
+        "navigation": {
+            "dashboard": ["Space"]
+        }
+    }"#;
+
+    let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
+    let result = SettingsName::Hotkeys.validate(&content);
     assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }

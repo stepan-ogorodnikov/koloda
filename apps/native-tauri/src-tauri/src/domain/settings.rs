@@ -82,6 +82,13 @@ impl SettingsName {
         match self {
             SettingsName::Learning => {
                 let settings: LearningSettings = serde_json::from_value(content)?;
+                settings.validate()?;
+                Ok(serde_json::to_value(settings)?)
+            }
+            SettingsName::Hotkeys => {
+                let mut settings: HotkeysSettings = serde_json::from_value(content)?;
+                settings.fill_defaults();
+                settings.validate()?;
                 Ok(serde_json::to_value(settings)?)
             }
             _ => {
