@@ -34,7 +34,7 @@ export function GeneratedCardsTable({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="w-full overflow-x-auto">
+      <div className="w-full pb-2 overflow-x-auto">
         <Table.Root variants={{ class: "w-full" }}>
           <Table.Head table={table} />
           <Table.Body table={table} />

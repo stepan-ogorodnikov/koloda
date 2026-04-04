@@ -46,8 +46,10 @@ export function useGenerateCards(streamGenerator: StreamGenerator): UseGenerateC
       if (!controller.signal.aborted && !isAbortError(e)) setError(e instanceof Error ? e : new Error(String(e)));
       return false;
     } finally {
-      if (controllerRef.current === controller) controllerRef.current = null;
-      setIsGenerating(false);
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+        setIsGenerating(false);
+      }
     }
   }, [streamGenerator]);
 

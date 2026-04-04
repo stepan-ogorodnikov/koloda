@@ -1,0 +1,292 @@
+import type { GeneratedCard } from "@koloda/srs";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type * as JotaiModule from "jotai";
+import { describe, expect, it, vi } from "vitest";
+import {
+  createAIModel,
+  createAIProfile,
+  createGeneratedCard,
+  createQueryClient,
+  createQueryClientWrapper,
+  createTemplate,
+} from "../../../test/test-helpers";
+import { serializeGeneratedCards } from "./generate-cards-utility";
+import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
+
+const {
+  useAIProfilesMock,
+  useAIModelsMock,
+  useGenerateCardsMock,
+  useAtomValueMock,
+} = vi.hoisted(() => ({
+  useAIProfilesMock: vi.fn(),
+  useAIModelsMock: vi.fn(),
+  useGenerateCardsMock: vi.fn(),
+  useAtomValueMock: vi.fn(),
+}));
+
+vi.mock("@koloda/react", () => ({
+  useAIProfiles: useAIProfilesMock,
+  useAIModels: useAIModelsMock,
+}));
+
+vi.mock("./use-generate-cards", () => ({
+  useGenerateCards: useGenerateCardsMock,
+}));
+
+vi.mock("@lingui/react", () => ({
+  useLingui: () => ({ _: (value: string) => value }),
+}));
+
+vi.mock("jotai", async () => {
+  const actual = await vi.importActual<typeof JotaiModule>("jotai");
+
+  return {
+    ...actual,
+    useAtomValue: useAtomValueMock,
+  };
+});
+
+describe("useGenerateCardsDialog", () => {
+  it("resets dialog state and cancels the current conversation when closed", async () => {
+    const {
+      result,
+      clearCardsMock,
+      cancelMock,
+      profile,
+      template,
+    } = renderGenerateCardsDialog();
+
+    await waitFor(() => expect(result.current.template?.id).toBe(template.id));
+
+    act(() => {
+      result.current.handleOpenChange(true);
+      result.current.handleProfileChange(profile.id);
+    });
+
+    await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    await act(async () => {
+      await result.current.handleGenerate("First prompt");
+    });
+
+    expect(result.current.messages).toHaveLength(2);
+
+    act(() => {
+      result.current.handleOpenChange(false);
+    });
+
+    expect(result.current.isOpen).toBe(false);
+    expect(result.current.profileId).toBe("");
+    expect(result.current.modelId).toBe("");
+    expect(result.current.messages).toEqual([]);
+    expect(clearCardsMock).toHaveBeenCalled();
+    expect(cancelMock).toHaveBeenCalled();
+  });
+
+  it("appends user and assistant messages and touches the selected AI profile on generate", async () => {
+    const {
+      result,
+      generateMock,
+      touchProfileMutationFn,
+      profile,
+      template,
+    } = renderGenerateCardsDialog();
+
+    await waitFor(() => expect(result.current.template?.id).toBe(template.id));
+
+    act(() => {
+      result.current.handleOpenChange(true);
+      result.current.handleProfileChange(profile.id);
+    });
+
+    await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    await act(async () => {
+      await result.current.handleGenerate("  Explain noun genders  ");
+    });
+
+    await waitFor(() =>
+      expect(touchProfileMutationFn).toHaveBeenCalledWith(
+        {
+          id: profile.id,
+          modelId: profile.lastUsedModel,
+        },
+        expect.any(Object),
+      )
+    );
+    expect(generateMock).toHaveBeenCalledWith({
+      input: {
+        credentialId: profile.id,
+        modelId: profile.lastUsedModel,
+        prompt: "Explain noun genders",
+        temperature: 0.2,
+        deckId: 1,
+        templateId: template.id,
+      },
+      messages: [],
+    });
+    expect(result.current.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
+    expect(result.current.messages[1]?.metadata).toMatchObject({
+      kind: "generated-cards",
+    });
+  });
+
+  it("includes the last successful assistant output in the next request context", async () => {
+    const {
+      result,
+      rerender,
+      generateMock,
+      setCards,
+      profile,
+      template,
+    } = renderGenerateCardsDialog();
+    const firstRunCards = [
+      createGeneratedCard({
+        content: {
+          "1": { text: "First front" },
+          "2": { text: "First back" },
+        },
+      }),
+    ];
+
+    await waitFor(() => expect(result.current.template?.id).toBe(template.id));
+
+    act(() => {
+      result.current.handleProfileChange(profile.id);
+    });
+
+    await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    await act(async () => {
+      await result.current.handleGenerate("First prompt");
+    });
+
+    setCards(firstRunCards);
+    act(() => {
+      rerender();
+    });
+
+    await waitFor(() =>
+      expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.cards).toEqual(firstRunCards)
+    );
+
+    await act(async () => {
+      await result.current.handleGenerate("Second prompt");
+    });
+
+    expect(generateMock.mock.calls[1]?.[0]?.messages).toEqual([
+      { role: "user", content: "First prompt" },
+      { role: "assistant", content: serializeGeneratedCards(firstRunCards, template) },
+    ]);
+  });
+
+  it("skips canceled assistant runs when building the next assistant context", async () => {
+    const {
+      result,
+      rerender,
+      generateMock,
+      setCards,
+      profile,
+      template,
+    } = renderGenerateCardsDialog();
+    const canceledRunCards = [createGeneratedCard()];
+
+    await waitFor(() => expect(result.current.template?.id).toBe(template.id));
+
+    act(() => {
+      result.current.handleProfileChange(profile.id);
+    });
+
+    await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    await act(async () => {
+      await result.current.handleGenerate("First prompt");
+    });
+
+    act(() => {
+      result.current.handleCancel();
+    });
+
+    setCards(canceledRunCards);
+    act(() => {
+      rerender();
+    });
+
+    await waitFor(() =>
+      expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.isCanceled).toBe(true)
+    );
+
+    await act(async () => {
+      await result.current.handleGenerate("Second prompt");
+    });
+
+    expect(generateMock.mock.calls[1]?.[0]?.messages).toEqual([
+      { role: "user", content: "First prompt" },
+    ]);
+    expect(generateMock.mock.calls[1]?.[0]?.messages).not.toContainEqual({
+      role: "assistant",
+      content: serializeGeneratedCards(canceledRunCards, template),
+    });
+  });
+});
+
+function renderGenerateCardsDialog() {
+  const profile = createAIProfile();
+  const template = createTemplate();
+  const model = createAIModel({ id: profile.lastUsedModel!, name: "GPT-5 Mini" });
+  const touchProfileMutationFn = vi.fn(async () => undefined);
+  const clearCardsMock = vi.fn();
+  const cancelMock = vi.fn();
+  const generateMock = vi.fn(async () => true);
+  let cards: GeneratedCard[] = [];
+  let isGenerating = false;
+  let error: Error | null = null;
+
+  useAtomValueMock.mockReturnValue({
+    getTemplateQuery: () => ({
+      queryFn: async () => template,
+    }),
+    touchAIProfileMutation: () => ({
+      mutationFn: touchProfileMutationFn,
+    }),
+  });
+  useAIProfilesMock.mockImplementation((profileId?: string | null) => ({
+    profiles: [profile],
+    selectedProfile: profileId ? profile : null,
+  }));
+  useAIModelsMock.mockReturnValue({
+    models: [model, createAIModel({ id: "openrouter/other", name: "Other" })],
+  });
+  useGenerateCardsMock.mockImplementation(() => ({
+    cards,
+    isGenerating,
+    error,
+    generate: generateMock,
+    clearCards: clearCardsMock,
+    cancel: cancelMock,
+  }));
+
+  const queryClient = createQueryClient();
+  const wrapper = createQueryClientWrapper(queryClient);
+  const rendered = renderHook(() => useGenerateCardsDialog(1, template.id), { wrapper });
+
+  return {
+    ...rendered,
+    profile,
+    template,
+    generateMock,
+    clearCardsMock,
+    cancelMock,
+    touchProfileMutationFn,
+    setCards(nextCards: GeneratedCard[]) {
+      cards = nextCards;
+    },
+    setIsGenerating(nextValue: boolean) {
+      isGenerating = nextValue;
+    },
+    setError(nextValue: Error | null) {
+      error = nextValue;
+    },
+  };
+}

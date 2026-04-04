@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  cacheDir: "../../node_modules/.vite/libs/srs-pgsql",
+  cacheDir: "../../node_modules/.vite/libs/react",
   plugins: [nxViteTsPaths()],
   resolve: {
     alias: {
@@ -14,7 +14,8 @@ export default defineConfig({
     },
   },
   test: {
-    environment: "node",
-    include: ["libs/srs-pgsql/src/**/*.test.ts"],
+    environment: "jsdom",
+    include: ["libs/react/src/**/*.test.ts", "libs/react/src/**/*.test.tsx"],
+    setupFiles: ["libs/react/src/test-setup.ts"],
   },
 });
