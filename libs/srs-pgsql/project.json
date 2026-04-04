@@ -1,0 +1,13 @@
+{
+  "name": "srs-pgsql",
+  "sourceRoot": "libs/srs-pgsql/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/srs-pgsql/vitest.config.mjs --configLoader runner"
+      }
+    }
+  }
+}
