@@ -71,6 +71,7 @@
     "@nx/react": "21.2.1",
     "@nx/vite": "21.2.1",
     "@nx/web": "21.2.1",
+    "@playwright/test": "^1.59.1",
     "@swc-node/register": "~1.9.1",
     "@swc/cli": "~0.6.0",
     "@swc/core": "~1.5.7",

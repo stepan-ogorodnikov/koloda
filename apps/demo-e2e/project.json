@@ -1,0 +1,21 @@
+{
+  "name": "demo-e2e",
+  "sourceRoot": "apps/demo-e2e/src",
+  "projectType": "application",
+  "implicitDependencies": ["demo"],
+  "tags": ["type:e2e", "platform:web"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx tsc --project apps/demo-e2e/tsconfig.json --noEmit"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx playwright test --config apps/demo-e2e/playwright.config.ts"
+      }
+    }
+  }
+}
