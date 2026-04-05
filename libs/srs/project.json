@@ -1,0 +1,13 @@
+{
+  "name": "@koloda/srs",
+  "sourceRoot": "libs/srs/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/srs/vitest.config.mjs --configLoader runner"
+      }
+    }
+  }
+}
