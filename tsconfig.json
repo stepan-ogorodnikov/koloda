@@ -26,6 +26,9 @@
     },
     {
       "path": "./libs/react-base"
+    },
+    {
+      "path": "./apps/demo-e2e"
     }
   ]
 }
