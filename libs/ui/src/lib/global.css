@@ -20,6 +20,9 @@
   --fg-success: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.15) calc(c - 0.03) h);
   --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.08) c h);
+  /* scrollbar */
+  --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l - 0.13) c h);
+  --scrollbar-track: transparent;
   /* input */
   --bg-input: oklch(from var(--bg-level-1) calc(l - 0.0075) c h);
   --fg-input-placeholder: var(--fg-disabled);
@@ -104,6 +107,9 @@
   --fg-success: oklch(from var(--color-green-500) calc(l - 0.13) calc(c - 0.06) h);
   --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.02) c h);
   --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.05) c h);
+  /* scrollbar */
+  --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l + 0.14) c h);
+  --scrollbar-track: transparent;
   /* input */
   --bg-input: oklch(100% 0 0 / 2%);
   --fg-input-placeholder: oklch(100% 0 0 / 20%);
@@ -281,6 +287,19 @@
 
   h3 {
     @apply text-lg font-bold tracking-tight;
+  }
+
+  :root {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  :root::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  :root::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
   }
 
   input[type="search"]::-webkit-search-cancel-button,
