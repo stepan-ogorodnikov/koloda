@@ -2,12 +2,14 @@ import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, button, Dialog } from "@koloda/ui";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
-import type { PropsWithChildren } from "react";
+import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
-export function DeleteDialog({ children }: PropsWithChildren) {
+type DeleteDialogProps = ComponentProps<typeof Dialog.Root>;
+
+export function DeleteDialog({ children, ...props }: DeleteDialogProps) {
   return (
-    <Dialog.Root dismissableWithHotkey>
+    <Dialog.Root dismissableWithHotkey {...props}>
       {children}
     </Dialog.Root>
   );
@@ -47,11 +49,11 @@ function DeleteDialogActions({ children }: PropsWithChildren) {
   return <div className="flex flex-row gap-2">{children}</div>;
 }
 
-function DeleteDialogConfirm({ ...props }: ButtonProps) {
+function DeleteDialogConfirm(props: ButtonProps) {
   return <Button variants={{ style: "primary" }} {...props} />;
 }
 
-function DeleteDialogCancel({ ...props }: ButtonProps) {
+function DeleteDialogCancel(props: ButtonProps) {
   return <Button variants={{ style: "ghost" }} slot="close" {...props} />;
 }
 
