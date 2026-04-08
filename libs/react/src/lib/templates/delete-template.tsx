@@ -1,12 +1,13 @@
 import { defaultTemplateAtom } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { Template } from "@koloda/srs";
-import { DeleteDialog, Tooltip } from "@koloda/ui";
+import { ERROR_MESSAGES, isAppError, type Template } from "@koloda/srs";
+import { DeleteDialog, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
+import { AnimatePresence } from "motion/react";
 
 type DeleteTemplateProps = {
   id: Template["id"];
@@ -20,7 +21,11 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { deleteTemplateMutation, getTemplateDecksQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: queryKeys.templates.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
-  const { mutate } = useMutation(deleteTemplateMutation());
+  const { mutate, error, reset } = useMutation(deleteTemplateMutation());
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) reset();
+  };
 
   const handleConfirm = () => {
     mutate({ id: Number(id) }, {
@@ -38,8 +43,10 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
     ? msg`delete-template.cant-delete-locked`
     : (isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-used`);
 
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`delete-template.message`;
+
   return (
-    <DeleteDialog>
+    <DeleteDialog onOpenChange={handleOpenChange}>
       <div className="relative">
         <DeleteDialog.Trigger isDisabled={isDisabled}>
           {_(msg`delete-template.trigger`)}
@@ -51,10 +58,24 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
         )}
       </div>
       <DeleteDialog.Frame>
-        {_(msg`delete-template.message`)}
+        <AnimatePresence>
+          {error
+            ? (
+              <Fade>
+                {typeof message === "function" ? _(message(error)) : _(message)}
+              </Fade>
+            )
+            : (
+              <Fade>
+                {_(msg`delete-template.message`)}
+              </Fade>
+            )}
+        </AnimatePresence>
         <DeleteDialog.Actions>
           <DeleteDialog.Cancel>{_(msg`delete-template.cancel`)}</DeleteDialog.Cancel>
-          <DeleteDialog.Confirm onClick={handleConfirm}>{_(msg`delete-template.confirm`)}</DeleteDialog.Confirm>
+          <DeleteDialog.Confirm onClick={handleConfirm} isDisabled={!!error}>
+            {_(msg`delete-template.confirm`)}
+          </DeleteDialog.Confirm>
         </DeleteDialog.Actions>
       </DeleteDialog.Frame>
     </DeleteDialog>
