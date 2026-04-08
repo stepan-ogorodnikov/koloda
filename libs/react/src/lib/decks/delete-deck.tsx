@@ -1,5 +1,6 @@
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import { type Deck, ERROR_MESSAGES, isAppError } from "@koloda/srs";
+import { ERROR_MESSAGES, isAppError } from "@koloda/srs";
+import type { Deck } from "@koloda/srs";
 import { DeleteDialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

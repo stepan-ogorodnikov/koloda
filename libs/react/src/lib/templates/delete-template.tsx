@@ -1,6 +1,7 @@
 import { defaultTemplateAtom } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import { ERROR_MESSAGES, isAppError, type Template } from "@koloda/srs";
+import { ERROR_MESSAGES, isAppError } from "@koloda/srs";
+import type { Template } from "@koloda/srs";
 import { DeleteDialog, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -43,7 +44,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
     ? msg`delete-template.cant-delete-locked`
     : (isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-used`);
 
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`delete-template.message`;
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
