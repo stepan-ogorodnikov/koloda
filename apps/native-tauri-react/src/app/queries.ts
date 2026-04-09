@@ -9,6 +9,7 @@ import type {
   Deck,
   DeleteAlgorithmData,
   DeleteCardData,
+  DeleteCardsData,
   DeleteDeckData,
   DeleteTemplateData,
   GetCardsParams,
@@ -132,6 +133,9 @@ export const queriesFn = (): Queries => ({
   }),
   deleteCardMutation: () => ({
     mutationFn: (data: DeleteCardData) => invoke("cmd_delete_card", { data }),
+  }),
+  deleteCardsMutation: () => ({
+    mutationFn: (data: DeleteCardsData) => invoke("cmd_delete_cards", { data }),
   }),
   resetCardProgressMutation: () => ({
     mutationFn: (data: ResetCardProgressData) => invoke("cmd_reset_card_progress", { data }),

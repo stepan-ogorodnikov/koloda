@@ -12,6 +12,7 @@ import type {
   DeckWithOnlyTitle,
   DeleteAlgorithmData,
   DeleteCardData,
+  DeleteCardsData,
   DeleteDeckData,
   DeleteTemplateData,
   GetCardsParams,
@@ -83,6 +84,7 @@ export type Queries = {
   addCardsMutation: () => UseMutationOptions<InsertCardsResponse, AppError, InsertCardData[], unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, AppError, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
+  deleteCardsMutation: () => UseMutationOptions<unknown, AppError, DeleteCardsData, unknown>;
   resetCardProgressMutation: () => UseMutationOptions<unknown, AppError, ResetCardProgressData, unknown>;
   getLessonsQuery: (filters?: LessonFilters) => QueryOptions<Lesson[] | undefined>;
   getTodayReviewTotalsQuery: () => QueryOptions<TodaysReviewTotals | undefined>;

@@ -25,8 +25,8 @@ export function CardsTableSelectionControls({
 }: CardsTableSelectionControlsProps) {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
-  const { deleteCardMutation } = useAtomValue(queriesAtom);
-  const { mutate } = useMutation(deleteCardMutation());
+  const { deleteCardsMutation } = useAtomValue(queriesAtom);
+  const { mutate } = useMutation(deleteCardsMutation());
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedCount = Object.keys(rowSelection).length;
@@ -35,15 +35,13 @@ export function CardsTableSelectionControls({
     .filter((id): id is Card["id"] => id !== undefined);
 
   const handleDelete = () => {
-    selectedIds.forEach((id) => {
-      mutate({ id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
-        },
-      });
+    mutate({ ids: selectedIds }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+        setIsOpen(false);
+        onClearSelection();
+      },
     });
-    setIsOpen(false);
-    onClearSelection();
   };
 
   return (
