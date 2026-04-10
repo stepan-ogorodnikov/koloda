@@ -23,6 +23,7 @@ export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInp
 
   return (
     <TextField
+      variants={{ class: "rounded-2xl" }}
       aria-label={_(msg`ai.chat.input.label`)}
       value={value}
       onChange={onChange}

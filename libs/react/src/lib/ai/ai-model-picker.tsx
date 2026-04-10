@@ -22,7 +22,7 @@ export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps
     <AnimatePresence mode="wait">
       {isLoading && (
         <Fade
-          className="flex flex-row items-center h-10 min-w-0 animate-shimmer-text--fg-level-4/fg-level-1"
+          className="flex flex-row items-center h-10 min-w-0 px-2 animate-shimmer-text--fg-level-4/fg-level-1"
           key="loading"
         >
           <span>{_(msg`ai.model-picker.loading.label`)}</span>
@@ -49,7 +49,7 @@ export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps
         </Fade>
       )}
       {!isLoading && !error && (
-        <Fade key="ready">
+        <Fade className="min-w-0" key="ready">
           <Select
             buttonVariants={{ style: "ghost" }}
             popoverVariants={{ class: "min-w-84" }}

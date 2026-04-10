@@ -72,7 +72,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
       <div className="relative">
         <Button
-          variants={{ style: "dashed", size: "icon", class: "max-tb:hidden" }}
+          variants={{ style: "dashed", size: "icon" }}
           aria-label={_(msg`generate-cards.trigger`)}
           isDisabled={!hasProfiles}
         >
@@ -109,7 +109,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                 <div className="grow" />
                 <Dialog.Close slot="close" />
               </Dialog.Header>
-              <Dialog.Content variants={{ class: "grow min-h-0 py-0" }}>
+              <Dialog.Content variants={{ class: "grow min-h-0 p-0" }}>
                 <Tabs.Panels variants={{ class: "grow flex flex-col" }}>
                   <Tabs.Panel id="chat">
                     <div className="flex h-full min-h-0 flex-col">

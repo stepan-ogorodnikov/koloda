@@ -18,7 +18,7 @@ const AUTO_SCROLL_THRESHOLD = 80;
 
 const aiChatPanel = [
   "flex flex-col gap-2 w-full max-w-3xl mx-auto p-2",
-  "rounded-t-xl border-2 border-b-0 border-input bg-input shadow-input",
+  "rounded-2xl border-2 border-input bg-input shadow-input",
 ].join(" ");
 
 export type AIChatProps = {
@@ -233,26 +233,31 @@ export function AIChat({
       </AnimatePresence>
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
-        <div className="flex items-center gap-3">
-          <AIProfilePicker value={profileId} onChange={onProfileChange} />
+        <div className="flex flex-row items-center min-w-0">
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} />
-          <div className="grow" />
-          <Button
-            variants={{ style: "ghost", size: "icon" }}
-            aria-label={_(msg`ai.chat.reset.label`)}
-            isDisabled={!canReset}
-            onPress={handleReset}
-          >
-            <HugeiconsIcon
-              className="size-5 min-w-5"
-              strokeWidth={1.75}
-              icon={Undo02Icon}
-              aria-hidden="true"
-            />
-          </Button>
-          <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
+          <div className="grow min-w-3" />
+          <div className="shrink-0 flex flex-row items-center gap-2">
+            <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
+          </div>
         </div>
       </form>
+      <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2">
+        <AIProfilePicker value={profileId} onChange={onProfileChange} />
+        <div className="grow min-w-3" />
+        <Button
+          variants={{ style: "ghost", size: "icon" }}
+          aria-label={_(msg`ai.chat.reset.label`)}
+          isDisabled={!canReset}
+          onPress={handleReset}
+        >
+          <HugeiconsIcon
+            className="size-5 min-w-5"
+            strokeWidth={1.75}
+            icon={Undo02Icon}
+            aria-hidden="true"
+          />
+        </Button>
+      </div>
     </section>
   );
 }

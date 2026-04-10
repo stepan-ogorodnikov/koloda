@@ -16,7 +16,7 @@ export function AIChatSubmit({ canSubmit, canCancel, onCancel }: AIChatSubmitPro
   return canCancel
     ? (
       <Button
-        variants={{ style: "primary", size: "icon" }}
+        variants={{ style: "primary", size: "icon", class: "rounded-2xl" }}
         aria-label={_(msg`ai-chat.cancel.label`)}
         onPress={() => onCancel?.()}
       >
@@ -29,7 +29,7 @@ export function AIChatSubmit({ canSubmit, canCancel, onCancel }: AIChatSubmitPro
       </Button>
     )
     : (
-      <Button variants={{ style: "primary", size: "icon" }} type="submit" isDisabled={!canSubmit}>
+      <Button variants={{ style: "primary", size: "icon", class: "rounded-xl" }} type="submit" isDisabled={!canSubmit}>
         <HugeiconsIcon
           className="size-5 min-w-5"
           strokeWidth={1.75}
