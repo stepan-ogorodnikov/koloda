@@ -153,7 +153,7 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
 }
 
 const selectValue = tv({
-  base: "flex flex-row items-center gap-2 truncate",
+  base: "flex flex-row items-center gap-2 min-w-0 truncate",
   variants: {
     isPlaceholder: {
       true: "fg-disabled",
@@ -163,7 +163,7 @@ const selectValue = tv({
 
 function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
   return (
-    <ReactAriaSelectValue {...props}>
+    <ReactAriaSelectValue className="min-w-0" {...props}>
       {(state) => (
         <span className={selectValue({ isPlaceholder: state.isPlaceholder })}>
           {typeof props.children === "function" ? props.children(state) : state.defaultChildren}
