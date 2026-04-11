@@ -10,7 +10,7 @@ import { tv } from "tailwind-variants";
 const ToggleGroupContext = createContext<string>("");
 
 export const toggleGroup = tv({
-  base: "flex flex-row items-center h-10  border-2 bg-toggle-group border-toggle-group rounded-lg",
+  base: "flex flex-row items-center gap-1 h-10 border-2 bg-toggle-group border-toggle-group rounded-lg",
 });
 
 type ToggleGroupProps = ToggleButtonGroupProps & TWVProps<typeof toggleGroup>;
@@ -27,7 +27,7 @@ export function ToggleGroup({ variants, ...props }: ToggleGroupProps) {
 
 export const toggleGroupItem = tv({
   extend: button,
-  base: "relative -m-0.5 fg-level-3 aria-checked:fg-level-1 hover:fg-level-1",
+  base: "relative -m-0.5 fg-level-3 aria-checked:fg-level-1 hover:fg-level-1 focus:z-5",
 });
 
 type ToggleGroupItemProps = ToggleButtonProps & PropsWithChildren & TWVProps<typeof toggleGroupItem>;
