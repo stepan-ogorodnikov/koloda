@@ -122,8 +122,6 @@
   --shadow-button-pressed: var(--shadow-input);
   --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l + 0.03) c h);
   --border-button-bordered: var(--border-input);
-  --bg-button-ghost-hover: oklch(100% 0 0 / 3%);
-  --bg-button-ghost-pressed: oklch(100% 0 0 / 5%);
   --bg-button-primary: oklch(from var(--bg-level-1) calc(l + 0.01) c h);
   --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l + 0.01) c h);
   --bg-button-primary-disabled: transparent;

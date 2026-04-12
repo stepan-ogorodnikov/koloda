@@ -5,7 +5,7 @@ import { tv } from "tailwind-variants";
 import { lessonAtom } from "./lesson";
 
 export const lessonBadge = [
-  "group flex items-center w-full h-full px-1 max-tb:py-2 text-left hover:bg-button-ghost-hover",
+  "group flex items-center w-full h-full px-1 max-tb:py-2 text-left hover:bg-button-hover",
   "cursor-pointer disabled:cursor-default no-focus-ring",
 ].join(" ");
 

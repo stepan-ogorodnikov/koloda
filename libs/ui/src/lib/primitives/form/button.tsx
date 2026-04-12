@@ -30,7 +30,7 @@ export const button = tv({
         "disabled:bg-button-primary-disabled disabled:fg-disabled",
       ],
       dashed: [
-        "bg-transparent hover:bg-button-ghost-hover border-2 border-button-bordered border-dashed fg-level-2",
+        "bg-transparent hover:bg-button-hover border-2 border-button-bordered border-dashed fg-level-2",
         "hover:bg-button-hover disabled:fg-disabled",
         "data-pressed:bg-button-pressed data-pressed:shadow-button-pressed",
       ],
