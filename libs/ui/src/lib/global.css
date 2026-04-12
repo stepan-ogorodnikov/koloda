@@ -30,11 +30,11 @@
   --border-input: oklch(from var(--bg-level-1) calc(l - 0.05) c h);
   --shadow-input: inset 0 0.125rem 0.125rem oklch(75% 0 0 / 6%);
   /* button */
+  --shadow-button-pressed: var(--shadow-input);
+  --bg-button-hover: oklch(0% 0 0 / 2%);
+  --bg-button-pressed: oklch(0% 0 0 / 4%);
   --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
   --border-button-bordered: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
-  --bg-button-ghost-hover: oklch(0% 0 0 / 3%);
-  --bg-button-ghost-pressed: oklch(0% 0 0 / 5%);
-  --shadow-button-ghost: var(--shadow-input);
   --bg-button-primary: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
   --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l - 0.01) c h);
   --bg-button-primary-disabled: transparent;
@@ -117,11 +117,13 @@
   --shadow-input: inset 0 2px 2px oklch(0% 0 0 / 8%);
   --border-input: oklch(100% 0 0 / 9%);
   /* button */
+  --bg-button-hover: oklch(100% 0 0 / 3%);
+  --bg-button-pressed: oklch(100% 0 0 / 5%);
+  --shadow-button-pressed: var(--shadow-input);
   --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l + 0.03) c h);
   --border-button-bordered: var(--border-input);
   --bg-button-ghost-hover: oklch(100% 0 0 / 3%);
   --bg-button-ghost-pressed: oklch(100% 0 0 / 5%);
-  --shadow-button-ghost: var(--shadow-input);
   --bg-button-primary: oklch(from var(--bg-level-1) calc(l + 0.01) c h);
   --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l + 0.01) c h);
   --bg-button-primary-disabled: transparent;
@@ -208,12 +210,12 @@
   --shadow-input: var(--shadow-input);
   --color-border-input: var(--border-input);
   /* button */
+  --color-bg-button-hover: var(--bg-button-hover);
+  --color-bg-button-pressed: var(--bg-button-pressed);
+  --shadow-button-pressed: var(--shadow-button-pressed);
   --color-bg-button-bordered-hover: var(--bg-button-bordered-hover);
   --color-border-button-bordered: var(--border-button-bordered);
   --shadow-button-bordered: var(--shadow-button-bordered);
-  --color-bg-button-ghost-hover: var(--bg-button-ghost-hover);
-  --color-bg-button-ghost-pressed: var(--bg-button-ghost-pressed);
-  --shadow-button-ghost: var(--shadow-button-ghost);
   --color-bg-button-primary: var(--bg-button-primary);
   --color-bg-button-primary-hover: var(--bg-button-primary-hover);
   --color-border-button-primary: var(--border-button-primary);

@@ -13,23 +13,26 @@ export const button = tv({
     style: {
       ghost: [
         "bg-transparent fg-level-2",
-        "hover:bg-button-ghost-hover",
-        "data-pressed:bg-button-ghost-pressed data-pressed:shadow-button-ghost",
+        "hover:bg-button-hover",
+        "data-pressed:bg-button-pressed data-pressed:shadow-button-pressed",
         "disabled:fg-disabled",
       ],
       bordered: [
         "bg-transparent fg-level-2 border-2 border-button-bordered",
-        "hover:bg-button-bordered-hover disabled:opacity-25 animate-opacity",
+        "hover:bg-button-hover disabled:opacity-25 animate-opacity",
+        "data-pressed:bg-button-pressed data-pressed:shadow-button-pressed",
       ],
       primary: [
         "bg-button-primary border-2 border-button-primary shadow-button-primary",
         "fg-level-2 font-semibold",
         "hover:bg-button-primary-hover",
+        "data-pressed:bg-button-pressed data-pressed:shadow-button-pressed",
         "disabled:bg-button-primary-disabled disabled:fg-disabled",
       ],
       dashed: [
         "bg-transparent hover:bg-button-ghost-hover border-2 border-button-bordered border-dashed fg-level-2",
-        "disabled:fg-disabled",
+        "hover:bg-button-hover disabled:fg-disabled",
+        "data-pressed:bg-button-pressed data-pressed:shadow-button-pressed",
       ],
     },
     size: {
