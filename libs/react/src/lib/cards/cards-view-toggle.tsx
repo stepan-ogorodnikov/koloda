@@ -1,3 +1,5 @@
+import { CarouselHorizontal02Icon, TableIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -17,8 +19,17 @@ export function CardsViewToggle() {
         if (value === "table" || value === "stack") setValue(value);
       }}
     >
-      <ToggleGroup.Item id="table">{_(msg`cards.views.table`)}</ToggleGroup.Item>
-      <ToggleGroup.Item id="stack">{_(msg`cards.views.stack`)}</ToggleGroup.Item>
+      <ToggleGroup.Item variants={{ size: "icon" }} aria-label={_(msg`cards.views.table`)} id="table">
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={TableIcon} aria-hidden="true" />
+      </ToggleGroup.Item>
+      <ToggleGroup.Item variants={{ size: "icon" }} aria-label={_(msg`cards.views.stack`)} id="stack">
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={1.75}
+          icon={CarouselHorizontal02Icon}
+          aria-hidden="true"
+        />
+      </ToggleGroup.Item>
     </ToggleGroup>
   );
 }

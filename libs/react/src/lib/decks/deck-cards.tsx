@@ -37,7 +37,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       </div>
       <QueryState query={query}>
         {() => (
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             {view === "stack" && <CardsStack deckId={deckId} controlsNode={portalContainer} key="stack" />}
             {view === "table" && <CardsTable deckId={deckId} controlsNode={portalContainer} key="table" />}
           </AnimatePresence>
