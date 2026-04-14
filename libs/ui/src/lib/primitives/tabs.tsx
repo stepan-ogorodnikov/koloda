@@ -22,7 +22,7 @@ const tabs = tv({ base: "grow flex flex-col min-h-0" });
 type TabsProps = ReactAriaTabsProps & TWVProps<typeof tabs>;
 
 export function Tabs({ variants, ...props }: TabsProps) {
-  return <ReactAriaTabs className={tabs(variants)} {...props} />;
+  return <ReactAriaTabs className={tabs(variants)} keyboardActivation="manual" {...props} />;
 }
 
 const tabsList = tv({ base: "self-stretch flex flex-row gap-2 items-center px-2" });
