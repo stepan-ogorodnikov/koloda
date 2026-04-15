@@ -58,21 +58,58 @@ function moveFocusedTab(offset: 1 | -1) {
   const active = document.activeElement as HTMLElement | null;
   if (!active) return false;
 
+  // Try to find a tab first
   const tab = active.closest<HTMLElement>("[role=\"tab\"]");
-  if (!tab) return false;
+  if (tab) {
+    const tabList = tab.closest<HTMLElement>("[role=\"tablist\"]");
+    if (tabList) {
+      const orientation = tabList.getAttribute("aria-orientation") || tabList.getAttribute("data-orientation");
+      const isVertical = orientation === "vertical";
+      const key = offset > 0
+        ? (isVertical ? "ArrowDown" : "ArrowRight")
+        : (isVertical ? "ArrowUp" : "ArrowLeft");
 
-  const tabList = tab.closest<HTMLElement>("[role=\"tablist\"]");
-  if (!tabList) return false;
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      tab.dispatchEvent(event);
+      return true;
+    }
+  }
 
-  const orientation = tabList.getAttribute("aria-orientation") || tabList.getAttribute("data-orientation");
-  const isVertical = orientation === "vertical";
-  const key = offset > 0
-    ? (isVertical ? "ArrowDown" : "ArrowRight")
-    : (isVertical ? "ArrowUp" : "ArrowLeft");
+  // Try to find a toggle group item (radio group)
+  const radio = active.closest<HTMLElement>("[role=\"radio\"]");
+  if (radio) {
+    const group = radio.closest<HTMLElement>("[role=\"radiogroup\"]");
+    if (group) {
+      const orientation = group.getAttribute("aria-orientation") || group.getAttribute("data-orientation");
+      const isVertical = orientation === "vertical";
+      const key = offset > 0
+        ? (isVertical ? "ArrowDown" : "ArrowRight")
+        : (isVertical ? "ArrowUp" : "ArrowLeft");
 
-  const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
-  tab.dispatchEvent(event);
-  return true;
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      radio.dispatchEvent(event);
+      return true;
+    }
+  }
+
+  // Try to find a toggle group item (button group with aria-pressed/aria-checked)
+  const toggleButton = active.closest<HTMLElement>("[role=\"button\"][aria-pressed], [role=\"button\"][aria-checked]");
+  if (toggleButton) {
+    const group = toggleButton.closest<HTMLElement>("[role=\"group\"]");
+    if (group) {
+      const orientation = group.getAttribute("aria-orientation") || group.getAttribute("data-orientation");
+      const isVertical = orientation === "vertical";
+      const key = offset > 0
+        ? (isVertical ? "ArrowDown" : "ArrowRight")
+        : (isVertical ? "ArrowUp" : "ArrowLeft");
+
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      toggleButton.dispatchEvent(event);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function goToNextTab(e: KeyboardEvent) {
