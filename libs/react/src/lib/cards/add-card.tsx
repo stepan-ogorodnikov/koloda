@@ -10,7 +10,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FocusScope, useFocusManager } from "react-aria";
+import { FocusScope } from "react-aria";
 
 type AddCardProps = {
   deckId: Deck["id"];
@@ -31,6 +31,14 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   ), [template]);
   const firstFieldRef = useRef<HTMLTextAreaElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        firstFieldRef.current?.focus();
+      });
+    }
+  }, [isOpen]);
 
   const form = useAppForm({
     defaultValues: { content, deckId, templateId } as InsertCardData,
@@ -65,7 +73,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "large" }}>
           <Dialog.Body>
-            <FocusScope contain>
+            <FocusScope>
               <Dialog.Header>
                 <Dialog.Title>{_(msg`add-cards.title`)}</Dialog.Title>
                 <div className="grow" />
@@ -82,12 +90,6 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                 <Dialog.Content variants={{ class: "justify-center pb-6" }}>
                   <QueryState query={query}>
                     {(data) => {
-                      const focusManager = useFocusManager();
-
-                      useEffect(() => {
-                        focusManager?.focusNext();
-                      }, [focusManager]);
-
                       return data.content.fields.map(({ id, title }, i) => (
                         <form.AppField name={`content.${id}.text`} key={id}>
                           {(field) => (
