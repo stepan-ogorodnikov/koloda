@@ -57,7 +57,7 @@ export function AddTemplate() {
   }, [isOpen, form]);
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-template.trigger`)}>
         <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
       </Button>

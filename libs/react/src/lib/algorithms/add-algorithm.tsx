@@ -1,3 +1,5 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { DEFAULT_FSRS_ALGORITHM, insertAlgorithmSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Algorithm } from "@koloda/srs";
@@ -7,8 +9,6 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect, useRef, useState } from "react";
 
 export function AddAlgorithm() {
@@ -57,7 +57,7 @@ export function AddAlgorithm() {
   }, [isOpen, form]);
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-algorithm.trigger`)}>
         <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} />
       </Button>

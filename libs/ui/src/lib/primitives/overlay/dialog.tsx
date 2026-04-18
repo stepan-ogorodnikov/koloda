@@ -1,54 +1,20 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
-import { Button, button, matchesAnyHotkey, overlay, Popover } from "@koloda/ui";
-import { useCallback, useContext, useEffect } from "react";
-import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components";
+import { Button, button, dispatchKey, overlay, Popover } from "@koloda/ui";
+import type { HotkeyOptions } from "@tanstack/react-hotkeys";
+import type { ComponentProps } from "react";
+import { useRef } from "react";
+import type { DialogProps, ModalOverlayProps } from "react-aria-components";
 import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
-import { OverlayTriggerStateContext } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { Modal } from "./modal";
 import { OverlayFrameContent, OverlayFrameFooter, OverlayFrameHeader, OverlayFrameTitle } from "./overlay";
 
+const options: HotkeyOptions = { ignoreInputs: false, conflictBehavior: "allow" };
+
 export function Dialog() {
-  return null;
-}
-
-type DialogRootProps = DialogTriggerProps & { dismissableWithHotkey?: boolean };
-
-function DialogRoot({ dismissableWithHotkey, children, ...props }: DialogRootProps) {
-  return (
-    <DialogTrigger {...props}>
-      <>
-        <DialogHotkeyListener enabled={!!dismissableWithHotkey} />
-        {children}
-      </>
-    </DialogTrigger>
-  );
-}
-
-function DialogHotkeyListener({ enabled }: { enabled: boolean }) {
-  const { ui } = useHotkeysSettings();
-  const overlayState = useContext(OverlayTriggerStateContext);
-
-  const onKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.defaultPrevented || event.isComposing) return;
-    if (ui.close.length > 0 && matchesAnyHotkey(event, ui.close)) {
-      event.preventDefault();
-      event.stopPropagation();
-      overlayState?.close();
-    }
-  }, [overlayState, ui]);
-
-  useEffect(() => {
-    if (!enabled || !overlayState?.isOpen || ui.close.length === 0) return;
-    document.addEventListener("keydown", onKeyDown, { capture: true });
-    return () => {
-      document.removeEventListener("keydown", onKeyDown, { capture: true });
-    };
-  }, [enabled, onKeyDown, overlayState, ui.close.length]);
-
   return null;
 }
 
@@ -60,6 +26,26 @@ function DialogOverlay({ variants, ...props }: DialogOverlayProps) {
 
 function DialogBody(props: DialogProps) {
   return <ReactAriaDialog className="grow min-h-0 flex flex-col focus-ring" {...props} />;
+}
+
+type DialogPopoverProps = ComponentProps<typeof Popover>;
+
+function DialogPopover(props: DialogPopoverProps) {
+  const { ui } = useHotkeysSettings();
+  const ref = useRef(null);
+  useAppHotkey(ui.close, () => dispatchKey(ref, "Escape"), "", options);
+
+  return <Popover ref={ref} {...props} />;
+}
+
+type DialogModalProps = ComponentProps<typeof Modal>;
+
+function DialogModal(props: DialogModalProps) {
+  const { ui } = useHotkeysSettings();
+  const ref = useRef(null);
+  useAppHotkey(ui.close, () => dispatchKey(ref, "Escape"), "", options);
+
+  return <Modal ref={ref} {...props} />;
 }
 
 export const dialogClose = tv({
@@ -81,10 +67,10 @@ function DialogClose({ variants, ...props }: DialogCloseProps) {
   );
 }
 
-Dialog.Root = DialogRoot;
+Dialog.Root = DialogTrigger;
 Dialog.Overlay = DialogOverlay;
-Dialog.Modal = Modal;
-Dialog.Popover = Popover;
+Dialog.Modal = DialogModal;
+Dialog.Popover = DialogPopover;
 Dialog.Body = DialogBody;
 Dialog.Close = DialogClose;
 Dialog.Header = OverlayFrameHeader;

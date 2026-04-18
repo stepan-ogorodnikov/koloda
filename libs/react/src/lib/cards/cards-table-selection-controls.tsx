@@ -62,7 +62,7 @@ export function CardsTableSelectionControls({
             {_(msg`${plural(selectedCount, { other: "cards-table.selection.label" })}`)}
           </span>
         </div>
-        <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange} dismissableWithHotkey>
+        <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
           <Button variants={{ style: "ghost" }} onClick={() => setIsOpen(true)}>
             <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
             <span>

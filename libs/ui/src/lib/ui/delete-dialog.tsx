@@ -7,12 +7,8 @@ import { tv } from "tailwind-variants";
 
 type DeleteDialogProps = ComponentProps<typeof Dialog.Root>;
 
-export function DeleteDialog({ children, ...props }: DeleteDialogProps) {
-  return (
-    <Dialog.Root dismissableWithHotkey {...props}>
-      {children}
-    </Dialog.Root>
-  );
+export function DeleteDialog(props: DeleteDialogProps) {
+  return <Dialog.Root {...props} />;
 }
 
 const deleteButtonTrigger = tv({

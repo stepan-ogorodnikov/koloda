@@ -51,7 +51,7 @@ export function CardsTableColumnsVisibility<TData>({
   };
 
   return (
-    <Dialog.Root dismissableWithHotkey>
+    <Dialog.Root>
       <Button variants={{ style: "bordered", size: "default" }}>
         <HugeiconsIcon
           className="size-5 min-w-5"

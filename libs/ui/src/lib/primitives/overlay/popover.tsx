@@ -1,7 +1,7 @@
 import { overlayFrame } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
+import type { ComponentProps } from "react";
 import { Popover as ReactAriaPopover } from "react-aria-components";
-import type { PopoverProps as ReactAriaPopoverProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const popover = tv({
@@ -17,7 +17,7 @@ export const popover = tv({
   ],
 });
 
-export type PopoverProps = ReactAriaPopoverProps & TWVProps<typeof popover>;
+export type PopoverProps = ComponentProps<typeof ReactAriaPopover> & TWVProps<typeof popover>;
 
 export function Popover({ variants, ...props }: PopoverProps) {
   return <ReactAriaPopover className={popover(variants)} {...props} />;

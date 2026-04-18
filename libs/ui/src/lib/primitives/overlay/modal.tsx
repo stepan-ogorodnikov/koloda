@@ -1,5 +1,5 @@
 import type { TWVProps } from "@koloda/ui";
-import type { ComponentProps, PropsWithChildren } from "react";
+import type { ComponentProps } from "react";
 import { Modal as ReactAriaModal } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import { overlayFrame } from "./overlay";
@@ -26,15 +26,8 @@ const modal = tv({
   },
 });
 
-type ModalProps =
-  & ComponentProps<typeof ReactAriaModal>
-  & TWVProps<typeof modal>
-  & PropsWithChildren;
+type ModalProps = ComponentProps<typeof ReactAriaModal> & TWVProps<typeof modal>;
 
-export function Modal({ variants, children, ...props }: ModalProps) {
-  return (
-    <ReactAriaModal className={modal(variants)} {...props}>
-      {children}
-    </ReactAriaModal>
-  );
+export function Modal({ variants, ...props }: ModalProps) {
+  return <ReactAriaModal className={modal(variants)} {...props} />;
 }

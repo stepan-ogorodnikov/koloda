@@ -40,7 +40,7 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange} dismissableWithHotkey>
+    <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button
         variants={{ style: "ghost", size: "icon", class: "group w-full p-1 rounded-none no-focus-ring" }}
         aria-label={_(msg`delete-card.trigger`)}

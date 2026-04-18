@@ -31,7 +31,7 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
   };
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button
         variants={{ style: "ghost", size: "icon" }}
         aria-label={_(msg`settings.ai.profiles.delete.trigger`)}

@@ -58,7 +58,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
   }, [isOpen, form]);
 
   return (
-    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen} dismissableWithHotkey>
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button variants={{ style: "primary" }}>
         <HugeiconsIcon
           className="size-5 min-w-5"

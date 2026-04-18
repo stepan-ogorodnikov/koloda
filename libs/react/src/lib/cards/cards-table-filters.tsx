@@ -29,7 +29,7 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
   const showTemplateFilter = templates && templates.length > 1;
 
   return (
-    <Dialog.Root dismissableWithHotkey>
+    <Dialog.Root>
       <Button variants={{ style: "bordered", size: "default" }}>
         <HugeiconsIcon
           className="size-5 min-w-5"
