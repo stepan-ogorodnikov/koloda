@@ -14,6 +14,7 @@ describe("settings-hotkeys", () => {
         reset: [],
       },
       ui: {
+        submit: [],
         focusNext: [],
         focusPrev: [],
         nextTab: [],

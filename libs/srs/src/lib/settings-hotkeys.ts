@@ -17,6 +17,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     reset: msg`settings.hotkeys.form.reset`,
   },
   ui: {
+    submit: msg`settings.hotkeys.ui.submit`,
     focusNext: msg`settings.hotkeys.ui.focusNext`,
     focusPrev: msg`settings.hotkeys.ui.focusPrev`,
     nextTab: msg`settings.hotkeys.ui.nextTab`,
@@ -40,7 +41,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 
 const hotkeys = {
   form: ["submit", "reset"],
-  ui: ["focusNext", "focusPrev", "nextTab", "prevTab", "close"],
+  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
 } as const;
@@ -181,6 +182,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     reset: ["Mod+D"],
   },
   ui: {
+    submit: ["Mod+E"],
     focusNext: ["Alt+J"],
     focusPrev: ["Alt+K"],
     nextTab: ["J"],

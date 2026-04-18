@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::app::error::{error_codes, AppError};
 
 const FORM_KEYS: &[&str] = &["submit", "reset"];
-const UI_KEYS: &[&str] = &["focusNext", "focusPrev", "nextTab", "prevTab", "close"];
+const UI_KEYS: &[&str] = &["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"];
 const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings"];
 const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];
 

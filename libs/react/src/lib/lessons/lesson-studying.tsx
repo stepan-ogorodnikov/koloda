@@ -17,7 +17,7 @@ type LessonStudyingProps = {
 
 export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   const { getLessonDataQuery } = useAtomValue(queriesAtom);
-  const { grades } = useHotkeysSettings();
+  const { grades, ui } = useHotkeysSettings();
   const { data } = useQuery({
     queryKey: queryKeys.lessons.data({ amounts: state.amounts!, filters: state.filters! }),
     ...getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }),
@@ -29,6 +29,14 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   useAppHotkey(grades.easy, () => dispatch(["gradeSelected", 3]), "lesson", { eventType: "keyup" });
   useAppHotkey(["Enter", "Space"], () => dispatch(["cardSubmitted"]), "lesson", { conflictBehavior: "allow" });
   useAppHotkey(["Escape"], () => dispatch(["terminationRequested", true]), "lesson", { ignoreInputs: false });
+  useAppHotkey(
+    ui.submit,
+    () => {
+      if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) dispatch(["cardSubmitted"]);
+    },
+    "lesson",
+    { ignoreInputs: false, conflictBehavior: "allow" },
+  );
 
   useEffect(() => {
     if (data) dispatch(["lessonDataReceived", data]);
