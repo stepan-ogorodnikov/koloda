@@ -44,7 +44,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
     ? msg`delete-template.cant-delete-locked`
     : (isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-used`);
 
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>

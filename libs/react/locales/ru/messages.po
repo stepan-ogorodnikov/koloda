@@ -14,11 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:60
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:76
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:55
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:62
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
 
@@ -43,15 +43,15 @@ msgstr "Новый алгоритм"
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:119
+#: ../../libs/react/src/lib/cards/add-card.tsx:131
 msgid "add-card.submit"
 msgstr "Добавить"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:70
+#: ../../libs/react/src/lib/cards/add-card.tsx:88
 msgid "add-cards.title"
 msgstr "Добавить карточку"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:61
+#: ../../libs/react/src/lib/cards/add-card.tsx:80
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
@@ -103,15 +103,15 @@ msgstr "Новый шаблон"
 msgid "ai-chat.cancel.label"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:26
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:27
 msgid "ai.chat.input.label"
 msgstr "Поле ввода сообщения"
 
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:34
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:35
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:242
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:249
 msgid "ai.chat.reset.label"
 msgstr "Очистить чат"
 
@@ -323,19 +323,19 @@ msgstr "Поиск по карточкам"
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:83
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:102
 msgid "cards-table.selection.clear"
 msgstr "Сбросить выбор"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:74
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:93
 msgid "cards-table.selection.delete.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:71
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:90
 msgid "cards-table.selection.delete.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:62
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:69
 msgid "cards-table.selection.delete.trigger"
 msgstr "Удалить"
 
@@ -355,15 +355,15 @@ msgstr "Статус"
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:68
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:84
 msgid "cards.table.selection.delete-confirm"
 msgstr "Вы уверены, что хотите удалить выбранные карточки?"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:25
 msgid "cards.views.stack"
 msgstr "По одной"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:20
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:22
 msgid "cards.views.table"
 msgstr "Таблица"
 
@@ -431,97 +431,95 @@ msgstr "Вкладки колоды"
 msgid "decks.title"
 msgstr "Колоды"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:79
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:88
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:101
 msgid "delete-algorithm.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:50
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:56
 msgid "delete-algorithm.cant-delete"
 msgstr "Нельзя удалить алгоритм по умолчанию"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:80
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:89
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:103
 msgid "delete-algorithm.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:86
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:96
 msgid "delete-algorithm.message"
 msgstr "Подтвердите удаление алгоритма"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:62
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:78
 msgid "delete-algorithm.successor-message"
 msgstr "Чтобы удалить этот алгоритм нужно выбрать алгоритм наследник"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:66
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:82
 msgid "delete-algorithm.successor.label"
 msgstr "Алгоритм наследник"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:47
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:53
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
-#: ../../libs/react/src/lib/cards/delete-card.tsx:36
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:73
+#: ../../libs/react/src/lib/cards/delete-card.tsx:56
 msgid "delete-card.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
-#: ../../libs/react/src/lib/cards/delete-card.tsx:37
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:70
+#: ../../libs/react/src/lib/cards/delete-card.tsx:58
 msgid "delete-card.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
-#: ../../libs/react/src/lib/cards/delete-card.tsx:34
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:65
+#: ../../libs/react/src/lib/cards/delete-card.tsx:51
 msgid "delete-card.message"
 msgstr "Подтвердите удаление карточки"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
-#: ../../libs/react/src/lib/cards/delete-card.tsx:31
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/delete-card.tsx:39
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:37
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:57
 msgid "delete-deck.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:38
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:59
 msgid "delete-deck.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:35
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:52
 msgid "delete-deck.message"
 msgstr "Подтвердите удаление колоды"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:32
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:40
 msgid "delete-deck.trigger"
 msgstr "Удалить колоду"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:56
+#: ../../libs/react/src/lib/templates/delete-template.tsx:76
 msgid "delete-template.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:39
+#: ../../libs/react/src/lib/templates/delete-template.tsx:45
 msgid "delete-template.cant-delete-default"
 msgstr "Нельзя удалить шаблон по умолчанию"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+#: ../../libs/react/src/lib/templates/delete-template.tsx:44
 msgid "delete-template.cant-delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:39
+#: ../../libs/react/src/lib/templates/delete-template.tsx:45
 msgid "delete-template.cant-delete-used"
 msgstr "Нельзя удалить используемый колодами шаблон"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:57
+#: ../../libs/react/src/lib/templates/delete-template.tsx:78
 msgid "delete-template.confirm"
 msgstr "Удалить"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:54
+#: ../../libs/react/src/lib/templates/delete-template.tsx:71
 msgid "delete-template.message"
 msgstr "Подтвердите удаление шаблона"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:45
+#: ../../libs/react/src/lib/templates/delete-template.tsx:53
 msgid "delete-template.trigger"
 msgstr "Удалить шаблон"
 
@@ -714,11 +712,11 @@ msgstr "Не найдено"
 msgid "preview-card.trigger"
 msgstr "Предпросмотр карточки"
 
-#: ../../libs/react/src/lib/components/query-error.tsx:15
+#: ../../libs/react/src/lib/components/query-error.tsx:19
 msgid "query-error.message"
 msgstr "Ошибка загрузки"
 
-#: ../../libs/react/src/lib/components/query-error.tsx:31
+#: ../../libs/react/src/lib/components/query-error.tsx:55
 msgid "query-error.retry"
 msgstr "Повторить"
 

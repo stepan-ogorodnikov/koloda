@@ -31,7 +31,7 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
     });
   };
 
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>

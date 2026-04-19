@@ -51,7 +51,7 @@ export function CardsTableSelectionControls({
     });
   };
 
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <Fade className="sticky bottom-16 tb:bottom-2 flex justify-center">

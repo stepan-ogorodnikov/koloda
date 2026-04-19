@@ -14,11 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:60
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:76
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:55
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:62
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
@@ -43,15 +43,15 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:119
+#: ../../libs/react/src/lib/cards/add-card.tsx:131
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:70
+#: ../../libs/react/src/lib/cards/add-card.tsx:88
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/react/src/lib/cards/add-card.tsx:61
+#: ../../libs/react/src/lib/cards/add-card.tsx:80
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
@@ -103,15 +103,15 @@ msgstr "New template"
 msgid "ai-chat.cancel.label"
 msgstr "Cancel request"
 
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:26
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:27
 msgid "ai.chat.input.label"
 msgstr "Prompt input"
 
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:34
+#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:35
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:242
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:249
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
 
@@ -323,19 +323,19 @@ msgstr "Search cards"
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:83
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:102
 msgid "cards-table.selection.clear"
 msgstr "Clear"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:74
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:93
 msgid "cards-table.selection.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:71
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:90
 msgid "cards-table.selection.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:62
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:69
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
@@ -355,15 +355,15 @@ msgstr "Status"
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
-#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:68
+#: ../../libs/react/src/lib/cards/cards-table-selection-controls.tsx:84
 msgid "cards.table.selection.delete-confirm"
 msgstr "Are you sure you want to delete selected cards?"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:21
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:25
 msgid "cards.views.stack"
 msgstr "Stack"
 
-#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:20
+#: ../../libs/react/src/lib/cards/cards-view-toggle.tsx:22
 msgid "cards.views.table"
 msgstr "Table"
 
@@ -431,97 +431,95 @@ msgstr "Deck tabs"
 msgid "decks.title"
 msgstr "Decks"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:79
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:88
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:101
 msgid "delete-algorithm.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:50
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:56
 msgid "delete-algorithm.cant-delete"
 msgstr "Default preset can't be deleted"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:80
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:89
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:103
 msgid "delete-algorithm.confirm"
 msgstr "Delete preset"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:86
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:96
 msgid "delete-algorithm.message"
 msgstr "Are you sure you want to delete this preset?"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:62
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:78
 msgid "delete-algorithm.successor-message"
 msgstr "If you want to delete this preset, select a successor."
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:66
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:82
 msgid "delete-algorithm.successor.label"
 msgstr "Successor preset"
 
-#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:47
+#: ../../libs/react/src/lib/algorithms/delete-algorithm.tsx:53
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:52
-#: ../../libs/react/src/lib/cards/delete-card.tsx:36
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:73
+#: ../../libs/react/src/lib/cards/delete-card.tsx:56
 msgid "delete-card.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:49
-#: ../../libs/react/src/lib/cards/delete-card.tsx:37
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:70
+#: ../../libs/react/src/lib/cards/delete-card.tsx:58
 msgid "delete-card.confirm"
 msgstr "Delete"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:47
-#: ../../libs/react/src/lib/cards/delete-card.tsx:34
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:65
+#: ../../libs/react/src/lib/cards/delete-card.tsx:51
 msgid "delete-card.message"
 msgstr "Delete this card with all it's reviews?"
 
-#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:37
-#: ../../libs/react/src/lib/cards/delete-card.tsx:31
+#: ../../libs/react/src/lib/cards/cards-table-cell-delete-card.tsx:46
+#: ../../libs/react/src/lib/cards/delete-card.tsx:39
 msgid "delete-card.trigger"
 msgstr "Delete card"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:37
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:57
 msgid "delete-deck.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:38
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:59
 msgid "delete-deck.confirm"
 msgstr "Delete deck"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:35
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:52
 msgid "delete-deck.message"
 msgstr "Are you sure you want to delete this deck and all it's cards and reviews?"
 
-#: ../../libs/react/src/lib/decks/delete-deck.tsx:32
+#: ../../libs/react/src/lib/decks/delete-deck.tsx:40
 msgid "delete-deck.trigger"
 msgstr "Delete deck"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:56
+#: ../../libs/react/src/lib/templates/delete-template.tsx:76
 msgid "delete-template.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:39
+#: ../../libs/react/src/lib/templates/delete-template.tsx:45
 msgid "delete-template.cant-delete-default"
 msgstr "Default template can't be deleted"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:38
+#: ../../libs/react/src/lib/templates/delete-template.tsx:44
 msgid "delete-template.cant-delete-locked"
 msgstr "This template is locked and can't be deleted"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:39
+#: ../../libs/react/src/lib/templates/delete-template.tsx:45
 msgid "delete-template.cant-delete-used"
 msgstr "This template is used by deck(s) and can't be deleted"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:57
+#: ../../libs/react/src/lib/templates/delete-template.tsx:78
 msgid "delete-template.confirm"
 msgstr "Delete template"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:54
+#: ../../libs/react/src/lib/templates/delete-template.tsx:71
 msgid "delete-template.message"
 msgstr "Are you sure you want to delete this template?"
 
-#: ../../libs/react/src/lib/templates/delete-template.tsx:45
+#: ../../libs/react/src/lib/templates/delete-template.tsx:53
 msgid "delete-template.trigger"
 msgstr "Delete template"
 
@@ -714,11 +712,11 @@ msgstr "Not found"
 msgid "preview-card.trigger"
 msgstr "Preview Card"
 
-#: ../../libs/react/src/lib/components/query-error.tsx:15
+#: ../../libs/react/src/lib/components/query-error.tsx:19
 msgid "query-error.message"
 msgstr "Something went wrong"
 
-#: ../../libs/react/src/lib/components/query-error.tsx:31
+#: ../../libs/react/src/lib/components/query-error.tsx:55
 msgid "query-error.retry"
 msgstr "Retry"
 

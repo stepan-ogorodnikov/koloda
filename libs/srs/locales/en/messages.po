@@ -209,23 +209,23 @@ msgstr "Discard"
 msgid "settings.hotkeys.form.submit"
 msgstr "Save"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:29
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:30
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:27
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:28
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:28
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:29
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:31
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:32
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:30
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:31
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
 
@@ -245,25 +245,29 @@ msgstr "Navigation"
 msgid "settings.hotkeys.scopes.ui"
 msgstr "Interface"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
 msgid "settings.hotkeys.ui.close"
 msgstr "Close popover"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.ui.focusNext"
 msgstr "Focus forward"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
 msgid "settings.hotkeys.ui.focusPrev"
 msgstr "Focus backward"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
 msgid "settings.hotkeys.ui.nextTab"
 msgstr "Go to next tab"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
 msgid "settings.hotkeys.ui.prevTab"
 msgstr "Go to previous tab"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+msgid "settings.hotkeys.ui.submit"
+msgstr "Submit text field"
 
 #: ../../libs/srs/src/lib/templates.ts:14
 msgid "templates.field-types.markdown"

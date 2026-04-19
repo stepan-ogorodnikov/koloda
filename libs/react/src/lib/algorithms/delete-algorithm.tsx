@@ -44,7 +44,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
 
   const isDefault = defaultAlgorithm === Number(id);
   const isDisabled = (algorithms && algorithms.length < 2) || isDefault;
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`db.delete`;
+  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
