@@ -34,6 +34,9 @@ describe("settings-hotkeys", () => {
         normal: [],
         easy: [],
       },
+      ai: {
+        cancel: [],
+      },
     });
   });
 

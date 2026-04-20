@@ -9,6 +9,7 @@ export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
   ui: msg`settings.hotkeys.scopes.ui`,
   navigation: msg`settings.hotkeys.scopes.navigation`,
   grades: msg`settings.hotkeys.scopes.grades`,
+  ai: msg`settings.hotkeys.scopes.ai`,
 } as const;
 
 export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
@@ -37,6 +38,9 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     normal: FSRS_GRADES[2],
     easy: FSRS_GRADES[3],
   },
+  ai: {
+    cancel: msg`settings.hotkeys.ai.cancel`,
+  },
 } as const;
 
 const hotkeys = {
@@ -44,6 +48,7 @@ const hotkeys = {
   ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
+  ai: ["cancel"],
 } as const;
 
 type Hotkeys = typeof hotkeys;
@@ -84,6 +89,7 @@ export const hotkeysSettingsValidation = z.object({
   ui: scopeSchema("ui").default(scopeDefault("ui")),
   navigation: scopeSchema("navigation").default(scopeDefault("navigation")),
   grades: scopeSchema("grades").default(scopeDefault("grades")),
+  ai: scopeSchema("ai").default(scopeDefault("ai")),
 }).superRefine(
   (data, ctx) => {
     // validate all scopes for duplicate hotkeys (within each scope)
@@ -201,5 +207,8 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     hard: ["2"],
     normal: ["3"],
     easy: ["4"],
+  },
+  ai: {
+    cancel: ["Escape"],
   },
 });

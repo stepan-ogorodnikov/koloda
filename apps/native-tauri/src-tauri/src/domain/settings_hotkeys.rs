@@ -8,6 +8,7 @@ const FORM_KEYS: &[&str] = &["submit", "reset"];
 const UI_KEYS: &[&str] = &["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"];
 const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings"];
 const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];
+const AI_KEYS: &[&str] = &["cancel"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,11 +21,13 @@ pub struct HotkeysSettings {
     pub navigation: HashMap<String, Vec<String>>,
     #[serde(default)]
     pub grades: HashMap<String, Vec<String>>,
+    #[serde(default)]
+    pub ai: HashMap<String, Vec<String>>,
 }
 
 impl HotkeysSettings {
     pub fn validate(&self) -> Result<(), AppError> {
-        for scope in [&self.form, &self.ui, &self.navigation, &self.grades] {
+        for scope in [&self.form, &self.ui, &self.navigation, &self.grades, &self.ai] {
             let mut seen = HashSet::new();
             for keys in scope.values() {
                 for key in keys {
@@ -44,6 +47,7 @@ impl HotkeysSettings {
             .values()
             .chain(self.navigation.values())
             .chain(self.grades.values())
+            .chain(self.ai.values())
             .flat_map(|keys| keys.iter())
             .any(|key| ui_hotkeys.contains(key))
         {
@@ -68,6 +72,9 @@ impl HotkeysSettings {
         }
         for key in GRADES_KEYS {
             self.grades.entry(key.to_string()).or_default();
+        }
+        for key in AI_KEYS {
+            self.ai.entry(key.to_string()).or_default();
         }
     }
 }

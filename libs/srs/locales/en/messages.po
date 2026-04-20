@@ -201,33 +201,41 @@ msgstr "Template not found"
 msgid "not-found.templates.clone.source"
 msgstr "Source template not found"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:42
+msgid "settings.hotkeys.ai.cancel"
+msgstr "Interrupt"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"
 msgstr "Discard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:16
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.form.submit"
 msgstr "Save"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:30
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:31
 msgid "settings.hotkeys.navigation.algorithms"
 msgstr "Presets"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:28
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:29
 msgid "settings.hotkeys.navigation.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:29
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:30
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:32
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:33
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:31
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:32
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:12
+msgid "settings.hotkeys.scopes.ai"
+msgstr "AI"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:8
 msgid "settings.hotkeys.scopes.form"
@@ -245,27 +253,27 @@ msgstr "Navigation"
 msgid "settings.hotkeys.scopes.ui"
 msgstr "Interface"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:26
 msgid "settings.hotkeys.ui.close"
 msgstr "Close popover"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
 msgid "settings.hotkeys.ui.focusNext"
 msgstr "Focus forward"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:22
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
 msgid "settings.hotkeys.ui.focusPrev"
 msgstr "Focus backward"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:23
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
 msgid "settings.hotkeys.ui.nextTab"
 msgstr "Go to next tab"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:24
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:25
 msgid "settings.hotkeys.ui.prevTab"
 msgstr "Go to previous tab"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:20
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:21
 msgid "settings.hotkeys.ui.submit"
 msgstr "Submit text field"
 

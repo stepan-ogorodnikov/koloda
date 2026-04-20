@@ -1,5 +1,7 @@
 import { ArrowDown02Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey } from "@koloda/react-base";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -55,6 +57,7 @@ export function AIChat({
   renderMessage,
 }: AIChatProps) {
   const { _ } = useLingui();
+  const { ai } = useHotkeysSettings();
   const { defaultProfileId } = useAIProfiles();
   const [inputValue, setInputValue] = useState("");
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -170,6 +173,8 @@ export function AIChat({
   const canCancel = isLoading && !!onCancel;
   const canReset = messages.length > 0 || isLoading;
   const showJumpToLatest = messages.length > 0 && !isNearBottom;
+
+  useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
 
   return (
     <section className="relative flex flex-col h-full min-h-0 px-4">

@@ -111,11 +111,11 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:249
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:261
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:210
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:222
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 
