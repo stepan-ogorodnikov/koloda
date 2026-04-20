@@ -84,5 +84,6 @@ function getOptions(
   scope: string,
   scopes: Record<string, boolean>,
 ) {
-  return { ...options, enabled: !scope || !!scopes[scope] };
+  const { enabled = true } = options || {};
+  return { ...options, enabled: enabled && (!scope || !!scopes[scope]) };
 }
