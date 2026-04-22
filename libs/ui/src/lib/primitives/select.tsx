@@ -2,11 +2,11 @@ import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
 import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
-import type { ButtonProps, TWVProps } from "@koloda/ui";
+import type { TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
-import type { ReactNode, RefObject } from "react";
+import type { ComponentProps, ReactNode, RefObject } from "react";
 import { useContext, useEffect, useMemo, useRef } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
@@ -46,6 +46,7 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
   items?: Iterable<T>;
   searchLabel?: string;
   searchPlaceholder?: string;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
   onChange: (key: string | number | null) => void;
   children: ReactNode | ((item: T) => ReactNode);
 };
@@ -62,6 +63,7 @@ export function Select<T extends object>({
   searchLabel,
   searchPlaceholder,
   isVirtualized,
+  triggerRef,
   children,
   ...props
 }: SelectProps<T>) {
@@ -83,6 +85,7 @@ export function Select<T extends object>({
         variants={{ layout: variants?.layout, ...buttonVariants }}
         withChevron={withChevron}
         icon={icon}
+        ref={triggerRef}
       />
       <Select.Popover variants={popoverVariants}>
         {!hasAutocomplete
@@ -121,15 +124,15 @@ const selectButton = tv({
   defaultVariants: { style: "bordered" },
 });
 
-export type SelectButtonProps = TWVProps<typeof selectButton> & Omit<ButtonProps, "children"> & {
+export type SelectButtonProps = TWVProps<typeof selectButton> & ComponentProps<typeof Button> & {
   withChevron?: boolean;
   icon?: ReactNode;
   children?: ReactNode;
 };
 
-function SelectButton({ variants, withChevron = true, icon, children, ...props }: SelectButtonProps) {
+function SelectButton({ variants, withChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
   return (
-    <Button className={selectButton(variants)} {...props}>
+    <Button ref={ref} className={selectButton(variants)} {...props}>
       {children || (
         <SelectValue>
           {(state) => (
@@ -154,11 +157,7 @@ function SelectButton({ variants, withChevron = true, icon, children, ...props }
 
 const selectValue = tv({
   base: "flex flex-row items-center gap-2 min-w-0 truncate",
-  variants: {
-    isPlaceholder: {
-      true: "fg-disabled",
-    },
-  },
+  variants: { isPlaceholder: { true: "fg-disabled" } },
 });
 
 function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
