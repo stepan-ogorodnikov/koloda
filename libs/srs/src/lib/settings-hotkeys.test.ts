@@ -37,6 +37,7 @@ describe("settings-hotkeys", () => {
       ai: {
         cancel: [],
         openProfilePicker: [],
+        openModelPicker: [],
       },
     });
   });

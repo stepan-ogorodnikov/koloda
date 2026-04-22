@@ -10,9 +10,10 @@ export type AIModelPickerProps = {
   profileId: string | null;
   value: string;
   onChange: (value: string) => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | null>;
 };
 
-export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps) {
+export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIModelPickerProps) {
   const { _ } = useLingui();
   const { models, error, isLoading, refetch } = useAIModels(profileId);
 
@@ -51,6 +52,7 @@ export function AIModelPicker({ profileId, value, onChange }: AIModelPickerProps
       {!isLoading && !error && (
         <Fade className="min-w-0" key="ready">
           <Select
+            triggerRef={triggerRef}
             buttonVariants={{ style: "ghost" }}
             popoverVariants={{ class: "min-w-84" }}
             aria-label={_(msg`ai.model-picker.label`)}

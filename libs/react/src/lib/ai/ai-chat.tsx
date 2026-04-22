@@ -66,6 +66,7 @@ export function AIChat({
   const isProgrammaticScrollRef = useRef(false);
   const shouldAutoScrollRef = useRef(true);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
+  const modelPickerRef = useRef<HTMLButtonElement>(null);
   const prompt = inputValue.trim();
 
   const getIsNearBottom = useEffectEvent(() => {
@@ -177,6 +178,10 @@ export function AIChat({
 
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
+  useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
+    enabled: !!profileId,
+    ignoreInputs: false,
+  });
 
   return (
     <section className="relative flex flex-col h-full min-h-0 px-4">
@@ -241,7 +246,7 @@ export function AIChat({
       <form className={aiChatPanel} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex flex-row items-center min-w-0">
-          <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} />
+          <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} triggerRef={modelPickerRef} />
           <div className="grow min-w-3" />
           <div className="shrink-0 flex flex-row items-center gap-2">
             <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />

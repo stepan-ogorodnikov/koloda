@@ -209,6 +209,10 @@ msgstr "Прервать"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Выбор профиля ИИ"
 
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:44
+msgid "settings.hotkeys.ai.open-model-picker"
+msgstr "Выбор модели ИИ"
+
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"
 msgstr "Сбросить"
