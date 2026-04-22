@@ -262,19 +262,19 @@ msgid "settings.hotkeys.ui.close"
 msgstr "Закрыть всплывающее окно"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:22
-msgid "settings.hotkeys.ui.focusNext"
+msgid "settings.hotkeys.ui.focus-next"
 msgstr "Фокус далее"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:23
-msgid "settings.hotkeys.ui.focusPrev"
+msgid "settings.hotkeys.ui.focus-prev"
 msgstr "Фокус назад"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:24
-msgid "settings.hotkeys.ui.nextTab"
+msgid "settings.hotkeys.ui.next-tab"
 msgstr "Следующая вкладка"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:25
-msgid "settings.hotkeys.ui.prevTab"
+msgid "settings.hotkeys.ui.prev-tab"
 msgstr "Предыдущая вкладка"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:21

@@ -147,7 +147,7 @@ msgstr "Search models"
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:26
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:25
 msgid "ai.profile-picker.label"
 msgstr "Select AI profile"
 
@@ -160,7 +160,7 @@ msgid "algorithm.actions.label"
 msgstr "Actions"
 
 #: ../../libs/react/src/lib/algorithms/algorithm.tsx:100
-msgid "algorithm.inputs.isFuzzEnabled.label"
+msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Apply fuzz factor"
 
 #: ../../libs/react/src/lib/algorithms/algorithm.tsx:118

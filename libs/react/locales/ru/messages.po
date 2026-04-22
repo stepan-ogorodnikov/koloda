@@ -147,7 +147,7 @@ msgstr "Поиск по моделям"
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:26
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:25
 msgid "ai.profile-picker.label"
 msgstr "Выбор профиля ИИ"
 
@@ -160,7 +160,7 @@ msgid "algorithm.actions.label"
 msgstr "Действия"
 
 #: ../../libs/react/src/lib/algorithms/algorithm.tsx:100
-msgid "algorithm.inputs.isFuzzEnabled.label"
+msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Добавить случайный разброс"
 
 #: ../../libs/react/src/lib/algorithms/algorithm.tsx:118

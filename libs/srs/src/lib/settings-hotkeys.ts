@@ -19,10 +19,10 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
   },
   ui: {
     submit: msg`settings.hotkeys.ui.submit`,
-    focusNext: msg`settings.hotkeys.ui.focusNext`,
-    focusPrev: msg`settings.hotkeys.ui.focusPrev`,
-    nextTab: msg`settings.hotkeys.ui.nextTab`,
-    prevTab: msg`settings.hotkeys.ui.prevTab`,
+    focusNext: msg`settings.hotkeys.ui.focus-next`,
+    focusPrev: msg`settings.hotkeys.ui.focus-prev`,
+    nextTab: msg`settings.hotkeys.ui.next-tab`,
+    prevTab: msg`settings.hotkeys.ui.prev-tab`,
     close: msg`settings.hotkeys.ui.close`,
   },
   navigation: {

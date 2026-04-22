@@ -262,19 +262,19 @@ msgid "settings.hotkeys.ui.close"
 msgstr "Close popover"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:22
-msgid "settings.hotkeys.ui.focusNext"
+msgid "settings.hotkeys.ui.focus-next"
 msgstr "Focus forward"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:23
-msgid "settings.hotkeys.ui.focusPrev"
+msgid "settings.hotkeys.ui.focus-prev"
 msgstr "Focus backward"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:24
-msgid "settings.hotkeys.ui.nextTab"
+msgid "settings.hotkeys.ui.next-tab"
 msgstr "Go to next tab"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:25
-msgid "settings.hotkeys.ui.prevTab"
+msgid "settings.hotkeys.ui.prev-tab"
 msgstr "Go to previous tab"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:21

@@ -97,7 +97,7 @@ export function Algorithm({ id }: AlgorithmProps) {
                 onChange={field.handleChange}
               >
                 <Switch.Indicator />
-                <Switch.Label>{_(msg`algorithm.inputs.isFuzzEnabled.label`)}</Switch.Label>
+                <Switch.Label>{_(msg`algorithm.inputs.is-fuzz-enabled.label`)}</Switch.Label>
               </Switch>
             )}
           </form.Field>
