@@ -205,6 +205,10 @@ msgstr "Исходный шаблон не найден"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Прервать"
 
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:43
+msgid "settings.hotkeys.ai.open-profile-picker"
+msgstr "Выбор профиля ИИ"
+
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"
 msgstr "Сбросить"

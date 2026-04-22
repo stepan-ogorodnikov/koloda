@@ -3,14 +3,16 @@ import { AI_PROVIDER_LABELS } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import type { RefObject } from "react";
 import { useAIProfiles } from "./use-ai-profiles";
 
 export type AIProfilePickerProps = {
   value: string;
   onChange: (value: string) => void;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 };
 
-export function AIProfilePicker({ value, onChange }: AIProfilePickerProps) {
+export function AIProfilePicker({ value, onChange, triggerRef }: AIProfilePickerProps) {
   const { _ } = useLingui();
   const { profiles, isLoading } = useAIProfiles();
 
@@ -21,6 +23,7 @@ export function AIProfilePicker({ value, onChange }: AIProfilePickerProps) {
       buttonVariants={{ style: "ghost" }}
       popoverVariants={{ class: "min-w-72" }}
       aria-label={_(msg`ai.profile-picker.label`)}
+      triggerRef={triggerRef}
       items={profiles}
       value={value}
       onChange={(key) => key && onChange(key.toString())}

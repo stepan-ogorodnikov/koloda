@@ -111,11 +111,11 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:254
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:256
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:215
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 
@@ -147,7 +147,7 @@ msgstr "Search models"
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:23
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:26
 msgid "ai.profile-picker.label"
 msgstr "Select AI profile"
 
@@ -609,7 +609,7 @@ msgstr "Change hotkey"
 msgid "language-select.label"
 msgstr "Language"
 
-#: ../../libs/react/src/lib/components/learned-today.tsx:54
+#: ../../libs/react/src/lib/components/learned-today.tsx:58
 msgid "learned-today.title"
 msgstr "Learned today"
 
@@ -820,7 +820,7 @@ msgstr "AI Profiles"
 msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:29
+#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:32
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:55
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:50
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:50
