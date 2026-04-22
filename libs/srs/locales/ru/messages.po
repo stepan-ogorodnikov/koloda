@@ -213,6 +213,10 @@ msgstr "Выбор профиля ИИ"
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Переключить настройки"
+
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"
 msgstr "Сбросить"

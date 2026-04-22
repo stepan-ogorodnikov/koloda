@@ -1,7 +1,7 @@
 import { AiMagicIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat } from "@koloda/react";
-import { useHotkeysStatus } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tabs, Tooltip } from "@koloda/ui";
@@ -28,6 +28,7 @@ export type GenerateCardsProps = {
 
 export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   const { _ } = useLingui();
+  const { ai } = useHotkeysSettings();
   const { disableScope, enableScope } = useHotkeysStatus();
   const [selectedTab, setSelectedTab] = useState<"chat" | "settings">("chat");
   const [isClosingRequested, setIsClosingRequested] = useState(false);
@@ -57,6 +58,13 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
   }, [isOpen, disableScope, enableScope]);
+
+  useAppHotkey(
+    ai.toggleSettings,
+    () => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat"),
+    "",
+    { enabled: isOpen, ignoreInputs: false },
+  );
 
   const handleDialogOpenChange = useCallback((value: boolean) => {
     if (!value && hasContext) {

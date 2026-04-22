@@ -8,7 +8,7 @@ const FORM_KEYS: &[&str] = &["submit", "reset"];
 const UI_KEYS: &[&str] = &["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"];
 const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings"];
 const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];
-const AI_KEYS: &[&str] = &["cancel", "openProfilePicker", "openModelPicker"];
+const AI_KEYS: &[&str] = &["cancel", "openProfilePicker", "openModelPicker", "toggleSettings"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

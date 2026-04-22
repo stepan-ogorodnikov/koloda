@@ -38,6 +38,7 @@ describe("settings-hotkeys", () => {
         cancel: [],
         openProfilePicker: [],
         openModelPicker: [],
+        toggleSettings: [],
       },
     });
   });

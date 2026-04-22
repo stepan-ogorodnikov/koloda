@@ -213,6 +213,10 @@ msgstr "Open AI profile picker"
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Toggle settings"
+
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"
 msgstr "Discard"
