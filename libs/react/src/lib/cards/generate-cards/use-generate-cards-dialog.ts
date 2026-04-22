@@ -38,6 +38,7 @@ export type UseGenerateCardsDialogReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
+  hasContext: boolean;
 };
 
 export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
@@ -87,6 +88,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     clearCards,
     cancel,
   } = useGenerateCards(streamGenerator);
+
+  const hasContext = messages.length > 0 || isGenerating;
 
   const resetConversation = useCallback(() => {
     setPrompt("");
@@ -278,6 +281,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleCancel,
     handleReset,
     getGeneratedCardsProps,
+    hasContext,
   };
 }
 

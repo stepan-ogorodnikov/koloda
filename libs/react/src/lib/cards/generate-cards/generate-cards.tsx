@@ -4,15 +4,22 @@ import { AIChat } from "@koloda/react";
 import { useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Dialog, Tabs, Tooltip } from "@koloda/ui";
+import { Button, Dialog, Fade, Tabs, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
+import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { FocusScope } from "react-aria";
 import { GenerateCardsPromptSettings } from "./generate-cards-prompt-settings";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
+
+export const closeConfirmOverlay = [
+  "absolute inset-0 flex flex-col items-center justify-center gap-4",
+  "bg-level-1/80 backdrop-blur-xs",
+].join(" ");
 
 export type GenerateCardsProps = {
   deckId: Deck["id"];
@@ -23,6 +30,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
   const { _ } = useLingui();
   const { disableScope, enableScope } = useHotkeysStatus();
   const [selectedTab, setSelectedTab] = useState<"chat" | "settings">("chat");
+  const [isClosingRequested, setIsClosingRequested] = useState(false);
   const {
     isOpen,
     profileId,
@@ -43,16 +51,21 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleCancel,
     handleReset,
     getGeneratedCardsProps,
+    hasContext,
   } = useGenerateCardsDialog(deckId, templateId);
 
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
   }, [isOpen, disableScope, enableScope]);
 
-  const handleDialogOpenChange = useCallback((open: boolean) => {
-    if (open) setSelectedTab("chat");
-    handleOpenChange(open);
-  }, [handleOpenChange]);
+  const handleDialogOpenChange = useCallback((value: boolean) => {
+    if (!value && hasContext) {
+      setIsClosingRequested(true);
+      return;
+    }
+    if (value) setSelectedTab("chat");
+    handleOpenChange(value);
+  }, [hasContext, handleOpenChange]);
 
   const renderMessage = useCallback((message: UIMessage, content: ReactNode) => {
     const props = getGeneratedCardsProps(message);
@@ -112,7 +125,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
               <Dialog.Content variants={{ class: "grow min-h-0 p-0" }}>
                 <Tabs.Panels variants={{ class: "grow flex flex-col" }}>
                   <Tabs.Panel id="chat">
-                    <div className="flex h-full min-h-0 flex-col">
+                    <div className="flex h-full min-h-0 flex-col relative">
                       <AIChat
                         profileId={profileId}
                         modelId={modelId}
@@ -128,6 +141,29 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                         emptyState={emptyState}
                         renderMessage={renderMessage}
                       />
+                      <AnimatePresence>
+                        {isClosingRequested && (
+                          <Fade className={closeConfirmOverlay} key="close-confirmation">
+                            <FocusScope contain autoFocus>
+                              <Button
+                                variants={{ style: "ghost" }}
+                                onClick={() => setIsClosingRequested(false)}
+                              >
+                                {_(msg`generate-cards.close.cancel`)}
+                              </Button>
+                              <Button
+                                variants={{ style: "primary" }}
+                                onClick={() => {
+                                  setIsClosingRequested(false);
+                                  handleOpenChange(false);
+                                }}
+                              >
+                                {_(msg`generate-cards.close.confirm`)}
+                              </Button>
+                            </FocusScope>
+                          </Fade>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </Tabs.Panel>
                   <Tabs.Panel id="settings">
