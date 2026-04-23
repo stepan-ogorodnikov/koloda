@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
 import { GenerateCardsPromptSettings } from "./generate-cards-prompt-settings";
+import { getChatTextMetadata } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
 
@@ -44,6 +45,8 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     hasProfiles,
     isGenerating,
     generateError,
+    mode,
+    setMode,
     handleOpenChange,
     handleProfileChange,
     handleModelChange,
@@ -77,17 +80,12 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
   const renderMessage = useCallback((message: UIMessage, content: ReactNode) => {
     const props = getGeneratedCardsProps(message);
-    if (!props || !props.template) return content;
+    if (props && props.template) return <GeneratedCardsMessage {...props} />;
 
-    return <GeneratedCardsMessage {...props} />;
+    if (getChatTextMetadata(message)) return content;
+
+    return content;
   }, [getGeneratedCardsProps]);
-
-  const emptyState = (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 p-4 fg-level-3">
-      <p>Generate cards, then use follow-up prompts to refine the previous result.</p>
-      <p>Reset starts a fresh thread. Closing this dialog resets it too.</p>
-    </div>
-  );
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
@@ -146,8 +144,10 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                         onReset={handleReset}
                         isLoading={isGenerating}
                         error={getGenerateErrorMessage(generateError, _)}
-                        emptyState={emptyState}
+                        emptyState={null}
                         renderMessage={renderMessage}
+                        mode={mode}
+                        onModeChange={setMode}
                       />
                       <AnimatePresence>
                         {isClosingRequested && (

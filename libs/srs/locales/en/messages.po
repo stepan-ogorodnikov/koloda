@@ -213,25 +213,25 @@ msgstr "Open AI model picker"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Open AI profile picker"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
-msgid "settings.hotkeys.ai.toggle-settings"
-msgstr "Toggle settings"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:46
-msgid "settings.hotkeys.ai.scroll-up"
-msgstr "Scroll up"
-
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Scroll down"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:49
+msgid "settings.hotkeys.ai.scroll-to-bottom"
+msgstr "Scroll to bottom"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Scroll to top"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:49
-msgid "settings.hotkeys.ai.scroll-to-bottom"
-msgstr "Scroll to bottom"
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:46
+msgid "settings.hotkeys.ai.scroll-up"
+msgstr "Scroll up"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Toggle settings"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"

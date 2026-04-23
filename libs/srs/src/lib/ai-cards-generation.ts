@@ -9,6 +9,17 @@ import type { Template, TemplateFields } from "./templates";
 
 export const GENERATION_TEMPERATURE = 0.2;
 
+export type ChatStreamRequest = {
+  messages: ModelMessage[];
+  input: GenerateCardsInput;
+};
+
+export type ChatStreamGenerator = (
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+) => Promise<void>;
+
 export const generateCardsInputSchema = z.object({
   credentialId: z.uuid(),
   modelId: z.string().min(1),
@@ -66,6 +77,40 @@ export function buildProviderFormatPrompt(fields: TemplateFields) {
 export function buildSystemPromptForProvider(fields: TemplateFields, provider?: AiProvider | null) {
   if (!provider || provider === "openrouter") return buildSystemPrompt(fields);
   return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
+}
+
+export function buildAssistantSystemPrompt(fields: TemplateFields, provider?: AiProvider | null): string {
+  const fieldDescriptions = fields
+    .map((f) => `- "${f.id}": ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
+    .join("\n");
+
+  const formatInstructions = provider && provider !== "openrouter"
+    ? [
+      "",
+      "When generating cards without structured output, format each card exactly as:",
+      "## Card <number>",
+      ...fields.map((field) => `**${field.title}**: <value>`),
+      "Only output cards in this exact format.",
+    ].join("\n")
+    : "";
+
+  return [
+    "You are a helpful AI study assistant embedded in a flashcard app.",
+    "You can answer questions, explain concepts, and have conversations.",
+    "When the user asks you to generate flashcards, you must produce structured card data.",
+    "",
+    "The flashcards have the following fields:",
+    fieldDescriptions,
+    "",
+    "Rules for card generation:",
+    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
+    "- \"content\" keys must be ONLY the field keys listed above.",
+    "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards.",
+    "- Keep text concise, educational, and accurate.",
+    "- For required fields, never return empty text.",
+    "- Follow the requested card count exactly when specified.",
+    formatInstructions,
+  ].filter(Boolean).join("\n");
 }
 
 export function generateCardsWithOpenRouter(request: CardGenerationRequest, openrouter: OpenRouterProvider) {
@@ -364,4 +409,148 @@ function getTextCompletionMessages({ template, prompt, messages = [], provider }
     },
     ...getConversationMessages(messages, prompt),
   ];
+}
+
+/**
+ * @section Chat streaming
+ */
+
+export async function streamChatWithOpenRouter(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  openrouter: OpenRouterProvider,
+): Promise<void> {
+  return wrapAIError(async () => {
+    const result = streamText({
+      model: openrouter(request.input.modelId),
+      temperature: resolveGenerationTemperature(request.input.temperature),
+      system: buildAssistantSystemPrompt([]),
+      messages: request.messages,
+      abortSignal,
+    });
+
+    for await (const chunk of result.textStream) {
+      onChunk(chunk);
+    }
+  });
+}
+
+export async function streamChatWithOllama(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  baseUrl: string,
+): Promise<void> {
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(
+      await fetch(new URL("/api/chat", baseUrl), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: request.input.modelId,
+          messages: request.messages,
+          options: { temperature: resolveGenerationTemperature(request.input.temperature) },
+          stream: true,
+        }),
+        signal: abortSignal,
+      }),
+    );
+
+    await readOllamaChatStream(response, onChunk);
+  });
+}
+
+export async function streamChatWithLMStudio(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  secrets: Extract<AISecrets, { provider: "lmstudio" }>,
+): Promise<void> {
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(
+      await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: request.input.modelId,
+          temperature: resolveGenerationTemperature(request.input.temperature),
+          messages: request.messages,
+          stream: true,
+        }),
+        signal: abortSignal,
+      }),
+    );
+
+    await readOpenAICompatibleChatStream(response, onChunk);
+  });
+}
+
+async function readOllamaChatStream(response: Response, onChunk: (chunk: string) => void) {
+  const reader = response.body?.getReader();
+  if (!reader) throw new AppError("ai.invalid-response");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line) as { message?: { content?: string } };
+          const content = data.message?.content;
+          if (typeof content === "string") onChunk(content);
+        } catch {
+          // Ignore parse errors for malformed lines
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+async function readOpenAICompatibleChatStream(response: Response, onChunk: (chunk: string) => void) {
+  const reader = response.body?.getReader();
+  if (!reader) throw new AppError("ai.invalid-response");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6);
+        if (data === "[DONE]") return;
+        try {
+          const parsed = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> };
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (typeof content === "string") onChunk(content);
+        } catch {
+          // Ignore parse errors for malformed lines
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }

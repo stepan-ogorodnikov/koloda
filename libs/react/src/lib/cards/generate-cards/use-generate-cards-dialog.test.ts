@@ -91,6 +91,7 @@ describe("useGenerateCardsDialog", () => {
       touchProfileMutationFn,
       profile,
       template,
+      setIsGenerating,
     } = renderGenerateCardsDialog();
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
@@ -101,6 +102,11 @@ describe("useGenerateCardsDialog", () => {
     });
 
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    act(() => {
+      result.current.setMode("generate");
+      setIsGenerating(true);
+    });
 
     await act(async () => {
       await result.current.handleGenerate("  Explain noun genders  ");
@@ -138,6 +144,7 @@ describe("useGenerateCardsDialog", () => {
       rerender,
       generateMock,
       setCards,
+      setIsGenerating,
       profile,
       template,
     } = renderGenerateCardsDialog();
@@ -158,6 +165,11 @@ describe("useGenerateCardsDialog", () => {
 
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
 
+    act(() => {
+      result.current.setMode("generate");
+      setIsGenerating(true);
+    });
+
     await act(async () => {
       await result.current.handleGenerate("First prompt");
     });
@@ -170,6 +182,16 @@ describe("useGenerateCardsDialog", () => {
     await waitFor(() =>
       expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.cards).toEqual(firstRunCards)
     );
+
+    act(() => {
+      setIsGenerating(false);
+      rerender();
+    });
+
+    act(() => {
+      result.current.setMode("generate");
+      setIsGenerating(true);
+    });
 
     await act(async () => {
       await result.current.handleGenerate("Second prompt");
@@ -187,6 +209,7 @@ describe("useGenerateCardsDialog", () => {
       rerender,
       generateMock,
       setCards,
+      setIsGenerating,
       profile,
       template,
     } = renderGenerateCardsDialog();
@@ -199,6 +222,11 @@ describe("useGenerateCardsDialog", () => {
     });
 
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    act(() => {
+      result.current.setMode("generate");
+      setIsGenerating(true);
+    });
 
     await act(async () => {
       await result.current.handleGenerate("First prompt");
@@ -238,7 +266,7 @@ function renderGenerateCardsDialog() {
   const touchProfileMutationFn = vi.fn(async () => undefined);
   const clearCardsMock = vi.fn();
   const cancelMock = vi.fn();
-  const generateMock = vi.fn(async () => true);
+  const generateMock = vi.fn(async (_request: { messages?: unknown[] }) => true);
   let cards: GeneratedCard[] = [];
   let isGenerating = false;
   let error: Error | null = null;

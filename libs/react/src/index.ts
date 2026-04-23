@@ -14,6 +14,7 @@ export * from "./lib/cards/card-preview-reducer";
 export * from "./lib/cards/card-reviews";
 export * from "./lib/cards/cards-view-toggle";
 export * from "./lib/cards/generate-cards/generate-cards";
+export * from "./lib/cards/generate-cards/generate-cards-utility";
 export * from "./lib/components/app";
 export * from "./lib/components/learned-today";
 export * from "./lib/components/not-found";

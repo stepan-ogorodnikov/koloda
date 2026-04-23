@@ -1,14 +1,31 @@
 import type { GeneratedCard, Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
-export type GeneratedCardsMessageMetadata = {
-  kind: "generated-cards";
-  runId: string;
-};
+export type GenerationMode = "chat" | "generate";
 
-export function getGeneratedCardsMetadata(message: UIMessage): GeneratedCardsMessageMetadata | null {
-  const metadata = message.metadata as GeneratedCardsMessageMetadata | undefined;
-  return (!metadata || metadata.kind !== "generated-cards") ? null : metadata;
+export type AssistantMessageMetadata =
+  | { kind: "generated-cards"; runId: string }
+  | { kind: "chat-text"; runId: string };
+
+export function getAssistantMetadata(message: UIMessage): AssistantMessageMetadata | null {
+  const metadata = message.metadata as AssistantMessageMetadata | undefined;
+  if (!metadata) return null;
+  if (metadata.kind !== "generated-cards" && metadata.kind !== "chat-text") return null;
+  return metadata;
+}
+
+export function getGeneratedCardsMetadata(
+  message: UIMessage,
+): Extract<AssistantMessageMetadata, { kind: "generated-cards" }> | null {
+  const metadata = getAssistantMetadata(message);
+  return metadata?.kind === "generated-cards" ? metadata : null;
+}
+
+export function getChatTextMetadata(
+  message: UIMessage,
+): Extract<AssistantMessageMetadata, { kind: "chat-text" }> | null {
+  const metadata = getAssistantMetadata(message);
+  return metadata?.kind === "chat-text" ? metadata : null;
 }
 
 export function createTextMessage(
@@ -30,11 +47,13 @@ export function getTextMessageContent(message: UIMessage): string {
 }
 
 export function serializeGeneratedCards(cards: GeneratedCard[], template: Template): string {
-  return cards.map((card, index) => [
-    `## Card ${index + 1}`,
-    ...template.content.fields.map((field) => {
-      const value = card.content[field.id]?.text?.trim() ?? "";
-      return `**${field.title}**: ${value}`;
-    }),
-  ].join("\n")).join("\n\n");
+  return cards.map((card, index) =>
+    [
+      `## Card ${index + 1}`,
+      ...template.content.fields.map((field) => {
+        const value = card.content[field.id]?.text?.trim() ?? "";
+        return `**${field.title}**: ${value}`;
+      }),
+    ].join("\n")
+  ).join("\n\n");
 }

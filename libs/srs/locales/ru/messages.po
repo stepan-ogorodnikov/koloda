@@ -213,25 +213,25 @@ msgstr "Выбор модели ИИ"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Выбор профиля ИИ"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
-msgid "settings.hotkeys.ai.toggle-settings"
-msgstr "Переключить настройки"
-
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:46
-msgid "settings.hotkeys.ai.scroll-up"
-msgstr "Прокрутить вверх"
-
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Прокрутить вниз"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:49
+msgid "settings.hotkeys.ai.scroll-to-bottom"
+msgstr "Прокрутить в конец"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Прокрутить на начало"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:49
-msgid "settings.hotkeys.ai.scroll-to-bottom"
-msgstr "Прокрутить в конец"
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:46
+msgid "settings.hotkeys.ai.scroll-up"
+msgstr "Прокрутить вверх"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Переключить настройки"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:18
 msgid "settings.hotkeys.form.reset"

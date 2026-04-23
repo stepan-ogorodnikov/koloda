@@ -1,7 +1,14 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { throwForAIResponse, wrapAIError } from "./ai-error";
-import type { GenerateCardsFunction } from "./ai-cards-generation";
-import { generateCardsWithLMStudio, generateCardsWithOllama, generateCardsWithOpenRouter } from "./ai-cards-generation";
+import type { ChatStreamGenerator, GenerateCardsFunction } from "./ai-cards-generation";
+import {
+  generateCardsWithLMStudio,
+  generateCardsWithOllama,
+  generateCardsWithOpenRouter,
+  streamChatWithLMStudio,
+  streamChatWithOllama,
+  streamChatWithOpenRouter,
+} from "./ai-cards-generation";
 import { AppError } from "./error";
 import type { AISecrets } from "./settings-ai";
 
@@ -10,6 +17,7 @@ export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
   listModels: () => Promise<AIModel[]>;
+  chat: ChatStreamGenerator;
   generateCards: GenerateCardsFunction;
 };
 
@@ -104,6 +112,7 @@ function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrou
   return {
     provider: "openrouter",
     listModels: fetchOpenRouterModels,
+    chat: (request, onChunk, abortSignal) => streamChatWithOpenRouter(request, onChunk, abortSignal, openrouter),
     generateCards: (request) => generateCardsWithOpenRouter(request, openrouter),
   };
 }
@@ -112,6 +121,7 @@ function createOllamaClient(secrets: Extract<AISecrets, { provider: "ollama" }>)
   return {
     provider: "ollama",
     listModels: () => fetchOllamaModels(secrets.baseUrl),
+    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, secrets.baseUrl),
     generateCards: (request) => generateCardsWithOllama(request, secrets.baseUrl),
   };
 }
@@ -120,6 +130,7 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
   return {
     provider: "lmstudio",
     listModels: () => fetchOpenAICompatibleModels(secrets.baseUrl, secrets.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithLMStudio(request, onChunk, abortSignal, secrets),
     generateCards: (request) => generateCardsWithLMStudio(request, secrets),
   };
 }

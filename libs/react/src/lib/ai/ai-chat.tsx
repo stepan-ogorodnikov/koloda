@@ -1,5 +1,6 @@
-import { ArrowDown02Icon, Undo02Icon } from "@hugeicons/core-free-icons";
+import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { GenerationMode } from "@koloda/react";
 import { useHotkeysSettings } from "@koloda/react-base";
 import { useAppHotkey } from "@koloda/react-base";
 import { Button, Fade } from "@koloda/ui";
@@ -38,6 +39,8 @@ export type AIChatProps = {
   autoSelectDefaultProfile?: boolean;
   emptyState?: ReactNode;
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
+  mode?: GenerationMode;
+  onModeChange?: (mode: GenerationMode) => void;
 };
 
 export function AIChat({
@@ -55,6 +58,8 @@ export function AIChat({
   autoSelectDefaultProfile = true,
   emptyState = null,
   renderMessage,
+  mode,
+  onModeChange,
 }: AIChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
@@ -136,9 +141,7 @@ export function AIChat({
       shouldAutoScrollRef.current = shouldFollow;
       onSubmit(prompt);
       setInputValue("");
-      if (shouldFollow) {
-        startFollowingLatest("smooth");
-      }
+      if (shouldFollow) startFollowingLatest("smooth");
     }
   };
 
@@ -291,6 +294,20 @@ export function AIChat({
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} triggerRef={modelPickerRef} />
           <div className="grow min-w-3" />
           <div className="shrink-0 flex flex-row items-center gap-2">
+            {onModeChange && (
+              <Button
+                variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
+                aria-label={mode === "generate" ? _(msg`ai.chat.mode.generate`) : _(msg`ai.chat.mode.chat`)}
+                onPress={() => onModeChange(mode === "chat" ? "generate" : "chat")}
+              >
+                <HugeiconsIcon
+                  className="size-6 min-w-6"
+                  strokeWidth={1.5}
+                  icon={mode === "generate" ? AiSheetsIcon : MessageMultiple01Icon}
+                  aria-hidden="true"
+                />
+              </Button>
+            )}
             <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
           </div>
         </div>
