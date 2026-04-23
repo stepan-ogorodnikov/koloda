@@ -39,6 +39,10 @@ describe("settings-hotkeys", () => {
         openProfilePicker: [],
         openModelPicker: [],
         toggleSettings: [],
+        scrollUp: [],
+        scrollDown: [],
+        scrollToTop: [],
+        scrollToBottom: [],
       },
     });
   });

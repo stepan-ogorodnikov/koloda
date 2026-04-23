@@ -179,20 +179,47 @@ export function AIChat({
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
 
+  const handleScrollUp = useEffectEvent(() => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+    viewport.scrollBy({ top: -300, behavior: "smooth" });
+  });
+
+  const handleScrollDown = useEffectEvent(() => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+    viewport.scrollBy({ top: 300, behavior: "smooth" });
+  });
+
+  const handleScrollToTop = useEffectEvent(() => {
+    const viewport = scrollViewportRef.current;
+    if (!viewport) return;
+    viewport.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  const handleScrollToBottom = useEffectEvent(() => {
+    startFollowingLatest("smooth");
+  });
+
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
   useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
     enabled: !!profileId,
     ignoreInputs: false,
   });
+  useAppHotkey(ai.scrollUp, handleScrollUp, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollDown, handleScrollDown, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollToTop, handleScrollToTop, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollToBottom, handleScrollToBottom, "", { ignoreInputs: false });
 
   return (
     <section className="relative flex flex-col h-full min-h-0 px-4">
       <div className="relative grow min-h-0 -mx-4 px-4">
         <div
-          className="flex flex-col items-center h-full overflow-y-auto [scrollbar-gutter:stable_both-edges]"
+          className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
           ref={scrollViewportRef}
           onScroll={handleScroll}
+          tabIndex={0}
         >
           <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2" ref={messagesRef}>
             {messages.length === 0
