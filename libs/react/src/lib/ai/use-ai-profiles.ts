@@ -1,8 +1,16 @@
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AIProfile, AISecrets } from "@koloda/srs";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
+
+const SECRETS_LABELS: Record<SecretField, MessageDescriptor> = {
+  apiKey: msg`settings.ai.profiles.api-key.label`,
+  baseUrl: msg`settings.ai.profiles.base-url.label`,
+};
 
 function getApiKey(secrets: AISecrets): string | null {
   switch (secrets.provider) {
@@ -17,7 +25,24 @@ function getApiKey(secrets: AISecrets): string | null {
   }
 }
 
+type SecretField = "apiKey" | "baseUrl";
+
+function getMissingSecretFields(secrets: AISecrets | null | undefined): SecretField[] {
+  if (!secrets) return [];
+  switch (secrets.provider) {
+    case "openrouter":
+      return secrets.apiKey ? [] : ["apiKey"];
+    case "ollama":
+      return secrets.baseUrl ? [] : ["baseUrl"];
+    case "lmstudio":
+      return secrets.baseUrl ? [] : ["baseUrl"];
+    default:
+      return [];
+  }
+}
+
 export function useAIProfiles(profileId?: string | null) {
+  const { _ } = useLingui();
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
   const profiles = useMemo(() => (query.data ?? []), [query.data]);
@@ -41,6 +66,11 @@ export function useAIProfiles(profileId?: string | null) {
 
   const lastUsedModel = selectedProfile?.lastUsedModel ?? null;
 
+  const missingSecretFields = getMissingSecretFields(selectedProfile?.secrets);
+  const missingSecretFieldLabels = useMemo(() => (
+    missingSecretFields.map((field) => _(SECRETS_LABELS[field]))
+  ), [missingSecretFields, _]);
+
   return {
     ...query,
     profiles,
@@ -49,5 +79,6 @@ export function useAIProfiles(profileId?: string | null) {
     lastUsedModel,
     secrets: selectedProfile?.secrets ?? null,
     apiKey: selectedProfile?.secrets ? getApiKey(selectedProfile.secrets) : null,
+    missingSecretFieldLabels,
   };
 }

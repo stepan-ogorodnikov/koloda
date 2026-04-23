@@ -205,13 +205,13 @@ msgstr "Исходный шаблон не найден"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Прервать"
 
-#: ../../libs/srs/src/lib/settings-hotkeys.ts:43
-msgid "settings.hotkeys.ai.open-profile-picker"
-msgstr "Выбор профиля ИИ"
-
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:44
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
+
+#: ../../libs/srs/src/lib/settings-hotkeys.ts:43
+msgid "settings.hotkeys.ai.open-profile-picker"
+msgstr "Выбор профиля ИИ"
 
 #: ../../libs/srs/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.toggle-settings"
