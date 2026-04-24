@@ -199,15 +199,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         );
       });
 
-      if (result === "error") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: _(msg`generate-cards.chat-error`) }] }
-              : m
-          )
-        );
-      } else if (result === "aborted") {
+      if (result === "aborted") {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
