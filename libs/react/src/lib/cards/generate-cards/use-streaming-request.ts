@@ -1,5 +1,5 @@
 import { isAbortError } from "@koloda/srs";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type StreamResult = "success" | "aborted" | "error";
 
@@ -28,6 +28,15 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
   const [error, setError] = useState<Error | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  useEffect(() => {
+    return () => {
+      controllerRef.current?.abort();
+    };
+  }, []);
+
   const start = useCallback(
     async (request: TRequest, onChunk?: (chunk: TChunk) => void) => {
       controllerRef.current?.abort();
@@ -36,14 +45,14 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
 
       setIsRunning(true);
       setError(null);
-      setData(options.initialData);
+      setData(optionsRef.current.initialData);
 
       try {
-        await options.executor(
+        await optionsRef.current.executor(
           request,
           (chunk) => {
             if (!controller.signal.aborted) {
-              setData((prev) => options.accumulate(prev, chunk));
+              setData((prev) => optionsRef.current.accumulate(prev, chunk));
               onChunk?.(chunk);
             }
           },
@@ -63,19 +72,20 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
         }
       }
     },
-    [options],
+    [],
   );
 
   const cancel = useCallback(() => {
     controllerRef.current?.abort();
     controllerRef.current = null;
     setIsRunning(false);
+    setError(null);
   }, []);
 
   const reset = useCallback(() => {
-    setData(options.initialData);
+    setData(optionsRef.current.initialData);
     setError(null);
-  }, [options.initialData]);
+  }, []);
 
   return { data, isRunning, error, start, cancel, reset };
 }
