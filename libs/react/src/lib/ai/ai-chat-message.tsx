@@ -48,6 +48,8 @@ function MessagePart({ part }: { part: UIMessagePart<any, any> }) {
       return <p className="whitespace-pre-wrap leading-6">{part.text}</p>;
     case "reasoning":
       return <p className="whitespace-pre-wrap leading-6 fg-level-3">{part.text}</p>;
+    case "interrupted" as any:
+      return <p className="fg-level-4">{(part as any).text}</p>;
     case "source-url":
       return <p className="fg-level-3">{part.title || part.url}</p>;
     case "source-document":

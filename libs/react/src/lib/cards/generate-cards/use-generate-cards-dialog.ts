@@ -207,6 +207,20 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
               : m
           )
         );
+      } else if (result === "aborted") {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === `assistant-${runId}`
+              ? {
+                  ...m,
+                  parts: [
+                    { type: "text" as const, text: currentText },
+                    { type: "interrupted" as any, text: _(msg`generate-cards.canceled`) },
+                  ],
+                }
+              : m
+          )
+        );
       }
     } else {
       startRun(runId, "generate");
