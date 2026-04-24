@@ -247,25 +247,25 @@ export function AIChat({
                 </>
               )}
           </div>
-          <AnimatePresence>
-            {showJumpToLatest && (
-              <Fade className="absolute bottom-2 z-10 flex flex-col items-center w-full max-w-3xl">
-                <Button
-                  variants={{ style: "primary", size: "icon", class: "rounded-full" }}
-                  aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
-                  onPress={handleScrollToLatest}
-                >
-                  <HugeiconsIcon
-                    className="size-5 min-w-5"
-                    strokeWidth={1.75}
-                    icon={ArrowDown02Icon}
-                    aria-hidden="true"
-                  />
-                </Button>
-              </Fade>
-            )}
-          </AnimatePresence>
         </div>
+        <AnimatePresence>
+          {showJumpToLatest && (
+            <Fade className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center w-full max-w-3xl">
+              <Button
+                variants={{ style: "primary", size: "icon", class: "rounded-full" }}
+                aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
+                onPress={handleScrollToLatest}
+              >
+                <HugeiconsIcon
+                  className="size-5 min-w-5"
+                  strokeWidth={1.75}
+                  icon={ArrowDown02Icon}
+                  aria-hidden="true"
+                />
+              </Button>
+            </Fade>
+          )}
+        </AnimatePresence>
       </div>
       <AnimatePresence>
         {showMissingSecretsWarning && (
