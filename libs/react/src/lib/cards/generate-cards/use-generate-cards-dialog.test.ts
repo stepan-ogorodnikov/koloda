@@ -51,7 +51,6 @@ describe("useGenerateCardsDialog", () => {
   it("resets dialog state and cancels the current conversation when closed", async () => {
     const {
       result,
-      clearCardsMock,
       cancelMock,
       profile,
       template,
@@ -80,7 +79,6 @@ describe("useGenerateCardsDialog", () => {
     expect(result.current.profileId).toBe("");
     expect(result.current.modelId).toBe("");
     expect(result.current.messages).toEqual([]);
-    expect(clearCardsMock).toHaveBeenCalled();
     expect(cancelMock).toHaveBeenCalled();
   });
 
@@ -121,17 +119,20 @@ describe("useGenerateCardsDialog", () => {
         expect.any(Object),
       )
     );
-    expect(generateMock).toHaveBeenCalledWith({
-      input: {
-        credentialId: profile.id,
-        modelId: profile.lastUsedModel,
-        prompt: "Explain noun genders",
-        temperature: 0.2,
-        deckId: 1,
-        templateId: template.id,
-      },
-      messages: [],
-    });
+    expect(generateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: {
+          credentialId: profile.id,
+          modelId: profile.lastUsedModel,
+          prompt: "Explain noun genders",
+          temperature: 0.2,
+          deckId: 1,
+          templateId: template.id,
+        },
+        messages: [],
+      }),
+      expect.any(Function),
+    );
     expect(result.current.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
     expect(result.current.messages[1]?.metadata).toMatchObject({
       kind: "generated-cards",
@@ -141,7 +142,6 @@ describe("useGenerateCardsDialog", () => {
   it("includes the last successful assistant output in the next request context", async () => {
     const {
       result,
-      rerender,
       generateMock,
       setCards,
       setIsGenerating,
@@ -170,23 +170,13 @@ describe("useGenerateCardsDialog", () => {
       setIsGenerating(true);
     });
 
+    setCards(firstRunCards);
+
     await act(async () => {
       await result.current.handleGenerate("First prompt");
     });
 
-    setCards(firstRunCards);
-    act(() => {
-      rerender();
-    });
-
-    await waitFor(() =>
-      expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.cards).toEqual(firstRunCards)
-    );
-
-    act(() => {
-      setIsGenerating(false);
-      rerender();
-    });
+    expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.cards).toEqual(firstRunCards);
 
     act(() => {
       result.current.setMode("generate");
@@ -206,14 +196,11 @@ describe("useGenerateCardsDialog", () => {
   it("skips canceled assistant runs when building the next assistant context", async () => {
     const {
       result,
-      rerender,
       generateMock,
-      setCards,
-      setIsGenerating,
       profile,
       template,
+      setIsGenerating,
     } = renderGenerateCardsDialog();
-    const canceledRunCards = [createGeneratedCard()];
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
 
@@ -228,22 +215,21 @@ describe("useGenerateCardsDialog", () => {
       setIsGenerating(true);
     });
 
+    generateMock.mockImplementationOnce(async (
+      _request: { messages?: unknown[] },
+      _onCard?: (card: GeneratedCard) => void,
+    ) => "aborted" as const);
+
     await act(async () => {
       await result.current.handleGenerate("First prompt");
     });
 
-    act(() => {
-      result.current.handleCancel();
-    });
+    expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.isCanceled).toBe(true);
 
-    setCards(canceledRunCards);
     act(() => {
-      rerender();
+      result.current.setMode("generate");
+      setIsGenerating(true);
     });
-
-    await waitFor(() =>
-      expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.isCanceled).toBe(true)
-    );
 
     await act(async () => {
       await result.current.handleGenerate("Second prompt");
@@ -254,7 +240,7 @@ describe("useGenerateCardsDialog", () => {
     ]);
     expect(generateMock.mock.calls[1]?.[0]?.messages).not.toContainEqual({
       role: "assistant",
-      content: serializeGeneratedCards(canceledRunCards, template),
+      content: expect.any(String),
     });
   });
 });
@@ -264,9 +250,13 @@ function renderGenerateCardsDialog() {
   const template = createTemplate();
   const model = createAIModel({ id: profile.lastUsedModel!, name: "GPT-5 Mini" });
   const touchProfileMutationFn = vi.fn(async () => undefined);
-  const clearCardsMock = vi.fn();
   const cancelMock = vi.fn();
-  const generateMock = vi.fn(async (_request: { messages?: unknown[] }) => true);
+  const generateMock = vi.fn(
+    async (_request: { messages?: unknown[] }, onCard?: (card: GeneratedCard) => void): Promise<string> => {
+      cards.forEach((c) => onCard?.(c));
+      return "success";
+    },
+  );
   let cards: GeneratedCard[] = [];
   let isGenerating = false;
   let error: Error | null = null;
@@ -291,7 +281,6 @@ function renderGenerateCardsDialog() {
     isGenerating,
     error,
     generate: generateMock,
-    clearCards: clearCardsMock,
     cancel: cancelMock,
   }));
 
@@ -304,7 +293,6 @@ function renderGenerateCardsDialog() {
     profile,
     template,
     generateMock,
-    clearCardsMock,
     cancelMock,
     touchProfileMutationFn,
     setCards(nextCards: GeneratedCard[]) {

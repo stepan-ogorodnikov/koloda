@@ -1,26 +1,27 @@
 import { useAIModels, useAIProfiles } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { AISecrets, Deck, GenerateCardsInput, GeneratedCard, Template } from "@koloda/srs";
-import { createAIGenerationClient, GENERATION_TEMPERATURE } from "@koloda/srs";
+import type { AISecrets, Deck, GeneratedCard, Template } from "@koloda/srs";
+import { createAIGenerationClient, generateCardsInputSchema, GENERATION_TEMPERATURE } from "@koloda/srs";
+import type { ChatStreamRequest } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ModelMessage, UIMessage } from "ai";
 import { useAtomValue } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatStreamRequest } from "@koloda/srs";
+import { useCallback, useEffect, useState } from "react";
 import {
   createTextMessage,
+  type GenerationMode,
   getAssistantMetadata,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
-  type GenerationMode,
 } from "./generate-cards-utility";
 import type { GeneratedCardsMessageProps } from "./generated-cards-message";
 import { useChatStream } from "./use-chat-stream";
 import { useGenerateCards } from "./use-generate-cards";
 import type { GenerateCardsRequest, StreamGenerator } from "./use-generate-cards";
+import { useGenerationRuns } from "./use-generation-runs";
 
 export type UseGenerateCardsDialogReturn = {
   isOpen: boolean;
@@ -57,12 +58,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [mode, setMode] = useState<GenerationMode>("chat");
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
-  const [activeRunId, setActiveRunId] = useState<string | null>(null);
-  const [generatedRuns, setGeneratedRuns] = useState<Record<string, GeneratedCard[]>>({});
-  const [canceledRuns, setCanceledRuns] = useState<Record<string, boolean>>({});
-  const [failedRuns, setFailedRuns] = useState<Record<string, boolean>>({});
-  const canceledRunsRef = useRef<Record<string, boolean>>({});
-  const chatTextRef = useRef("");
+  const { activeRunId, runs, startRun, addCard, completeRun, failRun, cancelRun, reset: resetRuns } =
+    useGenerationRuns();
   const touchProfileMutation = useMutation(touchAIProfileMutation());
   const templateQuery = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
   const template = templateQuery.data;
@@ -100,11 +97,9 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   );
 
   const {
-    cards,
     isGenerating,
     error: generateError,
     generate,
-    clearCards,
     cancel,
   } = useGenerateCards(streamGenerator);
 
@@ -115,21 +110,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     cancel: cancelChat,
   } = useChatStream(chatStreamGenerator);
 
-  const hasContext = messages.length > 0 || isGenerating;
+  const hasContext = messages.length > 0 || isGenerating || isChatStreaming;
 
   const resetConversation = useCallback(() => {
     setPrompt("");
     setMode("chat");
     setMessages([]);
-    setActiveRunId(null);
-    setGeneratedRuns({});
-    setCanceledRuns({});
-    canceledRunsRef.current = {};
-    setFailedRuns({});
-    clearCards();
+    resetRuns();
     cancel();
     cancelChat();
-  }, [clearCards, cancel, cancelChat]);
+  }, [resetRuns, cancel, cancelChat]);
 
   const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
@@ -165,15 +155,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     if (mode === "generate" && !template) return;
 
     const runId = `${Date.now()}`;
-    const conversationMessages = buildConversationMessages({
-      messages,
-      template,
-      generatedRuns,
-      canceledRuns,
-      failedRuns,
-      activeRunId,
-      isGenerating,
-    });
+    const conversationMessages = buildConversationMessages(messages, runs, template);
 
     setPrompt("");
     setMessages((prev) => [
@@ -182,17 +164,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     ]);
 
     touchProfileMutation.mutate({ id: profileId, modelId });
-    const input = {
+    const input = generateCardsInputSchema.parse({
       credentialId: profileId,
       modelId,
       prompt: promptText,
       temperature,
       deckId,
       templateId,
-    } as GenerateCardsInput;
+    });
 
     if (mode === "chat") {
-      chatTextRef.current = "";
       setMessages((prev) => [
         ...prev,
         createTextMessage(`assistant-${runId}`, "assistant", "", {
@@ -205,18 +186,19 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         input,
         messages: [...conversationMessages, { role: "user", content: promptText }],
       };
-      const chatSuccess = await streamChat(chatRequest, (chunk) => {
-        chatTextRef.current += chunk;
+      let currentText = "";
+      const result = await streamChat(chatRequest, (chunk) => {
+        currentText += chunk;
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: chatTextRef.current }] }
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
               : m
           )
         );
       });
 
-      if (!chatSuccess) {
+      if (result === "error") {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
@@ -226,15 +208,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         );
       }
     } else {
-      setActiveRunId(runId);
-      setGeneratedRuns((prev) => ({ ...prev, [runId]: [] }));
-      setCanceledRuns((prev) => {
-        const next = { ...prev, [runId]: false };
-        canceledRunsRef.current = next;
-        return next;
-      });
-      setFailedRuns((prev) => ({ ...prev, [runId]: false }));
-      clearCards();
+      startRun(runId, "generate");
       setMessages((prev) => [
         ...prev,
         createTextMessage(`assistant-${runId}`, "assistant", _(msg`generate-cards.generating`), {
@@ -244,10 +218,17 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       ]);
 
       const request: GenerateCardsRequest = { input, messages: conversationMessages };
-      const isSuccess = await generate(request);
+      const result = await generate(request, (card) => {
+        addCard(runId, card);
+      });
 
-      if (!isSuccess && !canceledRunsRef.current[runId]) {
-        setFailedRuns((prev) => ({ ...prev, [runId]: true }));
+      if (result === "success") {
+        completeRun(runId);
+        setMode("chat");
+      } else if (result === "error") {
+        failRun(runId);
+      } else if (result === "aborted") {
+        cancelRun(runId);
       }
     }
   }, [
@@ -255,34 +236,31 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     mode,
     template,
     messages,
-    generatedRuns,
-    canceledRuns,
-    failedRuns,
-    activeRunId,
-    isGenerating,
-    clearCards,
-    touchProfileMutation,
+    runs,
     profileId,
     modelId,
+    temperature,
     deckId,
     templateId,
-    temperature,
+    touchProfileMutation,
     generate,
     streamChat,
+    startRun,
+    addCard,
+    completeRun,
+    failRun,
+    cancelRun,
+    setMode,
     _,
   ]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
-      setCanceledRuns((prev) => {
-        const next = { ...prev, [activeRunId]: true };
-        canceledRunsRef.current = next;
-        return next;
-      });
+      cancelRun(activeRunId);
     }
     cancel();
     cancelChat();
-  }, [activeRunId, cancel, cancelChat]);
+  }, [activeRunId, cancel, cancelChat, cancelRun]);
 
   useEffect(() => {
     if (!profileId) {
@@ -302,46 +280,27 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setModelId(models[0]?.id ?? "");
   }, [profileId, modelId, models, profiles]);
 
-  useEffect(() => {
-    if (!activeRunId) return;
-    setGeneratedRuns((prev) => ({ ...prev, [activeRunId]: cards }));
-  }, [activeRunId, cards]);
-
-  useEffect(() => {
-    if (mode === "generate" && !isGenerating && activeRunId) {
-      setMode("chat");
-      setActiveRunId(null);
-    }
-  }, [mode, isGenerating, activeRunId]);
-
   const hasProfiles = profiles.length > 0;
 
   const getGeneratedCardsProps = useCallback((message: UIMessage): GeneratedCardsMessageProps | null => {
     const generatedCardsMetadata = getGeneratedCardsMetadata(message);
     if (!generatedCardsMetadata) return null;
 
-    const runCards = generatedRuns[generatedCardsMetadata.runId] ?? [];
+    const run = runs[generatedCardsMetadata.runId];
+    const runCards = run?.cards ?? [];
     const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
-    const canAdd = runCards.length > 0 && (!isCurrentRun || !isGenerating);
+    const isRunGenerating = isCurrentRun && isGenerating;
 
     return {
       cards: runCards,
       template,
       deckId,
       templateId,
-      canAdd,
-      isGenerating: isCurrentRun && isGenerating,
-      isCanceled: !!canceledRuns[generatedCardsMetadata.runId],
+      canAdd: runCards.length > 0 && !isRunGenerating,
+      isGenerating: isRunGenerating,
+      isCanceled: run?.status === "canceled",
     };
-  }, [
-    generatedRuns,
-    canceledRuns,
-    activeRunId,
-    isGenerating,
-    deckId,
-    templateId,
-    template,
-  ]);
+  }, [runs, activeRunId, isGenerating, deckId, templateId, template]);
 
   return {
     isOpen,
@@ -369,25 +328,11 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   };
 }
 
-type BuildConversationMessagesOptions = {
-  messages: UIMessage[];
-  template: Template | null | undefined;
-  generatedRuns: Record<string, GeneratedCard[]>;
-  canceledRuns: Record<string, boolean>;
-  failedRuns: Record<string, boolean>;
-  activeRunId: string | null;
-  isGenerating: boolean;
-};
-
-function buildConversationMessages({
-  messages,
-  template,
-  generatedRuns,
-  canceledRuns,
-  failedRuns,
-  activeRunId,
-  isGenerating,
-}: BuildConversationMessagesOptions) {
+function buildConversationMessages(
+  messages: UIMessage[],
+  runs: Record<string, { status: string; cards: GeneratedCard[] }>,
+  template: Template | null | undefined,
+) {
   const conversation: ModelMessage[] = [];
 
   for (const message of messages) {
@@ -410,12 +355,11 @@ function buildConversationMessages({
       continue;
     }
 
-    const runCards = generatedRuns[runId] ?? [];
-    const isActiveRun = runId === activeRunId;
-    if ((isActiveRun && isGenerating) || canceledRuns[runId] || failedRuns[runId] || runCards.length === 0) continue;
+    const run = runs[runId];
+    if (!run || run.status !== "success" || run.cards.length === 0) continue;
 
     if (!template) continue;
-    const cardContent = serializeGeneratedCards(runCards, template);
+    const cardContent = serializeGeneratedCards(run.cards, template);
     if (cardContent) conversation.push({ role: "assistant", content: cardContent });
   }
 
