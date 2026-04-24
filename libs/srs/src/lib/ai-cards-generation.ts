@@ -208,6 +208,15 @@ function normalizeLabel(value: string): string {
   return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 }
 
+function validateExtractedCards(cards: GeneratedCard[], fields: TemplateFields): GeneratedCard[] {
+  const schema = getCardContentSchema(fields);
+  const valid = cards.filter((card) => schema.safeParse(card).success);
+  if (cards.length > 0 && valid.length === 0) {
+    throw new AppError("ai.invalid-response", "Extracted cards failed schema validation");
+  }
+  return valid;
+}
+
 function resolveGenerationTemperature(value?: number) {
   return typeof value === "number" ? value : GENERATION_TEMPERATURE;
 }
@@ -319,10 +328,10 @@ async function runStructuredCardGeneration(
     if (cardsCount > 0) return;
 
     const streamedText = await result.text;
-    const streamedTextCards = [
+    const streamedTextCards = validateExtractedCards([
       ...extractCardsFromJsonArray(streamedText, template),
       ...extractCardsFromMarkdownText(streamedText, template),
-    ];
+    ], template.content.fields);
     if (streamedTextCards.length > 0) {
       for (const card of streamedTextCards) onCard(card);
       return;
@@ -335,10 +344,10 @@ async function runStructuredCardGeneration(
       messages: getConversationMessages(messages, input.prompt),
       abortSignal,
     });
-    const fallbackCards = [
+    const fallbackCards = validateExtractedCards([
       ...extractCardsFromJsonArray(fallbackTextResult.text, template),
       ...extractCardsFromMarkdownText(fallbackTextResult.text, template),
-    ];
+    ], template.content.fields);
 
     for (const card of fallbackCards) {
       onCard(card);
@@ -354,10 +363,10 @@ async function runTextCompletionCardGeneration(
 ): Promise<void> {
   const text = await completeText(request);
   const { template, onCard } = request;
-  const cards = [
+  const cards = validateExtractedCards([
     ...extractCardsFromJsonArray(text, template),
     ...extractCardsFromMarkdownText(text, template),
-  ];
+  ], template.content.fields);
 
   for (const card of cards) {
     onCard(card);

@@ -158,6 +158,69 @@ describe("ai-cards-generation", () => {
     });
   });
 
+  it("rejects Ollama cards that fail schema validation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            message: {
+              content: [
+                "```json",
+                '[{"content":{"1":{"text":""},"2":{"text":"Answer"}}}]',
+                "```",
+              ].join("\n"),
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        )
+      ),
+    );
+    const request = createRequest();
+
+    await expect(generateCardsWithOllama(request, "http://localhost:11434")).rejects.toMatchObject({
+      code: "ai.invalid-response",
+    });
+    expect(request.onCard).not.toHaveBeenCalled();
+  });
+
+  it("rejects LM Studio cards that fail schema validation", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            choices: [{
+              message: {
+                content: [
+                  "## Card 1",
+                  "**Front**:",
+                  "**Back**: Only back",
+                ].join("\n"),
+              },
+            }],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        )
+      ),
+    );
+    const request = createRequest();
+
+    await expect(generateCardsWithLMStudio(
+      request,
+      { provider: "lmstudio", baseUrl: "http://localhost:1234" },
+    )).rejects.toMatchObject({
+      code: "ai.invalid-response",
+    });
+    expect(request.onCard).not.toHaveBeenCalled();
+  });
+
   it("returns an app error when LM Studio omits message content", async () => {
     vi.stubGlobal(
       "fetch",
