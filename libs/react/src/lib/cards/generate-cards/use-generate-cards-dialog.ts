@@ -185,6 +185,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       const chatRequest: ChatStreamRequest = {
         input,
         messages: [...conversationMessages, { role: "user", content: promptText }],
+        template: template ?? undefined,
       };
       let currentText = "";
       const result = await streamChat(chatRequest, (chunk) => {

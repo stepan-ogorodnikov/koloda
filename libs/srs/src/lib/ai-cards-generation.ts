@@ -12,6 +12,7 @@ export const GENERATION_TEMPERATURE = 0.2;
 export type ChatStreamRequest = {
   messages: ModelMessage[];
   input: GenerateCardsInput;
+  template?: Template;
 };
 
 export type ChatStreamGenerator = (
@@ -425,7 +426,7 @@ export async function streamChatWithOpenRouter(
     const result = streamText({
       model: openrouter(request.input.modelId),
       temperature: resolveGenerationTemperature(request.input.temperature),
-      system: buildAssistantSystemPrompt([]),
+      system: buildAssistantSystemPrompt(request.template?.content.fields ?? []),
       messages: request.messages,
       abortSignal,
     });
@@ -449,6 +450,7 @@ export async function streamChatWithOllama(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: request.input.modelId,
+          system: buildAssistantSystemPrompt(request.template?.content.fields ?? [], "ollama"),
           messages: request.messages,
           options: { temperature: resolveGenerationTemperature(request.input.temperature) },
           stream: true,
@@ -468,6 +470,11 @@ export async function streamChatWithLMStudio(
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ): Promise<void> {
   return wrapAIError(async () => {
+    const systemMessage = buildAssistantSystemPrompt(request.template?.content.fields ?? [], "lmstudio");
+    const messages = systemMessage
+      ? [{ role: "system", content: systemMessage }, ...request.messages]
+      : request.messages;
+
     const response = throwForAIResponse(
       await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
         method: "POST",
@@ -478,7 +485,7 @@ export async function streamChatWithLMStudio(
         body: JSON.stringify({
           model: request.input.modelId,
           temperature: resolveGenerationTemperature(request.input.temperature),
-          messages: request.messages,
+          messages,
           stream: true,
         }),
         signal: abortSignal,
