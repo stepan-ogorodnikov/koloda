@@ -1,10 +1,10 @@
-import { AiMagicIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat } from "@koloda/react";
+import { AIChat, AIProfilePicker } from "@koloda/react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
-import { Button, Dialog, Fade, Tabs, Tooltip } from "@koloda/ui";
+import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -106,87 +106,97 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
       <Dialog.Overlay>
         <Dialog.Modal variants={{ size: "main" }}>
           <Dialog.Body>
-            <Tabs
-              selectedKey={selectedTab}
-              onSelectionChange={(key) => setSelectedTab(key === "settings" ? "settings" : "chat")}
-            >
-              <Dialog.Header variants={{ class: "gap-4 py-0" }}>
-                <Dialog.Title>{_(msg`generate-cards.title`)}</Dialog.Title>
-                <Tabs.List aria-label={_(msg`generate-cards.title`)}>
-                  <Tabs.Tab id="chat" aria-label={_(msg`generate-cards.settings.show-chat`)}>
-                    <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.75} icon={Chat01Icon} aria-hidden="true" />
-                  </Tabs.Tab>
-                  <Tabs.Tab id="settings" aria-label={_(msg`generate-cards.settings.show-settings`)}>
+            <Dialog.Header variants={{ class: "gap-4 py-0" }}>
+              <Dialog.Title>{_(msg`generate-cards.title`)}</Dialog.Title>
+              <div className="grow" />
+              <Dialog.Close slot="close" />
+            </Dialog.Header>
+            <Dialog.Content variants={{ class: "grow min-h-0 p-0 flex flex-col" }}>
+              <div className="relative grow min-h-0 flex flex-col">
+                <div className={selectedTab === "chat" ? "flex flex-col grow min-h-0" : "hidden"}>
+                  <AIChat
+                    showFooter={false}
+                    profileId={profileId}
+                    modelId={modelId}
+                    modelName={modelName}
+                    messages={messages}
+                    onProfileChange={handleProfileChange}
+                    onModelChange={handleModelChange}
+                    onSubmit={handleGenerate}
+                    onCancel={handleCancel}
+                    onReset={handleReset}
+                    isLoading={isGenerating}
+                    error={getGenerateErrorMessage(generateError, _)}
+                    emptyState={null}
+                    renderMessage={renderMessage}
+                    mode={mode}
+                    onModeChange={setMode}
+                  />
+                </div>
+                {selectedTab === "settings" && (
+                  <div className="grow overflow-auto">
+                    <GenerateCardsPromptSettings
+                      template={template}
+                      provider={provider}
+                      temperature={temperature}
+                      onTemperatureChange={handleTemperatureChange}
+                    />
+                  </div>
+                )}
+                <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2 shrink-0">
+                  <AIProfilePicker value={profileId} onChange={handleProfileChange} />
+                  <div className="grow min-w-3" />
+                  <Button
+                    variants={{ style: "ghost", size: "icon" }}
+                    aria-label={_(msg`ai.chat.reset.label`)}
+                    isDisabled={messages.length === 0 && !isGenerating}
+                    onPress={handleReset}
+                  >
                     <HugeiconsIcon
-                      className="size-6 min-w-6"
+                      className="size-5 min-w-5"
                       strokeWidth={1.75}
-                      icon={Settings01Icon}
+                      icon={Undo02Icon}
                       aria-hidden="true"
                     />
-                  </Tabs.Tab>
-                </Tabs.List>
-                <div className="grow" />
-                <Dialog.Close slot="close" />
-              </Dialog.Header>
-              <Dialog.Content variants={{ class: "grow min-h-0 p-0" }}>
-                <Tabs.Panels variants={{ class: "grow flex flex-col" }}>
-                  <Tabs.Panel id="chat">
-                    <div className="flex h-full min-h-0 flex-col relative">
-                      <AIChat
-                        profileId={profileId}
-                        modelId={modelId}
-                        modelName={modelName}
-                        messages={messages}
-                        onProfileChange={handleProfileChange}
-                        onModelChange={handleModelChange}
-                        onSubmit={handleGenerate}
-                        onCancel={handleCancel}
-                        onReset={handleReset}
-                        isLoading={isGenerating}
-                        error={getGenerateErrorMessage(generateError, _)}
-                        emptyState={null}
-                        renderMessage={renderMessage}
-                        mode={mode}
-                        onModeChange={setMode}
-                      />
-                      <AnimatePresence>
-                        {isClosingRequested && (
-                          <Fade className={closeConfirmOverlay} key="close-confirmation">
-                            <FocusScope contain autoFocus>
-                              <Button
-                                variants={{ style: "ghost" }}
-                                onClick={() => setIsClosingRequested(false)}
-                              >
-                                {_(msg`generate-cards.close.cancel`)}
-                              </Button>
-                              <Button
-                                variants={{ style: "primary" }}
-                                onClick={() => {
-                                  setIsClosingRequested(false);
-                                  handleOpenChange(false);
-                                }}
-                              >
-                                {_(msg`generate-cards.close.confirm`)}
-                              </Button>
-                            </FocusScope>
-                          </Fade>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </Tabs.Panel>
-                  <Tabs.Panel id="settings">
-                    <div className="grow overflow-auto">
-                      <GenerateCardsPromptSettings
-                        template={template}
-                        provider={provider}
-                        temperature={temperature}
-                        onTemperatureChange={handleTemperatureChange}
-                      />
-                    </div>
-                  </Tabs.Panel>
-                </Tabs.Panels>
-              </Dialog.Content>
-            </Tabs>
+                  </Button>
+                  <Button
+                    variants={{ style: "ghost", size: "icon" }}
+                    aria-label={selectedTab === "chat" ? _(msg`generate-cards.settings.show-settings`) : _(msg`generate-cards.settings.show-chat`)}
+                    onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
+                  >
+                    <HugeiconsIcon
+                      className="size-5 min-w-5"
+                      strokeWidth={1.75}
+                      icon={selectedTab === "chat" ? Settings01Icon : Chat01Icon}
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </div>
+                <AnimatePresence>
+                  {isClosingRequested && (
+                    <Fade className={closeConfirmOverlay} key="close-confirmation">
+                      <FocusScope contain autoFocus>
+                        <Button
+                          variants={{ style: "ghost" }}
+                          onClick={() => setIsClosingRequested(false)}
+                        >
+                          {_(msg`generate-cards.close.cancel`)}
+                        </Button>
+                        <Button
+                          variants={{ style: "primary" }}
+                          onClick={() => {
+                            setIsClosingRequested(false);
+                            handleOpenChange(false);
+                          }}
+                        >
+                          {_(msg`generate-cards.close.confirm`)}
+                        </Button>
+                      </FocusScope>
+                    </Fade>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Dialog.Content>
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

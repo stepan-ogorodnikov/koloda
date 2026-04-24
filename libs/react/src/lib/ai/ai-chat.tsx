@@ -41,6 +41,8 @@ export type AIChatProps = {
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
   mode?: GenerationMode;
   onModeChange?: (mode: GenerationMode) => void;
+  actions?: ReactNode;
+  showFooter?: boolean;
 };
 
 export function AIChat({
@@ -60,6 +62,8 @@ export function AIChat({
   renderMessage,
   mode,
   onModeChange,
+  actions,
+  showFooter = true,
 }: AIChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
@@ -216,10 +220,10 @@ export function AIChat({
   useAppHotkey(ai.scrollToBottom, handleScrollToBottom, "", { ignoreInputs: false });
 
   return (
-    <section className="relative flex flex-col h-full min-h-0 px-4">
-      <div className="relative grow min-h-0 -mx-4 px-4">
+    <section className="relative grow flex flex-col min-h-0 px-4">
+      <div className="relative flex-1 min-h-0 -mx-4 px-4">
         <div
-          className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
+          className="flex flex-col items-center h-full overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
           ref={scrollViewportRef}
           onScroll={handleScroll}
           tabIndex={0}
@@ -288,7 +292,7 @@ export function AIChat({
           </Fade>
         )}
       </AnimatePresence>
-      <form className={aiChatPanel} onSubmit={handleSubmit}>
+      <form className={`${aiChatPanel} shrink-0`} onSubmit={handleSubmit}>
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex flex-row items-center min-w-0">
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} triggerRef={modelPickerRef} />
@@ -312,23 +316,26 @@ export function AIChat({
           </div>
         </div>
       </form>
-      <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2">
-        <AIProfilePicker value={profileId} onChange={onProfileChange} triggerRef={profilePickerRef} />
-        <div className="grow min-w-3" />
-        <Button
-          variants={{ style: "ghost", size: "icon" }}
-          aria-label={_(msg`ai.chat.reset.label`)}
-          isDisabled={!canReset}
-          onPress={handleReset}
-        >
-          <HugeiconsIcon
-            className="size-5 min-w-5"
-            strokeWidth={1.75}
-            icon={Undo02Icon}
-            aria-hidden="true"
-          />
-        </Button>
-      </div>
+      {showFooter && (
+        <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2 shrink-0">
+          <AIProfilePicker value={profileId} onChange={onProfileChange} triggerRef={profilePickerRef} />
+          <div className="grow min-w-3" />
+          <Button
+            variants={{ style: "ghost", size: "icon" }}
+            aria-label={_(msg`ai.chat.reset.label`)}
+            isDisabled={!canReset}
+            onPress={handleReset}
+          >
+            <HugeiconsIcon
+              className="size-5 min-w-5"
+              strokeWidth={1.75}
+              icon={Undo02Icon}
+              aria-hidden="true"
+            />
+          </Button>
+          {actions}
+        </div>
+      )}
     </section>
   );
 }
