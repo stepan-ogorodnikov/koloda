@@ -1,5 +1,6 @@
 import { AIChatMessageLayout } from "@koloda/react";
 import type { Deck, GeneratedCard, Template } from "@koloda/srs";
+import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { GeneratedCardsTable } from "./generated-cards-table";
@@ -12,6 +13,8 @@ export type GeneratedCardsMessageProps = {
   canAdd: boolean;
   isGenerating: boolean;
   isCanceled: boolean;
+  isFailed: boolean;
+  onRetry: () => void;
 };
 
 export function GeneratedCardsMessage({
@@ -22,6 +25,8 @@ export function GeneratedCardsMessage({
   canAdd,
   isGenerating,
   isCanceled,
+  isFailed,
+  onRetry,
 }: GeneratedCardsMessageProps) {
   const { _ } = useLingui();
 
@@ -39,7 +44,20 @@ export function GeneratedCardsMessage({
           {_(msg`generate-cards.canceled`)}
         </p>
       )}
-      {!isGenerating && !isCanceled && cards.length > 0 && (
+      {isFailed && (
+        <div className="flex flex-row flex-wrap items-center gap-2">
+          <p className="fg-level-4">
+            {_(msg`generate-cards.failed`)}
+          </p>
+          <Button
+            variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
+            onPress={onRetry}
+          >
+            {_(msg`generate-cards.retry`)}
+          </Button>
+        </div>
+      )}
+      {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
         <GeneratedCardsTable
           cards={cards}
           template={template}
@@ -49,7 +67,7 @@ export function GeneratedCardsMessage({
           isGenerating={isGenerating}
         />
       )}
-      {!isGenerating && !isCanceled && !cards.length && (
+      {!isGenerating && !isCanceled && !isFailed && !cards.length && (
         <p className="fg-level-3">
           {_(msg`generate-cards.generated-no-cards`)}
         </p>

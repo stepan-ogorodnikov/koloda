@@ -46,6 +46,7 @@ export type UseGenerateCardsDialogReturn = {
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
   hasContext: boolean;
+  handleRetry: (runId: string) => Promise<void>;
 };
 
 export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
@@ -58,7 +59,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [mode, setMode] = useState<GenerationMode>("chat");
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
-  const { activeRunId, runs, startRun, addCard, completeRun, failRun, cancelRun, reset: resetRuns } =
+  const { activeRunId, runs, startRun, addCard, completeRun, failRun, cancelRun, restartRun, reset: resetRuns } =
     useGenerationRuns();
   const touchProfileMutation = useMutation(touchAIProfileMutation());
   const templateQuery = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
@@ -204,18 +205,19 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
           prev.map((m) =>
             m.id === `assistant-${runId}`
               ? {
-                  ...m,
-                  parts: [
-                    { type: "text" as const, text: currentText },
-                    { type: "interrupted" as any, text: _(msg`generate-cards.canceled`) },
-                  ],
-                }
+                ...m,
+                parts: [
+                  { type: "text" as const, text: currentText },
+                  { type: "interrupted" as any, text: _(msg`generate-cards.canceled`) },
+                ],
+              }
               : m
           )
         );
       }
     } else {
-      startRun(runId, "generate");
+      const request: GenerateCardsRequest = { input, messages: conversationMessages };
+      startRun(runId, "generate", request);
       setMessages((prev) => [
         ...prev,
         createTextMessage(`assistant-${runId}`, "assistant", _(msg`generate-cards.generating`), {
@@ -224,7 +226,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         }),
       ]);
 
-      const request: GenerateCardsRequest = { input, messages: conversationMessages };
       const result = await generate(request, (card) => {
         addCard(runId, card);
       });
@@ -260,6 +261,27 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setMode,
     _,
   ]);
+
+  const handleRetry = useCallback(async (runId: string) => {
+    const run = runs[runId];
+    if (!run?.request) return;
+
+    restartRun(runId);
+
+    const request = run.request as GenerateCardsRequest;
+    const result = await generate(request, (card) => {
+      addCard(runId, card);
+    });
+
+    if (result === "success") {
+      completeRun(runId);
+      setMode("chat");
+    } else if (result === "error") {
+      failRun(runId);
+    } else if (result === "aborted") {
+      cancelRun(runId);
+    }
+  }, [runs, generate, restartRun, addCard, completeRun, failRun, cancelRun, setMode]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
@@ -306,8 +328,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       canAdd: runCards.length > 0 && !isRunGenerating,
       isGenerating: isRunGenerating,
       isCanceled: run?.status === "canceled",
+      isFailed: run?.status === "failed",
+      onRetry: () => handleRetry(generatedCardsMetadata.runId),
     };
-  }, [runs, activeRunId, isGenerating, deckId, templateId, template]);
+  }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry]);
 
   return {
     isOpen,
@@ -332,6 +356,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleReset,
     getGeneratedCardsProps,
     hasContext,
+    handleRetry,
   };
 }
 

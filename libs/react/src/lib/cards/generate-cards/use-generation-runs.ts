@@ -9,6 +9,7 @@ export type GenerationRun = {
   mode: GenerationMode;
   status: RunStatus;
   cards: GeneratedCard[];
+  request?: unknown;
 };
 
 export type RunsState = {
@@ -17,11 +18,12 @@ export type RunsState = {
 };
 
 type RunsAction =
-  | { type: "start"; id: string; mode: GenerationMode }
+  | { type: "start"; id: string; mode: GenerationMode; request?: unknown }
   | { type: "addCard"; id: string; card: GeneratedCard }
   | { type: "complete"; id: string }
   | { type: "fail"; id: string }
   | { type: "cancel"; id: string }
+  | { type: "restart"; id: string }
   | { type: "reset" };
 
 const initialState: RunsState = {
@@ -36,7 +38,7 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: action.id,
         runs: {
           ...state.runs,
-          [action.id]: { id: action.id, mode: action.mode, status: "streaming", cards: [] },
+          [action.id]: { id: action.id, mode: action.mode, status: "streaming", cards: [], request: action.request },
         },
       };
 
@@ -91,6 +93,19 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
       };
     }
 
+    case "restart": {
+      const run = state.runs[action.id];
+      if (!run) return state;
+      return {
+        ...state,
+        activeRunId: action.id,
+        runs: {
+          ...state.runs,
+          [action.id]: { ...run, status: "streaming", cards: [] },
+        },
+      };
+    }
+
     case "reset":
       return initialState;
 
@@ -102,8 +117,8 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
 export function useGenerationRuns() {
   const [state, dispatch] = useReducer(runsReducer, initialState);
 
-  const startRun = useCallback((id: string, mode: GenerationMode) => {
-    dispatch({ type: "start", id, mode });
+  const startRun = useCallback((id: string, mode: GenerationMode, request?: unknown) => {
+    dispatch({ type: "start", id, mode, request });
   }, []);
 
   const addCard = useCallback((id: string, card: GeneratedCard) => {
@@ -120,6 +135,10 @@ export function useGenerationRuns() {
 
   const cancelRun = useCallback((id: string) => {
     dispatch({ type: "cancel", id });
+  }, []);
+
+  const restartRun = useCallback((id: string) => {
+    dispatch({ type: "restart", id });
   }, []);
 
   const reset = useCallback(() => {
@@ -139,6 +158,7 @@ export function useGenerationRuns() {
     completeRun,
     failRun,
     cancelRun,
+    restartRun,
     reset,
     getRun,
   };
