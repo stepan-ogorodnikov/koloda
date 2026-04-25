@@ -242,6 +242,43 @@ describe("useGenerateCardsDialog", () => {
       content: expect.any(String),
     });
   });
+
+  it("passes custom generation prompt template to the generate request", async () => {
+    const {
+      result,
+      generateMock,
+      profile,
+      template,
+      setIsGenerating,
+    } = renderGenerateCardsDialog();
+
+    await waitFor(() => expect(result.current.template?.id).toBe(template.id));
+
+    act(() => {
+      result.current.handleOpenChange(true);
+      result.current.handleProfileChange(profile.id);
+    });
+
+    await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
+
+    act(() => {
+      result.current.setMode("generate");
+      setIsGenerating(true);
+      result.current.handleGenerationPromptChange("Custom generation template with {{fields}} and {{rules}}");
+    });
+
+    await act(async () => {
+      await result.current.handleGenerate("Generate cards");
+    });
+
+    expect(generateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemPromptTemplate: "Custom generation template with {{fields}} and {{rules}}",
+      }),
+      expect.any(Function),
+    );
+  });
+
 });
 
 function renderGenerateCardsDialog() {

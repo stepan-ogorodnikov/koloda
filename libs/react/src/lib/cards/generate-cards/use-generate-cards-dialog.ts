@@ -47,6 +47,10 @@ export type UseGenerateCardsDialogReturn = {
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
   hasContext: boolean;
   handleRetry: (runId: string) => Promise<void>;
+  generationPromptTemplate: string | null;
+  chatPromptTemplate: string | null;
+  handleGenerationPromptChange: (value: string | null) => void;
+  handleChatPromptChange: (value: string | null) => void;
 };
 
 export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
@@ -59,6 +63,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [mode, setMode] = useState<GenerationMode>("chat");
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
+  const [generationPromptTemplate, setGenerationPromptTemplate] = useState<string | null>(null);
+  const [chatPromptTemplate, setChatPromptTemplate] = useState<string | null>(null);
   const { activeRunId, runs, startRun, addCard, completeRun, failRun, cancelRun, restartRun, reset: resetRuns } =
     useGenerationRuns();
   const touchProfileMutation = useMutation(touchAIProfileMutation());
@@ -81,6 +87,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         messages: request.messages,
         onCard,
         abortSignal,
+        systemPromptTemplate: request.systemPromptTemplate,
       });
     },
     [selectedProfile, template],
@@ -186,6 +193,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         input,
         messages: [...conversationMessages, { role: "user", content: promptText }],
         template: template ?? undefined,
+        systemPromptTemplate: chatPromptTemplate ?? undefined,
       };
       let currentText = "";
       const result = await streamChat(chatRequest, (chunk) => {
@@ -215,7 +223,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         );
       }
     } else {
-      const request: GenerateCardsRequest = { input, messages: conversationMessages };
+      const request: GenerateCardsRequest = { input, messages: conversationMessages, systemPromptTemplate: generationPromptTemplate ?? undefined };
       startRun(runId, "generate", request);
       setMessages((prev) => [
         ...prev,
@@ -259,6 +267,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     cancelRun,
     setMode,
     _,
+    chatPromptTemplate,
+    generationPromptTemplate,
   ]);
 
   const handleRetry = useCallback(async (runId: string) => {
@@ -289,6 +299,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     cancel();
     cancelChat();
   }, [activeRunId, cancel, cancelChat, cancelRun]);
+
+  const handleGenerationPromptChange = useCallback((value: string | null) => {
+    setGenerationPromptTemplate(value);
+  }, []);
+
+  const handleChatPromptChange = useCallback((value: string | null) => {
+    setChatPromptTemplate(value);
+  }, []);
+
+
 
   useEffect(() => {
     if (!profileId) {
@@ -356,6 +376,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     getGeneratedCardsProps,
     hasContext,
     handleRetry,
+    generationPromptTemplate,
+    chatPromptTemplate,
+    handleGenerationPromptChange,
+    handleChatPromptChange,
   };
 }
 

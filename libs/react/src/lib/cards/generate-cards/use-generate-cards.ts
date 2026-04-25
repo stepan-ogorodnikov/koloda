@@ -5,6 +5,7 @@ import { type StreamResult, useStreamingRequest } from "./use-streaming-request"
 export type GenerateCardsRequest = {
   input: GenerateCardsInput;
   messages: ModelMessage[];
+  systemPromptTemplate?: string;
 };
 
 export type StreamGenerator = (

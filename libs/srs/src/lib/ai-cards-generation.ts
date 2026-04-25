@@ -9,10 +9,28 @@ import type { Template, TemplateFields } from "./templates";
 
 export const GENERATION_TEMPERATURE = 0.2;
 
+export const DEFAULT_GENERATION_PROMPT_TEMPLATE = [
+  "You are a flashcard generator that must produce strictly structured flashcard data.",
+  "The flashcards have the following fields:",
+  "{{fields}}",
+  "",
+  "Rules:",
+  "{{rules}}",
+  "",
+  "{{providerFormat}}",
+].join("\n");
+
+export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
+  "You are a helpful AI study assistant embedded in a flashcard app.",
+  "You can answer questions, explain concepts, and have conversations.",
+  "Keep responses concise, educational, and accurate.",
+].join("\n");
+
 export type ChatStreamRequest = {
   messages: ModelMessage[];
   input: GenerateCardsInput;
   template?: Template;
+  systemPromptTemplate?: string;
 };
 
 export type ChatStreamGenerator = (
@@ -35,6 +53,7 @@ export type CardGenerationRequest = {
   messages?: ModelMessage[];
   onCard: OnCardGenerated;
   abortSignal?: AbortSignal;
+  systemPromptTemplate?: string;
 };
 
 export type GenerateCardsInput = z.input<typeof generateCardsInputSchema>;
@@ -53,14 +72,20 @@ function buildCardGenerationRules(context: "structured" | "assistant"): string {
     ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
     : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
 
-  return [
+  const rules = [
     '- Each card must be { "content": { ... } } where each field key maps to { "text": "..." }.',
     '- "content" keys must be ONLY the field keys listed above.',
     noExtras,
     "- Keep text concise, educational, and accurate.",
     "- For required fields, never return empty text.",
     "- Follow the requested card count exactly when specified.",
-  ].join("\n");
+  ];
+
+  if (context === "structured") {
+    rules.unshift("- Output must match the provided schema exactly.");
+  }
+
+  return rules.join("\n");
 }
 
 function buildMarkdownFormatInstructions(fields: TemplateFields): string {
@@ -78,7 +103,6 @@ export function buildSystemPrompt(fields: TemplateFields, providerPrompt = ""): 
     "The flashcards have the following fields:",
     buildFieldDescriptions(fields),
     "Rules:",
-    "- Output must match the provided schema exactly.",
     buildCardGenerationRules("structured"),
   ].join("\n");
 
@@ -113,6 +137,35 @@ export function buildAssistantSystemPrompt(fields: TemplateFields, provider?: Ai
   ].filter(Boolean).join("\n");
 }
 
+function resolveProviderFormatText(
+  fields: TemplateFields,
+  provider: AiProvider | null | undefined,
+  mode: "generation" | "chat",
+): string {
+  if (!provider || provider === "openrouter") return "";
+  if (mode === "generation") {
+    return buildProviderFormatPrompt(fields);
+  }
+  return buildMarkdownFormatInstructions(fields);
+}
+
+export function compilePromptTemplate(
+  template: string,
+  fields: TemplateFields,
+  provider?: AiProvider | null,
+  mode: "generation" | "chat" = "generation",
+): string {
+  const fieldsText = buildFieldDescriptions(fields);
+  const rulesText = buildCardGenerationRules(mode === "generation" ? "structured" : "assistant");
+  const providerFormatText = resolveProviderFormatText(fields, provider, mode);
+
+  return template
+    .replace(/{{fields}}/g, fieldsText)
+    .replace(/{{rules}}/g, rulesText)
+    .replace(/{{providerFormat}}/g, providerFormatText)
+    .trim();
+}
+
 export function generateCardsWithOpenRouter(request: CardGenerationRequest, openrouter: OpenRouterProvider) {
   return wrapAIError(() => runStructuredCardGeneration((modelId) => openrouter(modelId), request));
 }
@@ -132,6 +185,7 @@ export function generateCardsWithOllama(request: CardGenerationRequest, baseUrl:
               prompt: input.prompt,
               messages,
               provider: "ollama",
+              systemPromptTemplate: request.systemPromptTemplate,
             }),
             options: { temperature },
             stream: false,
@@ -177,6 +231,7 @@ export function generateCardsWithLMStudio(
               prompt: input.prompt,
               messages,
               provider: "lmstudio",
+              systemPromptTemplate: request.systemPromptTemplate,
             }),
           }),
           signal: abortSignal,
@@ -299,7 +354,7 @@ function extractCardsFromMarkdownText(text: string, template: Template): Generat
 
 async function runStructuredCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
-  { template, input, messages = [], onCard, abortSignal }: CardGenerationRequest,
+  { template, input, messages = [], onCard, abortSignal, systemPromptTemplate }: CardGenerationRequest,
 ): Promise<void> {
   const elementSchema = getCardContentSchema(template.content.fields);
   const temperature = resolveGenerationTemperature(input.temperature);
@@ -310,7 +365,12 @@ async function runStructuredCardGeneration(
       model: modelFactory(input.modelId),
       temperature,
       output: Output.array({ element: elementSchema }),
-      system: buildSystemPrompt(template.content.fields),
+      system: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        template.content.fields,
+        "openrouter",
+        "generation",
+      ),
       messages: getConversationMessages(messages, input.prompt),
       abortSignal,
       onError: ({ error }) => {
@@ -339,7 +399,12 @@ async function runStructuredCardGeneration(
     const fallbackTextResult = await generateText({
       model: modelFactory(input.modelId),
       temperature,
-      system: buildSystemPromptForProvider(template.content.fields, "openrouter"),
+      system: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        template.content.fields,
+        "openrouter",
+        "generation",
+      ),
       messages: getConversationMessages(messages, input.prompt),
       abortSignal,
     });
@@ -408,13 +473,19 @@ type GetTextCompletionMessagesParams = {
   prompt: string;
   messages?: ModelMessage[];
   provider: Exclude<AiProvider, "openrouter">;
+  systemPromptTemplate?: string;
 };
 
-function getTextCompletionMessages({ template, prompt, messages = [], provider }: GetTextCompletionMessagesParams) {
+function getTextCompletionMessages({ template, prompt, messages = [], provider, systemPromptTemplate }: GetTextCompletionMessagesParams) {
   return [
     {
       role: "system",
-      content: buildSystemPromptForProvider(template.content.fields, provider),
+      content: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        template.content.fields,
+        provider,
+        "generation",
+      ),
     },
     ...getConversationMessages(messages, prompt),
   ];
@@ -434,7 +505,12 @@ export async function streamChatWithOpenRouter(
     const result = streamText({
       model: openrouter(request.input.modelId),
       temperature: resolveGenerationTemperature(request.input.temperature),
-      system: buildAssistantSystemPrompt(request.template?.content.fields ?? []),
+      system: compilePromptTemplate(
+        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+        request.template?.content.fields ?? [],
+        "openrouter",
+        "chat",
+      ),
       messages: request.messages,
       abortSignal,
     });
@@ -458,7 +534,12 @@ export async function streamChatWithOllama(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: request.input.modelId,
-          system: buildAssistantSystemPrompt(request.template?.content.fields ?? [], "ollama"),
+          system: compilePromptTemplate(
+            request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+            request.template?.content.fields ?? [],
+            "ollama",
+            "chat",
+          ),
           messages: request.messages,
           options: { temperature: resolveGenerationTemperature(request.input.temperature) },
           stream: true,
@@ -478,7 +559,12 @@ export async function streamChatWithLMStudio(
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ): Promise<void> {
   return wrapAIError(async () => {
-    const systemMessage = buildAssistantSystemPrompt(request.template?.content.fields ?? [], "lmstudio");
+    const systemMessage = compilePromptTemplate(
+      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+      request.template?.content.fields ?? [],
+      "lmstudio",
+      "chat",
+    );
     const messages = systemMessage
       ? [{ role: "system", content: systemMessage }, ...request.messages]
       : request.messages;

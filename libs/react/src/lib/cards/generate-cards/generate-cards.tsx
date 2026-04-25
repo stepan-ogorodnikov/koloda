@@ -12,7 +12,7 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
-import { GenerateCardsPromptSettings } from "./generate-cards-prompt-settings";
+import { GenerateCardsSettings } from "./generate-cards-settings";
 import { getChatTextMetadata } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
@@ -56,6 +56,10 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleReset,
     getGeneratedCardsProps,
     hasContext,
+    generationPromptTemplate,
+    chatPromptTemplate,
+    handleGenerationPromptChange,
+    handleChatPromptChange,
   } = useGenerateCardsDialog(deckId, templateId);
 
   useEffect(() => {
@@ -135,11 +139,15 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                 </div>
                 {selectedTab === "settings" && (
                   <div className="grow overflow-auto">
-                    <GenerateCardsPromptSettings
+                    <GenerateCardsSettings
                       template={template}
                       provider={provider}
                       temperature={temperature}
                       onTemperatureChange={handleTemperatureChange}
+                      generationPromptTemplate={generationPromptTemplate}
+                      chatPromptTemplate={chatPromptTemplate}
+                      onGenerationPromptChange={handleGenerationPromptChange}
+                      onChatPromptChange={handleChatPromptChange}
                     />
                   </div>
                 )}
