@@ -122,7 +122,6 @@ describe("useGenerateCardsDialog", () => {
     expect(generateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         input: {
-          credentialId: profile.id,
           modelId: profile.lastUsedModel,
           prompt: "Explain noun genders",
           temperature: 0.2,

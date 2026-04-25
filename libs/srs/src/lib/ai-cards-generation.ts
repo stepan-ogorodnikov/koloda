@@ -22,7 +22,6 @@ export type ChatStreamGenerator = (
 ) => Promise<void>;
 
 export const generateCardsInputSchema = z.object({
-  credentialId: z.uuid(),
   modelId: z.string().min(1),
   prompt: z.string().min(1),
   temperature: z.number().min(0).max(2).optional(),

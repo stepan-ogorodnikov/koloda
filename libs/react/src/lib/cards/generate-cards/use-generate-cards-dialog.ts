@@ -166,7 +166,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
     touchProfileMutation.mutate({ id: profileId, modelId });
     const input = generateCardsInputSchema.parse({
-      credentialId: profileId,
       modelId,
       prompt: promptText,
       temperature,

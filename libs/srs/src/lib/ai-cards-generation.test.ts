@@ -28,7 +28,6 @@ function createRequest(template = createTemplate()) {
   return {
     template,
     input: {
-      credentialId: "550e8400-e29b-41d4-a716-446655440000",
       modelId: "openrouter/gpt-5-mini",
       prompt: "Create cards",
       temperature: 0.2,

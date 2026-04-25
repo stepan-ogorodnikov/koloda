@@ -7,7 +7,6 @@ import { useGenerateCards } from "./use-generate-cards";
 function createRequest(overrides: Partial<GenerateCardsRequest> = {}): GenerateCardsRequest {
   return {
     input: {
-      credentialId: "550e8400-e29b-41d4-a716-446655440000",
       modelId: "openrouter/gpt-5-mini",
       prompt: "Generate cards",
       temperature: 0.2,
