@@ -43,36 +43,51 @@ export type GeneratedCard = { content: Record<string, { text: string }> };
 export type OnCardGenerated = (card: GeneratedCard) => void;
 export type GenerateCardsFunction = (request: CardGenerationRequest) => Promise<void>;
 
-export function buildSystemPrompt(fields: TemplateFields, providerPrompt = ""): string {
-  const fieldDescriptions = fields
-    .map((f) => `- key "${f.id}" => ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
+function buildFieldDescriptions(fields: TemplateFields): string {
+  return fields
+    .map((f) => `- "${f.id}": ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
     .join("\n");
+}
 
-  const corePrompt = [
-    "You are a flashcard generator that must produce strictly structured flashcard data.",
-    "The flashcards have the following fields:",
-    fieldDescriptions,
-    "Rules:",
-    "- Output must match the provided schema exactly.",
-    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
-    "- \"content\" keys must be ONLY the field keys listed above.",
-    "- Do not add extra keys, comments, explanations, markdown, headings, or prose.",
+function buildCardGenerationRules(context: "structured" | "assistant"): string {
+  const noExtras = context === "assistant"
+    ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
+    : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
+
+  return [
+    '- Each card must be { "content": { ... } } where each field key maps to { "text": "..." }.',
+    '- "content" keys must be ONLY the field keys listed above.',
+    noExtras,
     "- Keep text concise, educational, and accurate.",
     "- For required fields, never return empty text.",
     "- Follow the requested card count exactly when specified.",
+  ].join("\n");
+}
+
+function buildMarkdownFormatInstructions(fields: TemplateFields): string {
+  return [
+    "When generating cards without structured output, format each card exactly as:",
+    "## Card <number>",
+    ...fields.map((field) => `**${field.title}**: <value>`),
+    "Only output cards in this exact format.",
+  ].join("\n");
+}
+
+export function buildSystemPrompt(fields: TemplateFields, providerPrompt = ""): string {
+  const corePrompt = [
+    "You are a flashcard generator that must produce strictly structured flashcard data.",
+    "The flashcards have the following fields:",
+    buildFieldDescriptions(fields),
+    "Rules:",
+    "- Output must match the provided schema exactly.",
+    buildCardGenerationRules("structured"),
   ].join("\n");
 
   return providerPrompt ? `${corePrompt}\n\n${providerPrompt}` : corePrompt;
 }
 
 export function buildProviderFormatPrompt(fields: TemplateFields) {
-  return [
-    "Provider-specific format instructions:",
-    "When not using native structured output, format each card exactly as:",
-    "## Card <number>",
-    ...fields.map((field) => `**${field.title}**: <value>`),
-    "Only output cards in this exact format.",
-  ].join("\n");
+  return ["Provider-specific format instructions:", buildMarkdownFormatInstructions(fields)].join("\n");
 }
 
 export function buildSystemPromptForProvider(fields: TemplateFields, provider?: AiProvider | null) {
@@ -81,18 +96,8 @@ export function buildSystemPromptForProvider(fields: TemplateFields, provider?: 
 }
 
 export function buildAssistantSystemPrompt(fields: TemplateFields, provider?: AiProvider | null): string {
-  const fieldDescriptions = fields
-    .map((f) => `- "${f.id}": ${f.title} (${f.type}${f.isRequired ? ", required" : ", optional"})`)
-    .join("\n");
-
   const formatInstructions = provider && provider !== "openrouter"
-    ? [
-      "",
-      "When generating cards without structured output, format each card exactly as:",
-      "## Card <number>",
-      ...fields.map((field) => `**${field.title}**: <value>`),
-      "Only output cards in this exact format.",
-    ].join("\n")
+    ? "\n\n" + buildMarkdownFormatInstructions(fields)
     : "";
 
   return [
@@ -101,15 +106,10 @@ export function buildAssistantSystemPrompt(fields: TemplateFields, provider?: Ai
     "When the user asks you to generate flashcards, you must produce structured card data.",
     "",
     "The flashcards have the following fields:",
-    fieldDescriptions,
+    buildFieldDescriptions(fields),
     "",
     "Rules for card generation:",
-    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
-    "- \"content\" keys must be ONLY the field keys listed above.",
-    "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards.",
-    "- Keep text concise, educational, and accurate.",
-    "- For required fields, never return empty text.",
-    "- Follow the requested card count exactly when specified.",
+    buildCardGenerationRules("assistant"),
     formatInstructions,
   ].filter(Boolean).join("\n");
 }
