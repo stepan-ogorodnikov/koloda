@@ -5,6 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMemo } from "react";
 import { GenerateCardsSettingsPromptEditor } from "./generate-cards-settings-prompt-editor";
+import { GenerateCardsSettingsVariables } from "./generate-cards-settings-variables";
 
 export type GenerateCardsSettingsProps = {
   template: Template | null | undefined;
@@ -68,6 +69,8 @@ export function GenerateCardsSettings({
         preview={generationPreview}
         onChange={onGenerationPromptChange}
       />
+
+      <GenerateCardsSettingsVariables />
 
       <NumberField
         minValue={0}

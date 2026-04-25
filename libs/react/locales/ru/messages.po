@@ -602,15 +602,31 @@ msgstr "Показать чат"
 msgid "generate-cards.settings.show-settings"
 msgstr "Показать настройки"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:55
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:56
 msgid "generate-cards.settings.system-prompt.chat.label"
 msgstr "Системный промпт режима 'Чат'"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:64
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:65
 msgid "generate-cards.settings.system-prompt.generate.label"
 msgstr "Системный промпт режима 'Карточки'"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:79
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:16
+msgid "generate-cards.settings.system-prompt.variables"
+msgstr "Доступные переменные"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:5
+msgid "generate-cards.settings.system-prompt.variables.fields"
+msgstr "Техническая информация о полях шаблона: тип, обязательно"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:7
+msgid "generate-cards.settings.system-prompt.variables.provider"
+msgstr "Инструкции формата для конкретного провайдера"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:6
+msgid "generate-cards.settings.system-prompt.variables.rules"
+msgstr "Инструкции, которые форсируют необходимый формат ответа"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:82
 msgid "generate-cards.settings.temperature.label"
 msgstr "Температура"
 

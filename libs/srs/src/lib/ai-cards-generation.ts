@@ -17,7 +17,7 @@ export const DEFAULT_GENERATION_PROMPT_TEMPLATE = [
   "Rules:",
   "{{rules}}",
   "",
-  "{{providerFormat}}",
+  "{{provider}}",
 ].join("\n");
 
 export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
@@ -162,7 +162,7 @@ export function compilePromptTemplate(
   return template
     .replace(/{{fields}}/g, fieldsText)
     .replace(/{{rules}}/g, rulesText)
-    .replace(/{{providerFormat}}/g, providerFormatText)
+    .replace(/{{provider}}/g, providerFormatText)
     .trim();
 }
 

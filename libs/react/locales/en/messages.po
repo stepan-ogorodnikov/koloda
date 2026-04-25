@@ -602,15 +602,31 @@ msgstr "Show chat"
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:55
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:56
 msgid "generate-cards.settings.system-prompt.chat.label"
 msgstr "Chat mode system prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:64
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:65
 msgid "generate-cards.settings.system-prompt.generate.label"
 msgstr "Cards mode system prompt"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:79
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:16
+msgid "generate-cards.settings.system-prompt.variables"
+msgstr "Available variables"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:5
+msgid "generate-cards.settings.system-prompt.variables.fields"
+msgstr "Technical details of template fields: type, requirement"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:7
+msgid "generate-cards.settings.system-prompt.variables.provider"
+msgstr "Provider-specific instructions"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-variables.tsx:6
+msgid "generate-cards.settings.system-prompt.variables.rules"
+msgstr "Instructions that enforce desired output format"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings.tsx:82
 msgid "generate-cards.settings.temperature.label"
 msgstr "Temperature"
 

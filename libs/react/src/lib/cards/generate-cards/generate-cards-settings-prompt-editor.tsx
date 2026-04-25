@@ -1,6 +1,6 @@
 import { Edit03Icon, Undo02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Label, TextField } from "@koloda/ui";
+import { Button, TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
@@ -29,7 +29,7 @@ export function GenerateCardsSettingsPromptEditor({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row items-center justify-between">
-        <Label>{label}</Label>
+        <span>{label}</span>
         <div className="flex flex-row items-center gap-2">
           <Button
             variants={{ style: "ghost", size: "icon" }}
