@@ -14,6 +14,7 @@ export type GeneratedCardsMessageProps = {
   isGenerating: boolean;
   isCanceled: boolean;
   isFailed: boolean;
+  canRetry: boolean;
   onRetry: () => void;
 };
 
@@ -26,6 +27,7 @@ export function GeneratedCardsMessage({
   isGenerating,
   isCanceled,
   isFailed,
+  canRetry,
   onRetry,
 }: GeneratedCardsMessageProps) {
   const { _ } = useLingui();
@@ -49,12 +51,14 @@ export function GeneratedCardsMessage({
           <p className="fg-level-4">
             {_(msg`generate-cards.generate.failed`)}
           </p>
-          <Button
-            variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-            onPress={onRetry}
-          >
-            {_(msg`generate-cards.generate.retry`)}
-          </Button>
+          {canRetry && (
+            <Button
+              variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
+              onPress={onRetry}
+            >
+              {_(msg`generate-cards.generate.retry`)}
+            </Button>
+          )}
         </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (

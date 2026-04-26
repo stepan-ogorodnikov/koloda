@@ -93,12 +93,14 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
           {content}
           <div className="flex flex-row flex-wrap items-center gap-2">
             <p className="fg-level-4">{_(msg`generate-cards.chat.failed`)}</p>
-            <Button
-              variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-              onPress={chatProps.onRetry}
-            >
-              {_(msg`generate-cards.chat.retry`)}
-            </Button>
+            {chatProps.canRetry && (
+              <Button
+                variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
+                onPress={chatProps.onRetry}
+              >
+                {_(msg`generate-cards.chat.retry`)}
+              </Button>
+            )}
           </div>
         </div>
       );

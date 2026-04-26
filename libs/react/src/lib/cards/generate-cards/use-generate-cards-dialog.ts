@@ -46,7 +46,7 @@ export type UseGenerateCardsDialogReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
-  getChatMessageProps: (message: UIMessage) => { isFailed: true; onRetry: () => void } | null;
+  getChatMessageProps: (message: UIMessage) => { isFailed: true; canRetry: boolean; onRetry: () => void } | null;
   hasContext: boolean;
   handleRetry: (runId: string) => Promise<void>;
   generationPromptTemplate: string | null;
@@ -391,6 +391,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
     const isRunGenerating = isCurrentRun && isGenerating;
 
+    // Only allow retry on the latest message
+    const messageIndex = messages.findIndex((m) => m.id === message.id);
+    const canRetry = messageIndex < 0 || messageIndex >= messages.length - 1;
+
     return {
       cards: runCards,
       template,
@@ -400,22 +404,28 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       isGenerating: isRunGenerating,
       isCanceled: run?.status === "canceled",
       isFailed: run?.status === "failed",
+      canRetry,
       onRetry: () => handleRetry(generatedCardsMetadata.runId),
     };
-  }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry]);
+  }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry, messages]);
 
-  const getChatMessageProps = useCallback((message: UIMessage): { isFailed: true; onRetry: () => void } | null => {
+  const getChatMessageProps = useCallback((message: UIMessage): { isFailed: true; canRetry: boolean; onRetry: () => void } | null => {
     const chatMetadata = getChatTextMetadata(message);
     if (!chatMetadata) return null;
 
     const run = runs[chatMetadata.runId];
     if (!run || run.status !== "failed") return null;
 
+    // Only allow retry on the latest message
+    const messageIndex = messages.findIndex((m) => m.id === message.id);
+    const canRetry = messageIndex < 0 || messageIndex >= messages.length - 1;
+
     return {
       isFailed: true,
+      canRetry,
       onRetry: () => handleRetry(chatMetadata.runId),
     };
-  }, [runs, handleRetry]);
+  }, [runs, handleRetry, messages]);
 
   return {
     isOpen,
