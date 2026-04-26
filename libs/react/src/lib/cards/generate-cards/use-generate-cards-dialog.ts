@@ -13,6 +13,7 @@ import {
   createTextMessage,
   type GenerationMode,
   getAssistantMetadata,
+  getChatTextMetadata,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
@@ -45,6 +46,7 @@ export type UseGenerateCardsDialogReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
+  getChatMessageProps: (message: UIMessage) => { isFailed: true; onRetry: () => void } | null;
   hasContext: boolean;
   handleRetry: (runId: string) => Promise<void>;
   generationPromptTemplate: string | null;
@@ -195,6 +197,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         template: template ?? undefined,
         systemPromptTemplate: chatPromptTemplate ?? undefined,
       };
+      startRun(runId, "chat", chatRequest);
       let currentText = "";
       const result = await streamChat(chatRequest, (chunk) => {
         currentText += chunk;
@@ -207,7 +210,12 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         );
       });
 
-      if (result === "aborted") {
+      if (result === "success") {
+        completeRun(runId);
+      } else if (result === "error") {
+        failRun(runId);
+      } else if (result === "aborted") {
+        cancelRun(runId);
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
@@ -215,7 +223,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
                 ...m,
                 parts: [
                   { type: "text" as const, text: currentText },
-                  { type: "interrupted" as any, text: _(msg`generate-cards.canceled`) },
+                  { type: "interrupted" as any, text: _(msg`generate-cards.chat.canceled`) },
                 ],
               }
               : m
@@ -227,7 +235,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       startRun(runId, "generate", request);
       setMessages((prev) => [
         ...prev,
-        createTextMessage(`assistant-${runId}`, "assistant", _(msg`generate-cards.generating`), {
+        createTextMessage(`assistant-${runId}`, "assistant", _(msg`generate-cards.generate.generating`), {
           kind: "generated-cards",
           runId,
         }),
@@ -277,20 +285,64 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
     restartRun(runId);
 
-    const request = run.request as GenerateCardsRequest;
-    const result = await generate(request, (card) => {
-      addCard(runId, card);
-    });
+    if (run.mode === "chat") {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === `assistant-${runId}`
+            ? { ...m, parts: [{ type: "text" as const, text: "" }] }
+            : m
+        )
+      );
 
-    if (result === "success") {
-      completeRun(runId);
-      setMode("chat");
-    } else if (result === "error") {
-      failRun(runId);
-    } else if (result === "aborted") {
-      cancelRun(runId);
+      const request = run.request as ChatStreamRequest;
+      let currentText = "";
+      const result = await streamChat(request, (chunk) => {
+        currentText += chunk;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === `assistant-${runId}`
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
+              : m
+          )
+        );
+      });
+
+      if (result === "success") {
+        completeRun(runId);
+      } else if (result === "error") {
+        failRun(runId);
+      } else if (result === "aborted") {
+        cancelRun(runId);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === `assistant-${runId}`
+              ? {
+                ...m,
+                parts: [
+                  { type: "text" as const, text: currentText },
+                  { type: "interrupted" as any, text: _(msg`generate-cards.chat.canceled`) },
+                ],
+              }
+              : m
+          )
+        );
+      }
+    } else {
+      const request = run.request as GenerateCardsRequest;
+      const result = await generate(request, (card) => {
+        addCard(runId, card);
+      });
+
+      if (result === "success") {
+        completeRun(runId);
+        setMode("chat");
+      } else if (result === "error") {
+        failRun(runId);
+      } else if (result === "aborted") {
+        cancelRun(runId);
+      }
     }
-  }, [runs, generate, restartRun, addCard, completeRun, failRun, cancelRun, setMode]);
+  }, [runs, generate, restartRun, addCard, completeRun, failRun, cancelRun, setMode, streamChat, setMessages, _]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
@@ -352,6 +404,19 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     };
   }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry]);
 
+  const getChatMessageProps = useCallback((message: UIMessage): { isFailed: true; onRetry: () => void } | null => {
+    const chatMetadata = getChatTextMetadata(message);
+    if (!chatMetadata) return null;
+
+    const run = runs[chatMetadata.runId];
+    if (!run || run.status !== "failed") return null;
+
+    return {
+      isFailed: true,
+      onRetry: () => handleRetry(chatMetadata.runId),
+    };
+  }, [runs, handleRetry]);
+
   return {
     isOpen,
     profileId,
@@ -374,6 +439,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleCancel,
     handleReset,
     getGeneratedCardsProps,
+    getChatMessageProps,
     hasContext,
     handleRetry,
     generationPromptTemplate,

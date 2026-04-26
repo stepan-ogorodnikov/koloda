@@ -128,7 +128,7 @@ msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
 #: ../../libs/react/src/lib/ai/ai-chat.tsx:325
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:159
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:175
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
 
@@ -548,39 +548,51 @@ msgstr "Edit card"
 msgid "generate-cards.add"
 msgstr "Add Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:44
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:218
-msgid "generate-cards.canceled"
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:226
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:323
+msgid "generate-cards.chat.canceled"
 msgstr "Interrupted"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:191
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:95
+msgid "generate-cards.chat.failed"
+msgstr "Failed to process request"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:100
+msgid "generate-cards.chat.retry"
+msgstr "Retry"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:207
 msgid "generate-cards.close.cancel"
 msgstr "Cancel"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:200
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:216
 msgid "generate-cards.close.confirm"
 msgstr "Close"
 
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:44
+msgid "generate-cards.generate.canceled"
+msgstr "Interrupted"
+
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:50
-msgid "generate-cards.failed"
+msgid "generate-cards.generate.failed"
 msgstr "Failed to generate cards"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:39
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:238
+msgid "generate-cards.generate.generating"
+msgstr "Generating"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:56
+msgid "generate-cards.generate.retry"
+msgstr "Retry"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:72
 msgid "generate-cards.generated-no-cards"
 msgstr "Failed to retrieve cards from the response."
 
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:39
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:230
-msgid "generate-cards.generating"
-msgstr "Generating"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:105
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:121
 msgid "generate-cards.no-profiles"
 msgstr "Add AI profile first to generate cards"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:56
-msgid "generate-cards.retry"
-msgstr "Retry"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards-settings-prompt-editor.tsx:38
 msgid "generate-cards.settings.prompt.edit"
@@ -594,11 +606,11 @@ msgstr "Preview"
 msgid "generate-cards.settings.prompt.reset"
 msgstr "Reset to default value"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:172
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:188
 msgid "generate-cards.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:172
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:188
 msgid "generate-cards.settings.show-settings"
 msgstr "Show settings"
 
@@ -642,11 +654,11 @@ msgstr "Card added successfully"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Adding card"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:114
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:130
 msgid "generate-cards.title"
 msgstr "Generate Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:99
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:115
 msgid "generate-cards.trigger"
 msgstr "Generate cards with AI"
 

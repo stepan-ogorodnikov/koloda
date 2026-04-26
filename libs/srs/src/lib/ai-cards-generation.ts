@@ -502,6 +502,7 @@ export async function streamChatWithOpenRouter(
   openrouter: OpenRouterProvider,
 ): Promise<void> {
   return wrapAIError(async () => {
+    let streamedError: unknown = null;
     const result = streamText({
       model: openrouter(request.input.modelId),
       temperature: resolveGenerationTemperature(request.input.temperature),
@@ -513,11 +514,20 @@ export async function streamChatWithOpenRouter(
       ),
       messages: request.messages,
       abortSignal,
+      onError: ({ error }) => {
+        streamedError = error;
+      },
     });
 
-    for await (const chunk of result.textStream) {
-      onChunk(chunk);
+    try {
+      for await (const chunk of result.textStream) {
+        onChunk(chunk);
+      }
+    } catch (error) {
+      throw streamedError ?? error;
     }
+
+    if (streamedError) throw streamedError;
   });
 }
 

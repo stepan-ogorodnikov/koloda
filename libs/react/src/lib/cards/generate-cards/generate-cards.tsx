@@ -13,7 +13,6 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
 import { GenerateCardsSettings } from "./generate-cards-settings";
-import { getChatTextMetadata } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
 
@@ -55,6 +54,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleCancel,
     handleReset,
     getGeneratedCardsProps,
+    getChatMessageProps,
     hasContext,
     generationPromptTemplate,
     chatPromptTemplate,
@@ -86,10 +86,26 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     const props = getGeneratedCardsProps(message);
     if (props && props.template) return <GeneratedCardsMessage {...props} />;
 
-    if (getChatTextMetadata(message)) return content;
+    const chatProps = getChatMessageProps(message);
+    if (chatProps) {
+      return (
+        <div className="flex flex-col gap-2 self-start w-full">
+          {content}
+          <div className="flex flex-row flex-wrap items-center gap-2">
+            <p className="fg-level-4">{_(msg`generate-cards.chat.failed`)}</p>
+            <Button
+              variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
+              onPress={chatProps.onRetry}
+            >
+              {_(msg`generate-cards.chat.retry`)}
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
     return content;
-  }, [getGeneratedCardsProps]);
+  }, [getGeneratedCardsProps, getChatMessageProps, _]);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>

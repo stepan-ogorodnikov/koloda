@@ -36,24 +36,24 @@ export function GeneratedCardsMessage({
     <AIChatMessageLayout role="assistant">
       {isGenerating && (
         <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
-          {_(msg`generate-cards.generating`)}
+          {_(msg`generate-cards.generate.generating`)}
         </p>
       )}
       {isCanceled && (
         <p className="fg-level-4">
-          {_(msg`generate-cards.canceled`)}
+          {_(msg`generate-cards.generate.canceled`)}
         </p>
       )}
       {isFailed && (
         <div className="flex flex-row flex-wrap items-center gap-2">
           <p className="fg-level-4">
-            {_(msg`generate-cards.failed`)}
+            {_(msg`generate-cards.generate.failed`)}
           </p>
           <Button
             variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
             onPress={onRetry}
           >
-            {_(msg`generate-cards.retry`)}
+            {_(msg`generate-cards.generate.retry`)}
           </Button>
         </div>
       )}
