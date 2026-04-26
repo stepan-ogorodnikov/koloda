@@ -13,8 +13,6 @@ import { AppError } from "./error";
 import type { AISecrets } from "./settings-ai";
 
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
-export const DEFAULT_CODEX_MODEL_ID = "gpt-5.4";
-export const CODEX_MODELS: AIModel[] = [{ id: DEFAULT_CODEX_MODEL_ID, name: "GPT-5.4", context_length: 1_050_000 }];
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -109,7 +107,7 @@ export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
 }
 
 export async function fetchCodexModels(): Promise<AIModel[]> {
-  return CODEX_MODELS;
+  throw new AppError("unknown", "Codex provider requires the native app runtime to list models.");
 }
 
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {

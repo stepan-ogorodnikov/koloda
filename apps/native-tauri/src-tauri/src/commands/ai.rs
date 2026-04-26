@@ -2,8 +2,8 @@ use tauri::command;
 use serde::Deserialize;
 
 use crate::{
+    ai::codex::{list_codex_models, run_codex_prompt, CodexModel},
     app::db::DB,
-    app::codex::run_codex_prompt,
     app::error::AppError,
     domain::ai::{AddProfileData, RemoveProfileData, TouchProfileData, UpdateProfileData},
     domain::settings_ai::AIProfile,
@@ -57,4 +57,9 @@ pub fn cmd_generate_cards_with_codex(data: CodexGenerateCardsData) -> Result<Str
 #[command]
 pub fn cmd_chat_with_codex(data: CodexChatData) -> Result<String, AppError> {
     run_codex_prompt(&data.prompt, data.model_id.as_deref())
+}
+
+#[command]
+pub fn cmd_list_codex_models() -> Result<Vec<CodexModel>, AppError> {
+    list_codex_models()
 }

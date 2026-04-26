@@ -11,8 +11,6 @@ import { z } from "zod";
 import type { ModelMessage } from "ai";
 import { invoke } from "./tauri";
 
-const DEFAULT_CODEX_MODEL_ID = "gpt-5.4";
-
 type CodexGenerateCardsData = {
   prompt: string;
   modelId?: string;
@@ -24,7 +22,7 @@ type CodexChatData = {
 };
 
 function normalizeModelId(modelId?: string) {
-  return modelId && modelId !== "default" ? modelId : DEFAULT_CODEX_MODEL_ID;
+  return modelId && modelId !== "default" ? modelId : undefined;
 }
 
 function getMessageText(content: ModelMessage["content"]) {

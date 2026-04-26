@@ -4,10 +4,77 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
+use serde::{Deserialize, Serialize};
+
 use crate::app::error::AppError;
 use crate::app::utility::generate_uuid;
 
-const DEFAULT_MODEL_ID: &str = "gpt-5.4";
+#[derive(Debug, Clone, Serialize)]
+pub struct CodexModel {
+    pub id: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub context_length: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelsCacheEntry {
+    slug: String,
+    display_name: String,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    visibility: String,
+    context_window: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct ModelsCache {
+    models: Vec<ModelsCacheEntry>,
+}
+
+const CODEX_MODELS_CACHE_FILE: &str = "models_cache.json";
+
+pub fn list_codex_models() -> Result<Vec<CodexModel>, AppError> {
+    let cache_path = resolve_models_cache_path();
+    let content = fs::read_to_string(&cache_path).map_err(|_| {
+        AppError::new(
+            "unknown",
+            Some(format!(
+                "Codex CLI models cache not found at {}. Run Codex CLI at least once to populate the model list.",
+                cache_path.display()
+            )),
+        )
+    })?;
+
+    let cache: ModelsCache = serde_json::from_str(&content)?;
+    let models: Vec<CodexModel> = cache.models
+        .into_iter()
+        .filter(|m| m.visibility == "list")
+        .map(|m| CodexModel {
+            id: m.slug,
+            name: m.display_name,
+            description: m.description,
+            context_length: m.context_window,
+        })
+        .collect();
+
+    if models.is_empty() {
+        return Err(AppError::new(
+            "unknown",
+            Some("Codex CLI models cache contains no visible models.".to_string()),
+        ));
+    }
+
+    Ok(models)
+}
+
+fn resolve_models_cache_path() -> PathBuf {
+    dirs::home_dir()
+        .map(|home| home.join(".codex").join(CODEX_MODELS_CACHE_FILE))
+        .unwrap_or_else(|| PathBuf::from(CODEX_MODELS_CACHE_FILE))
+}
 
 pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>) -> Result<String, AppError> {
     let temp_dir = create_temp_dir()?;
@@ -68,8 +135,7 @@ fn cleanup_temp_dir(path: &Path) {
 
 fn normalize_model_id(model_id: Option<&str>) -> Option<&str> {
     match model_id.map(str::trim) {
-        Some("") | None => Some(DEFAULT_MODEL_ID),
-        Some("default") => Some(DEFAULT_MODEL_ID),
+        Some("") | Some("default") | None => None,
         Some(model_id) => Some(model_id),
     }
 }

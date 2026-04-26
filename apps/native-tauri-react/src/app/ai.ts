@@ -1,10 +1,15 @@
-import type { AIProfile } from "@koloda/srs";
+import type { AIModel, AIProfile } from "@koloda/srs";
 import { fetchModels } from "@koloda/srs";
 import { invoke } from "./tauri";
 
 export async function getAIProfileModels(profileId: string) {
   const profiles = await invoke<AIProfile[]>("cmd_get_ai_profiles");
   const profile = profiles.find((p) => p.id === profileId);
+  if (!profile?.secrets) return [];
 
-  return profile?.secrets ? await fetchModels(profile.secrets) : [];
+  if (profile.secrets.provider === "codex") {
+    return invoke<AIModel[]>("cmd_list_codex_models");
+  }
+
+  return fetchModels(profile.secrets);
 }
