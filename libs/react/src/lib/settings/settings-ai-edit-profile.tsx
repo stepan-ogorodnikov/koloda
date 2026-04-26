@@ -11,11 +11,13 @@ import { useState } from "react";
 import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
 import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
 import { EditAIProfileOpenRouter } from "./ai-providers/edit-ai-profile-openrouter";
+import { EditAIProfileCodex } from "./ai-providers/edit-ai-profile-codex";
 
 const PROVIDER_FORMS = {
   openrouter: EditAIProfileOpenRouter,
   ollama: EditAIProfileOllama,
   lmstudio: EditAIProfileLMStudio,
+  codex: EditAIProfileCodex,
 };
 
 export type SettingsAIEditProfileProps = { profile: AIProfile };

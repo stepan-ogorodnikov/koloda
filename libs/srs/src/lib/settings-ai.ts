@@ -5,6 +5,7 @@ export const AI_PROVIDER_LABELS = {
   openrouter: "OpenRouter",
   ollama: "Ollama",
   lmstudio: "LM Studio",
+  codex: "Codex",
 } as const;
 
 export type AiProvider = keyof typeof AI_PROVIDER_LABELS;
@@ -24,15 +25,19 @@ export const lmstudioSecretsValidation = z.object({
   apiKey: z.string().optional(),
 });
 
+export const codexSecretsValidation = z.object({});
+
 export type AIPrompterSecrets =
   | z.infer<typeof openRouterSecretsValidation>
   | z.infer<typeof ollamaSecretsValidation>
-  | z.infer<typeof lmstudioSecretsValidation>;
+  | z.infer<typeof lmstudioSecretsValidation>
+  | z.infer<typeof codexSecretsValidation>;
 
 const secretsValidation = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("openrouter"), ...openRouterSecretsValidation.shape }),
   z.object({ provider: z.literal("ollama"), ...ollamaSecretsValidation.shape }),
   z.object({ provider: z.literal("lmstudio"), ...lmstudioSecretsValidation.shape }),
+  z.object({ provider: z.literal("codex") }),
 ]);
 
 export type AISecrets = z.infer<typeof secretsValidation>;
@@ -100,7 +105,7 @@ export type AIProviderFieldConfig = {
 
 export const aiProfileFormSchema = z.object({
   title: z.string().max(128).optional(),
-  provider: z.enum(["openrouter", "ollama", "lmstudio"]),
+  provider: z.enum(["openrouter", "ollama", "lmstudio", "codex"]),
   apiKey: z.string().optional(),
   baseUrl: z.string().optional(),
 });

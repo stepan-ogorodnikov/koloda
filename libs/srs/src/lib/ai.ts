@@ -13,6 +13,8 @@ import { AppError } from "./error";
 import type { AISecrets } from "./settings-ai";
 
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
+export const DEFAULT_CODEX_MODEL_ID = "gpt-5.4";
+export const CODEX_MODELS: AIModel[] = [{ id: DEFAULT_CODEX_MODEL_ID, name: "GPT-5.4", context_length: 1_050_000 }];
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -106,6 +108,10 @@ export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
   });
 }
 
+export async function fetchCodexModels(): Promise<AIModel[]> {
+  return CODEX_MODELS;
+}
+
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {
   const openrouter = createOpenRouter({ apiKey: secrets.apiKey });
 
@@ -135,6 +141,19 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
   };
 }
 
+function createCodexPlaceholderClient(): AIGenerationClient {
+  const unsupported = async () => {
+    throw new AppError("unknown", "Codex provider requires the native app runtime.");
+  };
+
+  return {
+    provider: "codex",
+    listModels: fetchCodexModels,
+    chat: unsupported,
+    generateCards: unsupported,
+  };
+}
+
 export function createAIGenerationClient(secretsInput: AISecrets | string): AIGenerationClient {
   const secrets: AISecrets = typeof secretsInput === "string"
     ? ({ provider: "openrouter", apiKey: secretsInput } as const)
@@ -147,6 +166,8 @@ export function createAIGenerationClient(secretsInput: AISecrets | string): AIGe
       return createOllamaClient(secrets);
     case "lmstudio":
       return createLmStudioClient(secrets);
+    case "codex":
+      return createCodexPlaceholderClient();
   }
 }
 

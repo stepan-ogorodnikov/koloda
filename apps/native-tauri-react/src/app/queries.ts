@@ -39,6 +39,7 @@ import type {
 } from "@koloda/srs";
 import type { TodaysReviewTotals } from "@koloda/srs";
 import { getAIProfileModels } from "./ai";
+import { codexRuntime } from "./codex";
 import { getStatus, seedDB } from "./setup";
 import { invoke } from "./tauri";
 
@@ -173,4 +174,5 @@ export const queriesFn = (): Queries => ({
   getAIProfileModelsQuery: (profileId: string) => ({
     queryFn: () => getAIProfileModels(profileId),
   }),
+  aiRuntime: codexRuntime,
 });

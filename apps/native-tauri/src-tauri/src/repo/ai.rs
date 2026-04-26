@@ -34,6 +34,7 @@ fn redact_secrets(secrets: &AISecrets) -> AISecrets {
             base_url: base_url.clone(),
             api_key: None,
         },
+        AISecrets::Codex { .. } => AISecrets::Codex {},
     }
 }
 
@@ -47,6 +48,7 @@ fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
             base_url: base_url.clone(),
             api_key: Some(api_key),
         },
+        AISecrets::Codex { .. } => AISecrets::Codex {},
     }
 }
 

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
 
-pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio"];
+pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "codex"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -36,6 +36,8 @@ pub enum AISecrets {
         #[serde(rename = "apiKey", alias = "api_key", skip_serializing_if = "Option::is_none")]
         api_key: Option<String>,
     },
+    #[serde(rename = "codex")]
+    Codex {},
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -77,6 +79,7 @@ impl AISecrets {
             AISecrets::OpenRouter { .. } => "openrouter",
             AISecrets::Ollama { .. } => "ollama",
             AISecrets::LmStudio { .. } => "lmstudio",
+            AISecrets::Codex { .. } => "codex",
         }
     }
 
@@ -85,6 +88,7 @@ impl AISecrets {
             AISecrets::OpenRouter { api_key } => Some(api_key),
             AISecrets::Ollama { .. } => None,
             AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
+            AISecrets::Codex { .. } => None,
         }
     }
 
@@ -118,6 +122,7 @@ impl AISecrets {
                     ));
                 }
             }
+            AISecrets::Codex { .. } => {}
         }
 
         Ok(())
@@ -149,6 +154,7 @@ impl AISecrets {
                     ));
                 }
             }
+            AISecrets::Codex { .. } => {}
         }
 
         Ok(())

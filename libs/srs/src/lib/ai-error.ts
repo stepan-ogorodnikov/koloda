@@ -7,6 +7,8 @@ export function getGenerateErrorMessage(error: Error | null, _: I18nContext["_"]
   if (!error) return null;
 
   if (isAppError(error)) {
+    if (error.code === "unknown" && error.details) return error.details;
+
     const content = getAIHttpErrorMessageDescriptor(error.code)
       ?? ERROR_MESSAGES[error.code]
       ?? ERROR_MESSAGES.unknown;

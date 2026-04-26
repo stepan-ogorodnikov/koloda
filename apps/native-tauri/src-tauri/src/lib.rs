@@ -7,7 +7,10 @@ pub mod repo;
 use app::db;
 use app::init::{get_db_status, seed_db};
 use commands::{
-    ai::{cmd_add_ai_profile, cmd_get_ai_profiles, cmd_remove_ai_profile, cmd_touch_ai_profile, cmd_update_ai_profile},
+    ai::{
+        cmd_add_ai_profile, cmd_chat_with_codex, cmd_generate_cards_with_codex, cmd_get_ai_profiles,
+        cmd_remove_ai_profile, cmd_touch_ai_profile, cmd_update_ai_profile,
+    },
     algorithms::{
         cmd_add_algorithm, cmd_clone_algorithm, cmd_delete_algorithm, cmd_get_algorithm, cmd_get_algorithm_decks,
         cmd_get_algorithms, cmd_update_algorithm,
@@ -56,6 +59,8 @@ pub fn run() {
             cmd_remove_ai_profile,
             cmd_touch_ai_profile,
             cmd_get_ai_profiles,
+            cmd_generate_cards_with_codex,
+            cmd_chat_with_codex,
             cmd_get_settings,
             cmd_set_settings,
             cmd_patch_settings,

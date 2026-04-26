@@ -20,6 +20,8 @@ function getApiKey(secrets: AISecrets): string | null {
       return null;
     case "lmstudio":
       return secrets.apiKey ?? null;
+    case "codex":
+      return null;
     default:
       return null;
   }
@@ -36,6 +38,8 @@ function getMissingSecretFields(secrets: AISecrets | null | undefined): SecretFi
       return secrets.baseUrl ? [] : ["baseUrl"];
     case "lmstudio":
       return secrets.baseUrl ? [] : ["baseUrl"];
+    case "codex":
+      return [];
     default:
       return [];
   }

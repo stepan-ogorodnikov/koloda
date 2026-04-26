@@ -114,12 +114,12 @@ export function buildProviderFormatPrompt(fields: TemplateFields) {
 }
 
 export function buildSystemPromptForProvider(fields: TemplateFields, provider?: AiProvider | null) {
-  if (!provider || provider === "openrouter") return buildSystemPrompt(fields);
+  if (!provider || provider === "openrouter" || provider === "codex") return buildSystemPrompt(fields);
   return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
 }
 
 export function buildAssistantSystemPrompt(fields: TemplateFields, provider?: AiProvider | null): string {
-  const formatInstructions = provider && provider !== "openrouter"
+  const formatInstructions = provider && provider !== "openrouter" && provider !== "codex"
     ? "\n\n" + buildMarkdownFormatInstructions(fields)
     : "";
 
@@ -142,7 +142,7 @@ function resolveProviderFormatText(
   provider: AiProvider | null | undefined,
   mode: "generation" | "chat",
 ): string {
-  if (!provider || provider === "openrouter") return "";
+  if (!provider || provider === "openrouter" || provider === "codex") return "";
   if (mode === "generation") {
     return buildProviderFormatPrompt(fields);
   }
@@ -273,6 +273,13 @@ function validateExtractedCards(cards: GeneratedCard[], fields: TemplateFields):
 
 function resolveGenerationTemperature(value?: number) {
   return typeof value === "number" ? value : GENERATION_TEMPERATURE;
+}
+
+export function parseGeneratedCardsText(text: string, template: Template): GeneratedCard[] {
+  return validateExtractedCards([
+    ...extractCardsFromJsonArray(text, template),
+    ...extractCardsFromMarkdownText(text, template),
+  ], template.content.fields);
 }
 
 function extractCardsFromJsonArray(text: string, template: Template): GeneratedCard[] {
@@ -427,10 +434,7 @@ async function runTextCompletionCardGeneration(
 ): Promise<void> {
   const text = await completeText(request);
   const { template, onCard } = request;
-  const cards = validateExtractedCards([
-    ...extractCardsFromJsonArray(text, template),
-    ...extractCardsFromMarkdownText(text, template),
-  ], template.content.fields);
+  const cards = parseGeneratedCardsText(text, template);
 
   for (const card of cards) {
     onCard(card);

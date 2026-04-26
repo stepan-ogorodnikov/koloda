@@ -1,11 +1,13 @@
 import type {
   AddAIProfileData,
+  AISecrets,
   AIModel,
   AIProfile,
   Algorithm,
   AllowedSettings,
   AppError,
   Card,
+  ChatStreamRequest,
   CloneAlgorithmData,
   CloneTemplateData,
   Deck,
@@ -18,6 +20,8 @@ import type {
   GetCardsParams,
   GetLessonDataParams,
   GetReviewsData,
+  GenerateCardsInput,
+  GeneratedCard,
   InsertAlgorithmData,
   InsertCardData,
   InsertCardsResponse,
@@ -44,7 +48,29 @@ import type {
 } from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { type QueryOptions } from "@tanstack/react-query";
+import type { ModelMessage } from "ai";
 import { atom } from "jotai";
+
+export type AIRuntimeGenerateCardsRequest = {
+  input: GenerateCardsInput;
+  messages: ModelMessage[];
+  template: Template;
+  systemPromptTemplate?: string;
+};
+
+export type AIRuntime = {
+  supportedProviders?: Array<AISecrets["provider"]>;
+  generateCards?: (
+    request: AIRuntimeGenerateCardsRequest,
+    onCard: (card: GeneratedCard) => void,
+    signal: AbortSignal,
+  ) => Promise<void>;
+  chat?: (
+    request: ChatStreamRequest,
+    onChunk: (chunk: string) => void,
+    signal: AbortSignal,
+  ) => Promise<void>;
+};
 
 export type Queries = {
   getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | null>;
@@ -97,6 +123,7 @@ export type Queries = {
   touchAIProfileMutation: () => UseMutationOptions<void, AppError, TouchAIProfileData, unknown>;
   getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;
   getAIProfilesQuery: () => QueryOptions<AIProfile[]>;
+  aiRuntime?: AIRuntime;
 };
 
 export const queriesAtom = atom<Queries>(null!);

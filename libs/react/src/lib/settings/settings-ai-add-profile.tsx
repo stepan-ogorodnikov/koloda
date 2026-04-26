@@ -13,20 +13,25 @@ import { useEffect, useState } from "react";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
 import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
 import { AddAIProfileOpenRouter } from "./ai-providers/add-ai-profile-openrouter";
+import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 
 const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
   openrouter: AddAIProfileOpenRouter,
   ollama: AddAIProfileOllama,
   lmstudio: AddAIProfileLMStudio,
+  codex: AddAIProfileCodex,
 };
 
 export function SettingsAIAddProfile() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
-  const { addAIProfileMutation } = useAtomValue(queriesAtom);
+  const { addAIProfileMutation, aiRuntime } = useAtomValue(queriesAtom);
   const { mutate, isPending, isSuccess, error, reset } = useMutation(addAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("openrouter");
+  const providerIds = aiRuntime?.supportedProviders?.includes("codex")
+    ? AI_PROVIDERS
+    : AI_PROVIDERS.filter((id) => id !== "codex");
 
   const handleSubmit = (data: { title?: string; secrets: AISecrets }) => {
     mutate(data, {
@@ -46,6 +51,12 @@ export function SettingsAIAddProfile() {
   useEffect(() => {
     if (isSuccess) reset();
   }, [isSuccess, reset]);
+
+  useEffect(() => {
+    if (!providerIds.includes(provider)) {
+      setProvider(providerIds[0] ?? "openrouter");
+    }
+  }, [provider, providerIds]);
 
   const Form = PROVIDER_FORMS[provider];
 
@@ -70,7 +81,7 @@ export function SettingsAIAddProfile() {
                   if (key) setProvider(key.toString() as AiProvider);
                 }}
               >
-                {AI_PROVIDERS.map((id) => (
+                {providerIds.map((id) => (
                   <Select.ListBoxItem id={id} textValue={AI_PROVIDER_LABELS[id]} key={id}>
                     {AI_PROVIDER_LABELS[id]}
                   </Select.ListBoxItem>

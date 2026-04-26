@@ -57,7 +57,7 @@ export type UseGenerateCardsDialogReturn = {
 
 export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
   const { _ } = useLingui();
-  const { getTemplateQuery, touchAIProfileMutation } = useAtomValue(queriesAtom);
+  const { getTemplateQuery, touchAIProfileMutation, aiRuntime } = useAtomValue(queriesAtom);
   const [isOpen, setIsOpen] = useState(false);
   const [profileId, setProfileId] = useState("");
   const [modelId, setModelId] = useState("");
@@ -82,6 +82,17 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
       if (!template) throw new Error("No template loaded");
 
+      if (selectedProfile.secrets.provider === "codex") {
+        if (!aiRuntime?.generateCards) throw new Error("Codex provider requires the native app runtime.");
+        await aiRuntime.generateCards({
+          input: request.input,
+          messages: request.messages,
+          template,
+          systemPromptTemplate: request.systemPromptTemplate,
+        }, onCard, abortSignal);
+        return;
+      }
+
       const client = createAIGenerationClient(selectedProfile.secrets);
       await client.generateCards({
         template,
@@ -92,7 +103,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         systemPromptTemplate: request.systemPromptTemplate,
       });
     },
-    [selectedProfile, template],
+    [aiRuntime, selectedProfile, template],
   );
 
   const chatStreamGenerator = useCallback(
@@ -100,10 +111,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       if (!selectedProfile) throw new Error("No AI profile selected");
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
 
+      if (selectedProfile.secrets.provider === "codex") {
+        if (!aiRuntime?.chat) throw new Error("Codex provider requires the native app runtime.");
+        await aiRuntime.chat(request, onChunk, abortSignal);
+        return;
+      }
+
       const client = createAIGenerationClient(selectedProfile.secrets);
       await client.chat(request, onChunk, abortSignal);
     },
-    [selectedProfile],
+    [aiRuntime, selectedProfile],
   );
 
   const {

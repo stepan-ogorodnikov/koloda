@@ -101,3 +101,19 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
 
     test_store::teardown();
 }
+
+#[test]
+fn ai_profile_codex_round_trips_without_secret_store_data() {
+    test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(&db, Some("Codex".to_string()), Some(AISecrets::Codex {}))
+        .expect("profile should be added");
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+
+    assert!(matches!(retrieved.secrets, Some(AISecrets::Codex { .. })));
+
+    test_store::teardown();
+}

@@ -60,6 +60,27 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
     assert!(settings.validate().is_ok());
 }
 
+#[test]
+fn test_valid_ai_settings_with_codex_profile() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-3",
+                "title": "Codex",
+                "secrets": {
+                    "provider": "codex"
+                },
+                "lastUsedModel": "default",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "lastUsedAt": null
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok());
+}
+
 // ============================================================================
 // MISSING FIELDS
 // ============================================================================
