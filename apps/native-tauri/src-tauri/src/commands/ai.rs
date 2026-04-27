@@ -52,13 +52,21 @@ pub fn cmd_touch_ai_profile(db: DB<'_>, data: TouchProfileData) -> Result<(), Ap
 }
 
 #[command]
-pub fn cmd_generate_cards_with_codex(data: CodexGenerateCardsData) -> Result<String, AppError> {
-    run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
+pub async fn cmd_generate_cards_with_codex(data: CodexGenerateCardsData) -> Result<String, AppError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
+    })
+    .await
+    .map_err(|error| AppError::new("unknown", Some(format!("Failed to join Codex worker: {}", error))))?
 }
 
 #[command]
-pub fn cmd_chat_with_codex(data: CodexChatData) -> Result<String, AppError> {
-    run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
+pub async fn cmd_chat_with_codex(data: CodexChatData) -> Result<String, AppError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
+    })
+    .await
+    .map_err(|error| AppError::new("unknown", Some(format!("Failed to join Codex worker: {}", error))))?
 }
 
 #[command]
