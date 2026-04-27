@@ -12,6 +12,9 @@ import {
 import { AppError } from "./error";
 import type { AISecrets } from "./settings-ai";
 
+export type ModelParameter =
+  | { type: "reasoning_effort"; value: string; levels: Array<{ effort: string; description: string }> };
+
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
 export type AIGenerationClient = {
@@ -35,6 +38,8 @@ export type AIModel = {
     instruct_type?: string;
   };
   supported_parameters?: string[];
+  supported_reasoning_levels?: Array<{ effort: string; description: string }>;
+  default_reasoning_level?: string;
 };
 
 type OpenRouterModelsResponse = { data: AIModel[] };

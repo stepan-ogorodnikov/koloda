@@ -15,6 +15,7 @@ use crate::{
 pub struct CodexGenerateCardsData {
     pub prompt: String,
     pub model_id: Option<String>,
+    pub reasoning_effort: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -22,6 +23,7 @@ pub struct CodexGenerateCardsData {
 pub struct CodexChatData {
     pub prompt: String,
     pub model_id: Option<String>,
+    pub reasoning_effort: Option<String>,
 }
 
 #[command]
@@ -51,12 +53,12 @@ pub fn cmd_touch_ai_profile(db: DB<'_>, data: TouchProfileData) -> Result<(), Ap
 
 #[command]
 pub fn cmd_generate_cards_with_codex(data: CodexGenerateCardsData) -> Result<String, AppError> {
-    run_codex_prompt(&data.prompt, data.model_id.as_deref())
+    run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
 }
 
 #[command]
 pub fn cmd_chat_with_codex(data: CodexChatData) -> Result<String, AppError> {
-    run_codex_prompt(&data.prompt, data.model_id.as_deref())
+    run_codex_prompt(&data.prompt, data.model_id.as_deref(), data.reasoning_effort.as_deref())
 }
 
 #[command]

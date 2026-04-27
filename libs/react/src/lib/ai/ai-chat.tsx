@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { GenerationMode } from "@koloda/react";
 import { useHotkeysSettings } from "@koloda/react-base";
 import { useAppHotkey } from "@koloda/react-base";
+import type { ModelParameter } from "@koloda/srs";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -11,6 +12,7 @@ import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
 import { Fragment, useEffect, useEffectEvent, useRef, useState } from "react";
 import { AIChatMessage } from "./ai-chat-message";
+import { AIModelParameters } from "./ai-model-parameters";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
 import { AIChatSubmit } from "./ai-chat-submit";
 import { AIModelPicker } from "./ai-model-picker";
@@ -43,6 +45,8 @@ export type AIChatProps = {
   onModeChange?: (mode: GenerationMode) => void;
   actions?: ReactNode;
   showFooter?: boolean;
+  modelParameters?: ModelParameter[];
+  onModelParameterChange?: (type: ModelParameter["type"], value: string) => void;
 };
 
 export function AIChat({
@@ -64,6 +68,8 @@ export function AIChat({
   onModeChange,
   actions,
   showFooter = true,
+  modelParameters,
+  onModelParameterChange,
 }: AIChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
@@ -296,6 +302,9 @@ export function AIChat({
         <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
         <div className="flex flex-row items-center min-w-0">
           <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} triggerRef={modelPickerRef} />
+          {modelParameters && onModelParameterChange && (
+            <AIModelParameters parameters={modelParameters} onChange={onModelParameterChange} />
+          )}
           <div className="grow min-w-3" />
           <div className="shrink-0 flex flex-row items-center gap-2">
             {onModeChange && (

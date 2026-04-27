@@ -7,22 +7,28 @@ import {
 } from "@koloda/srs";
 import { AppError } from "@koloda/srs";
 import type { ChatStreamRequest, GeneratedCard, Template } from "@koloda/srs";
-import { z } from "zod";
 import type { ModelMessage } from "ai";
-import { invoke } from "./tauri";
+import { z } from "zod";
+import { invoke } from "../app/tauri";
 
 type CodexGenerateCardsData = {
   prompt: string;
   modelId?: string;
+  reasoningEffort?: string;
 };
 
 type CodexChatData = {
   prompt: string;
   modelId?: string;
+  reasoningEffort?: string;
 };
 
 function normalizeModelId(modelId?: string) {
   return modelId && modelId !== "default" ? modelId : undefined;
+}
+
+function normalizeReasoningEffort(effort?: string) {
+  return effort || undefined;
 }
 
 function getMessageText(content: ModelMessage["content"]) {
@@ -119,6 +125,7 @@ async function generateCards(
     data: {
       prompt,
       modelId: normalizeModelId(request.input.modelId),
+      reasoningEffort: normalizeReasoningEffort(request.input.reasoningEffort),
     } satisfies CodexGenerateCardsData,
   });
 
@@ -143,6 +150,7 @@ async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void
     data: {
       prompt,
       modelId: normalizeModelId(request.input.modelId),
+      reasoningEffort: normalizeReasoningEffort(request.input.reasoningEffort),
     } satisfies CodexChatData,
   });
 

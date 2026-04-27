@@ -1,4 +1,5 @@
 export * from "./lib/ai/ai-chat";
+export * from "./lib/ai/ai-model-parameters";
 export * from "./lib/ai/ai-chat-message";
 export * from "./lib/ai/ai-model-picker";
 export * from "./lib/ai/ai-profile-picker";

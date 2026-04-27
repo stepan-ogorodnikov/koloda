@@ -38,8 +38,8 @@ import type {
   UpdateTemplateData,
 } from "@koloda/srs";
 import type { TodaysReviewTotals } from "@koloda/srs";
-import { getAIProfileModels } from "./ai";
-import { codexRuntime } from "./codex";
+import { getAIProfileModels } from "../services/ai";
+import { codexRuntime } from "../services/codex";
 import { getStatus, seedDB } from "./setup";
 import { invoke } from "./tauri";
 

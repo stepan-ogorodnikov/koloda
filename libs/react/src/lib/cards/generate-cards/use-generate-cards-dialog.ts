@@ -1,6 +1,7 @@
 import { useAIModels, useAIProfiles } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { AISecrets, Deck, GeneratedCard, Template } from "@koloda/srs";
+import type { AISecrets, Deck, GeneratedCard, ModelParameter, Template } from "@koloda/srs";
+import type { AIModel } from "@koloda/srs";
 import { createAIGenerationClient, generateCardsInputSchema, GENERATION_TEMPERATURE } from "@koloda/srs";
 import type { ChatStreamRequest } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
@@ -8,7 +9,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ModelMessage, UIMessage } from "ai";
 import { useAtomValue } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createTextMessage,
   type GenerationMode,
@@ -29,8 +30,10 @@ export type UseGenerateCardsDialogReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
+  models: AIModel[];
   provider: AISecrets["provider"] | null;
   temperature: number;
+  modelParameters: ModelParameter[];
   messages: UIMessage[];
   template: Template | null | undefined;
   hasProfiles: boolean;
@@ -42,6 +45,7 @@ export type UseGenerateCardsDialogReturn = {
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
   handleTemperatureChange: (value: number) => void;
+  handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   handleReset: () => void;
@@ -62,6 +66,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const [profileId, setProfileId] = useState("");
   const [modelId, setModelId] = useState("");
   const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);
+  const [reasoningEffort, setReasoningEffort] = useState("");
   const [mode, setMode] = useState<GenerationMode>("chat");
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<UIMessage[]>([]);
@@ -175,6 +180,14 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setTemperature(Number.isNaN(value) ? GENERATION_TEMPERATURE : Math.min(2, Math.max(0, value)));
   }, []);
 
+  const handleModelParameterChange = useCallback((type: ModelParameter["type"], value: string) => {
+    switch (type) {
+      case "reasoning_effort":
+        setReasoningEffort(value);
+        break;
+    }
+  }, []);
+
   const handleGenerate = useCallback(async (value?: string) => {
     let promptText = (value ?? prompt).trim();
     if (!promptText || !profileId || !modelId) return;
@@ -195,6 +208,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       modelId,
       prompt: promptText,
       temperature,
+      reasoningEffort,
       deckId,
       templateId,
     });
@@ -280,6 +294,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     profileId,
     modelId,
     temperature,
+    reasoningEffort,
     deckId,
     templateId,
     touchProfileMutation,
@@ -397,6 +412,35 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     setModelId(models[0]?.id ?? "");
   }, [profileId, modelId, models, profiles]);
 
+  const prevModelIdRef = useRef(modelId);
+
+  useEffect(() => {
+    const prevModelId = prevModelIdRef.current;
+    prevModelIdRef.current = modelId;
+
+    if (!modelId) {
+      setReasoningEffort("");
+      return;
+    }
+
+    if (prevModelId === modelId) return;
+
+    const modelData = models.find((m) => m.id === modelId);
+    setReasoningEffort(modelData?.default_reasoning_level ?? "");
+  }, [modelId, models]);
+
+  const modelParameters = useMemo((): ModelParameter[] => {
+    const model = models.find((m) => m.id === modelId);
+    const params: ModelParameter[] = [];
+
+    const levels = model?.supported_reasoning_levels;
+    if (levels && levels.length > 0) {
+      params.push({ type: "reasoning_effort", value: reasoningEffort, levels });
+    }
+
+    return params;
+  }, [modelId, models, reasoningEffort]);
+
   const hasProfiles = profiles.length > 0;
 
   const getGeneratedCardsProps = useCallback((message: UIMessage): GeneratedCardsMessageProps | null => {
@@ -449,8 +493,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     profileId,
     modelId,
     modelName,
+    models,
     provider: selectedProfile?.secrets?.provider ?? null,
     temperature,
+    modelParameters,
     messages,
     template,
     hasProfiles,
@@ -462,6 +508,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     handleProfileChange,
     handleModelChange,
     handleTemperatureChange,
+    handleModelParameterChange,
     handleGenerate,
     handleCancel,
     handleReset,

@@ -43,6 +43,7 @@ export const generateCardsInputSchema = z.object({
   modelId: z.string().min(1),
   prompt: z.string().min(1),
   temperature: z.number().min(0).max(2).optional(),
+  reasoningEffort: z.string().optional(),
   deckId: z.int().positive(),
   templateId: z.int().positive(),
 });

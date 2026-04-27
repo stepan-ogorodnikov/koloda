@@ -5,6 +5,7 @@ import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/reac
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
+
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -39,6 +40,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     modelName,
     provider,
     temperature,
+    modelParameters,
     messages,
     template,
     hasProfiles,
@@ -50,6 +52,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     handleProfileChange,
     handleModelChange,
     handleTemperatureChange,
+    handleModelParameterChange,
     handleGenerate,
     handleCancel,
     handleReset,
@@ -153,6 +156,8 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                     renderMessage={renderMessage}
                     mode={mode}
                     onModeChange={setMode}
+                    modelParameters={modelParameters}
+                    onModelParameterChange={handleModelParameterChange}
                   />
                 </div>
                 {selectedTab === "settings" && (

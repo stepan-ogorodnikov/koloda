@@ -1,6 +1,6 @@
 import type { AIModel, AIProfile } from "@koloda/srs";
 import { fetchModels } from "@koloda/srs";
-import { invoke } from "./tauri";
+import { invoke } from "../app/tauri";
 
 export async function getAIProfileModels(profileId: string) {
   const profiles = await invoke<AIProfile[]>("cmd_get_ai_profiles");

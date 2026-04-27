@@ -9,6 +9,12 @@ use serde::{Deserialize, Serialize};
 use crate::app::error::AppError;
 use crate::app::utility::generate_uuid;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReasoningLevel {
+    pub effort: String,
+    pub description: String,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct CodexModel {
     pub id: String,
@@ -16,6 +22,8 @@ pub struct CodexModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub context_length: u64,
+    pub supported_reasoning_levels: Vec<ReasoningLevel>,
+    pub default_reasoning_level: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,6 +35,10 @@ struct ModelsCacheEntry {
     #[serde(default)]
     visibility: String,
     context_window: u64,
+    #[serde(default)]
+    default_reasoning_level: Option<String>,
+    #[serde(default)]
+    supported_reasoning_levels: Vec<ReasoningLevel>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,11 +64,26 @@ pub fn list_codex_models() -> Result<Vec<CodexModel>, AppError> {
     let models: Vec<CodexModel> = cache.models
         .into_iter()
         .filter(|m| m.visibility == "list")
-        .map(|m| CodexModel {
-            id: m.slug,
-            name: m.display_name,
-            description: m.description,
-            context_length: m.context_window,
+        .map(|m| {
+            let levels = if m.supported_reasoning_levels.is_empty() {
+                vec![
+                    ReasoningLevel { effort: "low".to_string(), description: "Fast responses with lighter reasoning".to_string() },
+                    ReasoningLevel { effort: "medium".to_string(), description: "Balances speed and reasoning depth for everyday tasks".to_string() },
+                    ReasoningLevel { effort: "high".to_string(), description: "Greater reasoning depth for complex problems".to_string() },
+                    ReasoningLevel { effort: "xhigh".to_string(), description: "Extra high reasoning depth for complex problems".to_string() },
+                ]
+            } else {
+                m.supported_reasoning_levels
+            };
+
+            CodexModel {
+                id: m.slug,
+                name: m.display_name,
+                description: m.description,
+                context_length: m.context_window,
+                default_reasoning_level: m.default_reasoning_level.unwrap_or_else(|| "medium".to_string()),
+                supported_reasoning_levels: levels,
+            }
         })
         .collect();
 
@@ -76,7 +103,7 @@ fn resolve_models_cache_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from(CODEX_MODELS_CACHE_FILE))
 }
 
-pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>) -> Result<String, AppError> {
+pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>, reasoning_effort: Option<&str>) -> Result<String, AppError> {
     let temp_dir = create_temp_dir()?;
     let output_path = temp_dir.join("output.txt");
 
@@ -97,6 +124,10 @@ pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>) -> Result<String, 
 
     if let Some(model_id) = normalize_model_id(model_id) {
         command.arg("--model").arg(model_id);
+    }
+
+    if let Some(effort) = normalize_reasoning_effort(reasoning_effort) {
+        command.arg("-c").arg(format!("model_reasoning_effort={}", effort));
     }
 
     command
@@ -137,6 +168,13 @@ fn normalize_model_id(model_id: Option<&str>) -> Option<&str> {
     match model_id.map(str::trim) {
         Some("") | Some("default") | None => None,
         Some(model_id) => Some(model_id),
+    }
+}
+
+fn normalize_reasoning_effort(effort: Option<&str>) -> Option<&str> {
+    match effort.map(str::trim) {
+        Some("") | None => None,
+        Some(effort) => Some(effort),
     }
 }
 
