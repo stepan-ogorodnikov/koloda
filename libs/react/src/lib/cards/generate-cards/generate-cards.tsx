@@ -1,6 +1,6 @@
 import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AIProfilePicker } from "@koloda/react";
+import { AIChat, AIChatMessageLayout, AIProfilePicker } from "@koloda/react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
 import { GenerateCardsSettings } from "./generate-cards-settings";
+import { getTextMessageContent } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
 
@@ -90,7 +91,20 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     if (props && props.template) return <GeneratedCardsMessage {...props} />;
 
     const chatProps = getChatMessageProps(message);
+
     if (chatProps) {
+      if ("isStreaming" in chatProps) {
+        if (getTextMessageContent(message)) return content;
+
+        return (
+          <AIChatMessageLayout role="assistant">
+            <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
+              {_(msg`generate-cards.chat.status.pending`)}
+            </p>
+          </AIChatMessageLayout>
+        );
+      }
+
       return (
         <div className="flex flex-col gap-2 self-start w-full">
           {content}
@@ -192,7 +206,9 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                   </Button>
                   <Button
                     variants={{ style: "ghost", size: "icon" }}
-                    aria-label={selectedTab === "chat" ? _(msg`generate-cards.settings.show-settings`) : _(msg`generate-cards.settings.show-chat`)}
+                    aria-label={selectedTab === "chat"
+                      ? _(msg`generate-cards.settings.show-settings`)
+                      : _(msg`generate-cards.settings.show-chat`)}
                     onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
                   >
                     <HugeiconsIcon

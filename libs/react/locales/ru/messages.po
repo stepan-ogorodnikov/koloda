@@ -128,7 +128,7 @@ msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
 #: ../../libs/react/src/lib/ai/ai-chat.tsx:334
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:182
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:196
 msgid "ai.chat.reset.label"
 msgstr "Очистить чат"
 
@@ -557,19 +557,23 @@ msgstr "Добавить карточки"
 msgid "generate-cards.chat.canceled"
 msgstr "Прервано"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:98
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
 msgid "generate-cards.chat.failed"
 msgstr "Не удалось обработать запрос"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:104
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:118
 msgid "generate-cards.chat.retry"
 msgstr "Повторить"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:214
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
+msgid "generate-cards.chat.status.pending"
+msgstr "Обработка"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:230
 msgid "generate-cards.close.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:223
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:239
 msgid "generate-cards.close.confirm"
 msgstr "Закрыть"
 
@@ -594,7 +598,7 @@ msgstr "Повторить"
 msgid "generate-cards.generated-no-cards"
 msgstr "Ответ был получен, но не удалось извлечь из него карточки."
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:126
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:140
 msgid "generate-cards.no-profiles"
 msgstr "Сначала добавьте ИИ профиль, чтобы генерировать карточки"
 
@@ -610,11 +614,11 @@ msgstr "Просмотр"
 msgid "generate-cards.settings.prompt.reset"
 msgstr "Вернуть значение по умолчанию"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:195
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:211
 msgid "generate-cards.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:195
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:210
 msgid "generate-cards.settings.show-settings"
 msgstr "Показать настройки"
 
@@ -658,11 +662,11 @@ msgstr "Карточка добавляется"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Карточка успешно добавлена"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:149
 msgid "generate-cards.title"
 msgstr "Генерация карточек"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:120
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:134
 msgid "generate-cards.trigger"
 msgstr "Сгенерировать карточки с помощью ИИ"
 
