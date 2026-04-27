@@ -3,6 +3,7 @@ import type { Deck, GeneratedCard, Template } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { AiChatMessageStatusPending } from "@koloda/react";
 import { GeneratedCardsTable } from "./generated-cards-table";
 
 export type GeneratedCardsMessageProps = {
@@ -37,9 +38,7 @@ export function GeneratedCardsMessage({
   return (
     <AIChatMessageLayout role="assistant">
       {isGenerating && (
-        <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
-          {_(msg`generate-cards.generate.generating`)}
-        </p>
+        <AiChatMessageStatusPending label={_(msg`generate-cards.generate.generating`)} />
       )}
       {isCanceled && (
         <p className="fg-level-4">

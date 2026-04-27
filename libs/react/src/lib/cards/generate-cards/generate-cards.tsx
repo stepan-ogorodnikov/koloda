@@ -13,6 +13,7 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
+import { AiChatMessageStatusPending } from "@koloda/react";
 import { GenerateCardsSettings } from "./generate-cards-settings";
 import { getTextMessageContent } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
@@ -98,9 +99,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
         return (
           <AIChatMessageLayout role="assistant">
-            <p className="self-start animate-shimmer-text--fg-level-4/fg-level-1">
-              {_(msg`generate-cards.chat.status.pending`)}
-            </p>
+            <AiChatMessageStatusPending label={_(msg`generate-cards.chat.status.pending`)} />
           </AIChatMessageLayout>
         );
       }
