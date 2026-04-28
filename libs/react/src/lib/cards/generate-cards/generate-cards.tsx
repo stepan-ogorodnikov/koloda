@@ -13,7 +13,7 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
-import { AiChatMessageStatusPending } from "@koloda/react";
+import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/react";
 import { GenerateCardsSettings } from "./generate-cards-settings";
 import { getTextMessageContent } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
@@ -101,6 +101,18 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
           <AIChatMessageLayout role="assistant">
             <AiChatMessageStatusPending label={_(msg`generate-cards.chat.status.pending`)} />
           </AIChatMessageLayout>
+        );
+      }
+
+      if ("isSuccess" in chatProps) {
+        return (
+          <div className="flex flex-col gap-2 self-start w-full">
+            {content}
+            <p className="fg-level-4 flex flex-row items-center gap-1">
+              {_(msg`generate-cards.generate.finished-in`)}
+              <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
+            </p>
+          </div>
         );
       }
 

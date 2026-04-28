@@ -10,6 +10,8 @@ export type GenerationRun = {
   status: RunStatus;
   cards: GeneratedCard[];
   request?: unknown;
+  startedAt: number;
+  elapsedSeconds: number | null;
 };
 
 export type RunsState = {
@@ -38,7 +40,15 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: action.id,
         runs: {
           ...state.runs,
-          [action.id]: { id: action.id, mode: action.mode, status: "streaming", cards: [], request: action.request },
+          [action.id]: {
+            id: action.id,
+            mode: action.mode,
+            status: "streaming",
+            cards: [],
+            request: action.request,
+            startedAt: Date.now(),
+            elapsedSeconds: null,
+          },
         },
       };
 
@@ -62,7 +72,11 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: state.activeRunId === action.id ? null : state.activeRunId,
         runs: {
           ...state.runs,
-          [action.id]: { ...run, status: "success" },
+          [action.id]: {
+            ...run,
+            status: "success",
+            elapsedSeconds: Math.floor((Date.now() - run.startedAt) / 1000),
+          },
         },
       };
     }
@@ -75,7 +89,11 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: state.activeRunId === action.id ? null : state.activeRunId,
         runs: {
           ...state.runs,
-          [action.id]: { ...run, status: "failed" },
+          [action.id]: {
+            ...run,
+            status: "failed",
+            elapsedSeconds: Math.floor((Date.now() - run.startedAt) / 1000),
+          },
         },
       };
     }
@@ -88,7 +106,11 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: state.activeRunId === action.id ? null : state.activeRunId,
         runs: {
           ...state.runs,
-          [action.id]: { ...run, status: "canceled" },
+          [action.id]: {
+            ...run,
+            status: "canceled",
+            elapsedSeconds: Math.floor((Date.now() - run.startedAt) / 1000),
+          },
         },
       };
     }
@@ -101,7 +123,7 @@ function runsReducer(state: RunsState, action: RunsAction): RunsState {
         activeRunId: action.id,
         runs: {
           ...state.runs,
-          [action.id]: { ...run, status: "streaming", cards: [] },
+          [action.id]: { ...run, status: "streaming", cards: [], startedAt: Date.now(), elapsedSeconds: null },
         },
       };
     }

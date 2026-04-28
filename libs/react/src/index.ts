@@ -5,6 +5,7 @@ export * from "./lib/ai/ai-model-picker";
 export * from "./lib/ai/ai-profile-picker";
 export * from "./lib/ai/use-ai-models";
 export * from "./lib/ai/use-ai-profiles";
+export * from "./lib/ai/ai-chat-elapsed-time";
 export * from "./lib/ai/ai-chat-message-status-pending";
 export * from "./lib/algorithms/add-algorithm";
 export * from "./lib/algorithms/algorithm";

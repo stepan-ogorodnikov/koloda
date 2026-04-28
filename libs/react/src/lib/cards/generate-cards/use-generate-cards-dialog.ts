@@ -50,7 +50,7 @@ export type UseGenerateCardsDialogReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
-  getChatMessageProps: (message: UIMessage) => { isStreaming: true } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null;
+  getChatMessageProps: (message: UIMessage) => { isStreaming: true } | { isSuccess: true; elapsedSeconds: number } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null;
   hasContext: boolean;
   handleRetry: (runId: string) => Promise<void>;
   generationPromptTemplate: string | null;
@@ -467,10 +467,11 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       isFailed: run?.status === "failed",
       canRetry,
       onRetry: () => handleRetry(generatedCardsMetadata.runId),
+      elapsedSeconds: run?.elapsedSeconds ?? undefined,
     };
   }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry, messages]);
 
-  const getChatMessageProps = useCallback((message: UIMessage): { isStreaming: true } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null => {
+  const getChatMessageProps = useCallback((message: UIMessage): { isStreaming: true } | { isSuccess: true; elapsedSeconds: number } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null => {
     const chatMetadata = getChatTextMetadata(message);
     if (!chatMetadata) return null;
 
@@ -479,6 +480,10 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
     if (run.status === "streaming") {
       return { isStreaming: true };
+    }
+
+    if (run.status === "success" && run.elapsedSeconds !== null) {
+      return { isSuccess: true, elapsedSeconds: run.elapsedSeconds };
     }
 
     if (run.status !== "failed") return null;

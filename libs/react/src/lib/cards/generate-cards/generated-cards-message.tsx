@@ -1,4 +1,4 @@
-import { AIChatMessageLayout } from "@koloda/react";
+import { AIChatMessageLayout, AiChatElapsedTimeDisplay } from "@koloda/react";
 import type { Deck, GeneratedCard, Template } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -17,6 +17,7 @@ export type GeneratedCardsMessageProps = {
   isFailed: boolean;
   canRetry: boolean;
   onRetry: () => void;
+  elapsedSeconds?: number;
 };
 
 export function GeneratedCardsMessage({
@@ -30,6 +31,7 @@ export function GeneratedCardsMessage({
   isFailed,
   canRetry,
   onRetry,
+  elapsedSeconds,
 }: GeneratedCardsMessageProps) {
   const { _ } = useLingui();
 
@@ -61,14 +63,22 @@ export function GeneratedCardsMessage({
         </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
-        <GeneratedCardsTable
-          cards={cards}
-          template={template}
-          deckId={deckId}
-          templateId={templateId}
-          canAdd={canAdd}
-          isGenerating={isGenerating}
-        />
+        <div className="flex flex-col gap-2">
+          <GeneratedCardsTable
+            cards={cards}
+            template={template}
+            deckId={deckId}
+            templateId={templateId}
+            canAdd={canAdd}
+            isGenerating={isGenerating}
+          />
+          {elapsedSeconds !== undefined && (
+            <p className="fg-level-4 flex flex-row items-center gap-1">
+              {_(msg`generate-cards.generate.finished-in`)}
+              <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
+            </p>
+          )}
+        </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && !cards.length && (
         <p className="fg-level-3">
