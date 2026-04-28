@@ -20,7 +20,7 @@ import { GeneratedCardsMessage } from "./generated-cards-message";
 import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
 
 export const closeConfirmOverlay = [
-  "absolute inset-0 flex flex-col items-center justify-center gap-4",
+  "absolute inset-0 z-20 flex flex-col items-center justify-center gap-4",
   "bg-level-1/80 backdrop-blur-xs",
 ].join(" ");
 
