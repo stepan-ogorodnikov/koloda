@@ -10,7 +10,7 @@ import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
-import { Fragment, useEffect, useEffectEvent, useRef, useState } from "react";
+import { Fragment, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { AIChatMessage } from "./ai-chat-message";
 import { AIModelParameters } from "./ai-model-parameters";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
@@ -145,6 +145,15 @@ export function AIChat({
     };
   }, []);
 
+  useLayoutEffect(() => {
+    if (shouldAutoScrollRef.current) {
+      startFollowingLatest("auto");
+      return;
+    }
+
+    syncScrollState();
+  }, [messages, isLoading]);
+
   const submit = () => {
     if (profileId && modelId && prompt && !isLoading && hasRequiredSecrets) {
       const shouldFollow = getIsNearBottom();
@@ -229,7 +238,7 @@ export function AIChat({
     <section className="relative grow flex flex-col min-h-0 px-4">
       <div className="relative flex-1 min-h-0 -mx-4 px-4">
         <div
-          className="flex flex-col items-center h-full overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
+          className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
           ref={scrollViewportRef}
           onScroll={handleScroll}
           tabIndex={0}
