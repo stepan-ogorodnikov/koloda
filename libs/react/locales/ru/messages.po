@@ -123,6 +123,32 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:141
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
+msgid "ai.chat.message.retry"
+msgstr "Повторить"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:124
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:49
+msgid "ai.chat.message.status.canceled-in"
+msgstr "Прервано через"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
+msgid "ai.chat.message.status.failed"
+msgstr "Не удалось сгенерировать карточки"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
+msgid "ai.chat.message.status.finished-in"
+msgstr "Завершено за"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:278
+msgid "ai.chat.message.status.pending"
+msgstr "Обработка"
+
 #: ../../libs/react/src/lib/ai/ai-chat.tsx:322
 msgid "ai.chat.mode.chat"
 msgstr "Режим чата"
@@ -564,18 +590,6 @@ msgstr "Редактировать карточку"
 msgid "generate-cards.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
-msgid "generate-cards.chat.failed"
-msgstr "Не удалось обработать запрос"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:141
-msgid "generate-cards.chat.retry"
-msgstr "Повторить"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
-msgid "generate-cards.chat.status.pending"
-msgstr "Обработка"
-
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:253
 msgid "generate-cards.close.cancel"
 msgstr "Отменить"
@@ -583,29 +597,6 @@ msgstr "Отменить"
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:262
 msgid "generate-cards.close.confirm"
 msgstr "Закрыть"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:124
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:49
-msgid "generate-cards.generate.canceled-in"
-msgstr "Прервано через"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
-msgid "generate-cards.generate.failed"
-msgstr "Не удалось сгенерировать карточки"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
-msgid "generate-cards.generate.finished-in"
-msgstr "Завершено за"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:263
-msgid "generate-cards.generate.generating"
-msgstr "Генерирую"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
-msgid "generate-cards.generate.retry"
-msgstr "Повторить"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:90
 msgid "generate-cards.generated-no-cards"

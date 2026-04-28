@@ -275,7 +275,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
       startRun(runId, "generate", request);
       setMessages((prev) => [
         ...prev,
-        createTextMessage(`assistant-${runId}`, "assistant", _(msg`generate-cards.generate.generating`), {
+        createTextMessage(`assistant-${runId}`, "assistant", _(msg`ai.chat.message.status.pending`), {
           kind: "generated-cards",
           runId,
         }),

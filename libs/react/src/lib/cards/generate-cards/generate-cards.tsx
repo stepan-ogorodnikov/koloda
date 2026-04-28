@@ -99,7 +99,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
         return (
           <AIChatMessageLayout role="assistant">
-            <AiChatMessageStatusPending label={_(msg`generate-cards.chat.status.pending`)} />
+            <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />
           </AIChatMessageLayout>
         );
       }
@@ -109,7 +109,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
           <div className="flex flex-col gap-2 self-start w-full">
             {content}
             <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`generate-cards.generate.finished-in`)}
+              {_(msg`ai.chat.message.status.finished-in`)}
               <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
             </p>
           </div>
@@ -121,7 +121,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
           <div className="flex flex-col gap-2 self-start w-full">
             {content}
             <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`generate-cards.generate.canceled-in`)}
+              {_(msg`ai.chat.message.status.canceled-in`)}
               <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
             </p>
           </div>
@@ -132,13 +132,13 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
         <div className="flex flex-col gap-2 self-start w-full">
           {content}
           <div className="flex flex-row flex-wrap items-center gap-2">
-            <p className="fg-level-4">{_(msg`generate-cards.chat.failed`)}</p>
+            <p className="fg-level-4">{_(msg`ai.chat.message.status.failed`)}</p>
             {chatProps.canRetry && (
               <Button
                 variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
                 onPress={chatProps.onRetry}
               >
-                {_(msg`generate-cards.chat.retry`)}
+                {_(msg`ai.chat.message.retry`)}
               </Button>
             )}
           </div>

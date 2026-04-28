@@ -40,13 +40,13 @@ export function GeneratedCardsMessage({
   return (
     <AIChatMessageLayout role="assistant">
       {isGenerating && (
-        <AiChatMessageStatusPending label={_(msg`generate-cards.generate.generating`)} />
+        <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />
       )}
       {isCanceled && (
         <div className="flex flex-col gap-2">
           {elapsedSeconds !== undefined && (
             <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`generate-cards.generate.canceled-in`)}
+              {_(msg`ai.chat.message.status.canceled-in`)}
               <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
             </p>
           )}
@@ -55,14 +55,14 @@ export function GeneratedCardsMessage({
       {isFailed && (
         <div className="flex flex-row flex-wrap items-center gap-2">
           <p className="fg-level-4">
-            {_(msg`generate-cards.generate.failed`)}
+            {_(msg`ai.chat.message.status.failed`)}
           </p>
           {canRetry && (
             <Button
               variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
               onPress={onRetry}
             >
-              {_(msg`generate-cards.generate.retry`)}
+              {_(msg`ai.chat.message.retry`)}
             </Button>
           )}
         </div>
@@ -79,7 +79,7 @@ export function GeneratedCardsMessage({
           />
           {elapsedSeconds !== undefined && (
             <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`generate-cards.generate.finished-in`)}
+              {_(msg`ai.chat.message.status.finished-in`)}
               <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
             </p>
           )}

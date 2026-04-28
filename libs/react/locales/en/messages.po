@@ -123,6 +123,32 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:141
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
+msgid "ai.chat.message.retry"
+msgstr "Retry"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:124
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:49
+msgid "ai.chat.message.status.canceled-in"
+msgstr "Interrupted after"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
+msgid "ai.chat.message.status.failed"
+msgstr "Failed to generate cards"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
+msgid "ai.chat.message.status.finished-in"
+msgstr "Finished in"
+
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
+#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
+#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:278
+msgid "ai.chat.message.status.pending"
+msgstr "Working"
+
 #: ../../libs/react/src/lib/ai/ai-chat.tsx:322
 msgid "ai.chat.mode.chat"
 msgstr "Chat mode"
@@ -564,18 +590,6 @@ msgstr "Edit card"
 msgid "generate-cards.add"
 msgstr "Add Cards"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
-msgid "generate-cards.chat.failed"
-msgstr "Failed to process request"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:141
-msgid "generate-cards.chat.retry"
-msgstr "Retry"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
-msgid "generate-cards.chat.status.pending"
-msgstr "Working"
-
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:253
 msgid "generate-cards.close.cancel"
 msgstr "Cancel"
@@ -583,29 +597,6 @@ msgstr "Cancel"
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:262
 msgid "generate-cards.close.confirm"
 msgstr "Close"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:124
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:49
-msgid "generate-cards.generate.canceled-in"
-msgstr "Interrupted after"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
-msgid "generate-cards.generate.failed"
-msgstr "Failed to generate cards"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
-msgid "generate-cards.generate.finished-in"
-msgstr "Finished in"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:263
-msgid "generate-cards.generate.generating"
-msgstr "Generating"
-
-#: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
-msgid "generate-cards.generate.retry"
-msgstr "Retry"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:90
 msgid "generate-cards.generated-no-cards"
