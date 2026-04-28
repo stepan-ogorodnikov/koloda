@@ -50,7 +50,14 @@ export type UseGenerateCardsDialogReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
-  getChatMessageProps: (message: UIMessage) => { isStreaming: true } | { isSuccess: true; elapsedSeconds: number } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null;
+  getChatMessageProps: (
+    message: UIMessage,
+  ) =>
+    | { isStreaming: true }
+    | { isSuccess: true; elapsedSeconds: number }
+    | { isCanceled: true; elapsedSeconds: number }
+    | { isFailed: true; canRetry: boolean; onRetry: () => void }
+    | null;
   hasContext: boolean;
   handleRetry: (runId: string) => Promise<void>;
   generationPromptTemplate: string | null;
@@ -89,12 +96,16 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
       if (selectedProfile.secrets.provider === "codex") {
         if (!aiRuntime?.generateCards) throw new Error("Codex provider requires the native app runtime.");
-        await aiRuntime.generateCards({
-          input: request.input,
-          messages: request.messages,
-          template,
-          systemPromptTemplate: request.systemPromptTemplate,
-        }, onCard, abortSignal);
+        await aiRuntime.generateCards(
+          {
+            input: request.input,
+            messages: request.messages,
+            template,
+            systemPromptTemplate: request.systemPromptTemplate,
+          },
+          onCard,
+          abortSignal,
+        );
         return;
       }
 
@@ -250,19 +261,17 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
-              ? {
-                ...m,
-                parts: [
-                  { type: "text" as const, text: currentText },
-                  { type: "interrupted" as any, text: _(msg`generate-cards.chat.canceled`) },
-                ],
-              }
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
               : m
           )
         );
       }
     } else {
-      const request: GenerateCardsRequest = { input, messages: conversationMessages, systemPromptTemplate: generationPromptTemplate ?? undefined };
+      const request: GenerateCardsRequest = {
+        input,
+        messages: conversationMessages,
+        systemPromptTemplate: generationPromptTemplate ?? undefined,
+      };
       startRun(runId, "generate", request);
       setMessages((prev) => [
         ...prev,
@@ -348,13 +357,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         setMessages((prev) =>
           prev.map((m) =>
             m.id === `assistant-${runId}`
-              ? {
-                ...m,
-                parts: [
-                  { type: "text" as const, text: currentText },
-                  { type: "interrupted" as any, text: _(msg`generate-cards.chat.canceled`) },
-                ],
-              }
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
               : m
           )
         );
@@ -374,7 +377,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
         cancelRun(runId);
       }
     }
-  }, [runs, generate, restartRun, addCard, completeRun, failRun, cancelRun, setMode, streamChat, setMessages, _]);
+  }, [runs, generate, restartRun, addCard, completeRun, failRun, cancelRun, setMode, streamChat, setMessages]);
 
   const handleCancel = useCallback(() => {
     if (activeRunId) {
@@ -391,8 +394,6 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   const handleChatPromptChange = useCallback((value: string | null) => {
     setChatPromptTemplate(value);
   }, []);
-
-
 
   useEffect(() => {
     if (!profileId) {
@@ -471,32 +472,47 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     };
   }, [runs, activeRunId, isGenerating, deckId, templateId, template, handleRetry, messages]);
 
-  const getChatMessageProps = useCallback((message: UIMessage): { isStreaming: true } | { isSuccess: true; elapsedSeconds: number } | { isFailed: true; canRetry: boolean; onRetry: () => void } | null => {
-    const chatMetadata = getChatTextMetadata(message);
-    if (!chatMetadata) return null;
+  const getChatMessageProps = useCallback(
+    (
+      message: UIMessage,
+    ):
+      | { isStreaming: true }
+      | { isSuccess: true; elapsedSeconds: number }
+      | { isCanceled: true; elapsedSeconds: number }
+      | { isFailed: true; canRetry: boolean; onRetry: () => void }
+      | null =>
+    {
+      const chatMetadata = getChatTextMetadata(message);
+      if (!chatMetadata) return null;
 
-    const run = runs[chatMetadata.runId];
-    if (!run) return null;
+      const run = runs[chatMetadata.runId];
+      if (!run) return null;
 
-    if (run.status === "streaming") {
-      return { isStreaming: true };
-    }
+      if (run.status === "streaming") {
+        return { isStreaming: true };
+      }
 
-    if (run.status === "success" && run.elapsedSeconds !== null) {
-      return { isSuccess: true, elapsedSeconds: run.elapsedSeconds };
-    }
+      if (run.status === "success" && run.elapsedSeconds !== null) {
+        return { isSuccess: true, elapsedSeconds: run.elapsedSeconds };
+      }
 
-    if (run.status !== "failed") return null;
+      if (run.status === "canceled" && run.elapsedSeconds !== null) {
+        return { isCanceled: true, elapsedSeconds: run.elapsedSeconds };
+      }
 
-    const messageIndex = messages.findIndex((m) => m.id === message.id);
-    const canRetry = messageIndex < 0 || messageIndex >= messages.length - 1;
+      if (run.status !== "failed") return null;
 
-    return {
-      isFailed: true,
-      canRetry,
-      onRetry: () => handleRetry(chatMetadata.runId),
-    };
-  }, [runs, handleRetry, messages]);
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      const canRetry = messageIndex < 0 || messageIndex >= messages.length - 1;
+
+      return {
+        isFailed: true,
+        canRetry,
+        onRetry: () => handleRetry(chatMetadata.runId),
+      };
+    },
+    [runs, handleRetry, messages],
+  );
 
   return {
     isOpen,

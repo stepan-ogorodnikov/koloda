@@ -43,9 +43,14 @@ export function GeneratedCardsMessage({
         <AiChatMessageStatusPending label={_(msg`generate-cards.generate.generating`)} />
       )}
       {isCanceled && (
-        <p className="fg-level-4">
-          {_(msg`generate-cards.generate.canceled`)}
-        </p>
+        <div className="flex flex-col gap-2">
+          {elapsedSeconds !== undefined && (
+            <p className="fg-level-4 flex flex-row items-center gap-1">
+              {_(msg`generate-cards.generate.canceled-in`)}
+              <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
+            </p>
+          )}
+        </div>
       )}
       {isFailed && (
         <div className="flex flex-row flex-wrap items-center gap-2">

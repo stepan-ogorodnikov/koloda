@@ -116,6 +116,18 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
         );
       }
 
+      if ("isCanceled" in chatProps) {
+        return (
+          <div className="flex flex-col gap-2 self-start w-full">
+            {content}
+            <p className="fg-level-4 flex flex-row items-center gap-1">
+              {_(msg`generate-cards.generate.canceled-in`)}
+              <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
+            </p>
+          </div>
+        );
+      }
+
       return (
         <div className="flex flex-col gap-2 self-start w-full">
           {content}
