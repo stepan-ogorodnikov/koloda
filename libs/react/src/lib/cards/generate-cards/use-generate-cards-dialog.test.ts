@@ -125,6 +125,7 @@ describe("useGenerateCardsDialog", () => {
           modelId: profile.lastUsedModel,
           prompt: "Explain noun genders",
           temperature: 0.2,
+          reasoningEffort: "",
           deckId: 1,
           templateId: template.id,
         },

@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createGeneratedCard } from "../../../test/test-helpers";
 import type { GenerateCardsRequest } from "./use-generate-cards";
+import type { StreamResult } from "./use-streaming-request";
 import { useGenerateCards } from "./use-generate-cards";
 
 function createRequest(overrides: Partial<GenerateCardsRequest> = {}): GenerateCardsRequest {
@@ -26,12 +27,12 @@ describe("useGenerateCards", () => {
     });
     const { result } = renderHook(() => useGenerateCards(streamGenerator));
 
-    let isSuccess = false;
+    let isSuccess: StreamResult = "success";
     await act(async () => {
       isSuccess = await result.current.generate(createRequest());
     });
 
-    expect(isSuccess).toBe(true);
+    expect(isSuccess).toBe("success");
     expect(result.current.cards).toEqual([
       createGeneratedCard({ content: { "1": { text: "One" }, "2": { text: "Back one" } } }),
       createGeneratedCard({ content: { "1": { text: "Two" }, "2": { text: "Back two" } } }),
@@ -65,7 +66,7 @@ describe("useGenerateCards", () => {
   });
 
   it("cancels an in-flight request without surfacing an error", async () => {
-    let generationPromise!: Promise<boolean>;
+    let generationPromise!: Promise<StreamResult>;
     let signalRef: AbortSignal | undefined;
     const streamGenerator = vi.fn((_request, _onCard, signal: AbortSignal) => {
       signalRef = signal;
@@ -87,15 +88,15 @@ describe("useGenerateCards", () => {
       result.current.cancel();
     });
 
-    await expect(generationPromise).resolves.toBe(false);
+    await expect(generationPromise).resolves.toBe("aborted");
     await waitFor(() => expect(result.current.isGenerating).toBe(false));
     expect(signalRef?.aborted).toBe(true);
     expect(result.current.error).toBeNull();
   });
 
   it("aborts the previous run when a new generation starts and stays loading for the active request", async () => {
-    let firstPromise!: Promise<boolean>;
-    let secondPromise!: Promise<boolean>;
+    let firstPromise!: Promise<StreamResult>;
+    let secondPromise!: Promise<StreamResult>;
     const signals: AbortSignal[] = [];
     let resolveSecond!: () => void;
     const streamGenerator = vi.fn()
@@ -139,8 +140,8 @@ describe("useGenerateCards", () => {
       resolveSecond();
     });
 
-    await expect(firstPromise).resolves.toBe(false);
-    await expect(secondPromise).resolves.toBe(true);
+    await expect(firstPromise).resolves.toBe("aborted");
+    await expect(secondPromise).resolves.toBe("success");
     await waitFor(() => expect(result.current.isGenerating).toBe(false));
     expect(result.current.cards).toEqual([createGeneratedCard()]);
   });
