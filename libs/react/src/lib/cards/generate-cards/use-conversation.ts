@@ -117,6 +117,49 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
     [completeRun, failRun, cancelRun],
   );
 
+  const executeChatRun = useCallback(
+    async (runId: string, request: ChatStreamRequest) => {
+      let currentText = "";
+      const result = await streamChat(request, (chunk) => {
+        currentText += chunk;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === `assistant-${runId}`
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
+              : m
+          )
+        );
+      });
+
+      if (result === "aborted") {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === `assistant-${runId}`
+              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
+              : m
+          )
+        );
+      }
+
+      handleStreamResult(result, runId);
+    },
+    [streamChat, handleStreamResult],
+  );
+
+  const executeGenerateRun = useCallback(
+    async (runId: string, request: GenerateCardsRequest) => {
+      const result = await generate(request, (card) => {
+        addCard(runId, card);
+      });
+
+      handleStreamResult(result, runId);
+      if (result === "success") {
+        setMode("chat");
+      }
+    },
+    [generate, addCard, handleStreamResult],
+  );
+
   const handleGenerate = useCallback(async (value?: string) => {
     const cfg = configRef.current;
     const currentMode = modeRef.current;
@@ -162,29 +205,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
         systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
       };
       startRun(runId, "chat", chatRequest);
-
-      let currentText = "";
-      const result = await streamChat(chatRequest, (chunk) => {
-        currentText += chunk;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
-      });
-
-      if (result === "aborted") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
-      }
-      handleStreamResult(result, runId);
+      await executeChatRun(runId, chatRequest);
     } else {
       const request: GenerateCardsRequest = {
         input,
@@ -199,17 +220,9 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
           runId,
         }),
       ]);
-
-      const result = await generate(request, (card) => {
-        addCard(runId, card);
-      });
-
-      handleStreamResult(result, runId);
-      if (result === "success") {
-        setMode("chat");
-      }
+      await executeGenerateRun(runId, request);
     }
-  }, [startRun, addCard, handleStreamResult, generate, streamChat]);
+  }, [startRun, executeChatRun, executeGenerateRun]);
 
   const handleRetry = useCallback(async (runId: string) => {
     const currentRuns = runsRef.current;
@@ -226,42 +239,11 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
             : m
         )
       );
-
-      const request = run.request as ChatStreamRequest;
-      let currentText = "";
-      const result = await streamChat(request, (chunk) => {
-        currentText += chunk;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
-      });
-
-      if (result === "aborted") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
-      }
-      handleStreamResult(result, runId);
+      await executeChatRun(runId, run.request as ChatStreamRequest);
     } else {
-      const request = run.request as GenerateCardsRequest;
-      const result = await generate(request, (card) => {
-        addCard(runId, card);
-      });
-
-      handleStreamResult(result, runId);
-      if (result === "success") {
-        setMode("chat");
-      }
+      await executeGenerateRun(runId, run.request as GenerateCardsRequest);
     }
-  }, [restartRun, addCard, handleStreamResult, generate, streamChat]);
+  }, [restartRun, executeChatRun, executeGenerateRun]);
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = activeRunIdRef.current;
