@@ -327,7 +327,7 @@ function extractCardsFromMarkdownText(text: string, template: Template): Generat
   const cards: GeneratedCard[] = [];
 
   for (const block of blocks) {
-    const labelEntries = [...block.matchAll(/\*\*([^*]+)\*\*:\s*([\s\S]*?)(?=(?:\n\*\*[^*]+\*\*:)|$)/g)];
+    const labelEntries = [...block.matchAll(/\*\*([^*]+)\*\*:[^\S\n]*([\s\S]*?)(?=(?:\n\*\*[^*]+\*\*:)|$)/g)];
     if (labelEntries.length === 0) continue;
 
     const valuesInOrder = labelEntries.map((entry) => entry[2].trim()).filter(Boolean);
@@ -335,7 +335,7 @@ function extractCardsFromMarkdownText(text: string, template: Template): Generat
     for (const entry of labelEntries) {
       const label = normalizeLabel(entry[1]);
       const value = entry[2].trim();
-      if (value) byLabel.set(label, value);
+      byLabel.set(label, value);
     }
 
     let nextFallbackValue = 0;
