@@ -167,11 +167,6 @@ export function useGenerationRuns() {
     dispatch({ type: "reset" });
   }, []);
 
-  const getRun = useCallback(
-    (id: string) => state.runs[id],
-    [state.runs],
-  );
-
   return {
     activeRunId: state.activeRunId,
     runs: state.runs,
@@ -182,6 +177,5 @@ export function useGenerationRuns() {
     cancelRun,
     restartRun,
     reset,
-    getRun,
   };
 }

@@ -169,7 +169,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
 
     if (currentMode === "generate" && !cfg.template) return;
 
-    const runId = `${Date.now()}`;
+    const runId = crypto.randomUUID();
     const currentMessages = messagesRef.current;
     const currentRuns = runsRef.current;
     const conversationMessages = buildConversationMessages(currentMessages, currentRuns, cfg.template);
@@ -277,7 +277,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       const isCurrentRun = generatedCardsMetadata.runId === currentActiveRunId;
 
       const messageIndex = currentMessages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex < 0 || messageIndex >= currentMessages.length - 1;
+      const canRetry = messageIndex >= currentMessages.length - 1;
 
       return {
         cards: runCards,
@@ -329,7 +329,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       if (run.status !== "failed") return null;
 
       const messageIndex = currentMessages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex < 0 || messageIndex >= currentMessages.length - 1;
+      const canRetry = messageIndex >= currentMessages.length - 1;
 
       return {
         isFailed: true,
