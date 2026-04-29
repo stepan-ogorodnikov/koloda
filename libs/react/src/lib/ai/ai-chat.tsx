@@ -10,7 +10,7 @@ import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
-import { Fragment, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { AIChatMessage } from "./ai-chat-message";
 import { AIModelParameters } from "./ai-model-parameters";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
@@ -18,8 +18,7 @@ import { AIChatSubmit } from "./ai-chat-submit";
 import { AIModelPicker } from "./ai-model-picker";
 import { AIProfilePicker } from "./ai-profile-picker";
 import { useAIProfiles } from "./use-ai-profiles";
-
-const AUTO_SCROLL_THRESHOLD = 80;
+import { useAutoScroll } from "./use-auto-scroll";
 
 const aiChatPanel = [
   "flex flex-col gap-2 w-full max-w-3xl mx-auto p-2",
@@ -76,42 +75,10 @@ export function AIChat({
   const { defaultProfileId, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
   const [inputValue, setInputValue] = useState("");
-  const [isNearBottom, setIsNearBottom] = useState(true);
-  const messagesRef = useRef<HTMLDivElement>(null);
-  const scrollViewportRef = useRef<HTMLDivElement>(null);
-  const isProgrammaticScrollRef = useRef(false);
-  const shouldAutoScrollRef = useRef(true);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
   const modelPickerRef = useRef<HTMLButtonElement>(null);
   const prompt = inputValue.trim();
-
-  const getIsNearBottom = useEffectEvent(() => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return true;
-
-    const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
-    return distanceFromBottom <= AUTO_SCROLL_THRESHOLD;
-  });
-
-  const syncScrollState = useEffectEvent(() => {
-    const nextIsNearBottom = getIsNearBottom();
-    shouldAutoScrollRef.current = nextIsNearBottom;
-    setIsNearBottom((current) => current === nextIsNearBottom ? current : nextIsNearBottom);
-  });
-
-  const scrollToBottom = useEffectEvent((behavior: ScrollBehavior = "auto") => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return;
-
-    viewport.scrollTo({ top: viewport.scrollHeight, behavior });
-  });
-
-  const startFollowingLatest = useEffectEvent((behavior: ScrollBehavior = "smooth") => {
-    shouldAutoScrollRef.current = true;
-    isProgrammaticScrollRef.current = behavior === "smooth";
-    setIsNearBottom(true);
-    scrollToBottom(behavior);
-  });
+  const scroll = useAutoScroll({ messages, isLoading });
 
   useEffect(() => {
     if (autoSelectDefaultProfile && defaultProfileId && !profileId) {
@@ -119,48 +86,12 @@ export function AIChat({
     }
   }, [autoSelectDefaultProfile, defaultProfileId, profileId, onProfileChange]);
 
-  useEffect(() => {
-    syncScrollState();
-  }, []);
-
-  useEffect(() => {
-    const messagesElement = messagesRef.current;
-    if (!messagesElement) return;
-
-    const handleMessagesResize = () => {
-      if (shouldAutoScrollRef.current) {
-        startFollowingLatest("auto");
-        return;
-      }
-
-      syncScrollState();
-    };
-
-    const resizeObserver = new ResizeObserver(handleMessagesResize);
-    resizeObserver.observe(messagesElement);
-    handleMessagesResize();
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  useLayoutEffect(() => {
-    if (shouldAutoScrollRef.current) {
-      startFollowingLatest("auto");
-      return;
-    }
-
-    syncScrollState();
-  }, [messages, isLoading]);
-
   const submit = () => {
     if (profileId && modelId && prompt && !isLoading && hasRequiredSecrets) {
-      const shouldFollow = getIsNearBottom();
-      shouldAutoScrollRef.current = shouldFollow;
+      const shouldFollow = scroll.prepareSubmit();
       onSubmit(prompt);
       setInputValue("");
-      if (shouldFollow) startFollowingLatest("smooth");
+      if (shouldFollow) scroll.startFollowingLatest("smooth");
     }
   };
 
@@ -169,59 +100,17 @@ export function AIChat({
     submit();
   };
 
-  const handleScroll = () => {
-    if (isProgrammaticScrollRef.current) {
-      if (getIsNearBottom()) {
-        isProgrammaticScrollRef.current = false;
-        shouldAutoScrollRef.current = true;
-        setIsNearBottom(true);
-      }
-      return;
-    }
-
-    syncScrollState();
-  };
-
-  const handleScrollToLatest = () => {
-    startFollowingLatest("smooth");
-  };
-
   const handleReset = () => {
     setInputValue("");
-    shouldAutoScrollRef.current = true;
-    isProgrammaticScrollRef.current = false;
-    setIsNearBottom(true);
+    scroll.resetScroll();
     onReset?.();
   };
 
   const canSubmit = !!(profileId && modelId && !!prompt && !isLoading && hasRequiredSecrets);
   const canCancel = isLoading && !!onCancel;
   const canReset = messages.length > 0 || isLoading;
-  const showJumpToLatest = messages.length > 0 && !isNearBottom;
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
-
-  const handleScrollUp = useEffectEvent(() => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return;
-    viewport.scrollBy({ top: -300, behavior: "smooth" });
-  });
-
-  const handleScrollDown = useEffectEvent(() => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return;
-    viewport.scrollBy({ top: 300, behavior: "smooth" });
-  });
-
-  const handleScrollToTop = useEffectEvent(() => {
-    const viewport = scrollViewportRef.current;
-    if (!viewport) return;
-    viewport.scrollTo({ top: 0, behavior: "smooth" });
-  });
-
-  const handleScrollToBottom = useEffectEvent(() => {
-    startFollowingLatest("smooth");
-  });
 
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
@@ -229,21 +118,21 @@ export function AIChat({
     enabled: !!profileId,
     ignoreInputs: false,
   });
-  useAppHotkey(ai.scrollUp, handleScrollUp, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollDown, handleScrollDown, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollToTop, handleScrollToTop, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollToBottom, handleScrollToBottom, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollUp, scroll.handleScrollUp, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollDown, scroll.handleScrollDown, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollToTop, scroll.handleScrollToTop, "", { ignoreInputs: false });
+  useAppHotkey(ai.scrollToBottom, scroll.handleScrollToBottom, "", { ignoreInputs: false });
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
       <div className="relative flex-1 min-h-0 -mx-4 px-4">
         <div
           className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
-          ref={scrollViewportRef}
-          onScroll={handleScroll}
+          ref={scroll.scrollViewportRef}
+          onScroll={scroll.handleScroll}
           tabIndex={0}
         >
-          <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2" ref={messagesRef}>
+          <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2" ref={scroll.messagesRef}>
             {messages.length === 0
               ? emptyState
               : (
@@ -268,12 +157,12 @@ export function AIChat({
           </div>
         </div>
         <AnimatePresence>
-          {showJumpToLatest && (
+          {scroll.showJumpToLatest && (
             <Fade className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center w-full max-w-3xl">
               <Button
                 variants={{ style: "primary", size: "icon", class: "rounded-full" }}
                 aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
-                onPress={handleScrollToLatest}
+                onPress={scroll.handleScrollToLatest}
               >
                 <HugeiconsIcon
                   className="size-5 min-w-5"
