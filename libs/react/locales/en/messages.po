@@ -145,32 +145,36 @@ msgstr "Finished in"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
-#: ../../libs/react/src/lib/cards/generate-cards/use-generate-cards-dialog.ts:278
+#: ../../libs/react/src/lib/cards/generate-cards/use-conversation.ts:197
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:322
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:137
+msgid "ai.chat.messages.label"
+msgstr "Conversation log"
+
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
 msgid "ai.chat.mode.chat"
 msgstr "Chat mode"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:322
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
 msgid "ai.chat.mode.generate"
 msgstr "Generate cards mode"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:293
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:188
 msgid "ai.chat.profile-data-missing"
 msgstr "Selected AI profile is missing required data"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:296
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:191
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:343
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:238
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:219
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:275
+#: ../../libs/react/src/lib/ai/ai-chat.tsx:170
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 

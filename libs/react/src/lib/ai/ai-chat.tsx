@@ -12,9 +12,9 @@ import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { AIChatMessage } from "./ai-chat-message";
-import { AIModelParameters } from "./ai-model-parameters";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
 import { AIChatSubmit } from "./ai-chat-submit";
+import { AIModelParameters } from "./ai-model-parameters";
 import { AIModelPicker } from "./ai-model-picker";
 import { AIProfilePicker } from "./ai-profile-picker";
 import { useAIProfiles } from "./use-ai-profiles";
@@ -132,7 +132,13 @@ export function AIChat({
           onScroll={scroll.handleScroll}
           tabIndex={0}
         >
-          <div className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2" ref={scroll.messagesRef}>
+          <div
+            className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2"
+            aria-label={_(msg`ai.chat.messages.label`)}
+            aria-live="polite"
+            role="log"
+            ref={scroll.messagesRef}
+          >
             {messages.length === 0
               ? emptyState
               : (
