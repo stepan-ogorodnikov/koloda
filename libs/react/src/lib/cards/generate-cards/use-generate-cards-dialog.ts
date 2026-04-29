@@ -1,7 +1,6 @@
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck, ModelParameter, Template } from "@koloda/srs";
-import { createAIGenerationClient } from "@koloda/srs";
-import type { AISecrets, ChatStreamRequest } from "@koloda/srs";
+import type { AISecrets } from "@koloda/srs";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
@@ -9,10 +8,10 @@ import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import type { GenerationMode } from "./generate-cards-utility";
 import type { GeneratedCardsMessageProps } from "./generated-cards-message";
+import { useAIClient } from "./use-ai-client";
 import { useAIConfiguration } from "./use-ai-configuration";
 import { useConversation } from "./use-conversation";
 import type { ConversationConfig } from "./use-conversation";
-import type { StreamGenerator } from "./use-generate-cards";
 import { usePromptTemplates } from "./use-prompt-templates";
 
 export type UseGenerateCardsDialogReturn = {
@@ -89,56 +88,11 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
 
   const touchProfileMutation = useMutation(touchAIProfileMutation());
 
-  const streamGenerator = useCallback<StreamGenerator>(
-    async (request, onCard, abortSignal) => {
-      if (!selectedProfile) throw new Error("No AI profile selected");
-      if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
-      if (!template) throw new Error("No template loaded");
-
-      if (selectedProfile.secrets.provider === "codex") {
-        if (!aiRuntime?.generateCards) throw new Error("Codex provider requires the native app runtime.");
-        await aiRuntime.generateCards(
-          {
-            input: request.input,
-            messages: request.messages,
-            template,
-            systemPromptTemplate: request.systemPromptTemplate,
-          },
-          onCard,
-          abortSignal,
-        );
-        return;
-      }
-
-      const client = createAIGenerationClient(selectedProfile.secrets);
-      await client.generateCards({
-        template,
-        input: request.input,
-        messages: request.messages,
-        onCard,
-        abortSignal,
-        systemPromptTemplate: request.systemPromptTemplate,
-      });
-    },
-    [aiRuntime, selectedProfile, template],
-  );
-
-  const chatStreamGenerator = useCallback(
-    async (request: ChatStreamRequest, onChunk: (chunk: string) => void, abortSignal: AbortSignal) => {
-      if (!selectedProfile) throw new Error("No AI profile selected");
-      if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
-
-      if (selectedProfile.secrets.provider === "codex") {
-        if (!aiRuntime?.chat) throw new Error("Codex provider requires the native app runtime.");
-        await aiRuntime.chat(request, onChunk, abortSignal);
-        return;
-      }
-
-      const client = createAIGenerationClient(selectedProfile.secrets);
-      await client.chat(request, onChunk, abortSignal);
-    },
-    [aiRuntime, selectedProfile],
-  );
+  const { streamGenerator, chatStreamGenerator } = useAIClient({
+    selectedProfile,
+    aiRuntime,
+    template,
+  });
 
   const conversationConfig: ConversationConfig = {
     profileId,
