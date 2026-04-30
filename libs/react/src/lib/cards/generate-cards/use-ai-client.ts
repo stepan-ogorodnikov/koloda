@@ -1,5 +1,5 @@
 import type { AIProfile, ChatStreamGenerator, ChatStreamRequest, Template } from "@koloda/srs";
-import { createAIGenerationClient } from "@koloda/srs";
+import { createAIGenerationClient, getProviderConfig } from "@koloda/srs";
 import type { AIRuntime } from "@koloda/react-base";
 import { useCallback } from "react";
 import type { StreamGenerator } from "./use-generate-cards";
@@ -26,7 +26,9 @@ export function useAIClient({
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
       if (!template) throw new Error("No template loaded");
 
-      if (selectedProfile.secrets.provider === "codex") {
+      const providerConfig = getProviderConfig(selectedProfile.secrets.provider);
+
+      if (providerConfig.requiresNativeRuntime) {
         if (!aiRuntime?.generateCards) throw new Error("Codex provider requires the native app runtime.");
         await aiRuntime.generateCards(
           {
@@ -59,7 +61,9 @@ export function useAIClient({
       if (!selectedProfile) throw new Error("No AI profile selected");
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
 
-      if (selectedProfile.secrets.provider === "codex") {
+      const providerConfig = getProviderConfig(selectedProfile.secrets.provider);
+
+      if (providerConfig.requiresNativeRuntime) {
         if (!aiRuntime?.chat) throw new Error("Codex provider requires the native app runtime.");
         await aiRuntime.chat(request, onChunk, abortSignal);
         return;

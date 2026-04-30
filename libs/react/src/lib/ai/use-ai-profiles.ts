@@ -1,5 +1,7 @@
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AIProfile, AISecrets } from "@koloda/srs";
+import { getProviderConfig } from "@koloda/srs";
+import type { SecretField } from "@koloda/srs";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -12,37 +14,15 @@ const SECRETS_LABELS: Record<SecretField, MessageDescriptor> = {
   baseUrl: msg`settings.ai.profiles.base-url.label`,
 };
 
-function getApiKey(secrets: AISecrets): string | null {
-  switch (secrets.provider) {
-    case "openrouter":
-      return secrets.apiKey;
-    case "ollama":
-      return null;
-    case "lmstudio":
-      return secrets.apiKey ?? null;
-    case "codex":
-      return null;
-    default:
-      return null;
-  }
-}
-
-type SecretField = "apiKey" | "baseUrl";
-
 function getMissingSecretFields(secrets: AISecrets | null | undefined): SecretField[] {
   if (!secrets) return [];
-  switch (secrets.provider) {
-    case "openrouter":
-      return secrets.apiKey ? [] : ["apiKey"];
-    case "ollama":
-      return secrets.baseUrl ? [] : ["baseUrl"];
-    case "lmstudio":
-      return secrets.baseUrl ? [] : ["baseUrl"];
-    case "codex":
-      return [];
-    default:
-      return [];
-  }
+  const entry = getProviderConfig(secrets.provider);
+  return entry.getMissingSecretFields(secrets);
+}
+
+function getApiKey(secrets: AISecrets): string | null {
+  const entry = getProviderConfig(secrets.provider);
+  return entry.getApiKey(secrets);
 }
 
 export function useAIProfiles(profileId?: string | null) {

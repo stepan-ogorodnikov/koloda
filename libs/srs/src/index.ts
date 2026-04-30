@@ -1,4 +1,4 @@
-export * from "./lib/ai";
+export * from "./lib/ai-provider-registry";
 export * from "./lib/ai-error";
 export * from "./lib/ai-cards-generation";
 export * from "./lib/algorithms";
