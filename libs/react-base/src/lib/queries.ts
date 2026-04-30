@@ -1,6 +1,5 @@
 import type {
   AddAIProfileData,
-  AISecrets,
   AIModel,
   AIProfile,
   Algorithm,
@@ -59,7 +58,6 @@ export type AIRuntimeGenerateCardsRequest = {
 };
 
 export type AIRuntime = {
-  supportedProviders?: Array<AISecrets["provider"]>;
   generateCards?: (
     request: AIRuntimeGenerateCardsRequest,
     onCard: (card: GeneratedCard) => void,

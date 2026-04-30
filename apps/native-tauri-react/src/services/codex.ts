@@ -159,7 +159,6 @@ async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void
 }
 
 export const codexRuntime: AIRuntime = {
-  supportedProviders: ["codex"],
   generateCards,
   chat,
 };

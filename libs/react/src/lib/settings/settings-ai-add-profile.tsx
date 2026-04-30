@@ -1,8 +1,9 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { aiProvidersAtom } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AddAIProfileFormProps, AiProvider, AISecrets } from "@koloda/srs";
-import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/srs";
+import { AI_PROVIDER_LABELS } from "@koloda/srs";
 import { Button, Dialog, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -25,13 +26,11 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> =
 export function SettingsAIAddProfile() {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
-  const { addAIProfileMutation, aiRuntime } = useAtomValue(queriesAtom);
+  const { addAIProfileMutation } = useAtomValue(queriesAtom);
+  const providerIds = useAtomValue(aiProvidersAtom);
   const { mutate, isPending, isSuccess, error, reset } = useMutation(addAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("openrouter");
-  const providerIds = aiRuntime?.supportedProviders?.includes("codex")
-    ? AI_PROVIDERS
-    : AI_PROVIDERS.filter((id) => id !== "codex");
 
   const handleSubmit = (data: { title?: string; secrets: AISecrets }) => {
     mutate(data, {

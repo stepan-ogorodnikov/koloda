@@ -1,4 +1,4 @@
-import { appEntryAtom, langAtom, themeAtom } from "@koloda/react";
+import { aiProvidersAtom, appEntryAtom, langAtom, themeAtom } from "@koloda/react";
 import type { Queries } from "@koloda/react-base";
 import { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, queriesAtom } from "@koloda/react-base";
 import { motionSettingAtom } from "@koloda/ui";
@@ -60,5 +60,7 @@ store.set(motionSettingAtom, "system");
 store.set(hotkeysScopesAtom, DEFAULT_HOTKEYS_SCOPES);
 
 store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
+
+store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "codex"]);
 
 store.set(appEntryAtom, { component: AppEntry });
