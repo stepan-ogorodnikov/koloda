@@ -54,7 +54,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
         </DeleteDialog.Trigger>
         {isDisabled && (
           <Tooltip content={_(msg`delete-algorithm.cant-delete`)} delay={0}>
-            <Tooltip.HiddenTrigger />
+            <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
           </Tooltip>
         )}
       </div>
