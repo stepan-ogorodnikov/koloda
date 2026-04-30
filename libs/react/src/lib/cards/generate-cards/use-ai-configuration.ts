@@ -24,45 +24,36 @@ export type UseAIConfigurationReturn = {
 
 export function useAIConfiguration(): UseAIConfigurationReturn {
   const [profileId, setProfileId] = useState("");
-  const [modelId, setModelId] = useState("");
+  const [preferredModelId, setPreferredModelId] = useState("");
   const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);
   const [reasoningEffort, setReasoningEffort] = useState("");
   const { profiles, selectedProfile } = useAIProfiles(profileId);
   const { models } = useAIModels(profileId);
-  const modelName = models.find((m) => m.id === modelId)?.name;
   const provider = selectedProfile?.secrets?.provider ?? null;
   const hasProfiles = profiles.length > 0;
 
-  useEffect(() => {
-    if (!profileId) {
-      setModelId("");
-      return;
+  const modelId = useMemo(() => {
+    if (!profileId) return "";
+    if (preferredModelId && models.some((m) => m.id === preferredModelId)) return preferredModelId;
+    const profile = profiles.find((p) => p.id === profileId);
+    if (profile?.lastUsedModel && models.some((m) => m.id === profile.lastUsedModel)) {
+      return profile.lastUsedModel;
     }
+    return models[0]?.id ?? "";
+  }, [profileId, preferredModelId, models, profiles]);
 
-    if (modelId && models.some((model) => model.id === modelId)) return;
-
-    const profile = profiles.find((item) => item.id === profileId);
-    const preferredModelId = profile?.lastUsedModel;
-    if (preferredModelId && models.some((model) => model.id === preferredModelId)) {
-      setModelId(preferredModelId);
-      return;
-    }
-
-    setModelId(models[0]?.id ?? "");
-  }, [profileId, modelId, models, profiles]);
+  const modelName = models.find((m) => m.id === modelId)?.name;
 
   const prevModelIdRef = useRef(modelId);
 
   useEffect(() => {
-    const prevModelId = prevModelIdRef.current;
+    if (prevModelIdRef.current === modelId) return;
     prevModelIdRef.current = modelId;
 
     if (!modelId) {
       setReasoningEffort("");
       return;
     }
-
-    if (prevModelId === modelId) return;
 
     const modelData = models.find((m) => m.id === modelId);
     setReasoningEffort(modelData?.default_reasoning_level ?? "");
@@ -81,11 +72,11 @@ export function useAIConfiguration(): UseAIConfigurationReturn {
   const handleProfileChange = useCallback((value: string) => {
     setProfileId(value);
     const profile = profiles.find((p) => p.id === value);
-    setModelId(profile?.lastUsedModel ?? "");
+    setPreferredModelId(profile?.lastUsedModel ?? "");
   }, [profiles]);
 
   const handleModelChange = useCallback((value: string) => {
-    setModelId(value);
+    setPreferredModelId(value);
   }, []);
 
   const handleTemperatureChange = useCallback((value: number) => {
