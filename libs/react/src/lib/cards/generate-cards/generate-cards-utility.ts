@@ -7,11 +7,17 @@ export type AssistantMessageMetadata =
   | { kind: "generated-cards"; runId: string }
   | { kind: "chat-text"; runId: string };
 
-export function getAssistantMetadata(message: UIMessage): AssistantMessageMetadata | null {
-  const metadata = message.metadata as AssistantMessageMetadata | undefined;
-  if (!metadata) return null;
-  if (metadata.kind !== "generated-cards" && metadata.kind !== "chat-text") return null;
-  return metadata;
+function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
+  if (!value || typeof value !== "object") return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    (obj.kind === "generated-cards" || obj.kind === "chat-text")
+    && typeof obj.runId === "string"
+  );
+}
+
+export function getAssistantMetadata(message: UIMessage) {
+  return isAssistantMetadata(message.metadata) ? message.metadata : null;
 }
 
 export function getGeneratedCardsMetadata(
@@ -38,7 +44,7 @@ export function createTextMessage(
   return { id, role, metadata, parts: [part] };
 }
 
-export function getTextMessageContent(message: UIMessage): string {
+export function getTextMessageContent(message: UIMessage) {
   return message.parts
     .filter((part): part is TextUIPart => part.type === "text")
     .map((part) => part.text.trim())
@@ -46,7 +52,7 @@ export function getTextMessageContent(message: UIMessage): string {
     .join("\n\n");
 }
 
-export function serializeGeneratedCards(cards: GeneratedCard[], template: Template): string {
+export function serializeGeneratedCards(cards: GeneratedCard[], template: Template) {
   return cards.map((card, index) =>
     [
       `## Card ${index + 1}`,
