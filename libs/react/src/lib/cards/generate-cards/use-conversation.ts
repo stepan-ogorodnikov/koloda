@@ -100,16 +100,16 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   const executeChatRun = useCallback(
     async (runId: string, request: ChatStreamRequest) => {
       let currentText = "";
-      const result = await streamChat(request, (chunk) => {
+      const { streamResult, usage } = await streamChat(request, (chunk) => {
         currentText += chunk;
         dispatch({ type: "updateAssistantText", runId, text: currentText });
       });
 
-      if (result === "aborted") {
-        dispatch({ type: "updateAssistantText", runId, text: currentText });
-      }
+      if (streamResult === "aborted") dispatch({ type: "updateAssistantText", runId, text: currentText });
 
-      handleStreamResult(result, runId);
+      if (usage) dispatch({ type: "setUsage", runId, usage });
+
+      handleStreamResult(streamResult, runId);
     },
     [streamChat, handleStreamResult],
   );
@@ -121,9 +121,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       });
 
       handleStreamResult(result, runId);
-      if (result === "success") {
-        dispatch({ type: "setMode", mode: "chat" });
-      }
+      if (result === "success") dispatch({ type: "setMode", mode: "chat" });
     },
     [generate, handleStreamResult],
   );

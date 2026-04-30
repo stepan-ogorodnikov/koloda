@@ -1,4 +1,4 @@
-import type { GeneratedCard } from "@koloda/srs";
+import type { GeneratedCard, StreamUsage } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { createTextMessage, type GenerationMode } from "./generate-cards-utility";
 
@@ -12,6 +12,7 @@ export type GenerationRun = {
   request?: unknown;
   startedAt: number;
   elapsedSeconds: number | null;
+  usage?: StreamUsage;
 };
 
 export type ConversationState = {
@@ -36,6 +37,7 @@ export type ConversationAction =
   | { type: "failRun"; runId: string }
   | { type: "cancelRun"; runId: string }
   | { type: "restartRun"; runId: string }
+  | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: GenerationMode }
   | { type: "reset" };
 
@@ -183,10 +185,17 @@ export function conversationReducer(
             cards: [],
             startedAt: Date.now(),
             elapsedSeconds: null,
+            usage: undefined,
           },
         },
       };
     }
+
+    case "setUsage":
+      return updateRun(state, action.runId, (run) => ({
+        ...run,
+        usage: action.usage,
+      }));
 
     case "setMode":
       return { ...state, mode: action.mode };

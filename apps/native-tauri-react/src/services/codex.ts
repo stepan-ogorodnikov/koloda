@@ -156,6 +156,7 @@ async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void
 
   if (signal.aborted) throw new DOMException("Aborted", "AbortError");
   onChunk(text);
+  return undefined;
 }
 
 export const codexRuntime: AIRuntime = {

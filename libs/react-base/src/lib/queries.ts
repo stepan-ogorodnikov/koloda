@@ -8,6 +8,7 @@ import type {
   Card,
   ChatStreamRequest,
   CloneAlgorithmData,
+  StreamUsage,
   CloneTemplateData,
   Deck,
   DeckWithOnlyTitle,
@@ -67,7 +68,7 @@ export type AIRuntime = {
     request: ChatStreamRequest,
     onChunk: (chunk: string) => void,
     signal: AbortSignal,
-  ) => Promise<void>;
+  ) => Promise<StreamUsage | undefined>;
 };
 
 export type Queries = {

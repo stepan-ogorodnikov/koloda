@@ -33,11 +33,17 @@ export type ChatStreamRequest = {
   systemPromptTemplate?: string;
 };
 
+export type StreamUsage = {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+};
+
 export type ChatStreamGenerator = (
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-) => Promise<void>;
+) => Promise<StreamUsage | undefined>;
 
 export const generateCardsInputSchema = z.object({
   modelId: z.string().min(1),
@@ -505,7 +511,7 @@ export async function streamChatWithOpenRouter(
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   openrouter: OpenRouterProvider,
-): Promise<void> {
+): Promise<StreamUsage | undefined> {
   return wrapAIError(async () => {
     let streamedError: unknown = null;
     const result = streamText({
@@ -533,6 +539,15 @@ export async function streamChatWithOpenRouter(
     }
 
     if (streamedError) throw streamedError;
+
+    const usage = await result.usage;
+    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
+
+    return {
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+    };
   });
 }
 
@@ -541,7 +556,7 @@ export async function streamChatWithOllama(
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   baseUrl: string,
-): Promise<void> {
+): Promise<StreamUsage | undefined> {
   return wrapAIError(async () => {
     const response = throwForAIResponse(
       await fetch(new URL("/api/chat", baseUrl), {
@@ -563,7 +578,7 @@ export async function streamChatWithOllama(
       }),
     );
 
-    await readOllamaChatStream(response, onChunk);
+    return await readOllamaChatStream(response, onChunk);
   });
 }
 
@@ -572,7 +587,7 @@ export async function streamChatWithLMStudio(
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
-): Promise<void> {
+): Promise<StreamUsage | undefined> {
   return wrapAIError(async () => {
     const systemMessage = compilePromptTemplate(
       request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
@@ -596,21 +611,23 @@ export async function streamChatWithLMStudio(
           temperature: resolveGenerationTemperature(request.input.temperature),
           messages,
           stream: true,
+          stream_options: { include_usage: true },
         }),
         signal: abortSignal,
       }),
     );
 
-    await readOpenAICompatibleChatStream(response, onChunk);
+    return await readOpenAICompatibleChatStream(response, onChunk);
   });
 }
 
-async function readOllamaChatStream(response: Response, onChunk: (chunk: string) => void) {
+async function readOllamaChatStream(response: Response, onChunk: (chunk: string) => void): Promise<StreamUsage | undefined> {
   const reader = response.body?.getReader();
   if (!reader) throw new AppError("ai.invalid-response");
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let usage: StreamUsage | undefined;
 
   try {
     while (true) {
@@ -624,9 +641,26 @@ async function readOllamaChatStream(response: Response, onChunk: (chunk: string)
       for (const line of lines) {
         if (!line.trim()) continue;
         try {
-          const data = JSON.parse(line) as { message?: { content?: string } };
+          const data = JSON.parse(line) as {
+            message?: { content?: string };
+            done?: boolean;
+            prompt_eval_count?: number;
+            eval_count?: number;
+          };
           const content = data.message?.content;
           if (typeof content === "string") onChunk(content);
+
+          if (data.done) {
+            const promptTokens = data.prompt_eval_count;
+            const completionTokens = data.eval_count;
+            if (promptTokens != null || completionTokens != null) {
+              usage = {
+                promptTokens: promptTokens ?? 0,
+                completionTokens: completionTokens ?? 0,
+                totalTokens: (promptTokens ?? 0) + (completionTokens ?? 0),
+              };
+            }
+          }
         } catch {
           // Ignore parse errors for malformed lines
         }
@@ -635,14 +669,17 @@ async function readOllamaChatStream(response: Response, onChunk: (chunk: string)
   } finally {
     reader.releaseLock();
   }
+
+  return usage;
 }
 
-async function readOpenAICompatibleChatStream(response: Response, onChunk: (chunk: string) => void) {
+async function readOpenAICompatibleChatStream(response: Response, onChunk: (chunk: string) => void): Promise<StreamUsage | undefined> {
   const reader = response.body?.getReader();
   if (!reader) throw new AppError("ai.invalid-response");
 
   const decoder = new TextDecoder();
   let buffer = "";
+  let usage: StreamUsage | undefined;
 
   try {
     while (true) {
@@ -656,11 +693,23 @@ async function readOpenAICompatibleChatStream(response: Response, onChunk: (chun
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
         const data = line.slice(6);
-        if (data === "[DONE]") return;
+        if (data === "[DONE]") continue;
         try {
-          const parsed = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> };
+          const parsed = JSON.parse(data) as {
+            choices?: Array<{ delta?: { content?: string } }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+          };
           const content = parsed.choices?.[0]?.delta?.content;
           if (typeof content === "string") onChunk(content);
+
+          if (parsed.usage) {
+            const u = parsed.usage;
+            usage = {
+              promptTokens: u.prompt_tokens ?? 0,
+              completionTokens: u.completion_tokens ?? 0,
+              totalTokens: u.total_tokens ?? 0,
+            };
+          }
         } catch {
           // Ignore parse errors for malformed lines
         }
@@ -669,4 +718,6 @@ async function readOpenAICompatibleChatStream(response: Response, onChunk: (chun
   } finally {
     reader.releaseLock();
   }
+
+  return usage;
 }

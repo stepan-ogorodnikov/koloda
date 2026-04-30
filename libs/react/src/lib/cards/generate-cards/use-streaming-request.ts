@@ -3,27 +3,34 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export type StreamResult = "success" | "aborted" | "error";
 
-export type StreamExecutor<TChunk, TRequest> = (
+export type StreamExecutor<TChunk, TRequest, TResult = void> = (
   request: TRequest,
   onChunk: (chunk: TChunk) => void,
   signal: AbortSignal,
-) => Promise<void>;
+) => Promise<TResult>;
 
-export type UseStreamingRequestReturn<TData, TChunk, TRequest> = {
+export type StreamingStartResult<TResult = void> = {
+  streamResult: StreamResult;
+  result: TResult | null;
+};
+
+export type UseStreamingRequestReturn<TData, TChunk, TRequest, TResult = void> = {
   data: TData;
+  result: TResult | null;
   isRunning: boolean;
   error: Error | null;
-  start: (request: TRequest, onChunk?: (chunk: TChunk) => void) => Promise<StreamResult>;
+  start: (request: TRequest, onChunk?: (chunk: TChunk) => void) => Promise<StreamingStartResult<TResult>>;
   cancel: () => void;
   reset: () => void;
 };
 
-export function useStreamingRequest<TData, TChunk, TRequest>(options: {
+export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(options: {
   initialData: TData;
   accumulate: (prev: TData, chunk: TChunk) => TData;
-  executor: StreamExecutor<TChunk, TRequest>;
-}): UseStreamingRequestReturn<TData, TChunk, TRequest> {
+  executor: StreamExecutor<TChunk, TRequest, TResult>;
+}): UseStreamingRequestReturn<TData, TChunk, TRequest, TResult> {
   const [data, setData] = useState<TData>(options.initialData);
+  const [result, setResult] = useState<TResult | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
@@ -45,10 +52,11 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
 
       setIsRunning(true);
       setError(null);
+      setResult(null);
       setData(optionsRef.current.initialData);
 
       try {
-        await optionsRef.current.executor(
+        const executorResult = await optionsRef.current.executor(
           request,
           (chunk) => {
             if (!controller.signal.aborted) {
@@ -58,13 +66,12 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
           },
           controller.signal,
         );
-        return "success" as const;
+        setResult(executorResult ?? null);
+        return { streamResult: "success" as const, result: executorResult ?? null };
       } catch (e) {
-        if (controller.signal.aborted || isAbortError(e)) {
-          return "aborted" as const;
-        }
+        if (controller.signal.aborted || isAbortError(e)) return { streamResult: "aborted" as const, result: null };
         setError(e instanceof Error ? e : new Error(String(e)));
-        return "error" as const;
+        return { streamResult: "error" as const, result: null };
       } finally {
         if (controllerRef.current === controller) {
           controllerRef.current = null;
@@ -87,5 +94,5 @@ export function useStreamingRequest<TData, TChunk, TRequest>(options: {
     setError(null);
   }, []);
 
-  return { data, isRunning, error, start, cancel, reset };
+  return { data, result, isRunning, error, start, cancel, reset };
 }

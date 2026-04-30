@@ -1,5 +1,6 @@
 import type { GenerateCardsInput, GeneratedCard } from "@koloda/srs";
 import type { ModelMessage } from "ai";
+import { useCallback } from "react";
 import { type StreamResult, useStreamingRequest } from "./use-streaming-request";
 
 export type GenerateCardsRequest = {
@@ -24,12 +25,20 @@ export type UseGenerateCardsReturn = {
 };
 
 export function useGenerateCards(streamGenerator: StreamGenerator): UseGenerateCardsReturn {
-  const { data: cards, isRunning: isGenerating, error, start: generate, cancel, reset: clearCards } =
-    useStreamingRequest<GeneratedCard[], GeneratedCard, GenerateCardsRequest>({
+  const { data: cards, isRunning: isGenerating, error, start, cancel, reset: clearCards } =
+    useStreamingRequest<GeneratedCard[], GeneratedCard, GenerateCardsRequest, void>({
       initialData: [],
       accumulate: (prev, card) => [...prev, card],
       executor: streamGenerator,
     });
+
+  const generate = useCallback(
+    async (request: GenerateCardsRequest, onCard?: (card: GeneratedCard) => void) => {
+      const { streamResult } = await start(request, onCard);
+      return streamResult;
+    },
+    [start],
+  );
 
   return { cards, isGenerating, error, generate, clearCards, cancel };
 }

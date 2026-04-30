@@ -65,12 +65,11 @@ export function useAIClient({
 
       if (providerConfig.requiresNativeRuntime) {
         if (!aiRuntime?.chat) throw new Error("Codex provider requires the native app runtime.");
-        await aiRuntime.chat(request, onChunk, abortSignal);
-        return;
+        return await aiRuntime.chat(request, onChunk, abortSignal);
       }
 
       const client = createAIGenerationClient(selectedProfile.secrets);
-      await client.chat(request, onChunk, abortSignal);
+      return await client.chat(request, onChunk, abortSignal);
     },
     [aiRuntime, selectedProfile],
   );
