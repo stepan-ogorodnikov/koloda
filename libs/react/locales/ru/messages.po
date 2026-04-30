@@ -103,6 +103,11 @@ msgstr "Новый шаблон"
 msgid "ai-chat.cancel.label"
 msgstr "Отменить"
 
+#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:38
+#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:48
+msgid "ai.chat.context-usage.tokens"
+msgstr "токенов"
+
 #: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:12
 msgid "ai.chat.elapsed-time.periods.hours"
 msgstr "ч"
@@ -123,29 +128,29 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:141
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:143
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
 msgid "ai.chat.message.retry"
 msgstr "Повторить"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:124
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:126
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:49
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Прервано через"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:135
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:137
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось сгенерировать карточки"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:112
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:114
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
 msgid "ai.chat.message.status.finished-in"
 msgstr "Завершено за"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:102
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:104
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:43
-#: ../../libs/react/src/lib/cards/generate-cards/use-conversation.ts:197
+#: ../../libs/react/src/lib/cards/generate-cards/use-conversation.ts:202
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
@@ -170,7 +175,7 @@ msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
 #: ../../libs/react/src/lib/ai/ai-chat.tsx:238
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:219
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:222
 msgid "ai.chat.reset.label"
 msgstr "Очистить чат"
 
@@ -594,11 +599,11 @@ msgstr "Редактировать карточку"
 msgid "generate-cards.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:253
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:256
 msgid "generate-cards.close.cancel"
 msgstr "Отменить"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:262
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:265
 msgid "generate-cards.close.confirm"
 msgstr "Закрыть"
 
@@ -606,7 +611,7 @@ msgstr "Закрыть"
 msgid "generate-cards.generated-no-cards"
 msgstr "Ответ был получен, но не удалось извлечь из него карточки."
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:163
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:165
 msgid "generate-cards.no-profiles"
 msgstr "Сначала добавьте ИИ профиль, чтобы генерировать карточки"
 
@@ -622,11 +627,11 @@ msgstr "Просмотр"
 msgid "generate-cards.settings.prompt.reset"
 msgstr "Вернуть значение по умолчанию"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:234
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:237
 msgid "generate-cards.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:233
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:236
 msgid "generate-cards.settings.show-settings"
 msgstr "Показать настройки"
 
@@ -670,11 +675,11 @@ msgstr "Карточка добавляется"
 msgid "generate-cards.table.columns.status.success"
 msgstr "Карточка успешно добавлена"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:172
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:174
 msgid "generate-cards.title"
 msgstr "Генерация карточек"
 
-#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:157
+#: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:159
 msgid "generate-cards.trigger"
 msgstr "Сгенерировать карточки с помощью ИИ"
 
@@ -818,7 +823,7 @@ msgstr "Загрузка..."
 msgid "settings.ai"
 msgstr "ИИ"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:65
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:64
 msgid "settings.ai.add"
 msgstr "Добавить профиль"
 
@@ -829,7 +834,7 @@ msgstr "Добавить профиль"
 msgid "settings.ai.add.submit"
 msgstr "Добавить"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:72
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:71
 msgid "settings.ai.add.title"
 msgstr "Добавить ИИ профиль"
 
@@ -860,7 +865,7 @@ msgstr "Редактировать ИИ профиль"
 msgid "settings.ai.edit.trigger"
 msgstr "Редактировать профиль"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:11
+#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:13
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:83
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:79
@@ -868,7 +873,7 @@ msgstr "Редактировать профиль"
 msgid "settings.ai.profiles.api-key.label"
 msgstr "API key"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:12
+#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:14
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:69
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:70
@@ -884,7 +889,7 @@ msgstr "Удалить профиль"
 msgid "settings.ai.profiles.empty"
 msgstr "Нет профилей"
 
-#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:78
+#: ../../libs/react/src/lib/settings/settings-ai-add-profile.tsx:77
 msgid "settings.ai.profiles.provider.label"
 msgstr "Провайдер"
 

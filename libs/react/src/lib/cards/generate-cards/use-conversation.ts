@@ -1,9 +1,9 @@
 import { generateCardsInputSchema } from "@koloda/srs";
-import type { ChatStreamGenerator, ChatStreamRequest, Deck, GeneratedCard, Template } from "@koloda/srs";
+import type { ChatStreamGenerator, ChatStreamRequest, Deck, GeneratedCard, StreamUsage, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import type { ModelMessage, UIMessage } from "ai";
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useMemo, useReducer, useRef } from "react";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { GenerationMode } from "./generate-cards-utility";
 import {
@@ -42,6 +42,7 @@ export type UseConversationReturn = {
   mode: GenerationMode;
   setMode: (mode: GenerationMode) => void;
   hasContext: boolean;
+  contextUsage: StreamUsage | null;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   handleReset: () => void;
@@ -79,6 +80,28 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   } = useChatStream(config.chatStreamGenerator);
 
   const hasContext = state.messages.length > 0 || isGenerating || isChatStreaming;
+
+  const contextUsage = useMemo(() => {
+    let promptTokens = 0;
+    let completionTokens = 0;
+    let hasUsage = false;
+
+    for (const run of Object.values(state.runs)) {
+      if (run.usage) {
+        hasUsage = true;
+        promptTokens += run.usage.promptTokens;
+        completionTokens += run.usage.completionTokens;
+      }
+    }
+
+    if (!hasUsage) return null;
+
+    return {
+      promptTokens,
+      completionTokens,
+      totalTokens: promptTokens + completionTokens,
+    };
+  }, [state.runs]);
 
   const handleStreamResult = useCallback(
     (result: StreamResult, runId: string) => {
@@ -296,6 +319,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       [],
     ),
     hasContext,
+    contextUsage,
     handleGenerate,
     handleCancel,
     handleReset,

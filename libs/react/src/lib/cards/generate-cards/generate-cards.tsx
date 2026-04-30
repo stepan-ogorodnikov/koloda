@@ -1,11 +1,12 @@
 import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AIChatMessageLayout, AIProfilePicker } from "@koloda/react";
+import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
 
+import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -13,7 +14,6 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
-import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/react";
 import { GenerateCardsSettings } from "./generate-cards-settings";
 import { getTextMessageContent } from "./generate-cards-utility";
 import { GeneratedCardsMessage } from "./generated-cards-message";
@@ -61,6 +61,8 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     getGeneratedCardsProps,
     getChatMessageProps,
     hasContext,
+    contextUsage,
+    contextLength,
     generationPromptTemplate,
     chatPromptTemplate,
     handleGenerationPromptChange,
@@ -161,7 +163,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
         </Button>
         {!hasProfiles && (
           <Tooltip content={_(msg`generate-cards.no-profiles`)} delay={0}>
-            <Tooltip.HiddenTrigger />
+            <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
           </Tooltip>
         )}
       </div>
@@ -214,6 +216,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                 <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2 shrink-0">
                   <AIProfilePicker value={profileId} onChange={handleProfileChange} />
                   <div className="grow min-w-3" />
+                  <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />
                   <Button
                     variants={{ style: "ghost", size: "icon" }}
                     aria-label={_(msg`ai.chat.reset.label`)}

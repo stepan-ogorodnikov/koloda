@@ -1,4 +1,5 @@
 export * from "./lib/ai/ai-chat";
+export * from "./lib/ai/ai-chat-context-usage";
 export * from "./lib/ai/ai-chat-elapsed-time";
 export * from "./lib/ai/ai-chat-message";
 export * from "./lib/ai/ai-chat-message-status-pending";

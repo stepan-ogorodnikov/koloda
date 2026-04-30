@@ -1,5 +1,5 @@
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { Deck, ModelParameter, Template } from "@koloda/srs";
+import type { Deck, ModelParameter, StreamUsage, Template } from "@koloda/srs";
 import type { AISecrets } from "@koloda/srs";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -47,6 +47,8 @@ export type UseGenerateCardsDialogReturn = {
     | { isFailed: true; canRetry: boolean; onRetry: () => void }
     | null;
   hasContext: boolean;
+  contextUsage: StreamUsage | null;
+  contextLength: number;
   handleRetry: (runId: string) => Promise<void>;
   generationPromptTemplate: string | null;
   chatPromptTemplate: string | null;
@@ -64,6 +66,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     profileId,
     modelId,
     modelName,
+    models,
     selectedProfile,
     provider,
     temperature,
@@ -117,6 +120,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     mode,
     setMode,
     hasContext,
+    contextUsage,
     handleGenerate,
     handleCancel,
     handleReset,
@@ -124,6 +128,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     getGeneratedCardsProps,
     getChatMessageProps,
   } = useConversation(conversationConfig);
+
+  const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 
   const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
@@ -160,6 +166,8 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     getGeneratedCardsProps,
     getChatMessageProps,
     hasContext,
+    contextUsage,
+    contextLength,
     handleRetry,
     generationPromptTemplate,
     chatPromptTemplate,
