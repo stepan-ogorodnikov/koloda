@@ -1,11 +1,12 @@
 import { generateCardsInputSchema } from "@koloda/srs";
 import type { ChatStreamGenerator, ChatStreamRequest, Deck, GeneratedCard, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
+import type { I18nContext } from "@lingui/react";
 import type { ModelMessage, UIMessage } from "ai";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
+import { conversationReducer, initialConversationState } from "./conversation-state";
+import type { GenerationMode } from "./generate-cards-utility";
 import {
-  createTextMessage,
-  type GenerationMode,
   getAssistantMetadata,
   getChatTextMetadata,
   getGeneratedCardsMetadata,
@@ -16,7 +17,6 @@ import type { GeneratedCardsMessageProps } from "./generated-cards-message";
 import { useChatStream } from "./use-chat-stream";
 import { useGenerateCards } from "./use-generate-cards";
 import type { GenerateCardsRequest, StreamGenerator } from "./use-generate-cards";
-import { useGenerationRuns } from "./use-generation-runs";
 import type { StreamResult } from "./use-streaming-request";
 
 export type ConversationConfig = {
@@ -32,7 +32,7 @@ export type ConversationConfig = {
   touchProfileMutate: (args: { id: string; modelId: string }) => void;
   generationPromptTemplate: string | null;
   chatPromptTemplate: string | null;
-  _: (msg: any) => string;
+  _: I18nContext["_"];
 };
 
 export type UseConversationReturn = {
@@ -58,30 +58,17 @@ export type UseConversationReturn = {
 };
 
 export function useConversation(config: ConversationConfig): UseConversationReturn {
+  const [state, dispatch] = useReducer(conversationReducer, initialConversationState);
   const configRef = useRef(config);
   configRef.current = config;
-  const [messages, setMessages] = useState<UIMessage[]>([]);
-  const [mode, setMode] = useState<GenerationMode>("chat");
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
-
-  const {
-    activeRunId,
-    runs,
-    startRun,
-    addCard,
-    completeRun,
-    failRun,
-    cancelRun,
-    restartRun,
-    reset: resetRuns,
-  } = useGenerationRuns();
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const {
     isGenerating,
     error: generateError,
     generate,
-    cancel,
+    cancel: cancelGenerate,
   } = useGenerateCards(config.streamGenerator);
 
   const {
@@ -91,30 +78,23 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
     cancel: cancelChat,
   } = useChatStream(config.chatStreamGenerator);
 
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
-  const runsRef = useRef(runs);
-  runsRef.current = runs;
-  const activeRunIdRef = useRef(activeRunId);
-  activeRunIdRef.current = activeRunId;
-
-  const hasContext = messages.length > 0 || isGenerating || isChatStreaming;
+  const hasContext = state.messages.length > 0 || isGenerating || isChatStreaming;
 
   const handleStreamResult = useCallback(
     (result: StreamResult, runId: string) => {
       switch (result) {
         case "success":
-          completeRun(runId);
+          dispatch({ type: "completeRun", runId });
           break;
         case "error":
-          failRun(runId);
+          dispatch({ type: "failRun", runId });
           break;
         case "aborted":
-          cancelRun(runId);
+          dispatch({ type: "cancelRun", runId });
           break;
       }
     },
-    [completeRun, failRun, cancelRun],
+    [],
   );
 
   const executeChatRun = useCallback(
@@ -122,23 +102,11 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       let currentText = "";
       const result = await streamChat(request, (chunk) => {
         currentText += chunk;
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
+        dispatch({ type: "updateAssistantText", runId, text: currentText });
       });
 
       if (result === "aborted") {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === `assistant-${runId}`
-              ? { ...m, parts: [{ type: "text" as const, text: currentText }] }
-              : m
-          )
-        );
+        dispatch({ type: "updateAssistantText", runId, text: currentText });
       }
 
       handleStreamResult(result, runId);
@@ -149,135 +117,119 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   const executeGenerateRun = useCallback(
     async (runId: string, request: GenerateCardsRequest) => {
       const result = await generate(request, (card) => {
-        addCard(runId, card);
+        dispatch({ type: "addCard", runId, card });
       });
 
       handleStreamResult(result, runId);
       if (result === "success") {
-        setMode("chat");
+        dispatch({ type: "setMode", mode: "chat" });
       }
     },
-    [generate, addCard, handleStreamResult],
+    [generate, handleStreamResult],
   );
 
-  const handleGenerate = useCallback(async (value?: string) => {
-    const cfg = configRef.current;
-    const currentMode = modeRef.current;
+  const handleGenerate = useCallback(
+    async (value?: string) => {
+      const cfg = configRef.current;
+      const currentState = stateRef.current;
+      const currentMode = currentState.mode;
 
-    const promptText = (value ?? "").trim();
-    if (!promptText || !cfg.profileId || !cfg.modelId) return;
+      const promptText = (value ?? "").trim();
+      if (!promptText || !cfg.profileId || !cfg.modelId) return;
+      if (currentMode === "generate" && !cfg.template) return;
 
-    if (currentMode === "generate" && !cfg.template) return;
-
-    const runId = crypto.randomUUID();
-    const currentMessages = messagesRef.current;
-    const currentRuns = runsRef.current;
-    const conversationMessages = buildConversationMessages(currentMessages, currentRuns, cfg.template);
-
-    setMessages((prev) => [
-      ...prev,
-      createTextMessage(`user-${runId}`, "user", promptText),
-    ]);
-
-    cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
-    const input = generateCardsInputSchema.parse({
-      modelId: cfg.modelId,
-      prompt: promptText,
-      temperature: cfg.temperature,
-      reasoningEffort: cfg.reasoningEffort,
-      deckId: cfg.deckId,
-      templateId: cfg.templateId,
-    });
-
-    if (currentMode === "chat") {
-      setMessages((prev) => [
-        ...prev,
-        createTextMessage(`assistant-${runId}`, "assistant", "", {
-          kind: "chat-text",
-          runId,
-        }),
-      ]);
-
-      const chatRequest: ChatStreamRequest = {
-        input,
-        messages: [...conversationMessages, { role: "user", content: promptText }],
-        template: cfg.template ?? undefined,
-        systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
-      };
-      startRun(runId, "chat", chatRequest);
-      await executeChatRun(runId, chatRequest);
-    } else {
-      const request: GenerateCardsRequest = {
-        input,
-        messages: conversationMessages,
-        systemPromptTemplate: cfg.generationPromptTemplate ?? undefined,
-      };
-      startRun(runId, "generate", request);
-      setMessages((prev) => [
-        ...prev,
-        createTextMessage(`assistant-${runId}`, "assistant", cfg._(msg`ai.chat.message.status.pending`), {
-          kind: "generated-cards",
-          runId,
-        }),
-      ]);
-      await executeGenerateRun(runId, request);
-    }
-  }, [startRun, executeChatRun, executeGenerateRun]);
-
-  const handleRetry = useCallback(async (runId: string) => {
-    const currentRuns = runsRef.current;
-    const run = currentRuns[runId];
-    if (!run?.request) return;
-
-    restartRun(runId);
-
-    if (run.mode === "chat") {
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === `assistant-${runId}`
-            ? { ...m, parts: [{ type: "text" as const, text: "" }] }
-            : m
-        )
+      const runId = crypto.randomUUID();
+      const conversationMessages = buildConversationMessages(
+        currentState.messages,
+        currentState.runs,
+        cfg.template,
       );
-      await executeChatRun(runId, run.request as ChatStreamRequest);
-    } else {
-      await executeGenerateRun(runId, run.request as GenerateCardsRequest);
-    }
-  }, [restartRun, executeChatRun, executeGenerateRun]);
+
+      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      const input = generateCardsInputSchema.parse({
+        modelId: cfg.modelId,
+        prompt: promptText,
+        temperature: cfg.temperature,
+        reasoningEffort: cfg.reasoningEffort,
+        deckId: cfg.deckId,
+        templateId: cfg.templateId,
+      });
+
+      dispatch({ type: "addUserMessage", runId, text: promptText });
+
+      if (currentMode === "chat") {
+        const chatRequest: ChatStreamRequest = {
+          input,
+          messages: [...conversationMessages, { role: "user", content: promptText }],
+          template: cfg.template ?? undefined,
+          systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
+        };
+        dispatch({ type: "startRun", runId, mode: "chat", request: chatRequest });
+        dispatch({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
+        await executeChatRun(runId, chatRequest);
+      } else {
+        const request: GenerateCardsRequest = {
+          input,
+          messages: conversationMessages,
+          systemPromptTemplate: cfg.generationPromptTemplate ?? undefined,
+        };
+        dispatch({ type: "startRun", runId, mode: "generate", request });
+        dispatch({
+          type: "addAssistantMessage",
+          runId,
+          kind: "generated-cards",
+          text: cfg._(msg`ai.chat.message.status.pending`),
+        });
+        await executeGenerateRun(runId, request);
+      }
+    },
+    [executeChatRun, executeGenerateRun],
+  );
+
+  const handleRetry = useCallback(
+    async (runId: string) => {
+      const currentRuns = stateRef.current.runs;
+      const run = currentRuns[runId];
+      if (!run?.request) return;
+
+      dispatch({ type: "restartRun", runId });
+
+      if (run.mode === "chat") {
+        dispatch({ type: "updateAssistantText", runId, text: "" });
+        await executeChatRun(runId, run.request as ChatStreamRequest);
+      } else {
+        await executeGenerateRun(runId, run.request as GenerateCardsRequest);
+      }
+    },
+    [executeChatRun, executeGenerateRun],
+  );
 
   const handleCancel = useCallback(() => {
-    const currentActiveRunId = activeRunIdRef.current;
-    if (currentActiveRunId) {
-      cancelRun(currentActiveRunId);
-    }
-    cancel();
+    const currentActiveRunId = stateRef.current.activeRunId;
+    if (currentActiveRunId) dispatch({ type: "cancelRun", runId: currentActiveRunId });
+    cancelGenerate();
     cancelChat();
-  }, [cancel, cancelChat, cancelRun]);
+  }, [cancelGenerate, cancelChat]);
 
   const handleReset = useCallback(() => {
-    setMode("chat");
-    setMessages([]);
-    resetRuns();
-    cancel();
+    dispatch({ type: "reset" });
+    cancelGenerate();
     cancelChat();
-  }, [resetRuns, cancel, cancelChat]);
+  }, [cancelGenerate, cancelChat]);
 
   const getGeneratedCardsProps = useCallback(
     (message: UIMessage): GeneratedCardsMessageProps | null => {
       const generatedCardsMetadata = getGeneratedCardsMetadata(message);
       if (!generatedCardsMetadata) return null;
 
-      const currentRuns = runsRef.current;
-      const currentActiveRunId = activeRunIdRef.current;
-      const currentMessages = messagesRef.current;
+      const currentState = stateRef.current;
       const cfg = configRef.current;
-
-      const run = currentRuns[generatedCardsMetadata.runId];
+      const run = currentState.runs[generatedCardsMetadata.runId];
       const runCards = run?.cards ?? [];
-      const isCurrentRun = generatedCardsMetadata.runId === currentActiveRunId;
+      const isCurrentRun = generatedCardsMetadata.runId === currentState.activeRunId;
 
-      const messageIndex = currentMessages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex >= currentMessages.length - 1;
+      const messageIndex = currentState.messages.findIndex((m) => m.id === message.id);
+      const canRetry = messageIndex >= currentState.messages.length - 1;
 
       return {
         cards: runCards,
@@ -297,9 +249,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   );
 
   const getChatMessageProps = useCallback(
-    (
-      message: UIMessage,
-    ):
+    (message: UIMessage):
       | { isStreaming: true }
       | { isSuccess: true; elapsedSeconds: number }
       | { isCanceled: true; elapsedSeconds: number }
@@ -309,14 +259,12 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
       const chatMetadata = getChatTextMetadata(message);
       if (!chatMetadata) return null;
 
-      const currentRuns = runsRef.current;
-      const currentMessages = messagesRef.current;
-      const run = currentRuns[chatMetadata.runId];
+      const currentState = stateRef.current;
+      const run = currentState.runs[chatMetadata.runId];
+
       if (!run) return null;
 
-      if (run.status === "streaming") {
-        return { isStreaming: true };
-      }
+      if (run.status === "streaming") return { isStreaming: true };
 
       if (run.status === "success" && run.elapsedSeconds !== null) {
         return { isSuccess: true, elapsedSeconds: run.elapsedSeconds };
@@ -328,8 +276,8 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
 
       if (run.status !== "failed") return null;
 
-      const messageIndex = currentMessages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex >= currentMessages.length - 1;
+      const messageIndex = currentState.messages.findIndex((m) => m.id === message.id);
+      const canRetry = messageIndex >= currentState.messages.length - 1;
 
       return {
         isFailed: true,
@@ -341,11 +289,14 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   );
 
   return {
-    messages,
+    messages: state.messages,
     isGenerating: isGenerating || isChatStreaming,
     generateError: generateError || chatError,
-    mode,
-    setMode,
+    mode: state.mode,
+    setMode: useCallback(
+      (mode: GenerationMode) => dispatch({ type: "setMode", mode }),
+      [],
+    ),
     hasContext,
     handleGenerate,
     handleCancel,
