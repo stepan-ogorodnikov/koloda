@@ -45,8 +45,10 @@ apps/
   native-tauri-react/ # Desktop app frontend (React)
   native-tauri/       # Desktop app backend (Rust / Tauri)
 libs/
+  ai/                 # Domain lib for AI features
+  ai-react/           # AI features react lib
   srs/                # Main domain lib
-  srs-pgsql/          # PostgreSQL dialect code (web)
+  srs-pgsql/          # PostgreSQL backend (web)
   srs-sqlite/         # SQLite schema (desktop)
   react/              # Main react lib
   react-base/         # Shared react code (to avoid circular dependencies)
