@@ -5,7 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
 
-export type GenerateCardsSettingsPromptEditorProps = {
+export type AIChatSettingsPromptEditorProps = {
   label: string;
   rows: number;
   templateValue: string | null;
@@ -14,14 +14,14 @@ export type GenerateCardsSettingsPromptEditorProps = {
   onChange: (value: string | null) => void;
 };
 
-export function GenerateCardsSettingsPromptEditor({
+export function AIChatSettingsPromptEditor({
   label,
   rows,
   templateValue,
   defaultTemplate,
   preview,
   onChange,
-}: GenerateCardsSettingsPromptEditorProps) {
+}: AIChatSettingsPromptEditorProps) {
   const { _ } = useLingui();
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const isCustom = templateValue !== null;
@@ -34,8 +34,8 @@ export function GenerateCardsSettingsPromptEditor({
           <Button
             variants={{ style: "ghost", size: "icon" }}
             aria-label={mode === "edit"
-              ? _(msg`generate-cards.settings.prompt.preview`)
-              : _(msg`generate-cards.settings.prompt.edit`)}
+              ? _(msg`ai-chat.settings.prompt.preview`)
+              : _(msg`ai-chat.settings.prompt.edit`)}
             onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
           >
             <HugeiconsIcon
@@ -47,7 +47,7 @@ export function GenerateCardsSettingsPromptEditor({
           </Button>
           <Button
             variants={{ style: "ghost", size: "icon" }}
-            aria-label={_(msg`generate-cards.settings.prompt.reset`)}
+            aria-label={_(msg`ai-chat.settings.prompt.reset`)}
             onPress={() => onChange(null)}
             isDisabled={!isCustom}
           >

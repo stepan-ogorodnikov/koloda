@@ -1,4 +1,4 @@
-import { cardsViewAtom, CardsViewToggle, GenerateCards, QueryState } from "@koloda/react";
+import { AIChatDialog, cardsViewAtom, CardsViewToggle, QueryState } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";
@@ -32,7 +32,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
-        <GenerateCards deckId={Number(deckId)} templateId={data.templateId} key="generate" />
+        <AIChatDialog deckId={Number(deckId)} templateId={data.templateId} key="ai-chat" />
         <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
       <QueryState query={query}>

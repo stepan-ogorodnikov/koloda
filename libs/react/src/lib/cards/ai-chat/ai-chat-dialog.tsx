@@ -14,22 +14,22 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
-import { GenerateCardsSettings } from "./generate-cards-settings";
-import { getTextMessageContent } from "./generate-cards-utility";
-import { GeneratedCardsMessage } from "./generated-cards-message";
-import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
+import { AIChatSettings } from "./ai-chat-settings";
+import { getTextMessageContent } from "./ai-chat-utility";
+import { AIChatCardsMessage } from "./ai-chat-cards-message";
+import { useAIChatDialog } from "./use-ai-chat-dialog";
 
 export const closeConfirmOverlay = [
   "absolute inset-0 z-20 flex flex-col items-center justify-center gap-4",
   "bg-level-1/80 backdrop-blur-xs",
 ].join(" ");
 
-export type GenerateCardsProps = {
+export type AIChatDialogProps = {
   deckId: Deck["id"];
   templateId: Template["id"];
 };
 
-export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
+export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
   const { disableScope, enableScope } = useHotkeysStatus();
@@ -63,11 +63,11 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
     hasContext,
     contextUsage,
     contextLength,
-    generationPromptTemplate,
+    cardsPromptTemplate,
     chatPromptTemplate,
-    handleGenerationPromptChange,
+    handleCardsPromptChange,
     handleChatPromptChange,
-  } = useGenerateCardsDialog(deckId, templateId);
+  } = useAIChatDialog(deckId, templateId);
 
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
@@ -91,7 +91,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
 
   const renderMessage = useCallback((message: UIMessage, content: ReactNode) => {
     const props = getGeneratedCardsProps(message);
-    if (props && props.template) return <GeneratedCardsMessage {...props} />;
+    if (props && props.template) return <AIChatCardsMessage {...props} />;
 
     const chatProps = getChatMessageProps(message);
 
@@ -156,13 +156,13 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
       <div className="relative">
         <Button
           variants={{ style: "dashed", size: "icon" }}
-          aria-label={_(msg`generate-cards.trigger`)}
+          aria-label={_(msg`ai-chat.trigger`)}
           isDisabled={!hasProfiles}
         >
           <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
         </Button>
         {!hasProfiles && (
-          <Tooltip content={_(msg`generate-cards.no-profiles`)} delay={0}>
+          <Tooltip content={_(msg`ai-chat.no-profiles`)} delay={0}>
             <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
           </Tooltip>
         )}
@@ -171,7 +171,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
         <Dialog.Modal variants={{ size: "main" }}>
           <Dialog.Body>
             <Dialog.Header variants={{ class: "gap-4 py-0" }}>
-              <Dialog.Title>{_(msg`generate-cards.title`)}</Dialog.Title>
+              <Dialog.Title>{_(msg`ai-chat.title`)}</Dialog.Title>
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>
@@ -201,14 +201,14 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                 </div>
                 {selectedTab === "settings" && (
                   <div className="grow overflow-auto">
-                    <GenerateCardsSettings
+                    <AIChatSettings
                       template={template}
                       provider={provider}
                       temperature={temperature}
                       onTemperatureChange={handleTemperatureChange}
-                      generationPromptTemplate={generationPromptTemplate}
+                      cardsPromptTemplate={cardsPromptTemplate}
                       chatPromptTemplate={chatPromptTemplate}
-                      onGenerationPromptChange={handleGenerationPromptChange}
+                      onCardsPromptChange={handleCardsPromptChange}
                       onChatPromptChange={handleChatPromptChange}
                     />
                   </div>
@@ -233,8 +233,8 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                   <Button
                     variants={{ style: "ghost", size: "icon" }}
                     aria-label={selectedTab === "chat"
-                      ? _(msg`generate-cards.settings.show-settings`)
-                      : _(msg`generate-cards.settings.show-chat`)}
+                      ? _(msg`ai-chat.settings.show-settings`)
+                      : _(msg`ai-chat.settings.show-chat`)}
                     onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
                   >
                     <HugeiconsIcon
@@ -253,7 +253,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                           variants={{ style: "ghost" }}
                           onClick={() => setIsClosingRequested(false)}
                         >
-                          {_(msg`generate-cards.close.cancel`)}
+                          {_(msg`ai-chat.close.cancel`)}
                         </Button>
                         <Button
                           variants={{ style: "primary" }}
@@ -262,7 +262,7 @@ export function GenerateCards({ deckId, templateId }: GenerateCardsProps) {
                             handleOpenChange(false);
                           }}
                         >
-                          {_(msg`generate-cards.close.confirm`)}
+                          {_(msg`ai-chat.close.confirm`)}
                         </Button>
                       </FocusScope>
                     </Fade>

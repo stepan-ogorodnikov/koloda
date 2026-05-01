@@ -16,7 +16,7 @@ import { AIChatSubmit } from "./ai-chat-submit";
 import { AIModelParameters } from "./ai-model-parameters";
 import { AIModelPicker } from "./ai-model-picker";
 import { AIProfilePicker } from "./ai-profile-picker";
-import type { GenerationMode } from "./types";
+import type { AIChatMode } from "./types";
 import { useAIProfiles } from "./use-ai-profiles";
 import { useAutoScroll } from "./use-auto-scroll";
 
@@ -40,8 +40,8 @@ export type AIChatProps = {
   autoSelectDefaultProfile?: boolean;
   emptyState?: ReactNode;
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
-  mode?: GenerationMode;
-  onModeChange?: (mode: GenerationMode) => void;
+  mode?: AIChatMode;
+  onModeChange?: (mode: AIChatMode) => void;
   actions?: ReactNode;
   showFooter?: boolean;
   modelParameters?: ModelParameter[];
@@ -214,13 +214,13 @@ export function AIChat({
             {onModeChange && (
               <Button
                 variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
-                aria-label={mode === "generate" ? _(msg`ai.chat.mode.generate`) : _(msg`ai.chat.mode.chat`)}
-                onPress={() => onModeChange(mode === "chat" ? "generate" : "chat")}
+                aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
+                onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
               >
                 <HugeiconsIcon
                   className="size-6 min-w-6"
                   strokeWidth={1.5}
-                  icon={mode === "generate" ? AiSheetsIcon : MessageMultiple01Icon}
+                  icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
                   aria-hidden="true"
                 />
               </Button>

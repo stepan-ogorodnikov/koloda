@@ -5,30 +5,30 @@ import { Label, NumberField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMemo } from "react";
-import { GenerateCardsSettingsPromptEditor } from "./generate-cards-settings-prompt-editor";
-import { GenerateCardsSettingsVariables } from "./generate-cards-settings-variables";
+import { AIChatSettingsPromptEditor } from "./ai-chat-settings-prompt-editor";
+import { AIChatSettingsVariables } from "./ai-chat-settings-variables";
 
-export type GenerateCardsSettingsProps = {
+export type AIChatSettingsProps = {
   template: Template | null | undefined;
   provider: AISecrets["provider"] | null;
   temperature: number;
   onTemperatureChange: (value: number) => void;
-  generationPromptTemplate: string | null;
+  cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
-  onGenerationPromptChange: (value: string | null) => void;
+  onCardsPromptChange: (value: string | null) => void;
   onChatPromptChange: (value: string | null) => void;
 };
 
-export function GenerateCardsSettings({
+export function AIChatSettings({
   template,
   provider,
   temperature,
   onTemperatureChange,
-  generationPromptTemplate,
+  cardsPromptTemplate,
   chatPromptTemplate,
-  onGenerationPromptChange,
+  onCardsPromptChange,
   onChatPromptChange,
-}: GenerateCardsSettingsProps) {
+}: AIChatSettingsProps) {
   const { _ } = useLingui();
 
   const chatPreview = useMemo(() => {
@@ -44,17 +44,17 @@ export function GenerateCardsSettings({
   const generationPreview = useMemo(() => {
     if (!template?.content?.fields) return "";
     return compilePromptTemplate(
-      generationPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+      cardsPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
       template.content.fields,
       provider,
       "generation",
     );
-  }, [generationPromptTemplate, provider, template]);
+  }, [cardsPromptTemplate, provider, template]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
-      <GenerateCardsSettingsPromptEditor
-        label={_(msg`generate-cards.settings.system-prompt.chat.label`)}
+      <AIChatSettingsPromptEditor
+        label={_(msg`ai-chat.settings.system-prompt.chat.label`)}
         rows={6}
         templateValue={chatPromptTemplate}
         defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
@@ -62,16 +62,16 @@ export function GenerateCardsSettings({
         onChange={onChatPromptChange}
       />
 
-      <GenerateCardsSettingsPromptEditor
-        label={_(msg`generate-cards.settings.system-prompt.generate.label`)}
+      <AIChatSettingsPromptEditor
+        label={_(msg`ai-chat.settings.system-prompt.cards.label`)}
         rows={10}
-        templateValue={generationPromptTemplate}
+        templateValue={cardsPromptTemplate}
         defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
         preview={generationPreview}
-        onChange={onGenerationPromptChange}
+        onChange={onCardsPromptChange}
       />
 
-      <GenerateCardsSettingsVariables />
+      <AIChatSettingsVariables />
 
       <NumberField
         minValue={0}
@@ -80,7 +80,7 @@ export function GenerateCardsSettings({
         value={temperature}
         onChange={(value) => onTemperatureChange(value)}
       >
-        <Label>{_(msg`generate-cards.settings.temperature.label`)}</Label>
+        <Label>{_(msg`ai-chat.settings.temperature.label`)}</Label>
         <NumberField.Group />
       </NumberField>
     </div>

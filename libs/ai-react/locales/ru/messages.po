@@ -47,12 +47,12 @@ msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:217
-msgid "ai.chat.mode.chat"
-msgstr "Режим чата"
+msgid "ai.chat.mode.cards"
+msgstr "Режим карточек"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:217
-msgid "ai.chat.mode.generate"
-msgstr "Режим создания карточек"
+msgid "ai.chat.mode.chat"
+msgstr "Режим чата"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:188
 msgid "ai.chat.profile-data-missing"

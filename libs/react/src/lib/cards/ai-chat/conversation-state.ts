@@ -1,12 +1,13 @@
 import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { UIMessage } from "ai";
-import { createTextMessage, type GenerationMode } from "./generate-cards-utility";
+import { createTextMessage } from "./ai-chat-utility";
+import type { AIChatMode } from "./ai-chat-utility";
 
 export type RunStatus = "streaming" | "success" | "failed" | "canceled";
 
 export type GenerationRun = {
   id: string;
-  mode: GenerationMode;
+  mode: AIChatMode;
   status: RunStatus;
   cards: GeneratedCard[];
   request?: unknown;
@@ -19,7 +20,7 @@ export type ConversationState = {
   messages: UIMessage[];
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
-  mode: GenerationMode;
+  mode: AIChatMode;
 };
 
 export type ConversationAction =
@@ -31,14 +32,14 @@ export type ConversationAction =
     text: string;
   }
   | { type: "updateAssistantText"; runId: string; text: string }
-  | { type: "startRun"; runId: string; mode: GenerationMode; request: unknown }
+  | { type: "startRun"; runId: string; mode: AIChatMode; request: unknown }
   | { type: "addCard"; runId: string; card: GeneratedCard }
   | { type: "completeRun"; runId: string }
   | { type: "failRun"; runId: string }
   | { type: "cancelRun"; runId: string }
   | { type: "restartRun"; runId: string }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
-  | { type: "setMode"; mode: GenerationMode }
+  | { type: "setMode"; mode: AIChatMode }
   | { type: "reset" };
 
 export const initialConversationState: ConversationState = {
@@ -50,7 +51,7 @@ export const initialConversationState: ConversationState = {
 
 function makeRun(
   runId: string,
-  mode: GenerationMode,
+  mode: AIChatMode,
   request?: unknown,
 ): GenerationRun {
   return {

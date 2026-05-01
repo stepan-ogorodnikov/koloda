@@ -1,13 +1,13 @@
 import { Checkbox, Fade } from "@koloda/ui";
 import type { Table } from "@tanstack/react-table";
 import { AnimatePresence } from "motion/react";
-import type { CardWithStatus } from "./use-generated-cards-table";
+import type { CardWithStatus } from "./use-ai-chat-cards-table";
 
-export type GeneratedCardsTableSelectHeaderProps = {
+export type AIChatCardsTableSelectHeaderProps = {
   table: Table<CardWithStatus>;
 };
 
-export function GeneratedCardsTableSelectHeader({ table }: GeneratedCardsTableSelectHeaderProps) {
+export function AIChatCardsTableSelectHeader({ table }: AIChatCardsTableSelectHeaderProps) {
   const allRows = table.getRowModel().rows;
   const selectableRows = allRows.filter((row) => row.original.status === "idle");
   const selectableCount = selectableRows.length;

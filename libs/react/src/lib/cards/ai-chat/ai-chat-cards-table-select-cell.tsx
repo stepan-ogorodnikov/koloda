@@ -5,9 +5,9 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Row } from "@tanstack/react-table";
 import { AnimatePresence } from "motion/react";
-import type { CardWithStatus } from "./use-generated-cards-table";
+import type { CardWithStatus } from "./use-ai-chat-cards-table";
 
-export function GeneratedCardsTableSelectCell({ row }: { row: Row<CardWithStatus> }) {
+export function AIChatCardsTableSelectCell({ row }: { row: Row<CardWithStatus> }) {
   const { _ } = useLingui();
   const status = row.original.status;
   const isSelected = row.getIsSelected();
@@ -32,7 +32,7 @@ export function GeneratedCardsTableSelectCell({ row }: { row: Row<CardWithStatus
         <Fade className={tableCellContent()} key="pending">
           <HugeiconsIcon
             className="size-4 min-w-4 fg-level-4 animate-spin"
-            aria-label={_(msg`generate-cards.table.columns.status.pending`)}
+            aria-label={_(msg`ai-chat.table.columns.status.pending`)}
             strokeWidth={1.75}
             icon={DashedLineCircleIcon}
           />
@@ -42,7 +42,7 @@ export function GeneratedCardsTableSelectCell({ row }: { row: Row<CardWithStatus
         <Fade className={tableCellContent()} key="success">
           <HugeiconsIcon
             className="size-5 min-w-5 fg-success"
-            aria-label={_(msg`generate-cards.table.columns.status.success`)}
+            aria-label={_(msg`ai-chat.table.columns.status.success`)}
             strokeWidth={1.75}
             icon={CheckmarkCircle02Icon}
           />
@@ -52,7 +52,7 @@ export function GeneratedCardsTableSelectCell({ row }: { row: Row<CardWithStatus
         <Fade className={tableCellContent()} key="error">
           <HugeiconsIcon
             className="size-5 min-w-5 fg-error"
-            aria-label={_(msg`generate-cards.table.columns.status.error`)}
+            aria-label={_(msg`ai-chat.table.columns.status.error`)}
             strokeWidth={1.75}
             icon={AlertCircleIcon}
           />

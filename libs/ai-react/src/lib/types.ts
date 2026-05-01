@@ -1,1 +1,1 @@
-export type GenerationMode = "chat" | "generate";
+export type AIChatMode = "chat" | "cards";

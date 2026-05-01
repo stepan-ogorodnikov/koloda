@@ -47,12 +47,12 @@ msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:217
-msgid "ai.chat.mode.chat"
-msgstr "Chat mode"
+msgid "ai.chat.mode.cards"
+msgstr "Cards mode"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:217
-msgid "ai.chat.mode.generate"
-msgstr "Generate cards mode"
+msgid "ai.chat.mode.chat"
+msgstr "Chat mode"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:188
 msgid "ai.chat.profile-data-missing"

@@ -6,15 +6,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
-import type { GenerationMode } from "./generate-cards-utility";
-import type { GeneratedCardsMessageProps } from "./generated-cards-message";
+import type { AIChatMode } from "./ai-chat-utility";
+import type { AIChatCardsMessageProps } from "./ai-chat-cards-message";
 import { useAIClient } from "./use-ai-client";
 import { useAIConfiguration } from "./use-ai-configuration";
 import { useConversation } from "./use-conversation";
 import type { ConversationConfig } from "./use-conversation";
 import { usePromptTemplates } from "./use-prompt-templates";
 
-export type UseGenerateCardsDialogReturn = {
+export type UseAIChatDialogReturn = {
   isOpen: boolean;
   profileId: string;
   modelId: string;
@@ -27,8 +27,8 @@ export type UseGenerateCardsDialogReturn = {
   hasProfiles: boolean;
   isGenerating: boolean;
   generateError: Error | null;
-  mode: GenerationMode;
-  setMode: (mode: GenerationMode) => void;
+  mode: AIChatMode;
+  setMode: (mode: AIChatMode) => void;
   handleOpenChange: (open: boolean) => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
@@ -37,7 +37,7 @@ export type UseGenerateCardsDialogReturn = {
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   handleReset: () => void;
-  getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
+  getGeneratedCardsProps: (message: UIMessage) => AIChatCardsMessageProps | null;
   getChatMessageProps: (
     message: UIMessage,
   ) =>
@@ -50,13 +50,13 @@ export type UseGenerateCardsDialogReturn = {
   contextUsage: StreamUsage | null;
   contextLength: number;
   handleRetry: (runId: string) => Promise<void>;
-  generationPromptTemplate: string | null;
+  cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
-  handleGenerationPromptChange: (value: string | null) => void;
+  handleCardsPromptChange: (value: string | null) => void;
   handleChatPromptChange: (value: string | null) => void;
 };
 
-export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template["id"]): UseGenerateCardsDialogReturn {
+export function useAIChatDialog(deckId: Deck["id"], templateId: Template["id"]): UseAIChatDialogReturn {
   const { _ } = useLingui();
   const { getTemplateQuery, touchAIProfileMutation, aiRuntime } = useAtomValue(queriesAtom);
 
@@ -80,9 +80,9 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
   } = useAIConfiguration();
 
   const {
-    generationPromptTemplate,
+    cardsPromptTemplate,
     chatPromptTemplate,
-    handleGenerationPromptChange,
+    handleCardsPromptChange,
     handleChatPromptChange,
   } = usePromptTemplates();
 
@@ -108,7 +108,7 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     chatStreamGenerator,
     template,
     touchProfileMutate: (args) => touchProfileMutation.mutate(args),
-    generationPromptTemplate,
+    cardsPromptTemplate,
     chatPromptTemplate,
     _,
   };
@@ -169,9 +169,9 @@ export function useGenerateCardsDialog(deckId: Deck["id"], templateId: Template[
     contextUsage,
     contextLength,
     handleRetry,
-    generationPromptTemplate,
+    cardsPromptTemplate,
     chatPromptTemplate,
-    handleGenerationPromptChange,
+    handleCardsPromptChange,
     handleChatPromptChange,
   };
 }

@@ -6,9 +6,9 @@ import {
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
-} from "./generate-cards-utility";
+} from "./ai-chat-utility";
 
-describe("generateCardsUtility", () => {
+describe("aiChatUtility", () => {
   it("reads generated-card metadata only from matching assistant messages", () => {
     const message = createTextMessage("assistant-1", "assistant", "ready", {
       kind: "generated-cards",

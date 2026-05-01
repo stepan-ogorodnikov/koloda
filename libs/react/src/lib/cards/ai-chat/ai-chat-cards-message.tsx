@@ -5,9 +5,9 @@ import type { Deck, Template } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { GeneratedCardsTable } from "./generated-cards-table";
+import { AIChatCardsTable } from "./ai-chat-cards-table";
 
-export type GeneratedCardsMessageProps = {
+export type AIChatCardsMessageProps = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
   deckId: Deck["id"];
@@ -21,7 +21,7 @@ export type GeneratedCardsMessageProps = {
   elapsedSeconds?: number;
 };
 
-export function GeneratedCardsMessage({
+export function AIChatCardsMessage({
   cards,
   template,
   deckId,
@@ -33,7 +33,7 @@ export function GeneratedCardsMessage({
   canRetry,
   onRetry,
   elapsedSeconds,
-}: GeneratedCardsMessageProps) {
+}: AIChatCardsMessageProps) {
   const { _ } = useLingui();
 
   if (!template) return null;
@@ -68,7 +68,7 @@ export function GeneratedCardsMessage({
       )}
       {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
         <div className="flex flex-col gap-2">
-          <GeneratedCardsTable
+          <AIChatCardsTable
             cards={cards}
             template={template}
             deckId={deckId}
@@ -86,7 +86,7 @@ export function GeneratedCardsMessage({
       )}
       {!isGenerating && !isCanceled && !isFailed && !cards.length && (
         <p className="fg-level-3">
-          {_(msg`generate-cards.generated-no-cards`)}
+          {_(msg`ai-chat.generated-no-cards`)}
         </p>
       )}
     </AIChatMessageLayout>

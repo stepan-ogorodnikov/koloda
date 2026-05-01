@@ -2,7 +2,7 @@ import type { GeneratedCard } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
-export type GenerationMode = "chat" | "generate";
+export type AIChatMode = "chat" | "cards";
 
 export type AssistantMessageMetadata =
   | { kind: "generated-cards"; runId: string }

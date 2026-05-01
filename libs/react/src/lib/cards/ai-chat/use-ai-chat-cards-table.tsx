@@ -7,21 +7,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type CellContext, type ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { useCallback, useMemo, useState } from "react";
-import { GeneratedCardsTableSelectCell } from "./generated-cards-table-select-cell";
-import { GeneratedCardsTableSelectHeader } from "./generated-cards-table-select-header";
+import { AIChatCardsTableSelectCell } from "./ai-chat-cards-table-select-cell";
+import { AIChatCardsTableSelectHeader } from "./ai-chat-cards-table-select-header";
 
 export type CardStatus = "idle" | "pending" | "success" | "error";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 
-type UseGeneratedCardsTableOptions = {
+type UseAIChatCardsTableOptions = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
   deckId: Deck["id"];
   templateId: Template["id"];
 };
 
-export function useGeneratedCardsTable(options: UseGeneratedCardsTableOptions) {
+export function useAIChatCardsTable(options: UseAIChatCardsTableOptions) {
   const { cards, template, deckId, templateId } = options;
   const queryClient = useQueryClient();
   const { addCardsMutation } = useAtomValue(queriesAtom);
@@ -35,8 +35,8 @@ export function useGeneratedCardsTable(options: UseGeneratedCardsTableOptions) {
 
     const selectionColumn: ColumnDef<CardWithStatus> = {
       id: "select",
-      header: ({ table }) => <GeneratedCardsTableSelectHeader table={table} />,
-      cell: ({ row }) => <GeneratedCardsTableSelectCell row={row} />,
+      header: ({ table }) => <AIChatCardsTableSelectHeader table={table} />,
+      cell: ({ row }) => <AIChatCardsTableSelectCell row={row} />,
       size: 2,
       minSize: 2,
       enableSorting: false,

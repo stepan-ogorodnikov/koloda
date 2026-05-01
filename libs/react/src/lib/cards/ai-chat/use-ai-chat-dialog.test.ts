@@ -1,4 +1,4 @@
-import type { GeneratedCard } from "@koloda/srs";
+import type { GeneratedCard } from "@koloda/ai";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type * as JotaiModule from "jotai";
 import { describe, expect, it, vi } from "vitest";
@@ -10,18 +10,18 @@ import {
   createQueryClientWrapper,
   createTemplate,
 } from "../../../test/test-helpers";
-import { serializeGeneratedCards } from "./generate-cards-utility";
-import { useGenerateCardsDialog } from "./use-generate-cards-dialog";
+import { serializeGeneratedCards } from "./ai-chat-utility";
+import { useAIChatDialog } from "./use-ai-chat-dialog";
 
 const {
   useAIProfilesMock,
   useAIModelsMock,
-  useGenerateCardsMock,
+  useCardGenerationMock,
   useAtomValueMock,
 } = vi.hoisted(() => ({
   useAIProfilesMock: vi.fn(),
   useAIModelsMock: vi.fn(),
-  useGenerateCardsMock: vi.fn(),
+  useCardGenerationMock: vi.fn(),
   useAtomValueMock: vi.fn(),
 }));
 
@@ -30,8 +30,8 @@ vi.mock("@koloda/react", () => ({
   useAIModels: useAIModelsMock,
 }));
 
-vi.mock("./use-generate-cards", () => ({
-  useGenerateCards: useGenerateCardsMock,
+vi.mock("./use-card-generation", () => ({
+  useCardGeneration: useCardGenerationMock,
 }));
 
 vi.mock("@lingui/react", () => ({
@@ -47,14 +47,14 @@ vi.mock("jotai", async () => {
   };
 });
 
-describe("useGenerateCardsDialog", () => {
+describe("useAIChatDialog", () => {
   it("resets dialog state and cancels the current conversation when closed", async () => {
     const {
       result,
       cancelMock,
       profile,
       template,
-    } = renderGenerateCardsDialog();
+    } = renderAIChatDialogDialog();
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
 
@@ -90,7 +90,7 @@ describe("useGenerateCardsDialog", () => {
       profile,
       template,
       setIsGenerating,
-    } = renderGenerateCardsDialog();
+    } = renderAIChatDialogDialog();
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
 
@@ -102,7 +102,7 @@ describe("useGenerateCardsDialog", () => {
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
     });
 
@@ -147,7 +147,7 @@ describe("useGenerateCardsDialog", () => {
       setIsGenerating,
       profile,
       template,
-    } = renderGenerateCardsDialog();
+    } = renderAIChatDialogDialog();
     const firstRunCards = [
       createGeneratedCard({
         content: {
@@ -166,7 +166,7 @@ describe("useGenerateCardsDialog", () => {
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
     });
 
@@ -179,7 +179,7 @@ describe("useGenerateCardsDialog", () => {
     expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.cards).toEqual(firstRunCards);
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
     });
 
@@ -200,7 +200,7 @@ describe("useGenerateCardsDialog", () => {
       profile,
       template,
       setIsGenerating,
-    } = renderGenerateCardsDialog();
+    } = renderAIChatDialogDialog();
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
 
@@ -211,7 +211,7 @@ describe("useGenerateCardsDialog", () => {
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
     });
 
@@ -227,7 +227,7 @@ describe("useGenerateCardsDialog", () => {
     expect(result.current.getGeneratedCardsProps(result.current.messages[1]!)?.isCanceled).toBe(true);
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
     });
 
@@ -251,7 +251,7 @@ describe("useGenerateCardsDialog", () => {
       profile,
       template,
       setIsGenerating,
-    } = renderGenerateCardsDialog();
+    } = renderAIChatDialogDialog();
 
     await waitFor(() => expect(result.current.template?.id).toBe(template.id));
 
@@ -263,9 +263,9 @@ describe("useGenerateCardsDialog", () => {
     await waitFor(() => expect(result.current.modelId).toBe(profile.lastUsedModel));
 
     act(() => {
-      result.current.setMode("generate");
+      result.current.setMode("cards");
       setIsGenerating(true);
-      result.current.handleGenerationPromptChange("Custom generation template with {{fields}} and {{rules}}");
+      result.current.handleCardsPromptChange("Custom cards template with {{fields}} and {{rules}}");
     });
 
     await act(async () => {
@@ -282,7 +282,7 @@ describe("useGenerateCardsDialog", () => {
 
 });
 
-function renderGenerateCardsDialog() {
+function renderAIChatDialogDialog() {
   const profile = createAIProfile();
   const template = createTemplate();
   const model = createAIModel({ id: profile.lastUsedModel!, name: "GPT-5 Mini" });
@@ -313,7 +313,7 @@ function renderGenerateCardsDialog() {
   useAIModelsMock.mockReturnValue({
     models: [model, createAIModel({ id: "openrouter/other", name: "Other" })],
   });
-  useGenerateCardsMock.mockImplementation(() => ({
+  useCardGenerationMock.mockImplementation(() => ({
     cards,
     isGenerating,
     error,
@@ -323,7 +323,7 @@ function renderGenerateCardsDialog() {
 
   const queryClient = createQueryClient();
   const wrapper = createQueryClientWrapper(queryClient);
-  const rendered = renderHook(() => useGenerateCardsDialog(1, template.id), { wrapper });
+  const rendered = renderHook(() => useAIChatDialog(1, template.id), { wrapper });
 
   return {
     ...rendered,

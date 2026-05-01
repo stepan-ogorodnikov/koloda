@@ -9,17 +9,17 @@ import type { I18nContext } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { useCallback, useMemo, useReducer, useRef } from "react";
 import { conversationReducer, initialConversationState } from "./conversation-state";
-import type { GenerationMode } from "./generate-cards-utility";
+import type { AIChatMode } from "./ai-chat-utility";
 import {
   getAssistantMetadata,
   getChatTextMetadata,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
-} from "./generate-cards-utility";
-import type { GeneratedCardsMessageProps } from "./generated-cards-message";
-import { useGenerateCards } from "./use-generate-cards";
-import type { GenerateCardsRequest, StreamGenerator } from "./use-generate-cards";
+} from "./ai-chat-utility";
+import type { AIChatCardsMessageProps } from "./ai-chat-cards-message";
+import { useCardGeneration } from "./use-card-generation";
+import type { CardGenerationStreamRequest, CardGenerationExecutor } from "./use-card-generation";
 
 export type ConversationConfig = {
   profileId: string;
@@ -28,11 +28,11 @@ export type ConversationConfig = {
   reasoningEffort: string;
   deckId: Deck["id"];
   templateId: Template["id"];
-  streamGenerator: StreamGenerator;
+  streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
   template: Template | null | undefined;
   touchProfileMutate: (args: { id: string; modelId: string }) => void;
-  generationPromptTemplate: string | null;
+  cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
   _: I18nContext["_"];
 };
@@ -41,15 +41,15 @@ export type UseConversationReturn = {
   messages: UIMessage[];
   isGenerating: boolean;
   generateError: Error | null;
-  mode: GenerationMode;
-  setMode: (mode: GenerationMode) => void;
+  mode: AIChatMode;
+  setMode: (mode: AIChatMode) => void;
   hasContext: boolean;
   contextUsage: StreamUsage | null;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   handleReset: () => void;
   handleRetry: (runId: string) => Promise<void>;
-  getGeneratedCardsProps: (message: UIMessage) => GeneratedCardsMessageProps | null;
+  getGeneratedCardsProps: (message: UIMessage) => AIChatCardsMessageProps | null;
   getChatMessageProps: (
     message: UIMessage,
   ) =>
@@ -72,7 +72,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
     error: generateError,
     generate,
     cancel: cancelGenerate,
-  } = useGenerateCards(config.streamGenerator);
+  } = useCardGeneration(config.streamGenerator);
 
   const {
     isStreaming: isChatStreaming,
@@ -140,7 +140,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   );
 
   const executeGenerateRun = useCallback(
-    async (runId: string, request: GenerateCardsRequest) => {
+    async (runId: string, request: CardGenerationStreamRequest) => {
       const result = await generate(request, (card) => {
         dispatch({ type: "addCard", runId, card });
       });
@@ -159,7 +159,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
 
       const promptText = (value ?? "").trim();
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (currentMode === "generate" && !cfg.template) return;
+      if (currentMode === "cards" && !cfg.template) return;
 
       const runId = crypto.randomUUID();
       const conversationMessages = buildConversationMessages(
@@ -191,12 +191,12 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
         dispatch({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
         await executeChatRun(runId, chatRequest);
       } else {
-        const request: GenerateCardsRequest = {
+        const request: CardGenerationStreamRequest = {
           input,
           messages: conversationMessages,
-          systemPromptTemplate: cfg.generationPromptTemplate ?? undefined,
+          systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
         };
-        dispatch({ type: "startRun", runId, mode: "generate", request });
+        dispatch({ type: "startRun", runId, mode: "cards", request });
         dispatch({
           type: "addAssistantMessage",
           runId,
@@ -221,7 +221,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
         dispatch({ type: "updateAssistantText", runId, text: "" });
         await executeChatRun(runId, run.request as ChatStreamRequest);
       } else {
-        await executeGenerateRun(runId, run.request as GenerateCardsRequest);
+        await executeGenerateRun(runId, run.request as CardGenerationStreamRequest);
       }
     },
     [executeChatRun, executeGenerateRun],
@@ -241,7 +241,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   }, [cancelGenerate, cancelChat]);
 
   const getGeneratedCardsProps = useCallback(
-    (message: UIMessage): GeneratedCardsMessageProps | null => {
+    (message: UIMessage): AIChatCardsMessageProps | null => {
       const generatedCardsMetadata = getGeneratedCardsMetadata(message);
       if (!generatedCardsMetadata) return null;
 
@@ -317,7 +317,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
     generateError: generateError || chatError,
     mode: state.mode,
     setMode: useCallback(
-      (mode: GenerationMode) => dispatch({ type: "setMode", mode }),
+      (mode: AIChatMode) => dispatch({ type: "setMode", mode }),
       [],
     ),
     hasContext,

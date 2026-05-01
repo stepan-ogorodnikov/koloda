@@ -1,17 +1,17 @@
 import { useCallback, useState } from "react";
 
 export type UsePromptTemplatesReturn = {
-  generationPromptTemplate: string | null;
+  cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
-  handleGenerationPromptChange: (value: string | null) => void;
+  handleCardsPromptChange: (value: string | null) => void;
   handleChatPromptChange: (value: string | null) => void;
 };
 
 export function usePromptTemplates(): UsePromptTemplatesReturn {
-  const [generationPromptTemplate, setGenerationPromptTemplate] = useState<string | null>(null);
+  const [cardsPromptTemplate, setGenerationPromptTemplate] = useState<string | null>(null);
   const [chatPromptTemplate, setChatPromptTemplate] = useState<string | null>(null);
 
-  const handleGenerationPromptChange = useCallback((value: string | null) => {
+  const handleCardsPromptChange = useCallback((value: string | null) => {
     setGenerationPromptTemplate(value);
   }, []);
 
@@ -20,9 +20,9 @@ export function usePromptTemplates(): UsePromptTemplatesReturn {
   }, []);
 
   return {
-    generationPromptTemplate,
+    cardsPromptTemplate,
     chatPromptTemplate,
-    handleGenerationPromptChange,
+    handleCardsPromptChange,
     handleChatPromptChange,
   };
 }

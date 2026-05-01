@@ -3,9 +3,9 @@ import type { Deck, Template } from "@koloda/srs";
 import { Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useGeneratedCardsTable } from "./use-generated-cards-table";
+import { useAIChatCardsTable } from "./use-ai-chat-cards-table";
 
-type GeneratedCardsTableProps = {
+type AIChatCardsTableProps = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
   deckId: Deck["id"];
@@ -14,17 +14,17 @@ type GeneratedCardsTableProps = {
   isGenerating: boolean;
 };
 
-export function GeneratedCardsTable({
+export function AIChatCardsTable({
   cards,
   template,
   deckId,
   templateId,
   canAdd,
   isGenerating,
-}: GeneratedCardsTableProps) {
+}: AIChatCardsTableProps) {
   const { _ } = useLingui();
 
-  const { table, isAdding, hasSelection, handleAddCards } = useGeneratedCardsTable({
+  const { table, isAdding, hasSelection, handleAddCards } = useAIChatCardsTable({
     cards,
     template,
     deckId,
@@ -46,7 +46,7 @@ export function GeneratedCardsTable({
         isDisabled={!canAdd || isGenerating || isAdding || !hasSelection}
         onPress={handleAddCards}
       >
-        {_(msg`generate-cards.add`)}
+        {_(msg`ai-chat.add`)}
       </Button>
     </div>
   );

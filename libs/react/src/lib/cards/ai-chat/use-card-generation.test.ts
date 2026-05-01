@@ -2,10 +2,10 @@ import type { StreamResult } from "@koloda/ai-react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createGeneratedCard } from "../../../test/test-helpers";
-import type { GenerateCardsRequest } from "./use-generate-cards";
-import { useGenerateCards } from "./use-generate-cards";
+import type { CardGenerationStreamRequest } from "./use-card-generation";
+import { useCardGeneration } from "./use-card-generation";
 
-function createRequest(overrides: Partial<GenerateCardsRequest> = {}): GenerateCardsRequest {
+function createRequest(overrides: Partial<CardGenerationStreamRequest> = {}): CardGenerationStreamRequest {
   return {
     input: {
       modelId: "openrouter/gpt-5-mini",
@@ -19,13 +19,13 @@ function createRequest(overrides: Partial<GenerateCardsRequest> = {}): GenerateC
   };
 }
 
-describe("useGenerateCards", () => {
+describe("useCardGeneration", () => {
   it("streams cards and reports a successful generation", async () => {
     const streamGenerator = vi.fn(async (_request, onCard) => {
       onCard(createGeneratedCard({ content: { "1": { text: "One" }, "2": { text: "Back one" } } }));
       onCard(createGeneratedCard({ content: { "1": { text: "Two" }, "2": { text: "Back two" } } }));
     });
-    const { result } = renderHook(() => useGenerateCards(streamGenerator));
+    const { result } = renderHook(() => useCardGeneration(streamGenerator));
 
     let isSuccess: StreamResult = "success";
     await act(async () => {
@@ -49,7 +49,7 @@ describe("useGenerateCards", () => {
       .mockImplementationOnce(async (_request, onCard) => {
         onCard(createGeneratedCard());
       });
-    const { result } = renderHook(() => useGenerateCards(streamGenerator));
+    const { result } = renderHook(() => useCardGeneration(streamGenerator));
 
     await act(async () => {
       await result.current.generate(createRequest());
@@ -77,7 +77,7 @@ describe("useGenerateCards", () => {
         }, { once: true });
       });
     });
-    const { result } = renderHook(() => useGenerateCards(streamGenerator));
+    const { result } = renderHook(() => useCardGeneration(streamGenerator));
 
     act(() => {
       generationPromise = result.current.generate(createRequest());
@@ -118,7 +118,7 @@ describe("useGenerateCards", () => {
 
         if (!signal.aborted) onCard(createGeneratedCard());
       });
-    const { result } = renderHook(() => useGenerateCards(streamGenerator));
+    const { result } = renderHook(() => useCardGeneration(streamGenerator));
 
     act(() => {
       firstPromise = result.current.generate(createRequest());

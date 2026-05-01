@@ -3,7 +3,7 @@ import { createAIGenerationClient, getProviderConfig } from "@koloda/ai";
 import type { AIRuntime } from "@koloda/react-base";
 import type { Template } from "@koloda/srs";
 import { useCallback } from "react";
-import type { StreamGenerator } from "./use-generate-cards";
+import type { CardGenerationExecutor } from "./use-card-generation";
 
 export type UseAIClientOptions = {
   selectedProfile: AIProfile | null;
@@ -12,7 +12,7 @@ export type UseAIClientOptions = {
 };
 
 export type UseAIClientReturn = {
-  streamGenerator: StreamGenerator;
+  streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
 };
 
@@ -21,7 +21,7 @@ export function useAIClient({
   aiRuntime,
   template,
 }: UseAIClientOptions): UseAIClientReturn {
-  const streamGenerator = useCallback<StreamGenerator>(
+  const streamGenerator = useCallback<CardGenerationExecutor>(
     async (request, onCard, abortSignal) => {
       if (!selectedProfile) throw new Error("No AI profile selected");
       if (!selectedProfile.secrets) throw new Error("No secrets loaded for AI profile");
