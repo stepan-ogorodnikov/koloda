@@ -1,0 +1,13 @@
+{
+  "name": "@koloda/ai",
+  "sourceRoot": "libs/ai/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/ai/vitest.config.mjs --configLoader runner"
+      }
+    }
+  }
+}

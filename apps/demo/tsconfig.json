@@ -12,10 +12,13 @@
       "path": "../../libs/react-base"
     },
     {
+      "path": "../../libs/srs"
+    },
+    {
       "path": "../../libs/srs-pgsql"
     },
     {
-      "path": "../../libs/srs"
+      "path": "../../libs/ai"
     },
     {
       "path": "./tsconfig.app.json"

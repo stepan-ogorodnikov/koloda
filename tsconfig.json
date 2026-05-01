@@ -28,6 +28,12 @@
       "path": "./libs/react-base"
     },
     {
+      "path": "./libs/ai"
+    },
+    {
+      "path": "./libs/ai-react"
+    },
+    {
       "path": "./apps/demo-e2e"
     }
   ]

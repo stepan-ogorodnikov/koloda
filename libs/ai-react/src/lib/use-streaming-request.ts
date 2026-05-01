@@ -1,5 +1,8 @@
-import { isAbortError } from "@koloda/srs";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
 
 export type StreamResult = "success" | "aborted" | "error";
 

@@ -1,4 +1,5 @@
-import type { Deck, GeneratedCard, Template } from "@koloda/srs";
+import type { GeneratedCard } from "@koloda/ai";
+import type { Deck, Template } from "@koloda/srs";
 import { Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

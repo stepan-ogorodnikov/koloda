@@ -1,6 +1,5 @@
-export * from "./lib/ai-provider-registry";
-export * from "./lib/ai-error";
 export * from "./lib/ai-cards-generation";
+export * from "./lib/ai-error";
 export * from "./lib/algorithms";
 export * from "./lib/algorithms-fsrs";
 export * from "./lib/cards";

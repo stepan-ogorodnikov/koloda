@@ -1,13 +1,13 @@
-import type { AIRuntime, AIRuntimeGenerateCardsRequest } from "@koloda/react-base";
 import {
   compilePromptTemplate,
   DEFAULT_CHAT_PROMPT_TEMPLATE,
   DEFAULT_GENERATION_PROMPT_TEMPLATE,
   getCardContentSchema,
-} from "@koloda/srs";
+} from "@koloda/ai";
+import type { ChatStreamRequest, GeneratedCard, Message } from "@koloda/ai";
+import type { AIRuntime, AIRuntimeGenerateCardsRequest } from "@koloda/react-base";
 import { AppError } from "@koloda/srs";
-import type { ChatStreamRequest, GeneratedCard, Template } from "@koloda/srs";
-import type { ModelMessage } from "ai";
+import type { Template } from "@koloda/srs";
 import { z } from "zod";
 import { invoke } from "../app/tauri";
 
@@ -31,23 +31,11 @@ function normalizeReasoningEffort(effort?: string) {
   return effort || undefined;
 }
 
-function getMessageText(content: ModelMessage["content"]) {
-  if (typeof content === "string") return content;
-
-  if (Array.isArray(content)) {
-    return content
-      .map((part) => {
-        if (typeof part === "string") return part;
-        if ("text" in part && typeof part.text === "string") return part.text;
-        return JSON.stringify(part);
-      })
-      .join("\n");
-  }
-
-  return String(content);
+function getMessageText(content: string) {
+  return content;
 }
 
-function buildCodexPrompt(systemPrompt: string, messages: ModelMessage[]) {
+function buildCodexPrompt(systemPrompt: string, messages: Message[]) {
   const conversation = messages
     .map((message) => [`[${message.role.toUpperCase()}]`, getMessageText(message.content)])
     .flat()

@@ -1,5 +1,6 @@
+import type { GeneratedCard } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { Deck, GeneratedCard, Template } from "@koloda/srs";
+import type { Deck, Template } from "@koloda/srs";
 import { transformGeneratedCards } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

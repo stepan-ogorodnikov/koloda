@@ -1,6 +1,7 @@
+import type { AddAIProfileData } from "@koloda/ai";
+import type { RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type { Queries } from "@koloda/react-base";
 import type {
-  AddAIProfileData,
   Algorithm,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -20,13 +21,10 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
-  RemoveAIProfileData,
   ResetCardProgressData,
   SetSettingsData,
   SettingsName,
   Template,
-  TouchAIProfileData,
-  UpdateAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,

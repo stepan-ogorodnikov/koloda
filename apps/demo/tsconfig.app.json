@@ -49,10 +49,13 @@
       "path": "../../libs/react-base/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/srs/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/srs-pgsql/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/srs/tsconfig.lib.json"
+      "path": "../../libs/ai/tsconfig.lib.json"
     }
   ]
 }

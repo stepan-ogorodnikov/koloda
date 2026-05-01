@@ -4,8 +4,8 @@ import type {
   RemoveAIProfileData,
   TouchAIProfileData,
   UpdateAIProfileData,
-} from "@koloda/srs";
-import { aiSettingsValidation, fetchModels } from "@koloda/srs";
+} from "@koloda/ai";
+import { aiSettingsValidation, fetchModels } from "@koloda/ai";
 import type { DB } from "@koloda/srs-pgsql";
 import { getSettings, setSettings } from "@koloda/srs-pgsql";
 import { produce } from "immer";

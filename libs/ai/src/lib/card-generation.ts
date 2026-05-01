@@ -1,0 +1,677 @@
+import { generateText, Output, streamText } from "ai";
+import { z } from "zod";
+import { AIError, throwForAIResponse, wrapAIError } from "./error";
+import type {
+  AiProvider,
+  AISecrets,
+  CardGenerationFields,
+  CardGenerationRequest,
+  ChatStreamRequest,
+  GeneratedCard,
+  StreamUsage,
+} from "./types";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE, DEFAULT_GENERATION_PROMPT_TEMPLATE, GENERATION_TEMPERATURE } from "./types";
+
+function buildFieldDescriptions(fields: CardGenerationFields): string {
+  return fields
+    .map((f) => `- "${f.id}": ${f.title} (${f.type ?? "text"}${f.isRequired ? ", required" : ", optional"})`)
+    .join("\n");
+}
+
+function buildCardGenerationRules(context: "structured" | "assistant"): string {
+  const noExtras = context === "assistant"
+    ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
+    : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
+
+  const rules = [
+    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
+    "- \"content\" keys must be ONLY the field keys listed above.",
+    noExtras,
+    "- Keep text concise, educational, and accurate.",
+    "- For required fields, never return empty text.",
+    "- Follow the requested card count exactly when specified.",
+  ];
+
+  if (context === "structured") {
+    rules.unshift("- Output must match the provided schema exactly.");
+  }
+
+  return rules.join("\n");
+}
+
+function buildMarkdownFormatInstructions(fields: CardGenerationFields): string {
+  return [
+    "When generating cards without structured output, format each card exactly as:",
+    "## Card <number>",
+    ...fields.map((field) => `**${field.title}**: <value>`),
+    "Only output cards in this exact format.",
+  ].join("\n");
+}
+
+export function buildSystemPrompt(fields: CardGenerationFields, providerPrompt = ""): string {
+  const corePrompt = [
+    "You are a flashcard generator that must produce strictly structured flashcard data.",
+    "The flashcards have the following fields:",
+    buildFieldDescriptions(fields),
+    "Rules:",
+    buildCardGenerationRules("structured"),
+  ].join("\n");
+
+  return providerPrompt ? `${corePrompt}\n\n${providerPrompt}` : corePrompt;
+}
+
+export function buildProviderFormatPrompt(fields: CardGenerationFields) {
+  return ["Provider-specific format instructions:", buildMarkdownFormatInstructions(fields)].join("\n");
+}
+
+export function buildSystemPromptForProvider(fields: CardGenerationFields, provider?: AiProvider | null) {
+  if (!provider || provider === "openrouter" || provider === "codex") return buildSystemPrompt(fields);
+  return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
+}
+
+export function buildAssistantSystemPrompt(fields: CardGenerationFields, provider?: AiProvider | null): string {
+  const formatInstructions = provider && provider !== "openrouter" && provider !== "codex"
+    ? "\n\n" + buildMarkdownFormatInstructions(fields)
+    : "";
+
+  return [
+    "You are a helpful AI study assistant embedded in a flashcard app.",
+    "You can answer questions, explain concepts, and have conversations.",
+    "When the user asks you to generate flashcards, you must produce structured card data.",
+    "",
+    "The flashcards have the following fields:",
+    buildFieldDescriptions(fields),
+    "",
+    "Rules for card generation:",
+    buildCardGenerationRules("assistant"),
+    formatInstructions,
+  ].filter(Boolean).join("\n");
+}
+
+function resolveProviderFormatText(
+  fields: CardGenerationFields,
+  provider: AiProvider | null | undefined,
+  mode: "generation" | "chat",
+): string {
+  if (!provider || provider === "openrouter" || provider === "codex") return "";
+  if (mode === "generation") {
+    return buildProviderFormatPrompt(fields);
+  }
+  return buildMarkdownFormatInstructions(fields);
+}
+
+export function compilePromptTemplate(
+  template: string,
+  fields: CardGenerationFields,
+  provider?: AiProvider | null,
+  mode: "generation" | "chat" = "generation",
+): string {
+  const fieldsText = buildFieldDescriptions(fields);
+  const rulesText = buildCardGenerationRules(mode === "generation" ? "structured" : "assistant");
+  const providerFormatText = resolveProviderFormatText(fields, provider, mode);
+
+  return template
+    .replace(/{{fields}}/g, fieldsText)
+    .replace(/{{rules}}/g, rulesText)
+    .replace(/{{provider}}/g, providerFormatText)
+    .trim();
+}
+
+export function getCardContentSchema(fields: CardGenerationFields) {
+  const fieldSchema = fields.reduce((acc, field) => {
+    const textSchema = field.isRequired ? z.string().min(1) : z.string();
+    return {
+      ...acc,
+      [field.id.toString()]: z.object({ text: textSchema }),
+    };
+  }, {} as Record<string, z.ZodObject<{ text: z.ZodString }>>);
+
+  return z.object({ content: z.object(fieldSchema) });
+}
+
+function normalizeLabel(value: string): string {
+  return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+function validateExtractedCards(cards: GeneratedCard[], fields: CardGenerationFields): GeneratedCard[] {
+  const schema = getCardContentSchema(fields);
+  const valid = cards.filter((card) => schema.safeParse(card).success);
+  if (cards.length > 0 && valid.length === 0) {
+    throw new AIError("ai.invalid-response", "Extracted cards failed schema validation");
+  }
+  return valid;
+}
+
+function resolveGenerationTemperature(value?: number) {
+  return typeof value === "number" ? value : GENERATION_TEMPERATURE;
+}
+
+export function parseGeneratedCardsText(text: string, fields: CardGenerationFields): GeneratedCard[] {
+  return validateExtractedCards([
+    ...extractCardsFromJsonArray(text, fields),
+    ...extractCardsFromMarkdownText(text, fields),
+  ], fields);
+}
+
+function extractCardsFromJsonArray(text: string, fields: CardGenerationFields): GeneratedCard[] {
+  const jsonFenceMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
+  const candidate = (jsonFenceMatch?.[1] ?? text).trim();
+  if (!candidate) return [];
+
+  try {
+    const parsed = JSON.parse(candidate);
+    if (!Array.isArray(parsed)) return [];
+
+    const cards = parsed
+      .map((item): GeneratedCard | null => {
+        if (!item || typeof item !== "object" || typeof item.content !== "object" || !item.content) return null;
+        const content: GeneratedCard["content"] = {};
+        let hasValue = false;
+
+        for (const field of fields) {
+          const key = field.id.toString();
+          const raw = (item.content as Record<string, unknown>)[key];
+          const textValue = raw && typeof raw === "object" && "text" in raw
+            ? String((raw as { text?: unknown }).text ?? "").trim()
+            : "";
+          if (textValue) hasValue = true;
+          content[key] = { text: textValue };
+        }
+
+        return hasValue ? { content } : null;
+      })
+      .filter((card): card is GeneratedCard => card !== null);
+
+    return cards;
+  } catch {
+    return [];
+  }
+}
+
+function extractCardsFromMarkdownText(text: string, fields: CardGenerationFields): GeneratedCard[] {
+  if (fields.length === 0) return [];
+
+  const cardBlocks = text.match(/(?:^|\n)#{1,6}\s*card\b[\s\S]*?(?=(?:\n#{1,6}\s*card\b)|$)/gi) ?? [];
+  const blocks = cardBlocks.length > 0 ? cardBlocks : [text];
+  const cards: GeneratedCard[] = [];
+
+  for (const block of blocks) {
+    const labelEntries = [...block.matchAll(/\*\*([^*]+)\*\*:[^\S\n]*([\s\S]*?)(?=(?:\n\*\*[^*]+\*\*:)|$)/g)];
+    if (labelEntries.length === 0) continue;
+
+    const valuesInOrder = labelEntries.map((entry) => entry[2].trim()).filter(Boolean);
+    const byLabel = new Map<string, string>();
+    for (const entry of labelEntries) {
+      const label = normalizeLabel(entry[1]);
+      const value = entry[2].trim();
+      byLabel.set(label, value);
+    }
+
+    let nextFallbackValue = 0;
+    const content: GeneratedCard["content"] = {};
+    let hasValue = false;
+
+    for (const field of fields) {
+      const key = field.id.toString();
+      const mappedValue = byLabel.get(normalizeLabel(field.title));
+      const fallbackValue = valuesInOrder[nextFallbackValue];
+      const value = mappedValue ?? fallbackValue ?? "";
+      if (!mappedValue && fallbackValue) nextFallbackValue += 1;
+
+      const textValue = value.trim();
+      if (textValue) hasValue = true;
+      content[key] = { text: textValue };
+    }
+
+    if (hasValue) cards.push({ content });
+  }
+
+  return cards;
+}
+
+async function runStructuredCardGeneration(
+  modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
+  request: CardGenerationRequest,
+): Promise<void> {
+  const { template, input, messages = [], onCard, abortSignal, systemPromptTemplate } = request;
+  const elementSchema = getCardContentSchema(template.content.fields);
+  const temperature = resolveGenerationTemperature(input.temperature);
+  let streamedError: unknown = null;
+
+  try {
+    const result = streamText({
+      model: modelFactory(input.modelId),
+      temperature,
+      output: Output.array({ element: elementSchema }),
+      system: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        template.content.fields,
+        "openrouter",
+        "generation",
+      ),
+      messages: getConversationMessages(messages, input.prompt),
+      abortSignal,
+      onError: ({ error }) => {
+        streamedError = error;
+      },
+    });
+
+    let cardsCount = 0;
+    for await (const card of result.elementStream) {
+      cardsCount += 1;
+      onCard(card as GeneratedCard);
+    }
+
+    if (cardsCount > 0) return;
+
+    const streamedText = await result.text;
+    const streamedTextCards = validateExtractedCards([
+      ...extractCardsFromJsonArray(streamedText, template.content.fields),
+      ...extractCardsFromMarkdownText(streamedText, template.content.fields),
+    ], template.content.fields);
+    if (streamedTextCards.length > 0) {
+      for (const card of streamedTextCards) onCard(card);
+      return;
+    }
+
+    const fallbackTextResult = await generateText({
+      model: modelFactory(input.modelId),
+      temperature,
+      system: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        template.content.fields,
+        "openrouter",
+        "generation",
+      ),
+      messages: getConversationMessages(messages, input.prompt),
+      abortSignal,
+    });
+    const fallbackCards = validateExtractedCards([
+      ...extractCardsFromJsonArray(fallbackTextResult.text, template.content.fields),
+      ...extractCardsFromMarkdownText(fallbackTextResult.text, template.content.fields),
+    ], template.content.fields);
+
+    for (const card of fallbackCards) {
+      onCard(card);
+    }
+  } catch (error) {
+    throw streamedError ?? error;
+  }
+}
+
+async function runTextCompletionCardGeneration(
+  completeText: (request: CardGenerationRequest) => Promise<string>,
+  request: CardGenerationRequest,
+): Promise<void> {
+  const text = await completeText(request);
+  const { template, onCard } = request;
+  const cards = parseGeneratedCardsText(text, template.content.fields);
+
+  for (const card of cards) {
+    onCard(card);
+  }
+}
+
+/*
+ * Provider-specific card generation
+ */
+
+export function generateCardsWithOpenRouter(
+  request: CardGenerationRequest,
+  secrets: Extract<AISecrets, { provider: "openrouter" }>,
+) {
+  return wrapAIError(async () => {
+    const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
+    const openrouter = createOpenRouter({ apiKey: secrets.apiKey });
+    return runStructuredCardGeneration((modelId) => openrouter(modelId), request);
+  });
+}
+
+export function generateCardsWithOllama(
+  request: CardGenerationRequest,
+  baseUrl: string,
+) {
+  return wrapAIError(() =>
+    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal, systemPromptTemplate }) => {
+      const temperature = resolveGenerationTemperature(input.temperature);
+      const response = throwForAIResponse(
+        await fetch(new URL("/api/chat", baseUrl), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: input.modelId,
+            messages: getTextCompletionMessages({
+              fields: template.content.fields,
+              prompt: input.prompt,
+              messages,
+              provider: "ollama",
+              systemPromptTemplate,
+            }),
+            options: { temperature },
+            stream: false,
+          }),
+          signal: abortSignal,
+        }),
+      );
+
+      const data = await response.json() as OllamaChatResponse;
+      const content = data.message?.content;
+      if (typeof content !== "string") throw new AIError("ai.invalid-response");
+
+      return content;
+    }, request)
+  );
+}
+
+export function generateCardsWithLMStudio(
+  request: CardGenerationRequest,
+  secrets: Extract<AISecrets, { provider: "lmstudio" }>,
+) {
+  return wrapAIError(() =>
+    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal, systemPromptTemplate }) => {
+      const temperature = resolveGenerationTemperature(input.temperature);
+      const response = throwForAIResponse(
+        await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
+          },
+          body: JSON.stringify({
+            model: input.modelId,
+            temperature,
+            messages: getTextCompletionMessages({
+              fields: template.content.fields,
+              prompt: input.prompt,
+              messages,
+              provider: "lmstudio",
+              systemPromptTemplate,
+            }),
+          }),
+          signal: abortSignal,
+        }),
+      );
+
+      const data = await response.json() as OpenAICompatibleChatCompletionsResponse;
+      const content = data.choices?.[0]?.message?.content;
+      if (content == null) throw new AIError("ai.invalid-response");
+      return content;
+    }, request)
+  );
+}
+
+/*
+ * Chat streaming
+ */
+
+export async function streamChatWithOpenRouter(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  secrets: Extract<AISecrets, { provider: "openrouter" }>,
+): Promise<StreamUsage | undefined> {
+  return wrapAIError(async () => {
+    const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
+    const openrouter = createOpenRouter({ apiKey: secrets.apiKey });
+    let streamedError: unknown = null;
+    const result = streamText({
+      model: openrouter(request.input.modelId),
+      temperature: resolveGenerationTemperature(request.input.temperature),
+      system: compilePromptTemplate(
+        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+        request.template?.content.fields ?? [],
+        "openrouter",
+        "chat",
+      ),
+      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      abortSignal,
+      onError: ({ error }) => {
+        streamedError = error;
+      },
+    });
+
+    try {
+      for await (const chunk of result.textStream) {
+        onChunk(chunk);
+      }
+    } catch (error) {
+      throw streamedError ?? error;
+    }
+
+    if (streamedError) throw streamedError;
+
+    const usage = await result.usage;
+    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
+
+    return {
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+    };
+  });
+}
+
+export async function streamChatWithOllama(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  baseUrl: string,
+): Promise<StreamUsage | undefined> {
+  return wrapAIError(async () => {
+    const response = throwForAIResponse(
+      await fetch(new URL("/api/chat", baseUrl), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: request.input.modelId,
+          system: compilePromptTemplate(
+            request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+            request.template?.content.fields ?? [],
+            "ollama",
+            "chat",
+          ),
+          messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+          options: { temperature: resolveGenerationTemperature(request.input.temperature) },
+          stream: true,
+        }),
+        signal: abortSignal,
+      }),
+    );
+
+    return await readOllamaChatStream(response, onChunk);
+  });
+}
+
+export async function streamChatWithLMStudio(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  secrets: Extract<AISecrets, { provider: "lmstudio" }>,
+): Promise<StreamUsage | undefined> {
+  return wrapAIError(async () => {
+    const systemMessage = compilePromptTemplate(
+      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+      request.template?.content.fields ?? [],
+      "lmstudio",
+      "chat",
+    );
+    const messages = systemMessage
+      ? [
+        { role: "system", content: systemMessage },
+        ...request.messages.map((m) => ({ role: m.role, content: m.content })),
+      ]
+      : request.messages.map((m) => ({ role: m.role, content: m.content }));
+
+    const response = throwForAIResponse(
+      await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: request.input.modelId,
+          temperature: resolveGenerationTemperature(request.input.temperature),
+          messages,
+          stream: true,
+          stream_options: { include_usage: true },
+        }),
+        signal: abortSignal,
+      }),
+    );
+
+    return await readOpenAICompatibleChatStream(response, onChunk);
+  });
+}
+
+/*
+ * Internal helpers
+ */
+
+type OllamaChatResponse = {
+  message?: {
+    content?: string | null;
+  };
+};
+
+type OpenAICompatibleChatCompletionsResponse = {
+  choices?: Array<{
+    message?: { content?: string | null };
+  }>;
+};
+
+function getConversationMessages(messages: { role: string; content: string }[], prompt: string) {
+  return [...messages, { role: "user", content: prompt }] as { role: "user" | "assistant"; content: string }[];
+}
+
+type GetTextCompletionMessagesParams = {
+  fields: CardGenerationFields;
+  prompt: string;
+  messages?: { role: string; content: string }[];
+  provider: AiProvider;
+  systemPromptTemplate?: string;
+};
+
+function getTextCompletionMessages(
+  { fields, prompt, messages = [], provider, systemPromptTemplate }: GetTextCompletionMessagesParams,
+) {
+  return [
+    {
+      role: "system" as const,
+      content: compilePromptTemplate(
+        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+        fields,
+        provider,
+        "generation",
+      ),
+    },
+    ...getConversationMessages(messages, prompt),
+  ];
+}
+
+async function readOllamaChatStream(
+  response: Response,
+  onChunk: (chunk: string) => void,
+): Promise<StreamUsage | undefined> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new AIError("ai.invalid-response");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let usage: StreamUsage | undefined;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line) as {
+            message?: { content?: string };
+            done?: boolean;
+            prompt_eval_count?: number;
+            eval_count?: number;
+          };
+          const content = data.message?.content;
+          if (typeof content === "string") onChunk(content);
+
+          if (data.done) {
+            const promptTokens = data.prompt_eval_count;
+            const completionTokens = data.eval_count;
+            if (promptTokens != null || completionTokens != null) {
+              usage = {
+                promptTokens: promptTokens ?? 0,
+                completionTokens: completionTokens ?? 0,
+                totalTokens: (promptTokens ?? 0) + (completionTokens ?? 0),
+              };
+            }
+          }
+        } catch {
+          // Ignore parse errors for malformed lines
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return usage;
+}
+
+async function readOpenAICompatibleChatStream(
+  response: Response,
+  onChunk: (chunk: string) => void,
+): Promise<StreamUsage | undefined> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new AIError("ai.invalid-response");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let usage: StreamUsage | undefined;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6);
+        if (data === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(data) as {
+            choices?: Array<{ delta?: { content?: string } }>;
+            usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+          };
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (typeof content === "string") onChunk(content);
+
+          if (parsed.usage) {
+            const u = parsed.usage;
+            usage = {
+              promptTokens: u.prompt_tokens ?? 0,
+              completionTokens: u.completion_tokens ?? 0,
+              totalTokens: u.total_tokens ?? 0,
+            };
+          }
+        } catch {
+          // Ignore parse errors for malformed lines
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return usage;
+}

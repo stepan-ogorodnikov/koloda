@@ -1,9 +1,8 @@
 import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { GenerationMode } from "@koloda/react";
+import type { ModelParameter } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/react-base";
 import { useAppHotkey } from "@koloda/react-base";
-import type { ModelParameter } from "@koloda/srs";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -17,6 +16,7 @@ import { AIChatSubmit } from "./ai-chat-submit";
 import { AIModelParameters } from "./ai-model-parameters";
 import { AIModelPicker } from "./ai-model-picker";
 import { AIProfilePicker } from "./ai-profile-picker";
+import type { GenerationMode } from "./types";
 import { useAIProfiles } from "./use-ai-profiles";
 import { useAutoScroll } from "./use-auto-scroll";
 

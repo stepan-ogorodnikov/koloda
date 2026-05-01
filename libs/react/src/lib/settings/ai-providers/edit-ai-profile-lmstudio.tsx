@@ -1,5 +1,6 @@
+import { aiProfileValidation, lmstudioSecretsValidation } from "@koloda/ai";
 import type { EditAIProfileFormProps, ZodIssue } from "@koloda/srs";
-import { aiProfileValidation, lmstudioSecretsValidation, toFormErrors } from "@koloda/srs";
+import { toFormErrors } from "@koloda/srs";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

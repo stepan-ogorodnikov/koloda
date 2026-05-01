@@ -1,5 +1,5 @@
-import { TextField } from "@koloda/ui";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { type KeyboardEvent, useRef } from "react";
@@ -16,7 +16,6 @@ export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInp
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    // Submit on 'Enter'
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
       onSubmit();

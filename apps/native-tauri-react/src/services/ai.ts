@@ -1,5 +1,5 @@
-import type { AIModel, AIProfile } from "@koloda/srs";
-import { fetchModels } from "@koloda/srs";
+import type { AIModel, AIProfile } from "@koloda/ai";
+import { fetchModels } from "@koloda/ai";
 import { invoke } from "../app/tauri";
 
 export async function getAIProfileModels(profileId: string) {

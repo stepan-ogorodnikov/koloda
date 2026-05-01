@@ -1,19 +1,21 @@
 import { Edit03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { AIProfile, AiProvider, AISecrets } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { AIProfile, AISecrets } from "@koloda/srs";
+import type { EditAIProfileFormProps } from "@koloda/srs";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import type { ComponentType } from "react";
 import { useState } from "react";
+import { EditAIProfileCodex } from "./ai-providers/edit-ai-profile-codex";
 import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
 import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
 import { EditAIProfileOpenRouter } from "./ai-providers/edit-ai-profile-openrouter";
-import { EditAIProfileCodex } from "./ai-providers/edit-ai-profile-codex";
 
-const PROVIDER_FORMS = {
+const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> = {
   openrouter: EditAIProfileOpenRouter,
   ollama: EditAIProfileOllama,
   lmstudio: EditAIProfileLMStudio,

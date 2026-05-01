@@ -1,5 +1,5 @@
-import type { AIProfile } from "@koloda/srs";
-import { AI_PROVIDER_LABELS } from "@koloda/srs";
+import type { AIProfile } from "@koloda/ai";
+import { AI_PROVIDER_LABELS } from "@koloda/ai";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { SettingsAIAddProfile } from "./settings-ai-add-profile";

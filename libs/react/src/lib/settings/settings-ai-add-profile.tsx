@@ -1,9 +1,10 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { AiProvider, AISecrets } from "@koloda/ai";
+import { AI_PROVIDER_LABELS } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/react";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { AddAIProfileFormProps, AiProvider, AISecrets } from "@koloda/srs";
-import { AI_PROVIDER_LABELS } from "@koloda/srs";
+import type { AddAIProfileFormProps } from "@koloda/srs";
 import { Button, Dialog, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -11,10 +12,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
+import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
 import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
 import { AddAIProfileOpenRouter } from "./ai-providers/add-ai-profile-openrouter";
-import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 
 const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
   openrouter: AddAIProfileOpenRouter,

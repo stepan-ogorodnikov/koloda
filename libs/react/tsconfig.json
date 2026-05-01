@@ -3,13 +3,19 @@
   "include": [],
   "references": [
     {
-      "path": "../react-base"
+      "path": "../ai"
+    },
+    {
+      "path": "../ai-react"
+    },
+    {
+      "path": "../ui"
     },
     {
       "path": "../srs"
     },
     {
-      "path": "../ui"
+      "path": "../react-base"
     },
     {
       "path": "./tsconfig.lib.json"

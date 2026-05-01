@@ -99,35 +99,6 @@ msgstr "Новый шаблон"
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
-#: ../../libs/react/src/lib/ai/ai-chat-submit.tsx:20
-msgid "ai-chat.cancel.label"
-msgstr "Отменить"
-
-#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:38
-#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:48
-msgid "ai.chat.context-usage.tokens"
-msgstr "токенов"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:12
-msgid "ai.chat.elapsed-time.periods.hours"
-msgstr "ч"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:11
-msgid "ai.chat.elapsed-time.periods.minutes"
-msgstr "м"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:10
-msgid "ai.chat.elapsed-time.periods.seconds"
-msgstr "с"
-
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:38
-msgid "ai.chat.input.label"
-msgstr "Поле ввода сообщения"
-
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:46
-msgid "ai.chat.input.placeholder"
-msgstr "Введите сообщение"
-
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:143
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
 msgid "ai.chat.message.retry"
@@ -141,7 +112,7 @@ msgstr "Прервано через"
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:137
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:58
 msgid "ai.chat.message.status.failed"
-msgstr "Не удалось сгенерировать карточки"
+msgstr "Не удалось выполнить запрос"
 
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:114
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:82
@@ -154,70 +125,9 @@ msgstr "Завершено за"
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:137
-msgid "ai.chat.messages.label"
-msgstr "Поток сообщений"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
-msgid "ai.chat.mode.chat"
-msgstr "Режим чата"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
-msgid "ai.chat.mode.generate"
-msgstr "Режим создания карточек"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:188
-msgid "ai.chat.profile-data-missing"
-msgstr "У выбранного профиля отсутствуют необходимые данные"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:191
-msgid "ai.chat.profile-data-missing.hint"
-msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:238
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:222
 msgid "ai.chat.reset.label"
 msgstr "Очистить чат"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:170
-msgid "ai.chat.scroll-to-latest.label"
-msgstr "К последнему сообщению"
-
-#: ../../libs/react/src/lib/ai/ai-model-parameters.tsx:21
-msgid "ai.model-parameters.reasoning-effort.label"
-msgstr "Интеллект"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:41
-msgid "ai.model-picker.error.label"
-msgstr "Ошибка"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:45
-msgid "ai.model-picker.error.retry"
-msgstr "Обновить"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
-msgid "ai.model-picker.label"
-msgstr "Выбор языковой модели"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:29
-msgid "ai.model-picker.loading.label"
-msgstr "Загрузка"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
-msgid "ai.model-picker.placeholder"
-msgstr "Выберите модель"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:60
-msgid "ai.model-picker.search.label"
-msgstr "Поиск по моделям"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:61
-msgid "ai.model-picker.search.placeholder"
-msgstr "Поиск по моделям"
-
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:25
-msgid "ai.profile-picker.label"
-msgstr "Выбор профиля ИИ"
 
 #: ../../libs/react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -337,11 +247,11 @@ msgstr "Изучение"
 
 #: ../../libs/react/src/lib/cards/card-state.tsx:8
 msgid "card.state.relearn"
-msgstr "Переизучение"
+msgstr "Переучивание"
 
 #: ../../libs/react/src/lib/cards/card-state.tsx:7
 msgid "card.state.review"
-msgstr "Повторение"
+msgstr "Повтор"
 
 #: ../../libs/react/src/lib/cards/card-state.tsx:5
 msgid "card.state.untouched"
@@ -865,7 +775,6 @@ msgstr "Редактировать ИИ профиль"
 msgid "settings.ai.edit.trigger"
 msgstr "Редактировать профиль"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:13
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:83
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:79
@@ -873,7 +782,6 @@ msgstr "Редактировать профиль"
 msgid "settings.ai.profiles.api-key.label"
 msgstr "API key"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:14
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:69
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:70
@@ -912,7 +820,6 @@ msgstr "Профили ИИ"
 msgid "settings.ai.profiles.title.label"
 msgstr "Название"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:32
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:49
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:55
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:50

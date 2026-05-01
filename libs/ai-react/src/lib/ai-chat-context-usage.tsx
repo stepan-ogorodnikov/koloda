@@ -1,4 +1,4 @@
-import type { StreamUsage } from "@koloda/srs";
+import type { StreamUsage } from "@koloda/ai";
 import { Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

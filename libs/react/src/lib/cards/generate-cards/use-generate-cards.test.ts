@@ -1,8 +1,8 @@
+import type { StreamResult } from "@koloda/ai-react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createGeneratedCard } from "../../../test/test-helpers";
 import type { GenerateCardsRequest } from "./use-generate-cards";
-import type { StreamResult } from "./use-streaming-request";
 import { useGenerateCards } from "./use-generate-cards";
 
 function createRequest(overrides: Partial<GenerateCardsRequest> = {}): GenerateCardsRequest {

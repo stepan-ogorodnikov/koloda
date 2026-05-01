@@ -1,6 +1,6 @@
-import type { ChatStreamGenerator, StreamUsage } from "@koloda/srs";
+import type { ChatStreamGenerator, StreamUsage } from "@koloda/ai";
 import { useCallback } from "react";
-import { useStreamingRequest, type StreamResult } from "./use-streaming-request";
+import { type StreamResult, useStreamingRequest } from "./use-streaming-request";
 
 export type UseChatStreamReturn = {
   text: string;
@@ -15,12 +15,16 @@ export type UseChatStreamReturn = {
 };
 
 export function useChatStream(streamGenerator: ChatStreamGenerator): UseChatStreamReturn {
-  const { data: text, result: usage, isRunning: isStreaming, error, start, cancel } =
-    useStreamingRequest<string, string, Parameters<ChatStreamGenerator>[0], StreamUsage | undefined>({
-      initialData: "",
-      accumulate: (prev, chunk) => prev + chunk,
-      executor: streamGenerator,
-    });
+  const { data: text, result: usage, isRunning: isStreaming, error, start, cancel } = useStreamingRequest<
+    string,
+    string,
+    Parameters<ChatStreamGenerator>[0],
+    StreamUsage | undefined
+  >({
+    initialData: "",
+    accumulate: (prev, chunk) => prev + chunk,
+    executor: streamGenerator,
+  });
 
   const stream = useCallback(
     async (request: Parameters<ChatStreamGenerator>[0], onChunk: (chunk: string) => void) => {

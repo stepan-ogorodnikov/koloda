@@ -18,6 +18,14 @@ const config: LinguiConfig = {
       path: "../../libs/react/locales/{locale}/messages",
       include: ["../../libs/react/src"],
     },
+    {
+      path: "../../libs/ai/locales/{locale}/messages",
+      include: ["../../libs/ai/src"],
+    },
+    {
+      path: "../../libs/ai-react/locales/{locale}/messages",
+      include: ["../../libs/ai-react/src"],
+    },
   ],
   compileNamespace: "ts",
 };

@@ -1,12 +1,12 @@
 import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/react";
+import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
 
-import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/react";
+import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/ai-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";

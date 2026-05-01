@@ -1,8 +1,12 @@
-import { generateCardsInputSchema } from "@koloda/srs";
-import type { ChatStreamGenerator, ChatStreamRequest, Deck, GeneratedCard, StreamUsage, Template } from "@koloda/srs";
+import { generateCardsInputSchema } from "@koloda/ai";
+import type { Message } from "@koloda/ai";
+import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import { useChatStream } from "@koloda/ai-react";
+import type { StreamResult } from "@koloda/ai-react";
+import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
-import type { ModelMessage, UIMessage } from "ai";
+import type { UIMessage } from "ai";
 import { useCallback, useMemo, useReducer, useRef } from "react";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { GenerationMode } from "./generate-cards-utility";
@@ -14,10 +18,8 @@ import {
   serializeGeneratedCards,
 } from "./generate-cards-utility";
 import type { GeneratedCardsMessageProps } from "./generated-cards-message";
-import { useChatStream } from "./use-chat-stream";
 import { useGenerateCards } from "./use-generate-cards";
 import type { GenerateCardsRequest, StreamGenerator } from "./use-generate-cards";
-import type { StreamResult } from "./use-streaming-request";
 
 export type ConversationConfig = {
   profileId: string;
@@ -334,7 +336,7 @@ function buildConversationMessages(
   runs: Record<string, { status: string; cards: GeneratedCard[] }>,
   template: Template | null | undefined,
 ) {
-  const conversation: ModelMessage[] = [];
+  const conversation: Message[] = [];
 
   for (const message of messages) {
     if (message.role === "user") {

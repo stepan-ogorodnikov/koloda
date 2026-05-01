@@ -105,6 +105,14 @@
       "name": "@koloda/native-tauri-react",
       "version": "0.0.1",
     },
+    "libs/ai": {
+      "name": "@koloda/ai",
+      "version": "0.0.1",
+    },
+    "libs/ai-react": {
+      "name": "@koloda/ai-react",
+      "version": "0.0.1",
+    },
     "libs/react": {
       "name": "@koloda/react",
       "version": "0.0.1",
@@ -522,6 +530,10 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.25", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ=="],
+
+    "@koloda/ai": ["@koloda/ai@workspace:libs/ai"],
+
+    "@koloda/ai-react": ["@koloda/ai-react@workspace:libs/ai-react"],
 
     "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
 

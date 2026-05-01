@@ -1,6 +1,7 @@
-import type { AIProfile, ChatStreamGenerator, ChatStreamRequest, Template } from "@koloda/srs";
-import { createAIGenerationClient, getProviderConfig } from "@koloda/srs";
+import type { AIProfile, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
+import { createAIGenerationClient, getProviderConfig } from "@koloda/ai";
 import type { AIRuntime } from "@koloda/react-base";
+import type { Template } from "@koloda/srs";
 import { useCallback } from "react";
 import type { StreamGenerator } from "./use-generate-cards";
 

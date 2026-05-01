@@ -1,5 +1,7 @@
+import { isAIError } from "@koloda/ai";
 import type { I18nContext } from "@lingui/react";
-import { AppError, ERROR_MESSAGES, isAbortError, isAppError } from "./error";
+import { isAbortError } from "./error";
+import { AppError, ERROR_MESSAGES, isAppError } from "./error";
 import type { ErrorCode } from "./error";
 import { getObjectProperty } from "./utility";
 
@@ -30,6 +32,27 @@ export function getAIHttpErrorMessageDescriptor(code: string) {
   return typeof status === "number" && !Number.isNaN(status)
     ? ERROR_MESSAGES["ai.http"]({ status })
     : ERROR_MESSAGES.unknown;
+}
+
+export function toAIAppError(error: unknown): Error {
+  if (error instanceof AppError) return error;
+  if (isAIError(error)) {
+    return new AppError(error.code as AppError["code"], error.message);
+  }
+  if (isAbortError(error)) throw error;
+
+  const status = getHttpStatus(error);
+  if (status !== null) {
+    return new AppError(getAIHttpErrorCode(status), getErrorDetails(error));
+  }
+
+  if (isInvalidResponseError(error)) return new AppError("ai.invalid-response", getErrorDetails(error));
+  if (isNetworkError(error)) return new AppError("ai.network", getErrorDetails(error));
+  return new AppError("unknown", getErrorDetails(error));
+}
+
+function getAIHttpErrorCode(status: number): AppError["code"] {
+  return `ai.http.${status}` as AppError["code"];
 }
 
 function getHttpStatus(error: unknown, visited = new Set<object>()): number | null {
@@ -79,36 +102,4 @@ function isNetworkError(error: unknown) {
 
 function isInvalidResponseError(error: unknown) {
   return error instanceof SyntaxError;
-}
-
-export function getAIHttpErrorCode(status: number): AppError["code"] {
-  return `ai.http.${status}` as AppError["code"];
-}
-
-export function throwForAIResponse(response: Response): Response {
-  if (response.ok) return response;
-
-  const code = getAIHttpErrorCode(response.status);
-  throw new AppError(code, `${response.status} ${response.statusText}`.trim());
-}
-
-export function toAIAppError(error: unknown): Error {
-  if (error instanceof AppError) return error;
-  if (isAbortError(error)) throw error;
-
-  const status = getHttpStatus(error);
-  if (status !== null) {
-    const code = getAIHttpErrorCode(status);
-    return new AppError(code, getErrorDetails(error));
-  }
-
-  if (isInvalidResponseError(error)) return new AppError("ai.invalid-response", getErrorDetails(error));
-  if (isNetworkError(error)) return new AppError("ai.network", getErrorDetails(error));
-  return new AppError("unknown", getErrorDetails(error));
-}
-
-export async function wrapAIError<T>(fn: () => Promise<T>): Promise<T> {
-  return fn().catch((error) => {
-    throw toAIAppError(error);
-  });
 }

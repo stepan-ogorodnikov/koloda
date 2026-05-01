@@ -1,9 +1,10 @@
-import { AIChatMessageLayout, AiChatElapsedTimeDisplay } from "@koloda/react";
-import type { Deck, GeneratedCard, Template } from "@koloda/srs";
+import type { GeneratedCard } from "@koloda/ai";
+import { AiChatElapsedTimeDisplay, AIChatMessageLayout } from "@koloda/ai-react";
+import { AiChatMessageStatusPending } from "@koloda/ai-react";
+import type { Deck, Template } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { AiChatMessageStatusPending } from "@koloda/react";
 import { GeneratedCardsTable } from "./generated-cards-table";
 
 export type GeneratedCardsMessageProps = {
@@ -39,9 +40,7 @@ export function GeneratedCardsMessage({
 
   return (
     <AIChatMessageLayout role="assistant">
-      {isGenerating && (
-        <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />
-      )}
+      {isGenerating && <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />}
       {isCanceled && (
         <div className="flex flex-col gap-2">
           {elapsedSeconds !== undefined && (

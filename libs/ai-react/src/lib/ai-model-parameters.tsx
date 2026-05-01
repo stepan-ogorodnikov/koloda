@@ -1,4 +1,4 @@
-import type { ModelParameter } from "@koloda/srs";
+import type { ModelParameter } from "@koloda/ai";
 import { Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -15,7 +15,7 @@ export function AIModelParameters({ parameters, onChange }: AIModelParametersPro
     switch (param.type) {
       case "reasoning_effort":
         return (
-          <Select
+          <Select<{ effort: string; description: string }>
             buttonVariants={{ style: "ghost" }}
             popoverVariants={{ class: "min-w-48" }}
             aria-label={_(msg`ai.model-parameters.reasoning-effort.label`)}

@@ -1,7 +1,7 @@
-import { useAIModels, useAIProfiles } from "@koloda/react";
-import type { ModelParameter } from "@koloda/srs";
-import type { AIModel, AISecrets } from "@koloda/srs";
-import { GENERATION_TEMPERATURE } from "@koloda/srs";
+import type { ModelParameter } from "@koloda/ai";
+import type { AIModel, AISecrets } from "@koloda/ai";
+import { GENERATION_TEMPERATURE } from "@koloda/ai";
+import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type UseAIConfigurationReturn = {

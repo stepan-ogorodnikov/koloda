@@ -1,4 +1,3 @@
-import type { ChatStreamGenerator, GenerateCardsFunction } from "./ai-cards-generation";
 import {
   generateCardsWithLMStudio,
   generateCardsWithOllama,
@@ -6,32 +5,9 @@ import {
   streamChatWithLMStudio,
   streamChatWithOllama,
   streamChatWithOpenRouter,
-} from "./ai-cards-generation";
-import { AppError } from "./error";
-import type { AiProvider, AISecrets } from "./settings-ai";
-
-export type SecretField = "apiKey" | "baseUrl";
-
-export type AIModel = {
-  id: string;
-  name: string;
-  description?: string;
-  context_length: number;
-  top_provider?: {
-    max_completion_tokens?: number;
-  };
-  architecture?: {
-    modality?: string;
-    tokenizer?: string;
-    instruct_type?: string;
-  };
-  supported_parameters?: string[];
-  supported_reasoning_levels?: Array<{ effort: string; description: string }>;
-  default_reasoning_level?: string;
-};
-
-export type ModelParameter =
-  | { type: "reasoning_effort"; value: string; levels: Array<{ effort: string; description: string }> };
+} from "./card-generation";
+import { AIError, throwForAIResponse } from "./error";
+import type { AIModel, AiProvider, AISecrets, ChatStreamGenerator, GenerateCardsFunction, SecretField } from "./types";
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -56,12 +32,14 @@ type OllamaModelsResponse = {
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
 export async function fetchOpenRouterModels(): Promise<AIModel[]> {
-  const response = throwForAIResponse(await fetch(OPENROUTER_MODELS_URL, {
-    headers: { "Content-Type": "application/json" },
-  }));
+  const response = throwForAIResponse(
+    await fetch(OPENROUTER_MODELS_URL, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
 
   const data: OpenRouterModelsResponse = await response.json();
-  if (!Array.isArray(data.data)) throw new AppError("ai.invalid-response");
+  if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
 
   return data.data
     .filter((model) => model.id.includes("/"))
@@ -69,15 +47,17 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
 }
 
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(await fetch(new URL("/v1/models", baseUrl), {
-    headers: {
-      "Content-Type": "application/json",
-      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-    },
-  }));
+  const response = throwForAIResponse(
+    await fetch(new URL("/v1/models", baseUrl), {
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+    }),
+  );
 
   const data: OpenAICompatibleModelsResponse = await response.json();
-  if (!Array.isArray(data.data)) throw new AppError("ai.invalid-response");
+  if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
 
   return data.data
     .map((model) => ({
@@ -85,16 +65,18 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
       name: model.id,
       context_length: 0,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(await fetch(new URL("/api/tags", baseUrl), {
-    headers: { "Content-Type": "application/json" },
-  }));
+  const response = throwForAIResponse(
+    await fetch(new URL("/api/tags", baseUrl), {
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
 
   const data: OllamaModelsResponse = await response.json();
-  if (!Array.isArray(data.models)) throw new AppError("ai.invalid-response");
+  if (!Array.isArray(data.models)) throw new AIError("ai.invalid-response");
 
   return data.models
     .map((model) => ({
@@ -102,16 +84,11 @@ export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
       name: model.name ?? model.model,
       context_length: 0,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export async function fetchCodexModels(): Promise<AIModel[]> {
-  throw new AppError("unknown", "Codex provider requires the native app runtime to list models.");
-}
-
-function throwForAIResponse(response: Response): Response {
-  if (response.ok) return response;
-  throw new AppError(`ai.http.${response.status}` as any, `${response.status} ${response.statusText}`.trim());
+  throw new AIError("unknown", "Codex provider requires the native app runtime to list models.");
 }
 
 export type AIProviderEntry = {
@@ -123,18 +100,12 @@ export type AIProviderEntry = {
   requiresNativeRuntime: boolean;
 };
 
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-
-
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {
-  const openrouter = createOpenRouter({ apiKey: secrets.apiKey });
-
   return {
     provider: "openrouter",
     listModels: fetchOpenRouterModels,
-    chat: (request, onChunk, abortSignal) =>
-      streamChatWithOpenRouter(request, onChunk, abortSignal, openrouter),
-    generateCards: (request) => generateCardsWithOpenRouter(request, openrouter),
+    chat: (request, onChunk, abortSignal) => streamChatWithOpenRouter(request, onChunk, abortSignal, secrets),
+    generateCards: (request) => generateCardsWithOpenRouter(request, secrets),
   };
 }
 
@@ -142,8 +113,7 @@ function createOllamaClient(secrets: Extract<AISecrets, { provider: "ollama" }>)
   return {
     provider: "ollama",
     listModels: () => fetchOllamaModels(secrets.baseUrl),
-    chat: (request, onChunk, abortSignal) =>
-      streamChatWithOllama(request, onChunk, abortSignal, secrets.baseUrl),
+    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, secrets.baseUrl),
     generateCards: (request) => generateCardsWithOllama(request, secrets.baseUrl),
   };
 }
@@ -152,15 +122,14 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
   return {
     provider: "lmstudio",
     listModels: () => fetchOpenAICompatibleModels(secrets.baseUrl, secrets.apiKey),
-    chat: (request, onChunk, abortSignal) =>
-      streamChatWithLMStudio(request, onChunk, abortSignal, secrets),
+    chat: (request, onChunk, abortSignal) => streamChatWithLMStudio(request, onChunk, abortSignal, secrets),
     generateCards: (request) => generateCardsWithLMStudio(request, secrets),
   };
 }
 
 function createCodexPlaceholderClient(): AIGenerationClient {
   const unsupported = async () => {
-    throw new AppError("unknown", "Codex provider requires the native app runtime.");
+    throw new AIError("unknown", "Codex provider requires the native app runtime.");
   };
 
   return {
@@ -220,7 +189,7 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
 
 export function getProviderConfig(provider: AiProvider): AIProviderEntry {
   const entry = AI_PROVIDER_REGISTRY[provider];
-  if (!entry) throw new AppError("unknown", `Unsupported provider: ${provider}`);
+  if (!entry) throw new AIError("unknown", `Unsupported provider: ${provider}`);
   return entry;
 }
 

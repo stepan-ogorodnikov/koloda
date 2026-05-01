@@ -1,0 +1,119 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-01 12:19+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ru\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:20
+msgid "ai-chat.cancel.label"
+msgstr "Отменить"
+
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:34
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:45
+msgid "ai.chat.context-usage.tokens"
+msgstr "токенов"
+
+#: ../../libs/ai-react/src/lib/ai-chat-elapsed-time.tsx:12
+msgid "ai.chat.elapsed-time.periods.hours"
+msgstr "ч"
+
+#: ../../libs/ai-react/src/lib/ai-chat-elapsed-time.tsx:11
+msgid "ai.chat.elapsed-time.periods.minutes"
+msgstr "м"
+
+#: ../../libs/ai-react/src/lib/ai-chat-elapsed-time.tsx:10
+msgid "ai.chat.elapsed-time.periods.seconds"
+msgstr "с"
+
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:37
+msgid "ai.chat.input.label"
+msgstr "Поле ввода сообщения"
+
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:45
+msgid "ai.chat.input.placeholder"
+msgstr "Введите сообщение"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:137
+msgid "ai.chat.messages.label"
+msgstr "Поток сообщений"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:217
+msgid "ai.chat.mode.chat"
+msgstr "Режим чата"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:217
+msgid "ai.chat.mode.generate"
+msgstr "Режим создания карточек"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:188
+msgid "ai.chat.profile-data-missing"
+msgstr "У выбранного профиля отсутствуют необходимые данные"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:191
+msgid "ai.chat.profile-data-missing.hint"
+msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:238
+msgid "ai.chat.reset.label"
+msgstr "Очистить чат"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:170
+msgid "ai.chat.scroll-to-latest.label"
+msgstr "К последнему сообщению"
+
+#: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
+msgid "ai.model-parameters.reasoning-effort.label"
+msgstr "Интеллект"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:41
+msgid "ai.model-picker.error.label"
+msgstr "Ошибка"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:45
+msgid "ai.model-picker.error.retry"
+msgstr "Обновить"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:58
+msgid "ai.model-picker.label"
+msgstr "Выбор языковой модели"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:29
+msgid "ai.model-picker.loading.label"
+msgstr "Загрузка"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:59
+msgid "ai.model-picker.placeholder"
+msgstr "Выберите модель"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:60
+msgid "ai.model-picker.search.label"
+msgstr "Поиск по моделям"
+
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:61
+msgid "ai.model-picker.search.placeholder"
+msgstr "Поиск по моделям"
+
+#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:25
+msgid "ai.profile-picker.label"
+msgstr "Выбор профиля ИИ"
+
+#: ../../libs/ai-react/src/lib/use-ai-profiles.ts:13
+msgid "settings.ai.profiles.api-key.label"
+msgstr "API-ключ"
+
+#: ../../libs/ai-react/src/lib/use-ai-profiles.ts:14
+msgid "settings.ai.profiles.base-url.label"
+msgstr "Базовый URL"
+
+#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:32
+msgid "settings.ai.profiles.title.placeholder"
+msgstr "Без названия"

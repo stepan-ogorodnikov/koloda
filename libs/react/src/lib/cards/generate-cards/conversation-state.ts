@@ -1,4 +1,4 @@
-import type { GeneratedCard, StreamUsage } from "@koloda/srs";
+import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { UIMessage } from "ai";
 import { createTextMessage, type GenerationMode } from "./generate-cards-utility";
 

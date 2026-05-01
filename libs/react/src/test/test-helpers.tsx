@@ -1,3 +1,4 @@
+import type { AIModel, AIProfile, GeneratedCard } from "@koloda/ai";
 import {
   convertTemplateToLessonTemplate,
   deepMerge,
@@ -6,13 +7,10 @@ import {
   DEFAULT_TEMPLATE,
 } from "@koloda/srs";
 import type {
-  AIModel,
-  AIProfile,
   Algorithm,
   Card,
   Deck,
   DeepPartial,
-  GeneratedCard,
   Lesson,
   LessonData,
   LessonType,

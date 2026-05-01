@@ -1,4 +1,5 @@
-import type { GeneratedCard, Template } from "@koloda/srs";
+import type { GeneratedCard } from "@koloda/ai";
+import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
 export type GenerationMode = "chat" | "generate";

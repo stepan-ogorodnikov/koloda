@@ -1,6 +1,6 @@
+import { aiSettingsValidation } from "@koloda/ai";
 import type { DeepPartial, Timestamps } from "@koloda/srs";
 import type { z } from "zod";
-import { aiSettingsValidation } from "./settings-ai";
 import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { interfaceSettingsValidation } from "./settings-interface";
 import { learningSettingsValidation } from "./settings-learning";

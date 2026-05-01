@@ -99,35 +99,6 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/react/src/lib/ai/ai-chat-submit.tsx:20
-msgid "ai-chat.cancel.label"
-msgstr "Cancel request"
-
-#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:38
-#: ../../libs/react/src/lib/ai/ai-chat-context-usage.tsx:48
-msgid "ai.chat.context-usage.tokens"
-msgstr "tokens"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:12
-msgid "ai.chat.elapsed-time.periods.hours"
-msgstr "h"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:11
-msgid "ai.chat.elapsed-time.periods.minutes"
-msgstr "m"
-
-#: ../../libs/react/src/lib/ai/ai-chat-elapsed-time.tsx:10
-msgid "ai.chat.elapsed-time.periods.seconds"
-msgstr "s"
-
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:38
-msgid "ai.chat.input.label"
-msgstr "Prompt input"
-
-#: ../../libs/react/src/lib/ai/ai-chat-prompt-input.tsx:46
-msgid "ai.chat.input.placeholder"
-msgstr "Type your prompt here"
-
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:143
 #: ../../libs/react/src/lib/cards/generate-cards/generated-cards-message.tsx:65
 msgid "ai.chat.message.retry"
@@ -154,70 +125,9 @@ msgstr "Finished in"
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:137
-msgid "ai.chat.messages.label"
-msgstr "Conversation log"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
-msgid "ai.chat.mode.chat"
-msgstr "Chat mode"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:217
-msgid "ai.chat.mode.generate"
-msgstr "Generate cards mode"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:188
-msgid "ai.chat.profile-data-missing"
-msgstr "Selected AI profile is missing required data"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:191
-msgid "ai.chat.profile-data-missing.hint"
-msgstr "Go to settings to edit the profile and add the missing data"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:238
 #: ../../libs/react/src/lib/cards/generate-cards/generate-cards.tsx:222
 msgid "ai.chat.reset.label"
 msgstr "Clear conversation"
-
-#: ../../libs/react/src/lib/ai/ai-chat.tsx:170
-msgid "ai.chat.scroll-to-latest.label"
-msgstr "Jump to latest"
-
-#: ../../libs/react/src/lib/ai/ai-model-parameters.tsx:21
-msgid "ai.model-parameters.reasoning-effort.label"
-msgstr "Reasoning effort"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:41
-msgid "ai.model-picker.error.label"
-msgstr "Error"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:45
-msgid "ai.model-picker.error.retry"
-msgstr "Retry"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:58
-msgid "ai.model-picker.label"
-msgstr "Select a model"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:29
-msgid "ai.model-picker.loading.label"
-msgstr "Loading"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:59
-msgid "ai.model-picker.placeholder"
-msgstr "Select a model"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:60
-msgid "ai.model-picker.search.label"
-msgstr "Search models"
-
-#: ../../libs/react/src/lib/ai/ai-model-picker.tsx:61
-msgid "ai.model-picker.search.placeholder"
-msgstr "Search models"
-
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:25
-msgid "ai.profile-picker.label"
-msgstr "Select AI profile"
 
 #: ../../libs/react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -865,7 +775,6 @@ msgstr "Edit AI profile"
 msgid "settings.ai.edit.trigger"
 msgstr "Edit profile"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:13
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:83
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:79
@@ -873,7 +782,6 @@ msgstr "Edit profile"
 msgid "settings.ai.profiles.api-key.label"
 msgstr "API key"
 
-#: ../../libs/react/src/lib/ai/use-ai-profiles.ts:14
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:69
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:64
 #: ../../libs/react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:70
@@ -912,7 +820,6 @@ msgstr "AI Profiles"
 msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
-#: ../../libs/react/src/lib/ai/ai-profile-picker.tsx:32
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:49
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:55
 #: ../../libs/react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:50

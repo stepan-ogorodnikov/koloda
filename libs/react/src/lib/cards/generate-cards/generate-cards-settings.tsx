@@ -1,5 +1,6 @@
-import { compilePromptTemplate, DEFAULT_CHAT_PROMPT_TEMPLATE, DEFAULT_GENERATION_PROMPT_TEMPLATE } from "@koloda/srs";
-import type { AISecrets, Template } from "@koloda/srs";
+import { compilePromptTemplate, DEFAULT_CHAT_PROMPT_TEMPLATE, DEFAULT_GENERATION_PROMPT_TEMPLATE } from "@koloda/ai";
+import type { AISecrets } from "@koloda/ai";
+import type { Template } from "@koloda/srs";
 import { Label, NumberField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

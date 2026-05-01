@@ -1,6 +1,6 @@
+import type { AISecrets, ModelParameter, StreamUsage } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import type { Deck, ModelParameter, StreamUsage, Template } from "@koloda/srs";
-import type { AISecrets } from "@koloda/srs";
+import type { Deck, Template } from "@koloda/srs";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";

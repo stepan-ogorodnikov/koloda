@@ -2,13 +2,21 @@ import type {
   AddAIProfileData,
   AIModel,
   AIProfile,
+  ChatStreamRequest,
+  GenerateCardsInput,
+  GeneratedCard,
+  Message,
+  RemoveAIProfileData,
+  StreamUsage,
+  TouchAIProfileData,
+  UpdateAIProfileData,
+} from "@koloda/ai";
+import type {
   Algorithm,
   AllowedSettings,
   AppError,
   Card,
-  ChatStreamRequest,
   CloneAlgorithmData,
-  StreamUsage,
   CloneTemplateData,
   Deck,
   DeckWithOnlyTitle,
@@ -20,8 +28,6 @@ import type {
   GetCardsParams,
   GetLessonDataParams,
   GetReviewsData,
-  GenerateCardsInput,
-  GeneratedCard,
   InsertAlgorithmData,
   InsertCardData,
   InsertCardsResponse,
@@ -32,15 +38,12 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
-  RemoveAIProfileData,
   ResetCardProgressData,
   Review,
   SetSettingsData,
   SettingsName,
   Template,
   TodaysReviewTotals,
-  TouchAIProfileData,
-  UpdateAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -48,12 +51,11 @@ import type {
 } from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { type QueryOptions } from "@tanstack/react-query";
-import type { ModelMessage } from "ai";
 import { atom } from "jotai";
 
 export type AIRuntimeGenerateCardsRequest = {
   input: GenerateCardsInput;
-  messages: ModelMessage[];
+  messages: Message[];
   template: Template;
   systemPromptTemplate?: string;
 };
