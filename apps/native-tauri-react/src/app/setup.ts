@@ -1,12 +1,9 @@
 import type { InterfaceSettings } from "@koloda/app";
 import { DEFAULT_INTERFACE_SETTINGS } from "@koloda/app";
-import type { HotkeysSettings, InsertAlgorithmData, InsertTemplateData, LearningSettings } from "@koloda/srs";
-import {
-  DEFAULT_FSRS_ALGORITHM,
-  DEFAULT_HOTKEYS_SETTINGS,
-  DEFAULT_LEARNING_SETTINGS,
-  DEFAULT_TEMPLATE,
-} from "@koloda/srs";
+import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
+import type { HotkeysSettings } from "@koloda/app";
+import type { InsertAlgorithmData, InsertTemplateData, LearningSettings } from "@koloda/srs";
+import { DEFAULT_FSRS_ALGORITHM, DEFAULT_LEARNING_SETTINGS, DEFAULT_TEMPLATE } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import { invoke } from "@tauri-apps/api/core";

@@ -1,6 +1,6 @@
+import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
+import type { AppHotkeys } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
-import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/srs";
-import type { AppHotkeys } from "@koloda/srs";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 

@@ -1,4 +1,4 @@
-import type { HotkeyEntry } from "@koloda/srs";
+import type { HotkeyEntry } from "@koloda/app";
 import { getHotkeyManager } from "@tanstack/react-hotkeys";
 import type { HotkeyCallback, HotkeyOptions, HotkeyRegistrationHandle } from "@tanstack/react-hotkeys";
 import { useEffect, useEffectEvent, useRef } from "react";

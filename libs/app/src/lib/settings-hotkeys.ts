@@ -2,7 +2,6 @@ import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
 import { z } from "zod";
-import { FSRS_GRADES } from "./algorithms-fsrs";
 
 export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
   form: msg`settings.hotkeys.scopes.form`,
@@ -33,10 +32,10 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     settings: msg`settings.hotkeys.navigation.settings`,
   },
   grades: {
-    again: FSRS_GRADES[0],
-    hard: FSRS_GRADES[1],
-    normal: FSRS_GRADES[2],
-    easy: FSRS_GRADES[3],
+    again: msg`settings.hotkeys.grades.again`,
+    hard: msg`settings.hotkeys.grades.hard`,
+    normal: msg`settings.hotkeys.grades.normal`,
+    easy: msg`settings.hotkeys.grades.easy`,
   },
   ai: {
     cancel: msg`settings.hotkeys.ai.cancel`,

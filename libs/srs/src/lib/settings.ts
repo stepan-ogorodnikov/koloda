@@ -1,8 +1,7 @@
 import { aiSettingsValidation } from "@koloda/ai";
 import type { DeepPartial, Timestamps } from "@koloda/app";
-import { interfaceSettingsValidation } from "@koloda/app";
+import { hotkeysSettingsValidation, interfaceSettingsValidation } from "@koloda/app";
 import type { z } from "zod";
-import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { learningSettingsValidation } from "./settings-learning";
 
 export const allowedSettings = {

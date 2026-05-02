@@ -9,6 +9,5 @@ export * from "./lib/markdown";
 export * from "./lib/reviews";
 export * from "./lib/settings";
 export * from "./lib/settings-ai";
-export * from "./lib/settings-hotkeys";
 export * from "./lib/settings-learning";
 export * from "./lib/templates";
