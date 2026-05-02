@@ -1,4 +1,5 @@
-import { AppError, insertAlgorithmSchema, throwKnownError, updateAlgorithmSchema } from "@koloda/srs";
+import { AppError, throwKnownError } from "@koloda/app";
+import { insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
 import type {
   Algorithm,
   CloneAlgorithmData,

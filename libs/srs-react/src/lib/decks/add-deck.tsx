@@ -1,0 +1,134 @@
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { toFormErrors } from "@koloda/app";
+import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { insertDeckSchema as schema } from "@koloda/srs";
+import type { Deck, InsertDeckData } from "@koloda/srs";
+import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
+import { useStore } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
+import { useEffect, useRef, useState } from "react";
+import { AlgorithmPicker } from "../algorithms/algorithm-picker";
+import { TemplatePicker } from "../templates/template-picker";
+
+export function AddDeck() {
+  const queryClient = useQueryClient();
+  const { _ } = useLingui();
+  const { addDeckMutation } = useAtomValue(queriesAtom);
+  const isMotionOn = useMotionSetting();
+  const { mutate, isSuccess } = useMutation(addDeckMutation());
+  const linkRef = useRef<HTMLAnchorElement>(null);
+  const [newId, setNewId] = useState<Deck["id"] | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const form = useAppForm({
+    defaultValues: { title: "", algorithmId: 0, templateId: 0 } as InsertDeckData,
+    validators: { onSubmit: schema },
+    listeners: {
+      onChange: () => {
+        setNewId(null);
+      },
+    },
+    onSubmit: async ({ value, formApi }) => {
+      mutate(schema.parse({ ...value }), {
+        onSuccess: (returning) => {
+          formApi.reset();
+          queueMicrotask(() => {
+            if (returning) setNewId(returning.id);
+          });
+          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
+        },
+        onError: (error) => {
+          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+        },
+      });
+    },
+  });
+  const formErrorMap = useStore(form.store, (state) => state.errorMap);
+  const isLinkVisible = !!(isSuccess && newId);
+
+  useEffect(() => {
+    if (newId) linkRef.current?.focus();
+  }, [newId]);
+
+  useEffect(() => {
+    setNewId(null);
+    form.reset();
+  }, [isOpen, form]);
+
+  return (
+    <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+      </Button>
+      <Dialog.Popover variants={{ class: "w-84" }}>
+        <Dialog.Body>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+          >
+            <Dialog.Header>
+              <Dialog.Title>{_(msg`add-deck.title`)}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Content>
+              <form.Field name="title">
+                {(field) => (
+                  <TextField
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={field.handleChange}
+                    autoFocus
+                  >
+                    <Label>{_(msg`add-deck.inputs.title.label`)}</Label>
+                    <TextField.Input />
+                  </TextField>
+                )}
+              </form.Field>
+              <form.Field name="algorithmId">
+                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
+              </form.Field>
+              <form.Field name="templateId">
+                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
+              </form.Field>
+              <div className="min-h-10 mt-4">
+                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
+              </div>
+            </Dialog.Content>
+            <Dialog.Footer>
+              {isLinkVisible && (
+                <Link
+                  className={link({ type: "added" })}
+                  ref={linkRef}
+                  to="/decks/$deckId"
+                  params={{ deckId: newId }}
+                  onClick={() => setIsOpen(false)}
+                  viewTransition={isMotionOn}
+                >
+                  {_(msg`add-deck.redirect.link`)}
+                </Link>
+              )}
+              <div className="grow" />
+              <form.Subscribe selector={(state) => [state.canSubmit]}>
+                {([canSubmit]) => (
+                  <Button
+                    variants={{ style: "primary" }}
+                    type="submit"
+                    isDisabled={!canSubmit || isLinkVisible}
+                  >
+                    {isLinkVisible ? (_(msg`add-deck.success`)) : (_(msg`add-deck.submit`))}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </Dialog.Footer>
+          </form>
+        </Dialog.Body>
+      </Dialog.Popover>
+    </Dialog.Root>
+  );
+}

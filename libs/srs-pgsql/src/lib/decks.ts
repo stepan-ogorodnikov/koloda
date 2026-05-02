@@ -1,4 +1,5 @@
-import { throwKnownError, updateDeckSchema } from "@koloda/srs";
+import { throwKnownError } from "@koloda/app";
+import { updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";

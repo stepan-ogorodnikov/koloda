@@ -3,16 +3,19 @@
   "include": [],
   "references": [
     {
+      "path": "../../libs/app-react"
+    },
+    {
       "path": "../../libs/ui"
     },
     {
-      "path": "../../libs/react"
+      "path": "../../libs/srs"
     },
     {
       "path": "../../libs/react-base"
     },
     {
-      "path": "../../libs/srs"
+      "path": "../../libs/app"
     },
     {
       "path": "../../libs/srs-pgsql"

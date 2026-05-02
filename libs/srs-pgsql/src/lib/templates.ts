@@ -1,3 +1,4 @@
+import { AppError, throwKnownError } from "@koloda/app";
 import type {
   CloneTemplateData,
   DeckWithOnlyTitle,
@@ -6,13 +7,7 @@ import type {
   Template,
   UpdateTemplateData,
 } from "@koloda/srs";
-import {
-  AppError,
-  insertTemplateSchema,
-  throwKnownError,
-  updateTemplateSchema,
-  validateLockedTemplateFields,
-} from "@koloda/srs";
+import { insertTemplateSchema, updateTemplateSchema, validateLockedTemplateFields } from "@koloda/srs";
 import { count, eq, getTableColumns, gt } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";

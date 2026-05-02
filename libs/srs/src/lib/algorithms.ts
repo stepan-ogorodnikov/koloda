@@ -1,7 +1,6 @@
+import type { Timestamps, UpdateData } from "@koloda/app";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
-import type { Timestamps } from "./db";
-import type { UpdateData } from "./utility";
 
 export const algorithmValidation = z.object({
   id: z.int(),

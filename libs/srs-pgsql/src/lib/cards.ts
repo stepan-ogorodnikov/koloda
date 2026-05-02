@@ -1,4 +1,5 @@
-import { AppError, getInsertCardSchema, getUpdateCardSchema, throwKnownError } from "@koloda/srs";
+import { AppError, throwKnownError } from "@koloda/app";
+import { getInsertCardSchema, getUpdateCardSchema } from "@koloda/srs";
 import type {
   Card,
   DeleteCardData,

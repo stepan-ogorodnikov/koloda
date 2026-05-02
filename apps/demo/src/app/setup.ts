@@ -1,13 +1,11 @@
-import type { InterfaceSettings } from "@koloda/srs";
+import type { InterfaceSettings } from "@koloda/app";
+import { AppError, DEFAULT_INTERFACE_SETTINGS, interfaceSettingsValidation } from "@koloda/app";
 import {
-  AppError,
   DEFAULT_FSRS_ALGORITHM,
   DEFAULT_HOTKEYS_SETTINGS,
-  DEFAULT_INTERFACE_SETTINGS,
   DEFAULT_LEARNING_SETTINGS,
   DEFAULT_TEMPLATE,
   hotkeysSettingsValidation,
-  interfaceSettingsValidation,
   learningSettingsValidation,
 } from "@koloda/srs";
 import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";

@@ -1,0 +1,13 @@
+{
+  "name": "@koloda/app-react",
+  "sourceRoot": "libs/app-react/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/app-react/vitest.config.mjs --configLoader runner"
+      }
+    }
+  }
+}

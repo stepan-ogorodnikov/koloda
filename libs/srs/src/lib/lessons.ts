@@ -1,3 +1,4 @@
+import type { Modify } from "@koloda/app";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import type { Algorithm } from "./algorithms";
@@ -5,7 +6,6 @@ import type { Card } from "./cards";
 import type { Deck } from "./decks";
 import type { InsertReviewData } from "./reviews";
 import type { Template, TemplateField, TemplateLayoutItem } from "./templates";
-import type { Modify } from "./utility";
 
 export const LESSON_TYPES = ["untouched", "learn", "review", "total"] as const;
 

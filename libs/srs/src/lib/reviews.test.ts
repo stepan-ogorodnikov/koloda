@@ -1,5 +1,5 @@
+import type { AppError } from "@koloda/app";
 import { describe, expect, it, vi } from "vitest";
-import type { AppError } from "./error";
 import { calculateTodaysReviewTotals, createReviewFromReviewFSRS, getCurrentLearningDayRange } from "./reviews";
 import { DEFAULT_LEARNING_SETTINGS } from "./settings-learning";
 

@@ -1,4 +1,10 @@
-import type { AddAIProfileData, AIProfile, RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type {
+  AddAIProfileData,
+  AIProfile,
+  RemoveAIProfileData,
+  TouchAIProfileData,
+  UpdateAIProfileData,
+} from "@koloda/ai";
 import type { Queries } from "@koloda/react-base";
 import type {
   Algorithm,

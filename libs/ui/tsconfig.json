@@ -6,7 +6,7 @@
       "path": "../react-base"
     },
     {
-      "path": "../srs"
+      "path": "../app"
     },
     {
       "path": "./tsconfig.lib.json"

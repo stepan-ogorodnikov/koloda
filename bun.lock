@@ -113,21 +113,57 @@
       "name": "@koloda/ai-react",
       "version": "0.0.1",
     },
-    "libs/react": {
-      "name": "@koloda/react",
+    "libs/app": {
+      "name": "@koloda/app",
       "version": "0.0.1",
+    },
+    "libs/app-react": {
+      "name": "@koloda/app-react",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/ai-react": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/react-base": "workspace:*",
+        "@koloda/srs": "workspace:*",
+        "@koloda/srs-react": "workspace:*",
+        "@koloda/ui": "workspace:*",
+      },
     },
     "libs/react-base": {
       "name": "@koloda/react-base",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/app": "workspace:*",
+      },
     },
     "libs/srs": {
       "name": "@koloda/srs",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/app": "workspace:*",
+      },
     },
     "libs/srs-pgsql": {
       "name": "@koloda/srs-pgsql",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/app": "workspace:*",
+        "@koloda/srs": "workspace:*",
+      },
+    },
+    "libs/srs-react": {
+      "name": "@koloda/srs-react",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/ai-react": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/react-base": "workspace:*",
+        "@koloda/srs": "workspace:*",
+        "@koloda/ui": "workspace:*",
+      },
     },
     "libs/srs-sqlite": {
       "name": "@koloda/srs-sqlite",
@@ -136,6 +172,9 @@
     "libs/ui": {
       "name": "@koloda/ui",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/app": "workspace:*",
+      },
     },
   },
   "packages": {
@@ -535,17 +574,21 @@
 
     "@koloda/ai-react": ["@koloda/ai-react@workspace:libs/ai-react"],
 
+    "@koloda/app": ["@koloda/app@workspace:libs/app"],
+
+    "@koloda/app-react": ["@koloda/app-react@workspace:libs/app-react"],
+
     "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
 
     "@koloda/native-tauri-react": ["@koloda/native-tauri-react@workspace:apps/native-tauri-react"],
-
-    "@koloda/react": ["@koloda/react@workspace:libs/react"],
 
     "@koloda/react-base": ["@koloda/react-base@workspace:libs/react-base"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 
     "@koloda/srs-pgsql": ["@koloda/srs-pgsql@workspace:libs/srs-pgsql"],
+
+    "@koloda/srs-react": ["@koloda/srs-react@workspace:libs/srs-react"],
 
     "@koloda/srs-sqlite": ["@koloda/srs-sqlite@workspace:libs/srs-sqlite"],
 

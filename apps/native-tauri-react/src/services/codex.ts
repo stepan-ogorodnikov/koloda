@@ -13,7 +13,7 @@ import type {
   GeneratedCard,
   Message,
 } from "@koloda/ai";
-import { AppError } from "@koloda/srs";
+import { AppError } from "@koloda/app";
 import { z } from "zod";
 import { invoke } from "../app/tauri";
 

@@ -1,7 +1,6 @@
+import type { Timestamps, UpdateData } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
-import type { Timestamps } from "./db";
-import type { UpdateData } from "./utility";
 
 export const TEMPLATE_FIELD_TYPES = ["text", "markdown"] as const;
 export const TEMPLATE_OPERATIONS = ["display", "reveal", "type"] as const;

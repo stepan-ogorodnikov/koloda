@@ -13,7 +13,10 @@
       "path": "./libs/srs"
     },
     {
-      "path": "./libs/react"
+      "path": "./libs/app-react"
+    },
+    {
+      "path": "./libs/srs-react"
     },
     {
       "path": "./libs/srs-pgsql"
@@ -35,6 +38,9 @@
     },
     {
       "path": "./apps/demo-e2e"
+    },
+    {
+      "path": "./libs/app"
     }
   ]
 }

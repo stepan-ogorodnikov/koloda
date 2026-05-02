@@ -1,4 +1,4 @@
-import { getLanguageCode, LOCALES } from "@koloda/srs";
+import { getLanguageCode, LOCALES } from "@koloda/app";
 import { i18n } from "@lingui/core";
 import { detect, fromNavigator, fromStorage } from "@lingui/detect-locale";
 

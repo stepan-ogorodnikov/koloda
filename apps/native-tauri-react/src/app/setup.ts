@@ -1,14 +1,9 @@
-import type {
-  HotkeysSettings,
-  InsertAlgorithmData,
-  InsertTemplateData,
-  InterfaceSettings,
-  LearningSettings,
-} from "@koloda/srs";
+import type { InterfaceSettings } from "@koloda/app";
+import { DEFAULT_INTERFACE_SETTINGS } from "@koloda/app";
+import type { HotkeysSettings, InsertAlgorithmData, InsertTemplateData, LearningSettings } from "@koloda/srs";
 import {
   DEFAULT_FSRS_ALGORITHM,
   DEFAULT_HOTKEYS_SETTINGS,
-  DEFAULT_INTERFACE_SETTINGS,
   DEFAULT_LEARNING_SETTINGS,
   DEFAULT_TEMPLATE,
 } from "@koloda/srs";

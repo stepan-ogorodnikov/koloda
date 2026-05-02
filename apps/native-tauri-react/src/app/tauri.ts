@@ -1,4 +1,4 @@
-import { AppError, type ErrorCode } from "@koloda/srs";
+import { AppError, type ErrorCode } from "@koloda/app";
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import type { InvokeArgs } from "@tauri-apps/api/core";
 

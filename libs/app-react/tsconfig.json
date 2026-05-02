@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "../app"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../ai-react"
+    },
+    {
+      "path": "../react-base"
+    },
+    {
+      "path": "../srs"
+    },
+    {
+      "path": "../srs-react"
+    },
+    {
+      "path": "../ui"
+    },
+    {
+      "path": "./tsconfig.lib.json"
+    }
+  ]
+}

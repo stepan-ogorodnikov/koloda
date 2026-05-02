@@ -1,4 +1,4 @@
-import { aiProvidersAtom, appEntryAtom, langAtom, themeAtom } from "@koloda/react";
+import { aiProvidersAtom, appEntryAtom, langAtom, themeAtom } from "@koloda/react-base";
 import type { Queries } from "@koloda/react-base";
 import { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, queriesAtom } from "@koloda/react-base";
 import { motionSettingAtom } from "@koloda/ui";

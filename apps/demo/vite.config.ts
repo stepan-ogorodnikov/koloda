@@ -27,8 +27,8 @@ export default defineConfig(() => ({
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
-      routesDirectory: resolve(__dirname, "../../libs/react/src/lib/routes"),
-      generatedRouteTree: resolve(__dirname, "../../libs/react/src/lib/routeTree.gen.ts"),
+      routesDirectory: resolve(__dirname, "../../libs/app-react/src/lib/routes"),
+      generatedRouteTree: resolve(__dirname, "../../libs/app-react/src/lib/routeTree.gen.ts"),
     }),
     react({
       plugins: [["@lingui/swc-plugin", {}]],

@@ -6,10 +6,10 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
+import type { AppError } from "@koloda/app";
 import type {
   Algorithm,
   AllowedSettings,
-  AppError,
   Card,
   CloneAlgorithmData,
   CloneTemplateData,

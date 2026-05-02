@@ -1,9 +1,8 @@
 import { isAIError } from "@koloda/ai";
+import { AppError, ERROR_MESSAGES, isAbortError, isAppError } from "@koloda/app";
+import type { ErrorCode } from "@koloda/app";
+import { getObjectProperty } from "@koloda/app";
 import type { I18nContext } from "@lingui/react";
-import { isAbortError } from "./error";
-import { AppError, ERROR_MESSAGES, isAppError } from "./error";
-import type { ErrorCode } from "./error";
-import { getObjectProperty } from "./utility";
 
 export function getGenerateErrorMessage(error: Error | null, _: I18nContext["_"]) {
   if (!error) return null;

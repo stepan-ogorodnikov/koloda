@@ -1,6 +1,6 @@
+import { ERROR_MESSAGES } from "@koloda/app";
+import type { ErrorCode, FormError, ZodIssue } from "@koloda/app";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
-import { ERROR_MESSAGES } from "@koloda/srs";
-import type { ErrorCode, FormError, ZodIssue } from "@koloda/srs";
 import { Button, Fade, FormTextField } from "@koloda/ui";
 import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

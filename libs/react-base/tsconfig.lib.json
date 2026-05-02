@@ -36,6 +36,9 @@
       "path": "../ai/tsconfig.lib.json"
     },
     {
+      "path": "../app/tsconfig.lib.json"
+    },
+    {
       "path": "../srs/tsconfig.lib.json"
     }
   ]

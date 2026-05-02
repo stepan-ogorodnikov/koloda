@@ -1,0 +1,52 @@
+import type { LessonTemplateLayoutItem } from "@koloda/srs";
+import { LayoutGroup } from "motion/react";
+import type { ActionDispatch } from "react";
+import { tv } from "tailwind-variants";
+import type { CardPreviewReducerAction } from "../cards/card-preview-reducer";
+import { fieldTypeComponents } from "./lesson-card-field-types";
+import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+
+const lessonCardContentField = tv({
+  base: "flex flex-col w-full prose tb:prose-xl",
+  variants: {
+    operation: {
+      display: "",
+      reveal: "opacity-0 data-is-submitted:opacity-100 animate-opacity",
+      type: "",
+    },
+  },
+});
+
+type LessonCardFieldProps = {
+  params: LessonTemplateLayoutItem;
+  content: LessonReducerState["content"];
+  dispatch: ActionDispatch<[action: LessonReducerAction]> | ActionDispatch<[action: CardPreviewReducerAction]>;
+};
+
+export function LessonCardField({ params: { field, operation }, content, dispatch }: LessonCardFieldProps) {
+  if (!field || !content) return null;
+
+  const actualValue = content.card.content[field.id]?.text || "";
+  const userValue = content.form.data[field.id] || "";
+  const FieldComponent = fieldTypeComponents[field.type];
+
+  return (
+    <LayoutGroup>
+      <div
+        className={lessonCardContentField({ operation })}
+        data-is-submitted={content.form.isSubmitted || undefined}
+      >
+        <FieldComponent
+          value={actualValue}
+          operation={operation}
+          fieldId={field.id}
+          fieldTitle={field.title}
+          userValue={userValue}
+          isSubmitted={content.form.isSubmitted}
+          isFirstInput={field.id === content.form.firstInputFieldId}
+          dispatch={dispatch}
+        />
+      </div>
+    </LayoutGroup>
+  );
+}

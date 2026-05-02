@@ -1,5 +1,5 @@
 import type { AISecrets } from "@koloda/ai";
-import type { AppError } from "./error";
+import type { AppError } from "@koloda/app";
 
 export type AddAIProfileFormProps = {
   onSubmit: (data: { title?: string; secrets: AISecrets }) => void;

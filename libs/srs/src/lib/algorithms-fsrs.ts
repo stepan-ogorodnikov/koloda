@@ -1,9 +1,9 @@
+import { mapObjectProperties } from "@koloda/app";
+import type { ObjectPropertiesMapping } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { fsrs, generatorParameters } from "ts-fsrs";
 import type { FSRSParameters } from "ts-fsrs";
 import { z } from "zod";
-import { mapObjectProperties } from "./utility";
-import type { ObjectPropertiesMapping } from "./utility";
 
 export const LEARNING_STEPS_UNITS = [
   { id: "s", short: msg`fsrs.learning-steps.units.seconds.short`, long: msg`fsrs.learning-steps.units.seconds.long` },
