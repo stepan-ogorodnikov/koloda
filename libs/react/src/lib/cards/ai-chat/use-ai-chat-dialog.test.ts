@@ -18,16 +18,19 @@ const {
   useAIModelsMock,
   useCardGenerationMock,
   useAtomValueMock,
+  useChatStreamMock,
 } = vi.hoisted(() => ({
   useAIProfilesMock: vi.fn(),
   useAIModelsMock: vi.fn(),
   useCardGenerationMock: vi.fn(),
   useAtomValueMock: vi.fn(),
+  useChatStreamMock: vi.fn(),
 }));
 
-vi.mock("@koloda/react", () => ({
+vi.mock("@koloda/ai-react", () => ({
   useAIProfiles: useAIProfilesMock,
   useAIModels: useAIModelsMock,
+  useChatStream: useChatStreamMock,
 }));
 
 vi.mock("./use-card-generation", () => ({
@@ -274,7 +277,7 @@ describe("useAIChatDialog", () => {
 
     expect(generateMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemPromptTemplate: "Custom generation template with {{fields}} and {{rules}}",
+        systemPromptTemplate: "Custom cards template with {{fields}} and {{rules}}",
       }),
       expect.any(Function),
     );
@@ -320,6 +323,12 @@ function renderAIChatDialogDialog() {
     generate: generateMock,
     cancel: cancelMock,
   }));
+  useChatStreamMock.mockReturnValue({
+    isStreaming: false,
+    error: null,
+    stream: vi.fn(async () => ({ streamResult: "success" as const, usage: null })),
+    cancel: vi.fn(),
+  });
 
   const queryClient = createQueryClient();
   const wrapper = createQueryClientWrapper(queryClient);
