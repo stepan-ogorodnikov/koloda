@@ -2,12 +2,7 @@ import type {
   AddAIProfileData,
   AIModel,
   AIProfile,
-  ChatStreamRequest,
-  GenerateCardsInput,
-  GeneratedCard,
-  Message,
   RemoveAIProfileData,
-  StreamUsage,
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
@@ -52,26 +47,6 @@ import type {
 import type { UseMutationOptions } from "@tanstack/react-query";
 import { type QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
-
-export type AIRuntimeGenerateCardsRequest = {
-  input: GenerateCardsInput;
-  messages: Message[];
-  template: Template;
-  systemPromptTemplate?: string;
-};
-
-export type AIRuntime = {
-  generateCards?: (
-    request: AIRuntimeGenerateCardsRequest,
-    onCard: (card: GeneratedCard) => void,
-    signal: AbortSignal,
-  ) => Promise<void>;
-  chat?: (
-    request: ChatStreamRequest,
-    onChunk: (chunk: string) => void,
-    signal: AbortSignal,
-  ) => Promise<StreamUsage | undefined>;
-};
 
 export type Queries = {
   getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | null>;
@@ -124,7 +99,6 @@ export type Queries = {
   touchAIProfileMutation: () => UseMutationOptions<void, AppError, TouchAIProfileData, unknown>;
   getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;
   getAIProfilesQuery: () => QueryOptions<AIProfile[]>;
-  aiRuntime?: AIRuntime;
 };
 
 export const queriesAtom = atom<Queries>(null!);

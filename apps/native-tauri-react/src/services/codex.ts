@@ -4,10 +4,16 @@ import {
   DEFAULT_GENERATION_PROMPT_TEMPLATE,
   getCardContentSchema,
 } from "@koloda/ai";
-import type { ChatStreamRequest, GeneratedCard, Message } from "@koloda/ai";
-import type { AIRuntime, AIRuntimeGenerateCardsRequest } from "@koloda/react-base";
+import type {
+  AIGenerationClient,
+  AIModel,
+  CardGenerationFields,
+  CardGenerationRequest,
+  ChatStreamRequest,
+  GeneratedCard,
+  Message,
+} from "@koloda/ai";
 import { AppError } from "@koloda/srs";
-import type { Template } from "@koloda/srs";
 import { z } from "zod";
 import { invoke } from "../app/tauri";
 
@@ -58,8 +64,8 @@ function buildCodexPrompt(systemPrompt: string, messages: Message[]) {
   ].filter(Boolean).join("\n");
 }
 
-function buildCodexGenerationInstructions(template: Template) {
-  const fieldIds = template.content.fields.map((field) => `"${field.id}"`).join(", ");
+function buildCodexGenerationInstructions(fields: CardGenerationFields) {
+  const fieldIds = fields.map((field) => `"${field.id}"`).join(", ");
 
   return [
     "Return only a valid JSON array.",
@@ -70,7 +76,7 @@ function buildCodexGenerationInstructions(template: Template) {
   ].join("\n");
 }
 
-function parseGeneratedCardsText(text: string, template: Template): GeneratedCard[] {
+function parseGeneratedCardsText(text: string, fields: CardGenerationFields): GeneratedCard[] {
   const jsonFenceMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
   const candidate = (jsonFenceMatch?.[1] ?? text).trim();
   if (!candidate) return [];
@@ -82,7 +88,7 @@ function parseGeneratedCardsText(text: string, template: Template): GeneratedCar
     throw new AppError("ai.invalid-response", "Codex returned non-JSON card output.");
   }
 
-  const cardsSchema = z.array(getCardContentSchema(template.content.fields));
+  const cardsSchema = z.array(getCardContentSchema(fields));
   const result = cardsSchema.safeParse(parsed);
   if (!result.success) {
     throw new AppError("ai.invalid-response", "Codex returned cards in an unexpected shape.");
@@ -91,42 +97,43 @@ function parseGeneratedCardsText(text: string, template: Template): GeneratedCar
   return result.data;
 }
 
-async function generateCards(
-  request: AIRuntimeGenerateCardsRequest,
-  onCard: (card: GeneratedCard) => void,
-  signal: AbortSignal,
-) {
+async function generateCards(request: CardGenerationRequest): Promise<void> {
+  const { template, input, messages = [], onCard, abortSignal, systemPromptTemplate } = request;
   const systemPrompt = [
     compilePromptTemplate(
-      request.systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-      request.template.content.fields,
+      systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+      template.content.fields,
       "codex",
       "generation",
     ),
-    buildCodexGenerationInstructions(request.template),
+    buildCodexGenerationInstructions(template.content.fields),
   ].join("\n\n");
   const prompt = buildCodexPrompt(systemPrompt, [
-    ...request.messages,
-    { role: "user", content: request.input.prompt },
+    ...messages,
+    { role: "user", content: input.prompt },
   ]);
   const result = await invoke<string>("cmd_generate_cards_with_codex", {
     data: {
       prompt,
-      modelId: normalizeModelId(request.input.modelId),
-      reasoningEffort: normalizeReasoningEffort(request.input.reasoningEffort),
+      modelId: normalizeModelId(input.modelId),
+      reasoningEffort: normalizeReasoningEffort(input.reasoningEffort),
     } satisfies CodexGenerateCardsData,
   });
 
-  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  if (abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-  const cards = parseGeneratedCardsText(result, request.template);
+  const cards = parseGeneratedCardsText(result, template.content.fields);
   for (const card of cards) {
-    if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+    if (abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");
     onCard(card);
   }
 }
 
-async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void, signal: AbortSignal) {
+async function chat(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+) {
   const systemPrompt = compilePromptTemplate(
     request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
     request.template?.content.fields ?? [],
@@ -142,12 +149,20 @@ async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void
     } satisfies CodexChatData,
   });
 
-  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  if (abortSignal.aborted) throw new DOMException("Aborted", "AbortError");
   onChunk(text);
   return undefined;
 }
 
-export const codexRuntime: AIRuntime = {
-  generateCards,
-  chat,
-};
+export async function fetchCodexModels(): Promise<AIModel[]> {
+  return invoke<AIModel[]>("cmd_list_codex_models");
+}
+
+export function createCodexClient(): AIGenerationClient {
+  return {
+    provider: "codex",
+    listModels: fetchCodexModels,
+    chat,
+    generateCards,
+  };
+}

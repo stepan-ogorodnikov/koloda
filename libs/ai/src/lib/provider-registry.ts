@@ -91,13 +91,26 @@ export async function fetchCodexModels(): Promise<AIModel[]> {
   throw new AIError("unknown", "Codex provider requires the native app runtime to list models.");
 }
 
+export type ProviderImplementation = {
+  createClient: (secrets: AISecrets) => AIGenerationClient;
+  fetchModels: (secrets: AISecrets) => Promise<AIModel[]>;
+};
+
+const providerImplementations = new Map<AiProvider, ProviderImplementation>();
+
+export function registerProviderImplementation(
+  provider: AiProvider,
+  implementation: ProviderImplementation,
+) {
+  providerImplementations.set(provider, implementation);
+}
+
 export type AIProviderEntry = {
   id: AiProvider;
   createClient: (secrets: AISecrets) => AIGenerationClient;
   fetchModels: (secrets: AISecrets) => Promise<AIModel[]>;
   getMissingSecretFields: (secrets: AISecrets) => SecretField[];
   getApiKey: (secrets: AISecrets) => string | null;
-  requiresNativeRuntime: boolean;
 };
 
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {
@@ -150,7 +163,6 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
       return s.apiKey ? [] : ["apiKey"];
     },
     getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "openrouter" }>).apiKey,
-    requiresNativeRuntime: false,
   },
   ollama: {
     id: "ollama",
@@ -161,7 +173,6 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
       return s.baseUrl ? [] : ["baseUrl"];
     },
     getApiKey: () => null,
-    requiresNativeRuntime: false,
   },
   lmstudio: {
     id: "lmstudio",
@@ -175,7 +186,6 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
       return s.baseUrl ? [] : ["baseUrl"];
     },
     getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "lmstudio" }>).apiKey ?? null,
-    requiresNativeRuntime: false,
   },
   codex: {
     id: "codex",
@@ -183,7 +193,6 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
     fetchModels: () => fetchCodexModels(),
     getMissingSecretFields: () => [],
     getApiKey: () => null,
-    requiresNativeRuntime: true,
   },
 };
 
@@ -193,15 +202,25 @@ export function getProviderConfig(provider: AiProvider): AIProviderEntry {
   return entry;
 }
 
+function resolveProviderImplementation(provider: AiProvider): ProviderImplementation {
+  const override = providerImplementations.get(provider);
+  if (override) return override;
+  const entry = AI_PROVIDER_REGISTRY[provider];
+  return {
+    createClient: (secrets) => entry.createClient(secrets),
+    fetchModels: (secrets) => entry.fetchModels(secrets),
+  };
+}
+
 export function createAIGenerationClient(secretsInput: AISecrets | string): AIGenerationClient {
   const secrets: AISecrets = typeof secretsInput === "string"
     ? ({ provider: "openrouter", apiKey: secretsInput } as const)
     : secretsInput;
 
-  return getProviderConfig(secrets.provider).createClient(secrets);
+  return resolveProviderImplementation(secrets.provider).createClient(secrets);
 }
 
 export async function fetchModels(secrets?: AISecrets | null): Promise<AIModel[]> {
   if (!secrets) return fetchOpenRouterModels();
-  return getProviderConfig(secrets.provider).fetchModels(secrets);
+  return resolveProviderImplementation(secrets.provider).fetchModels(secrets);
 }

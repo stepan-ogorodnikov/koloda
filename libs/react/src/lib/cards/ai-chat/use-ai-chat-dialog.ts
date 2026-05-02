@@ -58,7 +58,7 @@ export type UseAIChatDialogReturn = {
 
 export function useAIChatDialog(deckId: Deck["id"], templateId: Template["id"]): UseAIChatDialogReturn {
   const { _ } = useLingui();
-  const { getTemplateQuery, touchAIProfileMutation, aiRuntime } = useAtomValue(queriesAtom);
+  const { getTemplateQuery, touchAIProfileMutation } = useAtomValue(queriesAtom);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -93,7 +93,6 @@ export function useAIChatDialog(deckId: Deck["id"], templateId: Template["id"]):
 
   const { streamGenerator, chatStreamGenerator } = useAIClient({
     selectedProfile,
-    aiRuntime,
     template,
   });
 

@@ -1,7 +1,6 @@
+import type { AddAIProfileData, AIProfile, RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type { Queries } from "@koloda/react-base";
 import type {
-  AddAIProfileData,
-  AIProfile,
   Algorithm,
   AllowedSettings,
   CloneAlgorithmData,
@@ -24,14 +23,11 @@ import type {
   LessonFilters,
   LessonResultData,
   PatchSettingsData,
-  RemoveAIProfileData,
   ResetCardProgressData,
   Review,
   SetSettingsData,
   SettingsName,
   Template,
-  TouchAIProfileData,
-  UpdateAIProfileData,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -39,7 +35,6 @@ import type {
 } from "@koloda/srs";
 import type { TodaysReviewTotals } from "@koloda/srs";
 import { getAIProfileModels } from "../services/ai";
-import { codexRuntime } from "../services/codex";
 import { getStatus, seedDB } from "./setup";
 import { invoke } from "./tauri";
 
@@ -174,5 +169,4 @@ export const queriesFn = (): Queries => ({
   getAIProfileModelsQuery: (profileId: string) => ({
     queryFn: () => getAIProfileModels(profileId),
   }),
-  aiRuntime: codexRuntime,
 });

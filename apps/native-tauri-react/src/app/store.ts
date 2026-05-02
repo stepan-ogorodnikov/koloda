@@ -7,6 +7,7 @@ import type { WritableAtom } from "jotai";
 import { AppEntry } from "../components/app-entry";
 import { activateLanguage, getLanguage } from "./i18n";
 import { queriesFn } from "./queries";
+import "../services/ai-provider-registration";
 
 export const store = createStore();
 export const queries = queriesFn();
