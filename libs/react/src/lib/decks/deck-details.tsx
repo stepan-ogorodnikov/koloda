@@ -1,4 +1,4 @@
-import { AlgorithmPicker } from "@koloda/react";
+import { AlgorithmPicker } from "../algorithms/algorithm-picker";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck, UpdateDeckValues } from "@koloda/srs";
 import { toFormErrors, updateDeckSchema as schema } from "@koloda/srs";

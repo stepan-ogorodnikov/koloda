@@ -1,4 +1,5 @@
-import { QueryError, QueryLoading } from "@koloda/react";
+import { QueryError } from "./query-error";
+import { QueryLoading } from "./query-loading";
 import { Fade } from "@koloda/ui";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { AnimatePresence } from "motion/react";

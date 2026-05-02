@@ -1,4 +1,5 @@
-import { LearnedToday, Lessons } from "@koloda/react";
+import { LearnedToday } from "../components/learned-today";
+import { Lessons } from "../lessons/lessons";
 import { queryKeys, useTitle } from "@koloda/react-base";
 import { Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

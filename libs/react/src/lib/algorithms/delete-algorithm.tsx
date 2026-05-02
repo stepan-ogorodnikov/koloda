@@ -1,4 +1,4 @@
-import { defaultAlgorithmAtom } from "@koloda/react";
+import { defaultAlgorithmAtom } from "../settings/settings";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Algorithm } from "@koloda/srs";
 import { ERROR_MESSAGES, isAppError } from "@koloda/srs";

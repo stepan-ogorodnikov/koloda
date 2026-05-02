@@ -1,6 +1,6 @@
 import { Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { QueryState } from "@koloda/react";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, UpdateCardValues, ZodIssue } from "@koloda/srs";
 import { getUpdateCardSchema, toFormErrors, updateCardSchema as schema } from "@koloda/srs";

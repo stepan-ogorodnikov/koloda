@@ -1,4 +1,8 @@
-import { LessonCardField, lessonContent, LessonFooterLayout, LessonHeaderLayout, lessonStudying } from "@koloda/react";
+import { LessonCardField } from "../lessons/lesson-card-field";
+import { lessonContent } from "../lessons/lesson";
+import { LessonFooterLayout } from "../lessons/lesson-footer";
+import { LessonHeaderLayout } from "../lessons/lesson-header";
+import { lessonStudying } from "../lessons/lesson-studying";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Card, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";

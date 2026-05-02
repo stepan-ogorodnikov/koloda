@@ -1,6 +1,6 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { QueryState } from "@koloda/react";
+import { QueryState } from "../components/query-state";
 import { useAppHotkey } from "@koloda/react-base";
 import { useHotkeysSettings } from "@koloda/react-base";
 import { queriesAtom, queryKeys } from "@koloda/react-base";

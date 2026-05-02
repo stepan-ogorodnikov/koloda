@@ -1,4 +1,5 @@
-import { QueryState, SettingsAi } from "@koloda/react";
+import { QueryState } from "../components/query-state";
+import { SettingsAi } from "../settings/settings-ai";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

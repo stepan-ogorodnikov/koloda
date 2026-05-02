@@ -1,6 +1,6 @@
 import { TranslationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { langAtom } from "@koloda/react";
+import { langAtom } from "../settings";
 import { queriesAtom } from "@koloda/react-base";
 import { LANGUAGES } from "@koloda/srs";
 import { Select } from "@koloda/ui";

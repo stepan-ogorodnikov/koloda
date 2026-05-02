@@ -1,4 +1,6 @@
-import { Algorithm, NotFound, QueryState } from "@koloda/react";
+import { Algorithm } from "../algorithms/algorithm";
+import { NotFound } from "../components/not-found";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";

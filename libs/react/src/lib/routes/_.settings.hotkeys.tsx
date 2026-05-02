@@ -1,4 +1,4 @@
-import { QueryState } from "@koloda/react";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/srs";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";

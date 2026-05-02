@@ -1,4 +1,6 @@
-import { AIChatDialog, cardsViewAtom, CardsViewToggle, QueryState } from "@koloda/react";
+import { AIChatDialog } from "../cards/ai-chat/ai-chat-dialog";
+import { cardsViewAtom, CardsViewToggle } from "../cards/cards-view-toggle";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Deck } from "@koloda/srs";
 import { getCSSVar } from "@koloda/ui";

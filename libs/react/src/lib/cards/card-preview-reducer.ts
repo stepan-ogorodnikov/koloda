@@ -1,4 +1,4 @@
-import type { LessonReducerState } from "@koloda/react";
+import type { LessonReducerState } from "../lessons/lesson-reducer";
 import type { ReducerAction } from "@koloda/react-base";
 import { dispatchReducerAction } from "@koloda/react-base";
 import type { Card, Template } from "@koloda/srs";

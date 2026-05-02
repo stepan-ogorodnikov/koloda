@@ -1,6 +1,7 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AlgorithmPicker, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker } from "../algorithms/algorithm-picker";
+import { TemplatePicker } from "../templates/template-picker";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { insertDeckSchema as schema, toFormErrors } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";

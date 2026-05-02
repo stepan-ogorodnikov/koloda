@@ -1,4 +1,5 @@
-import { AddAlgorithm, QueryState } from "@koloda/react";
+import { AddAlgorithm } from "../algorithms/add-algorithm";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

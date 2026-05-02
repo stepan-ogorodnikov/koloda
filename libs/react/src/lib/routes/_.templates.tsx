@@ -1,4 +1,5 @@
-import { AddTemplate, QueryState } from "@koloda/react";
+import { AddTemplate } from "../templates/add-template";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

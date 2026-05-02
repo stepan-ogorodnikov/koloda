@@ -1,4 +1,5 @@
-import { App, NotFound } from "@koloda/react";
+import { App } from "../components/app";
+import { NotFound } from "../components/not-found";
 import { useTitle } from "@koloda/react-base";
 import type { Queries } from "@koloda/react-base";
 import { type QueryClient } from "@tanstack/react-query";

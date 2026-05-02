@@ -1,4 +1,4 @@
-import { defaultAlgorithmAtom, defaultTemplateAtom, langAtom, themeAtom } from "@koloda/react";
+import { defaultAlgorithmAtom, defaultTemplateAtom, langAtom, themeAtom } from "../settings/settings";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { motionSettingAtom } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";

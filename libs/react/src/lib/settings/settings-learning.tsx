@@ -1,5 +1,6 @@
 import { parseTime } from "@internationalized/date";
-import { AlgorithmPicker, TemplatePicker } from "@koloda/react";
+import { AlgorithmPicker } from "../algorithms/algorithm-picker";
+import { TemplatePicker } from "../templates/template-picker";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { ResolvedLearningSettings } from "@koloda/srs";
 import { learningSettingsValidation, resolvedLearningSettingsValidation, toFormErrors } from "@koloda/srs";

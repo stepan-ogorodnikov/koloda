@@ -1,4 +1,5 @@
-import { LanguageSelect, themeAtom } from "@koloda/react";
+import { LanguageSelect } from "./interface-controls/language-select";
+import { themeAtom } from "./settings";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
 import { MOTION_SETTINGS } from "@koloda/srs";
 import type { AllowedSettings } from "@koloda/srs";

@@ -1,4 +1,4 @@
-import type { CardPreviewReducerAction } from "@koloda/react";
+import type { CardPreviewReducerAction } from "../cards/card-preview-reducer";
 import type { TemplateFieldType, TemplateOperation } from "@koloda/srs";
 import type { ActionDispatch, ComponentType } from "react";
 import { LessonCardFieldMarkdown } from "./lesson-card-field-markdown";

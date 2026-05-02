@@ -1,4 +1,4 @@
-import { defaultTemplateAtom } from "@koloda/react";
+import { defaultTemplateAtom } from "../settings/settings";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Template } from "@koloda/srs";
 import { Select } from "@koloda/ui";

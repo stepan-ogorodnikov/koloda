@@ -1,4 +1,5 @@
-import { CloneAlgorithm, NotFound } from "@koloda/react";
+import { CloneAlgorithm } from "./clone-algorithm";
+import { NotFound } from "../components/not-found";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
 import { toFormErrors, updateAlgorithmSchema as schema } from "@koloda/srs";

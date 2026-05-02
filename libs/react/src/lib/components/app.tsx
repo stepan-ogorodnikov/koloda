@@ -5,7 +5,10 @@ import {
   Settings01Icon,
   Settings05Icon,
 } from "@hugeicons/core-free-icons";
-import { LanguageSelect, ThemeSelect, useAppHotkeys, useGlobalSync } from "@koloda/react";
+import { LanguageSelect } from "../settings/interface-controls/language-select";
+import { ThemeSelect } from "../settings/interface-controls/theme-select";
+import { useAppHotkeys } from "../hooks/use-app-hotkeys";
+import { useGlobalSync } from "../hooks/use-global-sync";
 import { useHotkeysStatus } from "@koloda/react-base";
 import { Dashboard, Main } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

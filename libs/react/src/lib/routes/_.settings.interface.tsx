@@ -1,4 +1,4 @@
-import { SettingsInterface } from "@koloda/react";
+import { SettingsInterface } from "../settings/settings-interface";
 import { queryKeys, useTitle } from "@koloda/react-base";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

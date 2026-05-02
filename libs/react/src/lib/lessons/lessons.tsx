@@ -1,4 +1,5 @@
-import { Lesson as CurrentLesson, QueryState } from "@koloda/react";
+import { Lesson as CurrentLesson } from "./lesson";
+import { QueryState } from "../components/query-state";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";

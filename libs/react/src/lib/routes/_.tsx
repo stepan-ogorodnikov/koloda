@@ -1,4 +1,4 @@
-import { App, appMenu } from "@koloda/react";
+import { App, appMenu } from "../components/app";
 import { useTitle } from "@koloda/react-base";
 import { msg } from "@lingui/core/macro";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";

@@ -1,4 +1,4 @@
-import type { CardPreviewReducerAction } from "@koloda/react";
+import type { CardPreviewReducerAction } from "../cards/card-preview-reducer";
 import type { LessonTemplateLayoutItem } from "@koloda/srs";
 import { LayoutGroup } from "motion/react";
 import type { ActionDispatch } from "react";

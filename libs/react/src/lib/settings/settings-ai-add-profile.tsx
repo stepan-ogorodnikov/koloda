@@ -2,7 +2,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AiProvider, AISecrets } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
-import { aiProvidersAtom } from "@koloda/react";
+import { aiProvidersAtom } from "./ai-providers/ai-providers";
 import { queriesAtom, queryKeys } from "@koloda/react-base";
 import type { AddAIProfileFormProps } from "@koloda/srs";
 import { Button, Dialog, Select } from "@koloda/ui";
