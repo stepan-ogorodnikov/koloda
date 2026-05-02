@@ -13,18 +13,18 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/app/setup.ts:78
+#: src/app/setup.ts:75
 msgid "demo.setup.default-title"
 msgstr "Default"
 
-#: src/components/demo-setup.tsx:42
+#: src/components/demo-setup.tsx:43
 msgid "demo.setup.header"
 msgstr "Setting up a demo"
 
-#: src/components/demo-setup.tsx:46
+#: src/components/demo-setup.tsx:47
 msgid "demo.setup.storage"
 msgstr "All the data will be stored locally in IndexedDB browser storage."
 
-#: src/components/demo-setup.tsx:50
+#: src/components/demo-setup.tsx:51
 msgid "demo.setup.submit"
 msgstr "Get started"

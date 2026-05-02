@@ -1,0 +1,338 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-02 20:55+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ru\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../libs/app/src/lib/error.ts:39
+msgid "{maximum, plural, other {validation.common.title.too-long}}"
+msgstr "Название не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
+
+#: ../../libs/app/src/lib/error.ts:10
+msgid "ai.http {status}"
+msgstr "{status}"
+
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.http.400"
+msgstr "Некорректный формат запроса"
+
+#: ../../libs/app/src/lib/error.ts:14
+msgid "ai.http.401"
+msgstr "Ошибка авторизации. Проверьте учётные данные"
+
+#: ../../libs/app/src/lib/error.ts:15
+msgid "ai.http.402"
+msgstr "Для провайдера нужна оплата или доступные кредиты"
+
+#: ../../libs/app/src/lib/error.ts:16
+msgid "ai.http.403"
+msgstr "Нет доступа к этой модели или провайдеру"
+
+#: ../../libs/app/src/lib/error.ts:17
+msgid "ai.http.404"
+msgstr "Эндпоинт или модель не найдены"
+
+#: ../../libs/app/src/lib/error.ts:18
+msgid "ai.http.408"
+msgstr "Таймаут запроса"
+
+#: ../../libs/app/src/lib/error.ts:19
+msgid "ai.http.413"
+msgstr "Слишком большой запрос"
+
+#: ../../libs/app/src/lib/error.ts:20
+msgid "ai.http.422"
+msgstr "Провайдер не смог обработать этот запрос"
+
+#: ../../libs/app/src/lib/error.ts:21
+msgid "ai.http.429"
+msgstr "Слишком много запросов. Попробуйте чуть позже"
+
+#: ../../libs/app/src/lib/error.ts:22
+msgid "ai.http.500"
+msgstr "Провайдер не смог обработать запрос"
+
+#: ../../libs/app/src/lib/error.ts:23
+msgid "ai.http.502"
+msgstr "Провайдер временно недоступен"
+
+#: ../../libs/app/src/lib/error.ts:24
+msgid "ai.http.503"
+msgstr "Сервис временно недоступен"
+
+#: ../../libs/app/src/lib/error.ts:25
+msgid "ai.http.504"
+msgstr "Провайдер слишком долго отвечает"
+
+#: ../../libs/app/src/lib/error.ts:12
+msgid "ai.invalid-response"
+msgstr "Провайдер вернул некорректный ответ"
+
+#: ../../libs/app/src/lib/error.ts:11
+msgid "ai.network"
+msgstr "Ошибка сети при обращении к провайдеру"
+
+#: ../../libs/app/src/lib/error.ts:27
+msgid "db.add"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/app/src/lib/error.ts:30
+msgid "db.clone"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/app/src/lib/error.ts:29
+msgid "db.delete"
+msgstr "Не удалось выполнить операцию"
+
+#: ../../libs/app/src/lib/error.ts:26
+msgid "db.get"
+msgstr "Не удалось загрузить данные"
+
+#: ../../libs/app/src/lib/error.ts:28
+msgid "db.update"
+msgstr "Не удалось обновить данные"
+
+#: ../../libs/app/src/lib/settings-interface.ts:24
+msgid "motion.off"
+msgstr "Отключено"
+
+#: ../../libs/app/src/lib/settings-interface.ts:23
+msgid "motion.on"
+msgstr "Включено"
+
+#: ../../libs/app/src/lib/settings-interface.ts:25
+msgid "motion.system"
+msgstr "Как в системе"
+
+#: ../../libs/app/src/lib/error.ts:31
+msgid "not-found.algorithms.clone.source"
+msgstr "Исходный алгоритм не найден"
+
+#: ../../libs/app/src/lib/error.ts:32
+msgid "not-found.algorithms.delete.successor"
+msgstr "Алгоритм-наследник не найден"
+
+#: ../../libs/app/src/lib/error.ts:34
+msgid "not-found.cards.add.template"
+msgstr "Шаблон не найден"
+
+#: ../../libs/app/src/lib/error.ts:35
+msgid "not-found.cards.update.card"
+msgstr "Карточка не найдена"
+
+#: ../../libs/app/src/lib/error.ts:36
+msgid "not-found.cards.update.template"
+msgstr "Шаблон не найден"
+
+#: ../../libs/app/src/lib/error.ts:33
+msgid "not-found.templates.clone.source"
+msgstr "Исходный шаблон не найден"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:41
+msgid "settings.hotkeys.ai.cancel"
+msgstr "Прервать"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+msgid "settings.hotkeys.ai.open-model-picker"
+msgstr "Выбор модели ИИ"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:42
+msgid "settings.hotkeys.ai.open-profile-picker"
+msgstr "Выбор профиля ИИ"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+msgid "settings.hotkeys.ai.scroll-down"
+msgstr "Прокрутить вниз"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+msgid "settings.hotkeys.ai.scroll-to-bottom"
+msgstr "Прокрутить в конец"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+msgid "settings.hotkeys.ai.scroll-to-top"
+msgstr "Прокрутить на начало"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.scroll-up"
+msgstr "Прокрутить вверх"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Переключить настройки"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:17
+msgid "settings.hotkeys.form.reset"
+msgstr "Сбросить"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:16
+msgid "settings.hotkeys.form.submit"
+msgstr "Сохранить"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:35
+msgid "settings.hotkeys.grades.again"
+msgstr "Снова"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:38
+msgid "settings.hotkeys.grades.easy"
+msgstr "Легко"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:36
+msgid "settings.hotkeys.grades.hard"
+msgstr "Трудно"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:37
+msgid "settings.hotkeys.grades.normal"
+msgstr "Хорошо"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:30
+msgid "settings.hotkeys.navigation.algorithms"
+msgstr "Алгоритмы"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:28
+msgid "settings.hotkeys.navigation.dashboard"
+msgstr "Главная"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:29
+msgid "settings.hotkeys.navigation.decks"
+msgstr "Колоды"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:32
+msgid "settings.hotkeys.navigation.settings"
+msgstr "Настройки"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:31
+msgid "settings.hotkeys.navigation.templates"
+msgstr "Шаблоны"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:11
+msgid "settings.hotkeys.scopes.ai"
+msgstr "ИИ"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:7
+msgid "settings.hotkeys.scopes.form"
+msgstr "Редактирование"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:10
+msgid "settings.hotkeys.scopes.grades"
+msgstr "Выбор сложности"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:9
+msgid "settings.hotkeys.scopes.navigation"
+msgstr "Навигация"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.scopes.ui"
+msgstr "Интерфейс"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:25
+msgid "settings.hotkeys.ui.close"
+msgstr "Закрыть всплывающее окно"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:21
+msgid "settings.hotkeys.ui.focus-next"
+msgstr "Фокус далее"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:22
+msgid "settings.hotkeys.ui.focus-prev"
+msgstr "Фокус назад"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:23
+msgid "settings.hotkeys.ui.next-tab"
+msgstr "Следующая вкладка"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:24
+msgid "settings.hotkeys.ui.prev-tab"
+msgstr "Предыдущая вкладка"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:20
+msgid "settings.hotkeys.ui.submit"
+msgstr "Отправка формы"
+
+#: ../../libs/app/src/lib/settings-interface.ts:16
+msgid "theme.dark"
+msgstr "Тёмная"
+
+#: ../../libs/app/src/lib/settings-interface.ts:15
+msgid "theme.light"
+msgstr "Светлая"
+
+#: ../../libs/app/src/lib/settings-interface.ts:17
+msgid "theme.system"
+msgstr "Системная"
+
+#: ../../libs/app/src/lib/error.ts:9
+msgid "unknown"
+msgstr "Произошла ошибка"
+
+#: ../../libs/app/src/lib/error.ts:59
+msgid "validation.cards.content.field-empty"
+msgstr "Это поле не может быть пустым"
+
+#: ../../libs/app/src/lib/error.ts:37
+msgid "validation.common.title.too-short"
+msgstr "Название не может быть пустым"
+
+#: ../../libs/app/src/lib/error.ts:51
+msgid "validation.lessons.result.card-review-mismatch"
+msgstr "ID карточки и записи не совпадает"
+
+#: ../../libs/app/src/lib/error.ts:53
+msgid "validation.settings-ai.providers.apiKey"
+msgstr "API key не может быть пустым"
+
+#: ../../libs/app/src/lib/error.ts:54
+msgid "validation.settings-ai.providers.baseUrl"
+msgstr "Некорректный URL"
+
+#: ../../libs/app/src/lib/error.ts:52
+msgid "validation.settings-hotkeys.duplicate-keys"
+msgstr "Есть конфликтующие комбинации клавиш"
+
+#: ../../libs/app/src/lib/error.ts:43
+msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
+msgstr "Лимит карточек заучивания не может быть больше общего лимита"
+
+#: ../../libs/app/src/lib/error.ts:45
+msgid "validation.settings-learning.daily-limits.review-exceeds-total"
+msgstr "Лимит карточек повтора не может быть больше общего лимита"
+
+#: ../../libs/app/src/lib/error.ts:41
+msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
+msgstr "Лимит новых карточек не может быть больше общего лимита"
+
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.settings-learning.day-starts-at"
+msgstr "Неверный формат настройки начала дня"
+
+#: ../../libs/app/src/lib/error.ts:47
+msgid "validation.settings-learning.learn-ahead-limit.hours-range"
+msgstr "Часы должны быть от 0 до 48"
+
+#: ../../libs/app/src/lib/error.ts:49
+msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
+msgstr "Минуты должны быть от 0 до 59"
+
+#: ../../libs/app/src/lib/error.ts:58
+msgid "validation.templates.delete-locked"
+msgstr "Нельзя удалить заблокированный шаблон"
+
+#: ../../libs/app/src/lib/error.ts:55
+msgid "validation.templates.fields.too-few"
+msgstr "Необходимо хотя бы одно поле"
+
+#: ../../libs/app/src/lib/error.ts:56
+msgid "validation.templates.layout.too-few"
+msgstr "Раскладка не может быть пустой"
+
+#: ../../libs/app/src/lib/error.ts:57
+msgid "validation.templates.update-locked"
+msgstr "Нельзя обновить заблокированный шаблон"

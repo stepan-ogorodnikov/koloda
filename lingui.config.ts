@@ -7,16 +7,24 @@ const config: LinguiConfig = {
   },
   catalogs: [
     {
+      path: "../../libs/app/locales/{locale}/messages",
+      include: ["../../libs/app/src"],
+    },
+    {
+      path: "../../libs/app-react/locales/{locale}/messages",
+      include: ["../../libs/app-react/src"],
+    },
+    {
       path: "../../libs/srs/locales/{locale}/messages",
       include: ["../../libs/srs/src"],
     },
     {
-      path: "../../libs/ui/locales/{locale}/messages",
-      include: ["../../libs/ui/src"],
+      path: "../../libs/srs-react/locales/{locale}/messages",
+      include: ["../../libs/srs-react/src"],
     },
     {
-      path: "../../libs/react/locales/{locale}/messages",
-      include: ["../../libs/react/src"],
+      path: "../../libs/ui/locales/{locale}/messages",
+      include: ["../../libs/ui/src"],
     },
     {
       path: "../../libs/ai/locales/{locale}/messages",

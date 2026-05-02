@@ -63,6 +63,30 @@ msgstr "Отменить"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
+#: ../../libs/ui/src/lib/components/not-found.tsx:17
+msgid "not-found.back"
+msgstr "Назад"
+
+#: ../../libs/ui/src/lib/components/not-found.tsx:15
+msgid "not-found.message"
+msgstr "Запрашиваемые данные не существуют"
+
+#: ../../libs/ui/src/lib/components/not-found.tsx:14
+msgid "not-found.title"
+msgstr "Не найдено"
+
+#: ../../libs/ui/src/lib/components/query-error.tsx:19
+msgid "query-error.message"
+msgstr "Ошибка загрузки"
+
+#: ../../libs/ui/src/lib/components/query-error.tsx:55
+msgid "query-error.retry"
+msgstr "Повторить"
+
+#: ../../libs/ui/src/lib/components/query-loading.tsx:13
+msgid "query-loading.message"
+msgstr "Загрузка..."
+
 #: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:55
 msgid "table.pagination.buttons.first"
 msgstr "Перейти на первую страницу"

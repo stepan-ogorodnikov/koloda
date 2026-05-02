@@ -1,0 +1,338 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-02 20:55+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../libs/app/src/lib/error.ts:39
+msgid "{maximum, plural, other {validation.common.title.too-long}}"
+msgstr "Title can't be longer than {maximum, plural, other {# characters}}"
+
+#: ../../libs/app/src/lib/error.ts:10
+msgid "ai.http {status}"
+msgstr "Request failed with status {status}"
+
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.http.400"
+msgstr "The Request is invalid"
+
+#: ../../libs/app/src/lib/error.ts:14
+msgid "ai.http.401"
+msgstr "Authentication failed. Check your API key"
+
+#: ../../libs/app/src/lib/error.ts:15
+msgid "ai.http.402"
+msgstr "AI provider requires payment or available credits"
+
+#: ../../libs/app/src/lib/error.ts:16
+msgid "ai.http.403"
+msgstr "Access to this AI model or provider is forbidden"
+
+#: ../../libs/app/src/lib/error.ts:17
+msgid "ai.http.404"
+msgstr "The endpoint or model was not found"
+
+#: ../../libs/app/src/lib/error.ts:18
+msgid "ai.http.408"
+msgstr "The request timed out"
+
+#: ../../libs/app/src/lib/error.ts:19
+msgid "ai.http.413"
+msgstr "The request is too large"
+
+#: ../../libs/app/src/lib/error.ts:20
+msgid "ai.http.422"
+msgstr "AI provider could not process this request"
+
+#: ../../libs/app/src/lib/error.ts:21
+msgid "ai.http.429"
+msgstr "Too many requests. Try again in a moment"
+
+#: ../../libs/app/src/lib/error.ts:22
+msgid "ai.http.500"
+msgstr "AI provider failed to process the request"
+
+#: ../../libs/app/src/lib/error.ts:23
+msgid "ai.http.502"
+msgstr "AI provider is temporarily unreachable"
+
+#: ../../libs/app/src/lib/error.ts:24
+msgid "ai.http.503"
+msgstr "AI provider is temporarily unavailable"
+
+#: ../../libs/app/src/lib/error.ts:25
+msgid "ai.http.504"
+msgstr "AI provider took too long to respond"
+
+#: ../../libs/app/src/lib/error.ts:12
+msgid "ai.invalid-response"
+msgstr "AI provider returned an invalid response"
+
+#: ../../libs/app/src/lib/error.ts:11
+msgid "ai.network"
+msgstr "Network error"
+
+#: ../../libs/app/src/lib/error.ts:27
+msgid "db.add"
+msgstr "Failed to add data"
+
+#: ../../libs/app/src/lib/error.ts:30
+msgid "db.clone"
+msgstr "Failed to clone data"
+
+#: ../../libs/app/src/lib/error.ts:29
+msgid "db.delete"
+msgstr "Failed to delete data"
+
+#: ../../libs/app/src/lib/error.ts:26
+msgid "db.get"
+msgstr "Failed to load data"
+
+#: ../../libs/app/src/lib/error.ts:28
+msgid "db.update"
+msgstr "Failed to update data"
+
+#: ../../libs/app/src/lib/settings-interface.ts:24
+msgid "motion.off"
+msgstr "Disabled"
+
+#: ../../libs/app/src/lib/settings-interface.ts:23
+msgid "motion.on"
+msgstr "Enabled"
+
+#: ../../libs/app/src/lib/settings-interface.ts:25
+msgid "motion.system"
+msgstr "Automatic"
+
+#: ../../libs/app/src/lib/error.ts:31
+msgid "not-found.algorithms.clone.source"
+msgstr "Source preset not found"
+
+#: ../../libs/app/src/lib/error.ts:32
+msgid "not-found.algorithms.delete.successor"
+msgstr "Successor preset not found"
+
+#: ../../libs/app/src/lib/error.ts:34
+msgid "not-found.cards.add.template"
+msgstr "Template not found"
+
+#: ../../libs/app/src/lib/error.ts:35
+msgid "not-found.cards.update.card"
+msgstr "Card not found"
+
+#: ../../libs/app/src/lib/error.ts:36
+msgid "not-found.cards.update.template"
+msgstr "Template not found"
+
+#: ../../libs/app/src/lib/error.ts:33
+msgid "not-found.templates.clone.source"
+msgstr "Source template not found"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:41
+msgid "settings.hotkeys.ai.cancel"
+msgstr "Interrupt"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+msgid "settings.hotkeys.ai.open-model-picker"
+msgstr "Open AI model picker"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:42
+msgid "settings.hotkeys.ai.open-profile-picker"
+msgstr "Open AI profile picker"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+msgid "settings.hotkeys.ai.scroll-down"
+msgstr "Scroll down"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+msgid "settings.hotkeys.ai.scroll-to-bottom"
+msgstr "Scroll to bottom"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+msgid "settings.hotkeys.ai.scroll-to-top"
+msgstr "Scroll to top"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+msgid "settings.hotkeys.ai.scroll-up"
+msgstr "Scroll up"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+msgid "settings.hotkeys.ai.toggle-settings"
+msgstr "Toggle settings"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:17
+msgid "settings.hotkeys.form.reset"
+msgstr "Discard"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:16
+msgid "settings.hotkeys.form.submit"
+msgstr "Save"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:35
+msgid "settings.hotkeys.grades.again"
+msgstr "Again"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:38
+msgid "settings.hotkeys.grades.easy"
+msgstr "Easy"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:36
+msgid "settings.hotkeys.grades.hard"
+msgstr "Hard"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:37
+msgid "settings.hotkeys.grades.normal"
+msgstr "Normal"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:30
+msgid "settings.hotkeys.navigation.algorithms"
+msgstr "Presets"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:28
+msgid "settings.hotkeys.navigation.dashboard"
+msgstr "Dashboard"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:29
+msgid "settings.hotkeys.navigation.decks"
+msgstr "Decks"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:32
+msgid "settings.hotkeys.navigation.settings"
+msgstr "Settings"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:31
+msgid "settings.hotkeys.navigation.templates"
+msgstr "Templates"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:11
+msgid "settings.hotkeys.scopes.ai"
+msgstr "AI"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:7
+msgid "settings.hotkeys.scopes.form"
+msgstr "Forms"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:10
+msgid "settings.hotkeys.scopes.grades"
+msgstr "Grade selection"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:9
+msgid "settings.hotkeys.scopes.navigation"
+msgstr "Navigation"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.scopes.ui"
+msgstr "Interface"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:25
+msgid "settings.hotkeys.ui.close"
+msgstr "Close popover"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:21
+msgid "settings.hotkeys.ui.focus-next"
+msgstr "Focus forward"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:22
+msgid "settings.hotkeys.ui.focus-prev"
+msgstr "Focus backward"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:23
+msgid "settings.hotkeys.ui.next-tab"
+msgstr "Go to next tab"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:24
+msgid "settings.hotkeys.ui.prev-tab"
+msgstr "Go to previous tab"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:20
+msgid "settings.hotkeys.ui.submit"
+msgstr "Submit text field"
+
+#: ../../libs/app/src/lib/settings-interface.ts:16
+msgid "theme.dark"
+msgstr "Dark"
+
+#: ../../libs/app/src/lib/settings-interface.ts:15
+msgid "theme.light"
+msgstr "Light"
+
+#: ../../libs/app/src/lib/settings-interface.ts:17
+msgid "theme.system"
+msgstr "System"
+
+#: ../../libs/app/src/lib/error.ts:9
+msgid "unknown"
+msgstr "An error occurred"
+
+#: ../../libs/app/src/lib/error.ts:59
+msgid "validation.cards.content.field-empty"
+msgstr "This field can't be empty"
+
+#: ../../libs/app/src/lib/error.ts:37
+msgid "validation.common.title.too-short"
+msgstr "Title can't be empty"
+
+#: ../../libs/app/src/lib/error.ts:51
+msgid "validation.lessons.result.card-review-mismatch"
+msgstr "Card id and review card id don't match"
+
+#: ../../libs/app/src/lib/error.ts:53
+msgid "validation.settings-ai.providers.apiKey"
+msgstr "API key can't be empty"
+
+#: ../../libs/app/src/lib/error.ts:54
+msgid "validation.settings-ai.providers.baseUrl"
+msgstr "Invalid URL"
+
+#: ../../libs/app/src/lib/error.ts:52
+msgid "validation.settings-hotkeys.duplicate-keys"
+msgstr "There are conflicting hotkeys"
+
+#: ../../libs/app/src/lib/error.ts:43
+msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
+msgstr "Learn can't be more than total"
+
+#: ../../libs/app/src/lib/error.ts:45
+msgid "validation.settings-learning.daily-limits.review-exceeds-total"
+msgstr "Review can't be more than total"
+
+#: ../../libs/app/src/lib/error.ts:41
+msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
+msgstr "New can't be more than total"
+
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.settings-learning.day-starts-at"
+msgstr "Start of the day is incorrect"
+
+#: ../../libs/app/src/lib/error.ts:47
+msgid "validation.settings-learning.learn-ahead-limit.hours-range"
+msgstr "Hours must be between 0 and 48"
+
+#: ../../libs/app/src/lib/error.ts:49
+msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
+msgstr "Minutes must be between 0 and 59"
+
+#: ../../libs/app/src/lib/error.ts:58
+msgid "validation.templates.delete-locked"
+msgstr "Cannot delete locked template"
+
+#: ../../libs/app/src/lib/error.ts:55
+msgid "validation.templates.fields.too-few"
+msgstr "There has to be at least one field"
+
+#: ../../libs/app/src/lib/error.ts:56
+msgid "validation.templates.layout.too-few"
+msgstr "There has to be at least one layout item"
+
+#: ../../libs/app/src/lib/error.ts:57
+msgid "validation.templates.update-locked"
+msgstr "Cannot update locked template"

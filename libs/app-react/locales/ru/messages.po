@@ -1,0 +1,319 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-05-02 20:55+0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ru\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:36
+msgid "algorithms.title"
+msgstr "Алгоритмы"
+
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
+msgid "deck.tabs.cards"
+msgstr "Карточки"
+
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:25
+msgid "deck.tabs.details"
+msgstr "Параметры"
+
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:47
+msgid "deck.tabs.label"
+msgstr "Вкладки колоды"
+
+#: ../../libs/app-react/src/lib/routes/_.decks.tsx:36
+msgid "decks.title"
+msgstr "Колоды"
+
+#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:40
+msgid "hotkey-recorder.delete-button.label"
+msgstr "Удалить сочетание клавиш"
+
+#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:33
+msgid "hotkey-recorder.edit-button.label"
+msgstr "Сменить сочетание клавиш"
+
+#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:29
+msgid "language-select.label"
+msgstr "Язык интерфейса"
+
+#: ../../libs/app-react/src/lib/components/app.tsx:21
+msgid "nav.algorithms"
+msgstr "Алгоритмы"
+
+#: ../../libs/app-react/src/lib/components/app.tsx:20
+msgid "nav.decks"
+msgstr "Колоды"
+
+#: ../../libs/app-react/src/lib/components/app.tsx:19
+msgid "nav.home"
+msgstr "Главная"
+
+#: ../../libs/app-react/src/lib/components/app.tsx:23
+msgid "nav.settings"
+msgstr "Настройки"
+
+#: ../../libs/app-react/src/lib/components/app.tsx:22
+msgid "nav.templates"
+msgstr "Шаблоны"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:33
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
+msgid "settings.ai"
+msgstr "ИИ"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:65
+msgid "settings.ai.add"
+msgstr "Добавить профиль"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:67
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:102
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:83
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:83
+msgid "settings.ai.add.submit"
+msgstr "Добавить"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:72
+msgid "settings.ai.add.title"
+msgstr "Добавить ИИ профиль"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:52
+msgid "settings.ai.delete.cancel"
+msgstr "Отмена"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:49
+msgid "settings.ai.delete.confirm"
+msgstr "Удалить"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:47
+msgid "settings.ai.delete.message"
+msgstr "Вы уверены, что хотите удалить этот профиль?"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:63
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:99
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:80
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:75
+msgid "settings.ai.edit.submit"
+msgstr "Сохранить"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:67
+msgid "settings.ai.edit.title"
+msgstr "Редактировать ИИ профиль"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:57
+msgid "settings.ai.edit.trigger"
+msgstr "Редактировать профиль"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:85
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:66
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:81
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:57
+msgid "settings.ai.profiles.api-key.label"
+msgstr "API key"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:71
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:66
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:72
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:63
+msgid "settings.ai.profiles.base-url.label"
+msgstr "Базовый URL"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:37
+msgid "settings.ai.profiles.delete.trigger"
+msgstr "Удалить профиль"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:21
+msgid "settings.ai.profiles.empty"
+msgstr "Нет профилей"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:78
+msgid "settings.ai.profiles.provider.label"
+msgstr "Провайдер"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:46
+msgid "settings.ai.profiles.replace"
+msgstr "Заменить"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:17
+msgid "settings.ai.profiles.title"
+msgstr "Профили ИИ"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:50
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:56
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:51
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:51
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:46
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:57
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:48
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:48
+msgid "settings.ai.profiles.title.label"
+msgstr "Название"
+
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:51
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:57
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:52
+#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:52
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:47
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:58
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:49
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-openrouter.tsx:49
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
+msgid "settings.ai.profiles.title.placeholder"
+msgstr "Без названия"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
+msgid "settings.hotkeys"
+msgstr "Горячие клавиши"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:28
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
+msgid "settings.interface"
+msgstr "Интерфейс"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:29
+msgid "settings.interface.language"
+msgstr "Язык интерфейса"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
+msgid "settings.interface.motion"
+msgstr "Анимации"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:30
+msgid "settings.interface.theme"
+msgstr "Тема оформления"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
+msgid "settings.learning"
+msgstr "Изучение"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:197
+msgid "settings.learning.day-starts-at"
+msgstr "Начало дня"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:54
+msgid "settings.learning.defaults.algorithm"
+msgstr "Алгоритм по умолчанию"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:64
+msgid "settings.learning.defaults.template"
+msgstr "Шаблон по умолчанию"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:159
+msgid "settings.learning.learn-ahead-limit"
+msgstr "Лимит изучения наперёд"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:165
+msgid "settings.learning.learn-ahead-limit.hours.label"
+msgstr "Часы"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:172
+msgid "settings.learning.learn-ahead-limit.hours.suffix"
+msgstr "ч"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:180
+msgid "settings.learning.learn-ahead-limit.minutes.label"
+msgstr "Минуты"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:187
+msgid "settings.learning.learn-ahead-limit.minutes.suffix"
+msgstr "м"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:70
+msgid "settings.learning.limits"
+msgstr "Дневные лимиты"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:103
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:128
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:153
+msgid "settings.learning.limits.counts-towards-total"
+msgstr "Идёт в счёт всего"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:116
+msgid "settings.learning.limits.learn"
+msgstr "Заучивание"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:141
+msgid "settings.learning.limits.review"
+msgstr "Повтор"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:78
+msgid "settings.learning.limits.total"
+msgstr "Всего"
+
+#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:91
+msgid "settings.learning.limits.untouched"
+msgstr "Новые"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:33
+msgid "settings.title"
+msgstr "Настройки"
+
+#: ../../libs/app-react/src/lib/routes/_.templates.tsx:36
+msgid "templates.title"
+msgstr "Шаблоны"
+
+#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:31
+msgid "theme-select.label"
+msgstr "Тема оформления"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:38
+msgid "theme.dark"
+msgstr "Тёмная"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:37
+msgid "theme.light"
+msgstr "Светлая"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:39
+msgid "theme.system"
+msgstr "Системная"
+
+#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:17
+msgid "title.algorithms"
+msgstr "Алгоритмы"
+
+#: ../../libs/app-react/src/lib/routes/_.tsx:12
+msgid "title.base"
+msgstr "Koloda"
+
+#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:13
+msgid "title.dashboard"
+msgstr "Главная"
+
+#: ../../libs/app-react/src/lib/routes/_.decks.tsx:17
+msgid "title.decks"
+msgstr "Колоды"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:10
+msgid "title.settings"
+msgstr "Настройки"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:16
+msgid "title.settings.ai"
+msgstr "ИИ"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:17
+msgid "title.settings.hotkeys"
+msgstr "Горячие клавиши"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:13
+msgid "title.settings.interface"
+msgstr "Интерфейс"
+
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:17
+msgid "title.settings.learning"
+msgstr "Изучение"
+
+#: ../../libs/app-react/src/lib/routes/_.templates.tsx:17
+msgid "title.templates"
+msgstr "Шаблоны"

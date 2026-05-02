@@ -63,6 +63,30 @@ msgstr "Cancel"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Expecting input"
 
+#: ../../libs/ui/src/lib/components/not-found.tsx:17
+msgid "not-found.back"
+msgstr "Go back"
+
+#: ../../libs/ui/src/lib/components/not-found.tsx:15
+msgid "not-found.message"
+msgstr "Content you're trying to access doesn't exist"
+
+#: ../../libs/ui/src/lib/components/not-found.tsx:14
+msgid "not-found.title"
+msgstr "Not found"
+
+#: ../../libs/ui/src/lib/components/query-error.tsx:19
+msgid "query-error.message"
+msgstr "Something went wrong"
+
+#: ../../libs/ui/src/lib/components/query-error.tsx:55
+msgid "query-error.retry"
+msgstr "Retry"
+
+#: ../../libs/ui/src/lib/components/query-loading.tsx:13
+msgid "query-loading.message"
+msgstr "Loading"
+
 #: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:55
 msgid "table.pagination.buttons.first"
 msgstr "Go to first page"
