@@ -124,14 +124,14 @@
         "@koloda/ai": "workspace:*",
         "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
-        "@koloda/react-base": "workspace:*",
+        "@koloda/core-react": "workspace:*",
         "@koloda/srs": "workspace:*",
         "@koloda/srs-react": "workspace:*",
         "@koloda/ui": "workspace:*",
       },
     },
-    "libs/react-base": {
-      "name": "@koloda/react-base",
+    "libs/core-react": {
+      "name": "@koloda/core-react",
       "version": "0.0.1",
       "dependencies": {
         "@koloda/app": "workspace:*",
@@ -160,7 +160,7 @@
         "@koloda/ai": "workspace:*",
         "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
-        "@koloda/react-base": "workspace:*",
+        "@koloda/core-react": "workspace:*",
         "@koloda/srs": "workspace:*",
         "@koloda/ui": "workspace:*",
       },
@@ -578,11 +578,11 @@
 
     "@koloda/app-react": ["@koloda/app-react@workspace:libs/app-react"],
 
+    "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
+
     "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
 
     "@koloda/native-tauri-react": ["@koloda/native-tauri-react@workspace:apps/native-tauri-react"],
-
-    "@koloda/react-base": ["@koloda/react-base@workspace:libs/react-base"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 

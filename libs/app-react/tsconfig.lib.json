@@ -42,7 +42,7 @@
       "path": "../ai-react/tsconfig.lib.json"
     },
     {
-      "path": "../react-base/tsconfig.lib.json"
+      "path": "../core-react/tsconfig.lib.json"
     },
     {
       "path": "../srs/tsconfig.lib.json"

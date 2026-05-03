@@ -1,4 +1,4 @@
-import { queryKeys, useTitle } from "@koloda/react-base";
+import { queryKeys, useTitle } from "@koloda/core-react";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

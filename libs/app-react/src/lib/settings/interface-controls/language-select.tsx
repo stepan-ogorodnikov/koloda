@@ -1,8 +1,8 @@
 import { TranslationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LANGUAGES } from "@koloda/app";
-import { langAtom } from "@koloda/react-base";
-import { queriesAtom } from "@koloda/react-base";
+import { langAtom } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Template } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";

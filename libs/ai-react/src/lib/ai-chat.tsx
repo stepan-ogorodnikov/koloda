@@ -1,8 +1,8 @@
 import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter } from "@koloda/ai";
-import { useHotkeysSettings } from "@koloda/react-base";
-import { useAppHotkey } from "@koloda/react-base";
+import { useHotkeysSettings } from "@koloda/core-react";
+import { useAppHotkey } from "@koloda/core-react";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

@@ -1,6 +1,6 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import type { ButtonProps, TWVProps } from "@koloda/ui";
 import { Button, button, dispatchKey, overlay, Popover } from "@koloda/ui";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";

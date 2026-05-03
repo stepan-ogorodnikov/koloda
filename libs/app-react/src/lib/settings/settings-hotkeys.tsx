@@ -1,7 +1,7 @@
 import { HOTKEY_SCOPE_LABELS, HOTKEYS_LABELS, hotkeysSettingsValidation as schema } from "@koloda/app";
 import type { HotkeysSettings } from "@koloda/app";
 import { objectEntries, toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { AddHotkeyButton, FormLayout, formLayout, useAppForm } from "@koloda/ui";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";

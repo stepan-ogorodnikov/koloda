@@ -1,5 +1,5 @@
 import { toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
 import { updateAlgorithmSchema as schema } from "@koloda/srs";
 import { NotFound } from "@koloda/ui";

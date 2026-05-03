@@ -1,5 +1,5 @@
 import { LanguageSelect, ThemeSelect } from "@koloda/app-react";
-import { langAtom, themeAtom } from "@koloda/react-base";
+import { langAtom, themeAtom } from "@koloda/core-react";
 import {
   Button,
   overlayFrame,

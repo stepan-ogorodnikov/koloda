@@ -1,4 +1,4 @@
-import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

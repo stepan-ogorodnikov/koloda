@@ -1,7 +1,7 @@
 import type { AIProfile, AISecrets } from "@koloda/ai";
 import { getProviderConfig } from "@koloda/ai";
 import type { SecretField } from "@koloda/ai";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

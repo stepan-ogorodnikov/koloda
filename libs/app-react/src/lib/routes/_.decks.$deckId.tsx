@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { DeckCards } from "@koloda/srs-react";
 import { DeckDetails } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";

@@ -49,10 +49,10 @@ libs/
   ai-react/           # AI features React UI
   app/                # Generic app infrastructure (error types, utilities, interface settings)
   app-react/          # App shell, routing, settings UI, global hooks
+  core-react/         # Shared React infrastructure (queries, hooks, atoms)
   srs/                # SRS domain logic
   srs-pgsql/          # PostgreSQL backend (web)
   srs-sqlite/         # SQLite schema (desktop)
   srs-react/          # SRS domain React UI
-  react-base/         # Shared React infrastructure (query types, hooks, atoms)
   ui/                 # Styles and UI primitives
 ```

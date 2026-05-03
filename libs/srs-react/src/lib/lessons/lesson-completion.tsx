@@ -1,4 +1,4 @@
-import { useAppHotkey } from "@koloda/react-base";
+import { useAppHotkey } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ActionDispatch } from "react";

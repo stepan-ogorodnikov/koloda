@@ -1,5 +1,5 @@
-import { useHotkeysSettings } from "@koloda/react-base";
-import { useAppHotkey } from "@koloda/react-base";
+import { useHotkeysSettings } from "@koloda/core-react";
+import { useAppHotkey } from "@koloda/core-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab } from "@koloda/ui";
 import { useNavigate } from "@tanstack/react-router";
 

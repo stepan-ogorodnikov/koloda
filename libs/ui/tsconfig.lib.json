@@ -34,7 +34,7 @@
   ],
   "references": [
     {
-      "path": "../react-base/tsconfig.lib.json"
+      "path": "../core-react/tsconfig.lib.json"
     },
     {
       "path": "../app/tsconfig.lib.json"

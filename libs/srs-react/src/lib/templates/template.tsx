@@ -1,7 +1,7 @@
 import { SquareLock01Icon, SquareUnlock01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template as TemplateType, UpdateTemplateValues } from "@koloda/srs";
 import { updateTemplateSchema as schema } from "@koloda/srs";
 import { NotFound } from "@koloda/ui";

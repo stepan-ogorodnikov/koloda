@@ -15,7 +15,7 @@
     "@koloda/app": "workspace:*",
     "@koloda/ai": "workspace:*",
     "@koloda/ai-react": "workspace:*",
-    "@koloda/react-base": "workspace:*",
+    "@koloda/core-react": "workspace:*",
     "@koloda/srs": "workspace:*",
     "@koloda/ui": "workspace:*"
   }

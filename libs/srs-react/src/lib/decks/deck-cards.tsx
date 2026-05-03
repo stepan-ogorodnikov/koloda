@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";
 import { getCSSVar } from "@koloda/ui";

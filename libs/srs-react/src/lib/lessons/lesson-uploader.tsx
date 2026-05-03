@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/react-base";
+import { queriesAtom } from "@koloda/core-react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useEffectEvent } from "react";

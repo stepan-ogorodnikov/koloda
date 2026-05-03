@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Fade } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";

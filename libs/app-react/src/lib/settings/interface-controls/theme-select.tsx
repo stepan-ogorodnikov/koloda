@@ -1,8 +1,8 @@
 import { ComputerSettingsIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { THEMES } from "@koloda/app";
-import { themeAtom } from "@koloda/react-base";
-import { queriesAtom } from "@koloda/react-base";
+import { themeAtom } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

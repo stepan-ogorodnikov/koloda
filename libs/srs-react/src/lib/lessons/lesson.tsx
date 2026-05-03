@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/core-react";
 import type { Deck, LessonType } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";

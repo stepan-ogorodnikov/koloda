@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";
 import { BackButton, Main, useRouteFocus } from "@koloda/ui";

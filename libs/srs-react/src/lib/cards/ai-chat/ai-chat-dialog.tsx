@@ -1,7 +1,7 @@
 import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/ai-react";
-import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";

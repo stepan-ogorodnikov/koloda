@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

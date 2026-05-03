@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { AddTemplate } from "@koloda/srs-react";
 import { QueryState } from "@koloda/ui";
 import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";

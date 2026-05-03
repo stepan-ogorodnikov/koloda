@@ -1,5 +1,5 @@
-import { defaultTemplateAtom } from "@koloda/react-base";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { defaultTemplateAtom } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";

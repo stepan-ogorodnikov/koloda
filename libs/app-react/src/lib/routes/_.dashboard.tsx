@@ -1,4 +1,4 @@
-import { queryKeys, useTitle } from "@koloda/react-base";
+import { queryKeys, useTitle } from "@koloda/core-react";
 import { LearnedToday } from "@koloda/srs-react";
 import { Lessons } from "@koloda/srs-react";
 import { Main, useRouteFocus } from "@koloda/ui";

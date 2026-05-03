@@ -1,6 +1,6 @@
 import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";

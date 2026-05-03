@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck, Template } from "@koloda/srs";
 import { SearchField, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

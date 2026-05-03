@@ -1,5 +1,5 @@
-import { defaultAlgorithmAtom } from "@koloda/react-base";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { defaultAlgorithmAtom } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";

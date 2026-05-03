@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/react-base";
+import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";

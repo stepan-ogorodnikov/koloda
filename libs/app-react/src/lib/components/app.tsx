@@ -5,7 +5,7 @@ import {
   Settings01Icon,
   Settings05Icon,
 } from "@hugeicons/core-free-icons";
-import { useHotkeysStatus } from "@koloda/react-base";
+import { useHotkeysStatus } from "@koloda/core-react";
 import { Dashboard, Main } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";

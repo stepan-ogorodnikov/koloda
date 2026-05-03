@@ -12,7 +12,7 @@
       "path": "../../libs/srs"
     },
     {
-      "path": "../../libs/react-base"
+      "path": "../../libs/core-react"
     },
     {
       "path": "../../libs/ai"

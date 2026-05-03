@@ -28,7 +28,7 @@
       "path": "./apps/native-tauri-react"
     },
     {
-      "path": "./libs/react-base"
+      "path": "./libs/core-react"
     },
     {
       "path": "./libs/ai"

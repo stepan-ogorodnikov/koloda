@@ -1,6 +1,6 @@
 import { parseTime } from "@internationalized/date";
 import { toFormErrors } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { ResolvedLearningSettings } from "@koloda/srs";
 import { learningSettingsValidation, resolvedLearningSettingsValidation } from "@koloda/srs";
 import { AlgorithmPicker } from "@koloda/srs-react";

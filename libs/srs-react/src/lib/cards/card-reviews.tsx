@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { FSRS_GRADES } from "@koloda/srs";
 import type { Card } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";

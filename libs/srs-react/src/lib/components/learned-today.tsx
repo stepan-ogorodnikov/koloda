@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { LESSON_TYPE_LABELS, type LessonType } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

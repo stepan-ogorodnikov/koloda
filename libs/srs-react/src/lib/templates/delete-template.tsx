@@ -1,6 +1,6 @@
 import { ERROR_MESSAGES, isAppError } from "@koloda/app";
-import { defaultTemplateAtom } from "@koloda/react-base";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { defaultTemplateAtom } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
 import { DeleteDialog, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

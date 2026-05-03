@@ -1,5 +1,5 @@
-import { appEntryAtom, useTitle } from "@koloda/react-base";
-import type { Queries } from "@koloda/react-base";
+import { appEntryAtom, useTitle } from "@koloda/core-react";
+import type { Queries } from "@koloda/core-react";
 import { NotFound } from "@koloda/ui";
 import { type QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent } from "@tanstack/react-router";

@@ -5,7 +5,7 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
-import type { Queries } from "@koloda/react-base";
+import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
   AllowedSettings,

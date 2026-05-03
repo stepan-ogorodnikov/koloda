@@ -49,7 +49,7 @@
       "path": "../../libs/srs/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/react-base/tsconfig.lib.json"
+      "path": "../../libs/core-react/tsconfig.lib.json"
     },
     {
       "path": "../../libs/app/tsconfig.lib.json"

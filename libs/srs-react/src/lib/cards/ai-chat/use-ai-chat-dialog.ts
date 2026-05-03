@@ -1,5 +1,5 @@
 import type { AISecrets, ModelParameter, StreamUsage } from "@koloda/ai";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";

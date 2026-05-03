@@ -1,6 +1,6 @@
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { queriesAtom, queryKeys } from "@koloda/react-base";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { Button, Fade, Number } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
