@@ -1,8 +1,6 @@
 import type { GeneratedCard } from "@koloda/ai";
-import { AiChatElapsedTimeDisplay, AIChatMessageLayout } from "@koloda/ai-react";
-import { AiChatMessageStatusPending } from "@koloda/ai-react";
+import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import type { Deck, Template } from "@koloda/srs";
-import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AIChatCardsTable } from "./ai-chat-cards-table";
@@ -40,32 +38,13 @@ export function AIChatCardsMessage({
 
   return (
     <AIChatMessageLayout role="assistant">
-      {isGenerating && <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />}
+      {isGenerating && <AIChatMessageStatus state="pending" />}
       {isCanceled && (
         <div className="flex flex-col gap-2">
-          {elapsedSeconds !== undefined && (
-            <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`ai.chat.message.status.canceled-in`)}
-              <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
-            </p>
-          )}
+          {elapsedSeconds !== undefined && <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} />}
         </div>
       )}
-      {isFailed && (
-        <div className="flex flex-row flex-wrap items-center gap-2">
-          <p className="fg-level-4">
-            {_(msg`ai.chat.message.status.failed`)}
-          </p>
-          {canRetry && (
-            <Button
-              variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-              onPress={onRetry}
-            >
-              {_(msg`ai.chat.message.retry`)}
-            </Button>
-          )}
-        </div>
-      )}
+      {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
       {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
         <div className="flex flex-col gap-2">
           <AIChatCardsTable
@@ -76,12 +55,7 @@ export function AIChatCardsMessage({
             canAdd={canAdd}
             isGenerating={isGenerating}
           />
-          {elapsedSeconds !== undefined && (
-            <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`ai.chat.message.status.finished-in`)}
-              <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
-            </p>
-          )}
+          {elapsedSeconds !== undefined && <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} />}
         </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && !cards.length && (

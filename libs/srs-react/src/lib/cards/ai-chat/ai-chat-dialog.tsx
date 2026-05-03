@@ -1,12 +1,17 @@
-import { AiMagicIcon, Chat01Icon, Settings01Icon, BubbleChatAddIcon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon, BubbleChatAddIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/ai-react";
+import {
+  AIChat,
+  AiChatContextUsage,
+  AIChatMessageLayout,
+  AIChatMessageStatus,
+  AIProfilePicker,
+} from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
 
-import { AiChatElapsedTimeDisplay, AiChatMessageStatusPending } from "@koloda/ai-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -101,7 +106,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
 
         return (
           <AIChatMessageLayout role="assistant">
-            <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />
+            <AIChatMessageStatus state="pending" />
           </AIChatMessageLayout>
         );
       }
@@ -110,10 +115,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
         return (
           <div className="flex flex-col gap-2 self-start w-full">
             {content}
-            <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`ai.chat.message.status.finished-in`)}
-              <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
-            </p>
+            <AIChatMessageStatus state="success" elapsedSeconds={chatProps.elapsedSeconds} />
           </div>
         );
       }
@@ -122,10 +124,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
         return (
           <div className="flex flex-col gap-2 self-start w-full">
             {content}
-            <p className="fg-level-4 flex flex-row items-center gap-1">
-              {_(msg`ai.chat.message.status.canceled-in`)}
-              <AiChatElapsedTimeDisplay seconds={chatProps.elapsedSeconds} />
-            </p>
+            <AIChatMessageStatus state="canceled" elapsedSeconds={chatProps.elapsedSeconds} />
           </div>
         );
       }
@@ -133,17 +132,11 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
       return (
         <div className="flex flex-col gap-2 self-start w-full">
           {content}
-          <div className="flex flex-row flex-wrap items-center gap-2">
-            <p className="fg-level-4">{_(msg`ai.chat.message.status.failed`)}</p>
-            {chatProps.canRetry && (
-              <Button
-                variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-                onPress={chatProps.onRetry}
-              >
-                {_(msg`ai.chat.message.retry`)}
-              </Button>
-            )}
-          </div>
+          <AIChatMessageStatus
+            state="failed"
+            canRetry={chatProps.canRetry}
+            onRetry={chatProps.onRetry}
+          />
         </div>
       );
     }

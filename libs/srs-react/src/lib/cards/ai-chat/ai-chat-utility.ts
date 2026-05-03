@@ -1,8 +1,9 @@
 import type { GeneratedCard } from "@koloda/ai";
+import type { AIChatMode } from "@koloda/ai-react";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
-export type AIChatMode = "chat" | "cards";
+export type { AIChatMode };
 
 export type AssistantMessageMetadata =
   | { kind: "generated-cards"; runId: string }

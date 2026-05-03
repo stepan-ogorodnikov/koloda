@@ -2,6 +2,7 @@ export * from "./lib/ai-chat";
 export * from "./lib/ai-chat-context-usage";
 export * from "./lib/ai-chat-elapsed-time";
 export * from "./lib/ai-chat-message";
+export * from "./lib/ai-chat-message-status";
 export * from "./lib/ai-chat-message-status-pending";
 export * from "./lib/ai-model-parameters";
 export * from "./lib/ai-model-picker";
