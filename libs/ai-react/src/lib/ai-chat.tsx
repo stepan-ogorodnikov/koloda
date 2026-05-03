@@ -1,4 +1,4 @@
-import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
+import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, BubbleChatAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
@@ -242,7 +242,7 @@ export function AIChat({
             <HugeiconsIcon
               className="size-5 min-w-5"
               strokeWidth={1.75}
-              icon={Undo02Icon}
+              icon={BubbleChatAddIcon}
               aria-hidden="true"
             />
           </Button>

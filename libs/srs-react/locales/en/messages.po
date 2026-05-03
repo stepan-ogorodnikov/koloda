@@ -215,7 +215,7 @@ msgstr "Working"
 
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:222
 msgid "ai.chat.reset.label"
-msgstr "Clear conversation"
+msgstr "New conversation"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"

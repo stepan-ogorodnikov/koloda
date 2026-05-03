@@ -64,7 +64,7 @@ msgstr "Go to settings to edit the profile and add the missing data"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:238
 msgid "ai.chat.reset.label"
-msgstr "Clear conversation"
+msgstr "New conversation"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:170
 msgid "ai.chat.scroll-to-latest.label"

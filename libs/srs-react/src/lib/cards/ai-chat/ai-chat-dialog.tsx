@@ -1,4 +1,4 @@
-import { AiMagicIcon, Chat01Icon, Settings01Icon, Undo02Icon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon, Chat01Icon, Settings01Icon, BubbleChatAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AIChat, AiChatContextUsage, AIChatMessageLayout, AIProfilePicker } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
@@ -226,7 +226,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
                     <HugeiconsIcon
                       className="size-5 min-w-5"
                       strokeWidth={1.75}
-                      icon={Undo02Icon}
+                      icon={BubbleChatAddIcon}
                       aria-hidden="true"
                     />
                   </Button>
