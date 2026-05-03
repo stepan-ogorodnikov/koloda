@@ -1,12 +1,6 @@
-import { AiMagicIcon, BubbleChatAddIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  AIChat,
-  AiChatContextUsage,
-  AIChatMessageLayout,
-  AIChatMessageStatus,
-  AIProfilePicker,
-} from "@koloda/ai-react";
+import { AIChat, AiChatContextUsage, AIChatFooter, AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
@@ -142,7 +136,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
     }
 
     return content;
-  }, [getGeneratedCardsProps, getChatMessageProps, _]);
+  }, [getGeneratedCardsProps, getChatMessageProps]);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
@@ -206,38 +200,29 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
                     />
                   </div>
                 )}
-                <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2 shrink-0">
-                  <AIProfilePicker value={profileId} onChange={handleProfileChange} />
-                  <div className="grow min-w-3" />
-                  <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />
-                  <Button
-                    variants={{ style: "ghost", size: "icon" }}
-                    aria-label={_(msg`ai.chat.reset.label`)}
-                    isDisabled={messages.length === 0 && !isGenerating}
-                    onPress={handleReset}
-                  >
-                    <HugeiconsIcon
-                      className="size-5 min-w-5"
-                      strokeWidth={1.75}
-                      icon={BubbleChatAddIcon}
-                      aria-hidden="true"
-                    />
-                  </Button>
-                  <Button
-                    variants={{ style: "ghost", size: "icon" }}
-                    aria-label={selectedTab === "chat"
-                      ? _(msg`ai-chat.settings.show-settings`)
-                      : _(msg`ai-chat.settings.show-chat`)}
-                    onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
-                  >
-                    <HugeiconsIcon
-                      className="size-5 min-w-5"
-                      strokeWidth={1.75}
-                      icon={selectedTab === "chat" ? Settings01Icon : Chat01Icon}
-                      aria-hidden="true"
-                    />
-                  </Button>
-                </div>
+                <AIChatFooter
+                  profileId={profileId}
+                  onProfileChange={handleProfileChange}
+                  onReset={handleReset}
+                  canReset={messages.length > 0 || isGenerating}
+                  preActions={<AiChatContextUsage usage={contextUsage} contextLength={contextLength} />}
+                  actions={
+                    <Button
+                      variants={{ style: "ghost", size: "icon" }}
+                      aria-label={selectedTab === "chat"
+                        ? _(msg`ai-chat.settings.show-settings`)
+                        : _(msg`ai-chat.settings.show-chat`)}
+                      onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
+                    >
+                      <HugeiconsIcon
+                        className="size-5 min-w-5"
+                        strokeWidth={1.75}
+                        icon={selectedTab === "chat" ? Settings01Icon : Chat01Icon}
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  }
+                />
                 <AnimatePresence>
                   {isClosingRequested && (
                     <Fade className={closeConfirmOverlay} key="close-confirmation">

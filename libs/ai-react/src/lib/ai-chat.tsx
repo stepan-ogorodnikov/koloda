@@ -1,4 +1,4 @@
-import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, BubbleChatAddIcon } from "@hugeicons/core-free-icons";
+import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
@@ -10,12 +10,12 @@ import type { UIMessage } from "ai";
 import { AnimatePresence } from "motion/react";
 import type { FormEvent, ReactNode } from "react";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { AIChatFooter } from "./ai-chat-footer";
 import { AIChatMessage } from "./ai-chat-message";
 import { AIChatPromptInput } from "./ai-chat-prompt-input";
 import { AIChatSubmit } from "./ai-chat-submit";
 import { AIModelParameters } from "./ai-model-parameters";
 import { AIModelPicker } from "./ai-model-picker";
-import { AIProfilePicker } from "./ai-profile-picker";
 import type { AIChatMode } from "./types";
 import { useAIProfiles } from "./use-ai-profiles";
 import { useAutoScroll } from "./use-auto-scroll";
@@ -230,24 +230,14 @@ export function AIChat({
         </div>
       </form>
       {showFooter && (
-        <div className="self-center flex flex-row items-center w-full max-w-3xl my-2 px-2 shrink-0">
-          <AIProfilePicker value={profileId} onChange={onProfileChange} triggerRef={profilePickerRef} />
-          <div className="grow min-w-3" />
-          <Button
-            variants={{ style: "ghost", size: "icon" }}
-            aria-label={_(msg`ai.chat.reset.label`)}
-            isDisabled={!canReset}
-            onPress={handleReset}
-          >
-            <HugeiconsIcon
-              className="size-5 min-w-5"
-              strokeWidth={1.75}
-              icon={BubbleChatAddIcon}
-              aria-hidden="true"
-            />
-          </Button>
-          {actions}
-        </div>
+        <AIChatFooter
+          profileId={profileId}
+          onProfileChange={onProfileChange}
+          onReset={handleReset}
+          canReset={canReset}
+          actions={actions}
+          triggerRef={profilePickerRef}
+        />
       )}
     </section>
   );
