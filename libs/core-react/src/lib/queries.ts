@@ -6,10 +6,10 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
 import type { AppError } from "@koloda/app";
 import type {
   Algorithm,
-  AllowedSettings,
   Card,
   CloneAlgorithmData,
   CloneTemplateData,
@@ -32,11 +32,8 @@ import type {
   LessonData,
   LessonFilters,
   LessonResultData,
-  PatchSettingsData,
   ResetCardProgressData,
   Review,
-  SetSettingsData,
-  SettingsName,
   Template,
   TodaysReviewTotals,
   UpdateAlgorithmData,

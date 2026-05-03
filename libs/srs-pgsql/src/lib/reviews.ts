@@ -1,5 +1,6 @@
 import { throwKnownError } from "@koloda/app";
-import { calculateTodaysReviewTotals, getCurrentLearningDayRange, learningSettingsValidation } from "@koloda/srs";
+import { learningSettingsValidation } from "@koloda/app";
+import { calculateTodaysReviewTotals, getCurrentLearningDayRange } from "@koloda/srs";
 import type { GetReviewsData, GetReviewTotalsProps, Review, ReviewTotals } from "@koloda/srs";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";

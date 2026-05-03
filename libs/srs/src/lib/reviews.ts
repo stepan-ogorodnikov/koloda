@@ -1,11 +1,11 @@
 import type { ObjectPropertiesMapping } from "@koloda/app";
 import { AppError, mapObjectPropertiesReverse } from "@koloda/app";
+import type { AllowedSettings } from "@koloda/app";
+import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "@koloda/app";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
 import { z } from "zod";
 import { type Card, cardValidation } from "./cards";
 import type { LessonType } from "./lessons";
-import type { AllowedSettings } from "./settings";
-import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "./settings-learning";
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 

@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { algorithmValidation } from "./algorithms";
-import { templateValidation } from "./templates";
 
 export const LEARNING_DAILY_LIMIT_TYPES = ["untouched", "learn", "review"] as const;
 
@@ -52,8 +50,8 @@ const dailyLimitsValidation = z.object({
 
 export const learningSettingsValidation = z.object({
   defaults: z.object({
-    algorithm: algorithmValidation.shape.id,
-    template: templateValidation.shape.id,
+    algorithm: z.int(),
+    template: z.int(),
   }),
   dailyLimits: dailyLimitsValidation,
   dayStartsAt: z.iso.time({ precision: -1 }).default("05:00"),
@@ -62,8 +60,8 @@ export const learningSettingsValidation = z.object({
 
 export const resolvedLearningSettingsValidation = z.object({
   defaults: z.object({
-    algorithm: algorithmValidation.shape.id,
-    template: templateValidation.shape.id,
+    algorithm: z.int(),
+    template: z.int(),
   }),
   dailyLimits: resolvedDailyLimitsValidation,
   dayStartsAt: z.iso.time({ precision: -1 }),

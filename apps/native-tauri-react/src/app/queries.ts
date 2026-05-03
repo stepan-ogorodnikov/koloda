@@ -5,10 +5,10 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
-  AllowedSettings,
   CloneAlgorithmData,
   CloneTemplateData,
   Deck,
@@ -28,18 +28,15 @@ import type {
   LessonData,
   LessonFilters,
   LessonResultData,
-  PatchSettingsData,
   ResetCardProgressData,
   Review,
-  SetSettingsData,
-  SettingsName,
   Template,
+  TodaysReviewTotals,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import type { TodaysReviewTotals } from "@koloda/srs";
 import { getAIProfileModels } from "../services/ai";
 import { getStatus, seedDB } from "./setup";
 import { invoke } from "./tauri";

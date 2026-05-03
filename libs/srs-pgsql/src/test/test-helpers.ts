@@ -1,13 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
-import { DEFAULT_FSRS_ALGORITHM, DEFAULT_LEARNING_SETTINGS, DEFAULT_TEMPLATE } from "@koloda/srs";
-import type {
-  InsertAlgorithmData,
-  InsertDeckData,
-  InsertTemplateData,
-  LearningSettings,
-  Review,
-  Template,
-} from "@koloda/srs";
+import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
+import type { LearningSettings } from "@koloda/app";
+import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
+import type { InsertAlgorithmData, InsertDeckData, InsertTemplateData, Review, Template } from "@koloda/srs";
 import { drizzle } from "drizzle-orm/pglite";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";

@@ -134,7 +134,9 @@
       "name": "@koloda/core-react",
       "version": "0.0.1",
       "dependencies": {
+        "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/srs": "workspace:*",
       },
     },
     "libs/srs": {

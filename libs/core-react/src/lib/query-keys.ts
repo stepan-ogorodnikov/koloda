@@ -1,3 +1,4 @@
+import type { SettingsName } from "@koloda/app";
 import type {
   Algorithm,
   Deck,
@@ -5,7 +6,6 @@ import type {
   GetLessonDataParams,
   GetReviewsData,
   LessonFilters,
-  SettingsName,
   Template,
 } from "@koloda/srs";
 

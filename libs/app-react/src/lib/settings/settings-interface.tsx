@@ -1,7 +1,7 @@
 import { MOTION_SETTINGS } from "@koloda/app";
+import type { AllowedSettings } from "@koloda/app";
 import { themeAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
-import type { AllowedSettings } from "@koloda/srs";
 import { motionSettingAtom } from "@koloda/ui";
 import { FormLayout, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";

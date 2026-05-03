@@ -1,8 +1,8 @@
 import { parseTime } from "@internationalized/date";
 import { toFormErrors } from "@koloda/app";
+import { learningSettingsValidation, resolvedLearningSettingsValidation } from "@koloda/app";
+import type { ResolvedLearningSettings } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { ResolvedLearningSettings } from "@koloda/srs";
-import { learningSettingsValidation, resolvedLearningSettingsValidation } from "@koloda/srs";
 import { AlgorithmPicker } from "@koloda/srs-react";
 import { TemplatePicker } from "@koloda/srs-react";
 import { formLayout, Label, NumberField, Switch, TimeField, useAppForm } from "@koloda/ui";

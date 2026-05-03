@@ -7,7 +7,5 @@ export * from "./lib/decks";
 export * from "./lib/lessons";
 export * from "./lib/markdown";
 export * from "./lib/reviews";
-export * from "./lib/settings";
 export * from "./lib/settings-ai";
-export * from "./lib/settings-learning";
 export * from "./lib/templates";

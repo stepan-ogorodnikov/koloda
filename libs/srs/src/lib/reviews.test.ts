@@ -1,7 +1,7 @@
 import type { AppError } from "@koloda/app";
+import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import { describe, expect, it, vi } from "vitest";
 import { calculateTodaysReviewTotals, createReviewFromReviewFSRS, getCurrentLearningDayRange } from "./reviews";
-import { DEFAULT_LEARNING_SETTINGS } from "./settings-learning";
 
 describe("reviews", () => {
   it("returns the previous learning day range when current time is before the boundary", async () => {

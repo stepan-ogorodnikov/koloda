@@ -1,16 +1,12 @@
+import { LEARNING_DAILY_LIMIT_TYPES } from "@koloda/app";
+import type { LearningSettings } from "@koloda/app";
 import type { ReducerAction } from "@koloda/core-react";
 import { dispatchReducerAction } from "@koloda/core-react";
-import {
-  createCardFromCardFSRS,
-  createReviewFromReviewFSRS,
-  getCardGrades,
-  LEARNING_DAILY_LIMIT_TYPES,
-} from "@koloda/srs";
+import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } from "@koloda/srs";
 import type {
   Card,
   CardGrade,
   InsertReviewData,
-  LearningSettings,
   Lesson,
   LessonData,
   LessonFilters,

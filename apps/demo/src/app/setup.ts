@@ -1,12 +1,8 @@
 import type { InterfaceSettings } from "@koloda/app";
 import { AppError, DEFAULT_INTERFACE_SETTINGS, interfaceSettingsValidation } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
-import {
-  DEFAULT_FSRS_ALGORITHM,
-  DEFAULT_LEARNING_SETTINGS,
-  DEFAULT_TEMPLATE,
-  learningSettingsValidation,
-} from "@koloda/srs";
+import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/app";
+import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
 import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";

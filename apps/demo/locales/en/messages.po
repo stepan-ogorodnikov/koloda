@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/app/setup.ts:75
+#: src/app/setup.ts:71
 msgid "demo.setup.default-title"
 msgstr "Default"
 

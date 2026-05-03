@@ -1,12 +1,8 @@
 import type { AIModel, AIProfile, GeneratedCard } from "@koloda/ai";
 import { deepMerge } from "@koloda/app";
+import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import type { DeepPartial } from "@koloda/app";
-import {
-  convertTemplateToLessonTemplate,
-  DEFAULT_FSRS_ALGORITHM,
-  DEFAULT_LEARNING_SETTINGS,
-  DEFAULT_TEMPLATE,
-} from "@koloda/srs";
+import { convertTemplateToLessonTemplate, DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
 import type { Algorithm, Card, Deck, Lesson, LessonData, LessonType, Template, TodaysReviewTotals } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";

@@ -1,7 +1,7 @@
 import { AppError, throwKnownError } from "@koloda/app";
 import { deepMerge } from "@koloda/app";
-import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/srs";
-import { allowedSettings } from "@koloda/srs";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
+import { allowedSettings } from "@koloda/app";
 import { eq } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
