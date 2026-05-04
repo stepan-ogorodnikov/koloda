@@ -1,6 +1,12 @@
-import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon } from "@hugeicons/core-free-icons";
+import {
+  AiSheetsIcon,
+  ArrowDown02Icon,
+  Chat01Icon,
+  MessageMultiple01Icon,
+  Settings01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { ModelParameter } from "@koloda/ai";
+import type { ModelParameter, StreamUsage } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
 import { useAppHotkey } from "@koloda/core-react";
 import { Button, Fade } from "@koloda/ui";
@@ -42,10 +48,13 @@ export type AIChatProps = {
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
   mode?: AIChatMode;
   onModeChange?: (mode: AIChatMode) => void;
-  actions?: ReactNode;
-  showFooter?: boolean;
   modelParameters?: ModelParameter[];
   onModelParameterChange?: (type: ModelParameter["type"], value: string) => void;
+  contextUsage?: StreamUsage | null;
+  contextLength?: number;
+  settingsPanel?: ReactNode;
+  settingsPanelOpen?: boolean;
+  onSettingsPanelOpenChange?: (open: boolean) => void;
 };
 
 export function AIChat({
@@ -65,10 +74,13 @@ export function AIChat({
   renderMessage,
   mode,
   onModeChange,
-  actions,
-  showFooter = true,
   modelParameters,
   onModelParameterChange,
+  contextUsage,
+  contextLength,
+  settingsPanel,
+  settingsPanelOpen,
+  onSettingsPanelOpenChange,
 }: AIChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
@@ -112,6 +124,8 @@ export function AIChat({
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
 
+  const hasSettingsToggle = !!settingsPanel && onSettingsPanelOpenChange;
+
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
   useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
@@ -125,120 +139,152 @@ export function AIChat({
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
-      <div className="relative flex-1 min-h-0 -mx-4 px-4">
-        <div
-          className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
-          ref={scroll.scrollViewportRef}
-          onScroll={scroll.handleScroll}
-          tabIndex={0}
-        >
-          <div
-            className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2"
-            aria-label={_(msg`ai.chat.messages.label`)}
-            aria-live="polite"
-            role="log"
-            ref={scroll.messagesRef}
-          >
-            {messages.length === 0
-              ? emptyState
-              : (
-                <>
-                  {messages.map((message) => {
-                    const content = (
-                      <AIChatMessage
-                        role={message.role}
-                        modelName={modelName}
-                        parts={message.parts}
-                        key={message.id}
+      {settingsPanelOpen
+        ? (
+          <div className="flex-1 min-h-0 overflow-auto -mx-4 px-4">
+            {settingsPanel}
+          </div>
+        )
+        : (
+          <>
+            <div className="relative flex-1 min-h-0 -mx-4 px-4">
+              <div
+                className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
+                ref={scroll.scrollViewportRef}
+                onScroll={scroll.handleScroll}
+                tabIndex={0}
+              >
+                <div
+                  className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2"
+                  aria-label={_(msg`ai.chat.messages.label`)}
+                  aria-live="polite"
+                  role="log"
+                  ref={scroll.messagesRef}
+                >
+                  {messages.length === 0
+                    ? emptyState
+                    : (
+                      <>
+                        {messages.map((message) => {
+                          const content = (
+                            <AIChatMessage
+                              role={message.role}
+                              modelName={modelName}
+                              parts={message.parts}
+                              key={message.id}
+                            />
+                          );
+                          return (
+                            <Fragment key={message.id}>
+                              {renderMessage ? renderMessage(message, content) : content}
+                            </Fragment>
+                          );
+                        })}
+                      </>
+                    )}
+                </div>
+              </div>
+              <AnimatePresence>
+                {scroll.showJumpToLatest && (
+                  <Fade className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center w-full max-w-3xl">
+                    <Button
+                      variants={{ style: "primary", size: "icon", class: "rounded-full" }}
+                      aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
+                      onPress={scroll.handleScrollToLatest}
+                    >
+                      <HugeiconsIcon
+                        className="size-5 min-w-5"
+                        strokeWidth={1.75}
+                        icon={ArrowDown02Icon}
+                        aria-hidden="true"
                       />
-                    );
-                    return (
-                      <Fragment key={message.id}>
-                        {renderMessage ? renderMessage(message, content) : content}
-                      </Fragment>
-                    );
-                  })}
-                </>
+                    </Button>
+                  </Fade>
+                )}
+              </AnimatePresence>
+            </div>
+            <AnimatePresence>
+              {showMissingSecretsWarning && (
+                <Fade className="self-center w-full max-w-3xl mb-2 px-4 py-2 rounded-xl border-2 border-main bg-level-1 flex flex-col gap-1">
+                  <em className="fg-error not-italic">
+                    {_(msg`ai.chat.profile-data-missing`)}: {missingLabels}
+                  </em>
+                  <span className="fg-level-2 text-sm/6">
+                    {_(msg`ai.chat.profile-data-missing.hint`)}
+                  </span>
+                </Fade>
               )}
-          </div>
-        </div>
-        <AnimatePresence>
-          {scroll.showJumpToLatest && (
-            <Fade className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center w-full max-w-3xl">
-              <Button
-                variants={{ style: "primary", size: "icon", class: "rounded-full" }}
-                aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
-                onPress={scroll.handleScrollToLatest}
-              >
-                <HugeiconsIcon
-                  className="size-5 min-w-5"
-                  strokeWidth={1.75}
-                  icon={ArrowDown02Icon}
-                  aria-hidden="true"
+            </AnimatePresence>
+            <AnimatePresence>
+              {error && (
+                <Fade className="self-center w-full max-w-3xl mb-2 px-4 py-2 rounded-xl border-2 border-main bg-level-1">
+                  <em className="fg-error not-italic">
+                    {error}
+                  </em>
+                </Fade>
+              )}
+            </AnimatePresence>
+            <form className={`${aiChatPanel} shrink-0`} onSubmit={handleSubmit}>
+              <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
+              <div className="flex flex-row items-center min-w-0">
+                <AIModelPicker
+                  profileId={profileId}
+                  value={modelId}
+                  onChange={onModelChange}
+                  triggerRef={modelPickerRef}
                 />
-              </Button>
-            </Fade>
-          )}
-        </AnimatePresence>
-      </div>
-      <AnimatePresence>
-        {showMissingSecretsWarning && (
-          <Fade className="self-center w-full max-w-3xl mb-2 px-4 py-2 rounded-xl border-2 border-main bg-level-1 flex flex-col gap-1">
-            <em className="fg-error not-italic">
-              {_(msg`ai.chat.profile-data-missing`)}: {missingLabels}
-            </em>
-            <span className="fg-level-2 text-sm/6">
-              {_(msg`ai.chat.profile-data-missing.hint`)}
-            </span>
-          </Fade>
+                {modelParameters && onModelParameterChange && (
+                  <AIModelParameters parameters={modelParameters} onChange={onModelParameterChange} />
+                )}
+                <div className="grow min-w-3" />
+                <div className="shrink-0 flex flex-row items-center gap-2">
+                  {onModeChange && (
+                    <Button
+                      variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
+                      aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
+                      onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
+                    >
+                      <HugeiconsIcon
+                        className="size-6 min-w-6"
+                        strokeWidth={1.5}
+                        icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  )}
+                  <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
+                </div>
+              </div>
+            </form>
+          </>
         )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {error && (
-          <Fade className="self-center w-full max-w-3xl mb-2 px-4 py-2 rounded-xl border-2 border-main bg-level-1">
-            <em className="fg-error not-italic">
-              {error}
-            </em>
-          </Fade>
-        )}
-      </AnimatePresence>
-      <form className={`${aiChatPanel} shrink-0`} onSubmit={handleSubmit}>
-        <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
-        <div className="flex flex-row items-center min-w-0">
-          <AIModelPicker profileId={profileId} value={modelId} onChange={onModelChange} triggerRef={modelPickerRef} />
-          {modelParameters && onModelParameterChange && (
-            <AIModelParameters parameters={modelParameters} onChange={onModelParameterChange} />
-          )}
-          <div className="grow min-w-3" />
-          <div className="shrink-0 flex flex-row items-center gap-2">
-            {onModeChange && (
-              <Button
-                variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
-                aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
-                onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
-              >
-                <HugeiconsIcon
-                  className="size-6 min-w-6"
-                  strokeWidth={1.5}
-                  icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
-                  aria-hidden="true"
-                />
-              </Button>
-            )}
-            <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
-          </div>
-        </div>
-      </form>
-      {showFooter && (
-        <AIChatFooter
-          profileId={profileId}
-          onProfileChange={onProfileChange}
-          onReset={handleReset}
-          canReset={canReset}
-          actions={actions}
-          triggerRef={profilePickerRef}
-        />
-      )}
+      <AIChatFooter
+        profileId={profileId}
+        onProfileChange={onProfileChange}
+        onReset={handleReset}
+        canReset={canReset}
+        triggerRef={profilePickerRef}
+        contextUsage={contextUsage}
+        contextLength={contextLength}
+        settingsToggle={hasSettingsToggle
+          ? (
+            <Button
+              variants={{ style: "ghost", size: "icon" }}
+              aria-label={settingsPanelOpen
+                ? _(msg`ai.chat.settings.show-chat`)
+                : _(msg`ai.chat.settings.show-settings`)}
+              onPress={() => onSettingsPanelOpenChange?.(!settingsPanelOpen)}
+            >
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={1.75}
+                icon={settingsPanelOpen ? Chat01Icon : Settings01Icon}
+                aria-hidden="true"
+              />
+            </Button>
+          )
+          : undefined}
+      />
     </section>
   );
 }

@@ -1,6 +1,6 @@
-import { AiMagicIcon, Chat01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { AiMagicIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AiChatContextUsage, AIChatFooter, AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import { AIChat, AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
@@ -164,30 +164,27 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
             </Dialog.Header>
             <Dialog.Content variants={{ class: "grow min-h-0 p-0 flex flex-col" }}>
               <div className="relative grow min-h-0 flex flex-col">
-                <div className={selectedTab === "chat" ? "flex flex-col grow min-h-0" : "hidden"}>
-                  <AIChat
-                    showFooter={false}
-                    profileId={profileId}
-                    modelId={modelId}
-                    modelName={modelName}
-                    messages={messages}
-                    onProfileChange={handleProfileChange}
-                    onModelChange={handleModelChange}
-                    onSubmit={handleGenerate}
-                    onCancel={handleCancel}
-                    onReset={handleReset}
-                    isLoading={isGenerating}
-                    error={getGenerateErrorMessage(generateError, _)}
-                    emptyState={null}
-                    renderMessage={renderMessage}
-                    mode={mode}
-                    onModeChange={setMode}
-                    modelParameters={modelParameters}
-                    onModelParameterChange={handleModelParameterChange}
-                  />
-                </div>
-                {selectedTab === "settings" && (
-                  <div className="grow overflow-auto">
+                <AIChat
+                  profileId={profileId}
+                  modelId={modelId}
+                  modelName={modelName}
+                  messages={messages}
+                  onProfileChange={handleProfileChange}
+                  onModelChange={handleModelChange}
+                  onSubmit={handleGenerate}
+                  onCancel={handleCancel}
+                  onReset={handleReset}
+                  isLoading={isGenerating}
+                  error={getGenerateErrorMessage(generateError, _)}
+                  emptyState={null}
+                  renderMessage={renderMessage}
+                  mode={mode}
+                  onModeChange={setMode}
+                  modelParameters={modelParameters}
+                  onModelParameterChange={handleModelParameterChange}
+                  contextUsage={contextUsage}
+                  contextLength={contextLength}
+                  settingsPanel={
                     <AIChatSettings
                       template={template}
                       provider={provider}
@@ -198,30 +195,9 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
                       onCardsPromptChange={handleCardsPromptChange}
                       onChatPromptChange={handleChatPromptChange}
                     />
-                  </div>
-                )}
-                <AIChatFooter
-                  profileId={profileId}
-                  onProfileChange={handleProfileChange}
-                  onReset={handleReset}
-                  canReset={messages.length > 0 || isGenerating}
-                  preActions={<AiChatContextUsage usage={contextUsage} contextLength={contextLength} />}
-                  actions={
-                    <Button
-                      variants={{ style: "ghost", size: "icon" }}
-                      aria-label={selectedTab === "chat"
-                        ? _(msg`ai-chat.settings.show-settings`)
-                        : _(msg`ai-chat.settings.show-chat`)}
-                      onPress={() => setSelectedTab((prev) => prev === "chat" ? "settings" : "chat")}
-                    >
-                      <HugeiconsIcon
-                        className="size-5 min-w-5"
-                        strokeWidth={1.75}
-                        icon={selectedTab === "chat" ? Settings01Icon : Chat01Icon}
-                        aria-hidden="true"
-                      />
-                    </Button>
                   }
+                  settingsPanelOpen={selectedTab === "settings"}
+                  onSettingsPanelOpenChange={(open) => setSelectedTab(open ? "settings" : "chat")}
                 />
                 <AnimatePresence>
                   {isClosingRequested && (
