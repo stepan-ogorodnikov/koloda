@@ -1,22 +1,18 @@
 import { AiMagicIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AIChat, AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import { AIChat } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import { getGenerateErrorMessage } from "@koloda/srs";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Dialog, Fade, Tooltip } from "@koloda/ui";
-
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { UIMessage } from "ai";
 import { AnimatePresence } from "motion/react";
-import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { FocusScope } from "react-aria";
-import { AIChatCardsMessage } from "./ai-chat-cards-message";
 import { AIChatSettings } from "./ai-chat-settings";
-import { getTextMessageContent } from "./ai-chat-utility";
 import { useAIChatDialog } from "./use-ai-chat-dialog";
+import { useAIChatMessageRenderer } from "./use-ai-chat-message-renderer";
 
 export const closeConfirmOverlay = [
   "absolute inset-0 z-20 flex flex-col items-center justify-center gap-4",
@@ -88,55 +84,10 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
     handleOpenChange(value);
   }, [hasContext, handleOpenChange]);
 
-  const renderMessage = useCallback((message: UIMessage, content: ReactNode) => {
-    const props = getGeneratedCardsProps(message);
-    if (props && props.template) return <AIChatCardsMessage {...props} />;
-
-    const chatProps = getChatMessageProps(message);
-
-    if (chatProps) {
-      if ("isStreaming" in chatProps) {
-        if (getTextMessageContent(message)) return content;
-
-        return (
-          <AIChatMessageLayout role="assistant">
-            <AIChatMessageStatus state="pending" />
-          </AIChatMessageLayout>
-        );
-      }
-
-      if ("isSuccess" in chatProps) {
-        return (
-          <div className="flex flex-col gap-2 self-start w-full">
-            {content}
-            <AIChatMessageStatus state="success" elapsedSeconds={chatProps.elapsedSeconds} />
-          </div>
-        );
-      }
-
-      if ("isCanceled" in chatProps) {
-        return (
-          <div className="flex flex-col gap-2 self-start w-full">
-            {content}
-            <AIChatMessageStatus state="canceled" elapsedSeconds={chatProps.elapsedSeconds} />
-          </div>
-        );
-      }
-
-      return (
-        <div className="flex flex-col gap-2 self-start w-full">
-          {content}
-          <AIChatMessageStatus
-            state="failed"
-            canRetry={chatProps.canRetry}
-            onRetry={chatProps.onRetry}
-          />
-        </div>
-      );
-    }
-
-    return content;
-  }, [getGeneratedCardsProps, getChatMessageProps]);
+  const renderMessage = useAIChatMessageRenderer({
+    getGeneratedCardsProps,
+    getChatMessageProps,
+  });
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>

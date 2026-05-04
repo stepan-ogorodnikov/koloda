@@ -103,19 +103,19 @@ msgstr "New template"
 msgid "ai-chat.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:256
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:161
 msgid "ai-chat.close.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:265
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:170
 msgid "ai-chat.close.confirm"
 msgstr "Close"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:89
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:63
 msgid "ai-chat.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:165
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:103
 msgid "ai-chat.no-profiles"
 msgstr "Add an AI profile in settings to generate cards"
 
@@ -130,14 +130,6 @@ msgstr "Preview"
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:50
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Reset"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:237
-msgid "ai-chat.settings.show-chat"
-msgstr "Show chat"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:236
-msgid "ai-chat.settings.show-settings"
-msgstr "Show settings"
 
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:66
 msgid "ai-chat.settings.system-prompt.cards.label"
@@ -179,43 +171,17 @@ msgstr "Pending"
 msgid "ai-chat.table.columns.status.success"
 msgstr "Success"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:174
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:112
 msgid "ai-chat.title"
 msgstr "AI Chat"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:159
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:97
 msgid "ai-chat.trigger"
 msgstr "AI Chat"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:64
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:143
-msgid "ai.chat.message.retry"
-msgstr "Retry"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:48
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:126
-msgid "ai.chat.message.status.canceled-in"
-msgstr "Interrupted after"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:57
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:137
-msgid "ai.chat.message.status.failed"
-msgstr "Failed to generate cards"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:81
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:114
-msgid "ai.chat.message.status.finished-in"
-msgstr "Finished in"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:43
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:104
 #: ../../libs/srs-react/src/lib/cards/ai-chat/use-conversation.ts:204
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:222
-msgid "ai.chat.reset.label"
-msgstr "New conversation"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"

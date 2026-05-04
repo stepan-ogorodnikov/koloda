@@ -42,33 +42,61 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:137
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
+msgid "ai.chat.message.retry"
+msgstr "Повторить"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:40
+msgid "ai.chat.message.status.canceled-in"
+msgstr "Прервано через"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:48
+msgid "ai.chat.message.status.failed"
+msgstr "Не удалось выполнить запрос"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:31
+msgid "ai.chat.message.status.finished-in"
+msgstr "Завершено за"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:25
+msgid "ai.chat.message.status.pending"
+msgstr "Обработка"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:159
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:217
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:244
 msgid "ai.chat.mode.cards"
 msgstr "Режим карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:217
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:244
 msgid "ai.chat.mode.chat"
 msgstr "Режим чата"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:188
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:210
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:191
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:213
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:238
+#: ../../libs/ai-react/src/lib/ai-chat-footer.tsx:43
 msgid "ai.chat.reset.label"
 msgstr "Новый чат"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:170
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:192
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:274
+msgid "ai.chat.settings.show-chat"
+msgstr "Показать чат"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:275
+msgid "ai.chat.settings.show-settings"
+msgstr "Показать настройки"
 
 #: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
 msgid "ai.model-parameters.reasoning-effort.label"
