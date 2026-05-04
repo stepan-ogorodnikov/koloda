@@ -34,6 +34,10 @@ msgstr "m"
 msgid "ai.chat.elapsed-time.periods.seconds"
 msgstr "s"
 
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:33
+msgid "ai.chat.error.close"
+msgstr "Hide errors"
+
 #: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:37
 msgid "ai.chat.input.label"
 msgstr "Prompt input"
@@ -62,23 +66,23 @@ msgstr "Finished in"
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:159
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:160
 msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:244
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:237
 msgid "ai.chat.mode.cards"
 msgstr "Cards mode"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:244
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:237
 msgid "ai.chat.mode.chat"
 msgstr "Chat mode"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:210
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:211
 msgid "ai.chat.profile-data-missing"
 msgstr "Selected AI profile is missing required data"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:213
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:214
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
@@ -86,15 +90,15 @@ msgstr "Go to settings to edit the profile and add the missing data"
 msgid "ai.chat.reset.label"
 msgstr "New conversation"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:192
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:193
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:274
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:267
 msgid "ai.chat.settings.show-chat"
 msgstr "Show chat"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:275
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:268
 msgid "ai.chat.settings.show-settings"
 msgstr "Show settings"
 
