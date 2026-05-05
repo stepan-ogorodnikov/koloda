@@ -21,6 +21,7 @@ export function NumberField({ variants, ...props }: NumberFieldProps) {
 
 export const numberFieldGroup = tv({
   extend: fieldGroup,
+  base: "overflow-hidden",
   variants: {
     size: {
       default: "max-w-48",
@@ -34,10 +35,10 @@ export type NumberFieldGroupProps = Omit<TextFieldInputProps, "variants"> & TWVP
 function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
   return (
     <FieldGroup className={numberFieldGroup(variants)}>
-      <NumberFieldInput {...props} />
       <NumberFieldDecrement>
         <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={MinusSignIcon} aria-hidden="true" />
       </NumberFieldDecrement>
+      <NumberFieldInput {...props} />
       <NumberFieldIncrement>
         <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={Add01Icon} aria-hidden="true" />
       </NumberFieldIncrement>
@@ -47,7 +48,7 @@ function NumberFieldGroup({ variants, ...props }: NumberFieldGroupProps) {
 
 const numberFieldInput = tv({
   extend: textFieldInput,
-  base: "w-auto pe-0 leading-[1em]",
+  base: "w-auto px-1 leading-[1em]",
   variants: {
     showCaret: {
       true: "caret-fg-level-1",
@@ -108,7 +109,7 @@ function NumberFieldInput(props: NumberFieldInputProps) {
 const numberFieldButton = button({
   size: "none",
   style: "ghost",
-  class: "p-2 rounded-none hover:bg-transparent hover:fg-level-1",
+  class: "h-full px-2 rounded-none hover:bg-transparent hover:fg-level-1",
 });
 
 function NumberFieldIncrement(props: ButtonProps) {
