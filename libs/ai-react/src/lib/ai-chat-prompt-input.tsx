@@ -12,7 +12,7 @@ export type AIChatPromptInputProps = {
 
 export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInputProps) {
   const { _ } = useLingui();
-  const { ui } = useHotkeysSettings();
+  const { ui, ai } = useHotkeysSettings();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -22,6 +22,7 @@ export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInp
     }
   };
 
+  useAppHotkey(ai.focusPrompt, () => inputRef.current?.focus(), "", { ignoreInputs: false });
   useAppHotkey(
     ui.submit,
     () => {

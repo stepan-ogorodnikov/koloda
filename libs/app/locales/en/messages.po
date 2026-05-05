@@ -141,31 +141,35 @@ msgstr "Source template not found"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Interrupt"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+#: ../../libs/app/src/lib/settings-hotkeys.ts:42
+msgid "settings.hotkeys.ai.focus-prompt"
+msgstr "Focus chat input"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:42
+#: ../../libs/app/src/lib/settings-hotkeys.ts:43
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Open AI profile picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Scroll down"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Scroll to bottom"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Scroll to top"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Scroll up"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Toggle settings"
 

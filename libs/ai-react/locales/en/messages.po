@@ -38,11 +38,11 @@ msgstr "s"
 msgid "ai.chat.error.close"
 msgstr "Hide errors"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:37
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:39
 msgid "ai.chat.input.label"
 msgstr "Prompt input"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:45
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:47
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 

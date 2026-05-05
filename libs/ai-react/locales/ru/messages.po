@@ -38,11 +38,11 @@ msgstr "с"
 msgid "ai.chat.error.close"
 msgstr "Скрыть ошибки"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:37
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:39
 msgid "ai.chat.input.label"
 msgstr "Поле ввода сообщения"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:45
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:47
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 

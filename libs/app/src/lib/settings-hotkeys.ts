@@ -39,6 +39,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
   },
   ai: {
     cancel: msg`settings.hotkeys.ai.cancel`,
+    focusPrompt: msg`settings.hotkeys.ai.focus-prompt`,
     openProfilePicker: msg`settings.hotkeys.ai.open-profile-picker`,
     openModelPicker: msg`settings.hotkeys.ai.open-model-picker`,
     toggleSettings: msg`settings.hotkeys.ai.toggle-settings`,
@@ -54,7 +55,7 @@ const hotkeys = {
   ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
-  ai: ["cancel", "openProfilePicker", "openModelPicker", "toggleSettings", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
+  ai: ["cancel", "focusPrompt", "openProfilePicker", "openModelPicker", "toggleSettings", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
 } as const;
 
 type Hotkeys = typeof hotkeys;
@@ -216,6 +217,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
   },
   ai: {
     cancel: ["Mod+Shift+I"],
+    focusPrompt: ["Mod+L"],
     openProfilePicker: ["Mod+Shift+P"],
     openModelPicker: ["Mod+Shift+M"],
     toggleSettings: ["Mod+Shift+S"],
