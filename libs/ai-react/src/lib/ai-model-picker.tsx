@@ -52,13 +52,14 @@ export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIMode
       {!isLoading && !error && (
         <Fade className="min-w-0" key="ready">
           <Select
-            triggerRef={triggerRef}
             buttonVariants={{ style: "ghost" }}
-            popoverVariants={{ class: "min-w-84" }}
+            popoverVariants={{ class: "w-84" }}
+            listboxVariants={{ class: "h-96" }}
             aria-label={_(msg`ai.model-picker.label`)}
             placeholder={_(msg`ai.model-picker.placeholder`)}
             searchLabel={_(msg`ai.model-picker.search.label`)}
             searchPlaceholder={_(msg`ai.model-picker.search.placeholder`)}
+            triggerRef={triggerRef}
             items={models}
             value={value}
             onChange={(key) => key && onChange(key.toString())}
