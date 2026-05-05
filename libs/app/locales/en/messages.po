@@ -157,21 +157,25 @@ msgstr "Open AI model picker"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Open AI profile picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Scroll down"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Scroll to bottom"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Scroll to top"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Scroll up"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+msgid "settings.hotkeys.ai.toggle-cards-mode"
+msgstr "Toggle cards mode"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:46
 msgid "settings.hotkeys.ai.toggle-settings"

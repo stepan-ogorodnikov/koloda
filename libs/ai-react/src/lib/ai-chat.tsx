@@ -128,6 +128,10 @@ export function AIChat({
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
   useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
+  useAppHotkey(ai.toggleCardsMode, () => onModeChange?.(mode === "chat" ? "cards" : "chat"), "", {
+    enabled: !!onModeChange,
+    ignoreInputs: false,
+  });
   useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
     enabled: !!profileId,
     ignoreInputs: false,

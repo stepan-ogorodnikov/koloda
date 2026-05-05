@@ -44,6 +44,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     openProfilePicker: msg`settings.hotkeys.ai.open-profile-picker`,
     openModelPicker: msg`settings.hotkeys.ai.open-model-picker`,
     toggleSettings: msg`settings.hotkeys.ai.toggle-settings`,
+    toggleCardsMode: msg`settings.hotkeys.ai.toggle-cards-mode`,
     scrollUp: msg`settings.hotkeys.ai.scroll-up`,
     scrollDown: msg`settings.hotkeys.ai.scroll-down`,
     scrollToTop: msg`settings.hotkeys.ai.scroll-to-top`,
@@ -56,7 +57,7 @@ const hotkeys = {
   ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
-  ai: ["cancel", "focusPrompt", "newConversation", "openProfilePicker", "openModelPicker", "toggleSettings", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
+  ai: ["cancel", "focusPrompt", "newConversation", "openProfilePicker", "openModelPicker", "toggleSettings", "toggleCardsMode", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
 } as const;
 
 type Hotkeys = typeof hotkeys;
@@ -223,6 +224,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     openProfilePicker: ["Mod+Shift+P"],
     openModelPicker: ["Mod+Shift+M"],
     toggleSettings: ["Mod+Shift+S"],
+    toggleCardsMode: [],
     scrollUp: [],
     scrollDown: [],
     scrollToTop: [],

@@ -41,6 +41,7 @@ describe("settings-hotkeys", () => {
         openProfilePicker: [],
         openModelPicker: [],
         toggleSettings: [],
+        toggleCardsMode: [],
         scrollUp: [],
         scrollDown: [],
         scrollToTop: [],
