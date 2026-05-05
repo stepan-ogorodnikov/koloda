@@ -66,39 +66,39 @@ msgstr "Завершено за"
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:161
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:159
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:238
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:236
 msgid "ai.chat.mode.cards"
 msgstr "Режим карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:238
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:236
 msgid "ai.chat.mode.chat"
 msgstr "Режим чата"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:212
+#: ../../libs/ai-react/src/lib/ai-chat-footer.tsx:43
+msgid "ai.chat.new-conversation.label"
+msgstr "Новый диалог"
+
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:210
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:215
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:213
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat-footer.tsx:43
-msgid "ai.chat.reset.label"
-msgstr "Новый чат"
-
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:194
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:192
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:268
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:266
 msgid "ai.chat.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:269
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:267
 msgid "ai.chat.settings.show-settings"
 msgstr "Показать настройки"
 

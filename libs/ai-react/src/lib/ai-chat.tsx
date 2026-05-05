@@ -113,7 +113,7 @@ export function AIChat({
     submit();
   };
 
-  const handleReset = () => {
+  const handleNewConversation = () => {
     setInputValue("");
     scroll.resetScroll();
     onReset?.();
@@ -121,15 +121,13 @@ export function AIChat({
 
   const canSubmit = !!(profileId && modelId && !!prompt && !isLoading && hasRequiredSecrets);
   const canCancel = isLoading && !!onCancel;
-  const canReset = messages.length > 0 || isLoading;
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
-
   const hasSettingsToggle = !!settingsPanel && onSettingsPanelOpenChange;
 
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
-  useAppHotkey(ai.newConversation, handleReset, "", { ignoreInputs: false });
+  useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
   useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
     enabled: !!profileId,
     ignoreInputs: false,
@@ -255,8 +253,8 @@ export function AIChat({
       <AIChatFooter
         profileId={profileId}
         onProfileChange={onProfileChange}
-        onReset={handleReset}
-        canReset={canReset}
+        onNewConversation={handleNewConversation}
+        canStartNewConversation={messages.length > 0 || isLoading}
         triggerRef={profilePickerRef}
         contextUsage={contextUsage}
         contextLength={contextLength}

@@ -11,8 +11,8 @@ import { AIProfilePicker } from "./ai-profile-picker";
 export type AIChatFooterProps = {
   profileId: string;
   onProfileChange: (value: string) => void;
-  onReset: () => void;
-  canReset: boolean;
+  onNewConversation: () => void;
+  canStartNewConversation: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
   contextUsage?: StreamUsage | null;
   contextLength?: number;
@@ -22,8 +22,8 @@ export type AIChatFooterProps = {
 export function AIChatFooter({
   profileId,
   onProfileChange,
-  onReset,
-  canReset,
+  onNewConversation,
+  canStartNewConversation,
   triggerRef,
   contextUsage,
   contextLength,
@@ -40,9 +40,9 @@ export function AIChatFooter({
       )}
       <Button
         variants={{ style: "ghost", size: "icon" }}
-        aria-label={_(msg`ai.chat.reset.label`)}
-        isDisabled={!canReset}
-        onPress={onReset}
+        aria-label={_(msg`ai.chat.new-conversation.label`)}
+        isDisabled={!canStartNewConversation}
+        onPress={onNewConversation}
       >
         <HugeiconsIcon
           className="size-5 min-w-5"
