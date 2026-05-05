@@ -145,31 +145,35 @@ msgstr "Прервать"
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Фокус на поле ввода"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+msgid "settings.hotkeys.ai.new-conversation"
+msgstr "Новый диалог"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Выбор профиля ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Прокрутить вниз"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Прокрутить в конец"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Прокрутить на начало"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Прокрутить вверх"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"
 
