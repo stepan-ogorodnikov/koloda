@@ -40,6 +40,7 @@ type SelectOptions = {
 export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & SelectOptions & {
   buttonVariants?: SelectButtonProps["variants"];
   popoverVariants?: SelectPopoverProps["variants"];
+  listboxVariants?: SelectListBoxProps<T>["variants"];
   withChevron?: boolean;
   label?: ReactNode;
   icon?: ReactNode;
@@ -55,6 +56,7 @@ export function Select<T extends object>({
   variants,
   buttonVariants,
   popoverVariants,
+  listboxVariants,
   withChevron,
   label,
   icon,
@@ -72,7 +74,7 @@ export function Select<T extends object>({
   const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
 
   const listBox = (
-    <Select.ListBox items={items} isVirtualized={isVirtualized}>
+    <Select.ListBox items={items} isVirtualized={isVirtualized} variants={listboxVariants}>
       {children}
     </Select.ListBox>
   );
@@ -204,15 +206,17 @@ const selectListBox = tv({
   variants: { isVirtualized: { true: "overflow-x-hidden" } },
 });
 
-type SelectListBoxProps<T extends object> = ListBoxProps<T> & SelectOptions;
+type SelectListBoxProps<T extends object> = ListBoxProps<T> & SelectOptions & TWVProps<typeof selectListBox>;
 
-function SelectListBox<T extends object>({ renderEmptyState, isVirtualized, ...props }: SelectListBoxProps<T>) {
+function SelectListBox<T extends object>(
+  { renderEmptyState, isVirtualized, variants, ...props }: SelectListBoxProps<T>,
+) {
   const ref = useRef<HTMLDivElement>(null);
   useSelectHotkeys(ref);
 
   const listBox = (
     <ListBox
-      className={selectListBox({ isVirtualized })}
+      className={selectListBox({ isVirtualized, ...variants })}
       renderEmptyState={renderEmptyState}
       ref={ref}
       {...props}
