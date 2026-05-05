@@ -11,10 +11,7 @@ import { LESSON_PROGRESS_STATES } from "./lesson-reducer";
 const lessonProgressCardDot = tv({
   base: "flex items-center justify-center size-4 rounded-full animate-colors",
   variants: {
-    isCurrent: {
-      true: "",
-      false: "opacity-50",
-    },
+    isCurrent: { false: "opacity-50" },
     type: {
       untouched: "bg-lesson-type-blue",
       learn: "bg-lesson-type-red",

@@ -201,7 +201,7 @@ function SelectSearchField({ label, placeholder }: SelectSearchFieldProps) {
 
 const selectListBox = tv({
   base: "py-1 rounded-lg max-h-96 overflow-y-auto overflow-x-hidden",
-  variants: { isVirtualized: { true: "overflow-x-hidden", false: "" } },
+  variants: { isVirtualized: { true: "overflow-x-hidden" } },
 });
 
 type SelectListBoxProps<T extends object> = ListBoxProps<T> & SelectOptions;

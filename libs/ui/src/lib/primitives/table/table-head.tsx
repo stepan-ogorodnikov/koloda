@@ -8,10 +8,7 @@ export const tableHeadCellContent = tv({
   extend: tableCellContent,
   base: "flex flex-row items-center gap-1 whitespace-nowrap",
   variants: {
-    isSortable: {
-      true: "cursor-pointer select-none",
-      false: "",
-    },
+    isSortable: { true: "cursor-pointer select-none" },
   },
   defaultVariants: {
     isSortable: false,
