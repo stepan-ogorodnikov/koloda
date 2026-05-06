@@ -124,7 +124,7 @@ export function TextFieldTextArea({ variants, autoResize, maxRows, ref, onInput,
       el.style.height = "";
       el.style.overflowY = "";
     }
-  }, [autoResize, adjustHeight, value]);
+  });
 
   const handleInput = useCallback((e: FormEvent<HTMLTextAreaElement>) => {
     adjustHeight();
