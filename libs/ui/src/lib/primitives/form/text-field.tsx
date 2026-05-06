@@ -1,6 +1,8 @@
 import { formLayoutSection, formLayoutSectionContent, useFieldContext } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
 import { Errors } from "@koloda/ui";
+import { useCallback, useLayoutEffect, useRef } from "react";
+import type { FormEvent } from "react";
 import type { ComponentProps, PropsWithChildren, RefAttributes } from "react";
 import { Input, TextArea, TextField as ReactAriaTextField } from "react-aria-components";
 import type { InputProps, TextFieldProps as ReactAriaTextFieldProps } from "react-aria-components";
@@ -56,10 +58,71 @@ export function TextFieldInput({ variants, ...props }: TextFieldInputProps) {
 
 export const textFieldTextArea = tv({ extend: textFieldInput, base: "h-auto" });
 
-export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> & TWVProps<typeof textFieldTextArea>;
+export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> & TWVProps<typeof textFieldTextArea> & {
+  autoResize?: boolean;
+};
 
-export function TextFieldTextArea({ variants, ...props }: TextFieldTextAreaProps) {
-  return <TextArea className={textFieldTextArea(variants)} {...props} />;
+export function TextFieldTextArea({ variants, autoResize, ref, onInput, value, ...props }: TextFieldTextAreaProps) {
+  const internalRef = useRef<HTMLTextAreaElement>(null);
+
+  const setRef = useCallback((node: HTMLTextAreaElement | null) => {
+    internalRef.current = node;
+    if (typeof ref === "function") {
+      ref(node);
+    } else if (ref && "current" in ref) {
+      ref.current = node;
+    }
+  }, [ref]);
+
+  const adjustHeight = useCallback(() => {
+    const el = internalRef.current;
+    if (!el || !autoResize) return;
+
+    const style = window.getComputedStyle(el);
+    const borderHeight = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+    const minHeight = parseFloat(style.minHeight);
+    const maxHeight = parseFloat(style.maxHeight);
+
+    el.style.overflowY = "hidden";
+    el.style.height = "auto";
+
+    let targetHeight = Math.ceil(el.scrollHeight + borderHeight);
+
+    if (!Number.isNaN(minHeight)) targetHeight = Math.max(targetHeight, minHeight);
+
+    if (!Number.isNaN(maxHeight) && targetHeight > maxHeight) {
+      targetHeight = maxHeight;
+      el.style.overflowY = "auto";
+    }
+
+    el.style.height = `${targetHeight}px`;
+  }, [autoResize]);
+
+  useLayoutEffect(() => {
+    const el = internalRef.current;
+    if (!el) return;
+    if (autoResize) {
+      adjustHeight();
+    } else {
+      el.style.height = "";
+      el.style.overflowY = "";
+    }
+  }, [autoResize, adjustHeight, value]);
+
+  const handleInput = useCallback((e: FormEvent<HTMLTextAreaElement>) => {
+    adjustHeight();
+    onInput?.(e);
+  }, [adjustHeight, onInput]);
+
+  return (
+    <TextArea
+      className={textFieldTextArea(variants)}
+      ref={setRef}
+      {...props}
+      onInput={handleInput}
+      value={value}
+    />
+  );
 }
 
 export function FormTextField(props: TextFieldProps) {
