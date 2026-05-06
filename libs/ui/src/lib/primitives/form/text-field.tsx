@@ -60,9 +60,10 @@ export const textFieldTextArea = tv({ extend: textFieldInput, base: "h-auto" });
 
 export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> & TWVProps<typeof textFieldTextArea> & {
   autoResize?: boolean;
+  maxRows?: number;
 };
 
-export function TextFieldTextArea({ variants, autoResize, ref, onInput, value, ...props }: TextFieldTextAreaProps) {
+export function TextFieldTextArea({ variants, autoResize, maxRows, ref, onInput, value, ...props }: TextFieldTextAreaProps) {
   const internalRef = useRef<HTMLTextAreaElement>(null);
 
   const setRef = useCallback((node: HTMLTextAreaElement | null) => {
@@ -80,6 +81,8 @@ export function TextFieldTextArea({ variants, autoResize, ref, onInput, value, .
 
     const style = window.getComputedStyle(el);
     const borderHeight = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+    const paddingTop = parseFloat(style.paddingTop);
+    const paddingBottom = parseFloat(style.paddingBottom);
     const minHeight = parseFloat(style.minHeight);
     const maxHeight = parseFloat(style.maxHeight);
 
@@ -90,13 +93,27 @@ export function TextFieldTextArea({ variants, autoResize, ref, onInput, value, .
 
     if (!Number.isNaN(minHeight)) targetHeight = Math.max(targetHeight, minHeight);
 
-    if (!Number.isNaN(maxHeight) && targetHeight > maxHeight) {
-      targetHeight = maxHeight;
+    let maxHeightLimit: number | undefined;
+
+    if (maxRows !== undefined) {
+      let lineHeight = parseFloat(style.lineHeight);
+      if (Number.isNaN(lineHeight)) {
+        lineHeight = parseFloat(style.fontSize) * 1.2;
+      }
+      maxHeightLimit = maxRows * lineHeight + paddingTop + paddingBottom + borderHeight;
+    }
+
+    if (!Number.isNaN(maxHeight)) {
+      maxHeightLimit = maxHeightLimit === undefined ? maxHeight : Math.min(maxHeightLimit, maxHeight);
+    }
+
+    if (maxHeightLimit !== undefined && targetHeight > maxHeightLimit) {
+      targetHeight = maxHeightLimit;
       el.style.overflowY = "auto";
     }
 
     el.style.height = `${targetHeight}px`;
-  }, [autoResize]);
+  }, [autoResize, maxRows]);
 
   useLayoutEffect(() => {
     const el = internalRef.current;
