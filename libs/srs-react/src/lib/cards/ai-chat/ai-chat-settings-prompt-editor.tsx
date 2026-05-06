@@ -7,7 +7,8 @@ import { useState } from "react";
 
 export type AIChatSettingsPromptEditorProps = {
   label: string;
-  rows: number;
+  rows?: number;
+  maxRows?: number;
   templateValue: string | null;
   defaultTemplate: string;
   preview: string;
@@ -17,6 +18,7 @@ export type AIChatSettingsPromptEditorProps = {
 export function AIChatSettingsPromptEditor({
   label,
   rows,
+  maxRows,
   templateValue,
   defaultTemplate,
   preview,
@@ -63,8 +65,10 @@ export function AIChatSettingsPromptEditor({
             onChange={onChange}
           >
             <TextField.TextArea
-              variants={{ style: "normal" }}
+              variants={{ style: "normal", class: "resize-none" }}
+              autoResize
               rows={rows}
+              maxRows={maxRows}
             />
           </TextField>
         )
@@ -72,7 +76,9 @@ export function AIChatSettingsPromptEditor({
           <TextField value={preview} aria-label={label}>
             <TextField.TextArea
               variants={{ style: "normal" }}
+              autoResize
               rows={rows}
+              maxRows={maxRows}
               readOnly
             />
           </TextField>

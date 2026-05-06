@@ -88,7 +88,12 @@ export function CardDetails({ card }: CardDetailsProps) {
                 <field.TextField variants={{ layout: "form" }}>
                   <Label variants={{ layout: "form" }}>{title}</Label>
                   <TextField.Content>
-                    <TextField.TextArea variants={{ layout: "form" }} />
+                    <TextField.TextArea
+                      variants={{ layout: "form", class: "resize-none" }}
+                      autoResize
+                      rows={1}
+                      maxRows={10}
+                    />
                     {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
                   </TextField.Content>
                 </field.TextField>

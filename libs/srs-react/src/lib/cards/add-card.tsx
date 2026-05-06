@@ -108,7 +108,12 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                           <field.TextField>
                             <Label>{title}</Label>
                             <TextField.Content>
-                              <TextField.TextArea ref={i === 0 ? firstFieldRef : undefined} />
+                              <TextField.TextArea
+                                autoResize
+                                rows={1}
+                                maxRows={6}
+                                ref={i === 0 ? firstFieldRef : undefined}
+                              />
                               {!field.state.meta.isValid && (
                                 <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />
                               )}

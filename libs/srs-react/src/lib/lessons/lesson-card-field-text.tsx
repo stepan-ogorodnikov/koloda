@@ -32,7 +32,7 @@ export function LessonCardFieldText(
                   e.continuePropagation();
                 }}
               >
-                <TextField.TextArea />
+                <TextField.TextArea autoResize rows={1} maxRows={10} />
               </TextField>
             </Fade>
           )}

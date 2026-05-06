@@ -55,7 +55,8 @@ export function AIChatSettings({
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
       <AIChatSettingsPromptEditor
         label={_(msg`ai-chat.settings.system-prompt.chat.label`)}
-        rows={6}
+        rows={1}
+        maxRows={6}
         templateValue={chatPromptTemplate}
         defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
         preview={chatPreview}
@@ -64,7 +65,8 @@ export function AIChatSettings({
 
       <AIChatSettingsPromptEditor
         label={_(msg`ai-chat.settings.system-prompt.cards.label`)}
-        rows={10}
+        rows={5}
+        maxRows={10}
         templateValue={cardsPromptTemplate}
         defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
         preview={generationPreview}

@@ -42,8 +42,10 @@ export function AIChatPromptInput({ value, onChange, onSubmit }: AIChatPromptInp
     >
       <TextField.TextArea
         variants={{ style: "inline", class: "resize-none" }}
-        rows={4}
         placeholder={_(msg`ai.chat.input.placeholder`)}
+        autoResize
+        rows={2}
+        maxRows={6}
         ref={inputRef}
         onKeyDownCapture={handleKeyDown}
       />
