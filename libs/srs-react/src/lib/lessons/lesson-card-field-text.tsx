@@ -25,7 +25,7 @@ export function LessonCardFieldText(
                 onChange={(val) => dispatch(["cardFormUpdated", { key: fieldId, value: val }])}
                 autoFocus={isFirstInput}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                     e.preventDefault();
                     dispatch(["cardSubmitted"]);
                   }
