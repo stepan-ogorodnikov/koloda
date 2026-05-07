@@ -20,7 +20,7 @@ const checkboxIndicator = [
   "size-5 min-w-5 rounded border-2 border-checkbox bg-checkbox shadow-checkbox",
   "group-selected:bg-checkbox-selected group-selected:border-checkbox-selected",
   "group-indeterminate:bg-checkbox-selected group-indeterminate:border-checkbox-selected",
-  "animate-colors",
+  "group-disabled:opacity-40 animate-colors",
 ].join(" ");
 
 const checkboxIndicatorCheck = [
@@ -40,11 +40,13 @@ function CheckboxIndicator() {
   );
 }
 
-type CheckboxLabelProps = TWVProps<typeof label> & PropsWithChildren;
+const checkboxLabel = tv({ extend: label, base: "group-disabled:fg-disabled" });
+
+type CheckboxLabelProps = TWVProps<typeof checkboxLabel> & PropsWithChildren;
 
 function CheckboxLabel({ variants, children }: CheckboxLabelProps) {
   return (
-    <span className={label(variants)}>
+    <span className={checkboxLabel(variants)}>
       {children}
     </span>
   );
