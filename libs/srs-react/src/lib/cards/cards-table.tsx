@@ -37,7 +37,7 @@ type CardsTableProps = {
 
 export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
-  const { getCardsQuery } = useAtomValue(queriesAtom);
+  const { getCardsQuery, getDeckQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ createdAt: false, updatedAt: false });
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
@@ -49,7 +49,8 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const [searchValue, setSearchValue] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data: cards = [] } = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
-  const { templates, templateMapRef, isReady } = useCardsTemplates(cards);
+  const { data: deck } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
+  const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const columns = useMemo<ColumnDef<Card>[]>(

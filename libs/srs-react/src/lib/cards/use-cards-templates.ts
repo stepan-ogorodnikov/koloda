@@ -4,12 +4,16 @@ import { useQueries } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo, useRef } from "react";
 
-export function useCardsTemplates(cards: Card[] | undefined) {
+export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Template["id"]) {
   const { getTemplateQuery } = useAtomValue(queriesAtom);
 
   const templateIds = useMemo(
-    () => [...new Set(cards?.map((c) => c.templateId) ?? [])].sort((a, b) => a - b),
-    [cards],
+    () => {
+      const ids = new Set(cards?.map((c) => c.templateId) ?? []);
+      if (deckTemplateId !== undefined) ids.add(deckTemplateId);
+      return [...ids].sort((a, b) => a - b);
+    },
+    [cards, deckTemplateId],
   );
 
   const templateQueries = useQueries({
