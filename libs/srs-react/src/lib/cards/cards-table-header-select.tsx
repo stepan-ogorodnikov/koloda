@@ -12,6 +12,8 @@ export function CardsTableHeaderSelect({ table }: { table: Table<Card> }) {
     table.toggleAllRowsSelected(isSelected);
   };
 
+  if (allRows.length === 0) return null;
+
   return (
     <Checkbox
       isSelected={isAllSelected}
