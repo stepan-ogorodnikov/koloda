@@ -168,6 +168,7 @@ function TitlebarControls({ controls, onAction }: TitlebarControlsProps) {
         <Button
           variants={{ size: "none", class: control({ platform, action }) }}
           onPress={() => onAction(action)}
+          excludeFromTabOrder
           key={action}
         >
           <HugeiconsIcon
