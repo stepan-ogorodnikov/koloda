@@ -116,25 +116,27 @@ export function NativeTitlebar() {
 
   const controls = getTitlebarControls(isMaximized);
 
+  if (platform === "macos") {
+    return (
+      <div
+        className="h-8 w-full shrink-0 [-webkit-app-region:drag]"
+        data-tauri-drag-region
+        onDoubleClick={() => runWindowAction("maximize")}
+      />
+    );
+  }
+
   return (
     <div className={titlebar({ platform })}>
-      {platform === "macos" && (
-        <TitlebarControls
-          controls={[controls.close, controls.minimize, controls.maximize]}
-          onAction={runWindowAction}
-        />
-      )}
       <div
         className="grow self-stretch"
         data-tauri-drag-region
         onDoubleClick={() => runWindowAction("maximize")}
       />
-      {platform !== "macos" && (
-        <TitlebarControls
-          controls={[controls.minimize, controls.maximize, controls.close]}
-          onAction={runWindowAction}
-        />
-      )}
+      <TitlebarControls
+        controls={[controls.minimize, controls.maximize, controls.close]}
+        onAction={runWindowAction}
+      />
     </div>
   );
 

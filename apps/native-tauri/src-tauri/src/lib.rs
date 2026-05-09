@@ -29,7 +29,7 @@ use commands::{
         cmd_get_templates, cmd_update_template,
     },
 };
-use tauri::Manager;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_http::init as http_init;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,6 +40,30 @@ pub fn run() {
         .setup(|app| {
             let db = db::Database::init(app.handle()).expect("Failed to initialize database");
             app.manage(db);
+
+            #[cfg(target_os = "macos")]
+            WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+                .title("KOLODA")
+                .inner_size(1280.0, 720.0)
+                .resizable(true)
+                .fullscreen(false)
+                .shadow(true)
+                .decorations(true)
+                .title_bar_style(tauri::TitleBarStyle::Overlay)
+                .hidden_title(true)
+                .build()
+                .expect("Failed to create main window");
+
+            #[cfg(not(target_os = "macos"))]
+            WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+                .title("KOLODA")
+                .inner_size(1280.0, 720.0)
+                .resizable(true)
+                .fullscreen(false)
+                .shadow(true)
+                .decorations(false)
+                .build()
+                .expect("Failed to create main window");
 
             Ok(())
         })
