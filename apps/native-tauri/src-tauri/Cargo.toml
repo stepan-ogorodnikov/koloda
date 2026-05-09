@@ -11,7 +11,7 @@ rust-version = "1.80.0"
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.9.5", features = [] }
+tauri = { version = "2.11.1", features = [] }
 refinery = { version = "0.8", features = ["rusqlite"] }
 anyhow = "1.0"
 rusqlite = { version = "0.33", features = ["bundled"] }
@@ -20,11 +20,11 @@ strum = "0.27"
 strum_macros = "0.27"
 chrono = { version = "0.4", features = ["serde"] }
 keyring = "3"
-tauri-plugin-http = "2.5.7"
+tauri-plugin-http = "2.5.9"
 tauri-plugin-cors-fetch = "5.0.0"
 uuid = { version = "1.0", features = ["v4"] }
 dirs = "6.0.0"
 windows-sys = { version = "0.61.2", features = ["Win32_Security_Credentials"] }
 
 [build-dependencies]
-tauri-build = { version = "2.5.3", features = [] }
+tauri-build = { version = "2.6.1", features = [] }
