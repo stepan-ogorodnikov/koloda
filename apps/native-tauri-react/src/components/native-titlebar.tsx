@@ -121,7 +121,7 @@ export function NativeTitlebar() {
       <div
         className="h-8 w-full shrink-0 [-webkit-app-region:drag]"
         data-tauri-drag-region
-        onDoubleClick={() => runWindowAction("maximize")}
+        onDoubleClick={() => runWindowAction("maximize", setIsMaximized)}
       />
     );
   }
@@ -131,31 +131,14 @@ export function NativeTitlebar() {
       <div
         className="grow self-stretch"
         data-tauri-drag-region
-        onDoubleClick={() => runWindowAction("maximize")}
+        onDoubleClick={() => runWindowAction("maximize", setIsMaximized)}
       />
       <TitlebarControls
         controls={[controls.minimize, controls.maximize, controls.close]}
-        onAction={runWindowAction}
+        onAction={(action) => runWindowAction(action, setIsMaximized)}
       />
     </div>
   );
-
-  function runWindowAction(action: TitlebarAction) {
-    void (async () => {
-      if (action === "close") {
-        await appWindow.close();
-        return;
-      }
-
-      if (action === "minimize") {
-        await appWindow.minimize();
-        return;
-      }
-
-      await appWindow.toggleMaximize();
-      setIsMaximized(await appWindow.isMaximized());
-    })().catch(logWindowControlError);
-  }
 }
 
 type TitlebarControlsProps = {
@@ -204,6 +187,23 @@ function getTitlebarControls(isMaximized: boolean): Record<TitlebarAction, Title
     minimize: { action: "minimize", icon: MinusSignIcon },
     maximize: { action: "maximize", icon: isMaximized ? CopyIcon : SquareIcon },
   };
+}
+
+function runWindowAction(action: TitlebarAction, setIsMaximized: (value: boolean) => void) {
+  void (async () => {
+    if (action === "close") {
+      await appWindow.close();
+      return;
+    }
+
+    if (action === "minimize") {
+      await appWindow.minimize();
+      return;
+    }
+
+    await appWindow.toggleMaximize();
+    setIsMaximized(await appWindow.isMaximized());
+  })().catch(logWindowControlError);
 }
 
 function logWindowControlError(error: unknown) {
