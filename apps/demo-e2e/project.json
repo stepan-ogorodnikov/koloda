@@ -1,9 +1,15 @@
 {
   "name": "demo-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo-e2e/src",
   "projectType": "application",
-  "implicitDependencies": ["demo"],
-  "tags": ["type:e2e", "platform:web"],
+  "tags": [
+    "type:e2e",
+    "platform:web"
+  ],
+  "implicitDependencies": [
+    "demo"
+  ],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

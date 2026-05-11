@@ -1,14 +1,23 @@
 {
   "name": "@koloda/native-tauri",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/native-tauri/src",
   "projectType": "application",
-  "tags": ["type:app", "platform:desktop"],
-  "implicitDependencies": ["native-tauri-react"],
+  "tags": [
+    "type:app",
+    "platform:desktop"
+  ],
+  "implicitDependencies": [
+    "native-tauri-react"
+  ],
   "targets": {
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": ["nx serve native-tauri-react", "tauri dev"],
+        "commands": [
+          "nx serve native-tauri-react",
+          "tauri dev"
+        ],
         "parallel": true,
         "cwd": "apps/native-tauri"
       }
@@ -22,7 +31,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["native-tauri-react"],
+          "projects": [
+            "native-tauri-react"
+          ],
           "params": "forward"
         }
       ],

@@ -1,5 +1,6 @@
 {
   "name": "@koloda/srs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/srs/src",
   "projectType": "library",
   "targets": {

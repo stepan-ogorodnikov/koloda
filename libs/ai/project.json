@@ -1,5 +1,6 @@
 {
   "name": "@koloda/ai",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/ai/src",
   "projectType": "library",
   "targets": {

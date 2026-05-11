@@ -1,7 +1,12 @@
 {
+  "name": "@koloda/demo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo/src",
   "projectType": "application",
-  "tags": ["type:app", "platform:web"],
+  "tags": [
+    "type:app",
+    "platform:web"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",

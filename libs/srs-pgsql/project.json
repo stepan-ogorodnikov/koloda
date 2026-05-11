@@ -1,5 +1,6 @@
 {
   "name": "srs-pgsql",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/srs-pgsql/src",
   "projectType": "library",
   "targets": {

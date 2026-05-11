@@ -1,11 +1,18 @@
 {
+  "name": "@koloda/native-electron-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": [
+    "type:app",
+    "platform:web"
+  ],
   "sourceRoot": "apps/native-electron-react/src",
   "projectType": "application",
-  "tags": ["type:app", "platform:web"],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/native-electron-react"

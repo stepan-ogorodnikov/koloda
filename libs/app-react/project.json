@@ -1,5 +1,6 @@
 {
   "name": "@koloda/app-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/app-react/src",
   "projectType": "library",
   "targets": {

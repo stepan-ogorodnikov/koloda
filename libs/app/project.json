@@ -1,5 +1,6 @@
 {
   "name": "@koloda/app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/app/src",
   "projectType": "library",
   "targets": {
