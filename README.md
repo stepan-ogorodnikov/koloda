@@ -12,22 +12,33 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 
 - [Bun](https://bun.sh)
 - [Rust toolchain](https://rustup.rs) (1.80.0+)
-- Tauri [system dependencies](https://v2.tauri.app/start/prerequisites/) for your platform
 
 ```bash
 bun install
 ```
 
-### Dev server (desktop)
+### Dev server (desktop — Tauri)
 
 ```bash
 nx serve native-tauri
 ```
 
-### Build (desktop)
+### Build (desktop — Tauri)
 
 ```bash
 nx build native-tauri
+```
+
+### Dev server (desktop — Electron)
+
+```bash
+nx serve native-electron
+```
+
+### Build (desktop — Electron)
+
+```bash
+nx build native-electron
 ```
 
 ## Tech Stack
@@ -36,23 +47,30 @@ nx build native-tauri
 - **Frontend**: Vite, React, TanStack Router
 - **Web**: PGLite
 - **Desktop**: Tauri + SQLite
+- **Desktop**: Electron + Rust NAPI + SQLite
+- **Testing**: Playwright (E2E)
 
 ## Project Structure
 
 ```
 apps/
-  demo/               # Web app (Live demo)
-  native-tauri-react/ # Desktop app frontend (React)
-  native-tauri/       # Desktop app backend (Rust / Tauri)
+  demo/                   # Web app (Live demo)
+  demo-e2e/               # E2E tests for web app (Playwright)
+  native-electron/        # Desktop app backend (Electron / Rust NAPI)
+  native-electron-react/  # Desktop app frontend (React / Electron)
+  native-tauri/           # Desktop app backend (Rust / Tauri)
+  native-tauri-react/     # Desktop app frontend (React / Tauri)
 libs/
-  ai/                 # Domain lib for AI features
-  ai-react/           # AI features React UI
-  app/                # Generic app infrastructure (error types, utilities, interface settings)
-  app-react/          # App shell, routing, settings UI, global hooks
-  core-react/         # Shared React infrastructure (queries, hooks, atoms)
-  srs/                # SRS domain logic
-  srs-pgsql/          # PostgreSQL backend (web)
-  srs-sqlite/         # SQLite schema (desktop)
-  srs-react/          # SRS domain React UI
-  ui/                 # Styles and UI primitives
+  ai/                     # Domain lib for AI features
+  ai-react/               # AI features React UI
+  app/                    # Generic app infrastructure (error types, utilities, interface settings)
+  app-react/              # App shell, routing, settings UI, global hooks
+  core-react/             # Shared React infrastructure (queries, hooks, atoms)
+  srs/                    # SRS domain logic
+  srs-pgsql/              # PostgreSQL backend (web)
+  srs-react/              # SRS domain React UI
+  srs-sqlite/             # SQLite schema (desktop)
+  ui/                     # Styles and UI primitives
+crates/
+  koloda-core/            # Shared Rust backend (domain logic, DB, migrations)
 ```
