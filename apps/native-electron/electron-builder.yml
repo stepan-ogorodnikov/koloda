@@ -1,0 +1,31 @@
+appId: com.koloda.app
+productName: KOLODA
+directories:
+  output: dist
+  buildResources: build
+files:
+  - dist/**/*
+  - "!dist/tsconfig*"
+extraResources:
+  - from: ../native-electron-react/dist
+    to: native-electron-react
+mac:
+  category: public.app-category.education
+  target:
+    - dmg
+    - zip
+  icon: build/icon.icns
+  hardenedRuntime: true
+win:
+  target:
+    - nsis
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: build/icons
+  category: Education

@@ -1,0 +1,12 @@
+{
+  "name": "@koloda/native-electron",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/main.ts",
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^35.2.0",
+    "electron-builder": "^25.1.8"
+  }
+}

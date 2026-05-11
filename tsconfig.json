@@ -44,6 +44,9 @@
     },
     {
       "path": "./apps/native-electron-react"
+    },
+    {
+      "path": "./apps/native-electron"
     }
   ]
 }

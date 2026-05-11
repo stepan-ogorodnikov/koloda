@@ -1,0 +1,89 @@
+{
+  "name": "@koloda/native-electron",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/native-electron/src",
+  "projectType": "application",
+  "tags": [
+    "type:app",
+    "platform:desktop"
+  ],
+  "implicitDependencies": [
+    "native-electron-react"
+  ],
+  "targets": {
+    "build-rust": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/target/release"
+      ],
+      "options": {
+        "commands": [
+          "cargo build -p koloda-electron --release",
+          "npx tsx scripts/copy-native-addon.ts"
+        ],
+        "parallel": false,
+        "cwd": "apps/native-electron"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "serve",
+          "projects": [
+            "native-electron-react"
+          ],
+          "params": "forward"
+        },
+        {
+          "target": "build-rust"
+        }
+      ],
+      "options": {
+        "command": "electron -r tsx/esm .",
+        "cwd": "apps/native-electron"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "native-electron-react"
+          ],
+          "params": "forward"
+        },
+        {
+          "target": "build-rust"
+        }
+      ],
+      "options": {
+        "commands": [
+          "npx swc src -d dist --copy-files -C module.type=commonjs",
+          "npx tsx scripts/copy-native-release.ts",
+          "electron-builder"
+        ],
+        "parallel": false,
+        "cwd": "apps/native-electron"
+      },
+      "configurations": {
+        "production": {}
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --build --emitDeclarationOnly",
+        "cwd": "apps/native-electron"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "oxlint --deny correctness",
+        "cwd": "apps/native-electron"
+      }
+    }
+  }
+}
