@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/koloda-core",
+    "apps/native-tauri/src-tauri",
+    "apps/native-electron/src-rust",
+]
+resolver = "2"

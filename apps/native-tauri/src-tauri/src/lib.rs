@@ -1,9 +1,6 @@
-pub mod ai;
+pub use koloda_core::{ai, domain, migrations, repo};
 pub mod app;
 pub mod commands;
-pub mod domain;
-pub mod migrations;
-pub mod repo;
 
 use app::db;
 use app::init::{get_db_status, seed_db};
@@ -38,7 +35,7 @@ pub fn run() {
         .plugin(http_init())
         .plugin(tauri_plugin_cors_fetch::init())
         .setup(|app| {
-            let db = db::Database::init(app.handle()).expect("Failed to initialize database");
+            let db = db::init_db(app.handle()).expect("Failed to initialize database");
             app.manage(db);
 
             #[cfg(target_os = "macos")]
@@ -68,7 +65,6 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            // Checkpoint WAL into main db file
             if let tauri::WindowEvent::Destroyed = event {
                 let app_handle = window.app_handle();
                 if let Some(db) = app_handle.try_state::<db::Database>() {
