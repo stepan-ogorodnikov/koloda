@@ -43,7 +43,7 @@ msgstr "Новый алгоритм"
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:138
 msgid "add-card.submit"
 msgstr "Добавить"
 
@@ -119,19 +119,19 @@ msgstr "Карточки не сгенерированы"
 msgid "ai-chat.no-profiles"
 msgstr "Добавьте профиль ИИ в настройках для генерации карточек"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:38
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
 msgid "ai-chat.settings.prompt.edit"
 msgstr "Редактировать"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:37
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
 msgid "ai-chat.settings.prompt.preview"
 msgstr "Предпросмотр"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:50
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:52
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Сбросить"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:66
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:67
 msgid "ai-chat.settings.system-prompt.cards.label"
 msgstr "Промпт генерации карточек"
 
@@ -155,7 +155,7 @@ msgstr "Провайдер"
 msgid "ai-chat.settings.system-prompt.variables.rules"
 msgstr "Правила"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:83
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:85
 msgid "ai-chat.settings.temperature.label"
 msgstr "Температура"
 
@@ -187,7 +187,7 @@ msgstr "Обработка"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:139
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:143
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
@@ -195,15 +195,15 @@ msgstr "Действия"
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:120
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:124
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:134
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:138
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:123
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:127
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
@@ -257,36 +257,36 @@ msgstr "Удалить интервал переучивания номер {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:149
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:154
 msgid "card.action.reset-progress"
 msgstr "Сбросить прогресс"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:138
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:143
 msgid "card.labels.actions"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:118
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:123
 msgid "card.labels.difficulty"
 msgstr "Сложность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:104
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:109
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:85
 msgid "card.labels.due-at"
 msgstr "Срок"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:125
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:130
 msgid "card.labels.lapses"
 msgstr "Ошибки"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:132
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:137
 msgid "card.labels.reviews"
 msgstr "История"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:111
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:116
 msgid "card.labels.stability"
 msgstr "Стабильность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:98
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:103
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:68
 msgid "card.labels.state"
 msgstr "Статус"
@@ -343,11 +343,11 @@ msgstr "Шаблон"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:196
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:197
 msgid "cards-table.search.label"
 msgstr "Поиск по карточкам"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:206
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:207
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
@@ -367,19 +367,19 @@ msgstr "Удалить"
 msgid "cards-table.selection.delete.trigger"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:104
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:105
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:88
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:89
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:78
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:79
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:111
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:112
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 
@@ -601,7 +601,7 @@ msgid "lesson.init.title"
 msgstr "Начать изучение"
 
 #. placeholder {0}: index + 1
-#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:38
+#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:35
 msgid "lesson.progress.label {0} {total}"
 msgstr "Прогресс: карточка № {0}, всего {total}"
 

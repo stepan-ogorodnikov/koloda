@@ -1,0 +1,12 @@
+{
+  "name": "@koloda/native-electron-react",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "tags": [
+      "type:app",
+      "platform:web"
+    ]
+  }
+}

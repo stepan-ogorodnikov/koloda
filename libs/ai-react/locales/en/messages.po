@@ -42,7 +42,7 @@ msgstr "Hide errors"
 msgid "ai.chat.input.label"
 msgstr "Prompt input"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:46
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:45
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 

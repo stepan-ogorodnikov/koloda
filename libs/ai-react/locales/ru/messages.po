@@ -42,7 +42,7 @@ msgstr "Скрыть ошибки"
 msgid "ai.chat.input.label"
 msgstr "Поле ввода сообщения"
 
-#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:46
+#: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:45
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 

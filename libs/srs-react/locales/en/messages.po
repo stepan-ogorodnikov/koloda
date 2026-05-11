@@ -43,7 +43,7 @@ msgstr "New preset"
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:138
 msgid "add-card.submit"
 msgstr "Create card"
 
@@ -119,19 +119,19 @@ msgstr "No cards were generated"
 msgid "ai-chat.no-profiles"
 msgstr "Add an AI profile in settings to generate cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:38
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
 msgid "ai-chat.settings.prompt.edit"
 msgstr "Edit"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:37
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
 msgid "ai-chat.settings.prompt.preview"
 msgstr "Preview"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:50
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:52
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Reset"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:66
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:67
 msgid "ai-chat.settings.system-prompt.cards.label"
 msgstr "Card generation prompt"
 
@@ -155,7 +155,7 @@ msgstr "Provider"
 msgid "ai-chat.settings.system-prompt.variables.rules"
 msgstr "Rules"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:83
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:85
 msgid "ai-chat.settings.temperature.label"
 msgstr "Temperature"
 
@@ -187,7 +187,7 @@ msgstr "Working"
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:139
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:143
 msgid "algorithm.actions.label"
 msgstr "Actions"
 
@@ -195,15 +195,15 @@ msgstr "Actions"
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Apply fuzz factor"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:120
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:124
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Learning steps"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:134
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:138
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Maximum interval"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:123
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:127
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Relearning steps"
 
@@ -257,36 +257,36 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:149
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:154
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:138
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:143
 msgid "card.labels.actions"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:118
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:123
 msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:104
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:109
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:85
 msgid "card.labels.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:125
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:130
 msgid "card.labels.lapses"
 msgstr "Lapses"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:132
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:137
 msgid "card.labels.reviews"
 msgstr "Reviews"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:111
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:116
 msgid "card.labels.stability"
 msgstr "Stability"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:98
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:103
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:68
 msgid "card.labels.state"
 msgstr "Status"
@@ -343,11 +343,11 @@ msgstr "Template"
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:196
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:197
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:206
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:207
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
@@ -367,19 +367,19 @@ msgstr "Delete"
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:104
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:105
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:88
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:89
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:78
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:79
 msgid "cards.table.columns.state"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:111
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:112
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
@@ -601,7 +601,7 @@ msgid "lesson.init.title"
 msgstr "Study cards"
 
 #. placeholder {0}: index + 1
-#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:38
+#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:35
 msgid "lesson.progress.label {0} {total}"
 msgstr "Progress: card № {0} of {total} total"
 
