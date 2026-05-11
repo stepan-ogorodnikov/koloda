@@ -100,8 +100,8 @@ function registerDataIpc(db: any) {
     return true;
   });
 
-  ipcMain.handle("cmd_get_cards", async (_event, { params }: any) => j(db.getCards(params.deck_id)));
-  ipcMain.handle("cmd_get_card", async (_event, { id }: any) => j(db.getCard(id)));
+  ipcMain.handle("cmd_get_cards", async (_event, { params }: any) => j(db.getCards(params)));
+  ipcMain.handle("cmd_get_card", async (_event, args: any) => j(db.getCard(args)));
   ipcMain.handle("cmd_add_card", async (_event, { data }: any) => j(db.addCard(data)));
   ipcMain.handle("cmd_add_cards", async (_event, { data }: any) => j(db.addCards(data)));
   ipcMain.handle("cmd_update_card", async (_event, { data }: any) => j(db.updateCard(data)));
@@ -110,37 +110,37 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_reset_card_progress", async (_event, { data }: any) => j(db.resetCardProgress(data)));
 
   ipcMain.handle("cmd_get_algorithms", async () => j(db.getAlgorithms()));
-  ipcMain.handle("cmd_get_algorithm", async (_event, { id }: any) => j(db.getAlgorithm(id)));
+  ipcMain.handle("cmd_get_algorithm", async (_event, args: any) => j(db.getAlgorithm(args)));
   ipcMain.handle("cmd_add_algorithm", async (_event, { data }: any) => j(db.addAlgorithm(data)));
   ipcMain.handle("cmd_clone_algorithm", async (_event, { data }: any) => j(db.cloneAlgorithm(data)));
   ipcMain.handle("cmd_update_algorithm", async (_event, { data }: any) => j(db.updateAlgorithm(data)));
   ipcMain.handle("cmd_delete_algorithm", async (_event, { data }: any) => db.deleteAlgorithm(data));
-  ipcMain.handle("cmd_get_algorithm_decks", async (_event, { id }: any) => j(db.getAlgorithmDecks(id)));
+  ipcMain.handle("cmd_get_algorithm_decks", async (_event, args: any) => j(db.getAlgorithmDecks(args)));
 
   ipcMain.handle("cmd_get_decks", async () => j(db.getDecks()));
-  ipcMain.handle("cmd_get_deck", async (_event, { id }: any) => j(db.getDeck(id)));
+  ipcMain.handle("cmd_get_deck", async (_event, args: any) => j(db.getDeck(args)));
   ipcMain.handle("cmd_add_deck", async (_event, { data }: any) => j(db.addDeck(data)));
   ipcMain.handle("cmd_update_deck", async (_event, { data }: any) => j(db.updateDeck(data)));
   ipcMain.handle("cmd_delete_deck", async (_event, { data }: any) => db.deleteDeck(data));
 
   ipcMain.handle("cmd_get_templates", async () => j(db.getTemplates()));
-  ipcMain.handle("cmd_get_template", async (_event, { id }: any) => j(db.getTemplate(id)));
+  ipcMain.handle("cmd_get_template", async (_event, args: any) => j(db.getTemplate(args)));
   ipcMain.handle("cmd_add_template", async (_event, { data }: any) => j(db.addTemplate(data)));
   ipcMain.handle("cmd_clone_template", async (_event, { data }: any) => j(db.cloneTemplate(data)));
   ipcMain.handle("cmd_update_template", async (_event, { data }: any) => j(db.updateTemplate(data)));
   ipcMain.handle("cmd_delete_template", async (_event, { data }: any) => db.deleteTemplate(data));
-  ipcMain.handle("cmd_get_template_decks", async (_event, { id }: any) => j(db.getTemplateDecks(id)));
+  ipcMain.handle("cmd_get_template_decks", async (_event, args: any) => j(db.getTemplateDecks(args)));
 
-  ipcMain.handle("cmd_get_settings", async (_event, { name }: any) => j(db.getSettings(name)));
-  ipcMain.handle("cmd_set_settings", async (_event, { name, content }: any) => db.setSettings(name, content));
-  ipcMain.handle("cmd_patch_settings", async (_event, { name, patch }: any) => j(db.patchSettings(name, patch)));
+  ipcMain.handle("cmd_get_settings", async (_event, args: any) => j(db.getSettings(args)));
+  ipcMain.handle("cmd_set_settings", async (_event, args: any) => db.setSettings(args));
+  ipcMain.handle("cmd_patch_settings", async (_event, args: any) => j(db.patchSettings(args)));
 
-  ipcMain.handle("cmd_get_lessons", async (_event, { params }: any) => j(db.getLessons(params.dueAt, params.filters ?? null)));
+  ipcMain.handle("cmd_get_lessons", async (_event, { params }: any) => j(db.getLessons(params)));
   ipcMain.handle("cmd_get_lesson_data", async (_event, { params }: any) => j(db.getLessonData(params)));
   ipcMain.handle("cmd_submit_lesson_result", async (_event, { data }: any) => db.submitLessonResult(data));
 
   ipcMain.handle("cmd_get_reviews", async (_event, { data }: any) => j(db.getReviews(data)));
-  ipcMain.handle("cmd_get_review_totals", async (_event, params: any) => j(db.getReviewTotals(params.from, params.to)));
+  ipcMain.handle("cmd_get_review_totals", async (_event, params: any) => j(db.getReviewTotals(params)));
   ipcMain.handle("cmd_get_todays_review_totals", async () => j(db.getTodaysReviewTotals()));
 
   ipcMain.handle("cmd_get_ai_profiles", async () => j(db.getAiProfiles()));

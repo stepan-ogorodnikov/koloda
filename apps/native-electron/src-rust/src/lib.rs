@@ -1,7 +1,7 @@
 use koloda_core::app::db::Database;
 use koloda_core::app::error::AppError;
 use koloda_core::app::init::{self as init_mod, SeedData};
-use koloda_core::domain::lessons::{GetLessonsParams, LessonFilters};
+use koloda_core::domain::lessons::GetLessonsParams;
 use koloda_core::domain::reviews::GetReviewTotalsParams;
 use koloda_core::domain::settings::SettingsName;
 use koloda_core::repo;
@@ -23,6 +23,26 @@ fn parse_settings_name(name: &str) -> Result<SettingsName> {
 
 fn as_json<T: serde::Serialize>(val: &T) -> Result<String> {
     serde_json::to_string(val).map_err(|e| Error::from_reason(e.to_string()))
+}
+
+fn extract_id(params: serde_json::Value) -> Result<i64> {
+    #[derive(serde::Deserialize)]
+    struct P {
+        id: i64,
+    }
+    serde_json::from_value::<P>(params)
+        .map(|p| p.id)
+        .map_err(|e| Error::from_reason(e.to_string()))
+}
+
+fn extract_name(params: serde_json::Value) -> Result<String> {
+    #[derive(serde::Deserialize)]
+    struct P {
+        name: String,
+    }
+    serde_json::from_value::<P>(params)
+        .map(|p| p.name)
+        .map_err(|e| Error::from_reason(e.to_string()))
 }
 
 #[napi]
@@ -56,13 +76,16 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_cards(&self, deck_id: i64) -> Result<String> {
-        let cards = repo::cards::get_cards(&self.db, deck_id).map_err(to_napi_error)?;
+    pub fn get_cards(&self, params: serde_json::Value) -> Result<String> {
+        let params: koloda_core::domain::cards::GetCardsParams =
+            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let cards = repo::cards::get_cards(&self.db, params.deck_id).map_err(to_napi_error)?;
         as_json(&cards)
     }
 
     #[napi]
-    pub fn get_card(&self, id: i64) -> Result<Option<String>> {
+    pub fn get_card(&self, params: serde_json::Value) -> Result<Option<String>> {
+        let id = extract_id(params)?;
         let card = repo::cards::get_card(&self.db, id).map_err(to_napi_error)?;
         Ok(card.map(|c| serde_json::to_string(&c).unwrap_or_default()))
     }
@@ -114,7 +137,8 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_algorithm(&self, id: i64) -> Result<Option<String>> {
+    pub fn get_algorithm(&self, params: serde_json::Value) -> Result<Option<String>> {
+        let id = extract_id(params)?;
         let algorithm = repo::algorithms::get_algorithm(&self.db, id).map_err(to_napi_error)?;
         Ok(algorithm.map(|a| serde_json::to_string(&a).unwrap_or_default()))
     }
@@ -147,7 +171,8 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_algorithm_decks(&self, id: i64) -> Result<String> {
+    pub fn get_algorithm_decks(&self, params: serde_json::Value) -> Result<String> {
+        let id = extract_id(params)?;
         let decks = repo::algorithms::get_algorithm_decks(&self.db, id).map_err(to_napi_error)?;
         as_json(&decks)
     }
@@ -159,7 +184,8 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_deck(&self, id: i64) -> Result<Option<String>> {
+    pub fn get_deck(&self, params: serde_json::Value) -> Result<Option<String>> {
+        let id = extract_id(params)?;
         let deck = repo::decks::get_deck(&self.db, id).map_err(to_napi_error)?;
         Ok(deck.map(|d| serde_json::to_string(&d).unwrap_or_default()))
     }
@@ -191,7 +217,8 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_template(&self, id: i64) -> Result<Option<String>> {
+    pub fn get_template(&self, params: serde_json::Value) -> Result<Option<String>> {
+        let id = extract_id(params)?;
         let template = repo::templates::get_template(&self.db, id).map_err(to_napi_error)?;
         Ok(template.map(|t| serde_json::to_string(&t).unwrap_or_default()))
     }
@@ -224,41 +251,50 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_template_decks(&self, id: i64) -> Result<String> {
+    pub fn get_template_decks(&self, params: serde_json::Value) -> Result<String> {
+        let id = extract_id(params)?;
         let decks = repo::templates::get_template_decks(&self.db, id).map_err(to_napi_error)?;
         as_json(&decks)
     }
 
     #[napi]
-    pub fn get_settings(&self, name: String) -> Result<String> {
+    pub fn get_settings(&self, params: serde_json::Value) -> Result<String> {
+        let name = extract_name(params)?;
         let name = parse_settings_name(&name)?;
         let settings = repo::settings::get_settings(&self.db, name).map_err(to_napi_error)?;
         Ok(settings.map(|s| serde_json::to_string(&s).unwrap_or_default()).unwrap_or_else(|| "null".to_string()))
     }
 
     #[napi]
-    pub fn set_settings(&self, name: String, content: serde_json::Value) -> Result<()> {
-        let name = parse_settings_name(&name)?;
-        repo::settings::set_settings(&self.db, name, content).map_err(to_napi_error)?;
+    pub fn set_settings(&self, params: serde_json::Value) -> Result<()> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            name: String,
+            content: serde_json::Value,
+        }
+        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let name = parse_settings_name(&p.name)?;
+        repo::settings::set_settings(&self.db, name, p.content).map_err(to_napi_error)?;
         Ok(())
     }
 
     #[napi]
-    pub fn patch_settings(&self, name: String, patch: serde_json::Value) -> Result<String> {
-        let name = parse_settings_name(&name)?;
-        let settings = repo::settings::patch_settings(&self.db, name, patch).map_err(to_napi_error)?;
+    pub fn patch_settings(&self, params: serde_json::Value) -> Result<String> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            name: String,
+            patch: serde_json::Value,
+        }
+        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let name = parse_settings_name(&p.name)?;
+        let settings = repo::settings::patch_settings(&self.db, name, p.patch).map_err(to_napi_error)?;
         as_json(&settings)
     }
 
     #[napi]
-    pub fn get_lessons(&self, due_at: f64, filters: Option<serde_json::Value>) -> Result<String> {
-        let filters: Option<LessonFilters> = filters
-            .map(|v| serde_json::from_value(v).map_err(|e| Error::from_reason(e.to_string())))
-            .transpose()?;
-        let params = GetLessonsParams {
-            due_at: due_at as i64,
-            filters,
-        };
+    pub fn get_lessons(&self, params: serde_json::Value) -> Result<String> {
+        let params: GetLessonsParams =
+            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let lessons = repo::lessons::get_lessons(&self.db, params).map_err(to_napi_error)?;
         as_json(&lessons)
     }
@@ -284,11 +320,9 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn get_review_totals(&self, from: f64, to: f64) -> Result<String> {
-        let params = GetReviewTotalsParams {
-            from: from as i64,
-            to: to as i64,
-        };
+    pub fn get_review_totals(&self, params: serde_json::Value) -> Result<String> {
+        let params: GetReviewTotalsParams =
+            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let totals = repo::reviews::get_review_totals(&self.db, params).map_err(to_napi_error)?;
         as_json(&totals)
     }
