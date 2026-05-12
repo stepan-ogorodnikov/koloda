@@ -18,7 +18,7 @@ const platform = getTitlebarPlatform();
 
 const titlebar = tv({
   base:
-    "flex h-8 w-full shrink-0 items-center border-b-2 border-main bg-body select-none [-webkit-app-region:drag] [-webkit-user-select:none]",
+    "flex h-8 w-full shrink-0 items-center bg-body select-none [-webkit-app-region:drag] [-webkit-user-select:none]",
   variants: {
     platform: {
       macos: "justify-start px-3",

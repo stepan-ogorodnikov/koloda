@@ -37,7 +37,7 @@ export function ElectronTitlebar() {
   };
 
   return (
-    <div ref={titlebarRef} className="flex h-8 w-full shrink-0 items-center border-b-2 border-main bg-body select-none [-webkit-user-select:none]"
+    <div ref={titlebarRef} className="flex h-8 w-full shrink-0 items-center bg-body select-none [-webkit-user-select:none]"
       style={{ appRegion: "drag" } as React.CSSProperties}
     >
       {platform === "macos" && (
