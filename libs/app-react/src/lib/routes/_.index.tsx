@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTitle } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
@@ -16,7 +17,10 @@ function IndexRoute() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const data = queryClient.getQueryData(["app"]);
-  if (data === "ok") navigate({ to: appMenu[0].to });
+
+  useEffect(() => {
+    if (data === "ok") navigate({ to: appMenu[0].to });
+  }, [data, navigate]);
 
   return null;
 }
