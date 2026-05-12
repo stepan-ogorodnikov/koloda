@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, session } from "electron";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -175,6 +175,19 @@ app.whenReady().then(() => {
   const native = loadNativeAddon();
   const dbPath = join(app.getPath("userData"), "koloda.db");
   const db = new native.KolodaDb(dbPath);
+
+  const scriptSrc = isDev ? "'self' 'unsafe-inline'" : "'self'";
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' ws: wss:;`,
+        ],
+      },
+    });
+  });
 
   registerWindowIpc();
   registerDataIpc(db);
