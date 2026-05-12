@@ -6,6 +6,8 @@
 @import "./base";
 
 :root {
+  --titlebar-overlay-color: #f5f5f4;
+  --titlebar-overlay-symbol-color: #303030;
   --bg-body: var(--color-stone-100);
   --bg-level-1: oklch(98% 0 0);
   --bg-level-2: oklch(97% 0 0);
@@ -93,6 +95,8 @@
 }
 
 :root.dark {
+  --titlebar-overlay-color: #181818;
+  --titlebar-overlay-symbol-color: #e3e3e3;
   --bg-body: oklch(21% 0 0);
   --bg-level-1: oklch(22% 0 0);
   --bg-level-2: oklch(23% 0 0);

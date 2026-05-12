@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme } from "electron";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 
@@ -21,6 +21,16 @@ function loadNativeAddon(): { KolodaDb: new (dbPath: string) => any } {
     ? join(__dirname, "..", "dist", "koloda_electron.node")
     : join(__dirname, "koloda_electron.node");
   return req(addonPath);
+}
+
+function getInitialTitleBarOverlay(): { height: number; color: string; symbolColor: string } | undefined {
+  if (process.platform === "darwin") return undefined;
+  const isDark = nativeTheme.shouldUseDarkColors;
+  return {
+    height: 32,
+    color: isDark ? "#151515" : "#f5f5f4",
+    symbolColor: isDark ? "#e8e8e8" : "#171717",
+  };
 }
 
 function createWindow() {
@@ -47,7 +57,7 @@ function createWindow() {
     : new BrowserWindow({
         ...commonOptions,
         titleBarStyle: "hidden",
-        titleBarOverlay: { height: 32 },
+        titleBarOverlay: getInitialTitleBarOverlay(),
       });
 
   win.on("maximize", () => win.webContents.send("window:maximize-changed", true));
@@ -84,6 +94,15 @@ function registerWindowIpc() {
   });
   ipcMain.handle("window:isMaximized", (event) => {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
+  });
+  ipcMain.handle("window:set-title-bar-overlay", (event, options: { color?: string; symbolColor?: string }) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || process.platform === "darwin") return;
+    win.setTitleBarOverlay({
+      height: 32,
+      color: options.color,
+      symbolColor: options.symbolColor,
+    });
   });
 }
 
