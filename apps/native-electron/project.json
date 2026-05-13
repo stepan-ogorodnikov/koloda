@@ -19,7 +19,7 @@
       "options": {
         "commands": [
           "cargo build -p koloda-electron --release",
-          "npx tsx scripts/copy-native-addon.ts"
+          "bunx tsx scripts/copy-native-addon.ts"
         ],
         "parallel": false,
         "cwd": "apps/native-electron"
@@ -40,7 +40,11 @@
         }
       ],
       "options": {
-        "command": "electron -r tsx/esm .",
+        "commands": [
+          "bunx swc src/preload.ts -o dist/preload.js -C module.type=commonjs",
+          "electron -r tsx/esm ."
+        ],
+        "parallel": false,
         "cwd": "apps/native-electron"
       }
     },
@@ -60,8 +64,8 @@
       ],
       "options": {
         "commands": [
-          "npx swc src -d dist --copy-files -C module.type=commonjs",
-          "npx tsx scripts/copy-native-release.ts",
+          "bunx swc src -d dist --copy-files -C module.type=commonjs",
+          "bunx tsx scripts/copy-native-release.ts",
           "electron-builder"
         ],
         "parallel": false,

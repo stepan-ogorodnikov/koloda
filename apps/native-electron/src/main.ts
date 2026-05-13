@@ -42,7 +42,7 @@ function createWindow() {
     resizable: true,
     show: false,
     webPreferences: {
-      preload: join(__dirname, "preload.js"),
+      preload: join(__dirname, isDev ? "../dist/preload.js" : "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
