@@ -1,4 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
+import { useEffect } from "react";
 import "@fontsource-variable/inter";
 
 type LayoutProps = PropsWithChildren<{
@@ -6,6 +7,14 @@ type LayoutProps = PropsWithChildren<{
 }>;
 
 export function Layout({ titlebar, children }: LayoutProps) {
+  useEffect(() => {
+    const el = document.documentElement;
+    el.style.setProperty("--titlebar-height", titlebar ? "2rem" : "0px");
+    return () => {
+      el.style.removeProperty("--titlebar-height");
+    };
+  }, [titlebar]);
+
   return (
     <div className="flex flex-col min-w-screen min-h-screen h-screen overflow-hidden">
       {titlebar}

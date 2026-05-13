@@ -6,7 +6,7 @@ import { tv } from "tailwind-variants";
 export const overlay = tv({
   base: [
     "flex items-center justify-center",
-    "fixed inset-0 z-10 overflow-y-auto min-h-full p-1 tb:p-4",
+    "fixed inset-x-0 bottom-0 top-[var(--titlebar-height)] z-10 overflow-y-auto p-1 tb:p-4",
     "bg-overlay backdrop-blur-xs",
     "motion:entering:fade-in-0 motion:exiting:fade-out-0",
   ],
