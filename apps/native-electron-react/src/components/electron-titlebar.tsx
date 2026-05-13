@@ -1,15 +1,22 @@
 import { useEffect, useRef } from "react";
 
 type TitlebarPlatform = "linux" | "macos" | "windows";
+type TitlebarOverlayOptions = {
+  color: string;
+  symbolColor: string;
+  height: number;
+};
 
 const titlebar = [
   "flex flex-row items-center shrink-0 h-(--titlebar-height) w-full bg-body",
   "box-content select-none [-webkit-user-select:none]",
+  "border-b-2 border-main",
 ].join(" ");
 
 export function ElectronTitlebar() {
   const platform = getTitlebarPlatform();
   const titlebarRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
 
   useEffect(() => {
     window.electronAPI.on("window:maximize-changed", (...args: unknown[]) => {
@@ -22,24 +29,51 @@ export function ElectronTitlebar() {
     if (platform === "macos") return;
 
     function updateOverlay() {
-      const style = getComputedStyle(document.documentElement);
-      const color = style.getPropertyValue("--titlebar-overlay-color").trim();
-      const symbolColor = style.getPropertyValue("--titlebar-overlay-symbol-color").trim();
-      const height = parseTitlebarHeight(style);
+      const el = titlebarRef.current;
+      if (!el) return;
 
-      window.electronAPI.invoke("window:set-title-bar-overlay", { color, symbolColor, height });
+      const rootStyle = getComputedStyle(document.documentElement);
+      const color = rootStyle.getPropertyValue("--titlebar-overlay-color").trim();
+      const symbolColor = rootStyle.getPropertyValue("--titlebar-overlay-symbol-color").trim();
+      const height = getTitlebarOverlayHeight(el);
+
+      const nextOverlay = { color, symbolColor, height };
+      const currentOverlay = overlayRef.current;
+      if (
+        currentOverlay &&
+        currentOverlay.color === nextOverlay.color &&
+        currentOverlay.symbolColor === nextOverlay.symbolColor &&
+        currentOverlay.height === nextOverlay.height
+      ) {
+        return;
+      }
+
+      overlayRef.current = nextOverlay;
+      void window.electronAPI.invoke("window:set-title-bar-overlay", nextOverlay);
     }
 
-    const observer = new MutationObserver(updateOverlay);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    const classObserver = new MutationObserver(updateOverlay);
+    classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    const resizeObserver = new ResizeObserver(updateOverlay);
+    const el = titlebarRef.current;
+    if (el) resizeObserver.observe(el);
+
+    window.addEventListener("resize", updateOverlay);
+    const unsubscribeZoomFactorChanged = window.electronAPI.onZoomFactorChanged(updateOverlay);
 
     updateOverlay();
 
-    return () => observer.disconnect();
+    return () => {
+      classObserver.disconnect();
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateOverlay);
+      unsubscribeZoomFactorChanged();
+    };
   }, [platform]);
 
   const handleDragDoubleClick = () => {
-    window.electronAPI.invoke("window:maximize");
+    void window.electronAPI.invoke("window:maximize");
   };
 
   return (
@@ -54,19 +88,17 @@ export function ElectronTitlebar() {
   );
 }
 
+function getTitlebarOverlayHeight(el: HTMLElement) {
+  const contentHeight = parseFloat(getComputedStyle(el).height);
+  const height = Number.isNaN(contentHeight) ? el.clientHeight : contentHeight;
+  return Math.round(height * window.electronAPI.getZoomFactor());
+}
+
 function getTitlebarPlatform(): TitlebarPlatform {
   const platform = getNavigatorPlatform().toLowerCase();
   if (platform.includes("mac")) return "macos";
   if (platform.includes("win")) return "windows";
   return "linux";
-}
-
-function parseTitlebarHeight(style: CSSStyleDeclaration): number | undefined {
-  const raw = style.getPropertyValue("--titlebar-height");
-  const rem = parseFloat(raw);
-  if (Number.isNaN(rem)) return undefined;
-  const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  return Math.round(rem * fontSize);
 }
 
 function getNavigatorPlatform() {
