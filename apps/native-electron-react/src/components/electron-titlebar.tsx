@@ -1,10 +1,15 @@
 import { useEffect, useRef } from "react";
 
 type TitlebarPlatform = "linux" | "macos" | "windows";
+
 type TitlebarOverlayOptions = {
   color: string;
   symbolColor: string;
   height: number;
+};
+
+type WindowButtonPositionOptions = {
+  titlebarHeight: number;
 };
 
 const titlebar = [
@@ -17,6 +22,7 @@ export function ElectronTitlebar() {
   const platform = getTitlebarPlatform();
   const titlebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
+  const windowButtonPositionRef = useRef<WindowButtonPositionOptions | undefined>(undefined);
 
   useEffect(() => {
     window.electronAPI.on("window:maximize-changed", (...args: unknown[]) => {
@@ -26,24 +32,40 @@ export function ElectronTitlebar() {
   }, []);
 
   useEffect(() => {
-    if (platform === "macos") return;
-
-    function updateOverlay() {
+    function updateWindowControls() {
       const el = titlebarRef.current;
       if (!el) return;
 
+      if (platform === "macos") {
+        updateWindowButtonPosition(el);
+        return;
+      }
+
+      updateOverlay(el);
+    }
+
+    function updateWindowButtonPosition(el: HTMLElement) {
+      const nextPosition = { titlebarHeight: getTitlebarNativeContentHeight(el) };
+      const currentPosition = windowButtonPositionRef.current;
+      if (currentPosition?.titlebarHeight === nextPosition.titlebarHeight) return;
+
+      windowButtonPositionRef.current = nextPosition;
+      void window.electronAPI.invoke("window:set-window-button-position", nextPosition);
+    }
+
+    function updateOverlay(el: HTMLElement) {
       const rootStyle = getComputedStyle(document.documentElement);
       const color = rootStyle.getPropertyValue("--titlebar-overlay-color").trim();
       const symbolColor = rootStyle.getPropertyValue("--titlebar-overlay-symbol-color").trim();
-      const height = getTitlebarOverlayHeight(el);
+      const height = getTitlebarNativeContentHeight(el);
 
       const nextOverlay = { color, symbolColor, height };
       const currentOverlay = overlayRef.current;
       if (
-        currentOverlay &&
-        currentOverlay.color === nextOverlay.color &&
-        currentOverlay.symbolColor === nextOverlay.symbolColor &&
-        currentOverlay.height === nextOverlay.height
+        currentOverlay
+        && currentOverlay.color === nextOverlay.color
+        && currentOverlay.symbolColor === nextOverlay.symbolColor
+        && currentOverlay.height === nextOverlay.height
       ) {
         return;
       }
@@ -52,22 +74,22 @@ export function ElectronTitlebar() {
       void window.electronAPI.invoke("window:set-title-bar-overlay", nextOverlay);
     }
 
-    const classObserver = new MutationObserver(updateOverlay);
+    const classObserver = new MutationObserver(updateWindowControls);
     classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
-    const resizeObserver = new ResizeObserver(updateOverlay);
+    const resizeObserver = new ResizeObserver(updateWindowControls);
     const el = titlebarRef.current;
     if (el) resizeObserver.observe(el);
 
-    window.addEventListener("resize", updateOverlay);
-    const unsubscribeZoomFactorChanged = window.electronAPI.onZoomFactorChanged(updateOverlay);
+    window.addEventListener("resize", updateWindowControls);
+    const unsubscribeZoomFactorChanged = window.electronAPI.onZoomFactorChanged(updateWindowControls);
 
-    updateOverlay();
+    updateWindowControls();
 
     return () => {
       classObserver.disconnect();
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateOverlay);
+      window.removeEventListener("resize", updateWindowControls);
       unsubscribeZoomFactorChanged();
     };
   }, [platform]);
@@ -88,7 +110,7 @@ export function ElectronTitlebar() {
   );
 }
 
-function getTitlebarOverlayHeight(el: HTMLElement) {
+function getTitlebarNativeContentHeight(el: HTMLElement) {
   const contentHeight = parseFloat(getComputedStyle(el).height);
   const height = Number.isNaN(contentHeight) ? el.clientHeight : contentHeight;
   return Math.round(height * window.electronAPI.getZoomFactor());

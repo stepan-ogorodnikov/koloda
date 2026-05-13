@@ -4,6 +4,9 @@ import { join } from "node:path";
 
 const isDev = !app.isPackaged;
 const __dirname = import.meta.dirname!;
+const TITLEBAR_HEIGHT = 40;
+const WINDOW_BUTTON_X = 12;
+const MACOS_WINDOW_BUTTON_HEIGHT = 12;
 
 function configureUserData() {
   if (process.platform === "darwin") {
@@ -15,7 +18,7 @@ function configureUserData() {
   }
 }
 
-function loadNativeAddon(): { KolodaDb: new (dbPath: string) => any } {
+function loadNativeAddon(): { KolodaDb: new(dbPath: string) => any } {
   const req = createRequire(import.meta.url);
   const addonPath = isDev
     ? join(__dirname, "..", "dist", "koloda_electron.node")
@@ -27,9 +30,16 @@ function getInitialTitleBarOverlay(): { height: number; color: string; symbolCol
   if (process.platform === "darwin") return undefined;
   const isDark = nativeTheme.shouldUseDarkColors;
   return {
-    height: 40,
+    height: TITLEBAR_HEIGHT,
     color: isDark ? "#151515" : "#f5f5f4",
     symbolColor: isDark ? "#e8e8e8" : "#171717",
+  };
+}
+
+function getWindowButtonPosition(titlebarHeight = TITLEBAR_HEIGHT) {
+  return {
+    x: WINDOW_BUTTON_X,
+    y: Math.max(0, Math.round((titlebarHeight - MACOS_WINDOW_BUTTON_HEIGHT) / 2)),
   };
 }
 
@@ -50,15 +60,15 @@ function createWindow() {
 
   const win = process.platform === "darwin"
     ? new BrowserWindow({
-        ...commonOptions,
-        titleBarStyle: "hidden",
-        trafficLightPosition: { x: 12, y: 16 },
-      })
+      ...commonOptions,
+      titleBarStyle: "hidden",
+      trafficLightPosition: getWindowButtonPosition(),
+    })
     : new BrowserWindow({
-        ...commonOptions,
-        titleBarStyle: "hidden",
-        titleBarOverlay: getInitialTitleBarOverlay(),
-      });
+      ...commonOptions,
+      titleBarStyle: "hidden",
+      titleBarOverlay: getInitialTitleBarOverlay(),
+    });
 
   win.on("maximize", () => win.webContents.send("window:maximize-changed", true));
   win.on("unmaximize", () => win.webContents.send("window:maximize-changed", false));
@@ -95,14 +105,22 @@ function registerWindowIpc() {
   ipcMain.handle("window:isMaximized", (event) => {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
   });
-  ipcMain.handle("window:set-title-bar-overlay", (event, options: { color?: string; symbolColor?: string; height?: number }) => {
+  ipcMain.handle(
+    "window:set-title-bar-overlay",
+    (event, options: { color?: string; symbolColor?: string; height?: number }) => {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (!win || process.platform === "darwin") return;
+      win.setTitleBarOverlay({
+        height: options.height ?? TITLEBAR_HEIGHT,
+        color: options.color,
+        symbolColor: options.symbolColor,
+      });
+    },
+  );
+  ipcMain.handle("window:set-window-button-position", (event, options: { titlebarHeight?: number }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win || process.platform === "darwin") return;
-    win.setTitleBarOverlay({
-      height: options.height ?? 40,
-      color: options.color,
-      symbolColor: options.symbolColor,
-    });
+    if (!win || process.platform !== "darwin") return;
+    win.setWindowButtonPosition(getWindowButtonPosition(options.titlebarHeight));
   });
 }
 
