@@ -56,6 +56,44 @@ function App() {
     });
   }, [setLang]);
 
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      if (e.key === "=" || e.key === "+") {
+        e.preventDefault();
+        api.zoomIn();
+      } else if (e.key === "-") {
+        e.preventDefault();
+        api.zoomOut();
+      } else if (e.key === "0") {
+        e.preventDefault();
+        api.zoomReset();
+      }
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        api.zoomIn();
+      } else {
+        api.zoomOut();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
   if (!isI18nReady) return null;
 
   return (

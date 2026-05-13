@@ -5,6 +5,9 @@ declare global {
     electronAPI: {
       invoke: <T>(cmd: string, args?: unknown) => Promise<T>;
       on: (channel: string, callback: (...args: unknown[]) => void) => void;
+      zoomIn: () => void;
+      zoomOut: () => void;
+      zoomReset: () => void;
     };
   }
 }
