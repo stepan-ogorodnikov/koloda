@@ -276,5 +276,13 @@
   --color-border-chat-message: var(--border-chat-message);
 }
 
+:root[data-app="native"] {
+  --titlebar-height: 2rem;
+}
+
+:root[data-app="web"] {
+  --titlebar-height: 0;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant motion (&:where(.motion, .motion *));
