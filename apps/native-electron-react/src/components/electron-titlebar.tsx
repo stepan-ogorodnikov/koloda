@@ -2,6 +2,11 @@ import { useEffect, useRef } from "react";
 
 type TitlebarPlatform = "linux" | "macos" | "windows";
 
+const titlebar = [
+  "flex flex-row items-center shrink-0 h-(--titlebar-height) w-full bg-body",
+  "box-content select-none [-webkit-user-select:none]",
+].join(" ");
+
 export function ElectronTitlebar() {
   const platform = getTitlebarPlatform();
   const titlebarRef = useRef<HTMLDivElement>(null);
@@ -20,8 +25,9 @@ export function ElectronTitlebar() {
       const style = getComputedStyle(document.documentElement);
       const color = style.getPropertyValue("--titlebar-overlay-color").trim();
       const symbolColor = style.getPropertyValue("--titlebar-overlay-symbol-color").trim();
+      const height = parseTitlebarHeight(style);
 
-      window.electronAPI.invoke("window:set-title-bar-overlay", { color, symbolColor });
+      window.electronAPI.invoke("window:set-title-bar-overlay", { color, symbolColor, height });
     }
 
     const observer = new MutationObserver(updateOverlay);
@@ -37,15 +43,13 @@ export function ElectronTitlebar() {
   };
 
   return (
-    <div ref={titlebarRef} className="flex h-8 w-full shrink-0 items-center bg-body select-none [-webkit-user-select:none]"
+    <div
+      className={titlebar}
       style={{ appRegion: "drag" } as React.CSSProperties}
+      ref={titlebarRef}
     >
-      {platform === "macos" && (
-        <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />
-      )}
-      {platform !== "macos" && (
-        <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />
-      )}
+      {platform === "macos" && <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />}
+      {platform !== "macos" && <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />}
     </div>
   );
 }
@@ -55,6 +59,14 @@ function getTitlebarPlatform(): TitlebarPlatform {
   if (platform.includes("mac")) return "macos";
   if (platform.includes("win")) return "windows";
   return "linux";
+}
+
+function parseTitlebarHeight(style: CSSStyleDeclaration): number | undefined {
+  const raw = style.getPropertyValue("--titlebar-height");
+  const rem = parseFloat(raw);
+  if (Number.isNaN(rem)) return undefined;
+  const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return Math.round(rem * fontSize);
 }
 
 function getNavigatorPlatform() {

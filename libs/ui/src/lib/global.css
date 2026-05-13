@@ -277,7 +277,7 @@
 }
 
 :root[data-app="native"] {
-  --titlebar-height: 2rem;
+  --titlebar-height: 2.5rem;
 }
 
 :root[data-app="web"] {

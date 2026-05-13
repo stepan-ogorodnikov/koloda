@@ -27,7 +27,7 @@ function getInitialTitleBarOverlay(): { height: number; color: string; symbolCol
   if (process.platform === "darwin") return undefined;
   const isDark = nativeTheme.shouldUseDarkColors;
   return {
-    height: 32,
+    height: 40,
     color: isDark ? "#151515" : "#f5f5f4",
     symbolColor: isDark ? "#e8e8e8" : "#171717",
   };
@@ -95,11 +95,11 @@ function registerWindowIpc() {
   ipcMain.handle("window:isMaximized", (event) => {
     return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
   });
-  ipcMain.handle("window:set-title-bar-overlay", (event, options: { color?: string; symbolColor?: string }) => {
+  ipcMain.handle("window:set-title-bar-overlay", (event, options: { color?: string; symbolColor?: string; height?: number }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || process.platform === "darwin") return;
     win.setTitleBarOverlay({
-      height: 32,
+      height: options.height ?? 40,
       color: options.color,
       symbolColor: options.symbolColor,
     });
