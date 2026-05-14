@@ -298,9 +298,9 @@ function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   const { ui } = useHotkeysSettings();
   const state = useContext(SelectStateContext);
   const options: HotkeyOptions = { target: ref.current, ignoreInputs: false, conflictBehavior: "allow" };
-  useAppHotkey(ui.focusNext, () => dispatchKey(ref, "ArrowDown"), "", options);
-  useAppHotkey(ui.focusPrev, () => dispatchKey(ref, "ArrowUp"), "", options);
-  useAppHotkey(ui.close, () => dispatchKey(ref, "Escape"), "", options);
+  useAppHotkey(ui.focusNext, () => dispatchSelectNavigationKey(ref, state, "ArrowDown"), "", options);
+  useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", options);
+  useAppHotkey(ui.close, () => dispatchSelectKey(ref, state, "Escape"), "", options);
 
   // Fix for hotkeys with 'Alt' modifier breaking selecting with 'Space'
   useEffect(() => {
@@ -325,6 +325,25 @@ function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   }, [state]);
 
   return null;
+}
+
+function dispatchSelectKey(
+  ref: RefObject<HTMLElement | null>,
+  state: SelectState,
+  key: string,
+) {
+  if (!state?.isOpen) return;
+  dispatchKey(ref, key);
+}
+
+function dispatchSelectNavigationKey(
+  ref: RefObject<HTMLElement | null>,
+  state: SelectState,
+  key: "ArrowDown" | "ArrowUp",
+) {
+  if (!state?.isOpen) return;
+  state.selectionManager.setFocused(true);
+  dispatchKey(ref, key);
 }
 
 Select.Root = SelectRoot;
