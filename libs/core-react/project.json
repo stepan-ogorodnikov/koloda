@@ -1,0 +1,7 @@
+{
+  "name": "@koloda/core-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
+  "sourceRoot": "libs/core-react/src",
+  "projectType": "library"
+}

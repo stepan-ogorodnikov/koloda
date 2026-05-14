@@ -1,6 +1,7 @@
 {
   "name": "@koloda/app-react",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
   "sourceRoot": "libs/app-react/src",
   "projectType": "library",
   "targets": {
@@ -8,7 +9,8 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "bunx vitest run --config libs/app-react/vitest.config.mjs --configLoader runner"
-      }
+      },
+      "inputs": ["default", "^default"]
     }
   }
 }

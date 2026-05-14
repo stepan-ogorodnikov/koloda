@@ -1,6 +1,7 @@
 {
   "name": "srs-pgsql",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
   "sourceRoot": "libs/srs-pgsql/src",
   "projectType": "library",
   "targets": {
@@ -8,7 +9,8 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "bunx vitest run --config libs/srs-pgsql/vitest.config.mjs --configLoader runner"
-      }
+      },
+      "inputs": ["default", "^default"]
     }
   }
 }

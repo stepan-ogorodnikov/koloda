@@ -12,7 +12,8 @@
   "scripts": {
     "db:generate:pgsql": "drizzle-kit generate --config=drizzle.config.pgsql.ts",
     "db:generate:sqlite": "drizzle-kit generate --config=drizzle.config.sqlite.ts",
-    "db:generate": "bun run db:generate:pgsql && bun run db:generate:sqlite"
+    "db:generate": "bun run db:generate:pgsql && bun run db:generate:sqlite",
+    "test:libs": "nx run-many --target=test --projects=tag:type:lib"
   },
   "dependencies": {
     "@dnd-kit/helpers": "^0.1.21",
