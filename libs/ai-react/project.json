@@ -1,0 +1,14 @@
+{
+  "name": "@koloda/ai-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ai-react/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/ai-react/vitest.config.mjs --configLoader runner"
+      }
+    }
+  }
+}
