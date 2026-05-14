@@ -331,7 +331,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   };
 }
 
-function buildConversationMessages(
+export function buildConversationMessages(
   messages: UIMessage[],
   runs: Record<string, { status: string; cards: GeneratedCard[] }>,
   template: Template | null | undefined,
