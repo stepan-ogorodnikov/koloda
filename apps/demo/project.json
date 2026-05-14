@@ -8,6 +8,12 @@
     "platform:web"
   ],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx playwright test --config apps/demo-e2e/playwright.config.ts"
+      }
+    },
     "build": {
       "executor": "@nx/vite:build",
       "options": {

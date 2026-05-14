@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Locator, Page } from "@playwright/test";
+import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -76,26 +76,3 @@ test("creates a deck from the decks screen", async ({ page }) => {
   const detailsPanel = page.getByRole("tabpanel", { name: "Details", exact: true });
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(deckTitle);
 });
-
-async function setupDemo(page: Page) {
-  await page.goto("/");
-  await expect(page.getByText("Setting up a demo", { exact: true })).toBeVisible();
-
-  const startButton = page.getByRole("button", { name: "Get started", exact: true });
-  await expect(startButton).toBeVisible();
-  await startButton.click();
-
-  await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText("Learned today", { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Templates", exact: true })).toBeVisible();
-}
-
-async function openSection(page: Page, name: string) {
-  const navigationLink = getNavigation(page, name);
-  await expect(navigationLink).toBeVisible();
-  await navigationLink.click();
-}
-
-function getNavigation(page: Page, name: string): Locator {
-  return page.getByRole("link", { name, exact: true }).first();
-}
