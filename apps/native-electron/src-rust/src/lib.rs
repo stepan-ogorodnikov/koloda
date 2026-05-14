@@ -266,7 +266,7 @@ impl KolodaDb {
     }
 
     #[napi]
-    pub fn set_settings(&self, params: serde_json::Value) -> Result<()> {
+    pub fn set_settings(&self, params: serde_json::Value) -> Result<String> {
         #[derive(serde::Deserialize)]
         struct P {
             name: String,
@@ -274,8 +274,8 @@ impl KolodaDb {
         }
         let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let name = parse_settings_name(&p.name)?;
-        repo::settings::set_settings(&self.db, name, p.content).map_err(to_napi_error)?;
-        Ok(())
+        let settings = repo::settings::set_settings(&self.db, name, p.content).map_err(to_napi_error)?;
+        as_json(&settings)
     }
 
     #[napi]
@@ -283,11 +283,11 @@ impl KolodaDb {
         #[derive(serde::Deserialize)]
         struct P {
             name: String,
-            patch: serde_json::Value,
+            content: serde_json::Value,
         }
         let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let name = parse_settings_name(&p.name)?;
-        let settings = repo::settings::patch_settings(&self.db, name, p.patch).map_err(to_napi_error)?;
+        let settings = repo::settings::patch_settings(&self.db, name, p.content).map_err(to_napi_error)?;
         as_json(&settings)
     }
 

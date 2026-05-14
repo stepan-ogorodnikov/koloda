@@ -132,7 +132,7 @@ function j<T = any>(raw: string | null | undefined): T | null {
 function registerDataIpc(db: any) {
   ipcMain.handle("get_db_status", async () => db.getDbStatus());
 
-  ipcMain.handle("seed_db", async (_event, data: unknown) => {
+  ipcMain.handle("seed_db", async (_event, { data }: any) => {
     await db.seedDb(data);
     return true;
   });
@@ -169,7 +169,7 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_get_template_decks", async (_event, args: any) => j(db.getTemplateDecks(args)));
 
   ipcMain.handle("cmd_get_settings", async (_event, args: any) => j(db.getSettings(args)));
-  ipcMain.handle("cmd_set_settings", async (_event, args: any) => db.setSettings(args));
+  ipcMain.handle("cmd_set_settings", async (_event, args: any) => j(db.setSettings(args)));
   ipcMain.handle("cmd_patch_settings", async (_event, args: any) => j(db.patchSettings(args)));
 
   ipcMain.handle("cmd_get_lessons", async (_event, { params }: any) => j(db.getLessons(params)));
@@ -177,7 +177,7 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_submit_lesson_result", async (_event, { data }: any) => db.submitLessonResult(data));
 
   ipcMain.handle("cmd_get_reviews", async (_event, { data }: any) => j(db.getReviews(data)));
-  ipcMain.handle("cmd_get_review_totals", async (_event, params: any) => j(db.getReviewTotals(params)));
+  ipcMain.handle("cmd_get_review_totals", async (_event, { data }: any) => j(db.getReviewTotals(data)));
   ipcMain.handle("cmd_get_todays_review_totals", async () => j(db.getTodaysReviewTotals()));
 
   ipcMain.handle("cmd_get_ai_profiles", async () => j(db.getAiProfiles()));
