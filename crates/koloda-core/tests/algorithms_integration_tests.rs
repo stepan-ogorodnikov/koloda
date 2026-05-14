@@ -1,6 +1,6 @@
-use koloda_native_tauri::app::error::error_codes;
-use koloda_native_tauri::domain::algorithms::DeleteAlgorithmData;
-use koloda_native_tauri::repo::algorithms;
+use koloda_core::app::error::error_codes;
+use koloda_core::domain::algorithms::DeleteAlgorithmData;
+use koloda_core::repo::algorithms;
 
 mod common;
 use common::fixtures::{add_algorithm, add_deck, add_template};
@@ -23,7 +23,7 @@ fn delete_algorithm_reassigns_decks_to_successor() {
     )
     .expect("algorithm delete with successor should succeed");
 
-    let deck = koloda_native_tauri::repo::decks::get_deck(&db, deck_id)
+    let deck = koloda_core::repo::decks::get_deck(&db, deck_id)
         .expect("deck query should succeed")
         .expect("deck should exist");
     assert_eq!(deck.algorithm_id, successor_algorithm_id);
@@ -86,7 +86,7 @@ fn delete_algorithm_invalid_successor_does_not_mutate_decks_or_delete_algorithm(
     );
     assert!(result.is_err(), "delete should fail with invalid successor");
 
-    let deck = koloda_native_tauri::repo::decks::get_deck(&db, deck_id)
+    let deck = koloda_core::repo::decks::get_deck(&db, deck_id)
         .expect("deck query should succeed")
         .expect("deck should exist");
     assert_eq!(

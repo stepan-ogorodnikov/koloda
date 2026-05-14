@@ -1,5 +1,5 @@
-use koloda_native_tauri::domain::cards::{InsertCardData, UpdateCardProgress, UpdateCardValues};
-use koloda_native_tauri::domain::templates::TemplateField;
+use koloda_core::domain::cards::{InsertCardData, UpdateCardProgress, UpdateCardValues};
+use koloda_core::domain::templates::TemplateField;
 use serde_json::json;
 
 fn valid_template_fields() -> [TemplateField; 2] {

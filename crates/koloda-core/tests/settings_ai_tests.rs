@@ -1,5 +1,5 @@
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::domain::settings_ai::AISettings;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::domain::settings_ai::AISettings;
 
 // ============================================================================
 // VALID SETTINGS

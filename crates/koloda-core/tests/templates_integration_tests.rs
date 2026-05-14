@@ -1,8 +1,8 @@
-use koloda_native_tauri::app::error::error_codes;
-use koloda_native_tauri::domain::templates::{
+use koloda_core::app::error::error_codes;
+use koloda_core::domain::templates::{
     DeleteTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
-use koloda_native_tauri::repo::templates;
+use koloda_core::repo::templates;
 
 mod common;
 use common::fixtures::{add_algorithm, add_card, add_deck, add_template};

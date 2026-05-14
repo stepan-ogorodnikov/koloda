@@ -1,4 +1,4 @@
-use koloda_native_tauri::domain::lessons::LessonResultData;
+use koloda_core::domain::lessons::LessonResultData;
 use serde_json::json;
 
 fn valid_card_progress_json() -> serde_json::Value {

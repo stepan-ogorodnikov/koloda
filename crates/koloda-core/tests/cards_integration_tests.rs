@@ -1,9 +1,9 @@
-use koloda_native_tauri::domain::cards::{
+use koloda_core::domain::cards::{
     DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
 };
-use koloda_native_tauri::domain::lessons::LessonResultData;
-use koloda_native_tauri::domain::reviews::{GetReviewsData, InsertReviewData};
-use koloda_native_tauri::repo::{cards, lessons, reviews};
+use koloda_core::domain::lessons::LessonResultData;
+use koloda_core::domain::reviews::{GetReviewsData, InsertReviewData};
+use koloda_core::repo::{cards, lessons, reviews};
 
 mod common;
 use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};

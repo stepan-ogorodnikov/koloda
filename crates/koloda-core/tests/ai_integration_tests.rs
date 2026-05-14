@@ -1,14 +1,16 @@
-use koloda_native_tauri::domain::ai::AISecrets;
-use koloda_native_tauri::repo::ai;
+use koloda_core::domain::ai::AISecrets;
+use koloda_core::repo::ai;
 
 mod common;
 use common::test_db;
 
 mod test_store {
-    use koloda_native_tauri::app::error::AppError;
-    use koloda_native_tauri::app::secrets::{set_test_secret_store, SecretStore};
+    use koloda_core::app::error::AppError;
+    use koloda_core::app::secrets::{set_test_secret_store, SecretStore};
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
+
+    static LOCK: std::sync::LazyLock<std::sync::Mutex<()>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(()));
 
     #[derive(Default)]
     pub struct MockSecretStore {
@@ -41,19 +43,23 @@ mod test_store {
         }
     }
 
-    pub fn setup() {
+    pub struct Guard(());
+
+    pub fn setup() -> Guard {
+        let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let store = MockSecretStore::new().into_box();
         set_test_secret_store(Some(store));
+        Guard(())
     }
 
-    pub fn teardown() {
+    pub fn teardown(_guard: Guard) {
         set_test_secret_store(None);
     }
 }
 
 #[test]
 fn ai_profiles_add_get_and_remove() {
-    test_store::setup();
+    let _guard = test_store::setup();
     let db = test_db();
 
     let added = ai::add_ai_profile(
@@ -77,12 +83,12 @@ fn ai_profiles_add_get_and_remove() {
     let after_remove = ai::get_ai_profiles(&db).expect("should get profiles after remove");
     assert!(after_remove.is_empty());
 
-    test_store::teardown();
+    test_store::teardown(_guard);
 }
 
 #[test]
 fn ai_profile_api_key_is_stored_in_secret_store() {
-    test_store::setup();
+    let _guard = test_store::setup();
     let db = test_db();
 
     let profile = ai::add_ai_profile(
@@ -99,12 +105,12 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
 
     assert!(matches!(retrieved.secrets, Some(AISecrets::OpenRouter { .. })));
 
-    test_store::teardown();
+    test_store::teardown(_guard);
 }
 
 #[test]
 fn ai_profile_codex_round_trips_without_secret_store_data() {
-    test_store::setup();
+    let _guard = test_store::setup();
     let db = test_db();
 
     let added = ai::add_ai_profile(&db, Some("Codex".to_string()), Some(AISecrets::Codex {}))
@@ -115,5 +121,5 @@ fn ai_profile_codex_round_trips_without_secret_store_data() {
 
     assert!(matches!(retrieved.secrets, Some(AISecrets::Codex { .. })));
 
-    test_store::teardown();
+    test_store::teardown(_guard);
 }

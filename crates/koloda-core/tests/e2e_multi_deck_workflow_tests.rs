@@ -1,8 +1,8 @@
-use koloda_native_tauri::domain::algorithms::InsertAlgorithmData;
-use koloda_native_tauri::domain::cards::InsertCardData;
-use koloda_native_tauri::domain::decks::InsertDeckData;
-use koloda_native_tauri::domain::lessons::{GetLessonsParams, LessonFilters};
-use koloda_native_tauri::repo::{algorithms, cards, decks, lessons, templates};
+use koloda_core::domain::algorithms::InsertAlgorithmData;
+use koloda_core::domain::cards::InsertCardData;
+use koloda_core::domain::decks::InsertDeckData;
+use koloda_core::domain::lessons::{GetLessonsParams, LessonFilters};
+use koloda_core::repo::{algorithms, cards, decks, lessons, templates};
 
 mod common;
 use common::{card_content, fsrs_content, simple_template, test_db};

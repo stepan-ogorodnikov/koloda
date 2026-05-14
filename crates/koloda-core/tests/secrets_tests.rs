@@ -1,4 +1,4 @@
-use koloda_native_tauri::app::secrets::{create_secret_store, SecretStore};
+use koloda_core::app::secrets::{create_secret_store, SecretStore};
 use std::sync::{Arc, Barrier};
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};

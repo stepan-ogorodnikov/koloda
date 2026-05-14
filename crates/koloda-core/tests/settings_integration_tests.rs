@@ -1,6 +1,6 @@
-use koloda_native_tauri::app::error::error_codes;
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::repo::settings;
+use koloda_core::app::error::error_codes;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::repo::settings;
 use serde_json::json;
 
 mod common;

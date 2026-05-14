@@ -1,5 +1,5 @@
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::domain::settings_interface::InterfaceSettings;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::domain::settings_interface::InterfaceSettings;
 
 // ============================================================================
 // VALID

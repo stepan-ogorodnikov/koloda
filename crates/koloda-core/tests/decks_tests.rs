@@ -1,4 +1,4 @@
-use koloda_native_tauri::domain::decks::{InsertDeckData, UpdateDeckData, UpdateDeckValues};
+use koloda_core::domain::decks::{InsertDeckData, UpdateDeckData, UpdateDeckValues};
 use serde_json::json;
 
 // ============================================================================

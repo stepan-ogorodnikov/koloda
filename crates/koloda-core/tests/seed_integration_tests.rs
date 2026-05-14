@@ -1,7 +1,7 @@
-use koloda_native_tauri::app::init::seed_db_with_database;
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
-use koloda_native_tauri::repo::{algorithms, settings, templates};
+use koloda_core::app::init::seed_db;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
+use koloda_core::repo::{algorithms, settings, templates};
 
 mod common;
 use common::{fsrs_algorithm_content, seed_data, test_db};
@@ -10,8 +10,8 @@ use common::{fsrs_algorithm_content, seed_data, test_db};
 fn seed_db_is_idempotent_and_reuses_oldest_algorithm_and_template() {
     let db = test_db();
 
-    seed_db_with_database(&db, seed_data("Algorithm A", "Template A")).expect("first seed should succeed");
-    seed_db_with_database(&db, seed_data("Algorithm B", "Template B")).expect("second seed should succeed");
+    seed_db(&db, seed_data("Algorithm A", "Template A")).expect("first seed should succeed");
+    seed_db(&db, seed_data("Algorithm B", "Template B")).expect("second seed should succeed");
 
     let all_algorithms = algorithms::get_algorithms(&db).expect("algorithms query should succeed");
     let all_templates = templates::get_templates(&db).expect("templates query should succeed");
@@ -115,7 +115,7 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
     })
     .expect("fixture inserts should succeed");
 
-    seed_db_with_database(&db, seed_data("Algorithm ignored", "Template ignored")).expect("seed should succeed");
+    seed_db(&db, seed_data("Algorithm ignored", "Template ignored")).expect("seed should succeed");
 
     let learning = settings::get_settings(&db, SettingsName::Learning)
         .expect("settings query should succeed")
@@ -134,7 +134,7 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
 fn seed_db_persists_interface_learning_and_hotkeys_settings() {
     let db = test_db();
 
-    seed_db_with_database(&db, seed_data("Algorithm A", "Template A")).expect("seed should succeed");
+    seed_db(&db, seed_data("Algorithm A", "Template A")).expect("seed should succeed");
 
     let interface = settings::get_settings(&db, SettingsName::Interface)
         .expect("settings query should succeed")

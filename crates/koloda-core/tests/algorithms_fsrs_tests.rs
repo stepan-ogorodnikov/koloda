@@ -1,8 +1,4 @@
-use koloda_native_tauri::domain::algorithms_fsrs::AlgorithmFSRS;
-
-// ============================================================================
-// VALID ALGORITHM TESTS
-// ============================================================================
+use koloda_core::domain::algorithms_fsrs::AlgorithmFSRS;
 
 #[test]
 fn test_valid_algorithm_full() {
@@ -19,10 +15,6 @@ fn test_valid_algorithm_full() {
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize valid JSON");
     assert!(algorithm.validate().is_ok());
 }
-
-// ============================================================================
-// MISSING FIELDS TESTS
-// ============================================================================
 
 #[test]
 fn test_missing_type_fails() {
@@ -137,10 +129,6 @@ fn test_empty_json_object_fails() {
     assert!(result.is_err(), "Should fail with empty JSON");
 }
 
-// ============================================================================
-// EXTRA FIELDS TESTS
-// ============================================================================
-
 #[test]
 fn test_extra_fields_ignored() {
     let json = r#"{
@@ -158,10 +146,6 @@ fn test_extra_fields_ignored() {
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
     assert!(algorithm.validate().is_ok());
 }
-
-// ============================================================================
-// TYPE FIELD TESTS
-// ============================================================================
 
 #[test]
 fn test_type_as_number_fails() {
@@ -194,10 +178,6 @@ fn test_type_as_null_fails() {
     let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when type is null");
 }
-
-// ============================================================================
-// RETENTION FIELD TESTS
-// ============================================================================
 
 #[test]
 fn test_retention_minimum_boundary() {
@@ -294,10 +274,6 @@ fn test_retention_as_null_fails() {
     let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when retention is null");
 }
-
-// ============================================================================
-// WEIGHTS FIELD TESTS
-// ============================================================================
 
 #[test]
 fn test_weights_exactly_21_values() {
@@ -404,10 +380,6 @@ fn test_weights_empty_string_fails() {
     assert!(algorithm.validate().is_err(), "Should fail when weights is empty");
 }
 
-// ============================================================================
-// IS_FUZZ_ENABLED FIELD TESTS
-// ============================================================================
-
 #[test]
 fn test_is_fuzz_enabled_true() {
     let json = r#"{
@@ -457,10 +429,6 @@ fn test_is_fuzz_enabled_as_string_fails() {
     let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when isFuzzEnabled is a string");
 }
-
-// ============================================================================
-// LEARNING_STEPS FIELD TESTS
-// ============================================================================
 
 #[test]
 fn test_learning_steps_empty_array() {
@@ -564,10 +532,6 @@ fn test_learning_steps_wrong_format_string_fails() {
     assert!(result.is_err(), "Should fail when steps are strings instead of tuples");
 }
 
-// ============================================================================
-// RELEARNING_STEPS FIELD TESTS
-// ============================================================================
-
 #[test]
 fn test_relearning_steps_empty_array() {
     let json = r#"{
@@ -631,10 +595,6 @@ fn test_relearning_steps_invalid_unit_fails() {
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     assert!(algorithm.validate().is_err(), "Should fail with invalid unit");
 }
-
-// ============================================================================
-// MAXIMUM_INTERVAL FIELD TESTS
-// ============================================================================
 
 #[test]
 fn test_maximum_interval_minimum() {

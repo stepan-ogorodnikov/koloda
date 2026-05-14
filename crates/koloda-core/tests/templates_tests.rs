@@ -1,4 +1,4 @@
-use koloda_native_tauri::domain::templates::{
+use koloda_core::domain::templates::{
     CloneTemplateData, InsertTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData,
     UpdateTemplateValues,
 };

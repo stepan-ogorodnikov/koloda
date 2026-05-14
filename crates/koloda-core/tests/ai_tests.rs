@@ -1,8 +1,4 @@
-use koloda_native_tauri::domain::ai::{AIProfile, AISecrets};
-
-// ============================================================================
-// AI SECRETS - VALIDATION
-// ============================================================================
+use koloda_core::domain::ai::{AIProfile, AISecrets};
 
 #[test]
 fn test_ollama_validate_empty_base_url_fails() {
@@ -43,10 +39,6 @@ fn test_codex_validate_ok_without_extra_fields() {
 
     assert!(secrets.validate().is_ok());
 }
-
-// ============================================================================
-// AI SECRETS - SERDE
-// ============================================================================
 
 #[test]
 fn test_ai_secrets_openrouter_deserialize_api_key_alias() {
@@ -93,10 +85,6 @@ fn test_ai_secrets_invalid_provider_fails() {
     let result: Result<AISecrets, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail for unsupported provider");
 }
-
-// ============================================================================
-// AI PROFILE - VALIDATION
-// ============================================================================
 
 #[test]
 fn test_ai_profile_validate_ok_with_secrets() {

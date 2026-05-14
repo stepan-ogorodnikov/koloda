@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use koloda_native_tauri::app::db::Database;
-use koloda_native_tauri::domain::algorithms::InsertAlgorithmData;
-use koloda_native_tauri::domain::cards::InsertCardData;
-use koloda_native_tauri::domain::decks::InsertDeckData;
-use koloda_native_tauri::domain::templates::InsertTemplateData;
-use koloda_native_tauri::repo::{algorithms, cards, decks, templates};
+use koloda_core::app::db::Database;
+use koloda_core::domain::algorithms::InsertAlgorithmData;
+use koloda_core::domain::cards::InsertCardData;
+use koloda_core::domain::decks::InsertDeckData;
+use koloda_core::domain::templates::InsertTemplateData;
+use koloda_core::repo::{algorithms, cards, decks, templates};
 
 use crate::common::{card_content, fsrs_algorithm_content, simple_template_content};
 

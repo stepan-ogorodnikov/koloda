@@ -1,11 +1,11 @@
-use koloda_native_tauri::domain::algorithms::InsertAlgorithmData;
-use koloda_native_tauri::domain::cards::InsertCardData;
-use koloda_native_tauri::domain::decks::InsertDeckData;
-use koloda_native_tauri::domain::lessons::{
+use koloda_core::domain::algorithms::InsertAlgorithmData;
+use koloda_core::domain::cards::InsertCardData;
+use koloda_core::domain::decks::InsertDeckData;
+use koloda_core::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonFilters, LessonResultData,
 };
-use koloda_native_tauri::domain::reviews::GetReviewTotalsParams;
-use koloda_native_tauri::repo::{algorithms, cards, decks, lessons, reviews, templates};
+use koloda_core::domain::reviews::GetReviewTotalsParams;
+use koloda_core::repo::{algorithms, cards, decks, lessons, reviews, templates};
 
 mod common;
 use common::{card_content, fsrs_content, test_db};
@@ -96,7 +96,7 @@ fn e2e_full_learning_workflow() {
         lessons::submit_lesson_result(
             &db,
             LessonResultData {
-                card: koloda_native_tauri::domain::cards::UpdateCardProgress {
+                card: koloda_core::domain::cards::UpdateCardProgress {
                     id: card.id,
                     state: 2,
                     due_at: 1_900_000_000_000,
@@ -108,7 +108,7 @@ fn e2e_full_learning_workflow() {
                     lapses: 0,
                     last_reviewed_at: Some(1_800_000_000_000),
                 },
-                review: koloda_native_tauri::domain::reviews::InsertReviewData {
+                review: koloda_core::domain::reviews::InsertReviewData {
                     card_id: card.id,
                     rating: 3,
                     state: 2,

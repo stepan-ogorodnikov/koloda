@@ -1,9 +1,9 @@
-use koloda_native_tauri::domain::cards::UpdateCardProgress;
-use koloda_native_tauri::domain::lessons::{
+use koloda_core::domain::cards::UpdateCardProgress;
+use koloda_core::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonFilters, LessonResultData,
 };
-use koloda_native_tauri::domain::reviews::InsertReviewData;
-use koloda_native_tauri::repo::lessons;
+use koloda_core::domain::reviews::InsertReviewData;
+use koloda_core::repo::lessons;
 
 mod common;
 use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_card_row};
@@ -48,16 +48,16 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
     )
     .expect("lesson result should be persisted");
 
-    let updated = koloda_native_tauri::repo::cards::get_card(&db, card_id)
+    let updated = koloda_core::repo::cards::get_card(&db, card_id)
         .expect("card query should succeed")
         .expect("card should exist");
     assert_eq!(updated.state, 2);
     assert_eq!(updated.reps, 1);
     assert_eq!(updated.due_at, Some(1_900_000_000_000));
 
-    let saved_reviews = koloda_native_tauri::repo::reviews::get_reviews(
+    let saved_reviews = koloda_core::repo::reviews::get_reviews(
         &db,
-        koloda_native_tauri::domain::reviews::GetReviewsData { card_id },
+        koloda_core::domain::reviews::GetReviewsData { card_id },
     )
     .expect("reviews query should succeed");
     assert_eq!(saved_reviews.len(), 1);
@@ -108,16 +108,16 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
         "foreign key violation should fail insert and rollback transaction"
     );
 
-    let card_after = koloda_native_tauri::repo::cards::get_card(&db, card_id)
+    let card_after = koloda_core::repo::cards::get_card(&db, card_id)
         .expect("card query should succeed")
         .expect("card should exist");
     assert_eq!(card_after.state, 0, "card update should be rolled back");
     assert_eq!(card_after.reps, 0, "card update should be rolled back");
     assert_eq!(card_after.due_at, None, "card update should be rolled back");
 
-    let saved_reviews = koloda_native_tauri::repo::reviews::get_reviews(
+    let saved_reviews = koloda_core::repo::reviews::get_reviews(
         &db,
-        koloda_native_tauri::domain::reviews::GetReviewsData { card_id },
+        koloda_core::domain::reviews::GetReviewsData { card_id },
     )
     .expect("reviews query should succeed");
     assert!(saved_reviews.is_empty(), "review insert should be rolled back");

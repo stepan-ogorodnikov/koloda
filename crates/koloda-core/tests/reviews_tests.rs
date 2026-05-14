@@ -1,4 +1,4 @@
-use koloda_native_tauri::domain::reviews::InsertReviewData;
+use koloda_core::domain::reviews::InsertReviewData;
 
 // ============================================================================
 // VALID REVIEW

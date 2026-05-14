@@ -1,7 +1,7 @@
-use koloda_native_tauri::app::init::{seed_db_with_database, SeedData, SeedSettings};
-use koloda_native_tauri::domain::algorithms::InsertAlgorithmData;
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::repo::{algorithms, settings};
+use koloda_core::app::init::{seed_db, SeedData, SeedSettings};
+use koloda_core::domain::algorithms::InsertAlgorithmData;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::repo::{algorithms, settings};
 use serde_json::json;
 
 mod common;
@@ -11,7 +11,7 @@ use common::{counted_daily_limit, fsrs_content, simple_template, test_db};
 fn e2e_seed_and_review_workflow() {
     let db = test_db();
 
-    seed_db_with_database(
+    seed_db(
         &db,
         SeedData {
             algorithm: InsertAlgorithmData {

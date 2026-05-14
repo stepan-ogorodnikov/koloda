@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use koloda_native_tauri::app::db::Database;
+use koloda_core::app::db::Database;
 use serde_json::json;
 
 pub mod fixtures;
@@ -28,23 +28,23 @@ pub fn fsrs_content() -> serde_json::Value {
 pub fn card_content(
     front: &str,
     back: &str,
-) -> std::collections::HashMap<String, koloda_native_tauri::domain::cards::CardContentField> {
+) -> std::collections::HashMap<String, koloda_core::domain::cards::CardContentField> {
     std::collections::HashMap::from([
         (
             "1".to_string(),
-            koloda_native_tauri::domain::cards::CardContentField {
+            koloda_core::domain::cards::CardContentField {
                 text: front.to_string(),
             },
         ),
         (
             "2".to_string(),
-            koloda_native_tauri::domain::cards::CardContentField { text: back.to_string() },
+            koloda_core::domain::cards::CardContentField { text: back.to_string() },
         ),
     ])
 }
 
-pub fn simple_template_content() -> koloda_native_tauri::domain::templates::TemplateContent {
-    use koloda_native_tauri::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
+pub fn simple_template_content() -> koloda_core::domain::templates::TemplateContent {
+    use koloda_core::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
 
     TemplateContent {
         fields: vec![
@@ -74,8 +74,8 @@ pub fn simple_template_content() -> koloda_native_tauri::domain::templates::Temp
     }
 }
 
-pub fn simple_template() -> koloda_native_tauri::domain::templates::InsertTemplateData {
-    use koloda_native_tauri::domain::templates::InsertTemplateData;
+pub fn simple_template() -> koloda_core::domain::templates::InsertTemplateData {
+    use koloda_core::domain::templates::InsertTemplateData;
 
     InsertTemplateData {
         title: "Basic".to_string(),
@@ -156,12 +156,12 @@ pub fn hotkeys_settings() -> serde_json::Value {
     })
 }
 
-pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda_native_tauri::app::init::SeedData {
-    use koloda_native_tauri::app::init::SeedSettings;
-    use koloda_native_tauri::domain::algorithms::InsertAlgorithmData;
-    use koloda_native_tauri::domain::templates::InsertTemplateData;
+pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda_core::app::init::SeedData {
+    use koloda_core::app::init::SeedSettings;
+    use koloda_core::domain::algorithms::InsertAlgorithmData;
+    use koloda_core::domain::templates::InsertTemplateData;
 
-    koloda_native_tauri::app::init::SeedData {
+    koloda_core::app::init::SeedData {
         algorithm: InsertAlgorithmData {
             title: algorithm_title.to_string(),
             content: fsrs_algorithm_content(),

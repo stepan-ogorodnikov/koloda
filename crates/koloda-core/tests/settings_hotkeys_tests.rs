@@ -1,5 +1,5 @@
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::domain::settings_hotkeys::HotkeysSettings;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::domain::settings_hotkeys::HotkeysSettings;
 
 // ============================================================================
 // VALID SETTINGS TESTS

@@ -1,4 +1,4 @@
-use koloda_native_tauri::domain::algorithms::{
+use koloda_core::domain::algorithms::{
     CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues,
 };
 

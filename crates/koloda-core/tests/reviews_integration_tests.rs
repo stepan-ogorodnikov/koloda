@@ -1,6 +1,6 @@
-use koloda_native_tauri::domain::reviews::GetReviewTotalsParams;
-use koloda_native_tauri::domain::settings::SettingsName;
-use koloda_native_tauri::repo::reviews;
+use koloda_core::domain::reviews::GetReviewTotalsParams;
+use koloda_core::domain::settings::SettingsName;
+use koloda_core::repo::reviews;
 use serde_json::json;
 
 mod common;
@@ -9,7 +9,7 @@ use common::test_db;
 use common::{counted_daily_limit, learning_settings_with_day_start};
 
 fn get_todays_timestamp() -> i64 {
-    koloda_native_tauri::app::utility::get_current_timestamp().expect("timestamp should be available")
+    koloda_core::app::utility::get_current_timestamp().expect("timestamp should be available")
 }
 
 #[test]
@@ -74,9 +74,9 @@ fn get_todays_review_totals_uses_learning_day_window_and_limits_meta() {
     let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
     let card_id = add_card(&db, deck_id, template_id, "question");
 
-    koloda_native_tauri::repo::settings::set_settings(
+    koloda_core::repo::settings::set_settings(
         &db,
-        koloda_native_tauri::domain::settings::SettingsName::Learning,
+        koloda_core::domain::settings::SettingsName::Learning,
         learning_settings_with_day_start(1, 1, 1, 1, "00:00"),
     )
     .expect("learning settings should be set");
@@ -107,7 +107,7 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
     let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
     let card_id = add_card(&db, deck_id, template_id, "question");
 
-    koloda_native_tauri::repo::settings::set_settings(
+    koloda_core::repo::settings::set_settings(
         &db,
         SettingsName::Learning,
         json!({
