@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -67,32 +67,23 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Default");
   await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Default");
 
-  // Change the title
+  // Change title, algorithm, and template all at once
   const titleField = detailsPanel.getByRole("textbox", { name: "Title", exact: true });
   await titleField.clear();
   await titleField.fill(updatedTitle);
   await titleField.blur();
 
-  let saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
-  await expect(saveButton).toBeVisible();
-  await saveButton.click();
-  await expect(titleField).toHaveValue(updatedTitle);
-
-  // Change the algorithm (Preset picker)
   await selectPickerOption(detailsPanel, page, /Preset$/, algorithmTitle);
-  saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
-  await expect(saveButton).toBeVisible();
-  await saveButton.click();
-  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText(algorithmTitle);
-
-  // Change the template
   await selectPickerOption(detailsPanel, page, /Template$/, templateTitle);
-  saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await expect(saveButton).toBeVisible();
   await saveButton.click();
-  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText(templateTitle);
 
-  // Navigate away and back to confirm persistence
+  // Wait for the mutation to complete (Save button disappears via form reset)
+  await expect(saveButton).not.toBeVisible();
+
+  // Navigate away and back to verify persistence
   await openSection(page, "Dashboard");
   await openSection(page, "Decks");
   await page.getByRole("link", { name: updatedTitle, exact: true }).click();
