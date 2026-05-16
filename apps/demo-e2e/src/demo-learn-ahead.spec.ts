@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { openSection, setLearnAheadLimit, setupDemo, startDeckLesson } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -33,28 +33,6 @@ async function gradeCard(page: Page, grade: string) {
   await page.getByRole("button", { name: grade }).click();
 }
 
-async function setLearnAhead(page: Page, hours: number, minutes: number) {
-  await openSection(page, "Settings");
-  await page.getByRole("link", { name: "Learning", exact: true }).click();
-
-  const hoursField = page.getByRole("textbox", { name: "Hours" });
-  await hoursField.click();
-  await hoursField.clear();
-  await hoursField.fill(String(hours));
-  await hoursField.blur();
-
-  const minutesField = page.getByRole("textbox", { name: "Minutes" });
-  await minutesField.click();
-  await minutesField.clear();
-  await minutesField.fill(String(minutes));
-  await minutesField.blur();
-
-  const saveButton = page.locator("form").getByRole("button", { name: "Save" });
-  await saveButton.scrollIntoViewIfNeeded();
-  await saveButton.click();
-  await expect(page.getByText("Learn ahead limit")).toBeVisible();
-}
-
 async function createDeckWithCard(page: Page, deckTitle: string, cardFront: string, cardBack: string) {
   await openSection(page, "Decks");
 
@@ -78,22 +56,6 @@ async function createDeckWithCard(page: Page, deckTitle: string, cardFront: stri
   return cardsTab;
 }
 
-async function startLesson(page: Page, expectedCount: number) {
-  await openSection(page, "Dashboard");
-
-  const lessonBadge = page.getByRole("button", { name: String(expectedCount) }).first();
-  await expect(lessonBadge).toBeVisible({ timeout: 10_000 });
-  await lessonBadge.click();
-
-  const lessonDialog = page.getByRole("dialog");
-  await expect(lessonDialog).toBeVisible();
-  await expect(lessonDialog.getByRole("heading", { name: "Study cards" })).toBeVisible();
-
-  await lessonDialog.getByRole("button", { name: "Start" }).click();
-
-  return lessonDialog;
-}
-
 test("learn-ahead re-queues a card when its next due is within the limit", async ({ page }) => {
   const deckTitle = "Learn Ahead E2E Deck";
 
@@ -104,7 +66,7 @@ test("learn-ahead re-queues a card when its next due is within the limit", async
   const cardsTab = await createDeckWithCard(page, deckTitle, "Capital of France", "Paris");
 
   // Stage 3 — Start a lesson
-  const lessonDialog = await startLesson(page, 1);
+  const lessonDialog = await startDeckLesson(page, deckTitle, 1);
 
   // Stage 4 — Grade the single card as "Again".
   // With default learn-ahead (30 min), FSRS reschedules the card to be due very soon,
@@ -154,13 +116,13 @@ test("learn-ahead 0 does not re-queue a card after grading", async ({ page }) =>
 
   // Stage 1 — Set up demo and set learn-ahead to 0
   await setupDemo(page);
-  await setLearnAhead(page, 0, 0);
+  await setLearnAheadLimit(page, 0, 0);
 
   // Stage 2 — Create a deck with one card
   await createDeckWithCard(page, deckTitle, "Capital of Germany", "Berlin");
 
   // Stage 3 — Start a lesson
-  const lessonDialog = await startLesson(page, 1);
+  const lessonDialog = await startDeckLesson(page, deckTitle, 1);
 
   // Stage 4 — Grade the single card as "Again" (or any grade).
   // With learn-ahead at 0, the card should NOT be re-queued — it appears exactly once.
