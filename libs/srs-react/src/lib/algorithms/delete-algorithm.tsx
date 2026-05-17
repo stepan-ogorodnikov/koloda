@@ -29,7 +29,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   };
 
   const handleConfirm = () => {
-    mutate({ id, successorId }, {
+    mutate({ id, successorId: successorId ?? filteredAlgorithms?.[0]?.id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
         queryClient.removeQueries({ queryKey: queryKeys.algorithms.detail(id) });

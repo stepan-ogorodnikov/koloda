@@ -113,7 +113,7 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
   return throwKnownError("db.delete", async () => {
     const algorithmDecks = await getAlgorithmDecks(db, id);
     if (Array.isArray(algorithmDecks) && algorithmDecks.length > 0) {
-      const successor = await getAlgorithm(db, id);
+      const successor = await getAlgorithm(db, Number(successorId));
       if (!successor) throw new AppError("not-found.algorithms.delete.successor");
       return db.transaction(async (tx) => {
         await tx
