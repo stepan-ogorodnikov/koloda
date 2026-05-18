@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, type Page, test } from "@playwright/test";
+import { openSection, setLearnAheadLimit, setupDemo, startDeckLesson } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -52,17 +52,16 @@ test("edits card content fields and verifies changes persist", async ({ page }) 
   const updatedFront = "Updated Front Content";
   const updatedBack = "Updated Back Content";
 
-  // Stage 1 — Set up demo and create a deck with a card
   await setupDemo(page);
   await createDeckWithCard(page, deckTitle, originalFront, originalBack);
 
-  // Stage 2 — Open card edit dialog via pencil icon
+  // Open card edit dialog
   await page.getByRole("button", { name: "Edit card" }).click();
 
   const editDialog = page.getByRole("dialog");
   await expect(editDialog).toBeVisible();
 
-  // Stage 3 — Verify current field values and update them
+  // Verify current field values and update them
   const frontField = editDialog.getByRole("textbox", { name: "Front" });
   const backField = editDialog.getByRole("textbox", { name: "Back" });
 
@@ -77,12 +76,12 @@ test("edits card content fields and verifies changes persist", async ({ page }) 
   await backField.clear();
   await page.keyboard.type(updatedBack);
 
-  // Stage 4 — Save changes
+  // Save changes
   await editDialog.getByRole("button", { name: "Save", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(editDialog).not.toBeVisible();
 
-  // Stage 5 — Verify changes persist after navigation
+  // Verify changes persist after navigation
   await openSection(page, "Dashboard");
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
@@ -101,27 +100,24 @@ test("opens card preview and verifies content in lesson-like format", async ({ p
   const cardFront = "Preview Front Content";
   const cardBack = "Preview Back Content";
 
-  // Stage 1 — Set up demo and create a deck with a card
   await setupDemo(page);
   await createDeckWithCard(page, deckTitle, cardFront, cardBack);
 
-  // Stage 2 — Open card preview via eye icon
+  // Open card preview
   await page.getByRole("button", { name: "Preview Card" }).click();
-
   const previewDialog = page.getByRole("dialog");
   await expect(previewDialog).toBeVisible();
 
-  // Stage 3 — Verify the front content is visible in the preview
-  // The preview shows card front first (question side)
+  // Verify "Front" is visible in the preview
   await expect(previewDialog.getByText(cardFront)).toBeVisible();
 
-  // Stage 4 — Click "Continue" to reveal the answer (back side)
+  // Reveal the answer
   await previewDialog.getByRole("button", { name: "Continue" }).click();
 
-  // Stage 5 — Verify the back content is now visible
+  // Verify "Back" is now visible
   await expect(previewDialog.getByText(cardBack)).toBeVisible();
 
-  // Stage 6 — Close the preview
+  // Close the preview
   await page.keyboard.press("Escape");
   await expect(previewDialog).not.toBeVisible();
 });
@@ -131,50 +127,25 @@ test("resets card progress and verifies card returns to New state", async ({ pag
   const cardFront = "Reset Card Content";
   const cardBack = "Answer";
 
-  // Stage 1 — Set up demo and create a deck with a card
   await setupDemo(page);
+  await setLearnAheadLimit(page, 0, 0);
   await createDeckWithCard(page, deckTitle, cardFront, cardBack);
 
-  // Stage 2 — Grade the card to move it out of "New" state
-  await openSection(page, "Dashboard");
-
-  const lessonBadge = page.getByRole("button", { name: "1" }).first();
-  await expect(lessonBadge).toBeVisible({ timeout: 10_000 });
-  await lessonBadge.click();
-
-  const lessonDialog = page.getByRole("dialog");
-  await expect(lessonDialog).toBeVisible();
-  await lessonDialog.getByRole("button", { name: "Start" }).click();
+  // Grade the card to move it out of "New" state
+  const lessonDialog = await startDeckLesson(page, deckTitle, 1);
 
   const backTextbox = page.getByRole("textbox", { name: "Back" });
   const doneMessage = lessonDialog.getByText("Done");
 
-  await backTextbox.or(doneMessage).waitFor({ timeout: 10_000 });
-
-  if (await doneMessage.isVisible().catch(() => false)) {
-    // Card was already graded or learn-ahead didn't requeue
-  } else {
-    await backTextbox.fill(cardBack);
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Good" }).click();
-  }
-
-  // Handle possible learn-ahead re-queues
-  for (let i = 0; i < 10; i++) {
-    await backTextbox.or(doneMessage).waitFor({ timeout: 10_000 });
-
-    if (await doneMessage.isVisible().catch(() => false)) break;
-
-    await backTextbox.fill(cardBack);
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Good" }).click();
-  }
-
+  await expect(backTextbox).toBeVisible({ timeout: 10_000 });
+  await backTextbox.fill(cardBack);
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Good" }).click();
   await expect(doneMessage).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lessonDialog).not.toBeVisible();
 
-  // Stage 3 — Navigate to the deck and open the card edit dialog
+  // Navigate to the deck and open the card edit dialog
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
   await page.getByRole("tab", { name: "Cards" }).click();
@@ -183,7 +154,7 @@ test("resets card progress and verifies card returns to New state", async ({ pag
   const newBadges = page.getByRole("row").locator("text=New");
   await expect(newBadges).toHaveCount(0);
 
-  // Stage 4 — Open card edit and reset progress
+  // Open card edit and reset progress
   await page.getByRole("button", { name: "Edit card" }).click();
 
   const editDialog = page.getByRole("dialog");
@@ -194,7 +165,7 @@ test("resets card progress and verifies card returns to New state", async ({ pag
   await resetButton.click();
   await expect(resetButton).not.toBeVisible();
 
-  // Stage 5 — Close dialog and verify card is "New" again
+  // Close dialog and verify card is "New" again
   await page.keyboard.press("Escape");
   await expect(editDialog).not.toBeVisible();
 
