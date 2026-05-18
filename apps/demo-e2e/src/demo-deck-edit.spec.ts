@@ -1,20 +1,9 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { createDeck, openSection, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-  });
+  await setupPageDefaults(page);
 });
-
-async function selectPickerOption(detailsPanel: Locator, page: Page, pickerNamePattern: RegExp, optionName: string) {
-  await detailsPanel.getByRole("button", { name: pickerNamePattern }).click();
-  const option = page.getByRole("option", { name: optionName, exact: true });
-  await expect(option).toBeVisible();
-  await option.click();
-}
 
 test("edits deck title, algorithm, and template via the Details tab and verifies persistence", async ({ page }) => {
   const deckTitle = "E2E Edit Deck";
@@ -45,18 +34,7 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   await expect(page).toHaveURL(/\/templates\/\d+$/);
 
   // Create a deck
-  await openSection(page, "Decks");
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-  const deckDialog = page.getByRole("dialog");
-  await expect(deckDialog).toBeVisible();
-  await deckDialog.getByLabel("Title", { exact: true }).fill(deckTitle);
-  await deckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
-
-  const deckRedirect = deckDialog.getByRole("link", { name: "Go to the new deck", exact: true });
-  await expect(deckRedirect).toBeVisible();
-  await deckRedirect.click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-  await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
+  await createDeck(page, deckTitle);
 
   const detailsTab = page.getByRole("tab", { name: "Details", exact: true });
   await detailsTab.click();
@@ -73,8 +51,15 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   await titleField.fill(updatedTitle);
   await titleField.blur();
 
-  await selectPickerOption(detailsPanel, page, /Preset$/, algorithmTitle);
-  await selectPickerOption(detailsPanel, page, /Template$/, templateTitle);
+  await detailsPanel.getByRole("button", { name: /Preset$/ }).click();
+  const algoOption = page.getByRole("option", { name: algorithmTitle, exact: true });
+  await expect(algoOption).toBeVisible();
+  await algoOption.click();
+
+  await detailsPanel.getByRole("button", { name: /Template$/ }).click();
+  const templateOption = page.getByRole("option", { name: templateTitle, exact: true });
+  await expect(templateOption).toBeVisible();
+  await templateOption.click();
 
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await expect(saveButton).toBeVisible();

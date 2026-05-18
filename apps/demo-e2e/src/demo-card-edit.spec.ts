@@ -1,49 +1,16 @@
-import { expect, type Page, test } from "@playwright/test";
-import { openSection, setLearnAheadLimit, setupDemo, startDeckLesson } from "./helpers";
+import { expect, test } from "@playwright/test";
+import {
+  createDeckWithCard,
+  openSection,
+  setLearnAheadLimit,
+  setupDemo,
+  setupPageDefaults,
+  startDeckLesson,
+} from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
-
-async function createDeckWithCard(page: Page, deckTitle: string, cardFront: string, cardBack: string) {
-  await openSection(page, "Decks");
-
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-
-  const createDeckDialog = page.getByRole("dialog");
-  await expect(createDeckDialog).toBeVisible();
-  await createDeckDialog.getByLabel("Title", { exact: true }).fill(deckTitle);
-
-  await createDeckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
-  await createDeckDialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-  await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
-
-  const cardsTab = page.getByRole("tab", { name: "Cards" });
-  await expect(cardsTab).toBeVisible();
-  await cardsTab.click();
-
-  await page.getByRole("button", { name: "Add cards" }).click();
-
-  const addCardDialog = page.getByRole("dialog");
-  await expect(addCardDialog).toBeVisible();
-
-  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
-  await page.keyboard.type(cardFront);
-  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
-  await page.keyboard.type(cardBack);
-
-  await addCardDialog.getByRole("button", { name: "Create card" }).click();
-  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
-
-  await page.keyboard.press("Escape");
-  await expect(addCardDialog).not.toBeVisible();
-}
 
 test("edits card content fields and verifies changes persist", async ({ page }) => {
   const deckTitle = "E2E Edit Card Deck";

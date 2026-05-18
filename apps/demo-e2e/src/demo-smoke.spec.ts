@@ -1,12 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { createDeck, createTemplate, openSection, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-  });
+  await setupPageDefaults(page);
 });
 
 test("sets up the demo and reaches the core web sections", async ({ page }) => {
@@ -25,23 +21,7 @@ test("creates a template from the templates screen", async ({ page }) => {
   const templateTitle = "Playwright Template";
 
   await setupDemo(page);
-  await openSection(page, "Templates");
-
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await dialog.getByLabel("Title", { exact: true }).fill(templateTitle);
-
-  const createButton = dialog.getByRole("button", { name: "Create", exact: true });
-  await expect(createButton).toBeEnabled();
-  await createButton.click();
-
-  const redirectLink = dialog.getByRole("link", { name: "Go to the new template", exact: true });
-  await expect(redirectLink).toBeVisible();
-  await redirectLink.click();
-
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await createTemplate(page, templateTitle);
   await expect(page.getByRole("textbox", { name: "Title", exact: true }).first()).toHaveValue(templateTitle);
   await expect(page.getByText("Not locked", { exact: true })).toBeVisible();
 });
@@ -50,24 +30,7 @@ test("creates a deck from the decks screen", async ({ page }) => {
   const deckTitle = "Playwright Deck";
 
   await setupDemo(page);
-  await openSection(page, "Decks");
-
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await dialog.getByLabel("Title", { exact: true }).fill(deckTitle);
-
-  const createButton = dialog.getByRole("button", { name: "Add deck", exact: true });
-  await expect(createButton).toBeEnabled();
-  await createButton.click();
-
-  const redirectLink = dialog.getByRole("link", { name: "Go to the new deck", exact: true });
-  await expect(redirectLink).toBeVisible();
-  await redirectLink.click();
-
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-  await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
+  await createDeck(page, deckTitle);
 
   const detailsTab = page.getByRole("tab", { name: "Details", exact: true });
   await expect(detailsTab).toBeVisible();

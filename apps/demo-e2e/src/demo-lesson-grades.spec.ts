@@ -1,61 +1,18 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
+  addCard,
   expectDeckCardCount,
+  gradeLessonCards,
   openSection,
   setLearnAheadLimit,
   setupDemo,
+  setupPageDefaults,
   startDeckLesson,
 } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
-
-async function addCard(page: Page, front: string, back: string) {
-  await page.getByRole("button", { name: "Add cards" }).click();
-
-  const addCardDialog = page.getByRole("dialog");
-  await expect(addCardDialog).toBeVisible();
-
-  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
-  await page.keyboard.type(front);
-  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
-  await page.keyboard.type(back);
-
-  await addCardDialog.getByRole("button", { name: "Create card" }).click();
-  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
-
-  await page.keyboard.press("Escape");
-  await expect(addCardDialog).not.toBeVisible();
-}
-
-async function gradeLessonCards(page: Page, lessonDialog: Locator, grades: string[]) {
-  const backTextbox = page.getByRole("textbox", { name: "Back" });
-  const doneMessage = lessonDialog.getByText("Done");
-
-  for (let i = 0; i < 10; i++) {
-    await backTextbox.or(doneMessage).waitFor({ timeout: 15_000 });
-
-    if (await doneMessage.isVisible().catch(() => false)) break;
-
-    const grade = grades[i];
-    if (!grade) break;
-
-    await backTextbox.fill("test");
-    await page.getByRole("button", { name: "Continue" }).click();
-
-    const gradeButton = page.getByRole("button", { name: grade, exact: true });
-    await expect(gradeButton).toBeVisible();
-    await gradeButton.click();
-  }
-
-  await expect(doneMessage).toBeVisible({ timeout: 15_000 });
-}
 
 test("grades cards with all four FSRS grades and verifies persisted state", async ({ page }) => {
   test.setTimeout(90_000);
@@ -101,8 +58,8 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
   await cardsTab.click();
   await expectDeckCardCount(page, 4);
 
-  const cardRows = page.getByRole("row").filter({ has: page.getByRole("button", { name: "Delete card" }) });
-  await expect(cardRows.filter({ hasText: "Learning" })).toHaveCount(3);
-  await expect(cardRows.filter({ hasText: "Review" })).toHaveCount(1);
-  await expect(cardRows.filter({ hasText: "New" })).toHaveCount(0);
+  const rows = page.getByRole("row").filter({ has: page.getByRole("button", { name: "Delete card" }) });
+  await expect(rows.filter({ hasText: "Learning" })).toHaveCount(3);
+  await expect(rows.filter({ hasText: "Review" })).toHaveCount(1);
+  await expect(rows.filter({ hasText: "New" })).toHaveCount(0);
 });

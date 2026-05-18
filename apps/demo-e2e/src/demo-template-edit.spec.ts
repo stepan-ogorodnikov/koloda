@@ -1,34 +1,9 @@
-import { expect, type Page, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { createTemplate, openSection, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
-
-async function createTemplate(page: Page, title: string) {
-  await openSection(page, "Templates");
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await dialog.getByLabel("Title", { exact: true }).fill(title);
-
-  const createButton = dialog.getByRole("button", { name: "Create", exact: true });
-  await expect(createButton).toBeEnabled();
-  await createButton.click();
-
-  const redirectLink = dialog.getByRole("link", { name: "Go to the new template", exact: true });
-  await expect(redirectLink).toBeVisible();
-  await redirectLink.click();
-
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
-  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
-}
 
 test("edits template title, adds and removes fields, and verifies persistence", async ({ page }) => {
   const templateTitle = "E2E Edit Template";

@@ -1,57 +1,17 @@
-import { expect, type Page, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { addCard, createDeck, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
-
-async function addCard(page: Page, front: string, back: string) {
-  await page.getByRole("button", { name: "Add cards" }).click();
-
-  const addCardDialog = page.getByRole("dialog");
-  await expect(addCardDialog).toBeVisible();
-
-  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
-  await page.keyboard.type(front);
-  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
-  await page.keyboard.type(back);
-
-  await addCardDialog.getByRole("button", { name: "Create card" }).click();
-  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
-
-  await page.keyboard.press("Escape");
-  await expect(addCardDialog).not.toBeVisible();
-}
-
-async function createDeck(page: Page, title: string) {
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-
-  const createDeckDialog = page.getByRole("dialog");
-  await expect(createDeckDialog).toBeVisible();
-  await createDeckDialog.getByLabel("Title", { exact: true }).fill(title);
-
-  await createDeckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
-  await createDeckDialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
-
-  const cardsTab = page.getByRole("tab", { name: "Cards" });
-  await expect(cardsTab).toBeVisible();
-  await cardsTab.click();
-}
 
 test("deletes a single card via the table row and verifies removal", async ({ page }) => {
   const deckTitle = "E2E Delete Card Deck";
   const cardFront = "Card To Delete";
 
   await setupDemo(page);
-  await openSection(page, "Decks");
   await createDeck(page, deckTitle);
+  await page.getByRole("tab", { name: "Cards" }).click();
   await addCard(page, cardFront, "answer1");
   await addCard(page, "Keep Me", "answer2");
 
@@ -77,8 +37,8 @@ test("bulk deletes multiple selected cards", async ({ page }) => {
   const deckTitle = "E2E Bulk Delete Deck";
 
   await setupDemo(page);
-  await openSection(page, "Decks");
   await createDeck(page, deckTitle);
+  await page.getByRole("tab", { name: "Cards" }).click();
   await addCard(page, "Card One", "ans1");
   await addCard(page, "Card Two", "ans2");
   await addCard(page, "Card Three", "ans3");
@@ -88,7 +48,6 @@ test("bulk deletes multiple selected cards", async ({ page }) => {
   await expect(deleteButtons).toHaveCount(3);
 
   // Select all three cards via row checkboxes
-  // The first checkbox in the table header selects all, but we select individual rows
   const rows = page.getByRole("row");
 
   // Rows include header row; get data rows (skip header)

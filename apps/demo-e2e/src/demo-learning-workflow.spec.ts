@@ -1,54 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo, startDeckLesson } from "./helpers";
+import { addCard, createDeck, setupDemo, setupPageDefaults, startDeckLesson } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-  });
+  await setupPageDefaults(page);
 });
 
 test("completes a full learning workflow from deck creation to lesson grading", async ({ page }) => {
   const deckTitle = "E2E Workflow Deck";
 
   await setupDemo(page);
-  await openSection(page, "Decks");
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-
-  const createDeckDialog = page.getByRole("dialog");
-  await expect(createDeckDialog).toBeVisible();
-  await createDeckDialog.getByLabel("Title", { exact: true }).fill(deckTitle);
-
-  await createDeckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
-
-  await createDeckDialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-  await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
+  await createDeck(page, deckTitle);
 
   // Add a card to the deck (ensure we're on the "Cards" tab)
-  const cardsTab = page.getByRole("tab", { name: "Cards" });
-  await expect(cardsTab).toBeVisible();
-  await cardsTab.click();
-
-  const addCardButton = page.getByRole("button", { name: "Add cards" });
-  await expect(addCardButton).toBeVisible();
-  await addCardButton.click();
-
-  const addCardDialog = page.getByRole("dialog");
-  await expect(addCardDialog).toBeVisible();
-
-  // Use type() instead of fill() to properly trigger form change events
-  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
-  await page.keyboard.type("What is 2+2?");
-  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
-  await page.keyboard.type("4");
-
-  await addCardDialog.getByRole("button", { name: "Create card" }).click();
-
-  // Close the add card dialog (it stays open after submit for batch entry)
-  await page.keyboard.press("Escape");
-  await expect(addCardDialog).not.toBeVisible();
+  await page.getByRole("tab", { name: "Cards" }).click();
+  await addCard(page, "What is 2+2?", "4");
 
   // Navigate to dashboard and start a lesson
   const lessonDialog = await startDeckLesson(page, deckTitle, 1);

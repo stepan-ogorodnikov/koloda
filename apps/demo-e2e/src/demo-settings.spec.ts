@@ -1,13 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { openSection, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
 
 test("changes language and theme via Settings > Interface", async ({ page }) => {

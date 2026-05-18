@@ -1,59 +1,9 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, type Page, test } from "@playwright/test";
+import { cardRows, createDeckWithCards, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.clear();
-    window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
-    window.localStorage.setItem("motion", "off");
-  });
+  await setupPageDefaults(page);
 });
-
-async function addCard(page: Page, front: string, back: string) {
-  await page.getByRole("button", { name: "Add cards" }).click();
-
-  const addCardDialog = page.getByRole("dialog");
-  await expect(addCardDialog).toBeVisible();
-
-  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
-  await page.keyboard.type(front);
-  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
-  await page.keyboard.type(back);
-
-  await addCardDialog.getByRole("button", { name: "Create card" }).click();
-  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
-
-  await page.keyboard.press("Escape");
-  await expect(addCardDialog).not.toBeVisible();
-}
-
-function cardRows(page: Page): Locator {
-  return page.getByRole("row").filter({ has: page.getByRole("button", { name: "Delete card" }) });
-}
-
-async function createDeckWithCards(page: Page, deckTitle: string, cards: Array<{ front: string; back: string }>) {
-  await setupDemo(page);
-  await openSection(page, "Decks");
-
-  await page.getByRole("button", { name: "New deck", exact: true }).click();
-
-  const createDeckDialog = page.getByRole("dialog");
-  await expect(createDeckDialog).toBeVisible();
-  await createDeckDialog.getByLabel("Title", { exact: true }).fill(deckTitle);
-
-  await createDeckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
-  await createDeckDialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
-
-  const cardsTab = page.getByRole("tab", { name: "Cards" });
-  await expect(cardsTab).toBeVisible();
-  await cardsTab.click();
-
-  for (const card of cards) {
-    await addCard(page, card.front, card.back);
-  }
-}
 
 async function openFilters(page: Page) {
   await page.getByRole("button", { name: "Filters" }).click();
@@ -65,6 +15,7 @@ async function openFilters(page: Page) {
 test("filters cards by state", async ({ page }) => {
   const deckTitle = "E2E Filter Deck";
 
+  await setupDemo(page);
   await createDeckWithCards(page, deckTitle, [
     { front: "Filter Test One", back: "A1" },
     { front: "Filter Test Two", back: "A2" },
@@ -109,6 +60,7 @@ test("filters cards by state", async ({ page }) => {
 test("filters cards by due status", async ({ page }) => {
   const deckTitle = "E2E Due Filter Deck";
 
+  await setupDemo(page);
   await createDeckWithCards(page, deckTitle, [
     { front: "Due Card One", back: "A1" },
     { front: "Due Card Two", back: "A2" },
@@ -146,6 +98,7 @@ test("filters cards by due status", async ({ page }) => {
 test("sorts cards by column", async ({ page }) => {
   const deckTitle = "E2E Sort Deck";
 
+  await setupDemo(page);
   await createDeckWithCards(page, deckTitle, [
     { front: "B Sort Card", back: "B" },
     { front: "A Sort Card", back: "A" },
@@ -167,6 +120,7 @@ test("sorts cards by column", async ({ page }) => {
 test("searches cards by content", async ({ page }) => {
   const deckTitle = "E2E Search Deck";
 
+  await setupDemo(page);
   await createDeckWithCards(page, deckTitle, [
     { front: "Searchable Alpha", back: "A" },
     { front: "Searchable Beta", back: "B" },
@@ -195,6 +149,7 @@ test("searches cards by content", async ({ page }) => {
 
 test("toggles column visibility in the cards table", async ({ page }) => {
   const deckTitle = "E2E Columns Deck";
+  await setupDemo(page);
   await createDeckWithCards(page, deckTitle, [{ front: "Column Test", back: "answer" }]);
 
   // Open columns dialog
