@@ -56,7 +56,7 @@ msgstr "Interrupted after"
 
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:48
 msgid "ai.chat.message.status.failed"
-msgstr "Failed to generate cards"
+msgstr "Failed to get a response"
 
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:31
 msgid "ai.chat.message.status.finished-in"
