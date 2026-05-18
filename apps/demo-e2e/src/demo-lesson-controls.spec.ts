@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { expect, type Page, test } from "@playwright/test";
+import { openSection, setLearnAheadLimit, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -45,78 +45,80 @@ async function createDeck(page: Page, title: string) {
   await cardsTab.click();
 }
 
-test("adjusts card amounts in lesson init dialog and verifies expected counts", async ({ page }) => {
-  const deckTitle = "E2E Amount Deck";
-
-  // Stage 1 — Set up demo and create a deck with 3 cards
-  await setupDemo(page);
+async function createDeckWithCards(page: Page, title: string, cards: Array<{ front: string; back: string }>) {
   await openSection(page, "Decks");
-  await createDeck(page, deckTitle);
-  await addCard(page, "Q1", "A1");
-  await addCard(page, "Q2", "A2");
-  await addCard(page, "Q3", "A3");
+  await createDeck(page, title);
 
-  // Stage 2 — Navigate to dashboard and open lesson init
+  for (const card of cards) {
+    await addCard(page, card.front, card.back);
+  }
+}
+
+async function openLessonInit(page: Page, deckTitle: string, newCardCount: number) {
   await openSection(page, "Dashboard");
 
-  const lessonBadge = page.getByRole("button", { name: "3" }).first();
-  await expect(lessonBadge).toBeVisible({ timeout: 10_000 });
+  const deckRow = page.getByRole("row").filter({ has: page.getByText(deckTitle, { exact: true }) });
+  await expect(deckRow).toBeVisible({ timeout: 15_000 });
+
+  const lessonBadge = deckRow.getByRole("button", { name: String(newCardCount), exact: true }).first();
+  await expect(lessonBadge).toBeEnabled({ timeout: 15_000 });
   await lessonBadge.click();
 
   const lessonDialog = page.getByRole("dialog");
   await expect(lessonDialog).toBeVisible();
   await expect(lessonDialog.getByRole("heading", { name: "Study cards" })).toBeVisible();
 
-  // Stage 3 — Verify default amounts: 3 new cards available
+  return lessonDialog;
+}
+
+async function startLesson(page: Page, deckTitle: string, newCardCount: number) {
+  const lessonDialog = await openLessonInit(page, deckTitle, newCardCount);
+  await lessonDialog.getByRole("button", { name: "Start" }).click();
+  return lessonDialog;
+}
+
+test("adjusts card amounts in lesson init dialog and verifies expected counts", async ({ page }) => {
+  const deckTitle = "E2E Amount Deck";
+
+  await setupDemo(page);
+  await setLearnAheadLimit(page, 0, 0);
+  await createDeckWithCards(page, deckTitle, [
+    { front: "Q1", back: "A1" },
+    { front: "Q2", back: "A2" },
+    { front: "Q3", back: "A3" },
+  ]);
+
+  // Open lesson init dialog and verify default count is 3
+  const lessonDialog = await openLessonInit(page, deckTitle, 3);
+
   const newAmountInput = lessonDialog.getByRole("textbox", { name: "Amount of cards of type new" });
   await expect(newAmountInput).toHaveValue("3");
 
-  // Stage 4 — Change the new card amount to 1
+  // Reduce "New" card count to 1 and start lesson
   await newAmountInput.click();
   await newAmountInput.fill("1");
   await newAmountInput.blur();
 
-  // Stage 5 — Start the lesson
   await lessonDialog.getByRole("button", { name: "Start" }).click();
 
-  // Stage 6 — Verify only 1 card is studied (not 3)
-  // Answer the first card
+  // Answer the single card and complete the lesson
   const backTextbox = page.getByRole("textbox", { name: "Back" });
   const doneMessage = lessonDialog.getByText("Done");
-
-  await backTextbox.or(doneMessage).waitFor({ timeout: 10_000 });
-
-  if (await doneMessage.isVisible().catch(() => false)) {
-    // Already done
-  } else {
-    await backTextbox.fill("A1");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Good" }).click();
-  }
-
-  // Handle possible learn-ahead re-queues
-  for (let i = 0; i < 10; i++) {
-    await backTextbox.or(doneMessage).waitFor({ timeout: 10_000 });
-
-    if (await doneMessage.isVisible().catch(() => false)) break;
-
-    await backTextbox.fill("answer");
-    await page.getByRole("button", { name: "Continue" }).click();
-    await page.getByRole("button", { name: "Good" }).click();
-  }
-
-  // Stage 7 — Verify lesson completes
+  await expect(backTextbox).toBeVisible({ timeout: 10_000 });
+  await backTextbox.fill("A1");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Good" }).click();
   await expect(doneMessage).toBeVisible();
+
+  // Close the lesson dialog
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lessonDialog).not.toBeVisible();
 
-  // Stage 8 — Verify remaining cards (2) are still "New" (not studied)
+  // Navigate back to the deck and verify only 2 cards remain in "New" state
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
   await page.getByRole("tab", { name: "Cards" }).click();
 
-  // 2 out of 3 cards should still be "New"
-  // (the 1 graded card moved out of New, the 2 unstudied remain New)
   const newBadges = page.getByRole("row").locator("text=New");
   await expect(newBadges).toHaveCount(2);
 });
@@ -124,43 +126,25 @@ test("adjusts card amounts in lesson init dialog and verifies expected counts", 
 test("terminates lesson mid-study with confirmation and returns to dashboard", async ({ page }) => {
   const deckTitle = "E2E Terminate Deck";
 
-  // Stage 1 — Set up demo and create a deck with a card
   await setupDemo(page);
-  await openSection(page, "Decks");
-  await createDeck(page, deckTitle);
-  await addCard(page, "Termination Test Q", "Termination Test A");
+  await setLearnAheadLimit(page, 0, 0);
+  await createDeckWithCards(page, deckTitle, [{ front: "Termination Test Q", back: "Termination Test A" }]);
+  const lessonDialog = await startLesson(page, deckTitle, 1);
 
-  // Stage 2 — Start a lesson
-  await openSection(page, "Dashboard");
-
-  const lessonBadge = page.getByRole("button", { name: "1" }).first();
-  await expect(lessonBadge).toBeVisible({ timeout: 10_000 });
-  await lessonBadge.click();
-
-  const lessonDialog = page.getByRole("dialog");
-  await expect(lessonDialog).toBeVisible();
-  await lessonDialog.getByRole("button", { name: "Start" }).click();
-
-  // Stage 3 — Answer one card fill-in (type answer) but don't grade yet
+  // Answer the card and reach the grade step
   const backTextbox = page.getByRole("textbox", { name: "Back" });
-  const doneMessage = lessonDialog.getByText("Done");
-
-  await backTextbox.or(doneMessage).waitFor({ timeout: 10_000 });
-
-  if (await doneMessage.isVisible().catch(() => false)) {
-    // Card auto-graded, nothing to terminate mid-way
-    await page.getByRole("button", { name: "Close" }).click();
-    return;
-  }
-
+  await expect(backTextbox).toBeVisible({ timeout: 10_000 });
   await backTextbox.fill("Termination Test A");
   await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByRole("button", { name: "Good" })).toBeVisible();
 
-  // Stage 4 — Attempt to close the lesson (press Escape to trigger termination)
+  // Press "Escape" to trigger termination confirmation dialog
   await page.keyboard.press("Escape");
 
-  // Stage 5 — Verify termination confirmation dialog appears
-  const terminationDialog = page.getByRole("dialog");
+  // Verify termination dialog offers both "Continue studying" and "Close" options
+  const terminationDialog = page.getByRole("dialog").filter({
+    has: page.getByRole("button", { name: "Continue studying" }),
+  });
   await expect(terminationDialog).toBeVisible();
 
   const continueButton = terminationDialog.getByRole("button", { name: "Continue studying" });
@@ -169,21 +153,21 @@ test("terminates lesson mid-study with confirmation and returns to dashboard", a
   await expect(continueButton).toBeVisible();
   await expect(closeButton).toBeVisible();
 
-  // Stage 6 — Choose "Continue studying" to resume
+  // Click "Continue studying" — should dismiss dialog and resume lesson
   await continueButton.click();
-  await expect(terminationDialog.getByRole("button", { name: "Continue studying" })).not.toBeVisible();
-
-  // Verify we're back in the lesson (grade buttons should be visible)
+  await expect(terminationDialog).not.toBeVisible();
   await expect(page.getByRole("button", { name: "Good" })).toBeVisible();
 
-  // Stage 7 — Press Escape again, this time choose "Close" to actually exit
+  // Press "Escape" again and this time choose "Close" to terminate the lesson
   await page.keyboard.press("Escape");
 
-  const terminationDialog2 = page.getByRole("dialog");
+  const terminationDialog2 = page.getByRole("dialog").filter({
+    has: page.getByRole("button", { name: "Continue studying" }),
+  });
   await expect(terminationDialog2).toBeVisible();
   await terminationDialog2.getByRole("button", { name: "Close", exact: true }).click();
 
-  // Stage 8 — Verify return to dashboard
+  // Verify lesson is closed and user is redirected to dashboard
   await expect(lessonDialog).not.toBeVisible();
   await expect(page).toHaveURL(/\/dashboard$/);
 });

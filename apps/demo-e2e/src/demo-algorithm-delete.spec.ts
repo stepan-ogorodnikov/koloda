@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -61,14 +61,11 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
   const algorithmTitle = "E2E In-Use Algorithm";
   const deckTitle = "E2E Algorithm Deck";
 
-  // Stage 1 — Set up demo
   await setupDemo(page);
-
-  // Stage 2 — Create an algorithm and a deck using it
   await createAlgorithm(page, algorithmTitle);
   await createDeckWithAlgorithm(page, deckTitle, algorithmTitle);
 
-  // Stage 3 — Navigate to the algorithm and try to delete
+  // Navigate to the algorithm and try to delete
   await openSection(page, "Presets");
   await page.getByRole("link", { name: algorithmTitle, exact: true }).click();
   await expect(page).toHaveURL(/\/algorithms\/\d+$/);
@@ -77,7 +74,7 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
   await expect(deleteTrigger).toBeVisible();
   await deleteTrigger.click();
 
-  // Stage 4 — Confirm deletion
+  // Confirm deletion
   const deleteDialog = page.getByRole("dialog");
   await expect(deleteDialog).toBeVisible();
 
@@ -93,9 +90,9 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
   // Wait for dialog to close after successful deletion
   await expect(deleteDialog).not.toBeVisible();
 
-  // Stage 6 — Verify redirect to /algorithms
+  // Verify redirect to "/algorithms"
   await expect(page).toHaveURL(/\/algorithms$/);
 
-  // Stage 7 — Verify the algorithm no longer appears
+  // Verify the algorithm no longer appears
   await expect(page.getByRole("link", { name: algorithmTitle, exact: true })).not.toBeVisible();
 });

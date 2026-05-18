@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -35,23 +35,22 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   const updatedTitle = "E2E Updated Template";
   const newFieldTitle = "Extra Field";
 
-  // Stage 1 — Set up demo and create a template
   await setupDemo(page);
   await createTemplate(page, templateTitle);
 
-  // Stage 2 — Wait for default template fields (Front + Back)
+  // Wait for default template fields (Front + Back)
   const fieldDeleteButtons = page.getByRole("button", { name: "Delete field" });
   await expect(fieldDeleteButtons).toHaveCount(2);
   const initialFieldCount = 2;
 
-  // Stage 3 — Change the template title
+  // Change the template title
   const templateTitleField = page.getByRole("textbox", { name: "Title", exact: true }).first();
   await expect(templateTitleField).toBeVisible();
   await templateTitleField.clear();
   await templateTitleField.fill(updatedTitle);
   await templateTitleField.blur();
 
-  // Stage 4 — Add a new field
+  // Add a new field
   await page.getByRole("button", { name: "Add field", exact: true }).click();
   await expect(fieldDeleteButtons).toHaveCount(initialFieldCount + 1);
 
@@ -62,11 +61,11 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   await newFieldInput.fill(newFieldTitle);
   await newFieldInput.blur();
 
-  // Stage 5 — Remove the first field
+  // Remove the first field
   await fieldDeleteButtons.first().click();
   await expect(fieldDeleteButtons).toHaveCount(initialFieldCount);
 
-  // Stage 6 — Save and verify persistence via navigation
+  // Save and verify persistence via navigation
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();

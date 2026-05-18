@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo } from "./helpers";
+import { openSection, setupDemo, startDeckLesson } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -12,12 +12,8 @@ test.beforeEach(async ({ page }) => {
 test("completes a full learning workflow from deck creation to lesson grading", async ({ page }) => {
   const deckTitle = "E2E Workflow Deck";
 
-  // Stage 1 — Set up demo
   await setupDemo(page);
-
-  // Stage 2 — Create a deck
   await openSection(page, "Decks");
-
   await page.getByRole("button", { name: "New deck", exact: true }).click();
 
   const createDeckDialog = page.getByRole("dialog");
@@ -30,7 +26,7 @@ test("completes a full learning workflow from deck creation to lesson grading", 
   await expect(page).toHaveURL(/\/decks\/\d+$/);
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 
-  // Stage 3 — Add a card to the deck (ensure we're on the Cards tab)
+  // Add a card to the deck (ensure we're on the "Cards" tab)
   const cardsTab = page.getByRole("tab", { name: "Cards" });
   await expect(cardsTab).toBeVisible();
   await cardsTab.click();
@@ -54,22 +50,10 @@ test("completes a full learning workflow from deck creation to lesson grading", 
   await page.keyboard.press("Escape");
   await expect(addCardDialog).not.toBeVisible();
 
-  // Stage 4 — Navigate to dashboard and start a lesson
-  await openSection(page, "Dashboard");
+  // Navigate to dashboard and start a lesson
+  const lessonDialog = await startDeckLesson(page, deckTitle, 1);
 
-  // Wait for the lesson table to load. The badge button shows "1" (one new card).
-  const lessonBadge = page.getByRole("button", { name: "1" }).first();
-  await expect(lessonBadge).toBeVisible({ timeout: 10_000 });
-  await lessonBadge.click();
-
-  const lessonDialog = page.getByRole("dialog");
-  await expect(lessonDialog).toBeVisible();
-  await expect(lessonDialog.getByRole("heading", { name: "Study cards" })).toBeVisible();
-
-  // Start the lesson
-  await lessonDialog.getByRole("button", { name: "Start" }).click();
-
-  // Stage 5 — Answer card(s). Learn-ahead may re-queue the same card,
+  // Answer card(s). Learn-ahead may re-queue the same card,
   // so loop until the "Done" completion screen appears.
   const backTextbox = page.getByRole("textbox", { name: "Back" });
   const doneMessage = lessonDialog.getByText("Done");
@@ -89,7 +73,7 @@ test("completes a full learning workflow from deck creation to lesson grading", 
     await goodButton.click();
   }
 
-  // Stage 6 — Lesson completion
+  // Lesson completion
   await expect(doneMessage).toBeVisible();
 
   await page.getByRole("button", { name: "Close" }).click();

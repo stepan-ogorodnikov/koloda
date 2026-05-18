@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -35,13 +35,10 @@ test("creates an algorithm, modifies parameters, and verifies persistence", asyn
   const algorithmTitle = "E2E Algorithm";
   const updatedTitle = "E2E Algorithm Updated";
 
-  // Stage 1 — Set up demo
   await setupDemo(page);
-
-  // Stage 2 — Create an algorithm
   await createAlgorithm(page, algorithmTitle);
 
-  // Stage 3 — Modify parameters
+  // Modify parameters
   const titleField = page.getByRole("textbox", { name: "Title", exact: true });
   await expect(titleField).toBeVisible();
   await titleField.clear();
@@ -54,13 +51,13 @@ test("creates an algorithm, modifies parameters, and verifies persistence", asyn
   await retentionField.fill("85");
   await retentionField.blur();
 
-  // Save
+  // Save changes
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
   await expect(saveButton).not.toBeVisible();
 
-  // Stage 4 — Verify persistence after navigation
+  // Verify persistence after navigation
   await openSection(page, "Dashboard");
   await openSection(page, "Presets");
   await page.getByRole("link", { name: updatedTitle, exact: true }).click();

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { openSection, setupDemo } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
@@ -49,35 +49,33 @@ test("deletes a single card via the table row and verifies removal", async ({ pa
   const deckTitle = "E2E Delete Card Deck";
   const cardFront = "Card To Delete";
 
-  // Stage 1 — Set up demo and create a deck with two cards
   await setupDemo(page);
   await openSection(page, "Decks");
   await createDeck(page, deckTitle);
   await addCard(page, cardFront, "answer1");
   await addCard(page, "Keep Me", "answer2");
 
-  // Stage 2 — Verify both cards are present in the table
+  // Verify both cards are present in the table
   await expect(page.getByRole("row").filter({ hasText: cardFront })).toBeVisible();
   await expect(page.getByRole("row").filter({ hasText: "Keep Me" })).toBeVisible();
 
-  // Stage 3 — Delete the first card via the table row delete button
+  // Delete the first card via the table row delete button
   await page.getByRole("button", { name: "Delete card" }).first().click();
 
   const deletePopover = page.getByRole("dialog");
   await expect(deletePopover).toBeVisible();
   await deletePopover.getByRole("button", { name: "Delete", exact: true }).click();
 
-  // Stage 4 — Verify the deleted card no longer appears
+  // Verify the deleted card no longer appears
   await expect(page.getByRole("row").filter({ hasText: cardFront })).not.toBeVisible();
 
-  // Stage 5 — Verify the second card still exists
+  // Verify the second card still exists
   await expect(page.getByRole("row").filter({ hasText: "Keep Me" })).toBeVisible();
 });
 
 test("bulk deletes multiple selected cards", async ({ page }) => {
   const deckTitle = "E2E Bulk Delete Deck";
 
-  // Stage 1 — Set up demo and create a deck with three cards
   await setupDemo(page);
   await openSection(page, "Decks");
   await createDeck(page, deckTitle);
@@ -85,13 +83,14 @@ test("bulk deletes multiple selected cards", async ({ page }) => {
   await addCard(page, "Card Two", "ans2");
   await addCard(page, "Card Three", "ans3");
 
-  // Stage 2 — Verify three cards exist
+  // Verify three cards exist
   const deleteButtons = page.getByRole("button", { name: "Delete card" });
   await expect(deleteButtons).toHaveCount(3);
 
-  // Stage 3 — Select all three cards via row checkboxes
+  // Select all three cards via row checkboxes
   // The first checkbox in the table header selects all, but we select individual rows
   const rows = page.getByRole("row");
+
   // Rows include header row; get data rows (skip header)
   const dataRows = rows.filter({ has: page.getByRole("checkbox") });
   const rowCount = await dataRows.count();
@@ -100,17 +99,17 @@ test("bulk deletes multiple selected cards", async ({ page }) => {
     await dataRows.nth(i).getByRole("checkbox").check({ force: true });
   }
 
-  // Stage 4 — Verify selection bar appears and click bulk delete
+  // Verify selection bar appears and click bulk delete
   const selectionBarDelete = page.getByRole("button", { name: "Delete", exact: true }).first();
   await expect(selectionBarDelete).toBeVisible();
   await selectionBarDelete.click();
 
-  // Stage 5 — Confirm deletion in the popover
+  // Confirm deletion in the popover
   const deleteDialog = page.getByRole("dialog");
   await expect(deleteDialog).toBeVisible();
   await expect(deleteDialog.getByText(/delete selected cards/i)).toBeVisible();
   await deleteDialog.getByRole("button", { name: "Delete", exact: true }).click();
 
-  // Stage 6 — Verify all cards are removed
+  // Verify all cards are removed
   await expect(deleteButtons).toHaveCount(0);
 });

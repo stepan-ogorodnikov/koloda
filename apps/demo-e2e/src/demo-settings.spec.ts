@@ -11,16 +11,15 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("changes language and theme via Settings > Interface", async ({ page }) => {
-  // Stage 1 — Set up demo
   await setupDemo(page);
 
-  // Stage 2 — Navigate to Settings > Interface
+  // Navigate to Settings > Interface
   await openSection(page, "Settings");
   await expect(page).toHaveURL(/\/settings$/);
   await page.getByRole("link", { name: "Interface", exact: true }).click();
   await expect(page).toHaveURL(/\/settings\/interface$/);
 
-  // Stage 3 — Change theme to Dark (demo defaults to System)
+  // Change theme to Dark
   const lightToggle = page.getByRole("radio", { name: "Light" });
   const darkToggle = page.getByRole("radio", { name: "Dark" });
 
@@ -30,27 +29,29 @@ test("changes language and theme via Settings > Interface", async ({ page }) => 
   await expect(darkToggle).toBeChecked();
   await expect(page.locator("html")).toHaveClass(/dark/);
 
-  // Stage 4 — Switch back to Light theme
+  // Switch back to Light theme
   await lightToggle.click();
   await expect(lightToggle).toBeChecked();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 
-  // Stage 5 — Open language picker (header also has a language control)
+  // Open language picker
   const languageButton = page.getByRole("button", { name: "English Language" }).last();
   await languageButton.click();
 
   const russianOption = page.getByRole("option", { name: "Русский" });
   await expect(russianOption).toBeVisible();
-  // Don't actually switch to avoid side effects; just verify the option exists
-  await page.keyboard.press("Escape");
+  await russianOption.click();
+  await expect.poll(() => page.evaluate(() => window.localStorage.getItem("lang"))).toBe("ru");
 });
 
 test("changes learning defaults and verifies persistence after navigation", async ({ page }) => {
   await setupDemo(page);
 
+  // Navigate to Settings > Learning
   await openSection(page, "Settings");
   await page.getByRole("link", { name: "Learning", exact: true }).click();
 
+  // Update values
   const newLimitField = page.getByRole("textbox", { name: "New" });
   await newLimitField.click();
   await newLimitField.clear();
@@ -69,15 +70,18 @@ test("changes learning defaults and verifies persistence after navigation", asyn
   await minutesField.fill("30");
   await minutesField.blur();
 
+  // Save changes
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
   await saveButton.click();
   await expect(page.getByText("Learn ahead limit")).toBeVisible();
 
+  // Navigate away and back
   await openSection(page, "Dashboard");
   await openSection(page, "Settings");
   await page.getByRole("link", { name: "Learning", exact: true }).click();
 
+  // Verify changes persisted
   await expect(page.getByRole("textbox", { name: "New" })).toHaveValue("5");
   await expect(page.getByRole("textbox", { name: "Hours" })).toHaveValue("1");
   await expect(page.getByRole("textbox", { name: "Minutes" })).toHaveValue("30");
