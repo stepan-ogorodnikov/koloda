@@ -291,3 +291,13 @@ export async function dragTo(page: Page, source: Locator, target: Locator) {
   await page.waitForTimeout(100);
   await page.mouse.up();
 }
+
+export async function reorderWithKeyboard(handle: Locator, direction: "up" | "down", steps: number) {
+  await handle.scrollIntoViewIfNeeded();
+  await handle.focus();
+  await handle.press("Enter");
+  for (let i = 0; i < steps; i++) {
+    await handle.press(direction === "up" ? "ArrowUp" : "ArrowDown");
+  }
+  await handle.press("Enter");
+}
