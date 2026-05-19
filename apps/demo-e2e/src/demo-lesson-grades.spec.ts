@@ -52,6 +52,13 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lessonDialog).not.toBeVisible();
 
+  await openSection(page, "Dashboard");
+  const learnedTodaySection = page.getByText("Learned today", { exact: true }).locator("..");
+  await expect(learnedTodaySection).toBeVisible();
+  const totalRow = learnedTodaySection.getByText("Total");
+  await expect(totalRow).toBeVisible();
+  await expect(totalRow.locator("..").getByText("4")).toBeVisible();
+
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
   await expect(page).toHaveURL(/\/decks\/\d+$/);
