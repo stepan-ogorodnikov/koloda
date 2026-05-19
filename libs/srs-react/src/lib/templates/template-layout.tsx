@@ -49,7 +49,7 @@ export const TemplateLayout = withForm({
                         placeholder={_(msg`template.fields.inputs.title.placeholder`)}
                       />
                     </TextField>
-                    <form.Field name={`content.layout[${i}].operation`}>
+                    <form.Field name={`content.layout[${i}].operation`} key={`operation-${i}`}>
                       {(operationField) => (
                         <Select.Root
                           aria-label={_(msg`template.layout.inputs.operation.label`)}

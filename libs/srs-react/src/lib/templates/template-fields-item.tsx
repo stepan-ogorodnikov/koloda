@@ -16,7 +16,7 @@ export const TemplateFieldsItem = withForm({
 
     return (
       <>
-        <form.Field name={`content.fields[${index}].title`}>
+        <form.Field name={`content.fields[${index}].title`} key={`title-${index}`}>
           {(field) => (
             <TextField
               aria-label={_(msg`template.fields.inputs.title.label`)}
@@ -30,7 +30,7 @@ export const TemplateFieldsItem = withForm({
             </TextField>
           )}
         </form.Field>
-        <form.Field name={`content.fields[${index}].type`}>
+        <form.Field name={`content.fields[${index}].type`} key={`type-${index}`}>
           {(field) => (
             <Select.Root
               aria-label={_(msg`template.fields.inputs.type.label`)}
@@ -53,7 +53,7 @@ export const TemplateFieldsItem = withForm({
             </Select.Root>
           )}
         </form.Field>
-        <form.Field name={`content.fields[${index}].isRequired`}>
+        <form.Field name={`content.fields[${index}].isRequired`} key={`isRequired-${index}`}>
           {(field) => (
             <Checkbox
               variants={{ class: "mx-2 overflow-hidden" }}
