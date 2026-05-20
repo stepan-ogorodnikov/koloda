@@ -16,8 +16,10 @@ test("discards changes to algorithm details and resets form to persisted state",
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(algorithmTitle);
   const initialRetention = await page.getByRole("textbox", { name: "Retention" }).inputValue();
   const initialWeights = await page.getByRole("textbox", { name: "Weights" }).inputValue();
-  const initialLearningStep = await page.getByRole("textbox", { name: "Amount for learning step number 1" }).inputValue();
-  const initialRelearningStep = await page.getByRole("textbox", { name: "Amount for relearning step number 1" }).inputValue();
+  const initialLearningStep = await page.getByRole("textbox", { name: "Amount for learning step number 1" })
+    .inputValue();
+  const initialRelearningStep = await page.getByRole("textbox", { name: "Amount for relearning step number 1" })
+    .inputValue();
   const initialMaxInterval = await page.getByRole("textbox", { name: "Maximum interval" }).inputValue();
 
   // Change title
@@ -56,7 +58,7 @@ test("discards changes to algorithm details and resets form to persisted state",
   await maxIntervalField.fill("36500");
   await maxIntervalField.blur();
 
-  // Click Discard to reset the form
+  // Click "Discard" to reset the form
   const discardButton = page.locator("form").getByRole("button", { name: "Discard", exact: true });
   await expect(discardButton).toBeVisible();
   await discardButton.click();
@@ -65,7 +67,11 @@ test("discards changes to algorithm details and resets form to persisted state",
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(algorithmTitle);
   await expect(page.getByRole("textbox", { name: "Retention" })).toHaveValue(initialRetention);
   await expect(page.getByRole("textbox", { name: "Weights" })).toHaveValue(initialWeights);
-  await expect(page.getByRole("textbox", { name: "Amount for learning step number 1" })).toHaveValue(initialLearningStep);
-  await expect(page.getByRole("textbox", { name: "Amount for relearning step number 1" })).toHaveValue(initialRelearningStep);
+  await expect(page.getByRole("textbox", { name: "Amount for learning step number 1" })).toHaveValue(
+    initialLearningStep,
+  );
+  await expect(page.getByRole("textbox", { name: "Amount for relearning step number 1" })).toHaveValue(
+    initialRelearningStep,
+  );
   await expect(page.getByRole("textbox", { name: "Maximum interval" })).toHaveValue(initialMaxInterval);
 });
