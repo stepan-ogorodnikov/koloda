@@ -1,5 +1,5 @@
-import { ClipboardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { ClipboardIcon } from "@koloda/ui";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { cloneTemplateSchema as schema } from "@koloda/srs";
