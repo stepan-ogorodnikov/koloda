@@ -1,4 +1,4 @@
-import { ComputerSettingsIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
+import { ComputerPhoneSyncIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { THEMES } from "@koloda/app";
 import { themeAtom } from "@koloda/core-react";
@@ -13,7 +13,7 @@ import { useAtom, useAtomValue } from "jotai";
 const ITEMS = [
   { id: "light", Icon: Sun03Icon },
   { id: "dark", Icon: Moon02Icon },
-  { id: "system", Icon: ComputerSettingsIcon },
+  { id: "system", Icon: ComputerPhoneSyncIcon },
 ] as const;
 
 type ThemeSelectProps = Partial<SelectProps<typeof ITEMS[number]>> & {
