@@ -69,8 +69,9 @@ function DashboardNav({ children }: PropsWithChildren) {
 
 const dashboardNavLink = tv({
   base: [
-    "flex flex-row items-center gap-2 p-2 rounded-lg focus-ring",
-    "fg-inactive hover:fg-level-1 current:fg-level-1 current:font-medium",
+    "flex flex-row items-center gap-2 p-2 rounded-xl focus-ring animate-colors",
+    "current:bg-nav-active border-2 border-transparent current:border-nav-active current:shadow-nav-active",
+    "fg-nav-item hover:fg-nav-active current:fg-nav-active font-medium tracking-wide",
   ],
 });
 
