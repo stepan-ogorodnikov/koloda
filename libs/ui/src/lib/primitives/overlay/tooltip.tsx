@@ -27,7 +27,13 @@ const tooltipContent = tv({
   base: [
     "relative isolate flex flex-col overflow-visible p-2 border-0",
     "rounded-md bg-transparent fg-level-2 shadow-overlay-frame",
-    "placement-top:mb-[11px] placement-bottom:mt-[11px] placement-left:mr-[11px] placement-right:ml-[11px]",
+    "placement-top:mb-[13px] placement-bottom:mt-[13px] placement-left:mr-[13px] placement-right:ml-[13px]",
+    "motion:entering:animate-in motion:exiting:animate-out",
+    "motion:entering:fade-in-0 motion:exiting:fade-out-0",
+    "placement-bottom:slide-in-from-top-4 placement-bottom:slide-out-to-top-4",
+    "placement-top:slide-in-from-bottom-4 placement-top:slide-out-to-bottom-4",
+    "placement-left:slide-in-from-right-4 placement-left:slide-out-to-right-4",
+    "placement-right:slide-in-from-left-4 placement-right:slide-out-to-left-4",
   ],
 });
 
