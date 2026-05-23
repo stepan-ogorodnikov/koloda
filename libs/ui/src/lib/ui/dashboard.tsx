@@ -14,7 +14,7 @@ export function Dashboard({ children }: PropsWithChildren) {
 
 const dashboardContent = [
   "grow flex flex-col h-full min-h-0 min-w-0 max-w-screen dt:overflow-hidden",
-  "p-1 tb:px-2 tb:pt-2 max-dt:pb-16 dt:pb-2 bg-transparent",
+  "p-1 tb:px-2 tb:pt-2 max-dt:pb-15 dt:pb-2 bg-transparent",
 ].join(" ");
 
 function DashboardContent({ children }: PropsWithChildren) {
@@ -42,8 +42,9 @@ function DashboardSkipLink() {
   );
 }
 const dashboardAside = [
-  "fixed z-1 flex flex-col max-dt:items-center justify-center gap-4",
-  "dt:static dt:h-full dt:justify-between dt:overflow-y-auto bottom-0 inset-x-0 dt:min-w-48 dt:py-6 dt:pl-2",
+  "flex flex-col justify-center gap-4",
+  "fixed z-1 bottom-0 inset-x-0 max-dt:items-center",
+  "dt:static dt:justify-between dt:h-full dt:min-w-48 dt:py-6 dt:pl-2 dt:overflow-y-auto",
 ].join(" ");
 
 function DashboardAside({ children }: PropsWithChildren) {
@@ -54,10 +55,7 @@ function DashboardAside({ children }: PropsWithChildren) {
   );
 }
 
-const dashboardNav = [
-  "flex grow dt:flex-col dt:overflow-y-auto gap-1",
-  "p-2 max-dt:rounded-t-xl max-dt:border-2 max-dt:border-b-0 max-dt:border-main max-dt:bg-level-1",
-].join(" ");
+const dashboardNav = "flex grow dt:flex-col dt:overflow-y-auto gap-2 p-2";
 
 function DashboardNav({ children }: PropsWithChildren) {
   return (
