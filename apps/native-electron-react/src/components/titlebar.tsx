@@ -1,5 +1,5 @@
 import { getAppPlatform } from "@koloda/app";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type TitlebarOverlayOptions = {
   color: string;
@@ -7,25 +7,38 @@ type TitlebarOverlayOptions = {
   height: number;
 };
 
-type WindowButtonPositionOptions = {
-  titlebarHeight: number;
-};
+type WindowButtonPositionOptions = { titlebarHeight: number };
+
+const platform = getAppPlatform();
+
+const defaultOverlayWidth = (() => {
+  if (platform === "macos") return 64;
+  if (platform === "linux") return Math.round(100 * window.devicePixelRatio);
+  const winBuild = parseInt(navigator.userAgent.match(/Windows NT \d+\.\d+;.*?(\d{5,})/)?.[1] || "0");
+  const base = winBuild >= 22000 ? 140 : 110;
+  return Math.round(base * window.devicePixelRatio);
+})();
 
 const titlebar = [
-  "flex flex-row items-center shrink-0 h-(--titlebar-height) w-full bg-body",
+  "relative flex flex-col",
+  "h-(--titlebar-height) w-full border-b-2 border-main bg-body",
   "box-content select-none [-webkit-user-select:none]",
-  "border-b-2 border-main",
 ].join(" ");
 
-export function ElectronTitlebar() {
-  const platform = getAppPlatform();
+export function Titlebar() {
   const titlebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
   const windowButtonPositionRef = useRef<WindowButtonPositionOptions | undefined>(undefined);
+  const [overlayWidth, setOverlayWidth] = useState(defaultOverlayWidth);
+
+  useEffect(() => {
+    window.electronAPI.invoke<number>("window:get-overlay-width")
+      .then(setOverlayWidth)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     window.electronAPI.on("window:maximize-changed", (...args: unknown[]) => {
-      // Maximize state changes are handled by native Electron overlay
       void args;
     });
   }, []);
@@ -91,7 +104,7 @@ export function ElectronTitlebar() {
       window.removeEventListener("resize", updateWindowControls);
       unsubscribeZoomFactorChanged();
     };
-  }, [platform]);
+  }, []);
 
   const handleDragDoubleClick = () => {
     void window.electronAPI.invoke("window:maximize");
@@ -103,8 +116,11 @@ export function ElectronTitlebar() {
       style={{ appRegion: "drag" } as React.CSSProperties}
       ref={titlebarRef}
     >
-      {platform === "macos" && <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />}
-      {platform !== "macos" && <div className="h-full grow" onDoubleClick={handleDragDoubleClick} />}
+      <div
+        className="flex items-center h-full w-full"
+        style={{ [platform === "macos" ? "paddingLeft" : "paddingRight"]: `${overlayWidth}px` }}
+      />
+      <div className="absolute inset-0" onDoubleClick={handleDragDoubleClick} />
     </div>
   );
 }

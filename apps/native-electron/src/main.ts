@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, screen } from "electron";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import os from "node:os";
 
 const isDev = !app.isPackaged;
 const __dirname = import.meta.dirname!;
@@ -87,6 +88,15 @@ function createWindow() {
   return win;
 }
 
+function getWindowOverlayWidth(): number {
+  if (process.platform === "darwin") return 64;
+  const scaleFactor = screen.getPrimaryDisplay().scaleFactor;
+  if (process.platform === "linux") return Math.round(100 * scaleFactor);
+  const winBuild = parseInt(os.release().split(".").pop() || "0");
+  const base = winBuild >= 22000 ? 140 : 110;
+  return Math.round(base * scaleFactor);
+}
+
 function registerWindowIpc() {
   ipcMain.handle("window:minimize", (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize();
@@ -117,6 +127,7 @@ function registerWindowIpc() {
       });
     },
   );
+  ipcMain.handle("window:get-overlay-width", () => getWindowOverlayWidth());
   ipcMain.handle("window:set-window-button-position", (event, options: { titlebarHeight?: number }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win || process.platform !== "darwin") return;
