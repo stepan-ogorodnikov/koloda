@@ -1,6 +1,5 @@
+import { getAppPlatform } from "@koloda/app";
 import { useEffect, useRef } from "react";
-
-type TitlebarPlatform = "linux" | "macos" | "windows";
 
 type TitlebarOverlayOptions = {
   color: string;
@@ -19,7 +18,7 @@ const titlebar = [
 ].join(" ");
 
 export function ElectronTitlebar() {
-  const platform = getTitlebarPlatform();
+  const platform = getAppPlatform();
   const titlebarRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<TitlebarOverlayOptions | undefined>(undefined);
   const windowButtonPositionRef = useRef<WindowButtonPositionOptions | undefined>(undefined);
@@ -114,16 +113,4 @@ function getTitlebarNativeContentHeight(el: HTMLElement) {
   const contentHeight = parseFloat(getComputedStyle(el).height);
   const height = Number.isNaN(contentHeight) ? el.clientHeight : contentHeight;
   return Math.round(height * window.electronAPI.getZoomFactor());
-}
-
-function getTitlebarPlatform(): TitlebarPlatform {
-  const platform = getNavigatorPlatform().toLowerCase();
-  if (platform.includes("mac")) return "macos";
-  if (platform.includes("win")) return "windows";
-  return "linux";
-}
-
-function getNavigatorPlatform() {
-  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-  return nav.userAgentData?.platform || navigator.userAgent;
 }

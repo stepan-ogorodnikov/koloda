@@ -1,11 +1,11 @@
 import { Cancel01Icon, CopyIcon, MinusSignIcon, SquareIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Button } from "@koloda/ui";
+import { getAppPlatform } from "@koloda/app";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { tv } from "tailwind-variants";
 
-type TitlebarPlatform = "linux" | "macos" | "windows";
 type TitlebarAction = "close" | "maximize" | "minimize";
 
 type TitlebarControl = {
@@ -14,7 +14,7 @@ type TitlebarControl = {
 };
 
 const appWindow = getCurrentWindow();
-const platform = getTitlebarPlatform();
+const platform = getAppPlatform();
 
 const titlebar = tv({
   base:
@@ -166,19 +166,6 @@ function TitlebarControls({ controls, onAction }: TitlebarControlsProps) {
       ))}
     </div>
   );
-}
-
-function getTitlebarPlatform(): TitlebarPlatform {
-  const platform = getNavigatorPlatform().toLowerCase();
-
-  if (platform.includes("mac")) return "macos";
-  if (platform.includes("win")) return "windows";
-  return "linux";
-}
-
-function getNavigatorPlatform() {
-  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
-  return nav.userAgentData?.platform || navigator.userAgent;
 }
 
 function getTitlebarControls(isMaximized: boolean): Record<TitlebarAction, TitlebarControl> {

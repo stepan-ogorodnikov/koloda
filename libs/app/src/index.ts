@@ -1,4 +1,5 @@
 export * from "./lib/db";
+export * from "./lib/environment";
 export * from "./lib/error";
 export * from "./lib/settings";
 export * from "./lib/settings-hotkeys";
