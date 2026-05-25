@@ -27,6 +27,7 @@ use commands::{
     },
 };
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_decorum::WebviewWindowExt;
 use tauri_plugin_http::init as http_init;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -34,33 +35,24 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(http_init())
         .plugin(tauri_plugin_cors_fetch::init())
+        .plugin(tauri_plugin_decorum::init())
         .setup(|app| {
             let db = db::init_db(app.handle()).expect("Failed to initialize database");
             app.manage(db);
 
-            #[cfg(target_os = "macos")]
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            let main_window = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("KOLODA")
                 .inner_size(1280.0, 720.0)
                 .resizable(true)
                 .fullscreen(false)
                 .shadow(true)
-                .decorations(true)
-                .title_bar_style(tauri::TitleBarStyle::Overlay)
-                .hidden_title(true)
                 .build()
                 .expect("Failed to create main window");
 
-            #[cfg(not(target_os = "macos"))]
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
-                .title("KOLODA")
-                .inner_size(1280.0, 720.0)
-                .resizable(true)
-                .fullscreen(false)
-                .shadow(true)
-                .decorations(false)
-                .build()
-                .expect("Failed to create main window");
+            main_window.create_overlay_titlebar().unwrap();
+
+            #[cfg(target_os = "macos")]
+            main_window.set_traffic_lights_inset(12.0, 16.0).unwrap();
 
             Ok(())
         })

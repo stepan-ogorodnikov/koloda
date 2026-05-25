@@ -9,6 +9,7 @@
     "beforeBuildCommand": "nx build native-tauri-react"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [],
     "security": {
       "csp": null

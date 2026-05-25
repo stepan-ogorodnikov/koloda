@@ -6,9 +6,14 @@
   "permissions": [
     "core:default",
     "core:window:allow-close",
+    "core:window:allow-is-maximized",
+    "core:window:allow-maximize",
     "core:window:allow-minimize",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-size",
     "core:window:allow-start-dragging",
     "core:window:allow-toggle-maximize",
-    "cors-fetch:default"
+    "cors-fetch:default",
+    "decorum:allow-show-snap-overlay"
   ]
 }
