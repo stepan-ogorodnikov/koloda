@@ -1,4 +1,5 @@
 import { getAppPlatform } from "@koloda/app";
+import { Titlebar as TitlebarContent } from "@koloda/ui";
 import { useEffect, useRef, useState } from "react";
 
 type TitlebarOverlayOptions = {
@@ -119,7 +120,9 @@ export function Titlebar() {
       <div
         className="flex items-center h-full w-full"
         style={{ [platform === "macos" ? "paddingLeft" : "paddingRight"]: `${overlayWidth}px` }}
-      />
+      >
+        <TitlebarContent />
+      </div>
       <div className="absolute inset-0" onDoubleClick={handleDragDoubleClick} />
     </div>
   );

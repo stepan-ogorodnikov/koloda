@@ -45,4 +45,5 @@ export * from "./lib/ui/hotkey";
 export * from "./lib/ui/hotkey-recorder";
 export * from "./lib/ui/layout";
 export * from "./lib/ui/main";
+export * from "./lib/ui/titlebar";
 export * from "./lib/utility";
