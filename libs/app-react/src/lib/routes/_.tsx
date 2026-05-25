@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_")({
   component: RootRoute,
   beforeLoad: ({ location, context: { queryClient } }) => {
     const data = queryClient.getQueryData(["app"]);
-    if (data === "ok" && location.pathname === "/") throw redirect({ to: appMenu[0].to });
+    if (data === "ok" && location.pathname === "/") throw redirect({ to: appMenu[0].to, replace: true });
   },
   loader: () => ({ title: msg`title.base` }),
 });
