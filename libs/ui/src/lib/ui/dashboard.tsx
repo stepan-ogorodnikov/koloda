@@ -95,13 +95,8 @@ function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
   );
 }
 
-function DashboardControls({ children }: PropsWithChildren) {
-  return <div className="hidden dt:flex flex-col px-2">{children}</div>;
-}
-
 Dashboard.Aside = DashboardAside;
 Dashboard.Content = DashboardContent;
 Dashboard.SkipLink = DashboardSkipLink;
 Dashboard.Nav = DashboardNav;
 Dashboard.NavLink = DashboardNavLink;
-Dashboard.Controls = DashboardControls;

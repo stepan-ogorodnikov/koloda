@@ -12,8 +12,6 @@ import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
 import { useAppHotkeys } from "../hooks/use-app-hotkeys";
 import { useGlobalSync } from "../hooks/use-global-sync";
-import { LanguageSelect } from "../settings/interface-controls/language-select";
-import { ThemeSelect } from "../settings/interface-controls/theme-select";
 
 export const appMenu = [
   { to: "/dashboard", t: msg`nav.home`, icon: Home07Icon, cn: "max-dt:order-2" },
@@ -39,10 +37,6 @@ export function App({ children }: PropsWithChildren) {
         <Dashboard.Nav>
           {appMenu.map(({ cn, to, t, icon }) => <Dashboard.NavLink cn={cn} to={to} msg={t} icon={icon} key={to} />)}
         </Dashboard.Nav>
-        <Dashboard.Controls>
-          <ThemeSelect buttonVariants={{ style: "ghost" }} withChevron={false} />
-          <LanguageSelect buttonVariants={{ style: "ghost" }} withChevron={false} />
-        </Dashboard.Controls>
       </Dashboard.Aside>
       <Dashboard.Content>
         <Main>
