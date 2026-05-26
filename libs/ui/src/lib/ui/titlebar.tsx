@@ -1,12 +1,13 @@
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ArrowRight01Icon, PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@koloda/ui";
+import { Button, useDashboardDrawer } from "@koloda/ui";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function Titlebar() {
   const router = useRouter();
   const canGoBack = useCanGoBack();
+  const { close, isOpen, isToggleDisabled, open } = useDashboardDrawer();
   const [canGoForward, setCanGoForward] = useState(false);
   const forwardStackRef = useRef<string[]>([]);
   const isProgrammaticRef = useRef(false);
@@ -38,9 +39,26 @@ export function Titlebar() {
     router.history.forward();
   }, [router]);
 
+  const handleDrawerToggle = useCallback(() => {
+    if (isOpen) {
+      close();
+      return;
+    }
+    open();
+  }, [close, isOpen, open]);
+
   return (
     <div className="grow flex flex-row items-center h-full shrink-0 gap-2 px-2">
-      <div className="relative z-10 flex flex-row gap-2 [-webkit-app-region:no-drag]">
+      <div className="relative z-100 flex flex-row gap-2 [-webkit-app-region:no-drag]">
+        <Button
+          variants={{ style: "ghost", size: "smallIcon", class: "tb:hidden" }}
+          aria-label="Toggle navigation"
+          aria-pressed={isOpen}
+          isDisabled={isToggleDisabled}
+          onPress={handleDrawerToggle}
+        >
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={PanelLeftIcon} aria-hidden="true" />
+        </Button>
         <Button
           variants={{ style: "ghost", size: "smallIcon" }}
           aria-label="Go back"

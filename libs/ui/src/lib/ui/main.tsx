@@ -1,13 +1,22 @@
+import { getCSSVar, useDashboardDrawer } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
+import { useMediaQuery } from "@react-hook/media-query";
 import type { ComponentProps, PropsWithChildren } from "react";
+import { Children, isValidElement } from "react";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 
-export const main = [
-  "grow flex flex-row h-full min-h-0 min-w-0 items-stretch bg-level-1 no-focus-ring",
-].join(" ");
-
 export function Main({ children }: PropsWithChildren) {
-  return <div className={main} id="main" tabIndex={-1}>{children}</div>;
+  return (
+    <div
+      className="grow flex flex-row h-full min-h-0 min-w-0 items-stretch bg-level-1 no-focus-ring"
+      id="main"
+      tabIndex={-1}
+    >
+      {children}
+    </div>
+  );
 }
 
 export const mainTitlebar =
@@ -57,7 +66,29 @@ const mainSidebar = tv({
 type MainSidebarProps = PropsWithChildren & { hasContent?: boolean };
 
 function MainSidebar({ hasContent, children }: MainSidebarProps) {
-  return <div className={mainSidebar({ hasContent })}>{children}</div>;
+  const { setToggleDisabled, sidebarPortal } = useDashboardDrawer();
+  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const drawerChildren = Children.toArray(children).filter((child) => (
+    !isValidElement(child) || child.type !== MainTitlebar
+  ));
+
+  useEffect(() => {
+    setToggleDisabled(hasContent === false);
+    return () => setToggleDisabled(false);
+  }, [hasContent, setToggleDisabled]);
+
+  const content = <div className={mainSidebar({ hasContent })}>{children}</div>;
+
+  if (hasContent && isDrawerLayout) {
+    return sidebarPortal
+      ? createPortal(
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">{drawerChildren}</div>,
+        sidebarPortal,
+      )
+      : null;
+  }
+
+  return content;
 }
 
 const mainSidebarItem = "relative flex flex-col border-b-2 border-main truncate";
