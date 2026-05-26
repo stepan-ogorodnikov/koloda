@@ -6,19 +6,20 @@ import { useLingui } from "@lingui/react";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
-const dashboard = "grow flex flex-col dt:flex-row h-full w-full min-w-80 max-w-360 dt:overflow-hidden";
-
 export function Dashboard({ children }: PropsWithChildren) {
-  return <div className={dashboard}>{children}</div>;
+  return (
+    <div className="grow flex flex-row h-full w-full min-w-80 overflow-hidden">
+      {children}
+    </div>
+  );
 }
 
-const dashboardContent = [
-  "grow flex flex-col h-full min-h-0 min-w-0 max-w-screen dt:overflow-hidden",
-  "p-1 tb:px-2 tb:pt-2 max-dt:pb-15 dt:pb-2 bg-transparent",
-].join(" ");
-
 function DashboardContent({ children }: PropsWithChildren) {
-  return <div className={dashboardContent}>{children}</div>;
+  return (
+    <div className="grow flex flex-col h-full min-h-0 min-w-0 p-1 overflow-hidden bg-transparent">
+      {children}
+    </div>
+  );
 }
 
 const dashboardSkipLink =
@@ -41,25 +42,10 @@ function DashboardSkipLink() {
     </Button>
   );
 }
-const dashboardAside = [
-  "flex flex-col justify-center gap-4",
-  "fixed z-1 bottom-0 inset-x-0 max-dt:items-center",
-  "dt:static dt:justify-between dt:h-full dt:min-w-48 dt:py-6 dt:pl-2 dt:overflow-y-auto",
-].join(" ");
-
-function DashboardAside({ children }: PropsWithChildren) {
-  return (
-    <div className={dashboardAside}>
-      {children}
-    </div>
-  );
-}
-
-const dashboardNav = "flex grow dt:flex-col dt:overflow-y-auto gap-2 p-2";
 
 function DashboardNav({ children }: PropsWithChildren) {
   return (
-    <nav className={dashboardNav}>
+    <nav className="flex flex-col shrink-0 gap-2 p-2 border-r-2 border-main overflow-y-auto">
       {children}
     </nav>
   );
@@ -67,14 +53,11 @@ function DashboardNav({ children }: PropsWithChildren) {
 
 const dashboardNavLink = tv({
   base: [
-    "flex flex-row items-center gap-2 p-2 rounded-xl focus-ring animate-colors",
+    "flex flex-row items-center gap-2 min-w-10 p-2 rounded-xl focus-ring animate-colors",
     "current:bg-nav-active border-2 border-transparent current:border-nav-active current:shadow-nav-active",
     "fg-nav-item hover:fg-nav-active current:fg-nav-active font-medium tracking-wide",
   ],
 });
-
-const dashboardNavLinkIcon = "size-6 dt:size-5 min-w-6 dt:min-w-5";
-const dashboardNavLinkText = "max-dt:hidden";
 
 type DashboardNavLinkProps = {
   cn?: string;
@@ -89,13 +72,17 @@ function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
 
   return (
     <Link className={dashboardNavLink({ class: cn })} to={to} viewTransition={isMotionOn} key={to}>
-      <HugeiconsIcon className={dashboardNavLinkIcon} strokeWidth={1.75} icon={icon} aria-hidden="true" />
-      <span className={dashboardNavLinkText}>{_(msg)}</span>
+      <HugeiconsIcon
+        className="size-5 min-w-5"
+        strokeWidth={1.75}
+        icon={icon}
+        aria-hidden="true"
+      />
+      <span className="max-dt:hidden pr-2">{_(msg)}</span>
     </Link>
   );
 }
 
-Dashboard.Aside = DashboardAside;
 Dashboard.Content = DashboardContent;
 Dashboard.SkipLink = DashboardSkipLink;
 Dashboard.Nav = DashboardNav;
