@@ -16,7 +16,7 @@ export function Dashboard({ children }: PropsWithChildren) {
 
 function DashboardContent({ children }: PropsWithChildren) {
   return (
-    <div className="grow flex flex-col h-full min-h-0 min-w-0 p-1 overflow-hidden bg-transparent">
+    <div className="grow flex flex-col h-full min-h-0 min-w-0 overflow-hidden bg-transparent">
       {children}
     </div>
   );
