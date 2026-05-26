@@ -195,6 +195,7 @@
 }
 
 @theme {
+  --titlebar-height: 2.5rem;
   --breakpoint-*: initial;
   --breakpoint-tb: 48rem; /* tablet */
   --breakpoint-dt: 80rem; /* desktop */
@@ -292,14 +293,6 @@
   /* chat */
   --color-bg-chat-message: var(--bg-level-2);
   --color-border-chat-message: var(--border-chat-message);
-}
-
-:root[data-app="native"] {
-  --titlebar-height: 2.5rem;
-}
-
-:root[data-app="web"] {
-  --titlebar-height: 0;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
