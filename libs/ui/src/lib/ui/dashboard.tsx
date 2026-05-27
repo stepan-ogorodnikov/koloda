@@ -1,5 +1,5 @@
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Button, getCSSVar, Link, useMotionSetting } from "@koloda/ui";
+import { getCSSVar, Link, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -162,27 +162,6 @@ function DashboardContent({ children }: PropsWithChildren) {
   );
 }
 
-const dashboardSkipLink =
-  "sr-only focus:not-sr-only focus:fixed focus:z-100 focus:top-4 focus:left-4 focus:px-4 focus:py-2";
-
-function DashboardSkipLink() {
-  const { _ } = useLingui();
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    document.getElementById("main")?.focus();
-  };
-
-  return (
-    <Button
-      variants={{ style: "primary", class: dashboardSkipLink }}
-      onClick={handleClick}
-    >
-      {_(msg`dashboard.skip-link`)}
-    </Button>
-  );
-}
-
 function DashboardNav({ children }: PropsWithChildren) {
   const context = useContext(DashboardDrawerContext);
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
@@ -282,6 +261,5 @@ function DashboardDrawer({ setNavPortal, setSidebarPortal }: DashboardDrawerProp
 }
 
 Dashboard.Content = DashboardContent;
-Dashboard.SkipLink = DashboardSkipLink;
 Dashboard.Nav = DashboardNav;
 Dashboard.NavLink = DashboardNavLink;
