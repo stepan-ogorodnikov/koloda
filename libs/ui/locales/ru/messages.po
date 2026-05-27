@@ -17,7 +17,11 @@ msgstr ""
 msgid "back-button.label"
 msgstr "Перейти обратно"
 
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:40
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:265
+msgid "dashboard.drawer.label"
+msgstr "Панель навигации"
+
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:181
 msgid "dashboard.skip-link"
 msgstr "Перейти к содержимому"
 
@@ -110,3 +114,15 @@ msgstr "На странице:"
 #: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:48
 msgid "table.pagination.records.label"
 msgstr "из"
+
+#: ../../libs/ui/src/lib/ui/titlebar-navigation.tsx:48
+msgid "titlebar.navigation.back"
+msgstr "Назад"
+
+#: ../../libs/ui/src/lib/ui/titlebar-navigation.tsx:56
+msgid "titlebar.navigation.forward"
+msgstr "Вперёд"
+
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:23
+msgid "titlebar.sidebar-controls.label"
+msgstr "Переключить боковую панель"

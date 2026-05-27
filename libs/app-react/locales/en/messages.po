@@ -45,23 +45,23 @@ msgstr "Change hotkey"
 msgid "language-select.label"
 msgstr "Language"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:21
+#: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.algorithms"
 msgstr "Presets"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:20
+#: ../../libs/app-react/src/lib/components/app.tsx:18
 msgid "nav.decks"
 msgstr "Decks"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:19
+#: ../../libs/app-react/src/lib/components/app.tsx:17
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:23
+#: ../../libs/app-react/src/lib/components/app.tsx:21
 msgid "nav.settings"
 msgstr "Settings"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:22
+#: ../../libs/app-react/src/lib/components/app.tsx:20
 msgid "nav.templates"
 msgstr "Templates"
 

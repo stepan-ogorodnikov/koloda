@@ -17,7 +17,11 @@ msgstr ""
 msgid "back-button.label"
 msgstr "Go back"
 
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:40
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:265
+msgid "dashboard.drawer.label"
+msgstr "Navigation"
+
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:181
 msgid "dashboard.skip-link"
 msgstr "Skip to content"
 
@@ -110,3 +114,15 @@ msgstr "Per page:"
 #: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:48
 msgid "table.pagination.records.label"
 msgstr "of"
+
+#: ../../libs/ui/src/lib/ui/titlebar-navigation.tsx:48
+msgid "titlebar.navigation.back"
+msgstr "Go back"
+
+#: ../../libs/ui/src/lib/ui/titlebar-navigation.tsx:56
+msgid "titlebar.navigation.forward"
+msgstr "Go forward"
+
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:23
+msgid "titlebar.sidebar-controls.label"
+msgstr "Toggle navigation panel"

@@ -236,6 +236,7 @@ type DashboardDrawerProps = {
 };
 
 function DashboardDrawer({ setNavPortal, setSidebarPortal }: DashboardDrawerProps) {
+  const { _ } = useLingui();
   const { isOpen, close } = useDashboardDrawer();
 
   useEffect(() => {
@@ -260,19 +261,19 @@ function DashboardDrawer({ setNavPortal, setSidebarPortal }: DashboardDrawerProp
       }}
     >
       <div
-        className="flex h-full w-full max-w-80 flex-col bg-level-1 border-r-2 border-main focus-ring animate-in slide-in-from-left"
+        className="flex flex-col h-full w-full max-w-80 border-r-2 border-main bg-level-1 focus-ring animate-in slide-in-from-left"
+        aria-label={_(msg`dashboard.drawer.label`)}
         role="dialog"
-        aria-label="Navigation"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div
-          className="flex grow min-h-0 flex-row overflow-hidden"
+          className="grow flex flex-row min-h-0 overflow-hidden"
           onClickCapture={(event) => {
             if (event.target instanceof HTMLElement && event.target.closest("a")) close();
           }}
         >
-          <div ref={setNavPortal} className="h-full shrink-0 flex flex-col overflow-hidden" />
-          <div ref={setSidebarPortal} className="grow flex flex-col min-w-0 overflow-hidden" />
+          <div className="flex flex-col shrink-0 h-full overflow-hidden" ref={setNavPortal} />
+          <div className="grow flex flex-col min-w-0 overflow-hidden" ref={setSidebarPortal} />
         </div>
       </div>
     </div>,

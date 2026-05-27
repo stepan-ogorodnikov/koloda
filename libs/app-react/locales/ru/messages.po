@@ -45,23 +45,23 @@ msgstr "Сменить сочетание клавиш"
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:21
+#: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.algorithms"
 msgstr "Алгоритмы"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:20
+#: ../../libs/app-react/src/lib/components/app.tsx:18
 msgid "nav.decks"
 msgstr "Колоды"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:19
+#: ../../libs/app-react/src/lib/components/app.tsx:17
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:23
+#: ../../libs/app-react/src/lib/components/app.tsx:21
 msgid "nav.settings"
 msgstr "Настройки"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:22
+#: ../../libs/app-react/src/lib/components/app.tsx:20
 msgid "nav.templates"
 msgstr "Шаблоны"
 
