@@ -1,11 +1,11 @@
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { QueryState } from "@koloda/ui";
-import { BackButton, Main, useRouteFocus } from "@koloda/ui";
+import { Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useCanGoBack, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { SettingsHotkeys } from "../settings/settings-hotkeys";
 
@@ -22,8 +22,6 @@ function SettingsHotkeysRoute() {
   useTitle();
   const ref = useRouteFocus();
   const { _ } = useLingui();
-  const router = useRouter();
-  const canGoBack = useCanGoBack();
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
     ...getSettingsQuery<"hotkeys">("hotkeys"),
@@ -33,7 +31,6 @@ function SettingsHotkeysRoute() {
   return (
     <>
       <Main.Titlebar>
-        {canGoBack && <BackButton onClick={() => router.history.back()} />}
         <Main.H1>{_(msg`settings.hotkeys`)}</Main.H1>
       </Main.Titlebar>
       <Main.Container ref={ref} tabIndex={-1}>

@@ -3,11 +3,11 @@ import { DeckCards } from "@koloda/srs-react";
 import { DeckDetails } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
-import { BackButton, Main, Tabs, useRouteFocus } from "@koloda/ui";
+import { Main, Tabs, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/decks/$deckId")({
@@ -32,7 +32,6 @@ function DeckRoute() {
   const { deckId } = Route.useParams();
   const ref = useRouteFocus(deckId);
   const id = Number(deckId);
-  const router = useRouter();
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
 
@@ -41,7 +40,6 @@ function DeckRoute() {
   return (
     <Tabs defaultSelectedKey="cards">
       <Main.Titlebar>
-        <BackButton onClick={() => router.navigate({ to: "/decks" })} />
         <Main.H2>{query.data?.title}</Main.H2>
         {query.data && (
           <Tabs.List aria-label={_(msg`deck.tabs.label`)}>

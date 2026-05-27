@@ -38,7 +38,6 @@ export * from "./lib/primitives/table/table-pagination";
 export * from "./lib/primitives/tabs";
 export * from "./lib/types";
 export * from "./lib/ui/add-hotkey-button";
-export * from "./lib/ui/back-button";
 export * from "./lib/ui/dashboard";
 export * from "./lib/ui/delete-dialog";
 export * from "./lib/ui/hotkey";
