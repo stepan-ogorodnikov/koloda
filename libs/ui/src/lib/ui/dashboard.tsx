@@ -81,7 +81,7 @@ function DashboardContent({ children }: PropsWithChildren) {
 }
 
 function DashboardNav({ children }: PropsWithChildren) {
-  const { navPortal } = useDashboardDrawer();
+  const { navPortal, isToggleDisabled } = useDashboardDrawer();
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
 
   const content = (
@@ -90,7 +90,7 @@ function DashboardNav({ children }: PropsWithChildren) {
     </nav>
   );
 
-  if (isDrawerLayout) return navPortal ? createPortal(content, navPortal) : null;
+  if (isDrawerLayout && !isToggleDisabled) return navPortal ? createPortal(content, navPortal) : null;
 
   return content;
 }
