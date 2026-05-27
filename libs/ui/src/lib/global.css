@@ -195,14 +195,16 @@
 }
 
 @theme {
-  --titlebar-height: 2.5rem;
+  /* breakpoints */
   --breakpoint-*: initial;
   --breakpoint-tb: 48rem; /* tablet */
   --breakpoint-dt: 80rem; /* desktop */
-  --font-sans: "Inter Variable", sans-serif;
   /* containers */
-  --container-layout: --spacing(360);
   --container-main: --spacing(235);
+  /* sizes */
+  --titlebar-height: 2.5rem;
+  /* fonts */
+  --font-sans: "Inter Variable", sans-serif;
   /* colors */
   --color-bg-body: var(--bg-body);
   --color-bg-level-1: var(--bg-level-1);

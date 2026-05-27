@@ -21,7 +21,7 @@ const defaultOverlayWidth = (() => {
 })();
 
 const titlebar = [
-  "relative flex flex-col",
+  "relative flex flex-col shrink-0",
   "h-(--titlebar-height) w-full border-b-2 border-main bg-body",
   "box-content select-none [-webkit-user-select:none]",
 ].join(" ");

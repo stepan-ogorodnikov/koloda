@@ -80,19 +80,12 @@ function DashboardContent({ children }: PropsWithChildren) {
   );
 }
 
-const dashboardNav = tv({
-  base: "flex flex-col gap-2 h-full p-2 border-r-2 border-main overflow-y-auto",
-  variants: {
-    isCollapsed: { true: "w-auto", false: "w-52" },
-  },
-});
-
 function DashboardNav({ children }: PropsWithChildren) {
-  const { navPortal, isNavCollapsed } = useDashboardDrawer();
+  const { navPortal } = useDashboardDrawer();
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
 
   const content = (
-    <nav className={dashboardNav({ isCollapsed: !isDrawerLayout && isNavCollapsed })}>
+    <nav className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main overflow-y-auto">
       {children}
     </nav>
   );
@@ -104,35 +97,34 @@ function DashboardNav({ children }: PropsWithChildren) {
 
 const dashboardNavLink = tv({
   base: [
-    "flex flex-row items-center gap-2 min-w-10 p-2 rounded-xl focus-ring animate-colors",
+    "flex flex-row items-center shrink-0 gap-2 min-w-10 p-2 rounded-xl focus-ring animate-colors",
     "current:bg-nav-active border-2 border-transparent current:border-nav-active current:shadow-nav-active",
     "fg-nav-item hover:fg-nav-active current:fg-nav-active font-medium tracking-wide",
   ],
 });
 
 type DashboardNavLinkProps = {
-  cn?: string;
   to: string;
   msg: MessageDescriptor;
   icon: IconSvgElement;
 };
 
-function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
+function DashboardNavLink({ to, msg, icon }: DashboardNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const { close, isNavCollapsed } = useDashboardDrawer();
   const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-tb")})`);
-  const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : true;
+  const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : false;
 
   return (
-    <Link className={dashboardNavLink({ class: cn })} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
+    <Link className={dashboardNavLink()} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
       <HugeiconsIcon
         className="size-5 min-w-5"
         strokeWidth={1.75}
         icon={icon}
         aria-hidden="true"
       />
-      {isTextVisible && <span className="pr-2 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
+      {isTextVisible && <span className="pr-4 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
     </Link>
   );
 }
@@ -168,17 +160,12 @@ function DashboardDrawer({ setNavPortal, setSidebarPortal }: DashboardDrawerProp
       }}
     >
       <div
-        className="flex flex-col h-full w-full max-w-80 border-r-2 border-main bg-level-1 focus-ring animate-in slide-in-from-left"
+        className="flex flex-col h-full w-80 border-r-2 border-main bg-level-1 focus-ring animate-in slide-in-from-left"
         aria-label={_(msg`dashboard.drawer.label`)}
         role="dialog"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div
-          className="grow flex flex-row min-h-0 overflow-hidden"
-          onClickCapture={(event) => {
-            if (event.target instanceof HTMLElement && event.target.closest("a")) close();
-          }}
-        >
+        <div className="grow flex flex-row min-h-0 overflow-hidden">
           <div className="flex flex-col shrink-0 h-full overflow-hidden" ref={setNavPortal} />
           <div className="grow flex flex-col min-w-0 overflow-hidden" ref={setSidebarPortal} />
         </div>
