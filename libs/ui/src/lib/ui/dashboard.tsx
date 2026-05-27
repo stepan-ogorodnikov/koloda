@@ -4,153 +4,71 @@ import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
+import { atom, useAtom } from "jotai";
 import type { Dispatch, PropsWithChildren, SetStateAction } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 
-type DashboardDrawerContextValue = {
-  isOpen: boolean;
-  isToggleDisabled: boolean;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  setIsToggleDisabled: Dispatch<SetStateAction<boolean>>;
+const drawerOpenAtom = atom(false);
+const drawerToggleDisabledAtom = atom(false);
+const navCollapsedAtom = atom(false);
+
+type DashboardPortalContextValue = {
   navPortal: HTMLElement | null;
   sidebarPortal: HTMLElement | null;
 };
 
-type DashboardDrawerState = {
-  isOpen: boolean;
-  isToggleDisabled: boolean;
-};
-
-const defaultDashboardDrawerState = {
-  isOpen: false,
-  isToggleDisabled: false,
-};
-
-const DashboardDrawerContext = createContext<DashboardDrawerContextValue | null>(null);
-const dashboardDrawerOpenEvent = "koloda:dashboard-drawer-open";
-const dashboardDrawerCloseEvent = "koloda:dashboard-drawer-close";
-const dashboardDrawerToggleEvent = "koloda:dashboard-drawer-toggle";
-const dashboardDrawerRequestStateEvent = "koloda:dashboard-drawer-request-state";
-const dashboardDrawerStateEvent = "koloda:dashboard-drawer-state";
+const DashboardPortalContext = createContext<DashboardPortalContextValue | null>(null);
 
 export function useDashboardDrawer() {
-  const context = useContext(DashboardDrawerContext);
-  const contextSetIsOpen = context?.setIsOpen;
-  const contextSetIsToggleDisabled = context?.setIsToggleDisabled;
-  const [externalState, setExternalState] = useState<DashboardDrawerState>(defaultDashboardDrawerState);
-  const isToggleDisabled = context?.isToggleDisabled ?? externalState.isToggleDisabled;
+  const [isOpen, setIsOpen] = useAtom(drawerOpenAtom);
+  const [isToggleDisabled, setIsToggleDisabled] = useAtom(drawerToggleDisabledAtom);
+  const [isNavCollapsed, setIsNavCollapsed] = useAtom(navCollapsedAtom);
+  const portals = useContext(DashboardPortalContext);
 
   useEffect(() => {
-    if (context) return;
-
-    const handleState = (event: Event) => {
-      const { detail } = event as CustomEvent<DashboardDrawerState>;
-      if (!detail) return;
-      setExternalState(detail);
-    };
-
-    window.addEventListener(dashboardDrawerStateEvent, handleState);
-    window.dispatchEvent(new Event(dashboardDrawerRequestStateEvent));
-
-    return () => window.removeEventListener(dashboardDrawerStateEvent, handleState);
-  }, [context]);
+    if (isToggleDisabled) setIsOpen(false);
+  }, [isToggleDisabled, setIsOpen]);
 
   const open = useCallback(() => {
-    if (contextSetIsOpen) {
-      if (!isToggleDisabled) contextSetIsOpen(true);
-      return;
-    }
-    if (isToggleDisabled) return;
-    setExternalState((state) => ({ ...state, isOpen: true }));
-    window.dispatchEvent(new Event(dashboardDrawerOpenEvent));
-  }, [contextSetIsOpen, isToggleDisabled]);
+    if (!isToggleDisabled) setIsOpen(true);
+  }, [isToggleDisabled, setIsOpen]);
 
   const close = useCallback(() => {
-    if (contextSetIsOpen) {
-      contextSetIsOpen(false);
-      return;
-    }
-    setExternalState((state) => ({ ...state, isOpen: false }));
-    window.dispatchEvent(new Event(dashboardDrawerCloseEvent));
-  }, [contextSetIsOpen]);
+    setIsOpen(false);
+  }, [setIsOpen]);
 
   const toggle = useCallback(() => {
-    if (contextSetIsOpen) {
-      if (!isToggleDisabled) contextSetIsOpen((isOpen) => !isOpen);
-      return;
-    }
-    if (isToggleDisabled) return;
-    setExternalState((state) => ({ ...state, isOpen: !state.isOpen }));
-    window.dispatchEvent(new Event(dashboardDrawerToggleEvent));
-  }, [contextSetIsOpen, isToggleDisabled]);
-
-  const setToggleDisabled = useCallback((isDisabled: boolean) => {
-    contextSetIsToggleDisabled?.(isDisabled);
-  }, [contextSetIsToggleDisabled]);
+    if (!isToggleDisabled) setIsOpen((prev) => !prev);
+  }, [isToggleDisabled, setIsOpen]);
 
   return {
-    isOpen: context?.isOpen ?? externalState.isOpen,
+    isOpen,
     isToggleDisabled,
     open,
     close,
     toggle,
-    setToggleDisabled,
-    sidebarPortal: context?.sidebarPortal ?? null,
+    setToggleDisabled: setIsToggleDisabled,
+    navPortal: portals?.navPortal ?? null,
+    sidebarPortal: portals?.sidebarPortal ?? null,
+    isNavCollapsed,
+    setIsNavCollapsed,
   };
 }
 
 export function Dashboard({ children }: PropsWithChildren) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isToggleDisabled, setIsToggleDisabled] = useState(false);
   const [navPortal, setNavPortal] = useState<HTMLElement | null>(null);
   const [sidebarPortal, setSidebarPortal] = useState<HTMLElement | null>(null);
-  const broadcastState = useCallback(() => {
-    window.dispatchEvent(
-      new CustomEvent<DashboardDrawerState>(dashboardDrawerStateEvent, { detail: { isOpen, isToggleDisabled } }),
-    );
-  }, [isOpen, isToggleDisabled]);
-
-  useEffect(() => {
-    broadcastState();
-  }, [broadcastState]);
-
-  useEffect(() => {
-    if (isToggleDisabled) setIsOpen(false);
-  }, [isToggleDisabled]);
-
-  useEffect(() => {
-    const open = () => {
-      if (!isToggleDisabled) setIsOpen(true);
-    };
-    const close = () => setIsOpen(false);
-    const toggle = () => {
-      if (!isToggleDisabled) setIsOpen((isOpen) => !isOpen);
-    };
-
-    window.addEventListener(dashboardDrawerOpenEvent, open);
-    window.addEventListener(dashboardDrawerCloseEvent, close);
-    window.addEventListener(dashboardDrawerToggleEvent, toggle);
-    window.addEventListener(dashboardDrawerRequestStateEvent, broadcastState);
-
-    return () => {
-      window.removeEventListener(dashboardDrawerOpenEvent, open);
-      window.removeEventListener(dashboardDrawerCloseEvent, close);
-      window.removeEventListener(dashboardDrawerToggleEvent, toggle);
-      window.removeEventListener(dashboardDrawerRequestStateEvent, broadcastState);
-    };
-  }, [broadcastState, isToggleDisabled]);
+  const portalValue = useMemo(() => ({ navPortal, sidebarPortal }), [navPortal, sidebarPortal]);
 
   return (
-    <DashboardDrawerContext.Provider
-      value={{ isOpen, isToggleDisabled, setIsOpen, setIsToggleDisabled, navPortal, sidebarPortal }}
-    >
+    <DashboardPortalContext.Provider value={portalValue}>
       <div className="grow flex flex-row h-full w-full min-w-80 overflow-hidden">
         {children}
         <DashboardDrawer setNavPortal={setNavPortal} setSidebarPortal={setSidebarPortal} />
       </div>
-    </DashboardDrawerContext.Provider>
+    </DashboardPortalContext.Provider>
   );
 }
 
@@ -162,16 +80,24 @@ function DashboardContent({ children }: PropsWithChildren) {
   );
 }
 
+const dashboardNav = tv({
+  base: "flex flex-col gap-2 h-full p-2 border-r-2 border-main overflow-y-auto",
+  variants: {
+    isCollapsed: { true: "w-auto", false: "w-52" },
+  },
+});
+
 function DashboardNav({ children }: PropsWithChildren) {
-  const context = useContext(DashboardDrawerContext);
+  const { navPortal, isNavCollapsed } = useDashboardDrawer();
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+
   const content = (
-    <nav className="flex h-full flex-col shrink-0 gap-2 p-2 border-r-2 border-main overflow-y-auto">
+    <nav className={dashboardNav({ isCollapsed: !isDrawerLayout && isNavCollapsed })}>
       {children}
     </nav>
   );
 
-  if (isDrawerLayout) return context?.navPortal ? createPortal(content, context.navPortal) : null;
+  if (isDrawerLayout) return navPortal ? createPortal(content, navPortal) : null;
 
   return content;
 }
@@ -194,7 +120,9 @@ type DashboardNavLinkProps = {
 function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
-  const { close } = useDashboardDrawer();
+  const { close, isNavCollapsed } = useDashboardDrawer();
+  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-tb")})`);
+  const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : true;
 
   return (
     <Link className={dashboardNavLink({ class: cn })} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
@@ -204,7 +132,7 @@ function DashboardNavLink({ cn, to, msg, icon }: DashboardNavLinkProps) {
         icon={icon}
         aria-hidden="true"
       />
-      <span className="max-dt:hidden pr-2">{_(msg)}</span>
+      {isTextVisible && <span className="pr-2 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
     </Link>
   );
 }
