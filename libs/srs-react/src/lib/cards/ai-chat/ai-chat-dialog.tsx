@@ -100,7 +100,7 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
           <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
         </Button>
         {!hasProfiles && (
-          <Tooltip content={_(msg`ai-chat.no-profiles`)} delay={0}>
+          <Tooltip content={_(msg`ai-chat.no-profiles`)}>
             <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
           </Tooltip>
         )}

@@ -1,8 +1,8 @@
 import type { TWVProps } from "@koloda/ui";
 import type { ComponentProps, ReactNode, RefObject } from "react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useFocusRing } from "react-aria";
-import type { PlacementAxis } from "react-aria";
+import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { mergeProps, useFocusRing } from "react-aria";
+import type { Placement, PlacementAxis } from "react-aria";
 import {
   Focusable,
   OverlayArrow,
@@ -12,20 +12,20 @@ import {
 import type { TooltipProps as ReactAriaTooltipProps, TooltipTriggerComponentProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-export type TooltipProps = TooltipTriggerComponentProps & { content?: ReactNode };
+export type TooltipProps = TooltipTriggerComponentProps & { content?: ReactNode; placement?: Placement };
 
-export function Tooltip({ children, content, delay = 700, closeDelay = 300, ...props }: TooltipProps) {
+export function Tooltip({ children, content, delay = 0, closeDelay = 250, placement, ...props }: TooltipProps) {
   return (
     <ReactAriaTooltipTrigger delay={delay} closeDelay={closeDelay} {...props}>
-      {children}
-      <TooltipContent>{content}</TooltipContent>
+      <Focusable>{children as any}</Focusable>
+      <TooltipContent placement={placement}>{content}</TooltipContent>
     </ReactAriaTooltipTrigger>
   );
 }
 
 const tooltipContent = tv({
   base: [
-    "relative isolate flex flex-col overflow-visible p-2 border-0",
+    "relative isolate flex flex-col overflow-visible py-2 px-3 border-0",
     "rounded-md bg-transparent fg-level-2 shadow-overlay-frame",
     "placement-top:mb-[13px] placement-bottom:mt-[13px] placement-left:mr-[13px] placement-right:ml-[13px]",
     "motion:entering:animate-in motion:exiting:animate-out",
@@ -322,22 +322,22 @@ const tooltipTrigger = tv({
 
 type TooltipTriggerProps = ComponentProps<"div"> & TWVProps<typeof tooltipTrigger>;
 
-function TooltipTrigger({ variants, ...props }: TooltipTriggerProps) {
-  let { focusProps, isFocusVisible } = useFocusRing();
+const TooltipTrigger = forwardRef<HTMLDivElement, TooltipTriggerProps>(
+  function TooltipTrigger({ variants, ...props }, ref) {
+    const { focusProps, isFocusVisible } = useFocusRing();
 
-  return (
-    <Focusable>
+    return (
       <div
         className={tooltipTrigger(variants)}
+        ref={ref}
         role="button"
         tabIndex={0}
         data-focus-visible={isFocusVisible || undefined}
-        {...focusProps}
-        {...props}
+        {...mergeProps(focusProps, props)}
       />
-    </Focusable>
-  );
-}
+    );
+  },
+);
 
 Tooltip.Root = TooltipTrigger;
 Tooltip.Content = TooltipContent;

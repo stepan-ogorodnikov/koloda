@@ -49,7 +49,7 @@ export function AiChatContextUsage({ usage, contextLength }: AiChatContextUsageP
   );
 
   return (
-    <Tooltip content={content} delay={0}>
+    <Tooltip content={content}>
       <Tooltip.Trigger
         variants={{ class: "flex items-center justify-center size-10 min-w-10 hover:bg-button-hover animate-colors" }}
       >
