@@ -20,6 +20,7 @@ describe("settings-hotkeys", () => {
         nextTab: [],
         prevTab: [],
         close: [],
+        toggleSidebarControls: [],
       },
       navigation: {
         dashboard: [],

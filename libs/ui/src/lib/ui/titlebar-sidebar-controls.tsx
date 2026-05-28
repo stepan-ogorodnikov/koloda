@@ -1,5 +1,6 @@
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Button, getCSSVar, useDashboardDrawer } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -10,6 +11,7 @@ export function TitlebarSidebarControls() {
   const { _ } = useLingui();
   const { close, isNavCollapsed, isOpen, isToggleDisabled, open, setIsNavCollapsed } = useDashboardDrawer();
   const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-tb")})`);
+  const { ui } = useHotkeysSettings();
 
   const handleAction = useCallback(() => {
     if (isLargerBreakpoint) {
@@ -22,6 +24,8 @@ export function TitlebarSidebarControls() {
     }
     open();
   }, [close, isLargerBreakpoint, isOpen, open, setIsNavCollapsed]);
+
+  useAppHotkey(ui.toggleSidebarControls, handleAction, "", { ignoreInputs: false });
 
   return (
     <Button

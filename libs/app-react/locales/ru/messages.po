@@ -25,7 +25,7 @@ msgstr "Карточки"
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:47
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:45
 msgid "deck.tabs.label"
 msgstr "Вкладки колоды"
 
@@ -65,7 +65,7 @@ msgstr "Настройки"
 msgid "nav.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:33
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:30
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "ИИ"
@@ -169,12 +169,12 @@ msgstr "Название"
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:34
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.hotkeys"
 msgstr "Горячие клавиши"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:28
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:25
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
 msgid "settings.interface"
 msgstr "Интерфейс"
@@ -191,7 +191,7 @@ msgstr "Анимации"
 msgid "settings.interface.theme"
 msgstr "Тема оформления"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:34
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Изучение"
@@ -286,7 +286,7 @@ msgstr "Алгоритмы"
 msgid "title.base"
 msgstr "Koloda"
 
-#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:13
+#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:12
 msgid "title.dashboard"
 msgstr "Главная"
 

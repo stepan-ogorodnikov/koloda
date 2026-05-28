@@ -539,7 +539,7 @@ msgstr "Delete template"
 msgid "edit-card.trigger"
 msgstr "Edit card"
 
-#: ../../libs/srs-react/src/lib/components/learned-today.tsx:58
+#: ../../libs/srs-react/src/lib/components/learned-today.tsx:53
 msgid "learned-today.title"
 msgstr "Learned today"
 

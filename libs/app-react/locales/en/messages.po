@@ -25,7 +25,7 @@ msgstr "Cards"
 msgid "deck.tabs.details"
 msgstr "Details"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:47
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:45
 msgid "deck.tabs.label"
 msgstr "Deck tabs"
 
@@ -65,7 +65,7 @@ msgstr "Settings"
 msgid "nav.templates"
 msgstr "Templates"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:33
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:30
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "AI"
@@ -169,12 +169,12 @@ msgstr "Title"
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:34
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.hotkeys"
 msgstr "Hotkeys"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:28
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:25
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
 msgid "settings.interface"
 msgstr "Interface"
@@ -191,7 +191,7 @@ msgstr "Animations"
 msgid "settings.interface.theme"
 msgstr "Theme"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:34
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Learning"
@@ -286,7 +286,7 @@ msgstr "Presets"
 msgid "title.base"
 msgstr "Koloda"
 
-#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:13
+#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:12
 msgid "title.dashboard"
 msgstr "Dashboard"
 

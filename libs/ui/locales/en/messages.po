@@ -13,17 +13,9 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ui/src/lib/ui/back-button.tsx:14
-msgid "back-button.label"
-msgstr "Go back"
-
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:265
+#: ../../libs/ui/src/lib/ui/dashboard.tsx:176
 msgid "dashboard.drawer.label"
 msgstr "Navigation"
-
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:181
-msgid "dashboard.skip-link"
-msgstr "Skip to content"
 
 #: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:21
 msgid "drag-handle.description"
@@ -123,6 +115,6 @@ msgstr "Go back"
 msgid "titlebar.navigation.forward"
 msgstr "Go forward"
 
-#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:23
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:33
 msgid "titlebar.sidebar-controls.label"
 msgstr "Toggle navigation panel"

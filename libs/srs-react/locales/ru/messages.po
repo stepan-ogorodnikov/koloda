@@ -539,7 +539,7 @@ msgstr "Удалить шаблон"
 msgid "edit-card.trigger"
 msgstr "Редактировать карточку"
 
-#: ../../libs/srs-react/src/lib/components/learned-today.tsx:58
+#: ../../libs/srs-react/src/lib/components/learned-today.tsx:53
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 

@@ -23,6 +23,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     nextTab: msg`settings.hotkeys.ui.next-tab`,
     prevTab: msg`settings.hotkeys.ui.prev-tab`,
     close: msg`settings.hotkeys.ui.close`,
+    toggleSidebarControls: msg`settings.hotkeys.ui.toggle-sidebar-controls`,
   },
   navigation: {
     dashboard: msg`settings.hotkeys.navigation.dashboard`,
@@ -54,7 +55,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 
 const hotkeys = {
   form: ["submit", "reset"],
-  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close"],
+  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
   ai: ["cancel", "focusPrompt", "newConversation", "openProfilePicker", "openModelPicker", "toggleSettings", "toggleCardsMode", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
@@ -203,6 +204,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     nextTab: ["J"],
     prevTab: ["K"],
     close: ["Alt+C"],
+    toggleSidebarControls: ["Mod+B"],
   },
   navigation: {
     dashboard: ["H"],
