@@ -1,6 +1,5 @@
 import { queryKeys, useTitle } from "@koloda/core-react";
-import { LearnedToday } from "@koloda/srs-react";
-import { Lessons } from "@koloda/srs-react";
+import { LearnedToday, Lessons } from "@koloda/srs-react";
 import { Main, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { createFileRoute } from "@tanstack/react-router";
@@ -19,13 +18,15 @@ function DashboardRoute() {
   const ref = useRouteFocus();
 
   return (
-    <Main.Container
-      variants={{ class: "tb:flex-row items-start gap-4 tb:p-4" }}
-      ref={ref}
-      tabIndex={-1}
-    >
-      <Lessons />
-      <LearnedToday />
-    </Main.Container>
+    <>
+      <Main.Sidebar hasContent>
+        <LearnedToday />
+      </Main.Sidebar>
+      <Main.Content hasContent>
+        <Main.Container ref={ref} tabIndex={-1}>
+          <Lessons />
+        </Main.Container>
+      </Main.Content>
+    </>
   );
 }
