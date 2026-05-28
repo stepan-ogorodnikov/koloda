@@ -1,5 +1,5 @@
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { getCSSVar, Link, useMotionSetting } from "@koloda/ui";
+import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -117,15 +117,27 @@ function DashboardNavLink({ to, msg, icon }: DashboardNavLinkProps) {
   const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : false;
 
   return (
-    <Link className={dashboardNavLink()} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
-      <HugeiconsIcon
-        className="size-5 min-w-5"
-        strokeWidth={1.75}
-        icon={icon}
-        aria-hidden="true"
-      />
-      {isTextVisible && <span className="pr-4 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
-    </Link>
+    <Tooltip
+      content={<div className="fg-level-1 font-medium">{_(msg)}</div>}
+      isDisabled={isTextVisible}
+      placement="right"
+    >
+      <Link
+        className={dashboardNavLink()}
+        to={to}
+        viewTransition={isMotionOn}
+        onClick={close}
+        key={to}
+      >
+        <HugeiconsIcon
+          className="size-5 min-w-5"
+          strokeWidth={1.75}
+          icon={icon}
+          aria-hidden="true"
+        />
+        {isTextVisible && <span className="pr-4 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
+      </Link>
+    </Tooltip>
   );
 }
 
