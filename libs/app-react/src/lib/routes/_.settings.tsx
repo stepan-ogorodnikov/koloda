@@ -29,7 +29,7 @@ function SettingsRoute() {
   return (
     <>
       <Main.Sidebar hasContent={hasContent}>
-        <Main.Titlebar>
+        <Main.Titlebar variants={{ type: "sidebar" }}>
           <Main.H1>{_(msg`settings.title`)}</Main.H1>
         </Main.Titlebar>
         <Main.Container ref={ref} tabIndex={-1}>

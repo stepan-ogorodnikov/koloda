@@ -31,7 +31,7 @@ function TemplatesRoute() {
   return (
     <>
       <Main.Sidebar hasContent={hasContent}>
-        <Main.Titlebar>
+        <Main.Titlebar variants={{ type: "sidebar" }}>
           <Main.H1>
             {_(msg`templates.title`)}
           </Main.H1>

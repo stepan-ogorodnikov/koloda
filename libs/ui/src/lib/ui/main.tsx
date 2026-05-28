@@ -19,13 +19,19 @@ export function Main({ children }: PropsWithChildren) {
   );
 }
 
-export const mainTitlebar =
-  "flex flex-row items-center tb:gap-2 w-full min-w-0 min-h-14 dt:h-14 px-2 border-b-2 border-main";
+const mainTitlebar = tv({
+  base: "flex flex-row items-center tb:gap-2 w-full min-w-0 min-h-14 dt:h-14 px-2",
+  variants: {
+    type: { sidebar: "border-b-2 border-main", content: "" },
+  },
+});
 
-export function MainTitlebar({ children }: PropsWithChildren) {
+type MainTitlebarProps = PropsWithChildren & TWVProps<typeof mainTitlebar>;
+
+function MainTitlebar({ variants, children }: MainTitlebarProps) {
   return (
     <div className="min-h-14 overflow-hidden">
-      <div className={mainTitlebar}>{children}</div>
+      <div className={mainTitlebar(variants)}>{children}</div>
     </div>
   );
 }
@@ -43,8 +49,10 @@ function MainH2({ children }: PropsWithChildren) {
 }
 
 const mainContent = tv({
-  base:
-    "grow flex-col h-full min-h-0 min-w-0 overflow-hidden tb:w-full tb:max-w-main tb:grow-0 tb:basis-full tb:mx-auto",
+  base: [
+    "grow flex-col h-full min-h-0 min-w-0 overflow-hidden",
+    "tb:w-full tb:max-w-main tb:grow-0 tb:basis-full tb:mx-auto",
+  ],
   variants: { hasContent: { true: "flex", false: "hidden tb:flex" } },
 });
 

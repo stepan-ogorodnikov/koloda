@@ -31,7 +31,7 @@ function DecksRoute() {
   return (
     <>
       <Main.Sidebar hasContent={hasContent}>
-        <Main.Titlebar>
+        <Main.Titlebar variants={{ type: "sidebar" }}>
           <Main.H1>
             {_(msg`decks.title`)}
           </Main.H1>
