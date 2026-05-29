@@ -6,7 +6,7 @@ import {
   Settings05Icon,
 } from "@hugeicons/core-free-icons";
 import { useHotkeysStatus } from "@koloda/core-react";
-import { Dashboard, Main } from "@koloda/ui";
+import { Layout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
@@ -31,15 +31,11 @@ export function App({ children }: PropsWithChildren) {
   }, [enableScope]);
 
   return (
-    <Dashboard>
-      <Dashboard.Nav>
-        {appMenu.map(({ to, t, icon }) => <Dashboard.NavLink to={to} msg={t} icon={icon} key={to} />)}
-      </Dashboard.Nav>
-      <Dashboard.Content>
-        <Main>
-          {children}
-        </Main>
-      </Dashboard.Content>
-    </Dashboard>
+    <>
+      <Layout.Nav>
+        {appMenu.map(({ to, t, icon }) => <Layout.NavLink to={to} msg={t} icon={icon} key={to} />)}
+      </Layout.Nav>
+      {children}
+    </>
   );
 }

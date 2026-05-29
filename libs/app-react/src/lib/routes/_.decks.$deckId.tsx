@@ -3,7 +3,7 @@ import { DeckCards } from "@koloda/srs-react";
 import { DeckDetails } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
-import { Main, Tabs, useRouteFocus } from "@koloda/ui";
+import { Layout, Tabs, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -39,15 +39,15 @@ function DeckRoute() {
 
   return (
     <Tabs defaultSelectedKey="cards">
-      <Main.Titlebar>
-        <Main.H2>{query.data?.title}</Main.H2>
+      <Layout.Header>
+        <Layout.H2>{query.data?.title}</Layout.H2>
         {query.data && (
           <Tabs.List aria-label={_(msg`deck.tabs.label`)}>
             {DECK_TABS.map(({ id, t }) => <Tabs.Tab id={id} key={id}>{_(t)}</Tabs.Tab>)}
           </Tabs.List>
         )}
-      </Main.Titlebar>
-      <Main.Container ref={ref} tabIndex={-1}>
+      </Layout.Header>
+      <Layout.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
           {() => (
             <Tabs.Panels>
@@ -60,7 +60,7 @@ function DeckRoute() {
             </Tabs.Panels>
           )}
         </QueryState>
-      </Main.Container>
+      </Layout.Container>
     </Tabs>
   );
 }

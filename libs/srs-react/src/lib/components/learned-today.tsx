@@ -1,6 +1,6 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { LESSON_TYPE_LABELS, type LessonType } from "@koloda/srs";
-import { Main, QueryState } from "@koloda/ui";
+import { Layout, QueryState } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -49,10 +49,10 @@ export function LearnedToday() {
 
   return (
     <>
-      <Main.Titlebar variants={{ type: "sidebar" }}>
-        <Main.H1>{_(msg`learned-today.title`)}</Main.H1>
-      </Main.Titlebar>
-      <Main.Container tabIndex={-1}>
+      <Layout.Header variants={{ type: "sidebar" }}>
+        <Layout.H1>{_(msg`learned-today.title`)}</Layout.H1>
+      </Layout.Header>
+      <Layout.Container tabIndex={-1}>
         <QueryState query={query}>
           {(data) => (
             <div className="flex flex-col">
@@ -96,7 +96,7 @@ export function LearnedToday() {
             </div>
           )}
         </QueryState>
-      </Main.Container>
+      </Layout.Container>
     </>
   );
 }

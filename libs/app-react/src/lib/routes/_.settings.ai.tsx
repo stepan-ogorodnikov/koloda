@@ -1,6 +1,6 @@
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { QueryState } from "@koloda/ui";
-import { Main, useRouteFocus } from "@koloda/ui";
+import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -26,14 +26,14 @@ function SettingsAiRoute() {
 
   return (
     <>
-      <Main.Titlebar>
-        <Main.H1>{_(msg`settings.ai`)}</Main.H1>
-      </Main.Titlebar>
-      <Main.Container ref={ref} tabIndex={-1}>
+      <Layout.Header>
+        <Layout.H1>{_(msg`settings.ai`)}</Layout.H1>
+      </Layout.Header>
+      <Layout.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
           {(data) => <SettingsAi data={data || []} />}
         </QueryState>
-      </Main.Container>
+      </Layout.Container>
     </>
   );
 }

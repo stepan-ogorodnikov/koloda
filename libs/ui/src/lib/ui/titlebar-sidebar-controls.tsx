@@ -1,7 +1,7 @@
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import { Button, getCSSVar, useDashboardDrawer } from "@koloda/ui";
+import { Button, getCSSVar, useLayoutDrawer } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -9,7 +9,7 @@ import { useCallback } from "react";
 
 export function TitlebarSidebarControls() {
   const { _ } = useLingui();
-  const { close, isNavCollapsed, isOpen, isToggleDisabled, open, setIsNavCollapsed } = useDashboardDrawer();
+  const { close, isNavCollapsed, isOpen, isToggleDisabled, open, setIsNavCollapsed } = useLayoutDrawer();
   const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
   const { ui } = useHotkeysSettings();
 

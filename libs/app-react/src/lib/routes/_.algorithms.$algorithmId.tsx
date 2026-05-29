@@ -2,7 +2,7 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Algorithm } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
-import { Main, useRouteFocus } from "@koloda/ui";
+import { Layout, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -27,14 +27,14 @@ function AlgorithmRoute() {
 
   return (
     <>
-      <Main.Titlebar>
-        <Main.H1>{query.data?.title}</Main.H1>
-      </Main.Titlebar>
-      <Main.Container ref={ref} tabIndex={-1}>
+      <Layout.Header>
+        <Layout.H1>{query.data?.title}</Layout.H1>
+      </Layout.Header>
+      <Layout.Container ref={ref} tabIndex={-1}>
         <QueryState query={query}>
           {() => <Algorithm id={id} key={algorithmId} />}
         </QueryState>
-      </Main.Container>
+      </Layout.Container>
     </>
   );
 }

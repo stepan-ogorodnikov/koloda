@@ -13,10 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ui/src/lib/ui/dashboard.tsx:176
-msgid "dashboard.drawer.label"
-msgstr "Панель навигации"
-
 #: ../../libs/ui/src/lib/primitives/dnd/drag-handle.tsx:21
 msgid "drag-handle.description"
 msgstr "Перетащите для изменения порядка расположения элементов"
@@ -59,27 +55,31 @@ msgstr "Отменить"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
-#: ../../libs/ui/src/lib/components/not-found.tsx:17
+#: ../../libs/ui/src/lib/layout/drawer.tsx:87
+msgid "layout.drawer.label"
+msgstr "Панель навигации"
+
+#: ../../libs/ui/src/lib/ui/not-found.tsx:17
 msgid "not-found.back"
 msgstr "Назад"
 
-#: ../../libs/ui/src/lib/components/not-found.tsx:15
+#: ../../libs/ui/src/lib/ui/not-found.tsx:15
 msgid "not-found.message"
 msgstr "Запрашиваемые данные не существуют"
 
-#: ../../libs/ui/src/lib/components/not-found.tsx:14
+#: ../../libs/ui/src/lib/ui/not-found.tsx:14
 msgid "not-found.title"
 msgstr "Не найдено"
 
-#: ../../libs/ui/src/lib/components/query-error.tsx:19
+#: ../../libs/ui/src/lib/ui/query-error.tsx:19
 msgid "query-error.message"
 msgstr "Ошибка загрузки"
 
-#: ../../libs/ui/src/lib/components/query-error.tsx:55
+#: ../../libs/ui/src/lib/ui/query-error.tsx:55
 msgid "query-error.retry"
 msgstr "Повторить"
 
-#: ../../libs/ui/src/lib/components/query-loading.tsx:13
+#: ../../libs/ui/src/lib/ui/query-loading.tsx:13
 msgid "query-loading.message"
 msgstr "Загрузка..."
 

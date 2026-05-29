@@ -1,6 +1,6 @@
 import { queryKeys, useTitle } from "@koloda/core-react";
 import { LearnedToday, Lessons } from "@koloda/srs-react";
-import { Main, useRouteFocus } from "@koloda/ui";
+import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -19,14 +19,14 @@ function DashboardRoute() {
 
   return (
     <>
-      <Main.Sidebar hasContent>
+      <Layout.Sidebar hasContent>
         <LearnedToday />
-      </Main.Sidebar>
-      <Main.Content hasContent>
-        <Main.Container ref={ref} tabIndex={-1}>
+      </Layout.Sidebar>
+      <Layout.Content variants={{ hasContent: true }}>
+        <Layout.Container ref={ref} tabIndex={-1}>
           <Lessons />
-        </Main.Container>
-      </Main.Content>
+        </Layout.Container>
+      </Layout.Content>
     </>
   );
 }

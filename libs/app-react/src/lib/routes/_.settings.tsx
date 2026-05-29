@@ -1,6 +1,6 @@
 import { useTitle } from "@koloda/core-react";
 import { NotFound } from "@koloda/ui";
-import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
@@ -28,27 +28,27 @@ function SettingsRoute() {
 
   return (
     <>
-      <Main.Sidebar hasContent={hasContent}>
-        <Main.Titlebar variants={{ type: "sidebar" }}>
-          <Main.H1>{_(msg`settings.title`)}</Main.H1>
-        </Main.Titlebar>
-        <Main.Container ref={ref} tabIndex={-1}>
+      <Layout.Sidebar hasContent={hasContent}>
+        <Layout.Header variants={{ type: "sidebar" }}>
+          <Layout.H1>{_(msg`settings.title`)}</Layout.H1>
+        </Layout.Header>
+        <Layout.Container ref={ref} tabIndex={-1}>
           {LINKS.map(({ id, t, url }) => (
-            <Main.SidebarItem key={id}>
+            <Layout.SidebarItem key={id}>
               <Link
-                className={mainSidebarItemLink}
+                className={layoutSidebarItemLink}
                 to={`/settings/${url}`}
                 viewTransition={isMotionOn}
               >
-                <Main.SidebarItemLinkContent>{_(t)}</Main.SidebarItemLinkContent>
+                <Layout.SidebarItemLinkContent>{_(t)}</Layout.SidebarItemLinkContent>
               </Link>
-            </Main.SidebarItem>
+            </Layout.SidebarItem>
           ))}
-        </Main.Container>
-      </Main.Sidebar>
-      <Main.Content hasContent={hasContent}>
+        </Layout.Container>
+      </Layout.Sidebar>
+      <Layout.Content variants={{ hasContent: hasContent }}>
         <Outlet />
-      </Main.Content>
+      </Layout.Content>
     </>
   );
 }

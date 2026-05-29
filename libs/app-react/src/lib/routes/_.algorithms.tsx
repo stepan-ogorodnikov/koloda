@@ -1,7 +1,7 @@
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { AddAlgorithm } from "@koloda/srs-react";
 import { QueryState } from "@koloda/ui";
-import { Link, Main, mainSidebarItemLink, useMotionSetting, useRouteFocus } from "@koloda/ui";
+import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -30,37 +30,37 @@ function AlgorithmsRoute() {
 
   return (
     <>
-      <Main.Sidebar hasContent={hasContent}>
-        <Main.Titlebar variants={{ type: "sidebar" }}>
-          <Main.H1>
+      <Layout.Sidebar hasContent={hasContent}>
+        <Layout.Header variants={{ type: "sidebar" }}>
+          <Layout.H1>
             {_(msg`algorithms.title`)}
-          </Main.H1>
+          </Layout.H1>
           <AddAlgorithm />
-        </Main.Titlebar>
-        <Main.Container ref={ref} tabIndex={-1}>
+        </Layout.Header>
+        <Layout.Container ref={ref} tabIndex={-1}>
           <QueryState query={query}>
             {(data) => (
               <div className="flex flex-col">
                 {data.map(({ id, title }) => (
-                  <Main.SidebarItem key={id}>
+                  <Layout.SidebarItem key={id}>
                     <Link
-                      className={mainSidebarItemLink}
+                      className={layoutSidebarItemLink}
                       to="/algorithms/$algorithmId"
                       params={{ algorithmId: id }}
                       viewTransition={isMotionOn}
                     >
-                      <Main.SidebarItemLinkContent>{title}</Main.SidebarItemLinkContent>
+                      <Layout.SidebarItemLinkContent>{title}</Layout.SidebarItemLinkContent>
                     </Link>
-                  </Main.SidebarItem>
+                  </Layout.SidebarItem>
                 ))}
               </div>
             )}
           </QueryState>
-        </Main.Container>
-      </Main.Sidebar>
-      <Main.Content hasContent={hasContent}>
+        </Layout.Container>
+      </Layout.Sidebar>
+      <Layout.Content variants={{ hasContent: hasContent }}>
         <Outlet />
-      </Main.Content>
+      </Layout.Content>
     </>
   );
 }

@@ -2,7 +2,7 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Template } from "@koloda/srs-react";
 import { NotFound } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
-import { Main, useRouteFocus } from "@koloda/ui";
+import { Layout, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
@@ -26,13 +26,13 @@ function TemplateRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <Main.Container ref={ref} tabIndex={-1}>
-      <Main.Titlebar>
-        <Main.H1>{query.data?.title}</Main.H1>
-      </Main.Titlebar>
+    <Layout.Container ref={ref} tabIndex={-1}>
+      <Layout.Header>
+        <Layout.H1>{query.data?.title}</Layout.H1>
+      </Layout.Header>
       <QueryState query={query}>
         {() => <Template id={id} key={templateId} />}
       </QueryState>
-    </Main.Container>
+    </Layout.Container>
   );
 }

@@ -1,5 +1,5 @@
 import { queryKeys, useTitle } from "@koloda/core-react";
-import { Main, useRouteFocus } from "@koloda/ui";
+import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -21,12 +21,12 @@ function SettingsInterfaceRoute() {
 
   return (
     <>
-      <Main.Titlebar>
-        <Main.H1>{_(msg`settings.interface`)}</Main.H1>
-      </Main.Titlebar>
-      <Main.Container ref={ref} tabIndex={-1}>
+      <Layout.Header>
+        <Layout.H1>{_(msg`settings.interface`)}</Layout.H1>
+      </Layout.Header>
+      <Layout.Container ref={ref} tabIndex={-1}>
         <SettingsInterface />
-      </Main.Container>
+      </Layout.Container>
     </>
   );
 }
