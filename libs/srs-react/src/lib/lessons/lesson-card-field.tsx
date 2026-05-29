@@ -7,7 +7,7 @@ import { fieldTypeComponents } from "./lesson-card-field-types";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
 const lessonCardContentField = tv({
-  base: "flex flex-col w-full prose tb:prose-xl",
+  base: "flex flex-col w-full prose wd:prose-xl",
   variants: {
     operation: {
       display: "",

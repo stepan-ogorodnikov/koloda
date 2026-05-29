@@ -24,7 +24,7 @@ export const TemplateFieldsItem = withForm({
               onChange={field.handleChange}
             >
               <TextField.Input
-                variants={{ style: "inline", class: "dt:w-72" }}
+                variants={{ style: "inline", class: "wd:w-72" }}
                 placeholder={_(msg`template.fields.inputs.title.placeholder`)}
               />
             </TextField>

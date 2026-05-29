@@ -15,12 +15,12 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
   const { _ } = useLingui();
 
   return (
-    <div className="flex flex-row gap-1 tb:gap-2">
+    <div className="flex flex-row gap-1 wd:gap-2">
       {grades.map(({ card, log }, i) => (
-        <div className="flex flex-col items-center gap-1 tb:w-24" key={i}>
-          <div className="text-xs tb:text-sm">{formatDistanceStrict(card.due, log.review)}</div>
+        <div className="flex flex-col items-center gap-1 wd:w-24" key={i}>
+          <div className="text-xs wd:text-sm">{formatDistanceStrict(card.due, log.review)}</div>
           <Button
-            variants={{ style: "primary", class: "self-stretch max-tb:text-sm" }}
+            variants={{ style: "primary", class: "self-stretch max-wd:text-sm" }}
             onClick={() => dispatch(["gradeSelected", i])}
             autoFocus={i === 2}
           >

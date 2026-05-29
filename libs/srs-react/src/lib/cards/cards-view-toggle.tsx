@@ -13,7 +13,7 @@ export function CardsViewToggle() {
 
   return (
     <ToggleGroup
-      variants={{ class: "max-tb:hidden" }}
+      variants={{ class: "max-wd:hidden" }}
       selectedKeys={[value]}
       onSelectionChange={([value]) => {
         if (value === "table" || value === "stack") setValue(value);

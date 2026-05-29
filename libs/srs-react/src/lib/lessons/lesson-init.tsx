@@ -16,7 +16,7 @@ type LessonInitProps = {
 
 export function LessonInit({ state, dispatch }: LessonInitProps) {
   const { ui } = useHotkeysSettings();
-  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
   const { data: learnedToday } = useQuery({
     queryKey: queryKeys.lessons.todayReviewTotals(),

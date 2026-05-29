@@ -11,7 +11,7 @@ const learnedTodayAmount = tv({
   base: "leadning-none font-bold tracking-tight",
   variants: {
     content: {
-      title: "max-tb:hidden dt:text-lg leading-6",
+      title: "max-wd:hidden wd:text-lg leading-6",
       value: "text-xl leading-none",
       limit: "fg-level-3 leading-none",
     },

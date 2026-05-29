@@ -12,7 +12,7 @@ export function FormLayout({ children }: FormLayoutProps) {
 }
 
 export const formLayoutSection = tv({
-  base: "flex flex-col tb:flex-row flex-wrap tb:items-baseline tb:gap-4 py-2",
+  base: "flex flex-col wd:flex-row flex-wrap wd:items-baseline wd:gap-4 py-2",
 });
 
 type FormLayoutSectionProps =
@@ -35,7 +35,7 @@ export function FormLayoutSection({ variants, term, children, ...props }: FormLa
   return <div className={formLayoutSection(variants)} {...props}>{children}</div>;
 }
 
-export const formLayoutSectionTerm = "flex tb:basis-48 dt:basis-60 shrink-0 py-2 font-semibold fg-level-2";
+export const formLayoutSectionTerm = "flex wd:basis-60 shrink-0 py-2 font-semibold fg-level-2";
 
 type FormLayoutSectionTermProps = ComponentProps<"div">;
 

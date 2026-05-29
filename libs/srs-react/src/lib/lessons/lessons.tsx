@@ -9,12 +9,12 @@ import { LessonsList } from "./lessons-list";
 import { LessonsTable } from "./lessons-table";
 
 export function Lessons() {
-  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getLessonsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.lessons.all(), ...getLessonsQuery() });
 
   return (
-    <div className="w-full tb:max-w-180 mx-auto p-4 tb:overflow-auto">
+    <div className="w-full wd:max-w-180 mx-auto p-4 wd:overflow-auto">
       <CurrentLesson />
       <QueryState query={query}>
         {(data) => (isMobile ? <LessonsList data={data} /> : <LessonsTable data={data} />)}

@@ -146,7 +146,7 @@ function Controls({ showErrors = true }: ControlsProps) {
   );
 
   return (
-    <div className="sticky bottom-16 tb:bottom-2 flex flex-col items-center gap-2">
+    <div className="sticky bottom-16 wd:bottom-2 flex flex-col items-center gap-2">
       <LayoutGroup>
         <form.Subscribe selector={(state) => [state.errorMap]}>
           {([{ onChange, onSubmit }]) => (

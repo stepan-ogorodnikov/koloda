@@ -16,7 +16,7 @@ import { cardsViewAtom, CardsViewToggle } from "../cards/cards-view-toggle";
 type DeckCardsProps = { deckId: Deck["id"] };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
-  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
   const query = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
@@ -30,7 +30,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
   if (!data) return null;
 
   return (
-    <div className="flex flex-col gap-2 p-2 tb:p-4">
+    <div className="flex flex-col gap-2 p-2 wd:p-4">
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />

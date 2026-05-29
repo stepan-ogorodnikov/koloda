@@ -82,7 +82,7 @@ function DashboardContent({ children }: PropsWithChildren) {
 
 function DashboardNav({ children }: PropsWithChildren) {
   const { navPortal, isToggleDisabled } = useDashboardDrawer();
-  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
 
   const content = (
     <nav className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main overflow-y-auto">
@@ -113,7 +113,7 @@ function DashboardNavLink({ to, msg, icon }: DashboardNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const { close, isNavCollapsed } = useDashboardDrawer();
-  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-tb")})`);
+  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
   const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : false;
 
   return (
@@ -166,7 +166,7 @@ function DashboardDrawer({ setNavPortal, setSidebarPortal }: DashboardDrawerProp
 
   return createPortal(
     <div
-      className="tb:hidden fixed inset-x-0 bottom-0 top-[calc(var(--titlebar-height)+2px)] z-50 bg-overlay animate-in fade-in-0"
+      className="wd:hidden fixed inset-x-0 bottom-0 top-[calc(var(--titlebar-height)+2px)] z-50 bg-overlay animate-in fade-in-0"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}

@@ -54,7 +54,7 @@ export function CardsTableSelectionControls({
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
-    <Fade className="sticky bottom-16 tb:bottom-2 flex justify-center">
+    <Fade className="sticky bottom-16 wd:bottom-2 flex justify-center">
       <div className="flex flex-row items-center gap-4 py-2 px-4 rounded-xl border-2 border-main bg-level-1">
         <div className="flex flex-row items-center gap-2">
           <Number value={selectedCount} />

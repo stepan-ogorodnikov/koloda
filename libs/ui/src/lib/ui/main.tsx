@@ -19,7 +19,7 @@ export function Main({ children }: PropsWithChildren) {
 }
 
 const mainTitlebar = tv({
-  base: "flex flex-row items-center tb:gap-2 w-full min-w-0 min-h-14 dt:h-14 px-2",
+  base: "flex flex-row items-center wd:gap-2 w-full min-w-0 min-h-14 wd:h-14 px-2",
   variants: {
     type: { sidebar: "border-b-2 border-main", content: "" },
   },
@@ -50,9 +50,9 @@ function MainH2({ children }: PropsWithChildren) {
 const mainContent = tv({
   base: [
     "grow flex-col h-full min-h-0 min-w-0 overflow-hidden",
-    "tb:w-full tb:max-w-main tb:grow-0 tb:basis-full tb:mx-auto",
+    "wd:w-full wd:max-w-main wd:grow-0 wd:basis-full wd:mx-auto",
   ],
-  variants: { hasContent: { true: "flex", false: "hidden tb:flex" } },
+  variants: { hasContent: { true: "flex", false: "hidden wd:flex" } },
 });
 
 type MainContentProps = PropsWithChildren & { hasContent?: boolean };
@@ -64,17 +64,16 @@ function MainContent({ hasContent, children }: MainContentProps) {
 const mainSidebar = tv({
   base: [
     "flex flex-col shrink-0 overflow-hidden",
-    "tb:min-w-48 tb:max-w-48 tb:border-r-2 tb:border-main",
-    "dt:min-w-72 dt:max-w-72 dt:overflow-hidden",
+    "wd:min-w-72 wd:max-w-72 wd:border-r-2 wd:border-main wd:overflow-hidden",
   ],
-  variants: { hasContent: { true: "hidden tb:flex", false: "grow tb:grow-0" } },
+  variants: { hasContent: { true: "hidden wd:flex", false: "grow wd:grow-0" } },
 });
 
 type MainSidebarProps = PropsWithChildren & { hasContent?: boolean };
 
 function MainSidebar({ hasContent, children }: MainSidebarProps) {
   const { setToggleDisabled, sidebarPortal } = useDashboardDrawer();
-  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
+  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   useEffect(() => {
     setToggleDisabled(hasContent === false);
     return () => setToggleDisabled(false);

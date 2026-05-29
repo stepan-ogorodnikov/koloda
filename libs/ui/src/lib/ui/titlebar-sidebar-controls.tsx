@@ -10,7 +10,7 @@ import { useCallback } from "react";
 export function TitlebarSidebarControls() {
   const { _ } = useLingui();
   const { close, isNavCollapsed, isOpen, isToggleDisabled, open, setIsNavCollapsed } = useDashboardDrawer();
-  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-tb")})`);
+  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
   const { ui } = useHotkeysSettings();
 
   const handleAction = useCallback(() => {

@@ -197,8 +197,7 @@
 @theme {
   /* breakpoints */
   --breakpoint-*: initial;
-  --breakpoint-tb: 48rem; /* tablet */
-  --breakpoint-dt: 80rem; /* desktop */
+  --breakpoint-wd: 48rem; /* wide */
   /* containers */
   --container-main: --spacing(235);
   /* sizes */
