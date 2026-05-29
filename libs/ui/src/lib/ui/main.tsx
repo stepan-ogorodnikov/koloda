@@ -2,7 +2,6 @@ import { getCSSVar, useDashboardDrawer } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import type { ComponentProps, PropsWithChildren } from "react";
-import { Children, isValidElement } from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
@@ -76,10 +75,6 @@ type MainSidebarProps = PropsWithChildren & { hasContent?: boolean };
 function MainSidebar({ hasContent, children }: MainSidebarProps) {
   const { setToggleDisabled, sidebarPortal } = useDashboardDrawer();
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-tb")})`);
-  const drawerChildren = Children.toArray(children).filter((child) => (
-    !isValidElement(child) || child.type !== MainTitlebar
-  ));
-
   useEffect(() => {
     setToggleDisabled(hasContent === false);
     return () => setToggleDisabled(false);
@@ -90,7 +85,7 @@ function MainSidebar({ hasContent, children }: MainSidebarProps) {
   if (hasContent && isDrawerLayout) {
     return sidebarPortal
       ? createPortal(
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">{drawerChildren}</div>,
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">{children}</div>,
         sidebarPortal,
       )
       : null;
