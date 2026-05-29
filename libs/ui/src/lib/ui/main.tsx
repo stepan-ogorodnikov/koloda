@@ -64,7 +64,7 @@ function MainContent({ hasContent, children }: MainContentProps) {
 const mainSidebar = tv({
   base: [
     "flex flex-col shrink-0 overflow-hidden",
-    "wd:min-w-72 wd:max-w-72 wd:border-r-2 wd:border-main wd:overflow-hidden",
+    "wd:w-[clamp(14rem,25%,20rem)] wd:border-r-2 wd:border-main wd:overflow-hidden",
   ],
   variants: { hasContent: { true: "hidden wd:flex", false: "grow wd:grow-0" } },
 });
