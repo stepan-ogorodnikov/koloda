@@ -22,18 +22,8 @@ Narrow and wide layouts. Single breakpoint `--breakpoint-wd` defined in `global.
 
 ## Wide layout (`>= wd`)
 
-### Route with main content
-
 - **Nav**: inline, collapsible.
 - **Sidebar**: inline.
-- **Content**: inline, fills remaining width.
+- **Content**: inline, fills remaining width, can be empty.
 - **Drawer**: not needed, all zones fit in the viewport.
-- **Sidebar controls**: toggles Nav collapsible state.
-
-### Route without main content
-
-- **Nav**: inline, collapsible.
-- **Sidebar**: inline, takes the remaining width.
-- **Content**: hidden since it's empty.
-- **Drawer**: not needed, all zones fit in the viewport.
-- **Sidebar controls**: toggles Nav collapsible state.
+- **Sidebar controls**: toggles nav collapsible state.
