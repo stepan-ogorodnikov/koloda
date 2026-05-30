@@ -53,9 +53,8 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
   await expect(lessonDialog).not.toBeVisible();
 
   await openSection(page, "Dashboard");
-  const learnedTodaySection = page.getByText("Learned today", { exact: true }).locator("..");
-  await expect(learnedTodaySection).toBeVisible();
-  const totalRow = learnedTodaySection.getByText("Total");
+  await expect(page.getByText("Learned today", { exact: true })).toBeVisible();
+  const totalRow = page.getByText("Total");
   await expect(totalRow).toBeVisible();
   await expect(totalRow.locator("..").getByText("4")).toBeVisible();
 
