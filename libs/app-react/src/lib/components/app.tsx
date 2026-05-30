@@ -18,6 +18,9 @@ export const appMenu = [
   { to: "/decks", t: msg`nav.decks`, icon: FolderLibraryIcon },
   { to: "/algorithms", t: msg`nav.algorithms`, icon: Settings05Icon },
   { to: "/templates", t: msg`nav.templates`, icon: AlignBoxMiddleCenterIcon },
+];
+
+export const secondaryMenu = [
   { to: "/settings", t: msg`nav.settings`, icon: Settings01Icon },
 ];
 
@@ -34,6 +37,8 @@ export function App({ children }: PropsWithChildren) {
     <>
       <Layout.Nav>
         {appMenu.map(({ to, t, icon }) => <Layout.NavLink to={to} msg={t} icon={icon} key={to} />)}
+        <div className="grow" />
+        {secondaryMenu.map(({ to, t, icon }) => <Layout.NavLink to={to} msg={t} icon={icon} key={to} />)}
       </Layout.Nav>
       {children}
     </>
