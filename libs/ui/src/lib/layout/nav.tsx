@@ -25,7 +25,7 @@ export function LayoutNav({ children }: PropsWithChildren) {
 
 const layoutNavLink = tv({
   base: [
-    "flex flex-row items-center shrink-0 gap-2 min-w-10 p-2 rounded-xl focus-ring animate-colors",
+    "flex flex-row items-center shrink-0 gap-2 min-w-10 min-h-10 px-2 rounded-xl focus-ring animate-colors",
     "current:bg-nav-active border-2 border-transparent current:border-nav-active current:shadow-nav-active",
     "fg-nav-item hover:fg-nav-active current:fg-nav-active font-medium tracking-wide",
   ],
@@ -63,7 +63,7 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
           icon={icon}
           aria-hidden="true"
         />
-        {isTextVisible && <span className="pr-4 leading-none truncate whitespace-nowrap">{_(msg)}</span>}
+        {isTextVisible && <span className="pr-4 truncate whitespace-nowrap">{_(msg)}</span>}
       </Link>
     </Tooltip>
   );

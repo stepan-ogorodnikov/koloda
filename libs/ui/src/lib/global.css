@@ -185,7 +185,7 @@
   --fg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.13) calc(c - 0.08) h);
   --fg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
   /* nav */
-  --bg-nav-active: oklch(50% 0 0 / 6%);
+  --bg-nav-active: oklch(50% 0 0 / 9%);
   --border-nav-active: oklch(from var(--bg-body) calc(l + 0.1) c h);
   --shadow-nav-active: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 2%);
   --fg-nav-item: var(--fg-inactive);
