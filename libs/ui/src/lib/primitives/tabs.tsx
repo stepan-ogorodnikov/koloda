@@ -41,7 +41,7 @@ const tab = tv({
   ],
 });
 
-export const tabLink = "group-focus-ring p-1 rounded-md";
+export const tabLink = "group-focus-ring px-1 rounded-md";
 
 type TabsTabProps = TabProps & PropsWithChildren & { variants?: never };
 
@@ -55,7 +55,7 @@ function TabsTab({ children, ...props }: TabsTabProps) {
 }
 
 export const tabIndicator = [
-  "absolute -bottom-0.5 inset-x-0 h-0.5 w-full bg-fg-tabs-item-active",
+  "absolute bottom-2 inset-x-0 h-0.5 w-full bg-fg-tabs-item-active",
   "motion:transition-[translate,width] duration-250",
 ].join(" ");
 
