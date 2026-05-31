@@ -28,14 +28,16 @@ export function TitlebarSidebarControls() {
   useAppHotkey(ui.toggleSidebarControls, handleAction, "", { ignoreInputs: false });
 
   return (
-    <Button
-      variants={{ style: "ghost", size: "smallIcon" }}
-      aria-label={_(msg`titlebar.sidebar-controls.label`)}
-      aria-pressed={isLargerBreakpoint ? isNavCollapsed : isOpen}
-      isDisabled={isLargerBreakpoint ? false : isToggleDisabled}
-      onPress={handleAction}
-    >
-      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={PanelLeftIcon} aria-hidden="true" />
-    </Button>
+    <div className="relative z-100 [-webkit-app-region:no-drag]">
+      <Button
+        variants={{ style: "ghost", size: "smallIcon" }}
+        aria-label={_(msg`titlebar.sidebar-controls.label`)}
+        aria-pressed={isLargerBreakpoint ? isNavCollapsed : isOpen}
+        isDisabled={isLargerBreakpoint ? false : isToggleDisabled}
+        onPress={handleAction}
+      >
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={PanelLeftIcon} aria-hidden="true" />
+      </Button>
+    </div>
   );
 }
