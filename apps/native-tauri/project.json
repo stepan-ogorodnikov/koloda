@@ -56,15 +56,23 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "cargo clippy -p koloda-core -p koloda_native_tauri --all-targets --all-features -- -D warnings",
-        "cwd": "."
+        "commands": [
+          "cargo clippy -p koloda-core --all-targets --all-features -- -D warnings",
+          "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings"
+        ],
+        "parallel": false,
+        "cwd": "apps/native-tauri"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "cargo test -p koloda-core -p koloda_native_tauri",
-        "cwd": "."
+        "commands": [
+          "cargo test -p koloda-core",
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "parallel": false,
+        "cwd": "apps/native-tauri"
       }
     }
   }
