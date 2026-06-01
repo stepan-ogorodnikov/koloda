@@ -59,10 +59,10 @@
   /* pickers */
   --bg-picker-item-hover: oklch(50% 0 0 / 5%);
   /* toggle group */
-  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
-  --border-toggle-group: var(--border-input);
+  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
   --bg-toggle-group-active: var(--bg-level-1);
-  --border-toggle-group-active: oklch(from var(--border-toggle-group) calc(l - 0.02) c h);
+  --border-toggle-group-active: oklch(from var(--bg-toggle-group-active) calc(l - 0.06) c h);
+  --shadow-toggle-group-active: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 50%);
   /* overlay */
   --bg-overlay: radial-gradient(oklch(0% 0 0 / 35%), oklch(0% 0 0 / 30%));
   --shadow-overlay-frame: 0 0.25rem 0.25rem oklch(25% 0 0 / 1%), 0 1rem 1rem 0.25rem oklch(50% 0 0 / 4%);
@@ -154,10 +154,10 @@
   /* pickers */
   --bg-picker-item-hover: oklch(100% 0 0 / 4%);
   /* toggle group */
-  --bg-toggle-group: oklch(19% 0 0);
-  --border-toggle-group: oklch(27.5% 0 0);
-  --bg-toggle-group-active: oklch(100% 0 0 / 3%);
-  --border-toggle-group-active: oklch(34% 0 0);
+  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --bg-toggle-group-active: oklch(from var(--bg-toggle-group) calc(l + 0.025) c h);
+  --border-toggle-group-active: oklch(from var(--bg-toggle-group-active) calc(l + 0.05) c h);
+  --shadow-toggle-group-active: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 2%);
   /* overlay */
   --bg-overlay: oklch(50% 0 0 / 5%);
   --shadow-overlay-frame: none;
@@ -254,10 +254,9 @@
   --color-bg-picker-item-hover: var(--bg-picker-item-hover);
   /* toggle group */
   --color-bg-toggle-group: var(--bg-toggle-group);
-  --color-border-toggle-group: var(--border-toggle-group);
   --color-bg-toggle-group-active: var(--bg-toggle-group-active);
   --color-border-toggle-group-active: var(--border-toggle-group-active);
-  --shadow-toggle-group-active: var(--shadow-button-bordered);
+  --shadow-toggle-group-active: var(--shadow-toggle-group-active);
   /* overlays */
   --color-bg-overlay: var(--bg-overlay);
   --color-border-overlay-frame: var(--border-main);

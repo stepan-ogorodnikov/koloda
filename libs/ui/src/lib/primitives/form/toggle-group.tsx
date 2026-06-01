@@ -1,55 +1,36 @@
-import { button, type TWVProps, useMotionSetting } from "@koloda/ui";
-import { motion } from "motion/react";
-import { createContext, useContext } from "react";
+import { button, type TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
-import { useId } from "react-aria";
-import { ToggleButton, ToggleButtonGroup } from "react-aria-components";
+import { SelectionIndicator, ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import type { ToggleButtonGroupProps, ToggleButtonProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-const ToggleGroupContext = createContext<string>("");
-
 export const toggleGroup = tv({
-  base: "flex flex-row items-center gap-1 h-10 border-2 bg-toggle-group border-toggle-group rounded-lg",
+  base: "flex flex-row items-center gap-1 h-10 rounded-lg bg-toggle-group",
 });
 
 type ToggleGroupProps = ToggleButtonGroupProps & TWVProps<typeof toggleGroup>;
 
 export function ToggleGroup({ variants, ...props }: ToggleGroupProps) {
-  const id = useId();
-
-  return (
-    <ToggleGroupContext.Provider value={id}>
-      <ToggleButtonGroup className={toggleGroup(variants)} {...props} />
-    </ToggleGroupContext.Provider>
-  );
+  return <ToggleButtonGroup className={toggleGroup(variants)} {...props} />;
 }
 
 export const toggleGroupItem = tv({
   extend: button,
-  base: "relative -m-0.5 fg-level-3 aria-checked:fg-level-1 hover:fg-level-1 focus:z-5",
+  base: "relative fg-level-3 aria-checked:fg-level-1 hover:fg-level-1 focus:z-2",
 });
+
+const toggleGroupIndicator = [
+  "absolute z-1 inset-0 rounded-lg border-2 border-toggle-group-active",
+  "bg-toggle-group-active shadow-toggle-group-active motion:transition-[translate,width] duration-250",
+].join(" ");
 
 type ToggleGroupItemProps = ToggleButtonProps & PropsWithChildren & TWVProps<typeof toggleGroupItem>;
 
 export function ToggleGroupItem({ variants, children, ...props }: ToggleGroupItemProps) {
-  const isMotionOn = useMotionSetting();
-  const id = useContext(ToggleGroupContext);
-
   return (
-    <ToggleButton className={toggleGroupItem(variants || {})} {...props}>
-      {({ isSelected }) => (
-        <>
-          {isSelected && (
-            <motion.div
-              className="absolute z-1 inset-0 border-2 rounded-lg border-toggle-group-active bg-toggle-group-active shadow-toggle-group-active"
-              layoutId={id}
-              transition={isMotionOn ? { duration: 0.25, ease: "easeInOut" } : { duration: 0 }}
-            />
-          )}
-          <span className="z-2">{children}</span>
-        </>
-      )}
+    <ToggleButton className={toggleGroupItem(variants)} {...props}>
+      <SelectionIndicator className={toggleGroupIndicator} />
+      <span className="z-3">{children}</span>
     </ToggleButton>
   );
 }
