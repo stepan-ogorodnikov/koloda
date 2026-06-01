@@ -1,9 +1,11 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { atom, useAtom } from "jotai";
+import { AnimatePresence, motion } from "motion/react";
 import type { Dispatch, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useMotionSetting } from "../hooks/use-motion-settings";
 
 const drawerOpenAtom = atom(false);
 const drawerToggleDisabledAtom = atom(false);
@@ -60,6 +62,7 @@ type LayoutDrawerProps = {
 export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerProps) {
   const { _ } = useLingui();
   const { isOpen, close } = useLayoutDrawer();
+  const isMotionOn = useMotionSetting();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -73,27 +76,39 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
   }, [close, isOpen]);
 
   if (typeof document === "undefined") return null;
-  if (!isOpen) return null;
 
   return createPortal(
-    <div
-      className="wd:hidden fixed inset-x-0 bottom-0 top-[calc(var(--titlebar-height)+2px)] z-50 bg-overlay animate-in fade-in-0"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) close();
-      }}
-    >
-      <div
-        className="flex flex-col h-full w-80 border-r-2 border-main bg-level-1 focus-ring animate-in slide-in-from-left"
-        aria-label={_(msg`layout.drawer.label`)}
-        role="dialog"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <div className="grow flex flex-row min-h-0 overflow-hidden">
-          <div className="flex flex-col shrink-0 h-full overflow-hidden" ref={setNavPortal} />
-          <div className="grow flex flex-col min-w-0 overflow-hidden" ref={setSidebarPortal} />
-        </div>
-      </div>
-    </div>,
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="wd:hidden fixed z-50 inset-x-0 bottom-0 top-[calc(var(--titlebar-height)+2px)] bg-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) close();
+          }}
+          key="drawer-overlay"
+        >
+          <motion.div
+            className="flex flex-col h-full w-80 border-r-2 border-main bg-level-1 focus-ring"
+            aria-label={_(msg`layout.drawer.label`)}
+            role="dialog"
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={isMotionOn ? { duration: 0.25, ease: "easeOut" } : { duration: 0 }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="grow flex flex-row min-h-0 overflow-hidden">
+              <div className="flex flex-col shrink-0 h-full overflow-hidden" ref={setNavPortal} />
+              <div className="grow flex flex-col min-w-0 overflow-hidden" ref={setSidebarPortal} />
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body,
   );
 }
