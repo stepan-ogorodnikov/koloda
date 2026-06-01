@@ -1,23 +1,36 @@
 import type { TWVProps } from "@koloda/ui";
-import type { ComponentProps, ReactNode, RefObject } from "react";
-import { forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
-import { mergeProps, useFocusRing } from "react-aria";
+import type { ComponentProps, ReactElement, ReactNode, RefObject } from "react";
+import { Children, cloneElement, forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { mergeProps, useFocusable, useFocusRing, useObjectRef } from "react-aria";
 import type { Placement, PlacementAxis } from "react-aria";
 import {
-  Focusable,
   OverlayArrow,
   Tooltip as ReactAriaTooltip,
   TooltipTrigger as ReactAriaTooltipTrigger,
 } from "react-aria-components";
 import type { TooltipProps as ReactAriaTooltipProps, TooltipTriggerComponentProps } from "react-aria-components";
+import { mergeRefs } from "react-aria/mergeRefs";
 import { tv } from "tailwind-variants";
+
+function TooltipFocusable({ children }: { children: ReactElement<any> }) {
+  const ref = useObjectRef<HTMLElement>(null);
+  const { focusableProps } = useFocusable<HTMLElement>({} as any, ref);
+  const child = Children.only(children);
+
+  return cloneElement(child, {
+    ...mergeProps(focusableProps as any, child.props as any),
+    onKeyDown: (e: { continuePropagation?: () => void }) => e.continuePropagation?.(),
+    onKeyUp: (e: { continuePropagation?: () => void }) => e.continuePropagation?.(),
+    ref: mergeRefs((child as any).ref, ref),
+  });
+}
 
 export type TooltipProps = TooltipTriggerComponentProps & { content?: ReactNode; placement?: Placement };
 
 export function Tooltip({ children, content, delay = 0, closeDelay = 250, placement, ...props }: TooltipProps) {
   return (
     <ReactAriaTooltipTrigger delay={delay} closeDelay={closeDelay} {...props}>
-      <Focusable>{children as any}</Focusable>
+      <TooltipFocusable>{children as ReactElement}</TooltipFocusable>
       <TooltipContent placement={placement}>{content}</TooltipContent>
     </ReactAriaTooltipTrigger>
   );
