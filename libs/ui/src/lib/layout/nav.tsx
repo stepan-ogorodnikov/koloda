@@ -3,6 +3,7 @@ import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
+import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
@@ -63,7 +64,20 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
           icon={icon}
           aria-hidden="true"
         />
-        {isTextVisible && <span className="pr-4 truncate whitespace-nowrap">{_(msg)}</span>}
+        <AnimatePresence initial={false}>
+          {isTextVisible && (
+            <motion.span
+              className="overflow-hidden"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "auto", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={isMotionOn ? { duration: 0.25, ease: "easeOut" } : { duration: 0 }}
+              key="label"
+            >
+              <span className="pr-4 truncate whitespace-nowrap">{_(msg)}</span>
+            </motion.span>
+          )}
+        </AnimatePresence>
       </Link>
     </Tooltip>
   );
