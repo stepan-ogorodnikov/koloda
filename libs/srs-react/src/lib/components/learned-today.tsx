@@ -61,7 +61,7 @@ export function LearnedToday() {
                 const percentage = (data.reviewTotals[type] / (limit || Infinity)) * 100;
                 const isInfinity = limit === 0;
                 const progressWidth = Math.min(Math.max(percentage, 0), 100);
-                const progressLabel = isInfinity ? "–" : `${Math.round(progressWidth)}%`;
+                const progressLabel = formatProgressLabel(progressWidth, isInfinity);
 
                 return (
                   <div className="flex flex-col gap-2 leading-6 border-b-2 border-main py-2 px-4" key={type}>
@@ -99,4 +99,11 @@ export function LearnedToday() {
       </Layout.Container>
     </>
   );
+}
+
+function formatProgressLabel(progressWidth: number, isInfinity: boolean): string {
+  if (isInfinity) return "–";
+  if (progressWidth === 0) return "0%";
+  if (progressWidth < 1) return `${progressWidth.toFixed(1)}%`;
+  return `${Math.round(progressWidth)}%`;
 }
