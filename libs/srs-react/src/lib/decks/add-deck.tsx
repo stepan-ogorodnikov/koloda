@@ -4,7 +4,7 @@ import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { insertDeckSchema as schema } from "@koloda/srs";
 import type { Deck, InsertDeckData } from "@koloda/srs";
-import { Button, Dialog, Label, Link, link, TextField, useAppForm, useMotionSetting } from "@koloda/ui";
+import { Button, Dialog, Label, Link, link, TextField, Tooltip, useAppForm, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
@@ -61,9 +61,11 @@ export function AddDeck() {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
-      </Button>
+      <Tooltip content={_(msg`add-deck.trigger`)}>
+        <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-deck.trigger`)}>
+          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+        </Button>
+      </Tooltip>
       <Dialog.Popover variants={{ class: "w-84" }}>
         <Dialog.Body>
           <form
