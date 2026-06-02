@@ -25,6 +25,8 @@ export type UseAIChatDialogReturn = {
   messages: UIMessage[];
   template: Template | null | undefined;
   hasProfiles: boolean;
+  isModelsLoading: boolean;
+  isModelsError: boolean;
   isGenerating: boolean;
   generateError: Error | null;
   mode: AIChatMode;
@@ -67,6 +69,8 @@ export function useAIChatDialog(deckId: Deck["id"], templateId: Template["id"]):
     modelId,
     modelName,
     models,
+    isModelsLoading,
+    isModelsError,
     selectedProfile,
     provider,
     temperature,
@@ -150,6 +154,8 @@ export function useAIChatDialog(deckId: Deck["id"], templateId: Template["id"]):
     messages,
     template,
     hasProfiles,
+    isModelsLoading,
+    isModelsError,
     isGenerating,
     generateError,
     mode,

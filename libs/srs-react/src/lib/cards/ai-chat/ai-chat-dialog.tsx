@@ -41,6 +41,8 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
     messages,
     template,
     hasProfiles,
+    isModelsLoading,
+    isModelsError,
     isGenerating,
     generateError,
     mode,
@@ -128,6 +130,8 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
                   onCancel={handleCancel}
                   onReset={handleReset}
                   isLoading={isGenerating}
+                  isModelsLoading={isModelsLoading}
+                  isModelsError={isModelsError}
                   error={getGenerateErrorMessage(generateError, _)}
                   emptyState={null}
                   renderMessage={renderMessage}

@@ -43,6 +43,8 @@ export type AIChatProps = {
   onCancel?: () => void;
   onReset?: () => void;
   isLoading?: boolean;
+  isModelsLoading?: boolean;
+  isModelsError?: boolean;
   error?: string | null;
   autoSelectDefaultProfile?: boolean;
   emptyState?: ReactNode;
@@ -69,6 +71,8 @@ export function AIChat({
   onCancel,
   onReset,
   isLoading = false,
+  isModelsLoading = false,
+  isModelsError = false,
   error,
   autoSelectDefaultProfile = true,
   emptyState = null,
@@ -100,7 +104,10 @@ export function AIChat({
   }, [autoSelectDefaultProfile, defaultProfileId, profileId, onProfileChange]);
 
   const submit = () => {
-    if (profileId && modelId && prompt && !isLoading && hasRequiredSecrets) {
+    if (
+      profileId && modelId && prompt && !isLoading && hasRequiredSecrets
+      && !isModelsLoading && !isModelsError
+    ) {
       const shouldFollow = scroll.prepareSubmit();
       onSubmit(prompt);
       setInputValue("");
@@ -119,7 +126,10 @@ export function AIChat({
     onReset?.();
   };
 
-  const canSubmit = !!(profileId && modelId && !!prompt && !isLoading && hasRequiredSecrets);
+  const canSubmit = !!(
+    profileId && modelId && !!prompt && !isLoading && hasRequiredSecrets
+    && !isModelsLoading && !isModelsError
+  );
   const canCancel = isLoading && !!onCancel;
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
@@ -241,7 +251,8 @@ export function AIChat({
                       <Button
                         variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
                         aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
-                        onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
+                        onPress={() =>
+                          onModeChange(mode === "chat" ? "cards" : "chat")}
                       >
                         <HugeiconsIcon
                           className="size-6 min-w-6"

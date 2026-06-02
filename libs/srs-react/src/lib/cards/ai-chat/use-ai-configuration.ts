@@ -9,6 +9,8 @@ export type UseAIConfigurationReturn = {
   modelId: string;
   modelName: string | undefined;
   models: AIModel[];
+  isModelsLoading: boolean;
+  isModelsError: boolean;
   selectedProfile: ReturnType<typeof useAIProfiles>["selectedProfile"];
   profiles: ReturnType<typeof useAIProfiles>["profiles"];
   provider: AISecrets["provider"] | null;
@@ -28,7 +30,7 @@ export function useAIConfiguration(): UseAIConfigurationReturn {
   const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);
   const [reasoningEffort, setReasoningEffort] = useState("");
   const { profiles, selectedProfile } = useAIProfiles(profileId);
-  const { models } = useAIModels(profileId);
+  const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(profileId);
   const provider = selectedProfile?.secrets?.provider ?? null;
   const hasProfiles = profiles.length > 0;
 
@@ -96,6 +98,8 @@ export function useAIConfiguration(): UseAIConfigurationReturn {
     modelId,
     modelName,
     models,
+    isModelsLoading,
+    isModelsError,
     selectedProfile,
     profiles,
     provider,
