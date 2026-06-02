@@ -55,7 +55,7 @@ export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIMode
         <Fade className="min-w-0" key="ready">
           <Select
             buttonVariants={{ style: "ghost" }}
-            popoverVariants={{ class: "w-84" }}
+            popoverVariants={{ class: "min-w-84" }}
             listboxVariants={{ class: "h-96" }}
             aria-label={_(msg`ai.model-picker.label`)}
             placeholder={_(msg`ai.model-picker.placeholder`)}

@@ -25,6 +25,7 @@ export function LanguageSelect(
 
   return (
     <Select
+      popoverVariants={{ class: "min-w-48" }}
       label={label}
       aria-label={!label ? _(msg`language-select.label`) : undefined}
       icon={withIcon

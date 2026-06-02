@@ -176,7 +176,7 @@ function SelectValue<T extends object>(props: ReactAriaSelectValueProps<T>) {
 
 const selectPopover = tv({
   extend: popover,
-  base: "flex-col items-stretch w-[var(--trigger-width)]",
+  base: "flex-col items-stretch min-w-[var(--trigger-width)] max-w-96",
 });
 
 type SelectPopoverProps = PopoverProps & TWVProps<typeof selectPopover>;

@@ -28,6 +28,7 @@ export function ThemeSelect({ isPersisted = true, ...props }: ThemeSelectProps) 
 
   return (
     <Select
+      popoverVariants={{ class: "min-w-48" }}
       aria-label={_(msg`theme-select.label`)}
       items={ITEMS}
       value={theme}
