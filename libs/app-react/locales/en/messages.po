@@ -41,7 +41,7 @@ msgstr "Delete hotkey"
 msgid "hotkey-recorder.edit-button.label"
 msgstr "Change hotkey"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:29
+#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:30
 msgid "language-select.label"
 msgstr "Language"
 
@@ -262,7 +262,7 @@ msgstr "Settings"
 msgid "templates.title"
 msgstr "Templates"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:31
+#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:32
 msgid "theme-select.label"
 msgstr "Theme"
 

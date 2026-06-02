@@ -72,17 +72,17 @@ msgstr "Завершено за"
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:163
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:173
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:240
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:243
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:250
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:253
 msgid "ai.chat.mode.cards"
 msgstr "Режим карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:240
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:243
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:250
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:253
 msgid "ai.chat.mode.chat"
 msgstr "Режим чата"
 
@@ -91,26 +91,26 @@ msgstr "Режим чата"
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:216
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:226
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:219
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:229
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:194
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:197
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:204
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:207
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:273
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:279
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:284
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:290
 msgid "ai.chat.settings.show-chat"
 msgstr "Показать чат"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:274
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:280
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:285
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:291
 msgid "ai.chat.settings.show-settings"
 msgstr "Показать настройки"
 

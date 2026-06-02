@@ -41,7 +41,7 @@ msgstr "Удалить сочетание клавиш"
 msgid "hotkey-recorder.edit-button.label"
 msgstr "Сменить сочетание клавиш"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:29
+#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:30
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
@@ -262,7 +262,7 @@ msgstr "Настройки"
 msgid "templates.title"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:31
+#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:32
 msgid "theme-select.label"
 msgstr "Тема оформления"
 

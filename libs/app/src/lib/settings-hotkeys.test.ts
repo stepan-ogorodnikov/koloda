@@ -21,6 +21,7 @@ describe("settings-hotkeys", () => {
         prevTab: [],
         close: [],
         toggleSidebarControls: [],
+        toggleColorScheme: [],
       },
       navigation: {
         dashboard: [],

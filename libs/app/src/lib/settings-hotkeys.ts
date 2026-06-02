@@ -24,6 +24,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     prevTab: msg`settings.hotkeys.ui.prev-tab`,
     close: msg`settings.hotkeys.ui.close`,
     toggleSidebarControls: msg`settings.hotkeys.ui.toggle-sidebar-controls`,
+    toggleColorScheme: msg`settings.hotkeys.ui.toggle-color-scheme`,
   },
   navigation: {
     dashboard: msg`settings.hotkeys.navigation.dashboard`,
@@ -55,10 +56,22 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 
 const hotkeys = {
   form: ["submit", "reset"],
-  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls"],
+  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls", "toggleColorScheme"],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
   grades: ["again", "hard", "normal", "easy"],
-  ai: ["cancel", "focusPrompt", "newConversation", "openProfilePicker", "openModelPicker", "toggleSettings", "toggleCardsMode", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"],
+  ai: [
+    "cancel",
+    "focusPrompt",
+    "newConversation",
+    "openProfilePicker",
+    "openModelPicker",
+    "toggleSettings",
+    "toggleCardsMode",
+    "scrollUp",
+    "scrollDown",
+    "scrollToTop",
+    "scrollToBottom",
+  ],
 } as const;
 
 type Hotkeys = typeof hotkeys;
@@ -205,6 +218,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     prevTab: ["K"],
     close: ["Alt+C"],
     toggleSidebarControls: ["Mod+B"],
+    toggleColorScheme: [],
   },
   navigation: {
     dashboard: ["H"],
