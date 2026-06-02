@@ -1,6 +1,6 @@
 import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Fade, Select } from "@koloda/ui";
+import { Button, Fade, Select, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
@@ -40,13 +40,15 @@ export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIMode
             />
             <span className="truncate fg-error">{_(msg`ai.model-picker.error.label`)}</span>
           </div>
-          <Button
-            variants={{ style: "ghost", size: "icon", class: "fg-level-2" }}
-            aria-label={_(msg`ai.model-picker.error.retry`)}
-            onPress={() => refetch()}
-          >
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Refresh04Icon} aria-hidden="true" />
-          </Button>
+          <Tooltip content={_(msg`ai.model-picker.error.retry`)}>
+            <Button
+              variants={{ style: "ghost", size: "icon", class: "fg-level-2" }}
+              aria-label={_(msg`ai.model-picker.error.retry`)}
+              onPress={() => refetch()}
+            >
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Refresh04Icon} aria-hidden="true" />
+            </Button>
+          </Tooltip>
         </Fade>
       )}
       {!isLoading && !error && (

@@ -57,7 +57,7 @@ msgstr "Decks"
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:21
+#: ../../libs/app-react/src/lib/components/app.tsx:24
 msgid "nav.settings"
 msgstr "Settings"
 

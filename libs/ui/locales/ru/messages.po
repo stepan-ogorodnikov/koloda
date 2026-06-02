@@ -55,7 +55,7 @@ msgstr "Отменить"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Ожидание ввода"
 
-#: ../../libs/ui/src/lib/layout/drawer.tsx:87
+#: ../../libs/ui/src/lib/layout/drawer.tsx:96
 msgid "layout.drawer.label"
 msgstr "Панель навигации"
 
@@ -115,6 +115,6 @@ msgstr "Назад"
 msgid "titlebar.navigation.forward"
 msgstr "Вперёд"
 
-#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:33
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:34
 msgid "titlebar.sidebar-controls.label"
 msgstr "Переключить боковую панель"

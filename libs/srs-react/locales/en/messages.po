@@ -22,80 +22,84 @@ msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:81
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:86
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:83
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:88
 msgid "add-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:105
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:107
 msgid "add-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:116
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:118
 msgid "add-algorithm.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:75
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:77
 msgid "add-algorithm.title"
 msgstr "New preset"
 
 #: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:62
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:63
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:138
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:140
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:90
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:92
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:82
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:83
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:88
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:90
 msgid "add-deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:113
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:115
 msgid "add-deck.redirect.link"
 msgstr "Go to the new deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:124
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:126
 msgid "add-deck.submit"
 msgstr "Add deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:124
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:126
 msgid "add-deck.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:77
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:79
 msgid "add-deck.title"
 msgstr "New deck"
 
 #: ../../libs/srs-react/src/lib/decks/add-deck.tsx:64
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:65
 msgid "add-deck.trigger"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:86
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:88
 msgid "add-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:105
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:107
 msgid "add-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:116
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:118
 msgid "add-template.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:75
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:77
 msgid "add-template.title"
 msgstr "New template"
 
 #: ../../libs/srs-react/src/lib/templates/add-template.tsx:62
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:63
 msgid "add-template.trigger"
 msgstr "New template"
 
@@ -103,11 +107,11 @@ msgstr "New template"
 msgid "ai-chat.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:161
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:163
 msgid "ai-chat.close.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:170
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:172
 msgid "ai-chat.close.confirm"
 msgstr "Close"
 
@@ -115,19 +119,22 @@ msgstr "Close"
 msgid "ai-chat.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:103
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:105
 msgid "ai-chat.no-profiles"
 msgstr "Add an AI profile in settings to generate cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:45
 msgid "ai-chat.settings.prompt.edit"
 msgstr "Edit"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:38
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:44
 msgid "ai-chat.settings.prompt.preview"
 msgstr "Preview"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:52
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:56
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:59
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Reset"
 
@@ -171,11 +178,12 @@ msgstr "Pending"
 msgid "ai-chat.table.columns.status.success"
 msgstr "Success"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:112
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:114
 msgid "ai-chat.title"
 msgstr "AI Chat"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:97
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:95
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:98
 msgid "ai-chat.trigger"
 msgstr "AI Chat"
 
@@ -387,11 +395,13 @@ msgstr "Updated"
 msgid "cards.table.selection.delete-confirm"
 msgstr "Are you sure you want to delete selected cards?"
 
-#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:25
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:27
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:28
 msgid "cards.views.stack"
 msgstr "Stack"
 
 #: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:22
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:23
 msgid "cards.views.table"
 msgstr "Table"
 

@@ -1,7 +1,7 @@
 import { BubbleChatAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { StreamUsage } from "@koloda/ai";
-import { Button } from "@koloda/ui";
+import { Button, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ReactNode, RefObject } from "react";
@@ -38,19 +38,24 @@ export function AIChatFooter({
       {contextUsage !== undefined && contextLength !== undefined && (
         <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />
       )}
-      <Button
-        variants={{ style: "ghost", size: "icon" }}
-        aria-label={_(msg`ai.chat.new-conversation.label`)}
+      <Tooltip
+        content={_(msg`ai.chat.new-conversation.label`)}
         isDisabled={!canStartNewConversation}
-        onPress={onNewConversation}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={1.75}
-          icon={BubbleChatAddIcon}
-          aria-hidden="true"
-        />
-      </Button>
+        <Button
+          variants={{ style: "ghost", size: "icon" }}
+          aria-label={_(msg`ai.chat.new-conversation.label`)}
+          isDisabled={!canStartNewConversation}
+          onPress={onNewConversation}
+        >
+          <HugeiconsIcon
+            className="size-5 min-w-5"
+            strokeWidth={1.75}
+            icon={BubbleChatAddIcon}
+            aria-hidden="true"
+          />
+        </Button>
+      </Tooltip>
       {settingsToggle}
     </div>
   );

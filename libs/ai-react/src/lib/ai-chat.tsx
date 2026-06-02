@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter, StreamUsage } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
 import { useAppHotkey } from "@koloda/core-react";
-import { Button, Fade } from "@koloda/ui";
+import { Button, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -191,18 +191,20 @@ export function AIChat({
               <AnimatePresence>
                 {scroll.showJumpToLatest && (
                   <Fade className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center w-full max-w-3xl">
-                    <Button
-                      variants={{ style: "primary", size: "icon", class: "rounded-full" }}
-                      aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
-                      onPress={scroll.handleScrollToLatest}
-                    >
-                      <HugeiconsIcon
-                        className="size-5 min-w-5"
-                        strokeWidth={1.75}
-                        icon={ArrowDown02Icon}
-                        aria-hidden="true"
-                      />
-                    </Button>
+                    <Tooltip content={_(msg`ai.chat.scroll-to-latest.label`)}>
+                      <Button
+                        variants={{ style: "primary", size: "icon", class: "rounded-full" }}
+                        aria-label={_(msg`ai.chat.scroll-to-latest.label`)}
+                        onPress={scroll.handleScrollToLatest}
+                      >
+                        <HugeiconsIcon
+                          className="size-5 min-w-5"
+                          strokeWidth={1.75}
+                          icon={ArrowDown02Icon}
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </Tooltip>
                   </Fade>
                 )}
               </AnimatePresence>
@@ -235,18 +237,20 @@ export function AIChat({
                 <div className="grow min-w-3" />
                 <div className="shrink-0 flex flex-row items-center gap-2">
                   {onModeChange && (
-                    <Button
-                      variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
-                      aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
-                      onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
-                    >
-                      <HugeiconsIcon
-                        className="size-6 min-w-6"
-                        strokeWidth={1.5}
-                        icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
-                        aria-hidden="true"
-                      />
-                    </Button>
+                    <Tooltip content={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}>
+                      <Button
+                        variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
+                        aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
+                        onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
+                      >
+                        <HugeiconsIcon
+                          className="size-6 min-w-6"
+                          strokeWidth={1.5}
+                          icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </Tooltip>
                   )}
                   <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={onCancel} />
                 </div>
@@ -264,20 +268,26 @@ export function AIChat({
         contextLength={contextLength}
         settingsToggle={hasSettingsToggle
           ? (
-            <Button
-              variants={{ style: "ghost", size: "icon" }}
-              aria-label={settingsPanelOpen
+            <Tooltip
+              content={settingsPanelOpen
                 ? _(msg`ai.chat.settings.show-chat`)
                 : _(msg`ai.chat.settings.show-settings`)}
-              onPress={() => onSettingsPanelOpenChange?.(!settingsPanelOpen)}
             >
-              <HugeiconsIcon
-                className="size-5 min-w-5"
-                strokeWidth={1.75}
-                icon={settingsPanelOpen ? Chat01Icon : Settings01Icon}
-                aria-hidden="true"
-              />
-            </Button>
+              <Button
+                variants={{ style: "ghost", size: "icon" }}
+                aria-label={settingsPanelOpen
+                  ? _(msg`ai.chat.settings.show-chat`)
+                  : _(msg`ai.chat.settings.show-settings`)}
+                onPress={() => onSettingsPanelOpenChange?.(!settingsPanelOpen)}
+              >
+                <HugeiconsIcon
+                  className="size-5 min-w-5"
+                  strokeWidth={1.75}
+                  icon={settingsPanelOpen ? Chat01Icon : Settings01Icon}
+                  aria-hidden="true"
+                />
+              </Button>
+            </Tooltip>
           )
           : undefined}
       />

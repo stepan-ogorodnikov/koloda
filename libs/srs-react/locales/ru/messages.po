@@ -22,80 +22,84 @@ msgstr "{0, plural, one {# колода использует} few {# колод�
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:81
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:86
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:83
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:88
 msgid "add-algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:105
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:107
 msgid "add-algorithm.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:116
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:118
 msgid "add-algorithm.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:75
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:77
 msgid "add-algorithm.title"
 msgstr "Новый алгоритм"
 
 #: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:62
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:63
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:138
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:140
 msgid "add-card.submit"
 msgstr "Добавить"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:90
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:92
 msgid "add-cards.title"
 msgstr "Добавить карточку"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:82
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:83
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:88
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:90
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:113
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:115
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:124
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:126
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:124
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:126
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:77
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:79
 msgid "add-deck.title"
 msgstr "Новая колода"
 
 #: ../../libs/srs-react/src/lib/decks/add-deck.tsx:64
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:65
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:86
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:88
 msgid "add-template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:105
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:107
 msgid "add-template.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:116
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:118
 msgid "add-template.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:75
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:77
 msgid "add-template.title"
 msgstr "Новый шаблон"
 
 #: ../../libs/srs-react/src/lib/templates/add-template.tsx:62
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:63
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
@@ -103,11 +107,11 @@ msgstr "Новый шаблон"
 msgid "ai-chat.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:161
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:163
 msgid "ai-chat.close.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:170
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:172
 msgid "ai-chat.close.confirm"
 msgstr "Закрыть"
 
@@ -115,19 +119,22 @@ msgstr "Закрыть"
 msgid "ai-chat.generated-no-cards"
 msgstr "Карточки не сгенерированы"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:103
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:105
 msgid "ai-chat.no-profiles"
 msgstr "Добавьте профиль ИИ в настройках для генерации карточек"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:45
 msgid "ai-chat.settings.prompt.edit"
 msgstr "Редактировать"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:38
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:44
 msgid "ai-chat.settings.prompt.preview"
 msgstr "Предпросмотр"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:52
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:56
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:59
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Сбросить"
 
@@ -171,11 +178,12 @@ msgstr "В обработке"
 msgid "ai-chat.table.columns.status.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:112
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:114
 msgid "ai-chat.title"
 msgstr "Помощник ИИ"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:97
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:95
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:98
 msgid "ai-chat.trigger"
 msgstr "Помощник ИИ"
 
@@ -387,11 +395,13 @@ msgstr "Обновлена"
 msgid "cards.table.selection.delete-confirm"
 msgstr "Вы уверены, что хотите удалить выбранные карточки?"
 
-#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:25
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:27
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:28
 msgid "cards.views.stack"
 msgstr "По одной"
 
 #: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:22
+#: ../../libs/srs-react/src/lib/cards/cards-view-toggle.tsx:23
 msgid "cards.views.table"
 msgstr "Таблица"
 

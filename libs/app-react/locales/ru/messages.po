@@ -57,7 +57,7 @@ msgstr "Колоды"
 msgid "nav.home"
 msgstr "Главная"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:21
+#: ../../libs/app-react/src/lib/components/app.tsx:24
 msgid "nav.settings"
 msgstr "Настройки"
 

@@ -92,13 +92,15 @@ export function AIChatDialog({ deckId, templateId }: AIChatDialogProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleDialogOpenChange}>
       <div className="relative">
-        <Button
-          variants={{ style: "dashed", size: "icon" }}
-          aria-label={_(msg`ai-chat.trigger`)}
-          isDisabled={!hasProfiles}
-        >
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
-        </Button>
+        <Tooltip content={_(msg`ai-chat.trigger`)} isDisabled={!hasProfiles}>
+          <Button
+            variants={{ style: "dashed", size: "icon" }}
+            aria-label={_(msg`ai-chat.trigger`)}
+            isDisabled={!hasProfiles}
+          >
+            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
+          </Button>
+        </Tooltip>
         {!hasProfiles && (
           <Tooltip content={_(msg`ai-chat.no-profiles`)}>
             <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />

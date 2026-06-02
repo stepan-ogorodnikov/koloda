@@ -1,6 +1,6 @@
 import { Edit03Icon, Undo02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, TextField } from "@koloda/ui";
+import { Button, TextField, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
@@ -33,28 +33,36 @@ export function AIChatSettingsPromptEditor({
       <div className="flex flex-row items-center justify-between">
         <span>{label}</span>
         <div className="flex flex-row items-center gap-2">
-          <Button
-            variants={{ style: "ghost", size: "icon" }}
-            aria-label={mode === "edit"
+          <Tooltip
+            content={mode === "edit"
               ? _(msg`ai-chat.settings.prompt.preview`)
               : _(msg`ai-chat.settings.prompt.edit`)}
-            onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
           >
-            <HugeiconsIcon
-              className="size-5 min-w-5"
-              strokeWidth={1.75}
-              icon={mode === "edit" ? ViewIcon : Edit03Icon}
-              aria-hidden="true"
-            />
-          </Button>
-          <Button
-            variants={{ style: "ghost", size: "icon" }}
-            aria-label={_(msg`ai-chat.settings.prompt.reset`)}
-            onPress={() => onChange(null)}
-            isDisabled={!isCustom}
-          >
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Undo02Icon} aria-hidden="true" />
-          </Button>
+            <Button
+              variants={{ style: "ghost", size: "icon" }}
+              aria-label={mode === "edit"
+                ? _(msg`ai-chat.settings.prompt.preview`)
+                : _(msg`ai-chat.settings.prompt.edit`)}
+              onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
+            >
+              <HugeiconsIcon
+                className="size-5 min-w-5"
+                strokeWidth={1.75}
+                icon={mode === "edit" ? ViewIcon : Edit03Icon}
+                aria-hidden="true"
+              />
+            </Button>
+          </Tooltip>
+          <Tooltip content={_(msg`ai-chat.settings.prompt.reset`)} isDisabled={!isCustom}>
+            <Button
+              variants={{ style: "ghost", size: "icon" }}
+              aria-label={_(msg`ai-chat.settings.prompt.reset`)}
+              onPress={() => onChange(null)}
+              isDisabled={!isCustom}
+            >
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Undo02Icon} aria-hidden="true" />
+            </Button>
+          </Tooltip>
         </div>
       </div>
       {mode === "edit"
