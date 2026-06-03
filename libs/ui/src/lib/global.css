@@ -199,7 +199,7 @@
   --breakpoint-*: initial;
   --breakpoint-wd: 48rem; /* wide */
   /* containers */
-  --container-main: --spacing(235);
+  --container-main: 64rem;
   /* sizes */
   --titlebar-height: 2.5rem;
   /* fonts */
