@@ -1,9 +1,9 @@
-import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
+import { Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Fade, Select, Tooltip } from "@koloda/ui";
+import { Button, Fade, Select, Tooltip, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { AnimatePresence } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useAIModels } from "./use-ai-models";
 
 export type AIModelPickerProps = {
@@ -16,41 +16,19 @@ export type AIModelPickerProps = {
 export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIModelPickerProps) {
   const { _ } = useLingui();
   const { models, error, isLoading, refetch } = useAIModels(profileId);
+  const isMotionOn = useMotionSetting();
 
   if (!profileId) return null;
 
+  const cube = {
+    initial: { opacity: 0, rotateX: 60, y: "-75%" },
+    animate: { opacity: 1, rotateX: 0, y: 0 },
+    exit: { opacity: 0, rotateX: -60, y: "75%" },
+    transition: isMotionOn ? { duration: 0.25 } : { duration: 0 },
+  };
+
   return (
     <AnimatePresence mode="wait">
-      {isLoading && (
-        <Fade
-          className="flex flex-row items-center h-10 min-w-0 px-2 animate-shimmer-text--fg-level-4/fg-level-1"
-          key="loading"
-        >
-          <span>{_(msg`ai.model-picker.loading.label`)}</span>
-        </Fade>
-      )}
-      {!isLoading && error && (
-        <Fade className="flex h-10 min-w-0 flex-row items-center gap-2" key="error">
-          <div className="flex min-w-0 flex-row items-center gap-1 fg-error">
-            <HugeiconsIcon
-              className="size-5 min-w-5 fg-error"
-              strokeWidth={1.75}
-              icon={BadgeAlertIcon}
-              aria-hidden="true"
-            />
-            <span className="truncate fg-error">{_(msg`ai.model-picker.error.label`)}</span>
-          </div>
-          <Tooltip content={_(msg`ai.model-picker.error.retry`)}>
-            <Button
-              variants={{ style: "ghost", size: "icon", class: "fg-level-2" }}
-              aria-label={_(msg`ai.model-picker.error.retry`)}
-              onPress={() => refetch()}
-            >
-              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Refresh04Icon} aria-hidden="true" />
-            </Button>
-          </Tooltip>
-        </Fade>
-      )}
       {!isLoading && !error && (
         <Fade className="min-w-0" key="ready">
           <Select
@@ -74,6 +52,56 @@ export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIMode
               </Select.ListBoxItem>
             )}
           </Select>
+        </Fade>
+      )}
+      {(isLoading || error) && (
+        <Fade
+          key="status"
+          className="flex h-10 min-w-0 flex-row items-center gap-2 overflow-hidden"
+        >
+          <Tooltip content={_(msg`ai.model-picker.error.retry`)}>
+            <Button
+              variants={{ style: "ghost", size: "icon", class: "disabled:fg-level-2" }}
+              aria-label={_(msg`ai.model-picker.error.retry`)}
+              isDisabled={isLoading}
+              onPress={() => refetch()}
+            >
+              <HugeiconsIcon
+                className={`size-5 min-w-5 ${isLoading ? "animate-spin" : ""}`}
+                strokeWidth={1.75}
+                icon={Refresh04Icon}
+                aria-hidden="true"
+              />
+            </Button>
+          </Tooltip>
+          <div
+            className="grid perspective-near"
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <AnimatePresence initial={false}>
+              {isLoading
+                ? (
+                  <motion.div
+                    className="[grid-area:1/1]"
+                    style={{ backfaceVisibility: "hidden" }}
+                    key="loading"
+                    {...cube}
+                  >
+                    <span>{_(msg`ai.model-picker.loading.label`)}</span>
+                  </motion.div>
+                )
+                : (
+                  <motion.div
+                    className="[grid-area:1/1]"
+                    style={{ backfaceVisibility: "hidden" }}
+                    key="error"
+                    {...cube}
+                  >
+                    <span className="truncate fg-error">{_(msg`ai.model-picker.error.label`)}</span>
+                  </motion.div>
+                )}
+            </AnimatePresence>
+          </div>
         </Fade>
       )}
     </AnimatePresence>
