@@ -4,7 +4,6 @@ import { atom, useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import type { Dispatch, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useMotionSetting } from "../hooks/use-motion-settings";
 
 const drawerOpenAtom = atom(false);
@@ -75,13 +74,11 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [close, isOpen]);
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
+  return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="wd:hidden fixed z-50 inset-x-0 bottom-0 top-[calc(var(--titlebar-height)+2px)] bg-overlay"
+          className="wd:hidden absolute z-50 inset-x-0 bottom-0 top-0 bg-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -108,7 +105,6 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </AnimatePresence>
   );
 }

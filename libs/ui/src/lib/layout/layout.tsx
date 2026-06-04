@@ -27,7 +27,7 @@ export function Layout({ variants, titlebar, children }: LayoutProps) {
       {titlebar}
       <LayoutPortalContext.Provider value={portalValue}>
         <div
-          className="grow flex flex-row h-full w-full min-w-80 min-h-0 overflow-hidden bg-level-1"
+          className="relative grow flex flex-row h-full w-full min-w-80 min-h-0 overflow-hidden bg-level-1"
           id="main"
           tabIndex={-1}
         >
