@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, screen } from "electron";
 import { createRequire } from "node:module";
-import { join } from "node:path";
 import os from "node:os";
+import { join } from "node:path";
 
 const isDev = !app.isPackaged;
 const __dirname = import.meta.dirname!;
@@ -48,8 +48,8 @@ function createWindow() {
   const commonOptions = {
     width: 1280,
     height: 720,
-    minWidth: 800,
-    minHeight: 600,
+    minWidth: 320,
+    minHeight: 320,
     resizable: true,
     show: false,
     webPreferences: {
