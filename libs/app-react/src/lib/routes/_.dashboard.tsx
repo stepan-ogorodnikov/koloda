@@ -19,10 +19,10 @@ function DashboardRoute() {
 
   return (
     <>
-      <Layout.Sidebar hasContent>
+      <Layout.Sidebar>
         <LearnedToday />
       </Layout.Sidebar>
-      <Layout.Content variants={{ hasContent: true }}>
+      <Layout.Content>
         <Layout.Container ref={ref} tabIndex={-1}>
           <Lessons />
         </Layout.Container>

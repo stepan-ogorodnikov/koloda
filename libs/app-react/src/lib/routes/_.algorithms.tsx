@@ -5,8 +5,7 @@ import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } 
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet, useLocation } from "@tanstack/react-router";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/algorithms")({
@@ -22,15 +21,13 @@ function AlgorithmsRoute() {
   useTitle();
   const ref = useRouteFocus();
   const { _ } = useLingui();
-  const { pathname } = useLocation();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
   const query = useQuery({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
-  const hasContent = !(pathname === "/algorithms" || pathname === "/algorithms/");
 
   return (
     <>
-      <Layout.Sidebar hasContent={hasContent}>
+      <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
           <Layout.H1>
             {_(msg`algorithms.title`)}
@@ -58,7 +55,7 @@ function AlgorithmsRoute() {
           </QueryState>
         </Layout.Container>
       </Layout.Sidebar>
-      <Layout.Content variants={{ hasContent: hasContent }}>
+      <Layout.Content>
         <Outlet />
       </Layout.Content>
     </>

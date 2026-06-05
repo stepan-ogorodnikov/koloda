@@ -1,6 +1,6 @@
-import type { TWVProps } from "@koloda/ui";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import { useHasLayoutContent } from "./use-has-layout-content";
 
 const layoutContent = tv({
   base: [
@@ -10,10 +10,10 @@ const layoutContent = tv({
   variants: { hasContent: { true: "flex", false: "hidden" } },
 });
 
-type LayoutContentProps = PropsWithChildren & TWVProps<typeof layoutContent>;
+export function LayoutContent({ children }: PropsWithChildren) {
+  const hasContent = useHasLayoutContent();
 
-export function LayoutContent({ variants, children }: LayoutContentProps) {
-  return <div className={layoutContent(variants)}>{children}</div>;
+  return <div className={layoutContent({ hasContent })}>{children}</div>;
 }
 
 type LayoutContainerProps = ComponentProps<"div">;

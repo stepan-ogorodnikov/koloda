@@ -3,7 +3,7 @@ import { NotFound } from "@koloda/ui";
 import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_/settings")({
   component: SettingsRoute,
@@ -23,12 +23,10 @@ function SettingsRoute() {
   const ref = useRouteFocus();
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
-  const { pathname } = useLocation();
-  const hasContent = !(pathname === "/settings" || pathname === "/settings/");
 
   return (
     <>
-      <Layout.Sidebar hasContent={hasContent}>
+      <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
           <Layout.H1>{_(msg`settings.title`)}</Layout.H1>
         </Layout.Header>
@@ -46,7 +44,7 @@ function SettingsRoute() {
           ))}
         </Layout.Container>
       </Layout.Sidebar>
-      <Layout.Content variants={{ hasContent: hasContent }}>
+      <Layout.Content>
         <Outlet />
       </Layout.Content>
     </>

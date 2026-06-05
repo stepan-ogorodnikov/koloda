@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
+import { useHasLayoutContent } from "./use-has-layout-content";
 
 const layoutSidebar = tv({
   base: [
@@ -14,13 +15,12 @@ const layoutSidebar = tv({
   variants: { hasContent: { true: "hidden wd:flex", false: "grow wd:grow-0" } },
 });
 
-type LayoutSidebarProps = PropsWithChildren & { hasContent?: boolean };
-
-export function LayoutSidebar({ hasContent, children }: LayoutSidebarProps) {
+export function LayoutSidebar({ children }: PropsWithChildren) {
   const { setToggleDisabled, sidebarPortal } = useLayoutDrawer();
   const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const hasContent = useHasLayoutContent();
   useEffect(() => {
-    setToggleDisabled(hasContent === false);
+    setToggleDisabled(!hasContent);
     return () => setToggleDisabled(false);
   }, [hasContent, setToggleDisabled]);
 
