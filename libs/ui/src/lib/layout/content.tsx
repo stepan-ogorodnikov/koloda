@@ -1,8 +1,11 @@
 import { useMatch, useRouterState } from "@tanstack/react-router";
-import { atom, useSetAtom } from "jotai";
+import { useMediaQuery } from "@react-hook/media-query";
+import { atom, useAtom, useSetAtom } from "jotai";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { useLayoutEffect } from "react";
 import { tv } from "tailwind-variants";
+import { getCSSVar } from "../utility";
+import { drawerOpenAtom } from "./drawer";
 
 export const layoutHasContentAtom = atom(false);
 
@@ -23,13 +26,20 @@ export function LayoutContent({ children }: PropsWithChildren) {
     },
   });
   const setHasContent = useSetAtom(layoutHasContentAtom);
+  const [isDrawerOpen] = useAtom(drawerOpenAtom);
+  const isNarrow = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const isInert = isNarrow && hasContent && isDrawerOpen;
 
   useLayoutEffect(() => {
     setHasContent(hasContent);
     return () => setHasContent(false);
   }, [hasContent, setHasContent]);
 
-  return <div className={layoutContent({ hasContent })}>{children}</div>;
+  return (
+    <div className={layoutContent({ hasContent })} {...(isInert ? { inert: true } : {})}>
+      {children}
+    </div>
+  );
 }
 
 type LayoutContainerProps = ComponentProps<"div">;

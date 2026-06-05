@@ -9,7 +9,7 @@ import { tv } from "tailwind-variants";
 import { getCSSVar } from "../utility";
 import { layoutHasContentAtom } from "./content";
 
-const drawerOpenAtom = atom(false);
+export const drawerOpenAtom = atom(false);
 
 const layoutDrawerOverlay = tv({
   base: "max-wd:grow flex flex-row shrink-0",
@@ -75,6 +75,7 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
   const location = useRouterState({ select: (s) => s.location.pathname });
   const [hasContent] = useAtom(layoutHasContentAtom);
   const drawerLabel = isNarrow && hasContent ? _(msg`layout.drawer.label`) : undefined;
+  const isInert = isNarrow && hasContent && !isOpen;
 
   useEffect(() => {
     if (!isOpen || !hasContent) return;
@@ -105,6 +106,7 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
         aria-label={drawerLabel}
         role={isNarrow && hasContent ? "dialog" : undefined}
         onMouseDown={isNarrow && hasContent ? (e) => e.stopPropagation() : undefined}
+        {...(isInert ? { inert: true } : {})}
       >
         <div
           className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main overflow-y-auto"
