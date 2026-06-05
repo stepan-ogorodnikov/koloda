@@ -1,5 +1,6 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useRouterState } from "@tanstack/react-router";
 import { useMediaQuery } from "@react-hook/media-query";
 import { atom, useAtom } from "jotai";
 import type { Dispatch, MouseEvent, SetStateAction } from "react";
@@ -72,6 +73,7 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
   const { _ } = useLingui();
   const { isOpen, close } = useLayoutDrawer();
   const isNarrow = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const location = useRouterState({ select: (s) => s.location.pathname });
   const [hasContent] = useAtom(layoutHasContentAtom);
   const drawerLabel = isNarrow && hasContent ? _(msg`layout.drawer.label`) : undefined;
 
@@ -85,6 +87,10 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [close, hasContent, isOpen]);
+
+  useEffect(() => {
+    if (isNarrow) close();
+  }, [close, isNarrow, location]);
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) close();
