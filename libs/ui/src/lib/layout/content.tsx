@@ -1,6 +1,9 @@
+import { useMatch, useRouterState } from "@tanstack/react-router";
+import { useSetAtom } from "jotai";
 import type { ComponentProps, PropsWithChildren } from "react";
+import { useLayoutEffect } from "react";
 import { tv } from "tailwind-variants";
-import { useHasLayoutContent } from "./use-has-layout-content";
+import { layoutHasContentAtom } from "./drawer";
 
 const layoutContent = tv({
   base: [
@@ -11,7 +14,19 @@ const layoutContent = tv({
 });
 
 export function LayoutContent({ children }: PropsWithChildren) {
-  const hasContent = useHasLayoutContent();
+  const matchId = useMatch({ strict: false, select: (m) => m.id });
+  const hasContent = useRouterState({
+    select: (s) => {
+      const index = s.matches.findIndex((m) => m.id === matchId);
+      return !!s.matches[index + 1];
+    },
+  });
+  const setHasContent = useSetAtom(layoutHasContentAtom);
+
+  useLayoutEffect(() => {
+    setHasContent(hasContent);
+    return () => setHasContent(false);
+  }, [hasContent, setHasContent]);
 
   return <div className={layoutContent({ hasContent })}>{children}</div>;
 }

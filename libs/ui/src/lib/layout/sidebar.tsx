@@ -1,41 +1,10 @@
-import { getCSSVar } from "@koloda/ui";
-import { useMediaQuery } from "@react-hook/media-query";
 import type { PropsWithChildren } from "react";
-import { useEffect } from "react";
 import { createPortal } from "react-dom";
-import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
-import { useHasLayoutContent } from "./use-has-layout-content";
-
-const layoutSidebar = tv({
-  base: [
-    "flex flex-col shrink-0 overflow-hidden",
-    "wd:w-[clamp(14rem,25%,20rem)] wd:border-r-2 wd:border-main wd:overflow-hidden",
-  ],
-  variants: { hasContent: { true: "hidden wd:flex", false: "grow wd:grow-0" } },
-});
 
 export function LayoutSidebar({ children }: PropsWithChildren) {
-  const { setToggleDisabled, sidebarPortal } = useLayoutDrawer();
-  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
-  const hasContent = useHasLayoutContent();
-  useEffect(() => {
-    setToggleDisabled(!hasContent);
-    return () => setToggleDisabled(false);
-  }, [hasContent, setToggleDisabled]);
-
-  const content = <div className={layoutSidebar({ hasContent })}>{children}</div>;
-
-  if (hasContent && isDrawerLayout) {
-    return sidebarPortal
-      ? createPortal(
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">{children}</div>,
-        sidebarPortal,
-      )
-      : null;
-  }
-
-  return content;
+  const { sidebarPortal } = useLayoutDrawer();
+  return sidebarPortal ? createPortal(children, sidebarPortal) : null;
 }
 
 export function LayoutSidebarItem({ children }: PropsWithChildren) {

@@ -10,18 +10,9 @@ import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
 
 export function LayoutNav({ children }: PropsWithChildren) {
-  const { navPortal, isToggleDisabled } = useLayoutDrawer();
-  const isDrawerLayout = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const { navPortal } = useLayoutDrawer();
 
-  const content = (
-    <nav className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main overflow-y-auto">
-      {children}
-    </nav>
-  );
-
-  if (isDrawerLayout && !isToggleDisabled) return navPortal ? createPortal(content, navPortal) : null;
-
-  return content;
+  return navPortal ? createPortal(children, navPortal) : null;
 }
 
 const layoutNavLink = tv({
@@ -42,8 +33,8 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const { close, isNavCollapsed } = useLayoutDrawer();
-  const isLargerBreakpoint = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
-  const isTextVisible = isLargerBreakpoint ? !isNavCollapsed : false;
+  const isWide = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
+  const isTextVisible = isWide ? !isNavCollapsed : false;
 
   return (
     <Tooltip

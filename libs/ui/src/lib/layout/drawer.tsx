@@ -1,14 +1,118 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useMediaQuery } from "@react-hook/media-query";
 import { atom, useAtom } from "jotai";
-import { AnimatePresence, motion } from "motion/react";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, MouseEvent, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useEffect } from "react";
-import { useMotionSetting } from "../hooks/use-motion-settings";
+import { tv } from "tailwind-variants";
+import { getCSSVar } from "../utility";
 
 const drawerOpenAtom = atom(false);
-const drawerToggleDisabledAtom = atom(false);
 const navCollapsedAtom = atom(false);
+export const layoutHasContentAtom = atom(false);
+
+const layoutDrawerOverlay = tv({
+  base: "max-wd:grow flex flex-row shrink-0",
+  variants: {
+    hasContent: {
+      true: [
+        "max-wd:absolute max-wd:inset-0 max-wd:z-50 max-wd:bg-overlay max-wd:animate-opacity",
+        "max-wd:opacity-0 max-wd:pointer-events-none",
+      ],
+      false: "",
+    },
+    isOpen: { true: "", false: "" },
+  },
+  compoundVariants: [
+    {
+      hasContent: true,
+      isOpen: true,
+      class: "max-wd:opacity-100 max-wd:pointer-events-auto",
+    },
+  ],
+});
+
+const layoutDrawerPanel = tv({
+  base: "flex flex-row shrink-0 bg-transparent",
+  variants: {
+    hasContent: {
+      true: "max-wd:bg-level-1 max-wd:transition-transform max-wd:duration-250 max-wd:-translate-x-full",
+      false: "max-wd:grow",
+    },
+    isOpen: { true: "", false: "" },
+  },
+  compoundVariants: [
+    {
+      hasContent: true,
+      isOpen: true,
+      class: "max-wd:translate-x-0",
+    },
+  ],
+});
+
+const layoutDrawerSidebar = tv({
+  base: [
+    "flex flex-col shrink-0 overflow-hidden border-r-2 border-main",
+    "max-wd:w-[clamp(14rem,80vw,20rem)] wd:w-[clamp(14rem,25vw,20rem)]",
+  ],
+  variants: {
+    hasContent: {
+      true: "",
+      false: "",
+    },
+  },
+});
+
+type LayoutDrawerProps = {
+  setNavPortal: Dispatch<SetStateAction<HTMLElement | null>>;
+  setSidebarPortal: Dispatch<SetStateAction<HTMLElement | null>>;
+};
+
+export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerProps) {
+  const { _ } = useLingui();
+  const { isOpen, close } = useLayoutDrawer();
+  const isNarrow = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const [hasContent] = useAtom(layoutHasContentAtom);
+  const drawerLabel = isNarrow && hasContent ? _(msg`layout.drawer.label`) : undefined;
+
+  useEffect(() => {
+    if (!isOpen || !hasContent) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [close, hasContent, isOpen]);
+
+  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) close();
+  };
+
+  return (
+    <div
+      className={layoutDrawerOverlay({ isOpen, hasContent })}
+      onMouseDown={isNarrow && hasContent ? handleMouseDown : undefined}
+    >
+      <div
+        className={layoutDrawerPanel({ isOpen, hasContent })}
+        aria-label={drawerLabel}
+        role={isNarrow && hasContent ? "dialog" : undefined}
+        onMouseDown={isNarrow && hasContent ? (e) => e.stopPropagation() : undefined}
+      >
+        <div
+          className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main overflow-y-auto"
+          ref={setNavPortal}
+        />
+        <div
+          className={layoutDrawerSidebar({ hasContent })}
+          ref={setSidebarPortal}
+        />
+      </div>
+    </div>
+  );
+}
 
 type LayoutPortalContextValue = {
   navPortal: HTMLElement | null;
@@ -19,92 +123,29 @@ export const LayoutPortalContext = createContext<LayoutPortalContextValue | null
 
 export function useLayoutDrawer() {
   const [isOpen, setIsOpen] = useAtom(drawerOpenAtom);
-  const [isToggleDisabled, setIsToggleDisabled] = useAtom(drawerToggleDisabledAtom);
   const [isNavCollapsed, setIsNavCollapsed] = useAtom(navCollapsedAtom);
   const portals = useContext(LayoutPortalContext);
 
-  useEffect(() => {
-    if (isToggleDisabled) setIsOpen(false);
-  }, [isToggleDisabled, setIsOpen]);
-
   const open = useCallback(() => {
-    if (!isToggleDisabled) setIsOpen(true);
-  }, [isToggleDisabled, setIsOpen]);
+    setIsOpen(true);
+  }, [setIsOpen]);
 
   const close = useCallback(() => {
     setIsOpen(false);
   }, [setIsOpen]);
 
   const toggle = useCallback(() => {
-    if (!isToggleDisabled) setIsOpen((prev) => !prev);
-  }, [isToggleDisabled, setIsOpen]);
+    setIsOpen((prev) => !prev);
+  }, [setIsOpen]);
 
   return {
     isOpen,
-    isToggleDisabled,
     open,
     close,
     toggle,
-    setToggleDisabled: setIsToggleDisabled,
     navPortal: portals?.navPortal ?? null,
     sidebarPortal: portals?.sidebarPortal ?? null,
     isNavCollapsed,
     setIsNavCollapsed,
   };
-}
-
-type LayoutDrawerProps = {
-  setNavPortal: Dispatch<SetStateAction<HTMLElement | null>>;
-  setSidebarPortal: Dispatch<SetStateAction<HTMLElement | null>>;
-};
-
-export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerProps) {
-  const { _ } = useLingui();
-  const { isOpen, close } = useLayoutDrawer();
-  const isMotionOn = useMotionSetting();
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [close, isOpen]);
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          className="wd:hidden absolute z-50 inset-x-0 bottom-0 top-0 bg-overlay"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
-          key="drawer-overlay"
-        >
-          <motion.div
-            className="flex flex-col h-full w-80 border-r-2 border-main bg-level-1 focus-ring"
-            aria-label={_(msg`layout.drawer.label`)}
-            role="dialog"
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={isMotionOn ? { duration: 0.25, ease: "easeOut" } : { duration: 0 }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="grow flex flex-row min-h-0 overflow-hidden">
-              <div className="flex flex-col shrink-0 h-full overflow-hidden" ref={setNavPortal} />
-              <div className="grow flex flex-col min-w-0 overflow-hidden" ref={setSidebarPortal} />
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
 }

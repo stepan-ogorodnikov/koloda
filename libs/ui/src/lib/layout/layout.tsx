@@ -31,8 +31,8 @@ export function Layout({ variants, titlebar, children }: LayoutProps) {
           id="main"
           tabIndex={-1}
         >
-          {children}
           <LayoutDrawer setNavPortal={setNavPortal} setSidebarPortal={setSidebarPortal} />
+          {children}
         </div>
       </LayoutPortalContext.Provider>
     </div>
