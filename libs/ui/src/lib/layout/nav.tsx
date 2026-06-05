@@ -3,14 +3,26 @@ import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
+import { atom, useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren } from "react";
+import { useCallback, useContext } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
+import { LayoutPortalContext } from "./layout";
+
+const navCollapsedAtom = atom(false);
+
+export function useNavCollapsed() {
+  const [isNavCollapsed, setIsNavCollapsed] = useAtom(navCollapsedAtom);
+  const toggle = useCallback(() => setIsNavCollapsed((prev) => !prev), [setIsNavCollapsed]);
+
+  return { isNavCollapsed, setIsNavCollapsed, toggle };
+}
 
 export function LayoutNav({ children }: PropsWithChildren) {
-  const { navPortal } = useLayoutDrawer();
+  const { navPortal } = useContext(LayoutPortalContext) ?? {};
 
   return navPortal ? createPortal(children, navPortal) : null;
 }
@@ -32,7 +44,8 @@ type LayoutNavLinkProps = {
 export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
-  const { close, isNavCollapsed } = useLayoutDrawer();
+  const { close } = useLayoutDrawer();
+  const { isNavCollapsed } = useNavCollapsed();
   const isWide = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
   const isTextVisible = isWide ? !isNavCollapsed : false;
 

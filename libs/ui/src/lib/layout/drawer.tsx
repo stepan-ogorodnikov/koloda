@@ -1,16 +1,15 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useRouterState } from "@tanstack/react-router";
 import { useMediaQuery } from "@react-hook/media-query";
+import { useRouterState } from "@tanstack/react-router";
 import { atom, useAtom } from "jotai";
 import type { Dispatch, MouseEvent, SetStateAction } from "react";
-import { createContext, useCallback, useContext, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { tv } from "tailwind-variants";
 import { getCSSVar } from "../utility";
+import { layoutHasContentAtom } from "./content";
 
 const drawerOpenAtom = atom(false);
-const navCollapsedAtom = atom(false);
-export const layoutHasContentAtom = atom(false);
 
 const layoutDrawerOverlay = tv({
   base: "max-wd:grow flex flex-row shrink-0",
@@ -120,17 +119,8 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
   );
 }
 
-type LayoutPortalContextValue = {
-  navPortal: HTMLElement | null;
-  sidebarPortal: HTMLElement | null;
-};
-
-export const LayoutPortalContext = createContext<LayoutPortalContextValue | null>(null);
-
 export function useLayoutDrawer() {
   const [isOpen, setIsOpen] = useAtom(drawerOpenAtom);
-  const [isNavCollapsed, setIsNavCollapsed] = useAtom(navCollapsedAtom);
-  const portals = useContext(LayoutPortalContext);
 
   const open = useCallback(() => {
     setIsOpen(true);
@@ -144,14 +134,5 @@ export function useLayoutDrawer() {
     setIsOpen((prev) => !prev);
   }, [setIsOpen]);
 
-  return {
-    isOpen,
-    open,
-    close,
-    toggle,
-    navPortal: portals?.navPortal ?? null,
-    sidebarPortal: portals?.sidebarPortal ?? null,
-    isNavCollapsed,
-    setIsNavCollapsed,
-  };
+  return { isOpen, open, close, toggle };
 }

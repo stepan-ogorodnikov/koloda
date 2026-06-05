@@ -1,9 +1,11 @@
 import type { PropsWithChildren } from "react";
+import { useContext } from "react";
 import { createPortal } from "react-dom";
-import { useLayoutDrawer } from "./drawer";
+import { LayoutPortalContext } from "./layout";
 
 export function LayoutSidebar({ children }: PropsWithChildren) {
-  const { sidebarPortal } = useLayoutDrawer();
+  const { sidebarPortal } = useContext(LayoutPortalContext) ?? {};
+
   return sidebarPortal ? createPortal(children, sidebarPortal) : null;
 }
 

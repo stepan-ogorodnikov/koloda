@@ -1,13 +1,20 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import "@fontsource-variable/inter";
-import { useMemo, useState } from "react";
+import { createContext, useMemo, useState } from "react";
 import { tv } from "tailwind-variants";
 import type { TWVProps } from "../types";
 import { LayoutContainer, LayoutContent } from "./content";
-import { LayoutDrawer, LayoutPortalContext } from "./drawer";
+import { LayoutDrawer } from "./drawer";
 import { LayoutH1, LayoutH2, LayoutHeader } from "./header";
 import { LayoutNav, LayoutNavLink } from "./nav";
 import { LayoutSidebar, LayoutSidebarItem, LayoutSidebarItemLinkContent } from "./sidebar";
+
+type LayoutPortalContextValue = {
+  navPortal: HTMLElement | null;
+  sidebarPortal: HTMLElement | null;
+};
+
+export const LayoutPortalContext = createContext<LayoutPortalContextValue | null>(null);
 
 const layout = tv({
   base: "flex flex-col min-w-screen min-h-screen h-screen overflow-hidden",

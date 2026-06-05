@@ -1,7 +1,7 @@
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import { Button, getCSSVar, useLayoutDrawer } from "@koloda/ui";
+import { Button, getCSSVar, useLayoutDrawer, useNavCollapsed } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -9,13 +9,14 @@ import { useCallback } from "react";
 
 export function TitlebarSidebarControls() {
   const { _ } = useLingui();
-  const { close, isNavCollapsed, isOpen, open, setIsNavCollapsed } = useLayoutDrawer();
+  const { close, isOpen, open } = useLayoutDrawer();
+  const { isNavCollapsed, toggle: toggleNavCollapsed } = useNavCollapsed();
   const isWide = useMediaQuery(`(width >= ${getCSSVar("--breakpoint-wd")})`);
   const { ui } = useHotkeysSettings();
 
   const handleAction = useCallback(() => {
     if (isWide) {
-      setIsNavCollapsed((prev) => !prev);
+      toggleNavCollapsed();
       return;
     }
     if (isOpen) {
@@ -23,7 +24,7 @@ export function TitlebarSidebarControls() {
       return;
     }
     open();
-  }, [close, isWide, isOpen, open, setIsNavCollapsed]);
+  }, [close, isWide, isOpen, open, toggleNavCollapsed]);
 
   useAppHotkey(ui.toggleSidebarControls, handleAction, "", { ignoreInputs: false });
 

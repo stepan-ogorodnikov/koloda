@@ -1,9 +1,10 @@
 import { useMatch, useRouterState } from "@tanstack/react-router";
-import { useSetAtom } from "jotai";
+import { atom, useSetAtom } from "jotai";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { useLayoutEffect } from "react";
 import { tv } from "tailwind-variants";
-import { layoutHasContentAtom } from "./drawer";
+
+export const layoutHasContentAtom = atom(false);
 
 const layoutContent = tv({
   base: [

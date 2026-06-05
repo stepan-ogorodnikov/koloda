@@ -5,6 +5,7 @@ export * from "./lib/hooks/use-route-focus";
 export * from "./lib/icons/clipboard-icon";
 export * from "./lib/layout/drawer";
 export * from "./lib/layout/layout";
+export * from "./lib/layout/nav";
 export * from "./lib/layout/sidebar";
 export * from "./lib/primitives/animations/fade";
 export * from "./lib/primitives/animations/number";
