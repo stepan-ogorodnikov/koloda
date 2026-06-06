@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, screen } from "electron";
+import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import { join } from "node:path";
@@ -8,6 +9,7 @@ const __dirname = import.meta.dirname!;
 const TITLEBAR_HEIGHT = 40;
 const WINDOW_BUTTON_X = 12;
 const MACOS_WINDOW_BUTTON_HEIGHT = 12;
+const WINDOW_STATE_FILE = "window-state.json";
 
 function configureUserData() {
   if (process.platform === "darwin") {
@@ -44,10 +46,59 @@ function getWindowButtonPosition(titlebarHeight = TITLEBAR_HEIGHT) {
   };
 }
 
+type WindowState = {
+  x?: number;
+  y?: number;
+  width: number;
+  height: number;
+  isMaximized?: boolean;
+};
+
+function loadWindowState(): WindowState {
+  const defaults: WindowState = { width: 1280, height: 720 };
+  try {
+    const raw = readFileSync(join(app.getPath("userData"), WINDOW_STATE_FILE), "utf-8");
+    const state = JSON.parse(raw) as WindowState;
+    if (state.width > 0 && state.height > 0 && isWithinDisplay(state)) {
+      return state;
+    }
+  } catch {}
+  return defaults;
+}
+
+function saveWindowState(win: BrowserWindow) {
+  const isMaximized = win.isMaximized();
+  const bounds = isMaximized ? win.getNormalBounds() : win.getBounds();
+  const state: WindowState = {
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    isMaximized,
+  };
+  try {
+    writeFileSync(join(app.getPath("userData"), WINDOW_STATE_FILE), JSON.stringify(state));
+  } catch {}
+}
+
+function isWithinDisplay(state: WindowState): boolean {
+  if (state.x === undefined || state.y === undefined) return true;
+  const displays = screen.getAllDisplays();
+  return displays.some((display) => {
+    const { x, y, width, height } = display.bounds;
+    return state.x! < x + width && state.x! + state.width > x
+      && state.y! < y + height && state.y! + state.height > y;
+  });
+}
+
 function createWindow() {
+  const windowState = loadWindowState();
+
   const commonOptions = {
-    width: 1280,
-    height: 720,
+    x: windowState.x,
+    y: windowState.y,
+    width: windowState.width,
+    height: windowState.height,
     minWidth: 320,
     minHeight: 320,
     resizable: true,
@@ -71,8 +122,11 @@ function createWindow() {
       titleBarOverlay: getInitialTitleBarOverlay(),
     });
 
+  if (windowState.isMaximized) win.maximize();
+
   win.on("maximize", () => win.webContents.send("window:maximize-changed", true));
   win.on("unmaximize", () => win.webContents.send("window:maximize-changed", false));
+  win.on("close", () => saveWindowState(win));
 
   win.once("ready-to-show", () => {
     win.show();
