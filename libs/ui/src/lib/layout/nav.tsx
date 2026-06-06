@@ -4,6 +4,7 @@ import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { atom, useAtom, useSetAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren } from "react";
 import { useCallback, useContext, useLayoutEffect } from "react";
@@ -12,7 +13,7 @@ import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
 import { LayoutPortalContext } from "./layout";
 
-const navCollapsedAtom = atom(false);
+const navCollapsedAtom = atomWithStorage("nav-collapsed", false);
 export const layoutHasNavAtom = atom(false);
 
 export function useNavCollapsed() {
