@@ -15,8 +15,8 @@ Narrow and wide layouts. Single breakpoint `--breakpoint-wd` defined in `global.
 ### Route without main content
 
 - **Nav**: inline, not collapsible.
-- **Sidebar**: inline, takes the remaining width of the viewport.
-- **Content**: hidden since it's empty.
+- **Sidebar**: inline, takes the available width up to it's max boundary.
+- **Content**: empty.
 - **Drawer**: not needed, content is rendered inline.
 - **Sidebar controls**: disabled.
 
