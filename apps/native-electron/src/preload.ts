@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.on(channel, (_event, ...args) => callback(...args));
   },
   getZoomFactor: () => webFrame.getZoomFactor(),
+  getZoomLevel: () => webFrame.getZoomLevel(),
   onZoomFactorChanged: (callback: ZoomFactorChangedCallback) => {
     zoomFactorChangedCallbacks.add(callback);
     return () => {
@@ -36,4 +37,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
   zoomIn: () => setZoomLevel(webFrame.getZoomLevel() + ZOOM_STEP),
   zoomOut: () => setZoomLevel(webFrame.getZoomLevel() - ZOOM_STEP),
   zoomReset: () => setZoomLevel(0),
+  setZoomLevel: (level: number) => setZoomLevel(level),
 });

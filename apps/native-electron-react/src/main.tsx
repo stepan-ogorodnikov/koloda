@@ -60,6 +60,16 @@ function App() {
     const api = window.electronAPI;
     if (!api) return;
 
+    const stored = localStorage.getItem("zoom-level");
+    if (stored !== null) {
+      const level = Number(stored);
+      if (!Number.isNaN(level)) api.setZoomLevel(level);
+    }
+
+    const unsubscribe = api.onZoomFactorChanged(() => {
+      localStorage.setItem("zoom-level", String(api.getZoomLevel()));
+    });
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (!e.ctrlKey && !e.metaKey) return;
 
@@ -89,6 +99,7 @@ function App() {
     window.addEventListener("wheel", onWheel, { passive: false });
 
     return () => {
+      unsubscribe();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel", onWheel);
     };

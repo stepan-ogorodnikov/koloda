@@ -6,10 +6,12 @@ declare global {
       invoke: <T>(cmd: string, args?: unknown) => Promise<T>;
       on: (channel: string, callback: (...args: unknown[]) => void) => void;
       getZoomFactor: () => number;
+      getZoomLevel: () => number;
       onZoomFactorChanged: (callback: (zoomFactor: number) => void) => () => void;
       zoomIn: () => void;
       zoomOut: () => void;
       zoomReset: () => void;
+      setZoomLevel: (level: number) => void;
     };
   }
 }
