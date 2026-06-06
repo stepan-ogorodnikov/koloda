@@ -1,10 +1,19 @@
+import { atom, useSetAtom } from "jotai";
 import type { PropsWithChildren } from "react";
-import { useContext } from "react";
+import { useContext, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { LayoutPortalContext } from "./layout";
 
+export const layoutHasSidebarAtom = atom(false);
+
 export function LayoutSidebar({ children }: PropsWithChildren) {
   const { sidebarPortal } = useContext(LayoutPortalContext) ?? {};
+  const setHasSidebar = useSetAtom(layoutHasSidebarAtom);
+
+  useLayoutEffect(() => {
+    setHasSidebar(true);
+    return () => setHasSidebar(false);
+  }, [setHasSidebar]);
 
   return sidebarPortal ? createPortal(children, sidebarPortal) : null;
 }

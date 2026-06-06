@@ -3,16 +3,17 @@ import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
-import { atom, useAtom } from "jotai";
+import { atom, useAtom, useSetAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren } from "react";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
 import { useLayoutDrawer } from "./drawer";
 import { LayoutPortalContext } from "./layout";
 
 const navCollapsedAtom = atom(false);
+export const layoutHasNavAtom = atom(false);
 
 export function useNavCollapsed() {
   const [isNavCollapsed, setIsNavCollapsed] = useAtom(navCollapsedAtom);
@@ -23,6 +24,12 @@ export function useNavCollapsed() {
 
 export function LayoutNav({ children }: PropsWithChildren) {
   const { navPortal } = useContext(LayoutPortalContext) ?? {};
+  const setHasNav = useSetAtom(layoutHasNavAtom);
+
+  useLayoutEffect(() => {
+    setHasNav(true);
+    return () => setHasNav(false);
+  }, [setHasNav]);
 
   return navPortal ? createPortal(children, navPortal) : null;
 }

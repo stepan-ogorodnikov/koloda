@@ -3,6 +3,7 @@ export * from "./lib/core/hotkeys";
 export * from "./lib/hooks/use-motion-settings";
 export * from "./lib/hooks/use-route-focus";
 export * from "./lib/icons/clipboard-icon";
+export * from "./lib/layout/content";
 export * from "./lib/layout/drawer";
 export * from "./lib/layout/layout";
 export * from "./lib/layout/nav";
