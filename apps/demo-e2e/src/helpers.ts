@@ -40,6 +40,13 @@ export async function openLearningSettings(page: Page) {
   await expect(page.getByRole("textbox", { name: "Minutes" })).toBeVisible();
 }
 
+export async function openHotkeysSettings(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "Hotkeys", exact: true }).click();
+  const kbds = page.locator("form kbd");
+  await expect(kbds.first()).toBeVisible();
+}
+
 export async function saveLearningSettings(page: Page) {
   const saveButton = page.getByRole("button", { name: "Save", exact: true });
   await expect(saveButton).toBeEnabled();
@@ -152,6 +159,36 @@ export async function createAlgorithm(page: Page, title: string) {
 
   await expect(page).toHaveURL(/\/algorithms\/\d+$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+}
+
+export async function openNewPresetDialog(page: Page) {
+  await openSection(page, "Presets");
+  await page.getByRole("button", { name: "New preset", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New preset", exact: true })).toBeVisible();
+
+  return dialog;
+}
+
+export async function openNewTemplateDialog(page: Page) {
+  await openSection(page, "Templates");
+  await page.getByRole("button", { name: "New template", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New template", exact: true })).toBeVisible();
+
+  return dialog;
+}
+
+export async function openNewDeckDialog(page: Page) {
+  await openSection(page, "Decks");
+  await page.getByRole("button", { name: "New deck", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New deck", exact: true })).toBeVisible();
+
+  return dialog;
 }
 
 export async function createTemplate(page: Page, title: string) {
@@ -267,6 +304,7 @@ export async function gradeLessonCards(page: Page, lessonDialog: Locator, grades
 export async function startDeckLesson(page: Page, deckTitle: string, newCardCount: number) {
   const lessonDialog = await openLessonDialog(page, deckTitle, newCardCount);
   await lessonDialog.getByRole("button", { name: "Start" }).click();
+
   return lessonDialog;
 }
 
@@ -302,13 +340,55 @@ export async function reorderWithKeyboard(handle: Locator, direction: "up" | "do
   await handle.press("Enter");
 }
 
+export async function openAddAIDialog(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "AI", exact: true }).click();
+  await expect(page.getByText("No profiles")).toBeVisible();
+
+  await page.getByRole("button", { name: "Add profile" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Add AI Profile" })).toBeVisible();
+}
+
+export async function selectAIProvider(page: Page, provider: string, currentProvider = "OpenRouter") {
+  await page.getByRole("button", { name: currentProvider }).click();
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.getByRole("option", { name: provider, exact: true }).click();
+}
+
+export async function fillAIProfileTitle(page: Page, title: string) {
+  await page.getByRole("textbox", { name: "Title" }).fill(title);
+}
+
+export async function submitAddAIDialog(page: Page) {
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+}
+
+export async function openEditAIDialog(page: Page, profileTitle: string) {
+  await page.locator("div", { hasText: profileTitle }).getByRole("button", { name: "Edit profile" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit AI profile" })).toBeVisible();
+}
+
+export async function submitEditAIDialog(page: Page) {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+}
+
+export async function deleteAIProfile(page: Page, profileTitle: string) {
+  await page.locator("div", { hasText: profileTitle }).getByRole("button", { name: "Delete profile" }).click();
+  await expect(page.getByText("Are you sure you want to delete this profile?")).toBeVisible();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+}
+
 export function getHotkeyByLabel(page: Page, label: string) {
   const kbd = page.locator(
     `xpath=//div[normalize-space()='${label}']/following-sibling::div//kbd`,
   );
   const container = kbd.locator("xpath=..");
-  const editButton = kbd.locator("xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]")
+  const editButton = kbd.locator(
+    "xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]",
+  )
     .getByRole("button", { name: "Change hotkey" });
+
   return { kbd, container, editButton };
 }
 

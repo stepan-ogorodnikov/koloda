@@ -1,19 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo, setupPageDefaults } from "./helpers";
+import { openNewPresetDialog, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
-test("rejects empty algorithm title", async ({ page }) => {
+test("validates required title and adds an algorithm", async ({ page }) => {
   await setupDemo(page);
-  await openSection(page, "Presets");
+  const dialog = await openNewPresetDialog(page);
 
-  await page.getByRole("button", { name: "New preset", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-
+  // Validation: empty title
   const titleField = dialog.getByLabel("Title", { exact: true });
   await titleField.click();
   await titleField.clear();
@@ -23,18 +19,9 @@ test("rejects empty algorithm title", async ({ page }) => {
 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "New preset", exact: true })).toBeVisible();
-});
 
-test("adds an algorithm", async ({ page }) => {
-  await setupDemo(page);
-  await openSection(page, "Presets");
-  await page.getByRole("button", { name: "New preset", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await expect(page.getByRole("heading", { name: "New preset", exact: true })).toBeVisible();
-
-  await dialog.getByLabel("Title", { exact: true }).fill("My Test Algorithm");
+  // Success
+  await titleField.fill("My Test Algorithm");
 
   const createButton = dialog.getByRole("button", { name: "Create", exact: true });
   await expect(createButton).toBeEnabled();

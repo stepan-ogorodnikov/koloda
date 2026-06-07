@@ -1,19 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { openSection, setupDemo, setupPageDefaults } from "./helpers";
+import { openNewTemplateDialog, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
-test("rejects empty template title", async ({ page }) => {
+test("validates required title and adds a template", async ({ page }) => {
   await setupDemo(page);
-  await openSection(page, "Templates");
+  const dialog = await openNewTemplateDialog(page);
 
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-
+  // Validation: empty title
   const titleField = dialog.getByLabel("Title", { exact: true });
   await titleField.click();
   await titleField.clear();
@@ -23,18 +19,9 @@ test("rejects empty template title", async ({ page }) => {
 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "New template", exact: true })).toBeVisible();
-});
 
-test("adds a template", async ({ page }) => {
-  await setupDemo(page);
-  await openSection(page, "Templates");
-  await page.getByRole("button", { name: "New template", exact: true }).click();
-
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await expect(page.getByRole("heading", { name: "New template", exact: true })).toBeVisible();
-
-  await dialog.getByLabel("Title", { exact: true }).fill("My Test Template");
+  // Success
+  await titleField.fill("My Test Template");
 
   const createButton = dialog.getByRole("button", { name: "Create", exact: true });
   await expect(createButton).toBeEnabled();

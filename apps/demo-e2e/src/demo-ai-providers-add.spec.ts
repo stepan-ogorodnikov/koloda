@@ -1,122 +1,56 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
-import { openSection, setupDemo, setupPageDefaults } from "./helpers";
+import {
+  fillAIProfileTitle,
+  openAddAIDialog,
+  selectAIProvider,
+  setupDemo,
+  setupPageDefaults,
+  submitAddAIDialog,
+} from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
-async function openAddAIDialog(page: Page) {
-  await openSection(page, "Settings");
-  await page.getByRole("link", { name: "AI", exact: true }).click();
-  await expect(page.getByText("No profiles")).toBeVisible();
+const providerCases = [
+  { name: "OpenRouter", title: "My OpenRouter", requiredField: { name: "API key", value: "sk-test-key-12345" } },
+  { name: "Ollama", title: "My Ollama", requiredField: { name: "Base URL", value: "http://localhost:11434" } },
+  { name: "LM Studio", title: "My LM Studio", requiredField: { name: "Base URL", value: "http://localhost:1234/v1" } },
+] as const;
 
-  await page.getByRole("button", { name: "Add profile" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Add AI Profile" })).toBeVisible();
-}
-
-async function selectProvider(page: Page, provider: string) {
-  await page.getByRole("button", { name: "OpenRouter" }).click();
-  await expect(page.getByRole("listbox")).toBeVisible();
-  await page.getByRole("option", { name: provider, exact: true }).click();
-}
-
-async function fillTitle(page: Page, title: string) {
-  await page.getByRole("textbox", { name: "Title" }).fill(title);
-}
-
-async function submitDialog(page: Page) {
-  await page.getByRole("button", { name: "Add", exact: true }).click();
-}
-
-test("shows validation error for OpenRouter with empty API key", async ({ page }) => {
+test("validates required fields and adds profiles for all providers", async ({ page }) => {
   await setupDemo(page);
   await openAddAIDialog(page);
 
-  // "OpenRouter" is selected by default, try to submit without filling required fields
-  await submitDialog(page);
+  for (const [index, { name, title, requiredField }] of providerCases.entries()) {
+    if (name !== "OpenRouter") {
+      const previousProvider = providerCases[index - 1].name;
+      await selectAIProvider(page, name, previousProvider);
+    }
 
-  // Verify dialog is still open (form didn't submit due to validation)
-  await expect(page.getByRole("dialog")).toBeVisible();
+    // --- Validation: empty required field, dialog stays open ---
+    await submitAddAIDialog(page);
+    await expect(page.getByRole("dialog", { name: "Add AI Profile" })).toBeVisible();
 
-  // Verify no profile was added
-  await expect(page.getByText("No profiles")).toBeVisible();
-});
+    // First iteration: also verify "No profiles" is still shown (no profile was added).
+    if (index === 0) {
+      await expect(page.getByText("No profiles")).toBeVisible();
+    }
 
-test("adds OpenRouter provider successfully", async ({ page }) => {
-  await setupDemo(page);
-  await openAddAIDialog(page);
+    // --- Success: fill required fields and submit ---
+    await fillAIProfileTitle(page, title);
+    await page.getByRole("textbox", { name: requiredField.name }).fill(requiredField.value);
+    await submitAddAIDialog(page);
 
-  // Fill in fields
-  await fillTitle(page, "My OpenRouter");
-  await page.getByRole("textbox", { name: "API key" }).fill("sk-test-key-12345");
+    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
 
-  await submitDialog(page);
-
-  // Verify the profile was added
-  await expect(page.getByText("My OpenRouter")).toBeVisible();
-  await expect(page.getByText("OpenRouter", { exact: true })).toBeVisible();
-});
-
-test("shows validation error for Ollama with empty Base URL", async ({ page }) => {
-  await setupDemo(page);
-  await openAddAIDialog(page);
-  await selectProvider(page, "Ollama");
-
-  // Try to submit without filling required fields
-  await submitDialog(page);
-
-  // Verify dialog is still open (form didn't submit due to validation)
-  await expect(page.getByRole("dialog", { name: "Add AI Profile" })).toBeVisible();
-
-  // Verify no profile was added
-  await expect(page.getByText("No profiles")).toBeVisible();
-});
-
-test("adds Ollama provider successfully", async ({ page }) => {
-  await setupDemo(page);
-  await openAddAIDialog(page);
-  await selectProvider(page, "Ollama");
-
-  // Fill in fields
-  await fillTitle(page, "My Ollama");
-  await page.getByRole("textbox", { name: "Base URL" }).fill("http://localhost:11434");
-
-  await submitDialog(page);
-
-  // Verify the profile was added
-  await expect(page.getByText("My Ollama")).toBeVisible();
-  await expect(page.getByText("Ollama", { exact: true })).toBeVisible();
-});
-
-test("shows validation error for LM Studio with empty Base URL", async ({ page }) => {
-  await setupDemo(page);
-  await openAddAIDialog(page);
-  await selectProvider(page, "LM Studio");
-
-  // Try to submit without filling required fields
-  await submitDialog(page);
-
-  // Verify dialog is still open (form didn't submit due to validation)
-  await expect(page.getByRole("dialog", { name: "Add AI Profile" })).toBeVisible();
-
-  // Verify no profile was added
-  await expect(page.getByText("No profiles")).toBeVisible();
-});
-
-test("adds LM Studio provider successfully", async ({ page }) => {
-  await setupDemo(page);
-  await openAddAIDialog(page);
-  await selectProvider(page, "LM Studio");
-
-  // Fill in fields
-  await fillTitle(page, "My LM Studio");
-  await page.getByRole("textbox", { name: "Base URL" }).fill("http://localhost:1234/v1");
-
-  await submitDialog(page);
-
-  // Verify the profile was added
-  await expect(page.getByText("My LM Studio")).toBeVisible();
-  await expect(page.getByText("LM Studio", { exact: true })).toBeVisible();
+    // Re-open the dialog for the next iteration and wait for the form to be ready.
+    if (index < providerCases.length - 1) {
+      await page.getByRole("button", { name: "Add profile" }).click();
+      const addDialog = page.getByRole("dialog", { name: "Add AI Profile" });
+      await expect(addDialog).toBeVisible();
+      await expect(addDialog.getByRole("button", { name })).toBeVisible();
+    }
+  }
 });
