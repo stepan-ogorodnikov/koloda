@@ -133,6 +133,18 @@ function createWindow() {
     if (isDev) win.webContents.openDevTools();
   });
 
+  if (!isDev) {
+    win.webContents.on("before-input-event", (event, input) => {
+      if (input.type !== "keyDown") return;
+      const mod = input.control || input.meta;
+      const isReload = input.code === "F5"
+        || (input.code === "F5" && input.control)
+        || (input.code === "KeyR" && mod && input.shift)
+        || (input.code === "KeyR" && mod && !input.shift && !input.alt);
+      if (isReload) event.preventDefault();
+    });
+  }
+
   if (isDev) {
     win.loadURL("http://localhost:3000");
   } else {
