@@ -54,7 +54,7 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
 
   await openSection(page, "Dashboard");
   await expect(page.getByText("Learned today", { exact: true })).toBeVisible();
-  const totalRow = page.getByText("Total");
+  const totalRow = page.getByText("Total").first();
   await expect(totalRow).toBeVisible();
   await expect(totalRow.locator("..").getByText("4")).toBeVisible();
 
