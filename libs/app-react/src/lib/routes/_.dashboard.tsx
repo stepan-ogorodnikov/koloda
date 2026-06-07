@@ -22,7 +22,7 @@ function DashboardRoute() {
       <Layout.Sidebar>
         <LearnedToday />
       </Layout.Sidebar>
-      <Layout.Content>
+      <Layout.Content isAlwaysVisible>
         <Layout.Container ref={ref} tabIndex={-1}>
           <Lessons />
         </Layout.Container>

@@ -1,5 +1,5 @@
-import { useMatch, useRouterState } from "@tanstack/react-router";
 import { useMediaQuery } from "@react-hook/media-query";
+import { useMatch, useRouterState } from "@tanstack/react-router";
 import { atom, useAtom, useSetAtom } from "jotai";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { useLayoutEffect } from "react";
@@ -17,14 +17,19 @@ const layoutContent = tv({
   variants: { hasContent: { true: "flex", false: "hidden" } },
 });
 
-export function LayoutContent({ children }: PropsWithChildren) {
+type LayoutContentProps = PropsWithChildren & {
+  isAlwaysVisible?: boolean;
+};
+
+export function LayoutContent({ children, isAlwaysVisible }: LayoutContentProps) {
   const matchId = useMatch({ strict: false, select: (m) => m.id });
-  const hasContent = useRouterState({
+  const hasChildRoute = useRouterState({
     select: (s) => {
       const index = s.matches.findIndex((m) => m.id === matchId);
       return !!s.matches[index + 1];
     },
   });
+  const hasContent = hasChildRoute || !!isAlwaysVisible;
   const setHasContent = useSetAtom(layoutHasContentAtom);
   const [isDrawerOpen] = useAtom(drawerOpenAtom);
   const isNarrow = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
