@@ -301,3 +301,26 @@ export async function reorderWithKeyboard(handle: Locator, direction: "up" | "do
   }
   await handle.press("Enter");
 }
+
+export function getHotkeyByLabel(page: Page, label: string) {
+  const kbd = page.locator(
+    `xpath=//div[normalize-space()='${label}']/following-sibling::div//kbd`,
+  );
+  const container = kbd.locator("xpath=..");
+  const editButton = kbd.locator("xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]")
+    .getByRole("button", { name: "Change hotkey" });
+  return { kbd, container, editButton };
+}
+
+export async function editHotkey(page: Page, label: string, newKey: string) {
+  const { editButton } = getHotkeyByLabel(page, label);
+  await editButton.first().click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+
+  await page.keyboard.press(newKey);
+
+  await dialog.getByRole("button", { name: "Accept this hotkey" }).click();
+  await expect(dialog).not.toBeVisible();
+}
