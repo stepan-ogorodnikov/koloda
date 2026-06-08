@@ -282,6 +282,10 @@ msgstr "Системная"
 msgid "title.algorithms"
 msgstr "Алгоритмы"
 
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:17
+msgid "title.ai"
+msgstr "Ассистент"
+
 #: ../../libs/app-react/src/lib/routes/_.tsx:12
 msgid "title.base"
 msgstr "Koloda"

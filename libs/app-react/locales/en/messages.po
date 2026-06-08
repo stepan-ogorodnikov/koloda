@@ -282,6 +282,10 @@ msgstr "System"
 msgid "title.algorithms"
 msgstr "Presets"
 
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:17
+msgid "title.ai"
+msgstr "Assistant"
+
 #: ../../libs/app-react/src/lib/routes/_.tsx:12
 msgid "title.base"
 msgstr "Koloda"
