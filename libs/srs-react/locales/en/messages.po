@@ -123,18 +123,18 @@ msgstr "No cards were generated"
 msgid "ai-chat.no-profiles"
 msgstr "Add an AI profile in settings to generate cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:39
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:45
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:41
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:48
 msgid "ai-chat.settings.prompt.edit"
 msgstr "Edit"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:38
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:44
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:47
 msgid "ai-chat.settings.prompt.preview"
 msgstr "Preview"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:56
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:59
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:60
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:63
 msgid "ai-chat.settings.prompt.reset"
 msgstr "Reset"
 
@@ -162,7 +162,7 @@ msgstr "Provider"
 msgid "ai-chat.settings.system-prompt.variables.rules"
 msgstr "Rules"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:85
+#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:86
 msgid "ai-chat.settings.temperature.label"
 msgstr "Temperature"
 
@@ -444,6 +444,18 @@ msgstr "Done"
 #: ../../libs/srs-react/src/lib/templates/clone-template.tsx:70
 msgid "clone-template.trigger"
 msgstr "Clone template"
+
+#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:31
+msgid "deck-picker.label"
+msgstr "Deck:"
+
+#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:32
+msgid "deck-picker.placeholder"
+msgstr "Not selected"
+
+#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:37
+msgid "deck-picker.search"
+msgstr "Search by title"
 
 #: ../../libs/srs-react/src/lib/decks/deck-details.tsx:89
 msgid "deck.actions.label"

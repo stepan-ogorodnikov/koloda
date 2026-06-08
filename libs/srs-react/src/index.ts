@@ -21,6 +21,7 @@ export * from "./lib/cards/use-cards-templates";
 export * from "./lib/components/learned-today";
 export * from "./lib/decks/add-deck";
 export * from "./lib/decks/deck-cards";
+export * from "./lib/decks/deck-picker";
 export * from "./lib/decks/deck-details";
 export * from "./lib/decks/delete-deck";
 export * from "./lib/lessons/lesson";
