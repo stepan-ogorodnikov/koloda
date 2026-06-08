@@ -13,7 +13,7 @@ export const label = tv({
   },
 });
 
-type LabelProps = ReactAriaLabelProps & TWVProps<typeof label>;
+export type LabelProps = ReactAriaLabelProps & TWVProps<typeof label>;
 
 export function Label({ variants, ...props }: LabelProps) {
   return <ReactAriaLabel className={label(variants)} {...props} />;

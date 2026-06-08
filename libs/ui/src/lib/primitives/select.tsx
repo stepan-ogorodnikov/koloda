@@ -2,7 +2,7 @@ import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
+import type { LabelProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
@@ -38,11 +38,13 @@ type SelectOptions = {
 };
 
 export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & SelectOptions & {
+  labelVariants?: LabelProps["variants"];
   buttonVariants?: SelectButtonProps["variants"];
   popoverVariants?: SelectPopoverProps["variants"];
   listboxVariants?: SelectListBoxProps<T>["variants"];
   withChevron?: boolean;
   label?: ReactNode;
+  placeholder?: string;
   icon?: ReactNode;
   items?: Iterable<T>;
   searchLabel?: string;
@@ -54,6 +56,7 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
 
 export function Select<T extends object>({
   variants,
+  labelVariants,
   buttonVariants,
   popoverVariants,
   listboxVariants,
@@ -82,7 +85,11 @@ export function Select<T extends object>({
   return (
     <Select.Root variants={variants} keyboardDelegate={keyboardDelegate} {...props}>
       <SelectStateBridge stateRef={selectStateRef} />
-      {label && <Label variants={variants?.layout === "form" ? { layout: "form" } : {}}>{label}</Label>}
+      {label && (
+        <Label variants={labelVariants || (variants?.layout === "form" ? { layout: "form" } : undefined)}>
+          {label}
+        </Label>
+      )}
       <Select.Button
         variants={{ layout: variants?.layout, ...buttonVariants }}
         withChevron={withChevron}
