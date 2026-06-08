@@ -13,7 +13,12 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:36
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:103
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:106
+msgid "ai.deck-picker.clear"
+msgstr "Clear selection"
+
+#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:33
 msgid "algorithms.title"
 msgstr "Presets"
 
@@ -29,7 +34,7 @@ msgstr "Details"
 msgid "deck.tabs.label"
 msgstr "Deck tabs"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.tsx:36
+#: ../../libs/app-react/src/lib/routes/_.decks.tsx:33
 msgid "decks.title"
 msgstr "Decks"
 
@@ -254,11 +259,11 @@ msgstr "Total"
 msgid "settings.learning.limits.untouched"
 msgstr "New"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.tsx:33
+#: ../../libs/app-react/src/lib/routes/_.settings.tsx:31
 msgid "settings.title"
 msgstr "Settings"
 
-#: ../../libs/app-react/src/lib/routes/_.templates.tsx:36
+#: ../../libs/app-react/src/lib/routes/_.templates.tsx:33
 msgid "templates.title"
 msgstr "Templates"
 
@@ -278,13 +283,14 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:17
-msgid "title.algorithms"
-msgstr "Presets"
-
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:17
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:23
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:93
 msgid "title.ai"
 msgstr "Assistant"
+
+#: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:16
+msgid "title.algorithms"
+msgstr "Presets"
 
 #: ../../libs/app-react/src/lib/routes/_.tsx:12
 msgid "title.base"
@@ -294,7 +300,7 @@ msgstr "Koloda"
 msgid "title.dashboard"
 msgstr "Dashboard"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.tsx:17
+#: ../../libs/app-react/src/lib/routes/_.decks.tsx:16
 msgid "title.decks"
 msgstr "Decks"
 
@@ -318,6 +324,6 @@ msgstr "Interface"
 msgid "title.settings.learning"
 msgstr "Learning"
 
-#: ../../libs/app-react/src/lib/routes/_.templates.tsx:17
+#: ../../libs/app-react/src/lib/routes/_.templates.tsx:16
 msgid "title.templates"
 msgstr "Templates"

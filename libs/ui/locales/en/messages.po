@@ -55,7 +55,7 @@ msgstr "Cancel"
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Expecting input"
 
-#: ../../libs/ui/src/lib/layout/drawer.tsx:96
+#: ../../libs/ui/src/lib/layout/drawer.tsx:77
 msgid "layout.drawer.label"
 msgstr "Navigation"
 
@@ -115,6 +115,6 @@ msgstr "Go back"
 msgid "titlebar.navigation.forward"
 msgstr "Go forward"
 
-#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:34
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:48
 msgid "titlebar.sidebar-controls.label"
 msgstr "Toggle navigation panel"

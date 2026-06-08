@@ -118,32 +118,32 @@ msgstr "Show settings"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:41
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:100
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:43
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:46
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:62
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:65
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:60
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:38
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:29
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:90
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:61
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:39
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:62
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:40
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:63
+#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:41
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 

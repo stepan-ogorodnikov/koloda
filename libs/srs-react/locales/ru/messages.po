@@ -454,6 +454,7 @@ msgid "deck-picker.placeholder"
 msgstr "Не выбрана"
 
 #: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:37
+#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:38
 msgid "deck-picker.search"
 msgstr "Поиск по названию"
 
