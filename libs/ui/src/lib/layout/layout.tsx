@@ -5,7 +5,7 @@ import { tv } from "tailwind-variants";
 import type { TWVProps } from "../types";
 import { LayoutContainer, LayoutContent } from "./content";
 import { LayoutDrawer } from "./drawer";
-import { LayoutH1, LayoutH2, LayoutHeader } from "./header";
+import { LayoutH1, LayoutHeader } from "./header";
 import { LayoutNav, LayoutNavLink } from "./nav";
 import { LayoutSidebar, LayoutSidebarItem, LayoutSidebarItemLinkContent } from "./sidebar";
 

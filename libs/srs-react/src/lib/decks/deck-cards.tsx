@@ -1,14 +1,16 @@
+import { AiMagicIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
-import { QueryState } from "@koloda/ui";
-import { getCSSVar } from "@koloda/ui";
+import { Link, QueryState, Tooltip, button, getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { AddCard } from "../cards/add-card";
-import { AIChatDialog } from "../cards/ai-chat/ai-chat-dialog";
 import { CardsStack } from "../cards/cards-stack";
 import { CardsTable } from "../cards/cards-table";
 import { cardsViewAtom, CardsViewToggle } from "../cards/cards-view-toggle";
@@ -17,6 +19,7 @@ type DeckCardsProps = { deckId: Deck["id"] };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const { _ } = useLingui();
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
   const query = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
@@ -34,7 +37,15 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
-        <AIChatDialog deckId={Number(deckId)} templateId={data.templateId} key="ai-chat" />
+        <Tooltip content={_(msg`ai-chat.trigger`)}>
+          <Link
+            to="/ai"
+            search={{ deckId: Number(deckId) }}
+            className={button({ style: "dashed", size: "icon" })}
+          >
+            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
+          </Link>
+        </Tooltip>
         <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
       <QueryState query={query}>

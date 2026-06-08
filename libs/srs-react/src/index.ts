@@ -4,7 +4,6 @@ export * from "./lib/algorithms/algorithm-picker";
 export * from "./lib/algorithms/clone-algorithm";
 export * from "./lib/algorithms/delete-algorithm";
 export * from "./lib/cards/add-card";
-export * from "./lib/cards/ai-chat/ai-chat-dialog";
 export * from "./lib/cards/ai-chat/ai-chat-settings";
 export * from "./lib/cards/ai-chat/ai-chat-utility";
 export * from "./lib/cards/ai-chat/use-ai-chat-message-renderer";
