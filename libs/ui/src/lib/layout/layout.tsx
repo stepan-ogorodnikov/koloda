@@ -50,7 +50,6 @@ Layout.Nav = LayoutNav;
 Layout.NavLink = LayoutNavLink;
 Layout.Header = LayoutHeader;
 Layout.H1 = LayoutH1;
-Layout.H2 = LayoutH2;
 Layout.Content = LayoutContent;
 Layout.Sidebar = LayoutSidebar;
 Layout.SidebarItem = LayoutSidebarItem;

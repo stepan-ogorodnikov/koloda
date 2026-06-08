@@ -19,10 +19,16 @@ export function LayoutHeader({ variants, children }: LayoutHeaderProps) {
   );
 }
 
-export function LayoutH1({ children }: PropsWithChildren) {
-  return <h1 className="grow px-2 text-lg truncate">{children}</h1>;
-}
+const layoutH1 = tv({
+  base: "p-2 text-lg/6 truncate",
+  variants: {
+    grow: { true: "grow", false: "" },
+  },
+  defaultVariants: { grow: true },
+});
 
-export function LayoutH2({ children }: PropsWithChildren) {
-  return <h2 className="px-2 text-lg truncate">{children}</h2>;
+type LayoutH1Props = PropsWithChildren & TWVProps<typeof layoutH1>;
+
+export function LayoutH1({ variants, children }: LayoutH1Props) {
+  return <h1 className={layoutH1(variants)}>{children}</h1>;
 }
