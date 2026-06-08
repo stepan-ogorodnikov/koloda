@@ -71,6 +71,7 @@ export function AIChatSettings({
         defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
         preview={generationPreview}
         onChange={onCardsPromptChange}
+        isDisabled={!template}
       />
 
       <AIChatSettingsVariables />

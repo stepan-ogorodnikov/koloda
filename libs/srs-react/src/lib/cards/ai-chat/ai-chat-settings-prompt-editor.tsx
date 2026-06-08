@@ -13,6 +13,7 @@ export type AIChatSettingsPromptEditorProps = {
   defaultTemplate: string;
   preview: string;
   onChange: (value: string | null) => void;
+  isDisabled?: boolean;
 };
 
 export function AIChatSettingsPromptEditor({
@@ -23,6 +24,7 @@ export function AIChatSettingsPromptEditor({
   defaultTemplate,
   preview,
   onChange,
+  isDisabled,
 }: AIChatSettingsPromptEditorProps) {
   const { _ } = useLingui();
   const [mode, setMode] = useState<"edit" | "preview">("edit");
@@ -37,6 +39,7 @@ export function AIChatSettingsPromptEditor({
             content={mode === "edit"
               ? _(msg`ai-chat.settings.prompt.preview`)
               : _(msg`ai-chat.settings.prompt.edit`)}
+            isDisabled={isDisabled}
           >
             <Button
               variants={{ style: "ghost", size: "icon" }}
@@ -44,6 +47,7 @@ export function AIChatSettingsPromptEditor({
                 ? _(msg`ai-chat.settings.prompt.preview`)
                 : _(msg`ai-chat.settings.prompt.edit`)}
               onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
+              isDisabled={isDisabled}
             >
               <HugeiconsIcon
                 className="size-5 min-w-5"
@@ -53,7 +57,7 @@ export function AIChatSettingsPromptEditor({
               />
             </Button>
           </Tooltip>
-          <Tooltip content={_(msg`ai-chat.settings.prompt.reset`)} isDisabled={!isCustom}>
+          <Tooltip content={_(msg`ai-chat.settings.prompt.reset`)} isDisabled={!isCustom || isDisabled}>
             <Button
               variants={{ style: "ghost", size: "icon" }}
               aria-label={_(msg`ai-chat.settings.prompt.reset`)}
@@ -81,7 +85,7 @@ export function AIChatSettingsPromptEditor({
           </TextField>
         )
         : (
-          <TextField value={preview} aria-label={label}>
+          <TextField value={preview} aria-label={label} isDisabled={isDisabled}>
             <TextField.TextArea
               variants={{ style: "normal" }}
               autoResize
