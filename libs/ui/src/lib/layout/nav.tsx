@@ -71,7 +71,7 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
         key={to}
       >
         <HugeiconsIcon
-          className="size-5 min-w-5"
+          className="size-6 min-w-6"
           strokeWidth={1.75}
           icon={icon}
           aria-hidden="true"
