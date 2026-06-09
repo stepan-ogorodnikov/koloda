@@ -50,6 +50,10 @@ msgstr "Сменить сочетание клавиш"
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
+#: ../../libs/app-react/src/lib/components/app.tsx:20
+msgid "nav.ai"
+msgstr "Ассистент"
+
 #: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.algorithms"
 msgstr "Алгоритмы"

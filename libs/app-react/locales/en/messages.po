@@ -50,6 +50,10 @@ msgstr "Change hotkey"
 msgid "language-select.label"
 msgstr "Language"
 
+#: ../../libs/app-react/src/lib/components/app.tsx:20
+msgid "nav.ai"
+msgstr "Assistant"
+
 #: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.algorithms"
 msgstr "Presets"

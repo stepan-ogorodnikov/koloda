@@ -1,4 +1,5 @@
 import {
+  AiChat01Icon,
   AlignBoxMiddleCenterIcon,
   FolderLibraryIcon,
   Home07Icon,
@@ -18,6 +19,7 @@ export const appMenu = [
   { to: "/decks", t: msg`nav.decks`, icon: FolderLibraryIcon },
   { to: "/algorithms", t: msg`nav.algorithms`, icon: Settings05Icon },
   { to: "/templates", t: msg`nav.templates`, icon: AlignBoxMiddleCenterIcon },
+  { to: "/ai", t: msg`nav.ai`, icon: AiChat01Icon },
 ];
 
 export const secondaryMenu = [
