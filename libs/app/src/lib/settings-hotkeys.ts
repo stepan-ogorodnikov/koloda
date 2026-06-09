@@ -31,6 +31,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
     decks: msg`settings.hotkeys.navigation.decks`,
     algorithms: msg`settings.hotkeys.navigation.algorithms`,
     templates: msg`settings.hotkeys.navigation.templates`,
+    ai: msg`settings.hotkeys.navigation.ai`,
     settings: msg`settings.hotkeys.navigation.settings`,
   },
   grades: {
@@ -57,7 +58,7 @@ export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
 const hotkeys = {
   form: ["submit", "reset"],
   ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls", "toggleColorScheme"],
-  navigation: ["dashboard", "decks", "algorithms", "templates", "settings"],
+  navigation: ["dashboard", "decks", "algorithms", "templates", "settings", "ai"],
   grades: ["again", "hard", "normal", "easy"],
   ai: [
     "cancel",
@@ -226,6 +227,7 @@ export const DEFAULT_HOTKEYS_SETTINGS: HotkeysSettings = hotkeysSettingsValidati
     algorithms: ["P"],
     templates: ["T"],
     settings: ["Mod+,"],
+    ai: ["A"],
   },
   grades: {
     again: ["1"],

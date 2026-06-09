@@ -29,6 +29,7 @@ describe("settings-hotkeys", () => {
         algorithms: [],
         templates: [],
         settings: [],
+        ai: [],
       },
       grades: {
         again: [],

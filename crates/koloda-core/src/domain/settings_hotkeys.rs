@@ -6,7 +6,7 @@ use crate::app::error::{error_codes, AppError};
 
 const FORM_KEYS: &[&str] = &["submit", "reset"];
 const UI_KEYS: &[&str] = &["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls", "toggleColorScheme"];
-const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings"];
+const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings", "ai"];
 const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];
 const AI_KEYS: &[&str] = &["cancel", "focusPrompt", "newConversation", "openProfilePicker", "openModelPicker", "toggleSettings", "toggleCardsMode", "scrollUp", "scrollDown", "scrollToTop", "scrollToBottom"];
 

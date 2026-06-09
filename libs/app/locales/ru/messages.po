@@ -217,6 +217,10 @@ msgstr "Главная"
 msgid "settings.hotkeys.navigation.decks"
 msgstr "Колоды"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:35
+msgid "settings.hotkeys.navigation.ai"
+msgstr "Ассистент"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:34
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Настройки"
