@@ -8,7 +8,7 @@ import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 
@@ -28,23 +28,23 @@ function AIRoute() {
   useTitle();
   const ref = useRouteFocus();
   const { _ } = useLingui();
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
   const { deckId } = Route.useSearch();
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const deckQuery = useQuery({
-    queryKey: queryKeys.decks.detail(deckId!),
-    ...getDeckQuery(deckId!),
+    queryKey: queryKeys.decks.detail(deckId),
+    ...getDeckQuery(deckId),
     enabled: !!deckId,
   });
   const templateId = deckQuery.data?.templateId;
 
   const handleDeckChange = useCallback((id: number) => {
-    navigate({ search: { deckId: id } as any });
+    navigate({ search: { deckId: id } });
   }, [navigate]);
 
   const handleClearDeck = useCallback(() => {
-    navigate({ search: {} as any });
+    navigate({ search: {} });
   }, [navigate]);
 
   const {

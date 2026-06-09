@@ -375,4 +375,44 @@ impl KolodaDb {
     pub fn checkpoint(&self) -> Result<()> {
         self.db.checkpoint().map_err(to_napi_error)
     }
+
+    #[napi]
+    pub fn list_codex_models(&self) -> Result<String> {
+        let models = koloda_core::ai::codex::list_codex_models().map_err(to_napi_error)?;
+        as_json(&models)
+    }
+
+    #[napi]
+    pub fn generate_cards_with_codex(&self, data: serde_json::Value) -> Result<String> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            prompt: String,
+            model_id: Option<String>,
+            reasoning_effort: Option<String>,
+        }
+        let p: P = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        koloda_core::ai::codex::run_codex_prompt(
+            &p.prompt,
+            p.model_id.as_deref(),
+            p.reasoning_effort.as_deref(),
+        )
+        .map_err(to_napi_error)
+    }
+
+    #[napi]
+    pub fn chat_with_codex(&self, data: serde_json::Value) -> Result<String> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            prompt: String,
+            model_id: Option<String>,
+            reasoning_effort: Option<String>,
+        }
+        let p: P = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        koloda_core::ai::codex::run_codex_prompt(
+            &p.prompt,
+            p.model_id.as_deref(),
+            p.reasoning_effort.as_deref(),
+        )
+        .map_err(to_napi_error)
+    }
 }

@@ -262,6 +262,12 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_update_ai_profile", async (_event, { data }: any) => j(db.updateAiProfile(data)));
   ipcMain.handle("cmd_remove_ai_profile", async (_event, { data }: any) => db.removeAiProfile(data));
   ipcMain.handle("cmd_touch_ai_profile", async (_event, { data }: any) => db.touchAiProfile(data));
+
+  ipcMain.handle("cmd_list_codex_models", async () => j(db.listCodexModels()));
+  ipcMain.handle("cmd_generate_cards_with_codex", async (_event, { data }: any) =>
+    db.generateCardsWithCodex(data));
+  ipcMain.handle("cmd_chat_with_codex", async (_event, { data }: any) =>
+    db.chatWithCodex(data));
 }
 
 configureUserData();

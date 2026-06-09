@@ -62,11 +62,6 @@ function getHttpStatus(error: unknown, visited = new Set<object>()): number | nu
   const dataStatus = getHttpStatus(nestedData, visited);
   if (dataStatus !== null) return dataStatus;
 
-  for (const value of Object.values(error as Record<string, unknown>)) {
-    const nestedStatus = getHttpStatus(value, visited);
-    if (nestedStatus !== null) return nestedStatus;
-  }
-
   return null;
 }
 
