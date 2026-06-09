@@ -1,4 +1,4 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { BubbleChatAddIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AISecrets } from "@koloda/ai";
 import { AIChat } from "@koloda/ai-react";
@@ -84,9 +84,26 @@ function AIRoute() {
     getChatMessageProps,
   });
 
+  const canStartNewConversation = messages.length > 0 || isGenerating;
+
   return (
     <>
-      <Layout.Sidebar />
+      <Layout.Sidebar>
+        <Button
+          variants={{ style: "dashed", class: "m-2" }}
+          aria-label={_(msg`ai.chat.new-conversation.label`)}
+          isDisabled={!canStartNewConversation}
+          onPress={handleReset}
+        >
+          <HugeiconsIcon
+            className="size-5 min-w-5"
+            strokeWidth={1.75}
+            icon={BubbleChatAddIcon}
+            aria-hidden="true"
+          />
+          {_(msg`ai.chat.new-conversation.label`)}
+        </Button>
+      </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
           <div className="flex flex-row flex-wrap items-center w-full max-w-3xl">

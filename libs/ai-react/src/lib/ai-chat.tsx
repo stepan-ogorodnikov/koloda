@@ -266,8 +266,6 @@ export function AIChat({
       <AIChatFooter
         profileId={profileId}
         onProfileChange={onProfileChange}
-        onNewConversation={handleNewConversation}
-        canStartNewConversation={messages.length > 0 || isLoading}
         triggerRef={profilePickerRef}
         contextUsage={contextUsage}
         contextLength={contextLength}
