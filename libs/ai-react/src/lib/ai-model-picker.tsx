@@ -56,12 +56,12 @@ export function AIModelPicker({ profileId, value, onChange, triggerRef }: AIMode
       )}
       {(isLoading || error) && (
         <Fade
+          className="flex flex-row items-center gap-2 h-10 min-w-0 -mx-2 px-2 overflow-hidden"
           key="status"
-          className="flex h-10 min-w-0 flex-row items-center gap-2 overflow-hidden"
         >
           <Tooltip content={_(msg`ai.model-picker.error.retry`)}>
             <Button
-              variants={{ style: "ghost", size: "icon", class: "disabled:fg-level-2" }}
+              variants={{ style: "ghost", size: "smallIcon", class: "disabled:fg-level-2" }}
               aria-label={_(msg`ai.model-picker.error.retry`)}
               isDisabled={isLoading}
               onPress={() => refetch()}
