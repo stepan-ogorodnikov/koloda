@@ -1,10 +1,4 @@
-import {
-  AiSheetsIcon,
-  ArrowDown02Icon,
-  Chat01Icon,
-  MessageMultiple01Icon,
-  Settings01Icon,
-} from "@hugeicons/core-free-icons";
+import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter, StreamUsage } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
@@ -279,22 +273,22 @@ export function AIChat({
         contextLength={contextLength}
         settingsToggle={hasSettingsToggle
           ? (
-            <Tooltip
-              content={settingsPanelOpen
-                ? _(msg`ai.chat.settings.show-chat`)
-                : _(msg`ai.chat.settings.show-settings`)}
-            >
+            <Tooltip content={_(msg`ai.chat.settings.toggle`)}>
               <Button
-                variants={{ style: "ghost", size: "icon" }}
-                aria-label={settingsPanelOpen
-                  ? _(msg`ai.chat.settings.show-chat`)
-                  : _(msg`ai.chat.settings.show-settings`)}
+                variants={{
+                  style: "ghost",
+                  size: "icon",
+                  class: "data-is-active:bg-button-pressed data-is-active:fg-level-1",
+                }}
+                aria-label={_(msg`ai.chat.settings.toggle`)}
+                aria-pressed={settingsPanelOpen}
+                data-is-active={settingsPanelOpen || undefined}
                 onPress={() => onSettingsPanelOpenChange?.(!settingsPanelOpen)}
               >
                 <HugeiconsIcon
                   className="size-5 min-w-5"
                   strokeWidth={1.75}
-                  icon={settingsPanelOpen ? Chat01Icon : Settings01Icon}
+                  icon={Settings01Icon}
                   aria-hidden="true"
                 />
               </Button>

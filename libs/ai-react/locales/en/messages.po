@@ -106,13 +106,8 @@ msgstr "Jump to latest"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:284
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:290
-msgid "ai.chat.settings.show-chat"
-msgstr "Show chat"
-
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:285
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:291
-msgid "ai.chat.settings.show-settings"
-msgstr "Show settings"
+msgid "ai.chat.settings.toggle"
+msgstr "Settings"
 
 #: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
 msgid "ai.model-parameters.reasoning-effort.label"
