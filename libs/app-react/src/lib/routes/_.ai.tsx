@@ -40,7 +40,7 @@ function AIRoute() {
   const templateId = deckQuery.data?.templateId;
 
   const handleDeckChange = useCallback((id: number) => {
-    navigate({ search: { deckId: id } });
+    navigate({ search: { deckId: id }, replace: true });
   }, [navigate]);
 
   const {
