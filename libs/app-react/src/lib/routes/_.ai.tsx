@@ -136,6 +136,7 @@ function AIRoute() {
             profileId={profileId}
             modelId={modelId}
             modelName={modelName}
+            deckId={deckId}
             messages={messages}
             onProfileChange={handleProfileChange}
             onModelChange={handleModelChange}

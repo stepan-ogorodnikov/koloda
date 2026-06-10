@@ -13,8 +13,13 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:103
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:106
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:95
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:105
+msgid "ai.chat.new-conversation.label"
+msgstr ""
+
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:121
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:124
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -50,27 +55,27 @@ msgstr "Change hotkey"
 msgid "language-select.label"
 msgstr "Language"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:20
+#: ../../libs/app-react/src/lib/components/app.tsx:22
 msgid "nav.ai"
 msgstr "Assistant"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:19
+#: ../../libs/app-react/src/lib/components/app.tsx:20
 msgid "nav.algorithms"
 msgstr "Presets"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:18
+#: ../../libs/app-react/src/lib/components/app.tsx:19
 msgid "nav.decks"
 msgstr "Decks"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:17
+#: ../../libs/app-react/src/lib/components/app.tsx:18
 msgid "nav.home"
 msgstr "Dashboard"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:24
+#: ../../libs/app-react/src/lib/components/app.tsx:26
 msgid "nav.settings"
 msgstr "Settings"
 
-#: ../../libs/app-react/src/lib/components/app.tsx:20
+#: ../../libs/app-react/src/lib/components/app.tsx:21
 msgid "nav.templates"
 msgstr "Templates"
 
@@ -288,7 +293,7 @@ msgid "theme.system"
 msgstr "System"
 
 #: ../../libs/app-react/src/lib/routes/_.ai.tsx:23
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:93
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:111
 msgid "title.ai"
 msgstr "Assistant"
 

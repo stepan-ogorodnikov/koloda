@@ -107,21 +107,9 @@ msgstr "New template"
 msgid "ai-chat.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:167
-msgid "ai-chat.close.cancel"
-msgstr "Cancel"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:176
-msgid "ai-chat.close.confirm"
-msgstr "Close"
-
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:63
 msgid "ai-chat.generated-no-cards"
 msgstr "No cards were generated"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:107
-msgid "ai-chat.no-profiles"
-msgstr "Add an AI profile in settings to generate cards"
 
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:41
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:48
@@ -178,12 +166,7 @@ msgstr "Pending"
 msgid "ai-chat.table.columns.status.success"
 msgstr "Success"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:116
-msgid "ai-chat.title"
-msgstr "AI Chat"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:97
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:100
+#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
 msgid "ai-chat.trigger"
 msgstr "AI Chat"
 

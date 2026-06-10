@@ -1,9 +1,9 @@
-import { AiSheetsIcon, ArrowDown02Icon, MessageMultiple01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
+import { ArrowDown02Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ModelParameter, StreamUsage } from "@koloda/ai";
 import { useHotkeysSettings } from "@koloda/core-react";
 import { useAppHotkey } from "@koloda/core-react";
-import { Button, Fade, Tooltip } from "@koloda/ui";
+import { Button, ClipboardIcon, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -31,6 +31,7 @@ export type AIChatProps = {
   profileId: string;
   modelId: string;
   modelName?: string;
+  deckId?: number;
   onProfileChange: (value: string) => void;
   onModelChange: (value: string) => void;
   onSubmit: (value: string) => void | Promise<void>;
@@ -59,6 +60,7 @@ export function AIChat({
   profileId,
   modelId,
   modelName,
+  deckId,
   onProfileChange,
   onModelChange,
   onSubmit,
@@ -144,6 +146,10 @@ export function AIChat({
   useAppHotkey(ai.scrollDown, scroll.handleScrollDown, "", { ignoreInputs: false });
   useAppHotkey(ai.scrollToTop, scroll.handleScrollToTop, "", { ignoreInputs: false });
   useAppHotkey(ai.scrollToBottom, scroll.handleScrollToBottom, "", { ignoreInputs: false });
+
+  const cardsModeTooltip = deckId
+    ? (mode === "cards" ? _(msg`ai.chat.mode.cards.on`) : _(msg`ai.chat.mode.cards.off`))
+    : _(msg`ai.chat.mode.cards.no-deck`);
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
@@ -241,17 +247,24 @@ export function AIChat({
                 <div className="grow min-w-3" />
                 <div className="shrink-0 flex flex-row items-center gap-2">
                   {onModeChange && (
-                    <Tooltip content={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}>
+                    <Tooltip content={cardsModeTooltip}>
                       <Button
-                        variants={{ style: "ghost", size: "icon", class: "rounded-xl" }}
-                        aria-label={mode === "cards" ? _(msg`ai.chat.mode.cards`) : _(msg`ai.chat.mode.chat`)}
-                        onPress={() =>
-                          onModeChange(mode === "chat" ? "cards" : "chat")}
+                        variants={{
+                          style: "bordered",
+                          size: "icon",
+                          class:
+                            "rounded-xl border-transparent data-is-active:border-fg-link data-is-active:bg-button-pressed data-is-active:fg-link",
+                        }}
+                        aria-label={_(msg`ai.chat.mode.cards.on`)}
+                        aria-pressed={mode === "cards"}
+                        data-is-active={mode === "cards" || undefined}
+                        isDisabled={!deckId}
+                        onPress={() => onModeChange(mode === "chat" ? "cards" : "chat")}
                       >
                         <HugeiconsIcon
                           className="size-6 min-w-6"
                           strokeWidth={1.5}
-                          icon={mode === "cards" ? AiSheetsIcon : MessageMultiple01Icon}
+                          icon={ClipboardIcon}
                           aria-hidden="true"
                         />
                       </Button>

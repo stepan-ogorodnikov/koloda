@@ -107,21 +107,9 @@ msgstr "Новый шаблон"
 msgid "ai-chat.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:167
-msgid "ai-chat.close.cancel"
-msgstr "Отменить"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:176
-msgid "ai-chat.close.confirm"
-msgstr "Закрыть"
-
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:63
 msgid "ai-chat.generated-no-cards"
 msgstr "Карточки не сгенерированы"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:107
-msgid "ai-chat.no-profiles"
-msgstr "Добавьте профиль ИИ в настройках для генерации карточек"
 
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:41
 #: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:48
@@ -178,12 +166,7 @@ msgstr "В обработке"
 msgid "ai-chat.table.columns.status.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:116
-msgid "ai-chat.title"
-msgstr "Помощник ИИ"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:97
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-dialog.tsx:100
+#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
 msgid "ai-chat.trigger"
 msgstr "Помощник ИИ"
 

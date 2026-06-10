@@ -76,20 +76,18 @@ msgstr "Обработка"
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:250
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:253
-msgid "ai.chat.mode.cards"
-msgstr "Режим карточек"
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:152
+msgid "ai.chat.mode.cards.no-deck"
+msgstr "Для режима создания карточек нужно выбрать колоду"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:250
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:253
-msgid "ai.chat.mode.chat"
-msgstr "Режим чата"
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:151
+msgid "ai.chat.mode.cards.off"
+msgstr "Включить режим создания карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat-footer.tsx:42
-#: ../../libs/ai-react/src/lib/ai-chat-footer.tsx:47
-msgid "ai.chat.new-conversation.label"
-msgstr "Новый диалог"
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:151
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:258
+msgid "ai.chat.mode.cards.on"
+msgstr "Выключить режим создания карточек"
 
 #: ../../libs/ai-react/src/lib/ai-chat.tsx:226
 msgid "ai.chat.profile-data-missing"
@@ -104,8 +102,8 @@ msgstr "Перейдите в настройки, чтобы отредакти�
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:284
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:290
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:287
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:294
 msgid "ai.chat.settings.toggle"
 msgstr "Настройки"
 

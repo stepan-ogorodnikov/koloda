@@ -137,47 +137,47 @@ msgstr "Template not found"
 msgid "not-found.templates.clone.source"
 msgstr "Source template not found"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Interrupt"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Focus chat input"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
 msgid "settings.hotkeys.ai.new-conversation"
 msgstr "New conversation"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Open AI profile picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Scroll down"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+#: ../../libs/app/src/lib/settings-hotkeys.ts:54
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Scroll to bottom"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:53
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Scroll to top"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Scroll up"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.toggle-cards-mode"
 msgstr "Toggle cards mode"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Toggle settings"
 
@@ -189,21 +189,25 @@ msgstr "Discard"
 msgid "settings.hotkeys.form.submit"
 msgstr "Save"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:37
+#: ../../libs/app/src/lib/settings-hotkeys.ts:38
 msgid "settings.hotkeys.grades.again"
 msgstr "Again"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:40
+#: ../../libs/app/src/lib/settings-hotkeys.ts:41
 msgid "settings.hotkeys.grades.easy"
 msgstr "Easy"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:38
+#: ../../libs/app/src/lib/settings-hotkeys.ts:39
 msgid "settings.hotkeys.grades.hard"
 msgstr "Hard"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:39
+#: ../../libs/app/src/lib/settings-hotkeys.ts:40
 msgid "settings.hotkeys.grades.normal"
 msgstr "Normal"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:34
+msgid "settings.hotkeys.navigation.ai"
+msgstr "Assistant"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:32
 msgid "settings.hotkeys.navigation.algorithms"
@@ -218,10 +222,6 @@ msgid "settings.hotkeys.navigation.decks"
 msgstr "Decks"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:35
-msgid "settings.hotkeys.navigation.ai"
-msgstr "Assistant"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:34
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Settings"
 

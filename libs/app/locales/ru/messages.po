@@ -137,47 +137,47 @@ msgstr "Шаблон не найден"
 msgid "not-found.templates.clone.source"
 msgstr "Исходный шаблон не найден"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:43
+#: ../../libs/app/src/lib/settings-hotkeys.ts:44
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Прервать"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:44
+#: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Фокус на поле ввода"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:45
+#: ../../libs/app/src/lib/settings-hotkeys.ts:46
 msgid "settings.hotkeys.ai.new-conversation"
 msgstr "Новый диалог"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:46
+#: ../../libs/app/src/lib/settings-hotkeys.ts:47
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Выбор профиля ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Прокрутить вниз"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+#: ../../libs/app/src/lib/settings-hotkeys.ts:54
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Прокрутить в конец"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:53
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Прокрутить на начало"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Прокрутить вверх"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.toggle-cards-mode"
 msgstr "Переключить режим карточек"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"
 
@@ -189,21 +189,25 @@ msgstr "Сбросить"
 msgid "settings.hotkeys.form.submit"
 msgstr "Сохранить"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:37
+#: ../../libs/app/src/lib/settings-hotkeys.ts:38
 msgid "settings.hotkeys.grades.again"
 msgstr "Снова"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:40
+#: ../../libs/app/src/lib/settings-hotkeys.ts:41
 msgid "settings.hotkeys.grades.easy"
 msgstr "Легко"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:38
+#: ../../libs/app/src/lib/settings-hotkeys.ts:39
 msgid "settings.hotkeys.grades.hard"
 msgstr "Трудно"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:39
+#: ../../libs/app/src/lib/settings-hotkeys.ts:40
 msgid "settings.hotkeys.grades.normal"
 msgstr "Хорошо"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:34
+msgid "settings.hotkeys.navigation.ai"
+msgstr "Ассистент"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:32
 msgid "settings.hotkeys.navigation.algorithms"
@@ -218,10 +222,6 @@ msgid "settings.hotkeys.navigation.decks"
 msgstr "Колоды"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:35
-msgid "settings.hotkeys.navigation.ai"
-msgstr "Ассистент"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:34
 msgid "settings.hotkeys.navigation.settings"
 msgstr "Настройки"
 
