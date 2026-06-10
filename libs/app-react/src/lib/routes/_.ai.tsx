@@ -43,10 +43,6 @@ function AIRoute() {
     navigate({ search: { deckId: id } });
   }, [navigate]);
 
-  const handleClearDeck = useCallback(() => {
-    navigate({ search: {} });
-  }, [navigate]);
-
   const {
     profileId,
     modelId,
@@ -78,6 +74,11 @@ function AIRoute() {
     handleCardsPromptChange,
     handleChatPromptChange,
   } = useAIChatPage(deckId, templateId);
+
+  const handleClearDeck = useCallback(() => {
+    navigate({ search: {} });
+    setMode("chat");
+  }, [navigate, setMode]);
 
   const renderMessage = useAIChatMessageRenderer({
     getGeneratedCardsProps,
