@@ -1,25 +1,19 @@
 import { generateCardsInputSchema } from "@koloda/ai";
-import type { Message } from "@koloda/ai";
-import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { useChatStream } from "@koloda/ai-react";
-import type { StreamResult } from "@koloda/ai-react";
+import type { AIChatMode } from "@koloda/ai-react";
 import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { useCallback, useMemo, useReducer, useRef } from "react";
 import type { AssistantCardsMessageProps } from "./assistant-cards-message";
-import type { AIChatMode } from "./assistant-messages";
-import {
-  getAssistantMetadata,
-  getChatTextMetadata,
-  getGeneratedCardsMetadata,
-  getTextMessageContent,
-  serializeGeneratedCards,
-} from "./assistant-messages";
+import { buildConversationMessages } from "./assistant-messages";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
+import { useConversationMessageProps } from "./use-conversation-message-props";
+import { useConversationRuns } from "./use-conversation-runs";
 
 export type AssistantConversationConfig = {
   profileId: string;
@@ -105,50 +99,17 @@ export function useAssistantConversation(config: AssistantConversationConfig): U
     };
   }, [state.runs]);
 
-  const handleStreamResult = useCallback(
-    (result: StreamResult, runId: string) => {
-      switch (result) {
-        case "success":
-          dispatch({ type: "completeRun", runId });
-          break;
-        case "error":
-          dispatch({ type: "failRun", runId });
-          break;
-        case "aborted":
-          dispatch({ type: "cancelRun", runId });
-          break;
-      }
-    },
-    [],
+  const { executeChatRun, executeGenerateRun, handleRetry } = useConversationRuns(
+    streamChat,
+    generate,
+    dispatch,
+    stateRef,
   );
 
-  const executeChatRun = useCallback(
-    async (runId: string, request: ChatStreamRequest) => {
-      let currentText = "";
-      const { streamResult, usage } = await streamChat(request, (chunk) => {
-        currentText += chunk;
-        dispatch({ type: "updateAssistantText", runId, text: currentText });
-      });
-
-      if (streamResult === "aborted") dispatch({ type: "updateAssistantText", runId, text: currentText });
-
-      if (usage) dispatch({ type: "setUsage", runId, usage });
-
-      handleStreamResult(streamResult, runId);
-    },
-    [streamChat, handleStreamResult],
-  );
-
-  const executeGenerateRun = useCallback(
-    async (runId: string, request: CardGenerationStreamRequest) => {
-      const result = await generate(request, (card) => {
-        dispatch({ type: "addCard", runId, card });
-      });
-
-      handleStreamResult(result, runId);
-      if (result === "success") dispatch({ type: "setMode", mode: "chat" });
-    },
-    [generate, handleStreamResult],
+  const { getGeneratedCardsProps, getChatMessageProps } = useConversationMessageProps(
+    stateRef,
+    configRef,
+    handleRetry,
   );
 
   const handleGenerate = useCallback(
@@ -209,24 +170,6 @@ export function useAssistantConversation(config: AssistantConversationConfig): U
     [executeChatRun, executeGenerateRun],
   );
 
-  const handleRetry = useCallback(
-    async (runId: string) => {
-      const currentRuns = stateRef.current.runs;
-      const run = currentRuns[runId];
-      if (!run?.request) return;
-
-      dispatch({ type: "restartRun", runId });
-
-      if (run.mode === "chat") {
-        dispatch({ type: "updateAssistantText", runId, text: "" });
-        await executeChatRun(runId, run.request as ChatStreamRequest);
-      } else {
-        await executeGenerateRun(runId, run.request as CardGenerationStreamRequest);
-      }
-    },
-    [executeChatRun, executeGenerateRun],
-  );
-
   const handleCancel = useCallback(() => {
     const currentActiveRunId = stateRef.current.activeRunId;
     if (currentActiveRunId) dispatch({ type: "cancelRun", runId: currentActiveRunId });
@@ -239,77 +182,6 @@ export function useAssistantConversation(config: AssistantConversationConfig): U
     cancelGenerate();
     cancelChat();
   }, [cancelGenerate, cancelChat]);
-
-  const getGeneratedCardsProps = useCallback(
-    (message: UIMessage): AssistantCardsMessageProps | null => {
-      const generatedCardsMetadata = getGeneratedCardsMetadata(message);
-      if (!generatedCardsMetadata) return null;
-
-      const currentState = stateRef.current;
-      const cfg = configRef.current;
-      const run = currentState.runs[generatedCardsMetadata.runId];
-      const runCards = run?.cards ?? [];
-      const isCurrentRun = generatedCardsMetadata.runId === currentState.activeRunId;
-
-      const messageIndex = currentState.messages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex >= currentState.messages.length - 1;
-
-      return {
-        cards: runCards,
-        template: cfg.template,
-        deckId: cfg.deckId,
-        templateId: cfg.templateId,
-        canAdd: runCards.length > 0 && !isCurrentRun,
-        isGenerating: isCurrentRun,
-        isCanceled: run?.status === "canceled",
-        isFailed: run?.status === "failed",
-        canRetry,
-        onRetry: () => handleRetry(generatedCardsMetadata.runId),
-        elapsedSeconds: run?.elapsedSeconds ?? undefined,
-      };
-    },
-    [handleRetry],
-  );
-
-  const getChatMessageProps = useCallback(
-    (message: UIMessage):
-      | { isStreaming: true }
-      | { isSuccess: true; elapsedSeconds: number }
-      | { isCanceled: true; elapsedSeconds: number }
-      | { isFailed: true; canRetry: boolean; onRetry: () => void }
-      | null =>
-    {
-      const chatMetadata = getChatTextMetadata(message);
-      if (!chatMetadata) return null;
-
-      const currentState = stateRef.current;
-      const run = currentState.runs[chatMetadata.runId];
-
-      if (!run) return null;
-
-      if (run.status === "streaming") return { isStreaming: true };
-
-      if (run.status === "success" && run.elapsedSeconds !== null) {
-        return { isSuccess: true, elapsedSeconds: run.elapsedSeconds };
-      }
-
-      if (run.status === "canceled" && run.elapsedSeconds !== null) {
-        return { isCanceled: true, elapsedSeconds: run.elapsedSeconds };
-      }
-
-      if (run.status !== "failed") return null;
-
-      const messageIndex = currentState.messages.findIndex((m) => m.id === message.id);
-      const canRetry = messageIndex >= currentState.messages.length - 1;
-
-      return {
-        isFailed: true,
-        canRetry,
-        onRetry: () => handleRetry(chatMetadata.runId),
-      };
-    },
-    [handleRetry],
-  );
 
   return {
     messages: state.messages,
@@ -329,42 +201,4 @@ export function useAssistantConversation(config: AssistantConversationConfig): U
     getGeneratedCardsProps,
     getChatMessageProps,
   };
-}
-
-export function buildConversationMessages(
-  messages: UIMessage[],
-  runs: Record<string, { status: string; cards: GeneratedCard[] }>,
-  template: Template | null | undefined,
-) {
-  const conversation: Message[] = [];
-
-  for (const message of messages) {
-    if (message.role === "user") {
-      const content = getTextMessageContent(message);
-      if (content) conversation.push({ role: "user", content });
-      continue;
-    }
-
-    if (message.role !== "assistant") continue;
-
-    const metadata = getAssistantMetadata(message);
-    if (!metadata) continue;
-
-    const { runId } = metadata;
-    const textContent = getTextMessageContent(message);
-
-    if (metadata.kind === "chat-text") {
-      if (textContent) conversation.push({ role: "assistant", content: textContent });
-      continue;
-    }
-
-    const run = runs[runId];
-    if (!run || run.status !== "success" || run.cards.length === 0) continue;
-
-    if (!template) continue;
-    const cardContent = serializeGeneratedCards(run.cards, template);
-    if (cardContent) conversation.push({ role: "assistant", content: cardContent });
-  }
-
-  return conversation;
 }

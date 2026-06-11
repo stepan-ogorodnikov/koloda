@@ -1,9 +1,6 @@
-import type { GeneratedCard } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai-react";
+import type { GeneratedCard, Message } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
-
-export type { AIChatMode };
 
 export type AssistantMessageMetadata =
   | { kind: "generated-cards"; runId: string }
@@ -12,6 +9,7 @@ export type AssistantMessageMetadata =
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
+
   return (
     (obj.kind === "generated-cards" || obj.kind === "chat-text")
     && typeof obj.runId === "string"
@@ -64,4 +62,42 @@ export function serializeGeneratedCards(cards: GeneratedCard[], template: Templa
       }),
     ].join("\n")
   ).join("\n\n");
+}
+
+export function buildConversationMessages(
+  messages: UIMessage[],
+  runs: Record<string, { status: string; cards: GeneratedCard[] }>,
+  template: Template | null | undefined,
+) {
+  const conversation: Message[] = [];
+
+  for (const message of messages) {
+    if (message.role === "user") {
+      const content = getTextMessageContent(message);
+      if (content) conversation.push({ role: "user", content });
+      continue;
+    }
+
+    if (message.role !== "assistant") continue;
+
+    const metadata = getAssistantMetadata(message);
+    if (!metadata) continue;
+
+    const { runId } = metadata;
+    const textContent = getTextMessageContent(message);
+
+    if (metadata.kind === "chat-text") {
+      if (textContent) conversation.push({ role: "assistant", content: textContent });
+      continue;
+    }
+
+    const run = runs[runId];
+    if (!run || run.status !== "success" || run.cards.length === 0) continue;
+
+    if (!template) continue;
+    const cardContent = serializeGeneratedCards(run.cards, template);
+    if (cardContent) conversation.push({ role: "assistant", content: cardContent });
+  }
+
+  return conversation;
 }

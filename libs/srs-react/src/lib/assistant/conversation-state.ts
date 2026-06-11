@@ -1,7 +1,7 @@
 import type { GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode } from "@koloda/ai-react";
 import type { UIMessage } from "ai";
 import { createTextMessage } from "./assistant-messages";
-import type { AIChatMode } from "./assistant-messages";
 
 export type RunStatus = "streaming" | "success" | "failed" | "canceled";
 
@@ -49,11 +49,7 @@ export const initialConversationState: ConversationState = {
   mode: "chat",
 };
 
-function makeRun(
-  runId: string,
-  mode: AIChatMode,
-  request?: unknown,
-): GenerationRun {
+function makeRun(runId: string, mode: AIChatMode, request?: unknown): GenerationRun {
   return {
     id: runId,
     mode,
@@ -79,11 +75,7 @@ function updateRun(
   };
 }
 
-function finishRun(
-  state: ConversationState,
-  runId: string,
-  status: RunStatus,
-): ConversationState {
+function finishRun(state: ConversationState, runId: string, status: RunStatus): ConversationState {
   return updateRun(state, runId, (run) => ({
     ...run,
     status,
@@ -91,10 +83,7 @@ function finishRun(
   }));
 }
 
-export function conversationReducer(
-  state: ConversationState,
-  action: ConversationAction,
-): ConversationState {
+export function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {
   switch (action.type) {
     case "addUserMessage":
       return {
