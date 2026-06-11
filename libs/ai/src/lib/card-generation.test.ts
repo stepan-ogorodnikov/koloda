@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  buildSystemPromptForProvider,
-  generateCardsWithLMStudio,
-  generateCardsWithOllama,
-  getCardContentSchema,
-} from "./card-generation";
+import { generateCardsWithLMStudio, generateCardsWithOllama } from "./card-generation";
+import { getCardContentSchema } from "./card-parsing";
+import { buildSystemPromptForProvider } from "./prompts";
 import type { CardGenerationFields } from "./types";
 
 function createFields(): CardGenerationFields {

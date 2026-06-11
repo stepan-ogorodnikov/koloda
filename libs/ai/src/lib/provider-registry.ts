@@ -1,11 +1,5 @@
-import {
-  generateCardsWithLMStudio,
-  generateCardsWithOllama,
-  generateCardsWithOpenRouter,
-  streamChatWithLMStudio,
-  streamChatWithOllama,
-  streamChatWithOpenRouter,
-} from "./card-generation";
+import { generateCardsWithLMStudio, generateCardsWithOllama, generateCardsWithOpenRouter } from "./card-generation";
+import { streamChatWithLMStudio, streamChatWithOllama, streamChatWithOpenRouter } from "./chat-stream";
 import { AIError, throwForAIResponse } from "./error";
 import type { AIModel, AiProvider, AISecrets, ChatStreamGenerator, GenerateCardsFunction, SecretField } from "./types";
 
