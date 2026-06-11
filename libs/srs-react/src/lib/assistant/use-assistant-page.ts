@@ -6,15 +6,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
-import type { AIChatCardsMessageProps } from "./ai-chat-cards-message";
-import type { AIChatMode } from "./ai-chat-utility";
-import { useAIClient } from "./use-ai-client";
-import { useAIConfiguration } from "./use-ai-configuration";
-import { useConversation } from "./use-conversation";
-import type { ConversationConfig } from "./use-conversation";
-import { usePromptTemplates } from "./use-prompt-templates";
+import type { AssistantCardsMessageProps } from "./assistant-cards-message";
+import type { AIChatMode } from "./assistant-messages";
+import { useAssistantClient } from "./use-assistant-client";
+import { useAssistantConfiguration } from "./use-assistant-configuration";
+import { useAssistantConversation } from "./use-assistant-conversation";
+import type { AssistantConversationConfig } from "./use-assistant-conversation";
+import { useAssistantPromptTemplates } from "./use-assistant-prompt-templates";
 
-export type UseAIChatPageReturn = {
+export type UseAssistantPageReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
@@ -38,7 +38,7 @@ export type UseAIChatPageReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   handleRetry: (runId: string) => Promise<void>;
-  getGeneratedCardsProps: (message: UIMessage) => AIChatCardsMessageProps | null;
+  getGeneratedCardsProps: (message: UIMessage) => AssistantCardsMessageProps | null;
   getChatMessageProps: (
     message: UIMessage,
   ) =>
@@ -56,7 +56,7 @@ export type UseAIChatPageReturn = {
   handleChatPromptChange: (value: string | null) => void;
 };
 
-export function useAIChatPage(deckId?: Deck["id"], templateId?: Template["id"]): UseAIChatPageReturn {
+export function useAssistantPage(deckId?: Deck["id"], templateId?: Template["id"]): UseAssistantPageReturn {
   const { _ } = useLingui();
   const { getTemplateQuery, touchAIProfileMutation } = useAtomValue(queriesAtom);
 
@@ -77,14 +77,14 @@ export function useAIChatPage(deckId?: Deck["id"], templateId?: Template["id"]):
     handleModelChange,
     handleTemperatureChange,
     handleModelParameterChange,
-  } = useAIConfiguration();
+  } = useAssistantConfiguration();
 
   const {
     cardsPromptTemplate,
     chatPromptTemplate,
     handleCardsPromptChange,
     handleChatPromptChange,
-  } = usePromptTemplates();
+  } = useAssistantPromptTemplates();
 
   const templateQuery = useQuery({
     queryKey: queryKeys.templates.detail(templateId!),
@@ -95,12 +95,12 @@ export function useAIChatPage(deckId?: Deck["id"], templateId?: Template["id"]):
 
   const touchProfileMutation = useMutation(touchAIProfileMutation());
 
-  const { streamGenerator, chatStreamGenerator } = useAIClient({
+  const { streamGenerator, chatStreamGenerator } = useAssistantClient({
     selectedProfile,
     template,
   });
 
-  const conversationConfig: ConversationConfig = {
+  const conversationConfig: AssistantConversationConfig = {
     profileId,
     modelId,
     temperature,
@@ -130,7 +130,7 @@ export function useAIChatPage(deckId?: Deck["id"], templateId?: Template["id"]):
     handleRetry,
     getGeneratedCardsProps,
     getChatMessageProps,
-  } = useConversation(conversationConfig);
+  } = useAssistantConversation(conversationConfig);
 
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 

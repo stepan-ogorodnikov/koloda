@@ -2,12 +2,12 @@ import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import type { UIMessage } from "ai";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
-import { AIChatCardsMessage } from "./ai-chat-cards-message";
-import type { AIChatCardsMessageProps } from "./ai-chat-cards-message";
-import { getTextMessageContent } from "./ai-chat-utility";
+import { AssistantCardsMessage } from "./assistant-cards-message";
+import type { AssistantCardsMessageProps } from "./assistant-cards-message";
+import { getTextMessageContent } from "./assistant-messages";
 
-export type UseAIChatMessageRendererProps = {
-  getGeneratedCardsProps: (message: UIMessage) => AIChatCardsMessageProps | null;
+export type UseAssistantMessageRendererProps = {
+  getGeneratedCardsProps: (message: UIMessage) => AssistantCardsMessageProps | null;
   getChatMessageProps: (message: UIMessage) =>
     | { isStreaming: true }
     | { isSuccess: true; elapsedSeconds: number }
@@ -16,14 +16,14 @@ export type UseAIChatMessageRendererProps = {
     | null;
 };
 
-export function useAIChatMessageRenderer({
+export function useAssistantMessageRenderer({
   getGeneratedCardsProps,
   getChatMessageProps,
-}: UseAIChatMessageRendererProps) {
+}: UseAssistantMessageRendererProps) {
   return useCallback(
     (message: UIMessage, content: ReactNode) => {
       const props = getGeneratedCardsProps(message);
-      if (props && props.template) return <AIChatCardsMessage {...props} />;
+      if (props && props.template) return <AssistantCardsMessage {...props} />;
 
       const chatProps = getChatMessageProps(message);
 

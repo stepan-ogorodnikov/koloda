@@ -8,20 +8,20 @@ import { msg } from "@lingui/core/macro";
 import type { I18nContext } from "@lingui/react";
 import type { UIMessage } from "ai";
 import { useCallback, useMemo, useReducer, useRef } from "react";
-import type { AIChatCardsMessageProps } from "./ai-chat-cards-message";
-import type { AIChatMode } from "./ai-chat-utility";
+import type { AssistantCardsMessageProps } from "./assistant-cards-message";
+import type { AIChatMode } from "./assistant-messages";
 import {
   getAssistantMetadata,
   getChatTextMetadata,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
-} from "./ai-chat-utility";
+} from "./assistant-messages";
 import { conversationReducer, initialConversationState } from "./conversation-state";
-import { useCardGeneration } from "./use-card-generation";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-card-generation";
+import { useAssistantCardGeneration } from "./use-assistant-card-generation";
+import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
 
-export type ConversationConfig = {
+export type AssistantConversationConfig = {
   profileId: string;
   modelId: string;
   temperature: number;
@@ -37,7 +37,7 @@ export type ConversationConfig = {
   _: I18nContext["_"];
 };
 
-export type UseConversationReturn = {
+export type UseAssistantConversationReturn = {
   messages: UIMessage[];
   isGenerating: boolean;
   generateError: Error | null;
@@ -49,7 +49,7 @@ export type UseConversationReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   handleRetry: (runId: string) => Promise<void>;
-  getGeneratedCardsProps: (message: UIMessage) => AIChatCardsMessageProps | null;
+  getGeneratedCardsProps: (message: UIMessage) => AssistantCardsMessageProps | null;
   getChatMessageProps: (
     message: UIMessage,
   ) =>
@@ -60,7 +60,7 @@ export type UseConversationReturn = {
     | null;
 };
 
-export function useConversation(config: ConversationConfig): UseConversationReturn {
+export function useAssistantConversation(config: AssistantConversationConfig): UseAssistantConversationReturn {
   const [state, dispatch] = useReducer(conversationReducer, initialConversationState);
   const configRef = useRef(config);
   configRef.current = config;
@@ -72,7 +72,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
     error: generateError,
     generate,
     cancel: cancelGenerate,
-  } = useCardGeneration(config.streamGenerator);
+  } = useAssistantCardGeneration(config.streamGenerator);
 
   const {
     isStreaming: isChatStreaming,
@@ -201,7 +201,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
           type: "addAssistantMessage",
           runId,
           kind: "generated-cards",
-          text: cfg._(msg`ai.chat.message.status.pending`),
+          text: cfg._(msg`assistant.chat.message.status.pending`),
         });
         await executeGenerateRun(runId, request);
       }
@@ -241,7 +241,7 @@ export function useConversation(config: ConversationConfig): UseConversationRetu
   }, [cancelGenerate, cancelChat]);
 
   const getGeneratedCardsProps = useCallback(
-    (message: UIMessage): AIChatCardsMessageProps | null => {
+    (message: UIMessage): AssistantCardsMessageProps | null => {
       const generatedCardsMetadata = getGeneratedCardsMetadata(message);
       if (!generatedCardsMetadata) return null;
 

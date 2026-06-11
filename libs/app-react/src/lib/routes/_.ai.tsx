@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { AISecrets } from "@koloda/ai";
 import { AIChat } from "@koloda/ai-react";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
-import { AIChatSettings, DeckPicker, useAIChatMessageRenderer, useAIChatPage } from "@koloda/srs-react";
+import { AssistantSettings, DeckPicker, useAssistantMessageRenderer, useAssistantPage } from "@koloda/srs-react";
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -73,14 +73,14 @@ function AIRoute() {
     chatPromptTemplate,
     handleCardsPromptChange,
     handleChatPromptChange,
-  } = useAIChatPage(deckId, templateId);
+  } = useAssistantPage(deckId, templateId);
 
   const handleClearDeck = useCallback(() => {
     navigate({ search: {} });
     setMode("chat");
   }, [navigate, setMode]);
 
-  const renderMessage = useAIChatMessageRenderer({
+  const renderMessage = useAssistantMessageRenderer({
     getGeneratedCardsProps,
     getChatMessageProps,
   });
@@ -155,7 +155,7 @@ function AIRoute() {
             contextUsage={contextUsage}
             contextLength={contextLength}
             settingsPanel={
-              <AIChatSettings
+              <AssistantSettings
                 template={template}
                 provider={provider as AISecrets["provider"] | null}
                 temperature={temperature}

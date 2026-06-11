@@ -2,19 +2,18 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
 const VARIABLES = [
-  { variable: "{{fields}}", label: msg`ai-chat.settings.system-prompt.variables.fields` },
-  { variable: "{{rules}}", label: msg`ai-chat.settings.system-prompt.variables.rules` },
-  { variable: "{{provider}}", label: msg`ai-chat.settings.system-prompt.variables.provider` },
+  { variable: "{{fields}}", label: msg`assistant.settings.system-prompt.variables.fields` },
+  { variable: "{{rules}}", label: msg`assistant.settings.system-prompt.variables.rules` },
+  { variable: "{{provider}}", label: msg`assistant.settings.system-prompt.variables.provider` },
 ] as const;
 
-export function AIChatSettingsVariables() {
+export function AssistantSettingsVariables() {
   const { _ } = useLingui();
 
   return (
     <div className="flex flex-col gap-2">
       <span className="fg-level-2 font-medium tracking-wide uppercase">
-        {_(msg`ai-chat.settings.system-prompt.variables`)}
-      </span>
+        {_(msg`assistant.settings.system-prompt.variables`)}</span>
       <div className="flex flex-col gap-2 fg-level-2">
         {VARIABLES.map(({ variable, label }) => (
           <span key={variable}>

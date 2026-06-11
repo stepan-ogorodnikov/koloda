@@ -5,7 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
 
-export type AIChatSettingsPromptEditorProps = {
+export type AssistantSettingsPromptEditorProps = {
   label: string;
   rows?: number;
   maxRows?: number;
@@ -16,7 +16,7 @@ export type AIChatSettingsPromptEditorProps = {
   isDisabled?: boolean;
 };
 
-export function AIChatSettingsPromptEditor({
+export function AssistantSettingsPromptEditor({
   label,
   rows,
   maxRows,
@@ -25,7 +25,7 @@ export function AIChatSettingsPromptEditor({
   preview,
   onChange,
   isDisabled,
-}: AIChatSettingsPromptEditorProps) {
+}: AssistantSettingsPromptEditorProps) {
   const { _ } = useLingui();
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const isCustom = templateValue !== null;
@@ -37,15 +37,15 @@ export function AIChatSettingsPromptEditor({
         <div className="flex flex-row items-center gap-2">
           <Tooltip
             content={mode === "edit"
-              ? _(msg`ai-chat.settings.prompt.preview`)
-              : _(msg`ai-chat.settings.prompt.edit`)}
+              ? _(msg`assistant.settings.prompt.preview`)
+              : _(msg`assistant.settings.prompt.edit`)}
             isDisabled={isDisabled}
           >
             <Button
               variants={{ style: "ghost", size: "icon" }}
               aria-label={mode === "edit"
-                ? _(msg`ai-chat.settings.prompt.preview`)
-                : _(msg`ai-chat.settings.prompt.edit`)}
+                ? _(msg`assistant.settings.prompt.preview`)
+                : _(msg`assistant.settings.prompt.edit`)}
               onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
               isDisabled={isDisabled}
             >
@@ -57,10 +57,10 @@ export function AIChatSettingsPromptEditor({
               />
             </Button>
           </Tooltip>
-          <Tooltip content={_(msg`ai-chat.settings.prompt.reset`)} isDisabled={!isCustom || isDisabled}>
+          <Tooltip content={_(msg`assistant.settings.prompt.reset`)} isDisabled={!isCustom || isDisabled}>
             <Button
               variants={{ style: "ghost", size: "icon" }}
-              aria-label={_(msg`ai-chat.settings.prompt.reset`)}
+              aria-label={_(msg`assistant.settings.prompt.reset`)}
               onPress={() => onChange(null)}
               isDisabled={!isCustom}
             >

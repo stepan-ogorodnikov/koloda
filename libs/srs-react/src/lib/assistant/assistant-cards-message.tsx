@@ -3,9 +3,9 @@ import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { AIChatCardsTable } from "./ai-chat-cards-table";
+import { AssistantCardsTable } from "./assistant-cards-table";
 
-export type AIChatCardsMessageProps = {
+export type AssistantCardsMessageProps = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
   deckId: Deck["id"];
@@ -19,7 +19,7 @@ export type AIChatCardsMessageProps = {
   elapsedSeconds?: number;
 };
 
-export function AIChatCardsMessage({
+export function AssistantCardsMessage({
   cards,
   template,
   deckId,
@@ -31,7 +31,7 @@ export function AIChatCardsMessage({
   canRetry,
   onRetry,
   elapsedSeconds,
-}: AIChatCardsMessageProps) {
+}: AssistantCardsMessageProps) {
   const { _ } = useLingui();
 
   if (!template) return null;
@@ -47,7 +47,7 @@ export function AIChatCardsMessage({
       {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
       {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
         <div className="flex flex-col gap-2">
-          <AIChatCardsTable
+          <AssistantCardsTable
             cards={cards}
             template={template}
             deckId={deckId}
@@ -60,7 +60,7 @@ export function AIChatCardsMessage({
       )}
       {!isGenerating && !isCanceled && !isFailed && !cards.length && (
         <p className="fg-level-3">
-          {_(msg`ai-chat.generated-no-cards`)}
+          {_(msg`assistant.generated-no-cards`)}
         </p>
       )}
     </AIChatMessageLayout>

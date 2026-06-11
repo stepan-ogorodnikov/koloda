@@ -72,38 +72,38 @@ msgstr "Завершено за"
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:173
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:40
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:152
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:150
 msgid "ai.chat.mode.cards.no-deck"
 msgstr "Для режима создания карточек нужно выбрать колоду"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:151
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:149
 msgid "ai.chat.mode.cards.off"
 msgstr "Включить режим создания карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:151
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:258
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:27
+#: ../../libs/ai-react/src/lib/ai-chat.tsx:149
 msgid "ai.chat.mode.cards.on"
 msgstr "Выключить режим создания карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:226
+#: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:19
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:229
+#: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:22
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:204
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:207
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:71
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:74
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:287
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:294
+#: ../../libs/ai-react/src/lib/ai-chat-settings-toggle.tsx:16
+#: ../../libs/ai-react/src/lib/ai-chat-settings-toggle.tsx:23
 msgid "ai.chat.settings.toggle"
 msgstr "Настройки"
 

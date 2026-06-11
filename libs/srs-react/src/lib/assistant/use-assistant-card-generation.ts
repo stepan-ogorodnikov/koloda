@@ -15,7 +15,7 @@ export type CardGenerationExecutor = (
   signal: AbortSignal,
 ) => Promise<void>;
 
-export type UseCardGenerationReturn = {
+export type UseAssistantCardGenerationReturn = {
   cards: GeneratedCard[];
   isGenerating: boolean;
   error: Error | null;
@@ -24,7 +24,7 @@ export type UseCardGenerationReturn = {
   cancel: () => void;
 };
 
-export function useCardGeneration(streamGenerator: CardGenerationExecutor): UseCardGenerationReturn {
+export function useAssistantCardGeneration(streamGenerator: CardGenerationExecutor): UseAssistantCardGenerationReturn {
   const { data: cards, isRunning: isGenerating, error, start, cancel, reset: clearCards } = useStreamingRequest<
     GeneratedCard[],
     GeneratedCard,

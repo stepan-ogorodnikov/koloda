@@ -103,77 +103,6 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-table.tsx:49
-msgid "ai-chat.add"
-msgstr "Add cards"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-message.tsx:63
-msgid "ai-chat.generated-no-cards"
-msgstr "No cards were generated"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:41
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:48
-msgid "ai-chat.settings.prompt.edit"
-msgstr "Edit"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:40
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:47
-msgid "ai-chat.settings.prompt.preview"
-msgstr "Preview"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:60
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-prompt-editor.tsx:63
-msgid "ai-chat.settings.prompt.reset"
-msgstr "Reset"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:67
-msgid "ai-chat.settings.system-prompt.cards.label"
-msgstr "Card generation prompt"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:57
-msgid "ai-chat.settings.system-prompt.chat.label"
-msgstr "Chat prompt"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-variables.tsx:16
-msgid "ai-chat.settings.system-prompt.variables"
-msgstr "Variables"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-variables.tsx:5
-msgid "ai-chat.settings.system-prompt.variables.fields"
-msgstr "Fields"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-variables.tsx:7
-msgid "ai-chat.settings.system-prompt.variables.provider"
-msgstr "Provider"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings-variables.tsx:6
-msgid "ai-chat.settings.system-prompt.variables.rules"
-msgstr "Rules"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-settings.tsx:86
-msgid "ai-chat.settings.temperature.label"
-msgstr "Temperature"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-table-select-cell.tsx:55
-msgid "ai-chat.table.columns.status.error"
-msgstr "Error"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-table-select-cell.tsx:35
-msgid "ai-chat.table.columns.status.pending"
-msgstr "Pending"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/ai-chat-cards-table-select-cell.tsx:45
-msgid "ai-chat.table.columns.status.success"
-msgstr "Success"
-
-#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
-msgid "ai-chat.trigger"
-msgstr "AI Chat"
-
-#: ../../libs/srs-react/src/lib/cards/ai-chat/use-conversation.ts:204
-msgid "ai.chat.message.status.pending"
-msgstr "Working"
-
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Preset"
@@ -247,6 +176,77 @@ msgstr "Delete relearning step number {0}"
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-learning-steps.tsx:46
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table.tsx:49
+msgid "assistant.add"
+msgstr "Add cards"
+
+#: ../../libs/srs-react/src/lib/assistant/use-assistant-conversation.ts:204
+msgid "assistant.chat.message.status.pending"
+msgstr "Working"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:63
+msgid "assistant.generated-no-cards"
+msgstr "No cards were generated"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:41
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:48
+msgid "assistant.settings.prompt.edit"
+msgstr "Edit"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:47
+msgid "assistant.settings.prompt.preview"
+msgstr "Preview"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:60
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:63
+msgid "assistant.settings.prompt.reset"
+msgstr "Reset"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:67
+msgid "assistant.settings.system-prompt.cards.label"
+msgstr "Card generation prompt"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:57
+msgid "assistant.settings.system-prompt.chat.label"
+msgstr "Chat prompt"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:16
+msgid "assistant.settings.system-prompt.variables"
+msgstr "Variables"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:5
+msgid "assistant.settings.system-prompt.variables.fields"
+msgstr "Fields"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:7
+msgid "assistant.settings.system-prompt.variables.provider"
+msgstr "Provider"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:6
+msgid "assistant.settings.system-prompt.variables.rules"
+msgstr "Rules"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:86
+msgid "assistant.settings.temperature.label"
+msgstr "Temperature"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:55
+msgid "assistant.table.columns.status.error"
+msgstr "Error"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:35
+msgid "assistant.table.columns.status.pending"
+msgstr "Pending"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:45
+msgid "assistant.table.columns.status.success"
+msgstr "Success"
+
+#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
+msgid "assistant.trigger"
+msgstr "AI Chat"
 
 #: ../../libs/srs-react/src/lib/cards/card-details.tsx:154
 msgid "card.action.reset-progress"

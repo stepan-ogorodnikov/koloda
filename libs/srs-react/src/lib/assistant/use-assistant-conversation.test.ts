@@ -3,7 +3,7 @@ import type { Template } from "@koloda/srs";
 import { DEFAULT_TEMPLATE } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { buildConversationMessages } from "./use-conversation";
+import { buildConversationMessages } from "./use-assistant-conversation";
 
 function userMessage(id: string, text: string): UIMessage {
   return {

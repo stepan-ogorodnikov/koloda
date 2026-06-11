@@ -4,7 +4,7 @@ import { GENERATION_TEMPERATURE } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export type UseAIConfigurationReturn = {
+export type UseAssistantConfigurationReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
@@ -24,7 +24,7 @@ export type UseAIConfigurationReturn = {
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
 
-export function useAIConfiguration(): UseAIConfigurationReturn {
+export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
   const [profileId, setProfileId] = useState("");
   const [preferredModelId, setPreferredModelId] = useState("");
   const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);

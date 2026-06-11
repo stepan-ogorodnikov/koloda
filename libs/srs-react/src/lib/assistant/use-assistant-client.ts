@@ -2,22 +2,22 @@ import type { AIProfile, ChatStreamGenerator, ChatStreamRequest } from "@koloda/
 import { createAIGenerationClient } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import { useCallback } from "react";
-import type { CardGenerationExecutor } from "./use-card-generation";
+import type { CardGenerationExecutor } from "./use-assistant-card-generation";
 
-export type UseAIClientOptions = {
+export type UseAssistantClientOptions = {
   selectedProfile: AIProfile | null;
   template: Template | null | undefined;
 };
 
-export type UseAIClientReturn = {
+export type UseAssistantClientReturn = {
   streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
 };
 
-export function useAIClient({
+export function useAssistantClient({
   selectedProfile,
   template,
-}: UseAIClientOptions): UseAIClientReturn {
+}: UseAssistantClientOptions): UseAssistantClientReturn {
   const streamGenerator = useCallback<CardGenerationExecutor>(
     async (request, onCard, abortSignal) => {
       if (!selectedProfile) throw new Error("No AI profile selected");

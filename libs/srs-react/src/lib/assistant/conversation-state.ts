@@ -1,7 +1,7 @@
 import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { UIMessage } from "ai";
-import { createTextMessage } from "./ai-chat-utility";
-import type { AIChatMode } from "./ai-chat-utility";
+import { createTextMessage } from "./assistant-messages";
+import type { AIChatMode } from "./assistant-messages";
 
 export type RunStatus = "streaming" | "success" | "failed" | "canceled";
 

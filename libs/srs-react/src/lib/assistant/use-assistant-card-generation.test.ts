@@ -1,9 +1,9 @@
 import type { StreamResult } from "@koloda/ai-react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createGeneratedCard } from "../../../test/test-helpers";
-import type { CardGenerationStreamRequest } from "./use-card-generation";
-import { useCardGeneration } from "./use-card-generation";
+import { createGeneratedCard } from "../../test/test-helpers";
+import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
+import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 
 function createRequest(overrides: Partial<CardGenerationStreamRequest> = {}): CardGenerationStreamRequest {
   return {
@@ -19,13 +19,13 @@ function createRequest(overrides: Partial<CardGenerationStreamRequest> = {}): Ca
   };
 }
 
-describe("useCardGeneration", () => {
+describe("useAssistantCardGeneration", () => {
   it("streams cards and reports a successful generation", async () => {
     const streamGenerator = vi.fn(async (_request, onCard) => {
       onCard(createGeneratedCard({ content: { "1": { text: "One" }, "2": { text: "Back one" } } }));
       onCard(createGeneratedCard({ content: { "1": { text: "Two" }, "2": { text: "Back two" } } }));
     });
-    const { result } = renderHook(() => useCardGeneration(streamGenerator));
+    const { result } = renderHook(() => useAssistantCardGeneration(streamGenerator));
 
     let isSuccess: StreamResult = "success";
     await act(async () => {
@@ -49,7 +49,7 @@ describe("useCardGeneration", () => {
       .mockImplementationOnce(async (_request, onCard) => {
         onCard(createGeneratedCard());
       });
-    const { result } = renderHook(() => useCardGeneration(streamGenerator));
+    const { result } = renderHook(() => useAssistantCardGeneration(streamGenerator));
 
     await act(async () => {
       await result.current.generate(createRequest());
@@ -77,7 +77,7 @@ describe("useCardGeneration", () => {
         }, { once: true });
       });
     });
-    const { result } = renderHook(() => useCardGeneration(streamGenerator));
+    const { result } = renderHook(() => useAssistantCardGeneration(streamGenerator));
 
     act(() => {
       generationPromise = result.current.generate(createRequest());
@@ -118,7 +118,7 @@ describe("useCardGeneration", () => {
 
         if (!signal.aborted) onCard(createGeneratedCard());
       });
-    const { result } = renderHook(() => useCardGeneration(streamGenerator));
+    const { result } = renderHook(() => useAssistantCardGeneration(streamGenerator));
 
     act(() => {
       firstPromise = result.current.generate(createRequest());

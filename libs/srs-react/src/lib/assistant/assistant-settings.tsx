@@ -5,10 +5,10 @@ import { Label, NumberField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMemo } from "react";
-import { AIChatSettingsPromptEditor } from "./ai-chat-settings-prompt-editor";
-import { AIChatSettingsVariables } from "./ai-chat-settings-variables";
+import { AssistantSettingsPromptEditor } from "./assistant-settings-prompt-editor";
+import { AssistantSettingsVariables } from "./assistant-settings-variables";
 
-export type AIChatSettingsProps = {
+export type AssistantSettingsProps = {
   template: Template | null | undefined;
   provider: AISecrets["provider"] | null;
   temperature: number;
@@ -19,7 +19,7 @@ export type AIChatSettingsProps = {
   onChatPromptChange: (value: string | null) => void;
 };
 
-export function AIChatSettings({
+export function AssistantSettings({
   template,
   provider,
   temperature,
@@ -28,7 +28,7 @@ export function AIChatSettings({
   chatPromptTemplate,
   onCardsPromptChange,
   onChatPromptChange,
-}: AIChatSettingsProps) {
+}: AssistantSettingsProps) {
   const { _ } = useLingui();
 
   const chatPreview = useMemo(() => {
@@ -53,8 +53,8 @@ export function AIChatSettings({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
-      <AIChatSettingsPromptEditor
-        label={_(msg`ai-chat.settings.system-prompt.chat.label`)}
+      <AssistantSettingsPromptEditor
+        label={_(msg`assistant.settings.system-prompt.chat.label`)}
         rows={1}
         maxRows={6}
         templateValue={chatPromptTemplate}
@@ -63,8 +63,8 @@ export function AIChatSettings({
         onChange={onChatPromptChange}
       />
 
-      <AIChatSettingsPromptEditor
-        label={_(msg`ai-chat.settings.system-prompt.cards.label`)}
+      <AssistantSettingsPromptEditor
+        label={_(msg`assistant.settings.system-prompt.cards.label`)}
         rows={5}
         maxRows={10}
         templateValue={cardsPromptTemplate}
@@ -74,7 +74,7 @@ export function AIChatSettings({
         isDisabled={!template}
       />
 
-      <AIChatSettingsVariables />
+      <AssistantSettingsVariables />
 
       <NumberField
         minValue={0}
@@ -83,7 +83,7 @@ export function AIChatSettings({
         value={temperature}
         onChange={(value) => onTemperatureChange(value)}
       >
-        <Label>{_(msg`ai-chat.settings.temperature.label`)}</Label>
+        <Label>{_(msg`assistant.settings.temperature.label`)}</Label>
         <NumberField.Group />
       </NumberField>
     </div>

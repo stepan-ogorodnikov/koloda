@@ -1,12 +1,12 @@
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { createGeneratedCard, createTemplate } from "../../../test/test-helpers";
+import { createGeneratedCard, createTemplate } from "../../test/test-helpers";
 import {
   createTextMessage,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
-} from "./ai-chat-utility";
+} from "./assistant-messages";
 
 describe("aiChatUtility", () => {
   it("reads generated-card metadata only from matching assistant messages", () => {
