@@ -15,7 +15,6 @@ import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { cards, reviews } from "./schema";
 import { getTemplate } from "./templates";
-export type { Card as CardFSRS } from "ts-fsrs";
 
 /**
  * Retrieves all cards from a specific deck

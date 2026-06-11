@@ -9,7 +9,6 @@ import { deckValidation } from "./decks";
 import type { ReviewFSRS } from "./reviews";
 import type { Template, TemplateFields } from "./templates";
 import { templateValidation } from "./templates";
-export type { Card as CardFSRS } from "ts-fsrs";
 
 export const cardValidation = z.object({
   id: z.int(),
