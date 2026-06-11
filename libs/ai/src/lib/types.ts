@@ -175,3 +175,23 @@ export type CardGenerationRequest = {
 };
 
 export type GenerateCardsFunction = (request: CardGenerationRequest) => Promise<void>;
+
+export type AddAIProfileFormProps = {
+  onSubmit: (data: { title?: string; secrets: AISecrets }) => void;
+  isPending: boolean;
+  error?: Error | null;
+};
+
+export type EditAIProfileFormProps = {
+  profile: { id: string; title?: string; secrets?: AISecrets };
+  onSubmit: (data: { title?: string; secrets?: AISecrets }) => void;
+  isPending: boolean;
+  error?: Error | null;
+};
+
+export type AIProviderFieldConfig = {
+  name: "apiKey" | "baseUrl";
+  type: "password" | "url" | "text";
+  required: boolean;
+  placeholder?: string;
+};

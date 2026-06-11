@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { transformGeneratedCards } from "./ai-cards-generation";
+import { transformGeneratedCards } from "./assistant-cards-generation";
 
-describe("ai-cards-generation", () => {
+describe("assistant-cards-generation", () => {
   it("transforms generated cards into insertable card payloads", () => {
     expect(transformGeneratedCards(
       [{

@@ -1,4 +1,4 @@
-export * from "./lib/ai-cards-generation";
+export * from "./lib/assistant-cards-generation";
 export * from "./lib/ai-error";
 export * from "./lib/algorithms";
 export * from "./lib/algorithms-fsrs";
@@ -7,5 +7,4 @@ export * from "./lib/decks";
 export * from "./lib/lessons";
 export * from "./lib/markdown";
 export * from "./lib/reviews";
-export * from "./lib/settings-ai";
 export * from "./lib/templates";

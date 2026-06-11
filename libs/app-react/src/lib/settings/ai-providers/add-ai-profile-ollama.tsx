@@ -1,7 +1,7 @@
 import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/ai";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
-import type { AddAIProfileFormProps } from "@koloda/srs";
+import type { AddAIProfileFormProps } from "@koloda/ai";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

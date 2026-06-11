@@ -4,7 +4,7 @@ import type { AiProvider, AISecrets } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { AddAIProfileFormProps } from "@koloda/srs";
+import type { AddAIProfileFormProps } from "@koloda/ai";
 import { Button, Dialog, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
