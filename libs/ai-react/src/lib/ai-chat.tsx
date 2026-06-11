@@ -49,8 +49,8 @@ export type AIChatProps = {
   contextUsage?: StreamUsage | null;
   contextLength?: number;
   settingsPanel?: ReactNode;
-  settingsPanelOpen?: boolean;
-  onSettingsPanelOpenChange?: (open: boolean) => void;
+  areSettingsOpen?: boolean;
+  onAreSettingsOpenChange?: (open: boolean) => void;
 };
 
 export function AIChat({
@@ -78,8 +78,8 @@ export function AIChat({
   contextUsage,
   contextLength,
   settingsPanel,
-  settingsPanelOpen,
-  onSettingsPanelOpenChange,
+  areSettingsOpen,
+  onAreSettingsOpenChange,
 }: AIChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
@@ -127,7 +127,7 @@ export function AIChat({
   const canCancel = isLoading && !!onCancel;
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;
   const missingLabels = missingSecretFieldLabels.join(", ");
-  const hasSettingsToggle = !!settingsPanel && onSettingsPanelOpenChange;
+  const hasSettingsToggle = !!settingsPanel && onAreSettingsOpenChange;
 
   useAppHotkey(ai.cancel, () => onCancel?.(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
@@ -151,7 +151,7 @@ export function AIChat({
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
-      {settingsPanelOpen
+      {areSettingsOpen
         ? (
           <div className="flex-1 min-h-0 overflow-auto -mx-4 px-4">
             {settingsPanel}
@@ -205,8 +205,8 @@ export function AIChat({
         settingsToggle={hasSettingsToggle
           ? (
             <AIChatSettingsToggle
-              isOpen={settingsPanelOpen}
-              onOpenChange={onSettingsPanelOpenChange}
+              isOpen={areSettingsOpen}
+              onOpenChange={onAreSettingsOpenChange}
             />
           )
           : undefined}

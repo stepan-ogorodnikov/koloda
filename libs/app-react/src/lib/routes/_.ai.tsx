@@ -1,16 +1,17 @@
-import { BubbleChatAddIcon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { AISecrets } from "@koloda/ai";
-import { AIChat } from "@koloda/ai-react";
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
-import { AssistantSettings, DeckPicker, useAssistantMessageRenderer, useAssistantPage } from "@koloda/srs-react";
+import { queryKeys, useTitle } from "@koloda/core-react";
+import {
+  AssistantChatPanel,
+  AssistantChatProvider,
+  AssistantNewConversationButton,
+  DeckPicker,
+} from "@koloda/srs-react";
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useAtomValue } from "jotai";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
@@ -30,80 +31,19 @@ function AIRoute() {
   const { _ } = useLingui();
   const navigate = Route.useNavigate();
   const { deckId } = Route.useSearch();
-  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
-  const { getDeckQuery } = useAtomValue(queriesAtom);
-  const deckQuery = useQuery({
-    queryKey: queryKeys.decks.detail(deckId),
-    ...getDeckQuery(deckId),
-    enabled: !!deckId,
-  });
-  const templateId = deckQuery.data?.templateId;
 
   const handleDeckChange = useCallback((id: number) => {
     navigate({ search: { deckId: id }, replace: true });
   }, [navigate]);
 
-  const {
-    profileId,
-    modelId,
-    modelName,
-    provider,
-    temperature,
-    modelParameters,
-    messages,
-    template,
-    isModelsLoading,
-    isModelsError,
-    isGenerating,
-    generateError,
-    mode,
-    setMode,
-    handleProfileChange,
-    handleModelChange,
-    handleTemperatureChange,
-    handleModelParameterChange,
-    handleGenerate,
-    handleCancel,
-    handleReset,
-    getGeneratedCardsProps,
-    getChatMessageProps,
-    contextUsage,
-    contextLength,
-    cardsPromptTemplate,
-    chatPromptTemplate,
-    handleCardsPromptChange,
-    handleChatPromptChange,
-  } = useAssistantPage(deckId, templateId);
-
   const handleClearDeck = useCallback(() => {
-    navigate({ search: {} });
-    setMode("chat");
-  }, [navigate, setMode]);
-
-  const renderMessage = useAssistantMessageRenderer({
-    getGeneratedCardsProps,
-    getChatMessageProps,
-  });
-
-  const canStartNewConversation = messages.length > 0 || isGenerating;
+    navigate({ search: {}, replace: true });
+  }, [navigate]);
 
   return (
-    <>
+    <AssistantChatProvider deckId={deckId}>
       <Layout.Sidebar>
-        <Button
-          variants={{ style: "dashed", class: "m-2" }}
-          aria-label={_(msg`ai.chat.new-conversation.label`)}
-          isDisabled={!canStartNewConversation}
-          onPress={handleReset}
-        >
-          <HugeiconsIcon
-            className="size-5 min-w-5"
-            strokeWidth={1.75}
-            icon={BubbleChatAddIcon}
-            aria-hidden="true"
-          />
-          {_(msg`ai.chat.new-conversation.label`)}
-        </Button>
+        <AssistantNewConversationButton />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
@@ -132,45 +72,9 @@ function AIRoute() {
           </div>
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
-          <AIChat
-            profileId={profileId}
-            modelId={modelId}
-            modelName={modelName}
-            deckId={deckId}
-            messages={messages}
-            onProfileChange={handleProfileChange}
-            onModelChange={handleModelChange}
-            onSubmit={handleGenerate}
-            onCancel={handleCancel}
-            onReset={handleReset}
-            isLoading={isGenerating}
-            isModelsLoading={isModelsLoading}
-            isModelsError={isModelsError}
-            error={generateError?.message}
-            renderMessage={renderMessage}
-            mode={mode}
-            onModeChange={setMode}
-            modelParameters={modelParameters}
-            onModelParameterChange={handleModelParameterChange}
-            contextUsage={contextUsage}
-            contextLength={contextLength}
-            settingsPanel={
-              <AssistantSettings
-                template={template}
-                provider={provider as AISecrets["provider"] | null}
-                temperature={temperature}
-                onTemperatureChange={handleTemperatureChange}
-                cardsPromptTemplate={cardsPromptTemplate}
-                chatPromptTemplate={chatPromptTemplate}
-                onCardsPromptChange={handleCardsPromptChange}
-                onChatPromptChange={handleChatPromptChange}
-              />
-            }
-            settingsPanelOpen={settingsPanelOpen}
-            onSettingsPanelOpenChange={setSettingsPanelOpen}
-          />
+          <AssistantChatPanel />
         </Layout.Container>
       </Layout.Content>
-    </>
+    </AssistantChatProvider>
   );
 }

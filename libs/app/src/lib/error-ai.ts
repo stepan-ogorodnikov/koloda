@@ -13,6 +13,7 @@ export function getGenerateErrorMessage(error: Error | null, _: I18nContext["_"]
   const content = getAIHttpErrorMessageDescriptor(appError.code)
     ?? ERROR_MESSAGES[appError.code]
     ?? ERROR_MESSAGES.unknown;
+
   return typeof content === "function"
     ? _(content(appError))
     : _(content);
@@ -25,6 +26,7 @@ export function getAIHttpErrorMessageDescriptor(code: string) {
   if (directMessage) return directMessage;
 
   const status = Number(code.slice("ai.http.".length));
+
   return typeof status === "number" && !Number.isNaN(status)
     ? ERROR_MESSAGES["ai.http"]({ status })
     : ERROR_MESSAGES.unknown;
@@ -32,8 +34,8 @@ export function getAIHttpErrorMessageDescriptor(code: string) {
 
 export function toAIAppError(error: unknown): Error {
   if (error instanceof AppError) return error;
-
   const aiError = toAIError(error);
+
   return new AppError(
     aiError.code as AppError["code"],
     aiError.message === aiError.code ? undefined : aiError.message,
