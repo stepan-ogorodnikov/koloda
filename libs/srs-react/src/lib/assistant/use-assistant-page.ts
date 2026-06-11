@@ -5,9 +5,9 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
+
+import type { AIChatMode } from "@koloda/ai-react";
 import type { AssistantCardsMessageProps } from "./assistant-cards-message";
-import type { AIChatMode } from "./assistant-messages";
 import { useAssistantClient } from "./use-assistant-client";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import { useAssistantConversation } from "./use-assistant-conversation";
@@ -133,14 +133,6 @@ export function useAssistantPage(deckId?: Deck["id"], templateId?: Template["id"
   } = useAssistantConversation(conversationConfig);
 
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
-
-  useEffect(() => {
-    return () => {
-      handleProfileChange("");
-      handleModelChange("");
-      handleReset();
-    };
-  }, [handleProfileChange, handleModelChange, handleReset]);
 
   return {
     profileId,
