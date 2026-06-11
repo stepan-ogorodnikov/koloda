@@ -22,7 +22,7 @@ export function throwForAIResponse(response: Response): Response {
   throw new AIError(code, `${response.status} ${response.statusText}`.trim());
 }
 
-export function toAIError(error: unknown): Error {
+export function toAIError(error: unknown): AIError {
   if (error instanceof AIError) return error;
   if (error instanceof DOMException && error.name === "AbortError") throw error;
 

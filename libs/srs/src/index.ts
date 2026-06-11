@@ -1,5 +1,4 @@
 export * from "./lib/assistant-cards-generation";
-export * from "./lib/ai-error";
 export * from "./lib/algorithms";
 export * from "./lib/algorithms-fsrs";
 export * from "./lib/cards";

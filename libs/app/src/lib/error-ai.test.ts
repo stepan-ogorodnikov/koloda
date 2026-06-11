@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAIHttpErrorMessageDescriptor, toAIAppError } from "./ai-error";
+import { getAIHttpErrorMessageDescriptor, toAIAppError } from "./error-ai";
 
 describe("ai-error", () => {
   it("resolves direct and fallback AI http message descriptors", () => {
