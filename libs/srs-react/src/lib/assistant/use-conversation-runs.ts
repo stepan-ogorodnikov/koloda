@@ -14,7 +14,7 @@ export function useConversationRuns(
     onCard?: (card: { content: Record<string, { text: string }> }) => void,
   ) => Promise<StreamResult>,
   dispatch: React.Dispatch<ConversationAction>,
-  stateRef: React.RefObject<ConversationState>,
+  getState: () => ConversationState,
 ) {
   const handleStreamResult = useCallback((result: StreamResult, runId: string) => {
     switch (result) {
@@ -61,9 +61,7 @@ export function useConversationRuns(
 
   const handleRetry = useCallback(
     async (runId: string) => {
-      const currentRuns = stateRef.current?.runs;
-      if (!currentRuns) return;
-      const run = currentRuns[runId];
+      const run = getState().runs[runId];
       if (!run?.request) return;
 
       dispatch({ type: "restartRun", runId });
@@ -75,7 +73,7 @@ export function useConversationRuns(
         await executeGenerateRun(runId, run.request as CardGenerationStreamRequest);
       }
     },
-    [executeChatRun, executeGenerateRun, dispatch, stateRef],
+    [executeChatRun, executeGenerateRun, dispatch, getState],
   );
 
   return { handleStreamResult, executeChatRun, executeGenerateRun, handleRetry };

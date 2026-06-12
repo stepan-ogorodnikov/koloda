@@ -1,75 +1,106 @@
 import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import type { Deck, Template } from "@koloda/srs";
 import type { UIMessage } from "ai";
+import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
-import type { AssistantCardsMessageProps } from "./assistant-cards-message";
-import { getTextMessageContent } from "./assistant-messages";
+import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "./assistant-conversation-atoms";
+import { getChatTextMetadata, getGeneratedCardsMetadata, getTextMessageContent } from "./assistant-messages";
 
-export type UseAssistantMessageRendererProps = {
-  getGeneratedCardsProps: (message: UIMessage) => AssistantCardsMessageProps | null;
-  getChatMessageProps: (message: UIMessage) =>
-    | { isStreaming: true }
-    | { isSuccess: true; elapsedSeconds: number }
-    | { isCanceled: true; elapsedSeconds: number }
-    | { isFailed: true; canRetry: boolean; onRetry: () => void }
-    | null;
+export type UseAssistantMessageRendererOptions = {
+  template: Template | null | undefined;
+  deckId: Deck["id"];
+  handleRetry: (runId: string) => Promise<void>;
 };
 
-export function useAssistantMessageRenderer({
-  getGeneratedCardsProps,
-  getChatMessageProps,
-}: UseAssistantMessageRendererProps) {
+export function useAssistantMessageRenderer(
+  { template, deckId, handleRetry }: UseAssistantMessageRendererOptions,
+) {
+  const runs = useAtomValue(assistantRunsAtom);
+  const messages = useAtomValue(assistantMessagesAtom);
+  const activeRunId = useAtomValue(assistantActiveRunIdAtom);
+
   return useCallback(
     (message: UIMessage, content: ReactNode) => {
-      const props = getGeneratedCardsProps(message);
-      if (props && props.template) return <AssistantCardsMessage {...props} />;
+      const messageIndex = messages.findIndex((m) => m.id === message.id);
+      const isTail = messageIndex >= 0 && messageIndex >= messages.length - 1;
 
-      const chatProps = getChatMessageProps(message);
+      const generatedCardsMetadata = getGeneratedCardsMetadata(message);
+      if (generatedCardsMetadata) {
+        const run = runs[generatedCardsMetadata.runId];
+        const runCards = run?.cards ?? [];
+        const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
 
-      if (chatProps) {
-        if ("isStreaming" in chatProps) {
-          if (getTextMessageContent(message)) return content;
-
+        if (template) {
           return (
-            <AIChatMessageLayout role="assistant">
-              <AIChatMessageStatus state="pending" />
-            </AIChatMessageLayout>
-          );
-        }
-
-        if ("isSuccess" in chatProps) {
-          return (
-            <div className="flex flex-col gap-2 self-start w-full">
-              {content}
-              <AIChatMessageStatus state="success" elapsedSeconds={chatProps.elapsedSeconds} />
-            </div>
-          );
-        }
-
-        if ("isCanceled" in chatProps) {
-          return (
-            <div className="flex flex-col gap-2 self-start w-full">
-              {content}
-              <AIChatMessageStatus state="canceled" elapsedSeconds={chatProps.elapsedSeconds} />
-            </div>
-          );
-        }
-
-        return (
-          <div className="flex flex-col gap-2 self-start w-full">
-            {content}
-            <AIChatMessageStatus
-              state="failed"
-              canRetry={chatProps.canRetry}
-              onRetry={chatProps.onRetry}
+            <AssistantCardsMessage
+              cards={runCards}
+              template={template}
+              deckId={deckId}
+              templateId={template.id}
+              canAdd={runCards.length > 0 && !isCurrentRun}
+              isGenerating={isCurrentRun}
+              isCanceled={run?.status === "canceled"}
+              isFailed={run?.status === "failed"}
+              canRetry={isTail}
+              onRetry={() => handleRetry(generatedCardsMetadata.runId)}
+              elapsedSeconds={run?.elapsedSeconds ?? undefined}
             />
-          </div>
-        );
+          );
+        }
+      }
+
+      const chatMetadata = getChatTextMetadata(message);
+      if (chatMetadata) {
+        const run = runs[chatMetadata.runId];
+
+        if (run) {
+          if (run.status === "streaming") {
+            if (getTextMessageContent(message)) return content;
+
+            return (
+              <AIChatMessageLayout role="assistant">
+                <AIChatMessageStatus state="pending" />
+              </AIChatMessageLayout>
+            );
+          }
+
+          if (run.status === "success" && run.elapsedSeconds !== null) {
+            return (
+              <div className="flex flex-col gap-2 self-start w-full">
+                {content}
+                <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} />
+              </div>
+            );
+          }
+
+          if (run.status === "canceled" && run.elapsedSeconds !== null) {
+            return (
+              <div className="flex flex-col gap-2 self-start w-full">
+                {content}
+                <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} />
+              </div>
+            );
+          }
+
+          if (run.status === "failed") {
+            return (
+              <div className="flex flex-col gap-2 self-start w-full">
+                {content}
+                <AIChatMessageStatus
+                  state="failed"
+                  canRetry={isTail}
+                  onRetry={() => handleRetry(chatMetadata.runId)}
+                />
+              </div>
+            );
+          }
+        }
       }
 
       return content;
     },
-    [getGeneratedCardsProps, getChatMessageProps],
+    [messages, runs, activeRunId, template, deckId, handleRetry],
   );
 }

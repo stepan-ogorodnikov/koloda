@@ -1,12 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { queryKeys, useTitle } from "@koloda/core-react";
-import {
-  AssistantChatPanel,
-  AssistantChatProvider,
-  AssistantNewConversationButton,
-  DeckPicker,
-} from "@koloda/srs-react";
+import { AssistantChatPanel, AssistantNewConversationButton, DeckPicker } from "@koloda/srs-react";
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -41,7 +36,7 @@ function AIRoute() {
   }, [navigate]);
 
   return (
-    <AssistantChatProvider deckId={deckId}>
+    <>
       <Layout.Sidebar>
         <AssistantNewConversationButton />
       </Layout.Sidebar>
@@ -72,9 +67,9 @@ function AIRoute() {
           </div>
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
-          <AssistantChatPanel />
+          <AssistantChatPanel deckId={deckId} />
         </Layout.Container>
       </Layout.Content>
-    </AssistantChatProvider>
+    </>
   );
 }

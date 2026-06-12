@@ -9,11 +9,14 @@ export type AIChatModeToggleProps = {
   mode?: AIChatMode;
   deckId?: number;
   onModeChange?: (mode: AIChatMode) => void;
-  tooltip: string;
 };
 
-export function AIChatModeToggle({ mode, deckId, onModeChange, tooltip }: AIChatModeToggleProps) {
+export function AIChatModeToggle({ mode, deckId, onModeChange }: AIChatModeToggleProps) {
   const { _ } = useLingui();
+
+  const tooltip = deckId
+    ? (mode === "cards" ? _(msg`ai.chat.mode.cards.on`) : _(msg`ai.chat.mode.cards.off`))
+    : _(msg`ai.chat.mode.cards.no-deck`);
 
   return (
     <Tooltip content={tooltip}>
