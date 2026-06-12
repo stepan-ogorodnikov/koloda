@@ -3,7 +3,7 @@ import { parseGeneratedCardsText, resolveGenerationTemperature } from "./card-pa
 import { getConversationMessages } from "./chat-stream";
 import { AIError, throwForAIResponse, wrapAIError } from "./error";
 import { compilePromptTemplate } from "./prompts";
-import type { AiProvider, AISecrets, CardGenerationFields, CardGenerationRequest, GeneratedCard } from "./types";
+import type { AiProvider, AISecrets, CardGenerationFields, CardGenerationRequest, GeneratedCard, Message } from "./types";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./types";
 
 async function runStructuredCardGeneration(
@@ -191,7 +191,7 @@ type OpenAICompatibleChatCompletionsResponse = {
 type GetTextCompletionMessagesParams = {
   fields: CardGenerationFields;
   prompt: string;
-  messages?: { role: string; content: string }[];
+  messages?: Message[];
   provider: AiProvider;
   systemPromptTemplate?: string;
 };

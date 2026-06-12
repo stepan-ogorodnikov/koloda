@@ -50,7 +50,7 @@ export const aiProfileValidation = z.object({
   lastUsedAt: z.iso.datetime().nullable(),
 });
 
-export type AIProfile = z.input<typeof aiProfileValidation>;
+export type AIProfile = z.output<typeof aiProfileValidation>;
 
 export const aiSettingsValidation = z.object({
   profiles: z.array(aiProfileValidation),
@@ -148,7 +148,7 @@ export type GeneratedCard = { content: Record<string, { text: string }> };
 
 export type OnCardGenerated = (card: GeneratedCard) => void;
 
-export type Message = { role: string; content: string };
+export type Message = { role: "user" | "assistant" | "system"; content: string };
 
 export type CardGenerationFields = Array<{ id: number; title: string; isRequired: boolean; type?: string }>;
 

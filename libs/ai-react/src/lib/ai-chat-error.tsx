@@ -18,8 +18,8 @@ export function AIChatError({ error }: AIChatErrorProps) {
   const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
-    setIsHidden(false);
-  }, [error]);
+    if (error && isHidden) setIsHidden(false);
+  }, [error, isHidden]);
 
   return (
     <AnimatePresence>

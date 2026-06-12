@@ -2,7 +2,7 @@ import { streamText } from "ai";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, throwForAIResponse, wrapAIError } from "./error";
 import { compilePromptTemplate } from "./prompts";
-import type { AISecrets, ChatStreamRequest, StreamUsage } from "./types";
+import type { AISecrets, ChatStreamRequest, Message, StreamUsage } from "./types";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./types";
 
 export async function streamChatWithOpenRouter(
@@ -125,8 +125,8 @@ export async function streamChatWithLMStudio(
   });
 }
 
-export function getConversationMessages(messages: { role: string; content: string }[], prompt: string) {
-  return [...messages, { role: "user", content: prompt }] as { role: "user" | "assistant"; content: string }[];
+export function getConversationMessages(messages: Message[], prompt: string): Message[] {
+  return [...messages, { role: "user", content: prompt }];
 }
 
 async function readOllamaChatStream(

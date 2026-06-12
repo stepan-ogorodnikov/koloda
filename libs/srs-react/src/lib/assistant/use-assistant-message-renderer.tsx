@@ -43,7 +43,7 @@ export function useAssistantMessageRenderer(
               isGenerating={isCurrentRun}
               isCanceled={run?.status === "canceled"}
               isFailed={run?.status === "failed"}
-              canRetry={isTail}
+              canRetry={isTail && !!run}
               onRetry={() => handleRetry(generatedCardsMetadata.runId)}
               elapsedSeconds={run?.elapsedSeconds ?? undefined}
             />

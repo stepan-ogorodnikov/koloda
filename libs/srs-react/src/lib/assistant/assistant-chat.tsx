@@ -74,16 +74,15 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
     setMode,
   } = useAssistantChat(deckId);
 
-  const { inputValue, setInputValue, prompt, canSubmit, canCancel, submit, handleSubmit, handleNewConversation } =
-    useAIChatInput({
-      onSubmit: handleGenerate,
-      onCancel: handleCancel,
-      onReset: handleReset,
-      isLoading: isProcessing,
-      scroll,
-    });
+  const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
+    onSubmit: handleGenerate,
+    onCancel: handleCancel,
+    onReset: handleReset,
+    isLoading: isProcessing,
+    scroll,
+  });
 
-  const { showMissingSecretsWarning } = useAIChatValidation({
+  const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,
     modelId,
     prompt,

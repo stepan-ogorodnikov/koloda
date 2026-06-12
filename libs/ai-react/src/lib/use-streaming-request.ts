@@ -90,6 +90,7 @@ export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(opt
     controllerRef.current = null;
     setIsRunning(false);
     setError(null);
+    setResult(null);
   }, []);
 
   const reset = useCallback(() => {

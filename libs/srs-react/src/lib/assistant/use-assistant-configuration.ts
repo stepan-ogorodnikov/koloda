@@ -82,7 +82,9 @@ export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
   }, []);
 
   const handleTemperatureChange = useCallback((value: number) => {
-    setTemperature(Number.isNaN(value) ? GENERATION_TEMPERATURE : Math.min(2, Math.max(0, value)));
+    setTemperature(
+      Number.isNaN(value) ? GENERATION_TEMPERATURE : Math.round(Math.min(2, Math.max(0, value)) * 10) / 10,
+    );
   }, []);
 
   const handleModelParameterChange = useCallback((type: ModelParameter["type"], value: string) => {
