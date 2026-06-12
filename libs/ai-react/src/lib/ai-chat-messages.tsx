@@ -12,19 +12,13 @@ import type { UseAutoScrollReturn } from "./use-auto-scroll";
 
 export type AIChatMessagesProps = {
   messages: UIMessage[];
+  renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
   modelName?: string;
   emptyState?: ReactNode;
-  renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
   scroll: UseAutoScrollReturn;
 };
 
-export function AIChatMessages({
-  messages,
-  modelName,
-  emptyState = null,
-  renderMessage,
-  scroll,
-}: AIChatMessagesProps) {
+export function AIChatMessages({ messages, modelName, emptyState = null, renderMessage, scroll }: AIChatMessagesProps) {
   const { _ } = useLingui();
 
   return (

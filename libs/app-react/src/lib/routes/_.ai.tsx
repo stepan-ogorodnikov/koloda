@@ -1,7 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { queryKeys, useTitle } from "@koloda/core-react";
-import { AssistantChatPanel, AssistantNewConversationButton, DeckPicker } from "@koloda/srs-react";
+import { AssistantChat, AssistantNewConversationButton, DeckPicker } from "@koloda/srs-react";
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -67,7 +67,7 @@ function AIRoute() {
           </div>
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
-          <AssistantChatPanel deckId={deckId} />
+          <AssistantChat deckId={deckId} />
         </Layout.Container>
       </Layout.Content>
     </>

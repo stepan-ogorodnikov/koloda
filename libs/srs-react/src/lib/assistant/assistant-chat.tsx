@@ -1,15 +1,18 @@
 import type { AISecrets } from "@koloda/ai";
 import {
+  AiChatContextUsage,
   AIChatError,
   AIChatFooter,
   AIChatMessages,
   AIChatMissingSecrets,
   AIChatModeToggle,
   AIChatPromptInput,
+  AIChatPromptPanel,
   AIChatSettingsToggle,
   AIChatSubmit,
   AIModelParameters,
   AIModelPicker,
+  AIProfilePicker,
   useAIChatInput,
   useAIChatValidation,
   useAutoScroll,
@@ -28,16 +31,11 @@ import { AssistantSettings } from "./assistant-settings";
 import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 
-const aiChatPanel = [
-  "flex flex-col gap-2 w-full max-w-3xl mx-auto p-2",
-  "rounded-2xl border-2 border-input bg-input shadow-input",
-].join(" ");
-
-export type AssistantChatPanelProps = {
+export type AssistantChatProps = {
   deckId?: Deck["id"];
 };
 
-export function AssistantChatPanel({ deckId }: AssistantChatPanelProps) {
+export function AssistantChat({ deckId }: AssistantChatProps) {
   const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
   const mode = useAtomValue(assistantModeAtom);
@@ -116,30 +114,23 @@ export function AssistantChatPanel({ deckId }: AssistantChatPanelProps) {
     <section className="relative grow flex flex-col min-h-0 px-4">
       {areSettingsOpen
         ? (
-          <div className="flex-1 min-h-0 overflow-auto -mx-4 px-4">
-            <AssistantSettings
-              template={template}
-              provider={provider as AISecrets["provider"] | null}
-              temperature={temperature}
-              onTemperatureChange={handleTemperatureChange}
-              cardsPromptTemplate={cardsPromptTemplate}
-              chatPromptTemplate={chatPromptTemplate}
-              onCardsPromptChange={handleCardsPromptChange}
-              onChatPromptChange={handleChatPromptChange}
-            />
-          </div>
+          <AssistantSettings
+            template={template}
+            provider={provider as AISecrets["provider"] | null}
+            temperature={temperature}
+            onTemperatureChange={handleTemperatureChange}
+            cardsPromptTemplate={cardsPromptTemplate}
+            chatPromptTemplate={chatPromptTemplate}
+            onCardsPromptChange={handleCardsPromptChange}
+            onChatPromptChange={handleChatPromptChange}
+          />
         )
         : (
           <>
-            <AIChatMessages
-              messages={messages}
-              modelName={modelName}
-              renderMessage={renderMessage}
-              scroll={scroll}
-            />
+            <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
             <AIChatError error={generateError?.message} />
-            <form className={`${aiChatPanel} shrink-0`} onSubmit={handleSubmit}>
+            <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
               <div className="flex flex-row items-center min-w-0">
                 <AIModelPicker
@@ -152,7 +143,7 @@ export function AssistantChatPanel({ deckId }: AssistantChatPanelProps) {
                   <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
                 )}
                 <div className="grow min-w-3" />
-                <div className="shrink-0 flex flex-row items-center gap-2">
+                <div className="flex flex-row items-center gap-2 shrink-0">
                   <AIChatModeToggle
                     mode={mode}
                     deckId={deckId}
@@ -161,17 +152,17 @@ export function AssistantChatPanel({ deckId }: AssistantChatPanelProps) {
                   <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
                 </div>
               </div>
-            </form>
+            </AIChatPromptPanel>
           </>
         )}
-      <AIChatFooter
-        profileId={profileId}
-        onProfileChange={handleProfileChange}
-        triggerRef={profilePickerRef}
-        contextUsage={contextUsage}
-        contextLength={contextLength}
-        settingsToggle={<AIChatSettingsToggle isOpen={areSettingsOpen} onOpenChange={setAreSettingsOpen} />}
-      />
+      <AIChatFooter>
+        <AIProfilePicker value={profileId} onChange={handleProfileChange} triggerRef={profilePickerRef} />
+        <div className="grow min-w-3" />
+        {contextUsage !== undefined && contextLength !== undefined && (
+          <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />
+        )}
+        <AIChatSettingsToggle isOpen={areSettingsOpen} onOpenChange={() => setAreSettingsOpen((prev) => !prev)} />
+      </AIChatFooter>
     </section>
   );
 }

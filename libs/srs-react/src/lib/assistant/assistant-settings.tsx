@@ -52,40 +52,42 @@ export function AssistantSettings({
   }, [cardsPromptTemplate, provider, template]);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
-      <AssistantSettingsPromptEditor
-        label={_(msg`assistant.settings.system-prompt.chat.label`)}
-        rows={1}
-        maxRows={6}
-        templateValue={chatPromptTemplate}
-        defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
-        preview={chatPreview}
-        onChange={onChatPromptChange}
-      />
+    <div className="flex-1 min-h-0 overflow-auto -mx-4 px-4">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+        <AssistantSettingsPromptEditor
+          label={_(msg`assistant.settings.system-prompt.chat.label`)}
+          rows={1}
+          maxRows={6}
+          templateValue={chatPromptTemplate}
+          defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
+          preview={chatPreview}
+          onChange={onChatPromptChange}
+        />
 
-      <AssistantSettingsPromptEditor
-        label={_(msg`assistant.settings.system-prompt.cards.label`)}
-        rows={5}
-        maxRows={10}
-        templateValue={cardsPromptTemplate}
-        defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
-        preview={generationPreview}
-        onChange={onCardsPromptChange}
-        isDisabled={!template}
-      />
+        <AssistantSettingsPromptEditor
+          label={_(msg`assistant.settings.system-prompt.cards.label`)}
+          rows={5}
+          maxRows={10}
+          templateValue={cardsPromptTemplate}
+          defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
+          preview={generationPreview}
+          onChange={onCardsPromptChange}
+          isDisabled={!template}
+        />
 
-      <AssistantSettingsVariables />
+        <AssistantSettingsVariables />
 
-      <NumberField
-        minValue={0}
-        maxValue={2}
-        step={0.1}
-        value={temperature}
-        onChange={(value) => onTemperatureChange(value)}
-      >
-        <Label>{_(msg`assistant.settings.temperature.label`)}</Label>
-        <NumberField.Group />
-      </NumberField>
+        <NumberField
+          minValue={0}
+          maxValue={2}
+          step={0.1}
+          value={temperature}
+          onChange={(value) => onTemperatureChange(value)}
+        >
+          <Label>{_(msg`assistant.settings.temperature.label`)}</Label>
+          <NumberField.Group />
+        </NumberField>
+      </div>
     </div>
   );
 }
