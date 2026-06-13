@@ -52,8 +52,25 @@ export const aiProfileValidation = z.object({
 
 export type AIProfile = z.output<typeof aiProfileValidation>;
 
+export const assistantSettingsValidation = z.object({
+  temperature: z.number().min(0).max(2).default(0.2),
+  cardsPromptTemplate: z.string().nullable().default(null),
+  chatPromptTemplate: z.string().nullable().default(null),
+});
+
+export type AssistantSettings = z.input<typeof assistantSettingsValidation>;
+
+export const assistantSettingsFormSchema = z.object({
+  temperature: z.number().min(0).max(2),
+  cardsPromptTemplate: z.string().nullable(),
+  chatPromptTemplate: z.string().nullable(),
+});
+
+export type AssistantSettingsFormValues = z.infer<typeof assistantSettingsFormSchema>;
+
 export const aiSettingsValidation = z.object({
   profiles: z.array(aiProfileValidation),
+  assistant: assistantSettingsValidation.optional(),
 });
 
 export type AISettings = z.input<typeof aiSettingsValidation>;

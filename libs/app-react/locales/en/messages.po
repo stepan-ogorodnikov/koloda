@@ -13,13 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:95
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:105
-msgid "ai.chat.new-conversation.label"
-msgstr "New conversation"
-
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:121
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:124
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:56
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:59
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -292,8 +287,8 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:23
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:111
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:19
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:46
 msgid "title.ai"
 msgstr "Assistant"
 

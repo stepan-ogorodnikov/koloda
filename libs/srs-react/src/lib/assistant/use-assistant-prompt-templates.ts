@@ -1,3 +1,4 @@
+import type { AssistantSettings } from "@koloda/ai";
 import { useCallback, useState } from "react";
 
 export type UseAssistantPromptTemplatesReturn = {
@@ -7,9 +8,13 @@ export type UseAssistantPromptTemplatesReturn = {
   handleChatPromptChange: (value: string | null) => void;
 };
 
-export function useAssistantPromptTemplates(): UseAssistantPromptTemplatesReturn {
-  const [cardsPromptTemplate, setGenerationPromptTemplate] = useState<string | null>(null);
-  const [chatPromptTemplate, setChatPromptTemplate] = useState<string | null>(null);
+export function useAssistantPromptTemplates(assistantSettings?: AssistantSettings): UseAssistantPromptTemplatesReturn {
+  const [cardsPromptTemplate, setGenerationPromptTemplate] = useState<string | null>(
+    assistantSettings?.cardsPromptTemplate ?? null,
+  );
+  const [chatPromptTemplate, setChatPromptTemplate] = useState<string | null>(
+    assistantSettings?.chatPromptTemplate ?? null,
+  );
 
   const handleCardsPromptChange = useCallback((value: string | null) => {
     setGenerationPromptTemplate(value);

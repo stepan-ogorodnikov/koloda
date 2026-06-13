@@ -42,7 +42,7 @@ function AIRoute() {
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
-          <div className="flex flex-row flex-wrap items-center w-full max-w-3xl">
+          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl px-2">
             <Layout.H1>{_(msg`title.ai`)}</Layout.H1>
             <div className="flex flex-row items-center gap-1 pl-2">
               <DeckPicker

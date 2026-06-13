@@ -1,4 +1,3 @@
-import type { AISecrets } from "@koloda/ai";
 import {
   AiChatContextUsage,
   AIChatError,
@@ -50,7 +49,6 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
     modelId,
     modelName,
     provider,
-    temperature,
     modelParameters,
     template,
     hasRequiredSecrets,
@@ -59,14 +57,9 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
     isModelsError,
     generateError,
     contextLength,
-    cardsPromptTemplate,
-    chatPromptTemplate,
     handleProfileChange,
     handleModelChange,
-    handleTemperatureChange,
     handleModelParameterChange,
-    handleCardsPromptChange,
-    handleChatPromptChange,
     handleGenerate,
     handleCancel,
     handleReset,
@@ -112,18 +105,7 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
       {areSettingsOpen
-        ? (
-          <AssistantSettings
-            template={template}
-            provider={provider as AISecrets["provider"] | null}
-            temperature={temperature}
-            onTemperatureChange={handleTemperatureChange}
-            cardsPromptTemplate={cardsPromptTemplate}
-            chatPromptTemplate={chatPromptTemplate}
-            onCardsPromptChange={handleCardsPromptChange}
-            onChatPromptChange={handleChatPromptChange}
-          />
-        )
+        ? <AssistantSettings template={template} provider={provider} />
         : (
           <>
             <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />

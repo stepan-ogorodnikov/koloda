@@ -1,4 +1,4 @@
-import type { ModelParameter } from "@koloda/ai";
+import type { AISecrets, AssistantSettings, ModelParameter } from "@koloda/ai";
 import { generateCardsInputSchema } from "@koloda/ai";
 import type { ChatStreamRequest } from "@koloda/ai";
 import { useAIProfiles, useChatStream } from "@koloda/ai-react";
@@ -23,15 +23,13 @@ import type { CardGenerationStreamRequest } from "./use-assistant-card-generatio
 import { useAssistantClient } from "./use-assistant-client";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
-import { useAssistantPromptTemplates } from "./use-assistant-prompt-templates";
 import { useConversationRuns } from "./use-conversation-runs";
 
 export type UseAssistantChatReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
-  provider: string | null;
-  temperature: number;
+  provider: AISecrets["provider"] | null;
   modelParameters: ModelParameter[];
   template: Template | null | undefined;
   hasRequiredSecrets: boolean;
@@ -40,14 +38,9 @@ export type UseAssistantChatReturn = {
   isModelsError: boolean;
   generateError: Error | null;
   contextLength: number;
-  cardsPromptTemplate: string | null;
-  chatPromptTemplate: string | null;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
-  handleTemperatureChange: (value: number) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
-  handleCardsPromptChange: (value: string | null) => void;
-  handleChatPromptChange: (value: string | null) => void;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
   handleReset: () => void;
@@ -57,10 +50,16 @@ export type UseAssistantChatReturn = {
 
 export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
   const { _ } = useLingui();
-  const { getDeckQuery, getTemplateQuery, touchAIProfileMutation } = useAtomValue(queriesAtom);
+  const { getDeckQuery, getTemplateQuery, touchAIProfileMutation, getSettingsQuery } = useAtomValue(queriesAtom);
   const setConversationAction = useSetAtom(assistantConversationStateAtom);
   const resetConversation = useSetAtom(resetAssistantConversationAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
+
+  const { data: aiSettings } = useQuery({
+    ...getSettingsQuery("ai"),
+    queryKey: queryKeys.settings.detail("ai"),
+  });
+  const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
 
   const {
     profileId,
@@ -76,9 +75,8 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     modelParameters,
     handleProfileChange,
     handleModelChange,
-    handleTemperatureChange,
     handleModelParameterChange,
-  } = useAssistantConfiguration();
+  } = useAssistantConfiguration(assistantSettings);
 
   const { defaultProfileId, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
@@ -93,12 +91,8 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     if (!deckId) setMode("chat");
   }, [deckId, setMode]);
 
-  const {
-    cardsPromptTemplate,
-    chatPromptTemplate,
-    handleCardsPromptChange,
-    handleChatPromptChange,
-  } = useAssistantPromptTemplates();
+  const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
+  const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
 
   const deckQuery = useQuery({
     queryKey: queryKeys.decks.detail(deckId!),
@@ -244,7 +238,6 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     modelId,
     modelName,
     provider,
-    temperature,
     modelParameters,
     template,
     hasRequiredSecrets,
@@ -253,14 +246,9 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     isModelsError,
     generateError,
     contextLength,
-    cardsPromptTemplate,
-    chatPromptTemplate,
     handleProfileChange,
     handleModelChange,
-    handleTemperatureChange,
     handleModelParameterChange,
-    handleCardsPromptChange,
-    handleChatPromptChange,
     handleGenerate,
     handleCancel,
     handleReset,

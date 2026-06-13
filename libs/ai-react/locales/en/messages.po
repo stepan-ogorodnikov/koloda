@@ -23,8 +23,8 @@ msgstr "Cancel request"
 msgid "ai-chat.submit.label"
 msgstr "Send"
 
-#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:34
-#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:45
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:31
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:42
 msgid "ai.chat.context-usage.tokens"
 msgstr "tokens"
 
@@ -72,20 +72,20 @@ msgstr "Finished in"
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:40
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:34
 msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:150
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:19
 msgid "ai.chat.mode.cards.no-deck"
 msgstr "Select a deck to use cards creation mode"
 
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:149
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:18
 msgid "ai.chat.mode.cards.off"
 msgstr "Turn on cards creation mode"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:27
-#: ../../libs/ai-react/src/lib/ai-chat.tsx:149
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:18
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:30
 msgid "ai.chat.mode.cards.on"
 msgstr "Turn off cards creation mode"
 
@@ -97,8 +97,8 @@ msgstr "Selected AI profile is missing required data"
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:71
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:74
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:65
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:68
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 

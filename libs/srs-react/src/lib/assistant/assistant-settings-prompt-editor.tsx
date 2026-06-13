@@ -12,7 +12,7 @@ export type AssistantSettingsPromptEditorProps = {
   templateValue: string | null;
   defaultTemplate: string;
   preview: string;
-  onChange: (value: string | null) => void;
+  onChange: (value: string) => void;
   isDisabled?: boolean;
 };
 
@@ -61,7 +61,7 @@ export function AssistantSettingsPromptEditor({
             <Button
               variants={{ style: "ghost", size: "icon" }}
               aria-label={_(msg`assistant.settings.prompt.reset`)}
-              onPress={() => onChange(null)}
+              onPress={() => onChange(defaultTemplate)}
               isDisabled={!isCustom}
             >
               <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Undo02Icon} aria-hidden="true" />

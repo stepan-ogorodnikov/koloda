@@ -1,4 +1,4 @@
-import type { ModelParameter } from "@koloda/ai";
+import type { AssistantSettings, ModelParameter } from "@koloda/ai";
 import type { AIModel, AISecrets } from "@koloda/ai";
 import { GENERATION_TEMPERATURE } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
@@ -24,10 +24,10 @@ export type UseAssistantConfigurationReturn = {
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
 
-export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
+export function useAssistantConfiguration(assistantSettings?: AssistantSettings): UseAssistantConfigurationReturn {
   const [profileId, setProfileId] = useState("");
   const [preferredModelId, setPreferredModelId] = useState("");
-  const [temperature, setTemperature] = useState(GENERATION_TEMPERATURE);
+  const [temperature, setTemperature] = useState(assistantSettings?.temperature ?? GENERATION_TEMPERATURE);
   const [reasoningEffort, setReasoningEffort] = useState("");
   const { profiles, selectedProfile } = useAIProfiles(profileId);
   const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(profileId);
