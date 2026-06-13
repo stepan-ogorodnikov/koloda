@@ -68,15 +68,13 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
   const chatPromptTemplate = form.getFieldValue("chatPromptTemplate") ?? DEFAULT_CHAT_PROMPT_TEMPLATE;
   const cardsPromptTemplate = form.getFieldValue("cardsPromptTemplate") ?? DEFAULT_GENERATION_PROMPT_TEMPLATE;
 
-  const chatPreview = useMemo(() => {
-    if (!template?.content?.fields) return chatPromptTemplate;
-    return compilePromptTemplate(chatPromptTemplate, template.content.fields, provider, "chat");
-  }, [chatPromptTemplate, provider, template]);
+  const chatPreview = useMemo(() => (
+    compilePromptTemplate(chatPromptTemplate, template?.content?.fields ?? [], provider, "chat")
+  ), [chatPromptTemplate, provider, template]);
 
-  const generationPreview = useMemo(() => {
-    if (!template?.content?.fields) return "";
-    return compilePromptTemplate(cardsPromptTemplate, template.content.fields, provider, "generation");
-  }, [cardsPromptTemplate, provider, template]);
+  const generationPreview = useMemo(() => (
+    compilePromptTemplate(cardsPromptTemplate, template?.content?.fields ?? [], provider, "generation")
+  ), [cardsPromptTemplate, provider, template]);
 
   return (
     <form
@@ -110,7 +108,6 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
             defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
             preview={generationPreview}
             onChange={field.handleChange}
-            isDisabled={!template}
           />
         )}
       </form.Field>
