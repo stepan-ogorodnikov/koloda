@@ -1,0 +1,142 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import type { TestDb } from "../test/test-helpers";
+import { createTestDb } from "../test/test-helpers";
+import { getConversation, getConversations, setConversation } from "./conversations";
+
+describe("conversations repository integration", () => {
+  let testDb: TestDb;
+
+  beforeEach(async () => {
+    testDb = await createTestDb();
+  });
+
+  afterEach(async () => {
+    await testDb.close();
+  });
+
+  it("returns null for a missing conversation", async () => {
+    const { db } = testDb;
+    const result = await getConversation(db, "nonexistent-id");
+    expect(result).toBeNull();
+  });
+
+  it("round-trips a conversation through save and get", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-1",
+      createdAt: 1700000000000,
+      messages: [{ id: "msg-1", role: "user", content: "hello" }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    const saved = await setConversation(db, { id: "conv-1", state });
+    expect(saved.id).toBe("conv-1");
+    expect(saved.state).toEqual(state);
+    expect(saved.createdAt).toBeInstanceOf(Date);
+
+    const loaded = await getConversation(db, "conv-1");
+    expect(loaded).not.toBeNull();
+    expect(loaded!.id).toBe("conv-1");
+    expect(loaded!.state).toEqual(state);
+  });
+
+  it("updates an existing conversation on conflict", async () => {
+    const { db } = testDb;
+    const stateV1 = {
+      id: "conv-1",
+      createdAt: 1700000000000,
+      messages: [],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+    const stateV2 = {
+      id: "conv-1",
+      createdAt: 1700000000000,
+      messages: [{ id: "msg-1", role: "user", content: "hi" }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    await setConversation(db, { id: "conv-1", state: stateV1 });
+    const updated = await setConversation(db, { id: "conv-1", state: stateV2 });
+
+    expect(updated.state).toEqual(stateV2);
+    expect(updated.updatedAt).not.toBeNull();
+
+    const loaded = await getConversation(db, "conv-1");
+    expect(loaded!.state).toEqual(stateV2);
+  });
+
+  it("lists conversations ordered by updated/created time", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "",
+      createdAt: 1700000000000,
+      messages: [],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    await setConversation(db, { id: "conv-a", state: { ...state, id: "conv-a" } });
+    await setConversation(db, { id: "conv-b", state: { ...state, id: "conv-b" } });
+    // Ensure both rows have a non-null updated_at so ordering is deterministic,
+    // then make conv-a the most recently updated.
+    await setConversation(db, { id: "conv-b", state: { ...state, id: "conv-b", mode: "chat" } });
+    await setConversation(db, { id: "conv-a", state: { ...state, id: "conv-a", mode: "cards" } });
+
+    const list = await getConversations(db);
+    expect(list).toHaveLength(2);
+    expect(list[0].id).toBe("conv-a");
+    expect(list[1].id).toBe("conv-b");
+  });
+
+  it("handles complex nested state", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-complex",
+      createdAt: 1700000000000,
+      messages: [
+        { id: "msg-1", role: "user", content: "Generate cards about animals" },
+        { id: "msg-2", role: "assistant", content: "Here are some cards" },
+      ],
+      runs: {
+        "run-1": {
+          id: "run-1",
+          mode: "cards",
+          status: "completed",
+          cards: [
+            { front: "Cat", back: "A small domesticated feline" },
+            { front: "Dog", back: "A domesticated canine" },
+          ],
+          cardStatuses: { 0: "success", 1: "success" },
+          templateFields: [{ id: 1, title: "Front", type: "text", isRequired: true }, {
+            id: 2,
+            title: "Back",
+            type: "text",
+            isRequired: true,
+          }],
+          startedAt: 1700000000000,
+          elapsedSeconds: 5,
+        },
+      },
+      activeRunId: "run-1",
+      mode: "cards",
+      deckId: 1,
+    };
+
+    const saved = await setConversation(db, { id: "conv-complex", state });
+    expect(saved.state).toEqual(state);
+
+    const loaded = await getConversation(db, "conv-complex");
+    expect(loaded!.state).toEqual(state);
+  });
+});

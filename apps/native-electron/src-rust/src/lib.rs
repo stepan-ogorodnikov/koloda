@@ -69,8 +69,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn seed_db(&self, data: serde_json::Value) -> Result<String> {
-        let data: SeedData = serde_json::from_value(data)
-            .map_err(|e| Error::from_reason(e.to_string()))?;
+        let data: SeedData = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         init_mod::seed_db(&self.db, data).map_err(to_napi_error)?;
         Ok("true".to_string())
     }
@@ -262,7 +261,9 @@ impl KolodaDb {
         let name = extract_name(params)?;
         let name = parse_settings_name(&name)?;
         let settings = repo::settings::get_settings(&self.db, name).map_err(to_napi_error)?;
-        Ok(settings.map(|s| serde_json::to_string(&s).unwrap_or_default()).unwrap_or_else(|| "null".to_string()))
+        Ok(settings
+            .map(|s| serde_json::to_string(&s).unwrap_or_default())
+            .unwrap_or_else(|| "null".to_string()))
     }
 
     #[napi]
@@ -292,9 +293,39 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn get_conversation(&self, params: serde_json::Value) -> Result<String> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            id: String,
+        }
+        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let conversation = repo::conversations::get_conversation(&self.db, &p.id).map_err(to_napi_error)?;
+        Ok(conversation
+            .map(|c| serde_json::to_string(&c).unwrap_or_default())
+            .unwrap_or_else(|| "null".to_string()))
+    }
+
+    #[napi]
+    pub fn get_conversations(&self) -> Result<String> {
+        let conversations = repo::conversations::get_conversations(&self.db).map_err(to_napi_error)?;
+        as_json(&conversations)
+    }
+
+    #[napi]
+    pub fn set_conversation(&self, params: serde_json::Value) -> Result<String> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            id: String,
+            state: serde_json::Value,
+        }
+        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let conversation = repo::conversations::set_conversation(&self.db, &p.id, p.state).map_err(to_napi_error)?;
+        as_json(&conversation)
+    }
+
+    #[napi]
     pub fn get_lessons(&self, params: serde_json::Value) -> Result<String> {
-        let params: GetLessonsParams =
-            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let params: GetLessonsParams = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let lessons = repo::lessons::get_lessons(&self.db, params).map_err(to_napi_error)?;
         as_json(&lessons)
     }
@@ -303,7 +334,9 @@ impl KolodaDb {
     pub fn get_lesson_data(&self, params: serde_json::Value) -> Result<String> {
         let params = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let data = repo::lessons::get_lesson_data(&self.db, &params).map_err(to_napi_error)?;
-        Ok(data.map(|d| serde_json::to_string(&d).unwrap_or_default()).unwrap_or_else(|| "null".to_string()))
+        Ok(data
+            .map(|d| serde_json::to_string(&d).unwrap_or_default())
+            .unwrap_or_else(|| "null".to_string()))
     }
 
     #[napi]
@@ -343,8 +376,7 @@ impl KolodaDb {
     pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<String> {
         let data: koloda_core::domain::ai::AddProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets)
-            .map_err(to_napi_error)?;
+        let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets).map_err(to_napi_error)?;
         as_json(&profile)
     }
 
@@ -352,8 +384,8 @@ impl KolodaDb {
     pub fn update_ai_profile(&self, data: serde_json::Value) -> Result<String> {
         let data: koloda_core::domain::ai::UpdateProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        let profile = repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets)
-            .map_err(to_napi_error)?;
+        let profile =
+            repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets).map_err(to_napi_error)?;
         as_json(&profile)
     }
 
@@ -391,12 +423,8 @@ impl KolodaDb {
             reasoning_effort: Option<String>,
         }
         let p: P = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        koloda_core::ai::codex::run_codex_prompt(
-            &p.prompt,
-            p.model_id.as_deref(),
-            p.reasoning_effort.as_deref(),
-        )
-        .map_err(to_napi_error)
+        koloda_core::ai::codex::run_codex_prompt(&p.prompt, p.model_id.as_deref(), p.reasoning_effort.as_deref())
+            .map_err(to_napi_error)
     }
 
     #[napi]
@@ -408,11 +436,7 @@ impl KolodaDb {
             reasoning_effort: Option<String>,
         }
         let p: P = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        koloda_core::ai::codex::run_codex_prompt(
-            &p.prompt,
-            p.model_id.as_deref(),
-            p.reasoning_effort.as_deref(),
-        )
-        .map_err(to_napi_error)
+        koloda_core::ai::codex::run_codex_prompt(&p.prompt, p.model_id.as_deref(), p.reasoning_effort.as_deref())
+            .map_err(to_napi_error)
     }
 }

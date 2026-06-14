@@ -1,7 +1,10 @@
 import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai-react";
+import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { createTextMessage } from "./assistant-messages";
+
+export type CardStatus = "idle" | "pending" | "success" | "error";
 
 export type RunStatus = "streaming" | "success" | "failed" | "canceled";
 
@@ -10,6 +13,8 @@ export type GenerationRun = {
   mode: AIChatMode;
   status: RunStatus;
   cards: GeneratedCard[];
+  cardStatuses: Record<number, CardStatus>;
+  templateFields: TemplateFields | null;
   request?: unknown;
   startedAt: number;
   elapsedSeconds: number | null;
@@ -17,10 +22,13 @@ export type GenerationRun = {
 };
 
 export type ConversationState = {
+  id: string;
+  createdAt: number;
   messages: UIMessage[];
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
   mode: AIChatMode;
+  deckId: number | null;
 };
 
 export type ConversationAction =
@@ -32,7 +40,7 @@ export type ConversationAction =
     text: string;
   }
   | { type: "updateAssistantText"; runId: string; text: string }
-  | { type: "startRun"; runId: string; mode: AIChatMode; request: unknown }
+  | { type: "startRun"; runId: string; mode: AIChatMode; request: unknown; templateFields?: TemplateFields | null }
   | { type: "addCard"; runId: string; card: GeneratedCard }
   | { type: "completeRun"; runId: string }
   | { type: "failRun"; runId: string }
@@ -40,21 +48,33 @@ export type ConversationAction =
   | { type: "restartRun"; runId: string }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
-  | { type: "reset" };
+  | { type: "setDeck"; deckId: number | null }
+  | { type: "setCardStatus"; runId: string; index: number; status: CardStatus }
+  | { type: "newConversation"; id: string; createdAt: number };
 
 export const initialConversationState: ConversationState = {
+  id: "",
+  createdAt: 0,
   messages: [],
   runs: {},
   activeRunId: null,
   mode: "chat",
+  deckId: null,
 };
 
-function makeRun(runId: string, mode: AIChatMode, request?: unknown): GenerationRun {
+function makeRun(
+  runId: string,
+  mode: AIChatMode,
+  templateFields: TemplateFields | null | undefined,
+  request?: unknown,
+): GenerationRun {
   return {
     id: runId,
     mode,
     status: "streaming",
     cards: [],
+    cardStatuses: {},
+    templateFields: templateFields ?? null,
     request,
     startedAt: Date.now(),
     elapsedSeconds: null,
@@ -81,6 +101,10 @@ function finishRun(state: ConversationState, runId: string, status: RunStatus): 
     status,
     elapsedSeconds: Math.floor((Date.now() - run.startedAt) / 1000),
   }));
+}
+
+function isLocked(state: ConversationState): boolean {
+  return state.messages.some((m) => m.role === "user");
 }
 
 export function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {
@@ -127,7 +151,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
         activeRunId: action.runId,
         runs: {
           ...state.runs,
-          [action.runId]: makeRun(action.runId, action.mode, action.request),
+          [action.runId]: makeRun(action.runId, action.mode, action.templateFields, action.request),
         },
       };
 
@@ -135,6 +159,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
       return updateRun(state, action.runId, (run) => ({
         ...run,
         cards: [...run.cards, action.card],
+        cardStatuses: { ...run.cardStatuses, [run.cards.length]: "idle" },
       }));
 
     case "completeRun": {
@@ -173,6 +198,8 @@ export function conversationReducer(state: ConversationState, action: Conversati
             ...run,
             status: "streaming",
             cards: [],
+            cardStatuses: {},
+            templateFields: null,
             startedAt: Date.now(),
             elapsedSeconds: null,
             usage: undefined,
@@ -190,8 +217,26 @@ export function conversationReducer(state: ConversationState, action: Conversati
     case "setMode":
       return { ...state, mode: action.mode };
 
-    case "reset":
-      return initialConversationState;
+    case "setDeck":
+      if (isLocked(state)) return state;
+      return { ...state, deckId: action.deckId };
+
+    case "setCardStatus":
+      return updateRun(state, action.runId, (run) => ({
+        ...run,
+        cardStatuses: { ...run.cardStatuses, [action.index]: action.status },
+      }));
+
+    case "newConversation":
+      return {
+        id: action.id,
+        createdAt: action.createdAt,
+        messages: [],
+        runs: {},
+        activeRunId: null,
+        mode: "chat",
+        deckId: null,
+      };
 
     default:
       return state;

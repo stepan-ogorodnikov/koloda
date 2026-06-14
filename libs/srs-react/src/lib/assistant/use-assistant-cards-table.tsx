@@ -9,8 +9,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useMemo, useState } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
-
-export type CardStatus = "idle" | "pending" | "success" | "error";
+import type { CardStatus } from "./conversation-state";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 

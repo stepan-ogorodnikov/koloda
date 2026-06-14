@@ -100,6 +100,12 @@ export const reviews = table("reviews", {
     .notNull(),
 });
 
+export const conversations = table("conversations", {
+  id: text("id").primaryKey(),
+  state: text("state", { mode: "json" }).notNull(),
+  ...timestamps,
+});
+
 export const schema = {
   settings,
   algorithms,
@@ -107,4 +113,5 @@ export const schema = {
   decks,
   cards,
   reviews,
+  conversations,
 };

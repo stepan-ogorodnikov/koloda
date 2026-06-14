@@ -1,3 +1,4 @@
+export * from "./lib/conversations";
 export * from "./lib/db";
 export * from "./lib/environment";
 export * from "./lib/error";

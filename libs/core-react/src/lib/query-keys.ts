@@ -23,6 +23,10 @@ export const queryKeys = {
     deck: ({ deckId }: GetCardsParams) => ["cards", String(deckId)] as const,
     detail: (id: Deck["id"]) => ["cards", String(id)] as const,
   },
+  conversations: {
+    all: () => ["conversations"] as const,
+    detail: (id: string) => ["conversations", id] as const,
+  },
   decks: {
     all: () => ["decks"] as const,
     detail: (id: Deck["id"]) => ["decks", String(id)] as const,

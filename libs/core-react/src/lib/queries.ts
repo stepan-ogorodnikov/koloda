@@ -6,8 +6,15 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
-import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
-import type { AppError } from "@koloda/app";
+import type {
+  AllowedSettings,
+  AppError,
+  Conversation,
+  PatchSettingsData,
+  SetConversationData,
+  SetSettingsData,
+  SettingsName,
+} from "@koloda/app";
 import type {
   Algorithm,
   Card,
@@ -57,6 +64,14 @@ export type Queries = {
     AllowedSettings<T> | undefined,
     AppError,
     PatchSettingsData<T>,
+    unknown
+  >;
+  getConversationQuery: (id: string) => QueryOptions<Conversation | null>;
+  getConversationsQuery: () => QueryOptions<Conversation[]>;
+  setConversationMutation: () => UseMutationOptions<
+    Conversation,
+    AppError,
+    SetConversationData,
     unknown
   >;
   getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;

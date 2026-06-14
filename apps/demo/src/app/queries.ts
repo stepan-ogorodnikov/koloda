@@ -1,6 +1,6 @@
 import type { AddAIProfileData } from "@koloda/ai";
 import type { RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type { PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
+import type { PatchSettingsData, SetConversationData, SetSettingsData, SettingsName } from "@koloda/app";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
@@ -46,6 +46,8 @@ import {
   getAlgorithmDecks,
   getAlgorithms,
   getCards,
+  getConversation,
+  getConversations,
   getDeck,
   getDecks,
   getLessonData,
@@ -58,6 +60,7 @@ import {
   getTodaysReviewTotals,
   patchSettings,
   resetCardProgress,
+  setConversation,
   setSettings,
   submitLessonResult,
   updateAlgorithm,
@@ -92,6 +95,11 @@ export const queriesFn = (db: DB): Queries => ({
   }),
   patchSettingsMutation: <T extends SettingsName>() => ({
     mutationFn: (data: PatchSettingsData<T>) => patchSettings<T>(db, data),
+  }),
+  getConversationQuery: (id: string) => ({ queryFn: () => getConversation(db, id) }),
+  getConversationsQuery: () => ({ queryFn: () => getConversations(db) }),
+  setConversationMutation: () => ({
+    mutationFn: (data: SetConversationData) => setConversation(db, data),
   }),
   getAlgorithmsQuery: () => ({ queryFn: () => getAlgorithms(db) }),
   getAlgorithmQuery: (id: Algorithm["id"]) => ({ queryFn: () => getAlgorithm(db, id) }),

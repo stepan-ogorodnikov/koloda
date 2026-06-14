@@ -108,6 +108,12 @@ export const reviews = table("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const conversations = table("conversations", {
+  id: varchar({ length: 36 }).primaryKey(),
+  state: jsonb().notNull(),
+  ...timestamps,
+});
+
 export const schema = {
   settings,
   algorithms,
@@ -115,4 +121,5 @@ export const schema = {
   templates,
   cards,
   reviews,
+  conversations,
 };

@@ -1,5 +1,6 @@
 export * from "./lib/algorithms";
 export * from "./lib/cards";
+export * from "./lib/conversations";
 export * from "./lib/db";
 export * from "./lib/decks";
 export * from "./lib/lessons";

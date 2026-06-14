@@ -70,16 +70,32 @@ describe("conversationReducer", () => {
         mode: "chat",
         status: "streaming",
         cards: [],
+        cardStatuses: {},
+        templateFields: null,
         startedAt: 1000,
         elapsedSeconds: null,
       });
 
       vi.useRealTimers();
     });
+
+    it("stamps templateFields for cards runs when provided", () => {
+      const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
+
+      const state = conversationReducer(initialConversationState, {
+        type: "startRun",
+        runId: "r1",
+        mode: "cards",
+        request: {},
+        templateFields: fields,
+      });
+
+      expect(state.runs["r1"].templateFields).toEqual(fields);
+    });
   });
 
   describe("addCard", () => {
-    it("adds a card to the run's cards array", () => {
+    it("adds a card to the run's cards array and seeds idle status", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "cards", request: {} }]);
       state = conversationReducer(state, {
         type: "addCard",
@@ -88,6 +104,7 @@ describe("conversationReducer", () => {
       });
       expect(state.runs["r1"].cards).toHaveLength(1);
       expect(state.runs["r1"].cards[0].content["1"].text).toBe("Front");
+      expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
     });
   });
 
@@ -150,12 +167,18 @@ describe("conversationReducer", () => {
   });
 
   describe("restartRun", () => {
-    it("resets run status to streaming, clears cards, and sets activeRunId", () => {
+    it("resets run status to streaming, clears cards and statuses, and sets activeRunId", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "cards", request: {} },
+        {
+          type: "startRun",
+          runId: "r1",
+          mode: "cards",
+          request: {},
+          templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+        },
         { type: "addCard", runId: "r1", card: { content: {} } },
       ]);
       state = conversationReducer(state, { type: "completeRun", runId: "r1" });
@@ -165,6 +188,8 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].cardStatuses).toEqual({});
+      expect(state.runs["r1"].templateFields).toBeNull();
       expect(state.runs["r1"].startedAt).toBe(10_000);
       expect(state.runs["r1"].elapsedSeconds).toBeNull();
       expect(state.runs["r1"].usage).toBeUndefined();
@@ -201,22 +226,62 @@ describe("conversationReducer", () => {
     });
   });
 
-  describe("reset", () => {
-    it("returns the initial state", () => {
+  describe("setDeck", () => {
+    it("sets the deck when the conversation is not locked", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "setDeck",
+        deckId: 5,
+      });
+      expect(state.deckId).toBe(5);
+    });
+
+    it("is a no-op when a user message exists", () => {
+      let state = reduce([{ type: "addUserMessage", runId: "r1", text: "Hi" }]);
+      state = conversationReducer(state, { type: "setDeck", deckId: 5 });
+      expect(state.deckId).toBeNull();
+    });
+  });
+
+  describe("setCardStatus", () => {
+    it("updates the status of a card by index", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "cards", request: {} },
+        { type: "addCard", runId: "r1", card: { content: {} } },
+      ]);
+      state = conversationReducer(state, { type: "setCardStatus", runId: "r1", index: 0, status: "success" });
+      expect(state.runs["r1"].cardStatuses).toEqual({ 0: "success" });
+    });
+  });
+
+  describe("newConversation", () => {
+    it("resets to a fresh conversation with the provided id and createdAt", () => {
       let state = reduce([
         { type: "addUserMessage", runId: "r1", text: "Hi" },
         { type: "startRun", runId: "r1", mode: "chat", request: {} },
+        { type: "setDeck", deckId: 3 },
       ]);
-      state = conversationReducer(state, { type: "reset" });
-      expect(state).toEqual(initialConversationState);
+      state = conversationReducer(state, { type: "newConversation", id: "new-id", createdAt: 1234 });
+
+      expect(state).toEqual({
+        id: "new-id",
+        createdAt: 1234,
+        messages: [],
+        runs: {},
+        activeRunId: null,
+        mode: "chat",
+        deckId: null,
+      });
     });
   });
 
   describe("unknown action", () => {
     it("returns the current state unchanged", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "nonexistent" as any,
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        {
+          type: "nonexistent",
+        } as unknown as Parameters<typeof conversationReducer>[1],
+      );
       expect(state).toBe(initialConversationState);
     });
   });

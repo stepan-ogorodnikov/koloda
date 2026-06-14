@@ -2,6 +2,7 @@ pub mod ai;
 pub mod algorithms;
 pub mod algorithms_fsrs;
 pub mod cards;
+pub mod conversations;
 pub mod decks;
 pub mod lessons;
 pub mod reviews;

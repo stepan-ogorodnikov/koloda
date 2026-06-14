@@ -48,7 +48,11 @@ export const assistantCancelFunctionsAtom = atom<{
 }>({});
 
 export const resetAssistantConversationAtom = atom(null, (get, set) => {
-  set(assistantConversationStateAtom, { type: "reset" });
+  set(assistantConversationStateAtom, {
+    type: "newConversation",
+    id: crypto.randomUUID(),
+    createdAt: Date.now(),
+  });
   const cancels = get(assistantCancelFunctionsAtom);
   cancels.cancelGenerate?.();
   cancels.cancelChat?.();
