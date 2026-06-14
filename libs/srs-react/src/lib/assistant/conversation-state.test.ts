@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { conversationReducer, initialConversationState } from "./conversation-state";
+import {
+  conversationReducer,
+  initialConversationState,
+  isConversationState,
+  normalizeRestoredConversation,
+} from "./conversation-state";
+import type { ConversationState } from "./conversation-state";
 
 function reduce(actions: Parameters<typeof conversationReducer>[1][]) {
   return actions.reduce(
@@ -7,6 +13,89 @@ function reduce(actions: Parameters<typeof conversationReducer>[1][]) {
     initialConversationState,
   );
 }
+
+describe("isConversationState", () => {
+  it("accepts a valid conversation shape", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: 1,
+    };
+    expect(isConversationState(state)).toBe(true);
+  });
+
+  it("rejects non-objects", () => {
+    expect(isConversationState(null)).toBe(false);
+    expect(isConversationState("string")).toBe(false);
+    expect(isConversationState(123)).toBe(false);
+  });
+
+  it("rejects objects with wrong field types", () => {
+    expect(isConversationState({ ...initialConversationState, id: 123 })).toBe(false);
+    expect(isConversationState({ ...initialConversationState, mode: "voice" })).toBe(false);
+    expect(isConversationState({ ...initialConversationState, deckId: "5" })).toBe(false);
+  });
+});
+
+describe("normalizeRestoredConversation", () => {
+  it("forces streaming runs to failed with an interrupted error", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(10_000);
+
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: 5000,
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state);
+
+    expect(next.runs["r1"]).toMatchObject({
+      status: "failed",
+      error: "interrupted",
+      elapsedSeconds: 5,
+    });
+    expect(next.activeRunId).toBeNull();
+
+    vi.useRealTimers();
+  });
+
+  it("leaves non-streaming runs unchanged", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: 1000,
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state);
+
+    expect(next).toBe(state);
+  });
+});
 
 describe("conversationReducer", () => {
   describe("addUserMessage", () => {

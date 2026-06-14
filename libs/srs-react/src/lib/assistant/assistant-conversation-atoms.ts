@@ -1,12 +1,19 @@
 import type { AIChatMode } from "@koloda/ai-react";
+import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
-import { atomWithReducer } from "jotai/utils";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 
-export const assistantConversationStateAtom = atomWithReducer<ConversationState, ConversationAction>(
-  initialConversationState,
-  conversationReducer,
+const baseStateAtom = atom<ConversationState>(initialConversationState);
+
+export const assistantConversationStateAtom = atom(
+  (get) => get(baseStateAtom),
+  (get, set, update: ConversationAction | ((prev: ConversationState) => ConversationState)) => {
+    const next = typeof update === "function"
+      ? (update as (prev: ConversationState) => ConversationState)(get(baseStateAtom))
+      : conversationReducer(get(baseStateAtom), update);
+    set(baseStateAtom, next);
+  },
 );
 
 export const assistantMessagesAtom = atom((get) => get(assistantConversationStateAtom).messages);
@@ -47,17 +54,19 @@ export const assistantCancelFunctionsAtom = atom<{
   cancelChat?: () => void;
 }>({});
 
-export const resetAssistantConversationAtom = atom(null, (get, set) => {
-  set(assistantConversationStateAtom, {
-    type: "newConversation",
-    id: crypto.randomUUID(),
-    createdAt: Date.now(),
-  });
-  const cancels = get(assistantCancelFunctionsAtom);
-  cancels.cancelGenerate?.();
-  cancels.cancelChat?.();
+export const pendingSaveAtom = atom<number>(0);
+
+export const restoreConversationAtom = atom(null, (_get, set, state: ConversationState) => {
+  set(assistantConversationStateAtom, () => state);
 });
 
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
   set(assistantConversationStateAtom, { type: "setMode", mode });
+  set(pendingSaveAtom, (n) => n + 1);
+});
+
+export const newConversationAtom = atom(null, (_get, set, id: string = generateUUID()) => {
+  set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: Date.now() });
+  set(pendingSaveAtom, (n) => n + 1);
+  return id;
 });

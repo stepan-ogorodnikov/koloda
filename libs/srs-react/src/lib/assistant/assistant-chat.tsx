@@ -18,6 +18,9 @@ import {
 } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
+import { QueryError } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import {
@@ -32,9 +35,12 @@ import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 
 export type AssistantChatProps = {
   deckId?: Deck["id"];
+  conversationId: string | undefined;
+  onConversationIdChange: (id: string) => void;
 };
 
-export function AssistantChat({ deckId }: AssistantChatProps) {
+export function AssistantChat({ deckId, conversationId, onConversationIdChange }: AssistantChatProps) {
+  const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
   const mode = useAtomValue(assistantModeAtom);
@@ -57,6 +63,9 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
     isModelsError,
     generateError,
     contextLength,
+    isRestoring,
+    loadError,
+    saveError,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
@@ -64,8 +73,9 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
     handleCancel,
     handleReset,
     handleRetry,
+    handleRetryLoad,
     setMode,
-  } = useAssistantChat(deckId);
+  } = useAssistantChat({ deckId, conversationId, onConversationIdChange });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     onSubmit: handleGenerate,
@@ -104,12 +114,21 @@ export function AssistantChat({ deckId }: AssistantChatProps) {
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
-      {areSettingsOpen
+      {isRestoring
+        ? (
+          <div className="flex grow items-center justify-center fg-level-2">
+            {_(msg`ai.chat.restoring`)}
+          </div>
+        )
+        : loadError
+        ? <QueryError error={loadError} onRetry={handleRetryLoad} />
+        : areSettingsOpen
         ? <AssistantSettings template={template} provider={provider} />
         : (
           <>
             <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
+            <AIChatError error={saveError?.message} />
             <AIChatError error={generateError?.message} />
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />

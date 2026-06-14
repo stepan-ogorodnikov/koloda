@@ -3,27 +3,44 @@ import { generateCardsInputSchema } from "@koloda/ai";
 import type { ChatStreamRequest } from "@koloda/ai";
 import { useAIProfiles, useChatStream } from "@koloda/ai-react";
 import type { AIChatMode } from "@koloda/ai-react";
+import type { Conversation, SetConversationData } from "@koloda/app";
+import { generateUUID } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
+import { getDefaultStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useEffect, useRef } from "react";
 import {
+  assistantActiveRunIdAtom,
   assistantCancelFunctionsAtom,
   assistantConversationStateAtom,
-  resetAssistantConversationAtom,
+  newConversationAtom,
+  pendingSaveAtom,
+  restoreConversationAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages } from "./assistant-messages";
+import { isConversationState, normalizeRestoredConversation } from "./conversation-state";
+import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useAssistantClient } from "./use-assistant-client";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
 import { useConversationRuns } from "./use-conversation-runs";
+
+const STREAM_SAVE_THROTTLE_MS = 1000;
+const IDLE_SAVE_DEBOUNCE_MS = 250;
+
+export type UseAssistantChatOptions = {
+  deckId?: Deck["id"];
+  conversationId: string | undefined;
+  onConversationIdChange: (id: string) => void;
+};
 
 export type UseAssistantChatReturn = {
   profileId: string;
@@ -38,6 +55,9 @@ export type UseAssistantChatReturn = {
   isModelsError: boolean;
   generateError: Error | null;
   contextLength: number;
+  isRestoring: boolean;
+  loadError: Error | null;
+  saveError: Error | null;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
@@ -45,15 +65,37 @@ export type UseAssistantChatReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   handleRetry: (runId: string) => Promise<void>;
+  handleRetryLoad: () => Promise<unknown>;
   setMode: (mode: AIChatMode) => void;
 };
 
-export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
+function dispatchAndBump(
+  setConversationAction: (action: ConversationAction) => void,
+  setPendingSave: (updater: (n: number) => number) => void,
+  action: ConversationAction,
+) {
+  setConversationAction(action);
+  setPendingSave((n) => n + 1);
+}
+
+export function useAssistantChat(
+  { deckId, conversationId, onConversationIdChange }: UseAssistantChatOptions,
+): UseAssistantChatReturn {
   const { _ } = useLingui();
-  const { getDeckQuery, getTemplateQuery, touchAIProfileMutation, getSettingsQuery } = useAtomValue(queriesAtom);
+  const queryClient = useQueryClient();
+  const {
+    getDeckQuery,
+    getTemplateQuery,
+    touchAIProfileMutation,
+    getSettingsQuery,
+    getConversationQuery,
+    setConversationMutation,
+  } = useAtomValue(queriesAtom);
   const setConversationAction = useSetAtom(assistantConversationStateAtom);
-  const resetConversation = useSetAtom(resetAssistantConversationAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
+  const restoreConversation = useSetAtom(restoreConversationAtom);
+  const setPendingSave = useSetAtom(pendingSaveAtom);
+  const newConversation = useSetAtom(newConversationAtom);
 
   const { data: aiSettings } = useQuery({
     ...getSettingsQuery("ai"),
@@ -147,10 +189,17 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     setCancelFunctions({ cancelGenerate, cancelChat });
   }, [cancelGenerate, cancelChat, setCancelFunctions]);
 
+  const dispatchAction = useCallback(
+    (action: ConversationAction) => {
+      dispatchAndBump(setConversationAction, setPendingSave, action);
+    },
+    [setConversationAction, setPendingSave],
+  );
+
   const { executeChatRun, executeGenerateRun, handleRetry: conversationHandleRetry } = useConversationRuns(
     streamChat,
     generate,
-    setConversationAction,
+    dispatchAction,
     readState,
   );
 
@@ -162,8 +211,136 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     [],
   );
 
+  const setConversation = useMutation({
+    ...setConversationMutation(),
+    onSuccess: (row) => {
+      queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+    },
+    onError: (error) => {
+      console.error("Failed to save conversation", error);
+    },
+  });
+
+  const conversationQuery = useQuery({
+    ...getConversationQuery(conversationId!),
+    queryKey: queryKeys.conversations.detail(conversationId!),
+    enabled: !!conversationId,
+  });
+  const { data: conversationData, error: conversationError, refetch: refetchConversation } = conversationQuery;
+
+  const restoredIdRef = useRef<string | null>(null);
+  const lastSavedIdRef = useRef<string | null>(null);
+  // Holds the id assigned locally before the URL has caught up (cold start).
+  const localConversationIdRef = useRef<string | null>(conversationId ?? null);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    if (restoredIdRef.current === conversationId) return;
+    if (conversationQuery.isLoading) return;
+    if (conversationQuery.isFetching && !conversationData) return;
+    // Don't overwrite the atom with a fresh empty state when the query failed.
+    // The UI will surface the error and offer a retry.
+    if (conversationError) return;
+
+    // If the atom already contains state for this id, it was created locally
+    // (e.g. first message on a cold start) and is newer than anything in the DB.
+    // Keep it and mark the conversation as restored.
+    const currentState = getDefaultStore().get(assistantConversationStateAtom);
+    if (currentState.id === conversationId) {
+      restoredIdRef.current = conversationId;
+      lastSavedIdRef.current = conversationId;
+      return;
+    }
+
+    const loaded = conversationData?.state;
+    if (isConversationState(loaded)) {
+      restoreConversation(normalizeRestoredConversation(loaded));
+    } else {
+      const fresh: ConversationState = {
+        id: conversationId,
+        createdAt: Date.now(),
+        messages: [],
+        runs: {},
+        activeRunId: null,
+        mode: "chat",
+        deckId: null,
+      };
+      restoreConversation(fresh);
+    }
+    restoredIdRef.current = conversationId;
+    lastSavedIdRef.current = conversationId;
+  }, [
+    conversationId,
+    conversationData,
+    conversationQuery.isLoading,
+    conversationQuery.isFetching,
+    conversationError,
+    restoreConversation,
+  ]);
+
+  const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
+
+  const ensureConversationId = useCallback(() => {
+    if (conversationId) return conversationId;
+    if (!localConversationIdRef.current) {
+      localConversationIdRef.current = generateUUID();
+      onConversationIdChange(localConversationIdRef.current);
+    }
+    return localConversationIdRef.current;
+  }, [conversationId, onConversationIdChange]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    if (restoredIdRef.current !== conversationId) return;
+
+    const store = getDefaultStore();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let lastFiredAt = 0;
+
+    const flush = () => {
+      timer = null;
+      const state = readStateForSave();
+      if (state.id !== conversationId) return;
+
+      const row: Conversation = {
+        id: state.id,
+        state: state as unknown,
+        createdAt: new Date(state.createdAt),
+        updatedAt: new Date(),
+      };
+      const data: SetConversationData = { id: row.id, state: row.state };
+      lastSavedIdRef.current = row.id;
+      setConversation.mutate(data);
+    };
+
+    const handler = () => {
+      if (lastSavedIdRef.current !== conversationId) return;
+      const isStreaming = store.get(assistantActiveRunIdAtom) !== null;
+      const now = Date.now();
+      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
+      const sinceLast = now - lastFiredAt;
+      const delay = Math.max(0, wait - sinceLast);
+
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(flush, delay);
+      lastFiredAt = now + delay;
+    };
+
+    const unsub = store.sub(pendingSaveAtom, handler);
+
+    return () => {
+      unsub();
+      if (timer) {
+        clearTimeout(timer);
+        flush();
+      }
+    };
+  }, [conversationId, readStateForSave, setConversation]);
+
   const handleGenerate = useCallback(
     async (value?: string) => {
+      ensureConversationId();
       const cfg = configRef.current;
       const currentState = readState();
       const currentMode = currentState.mode;
@@ -172,7 +349,7 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
       if (currentMode === "cards" && !cfg.template) return;
 
-      const runId = crypto.randomUUID();
+      const runId = generateUUID();
       const conversationMessages = buildConversationMessages(
         currentState.messages,
         currentState.runs,
@@ -189,7 +366,7 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
         templateId: cfg.templateId,
       });
 
-      setConversationAction({ type: "addUserMessage", runId, text: promptText });
+      dispatchAction({ type: "addUserMessage", runId, text: promptText });
 
       if (currentMode === "chat") {
         const chatRequest: ChatStreamRequest = {
@@ -198,8 +375,8 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
           template: cfg.template ?? undefined,
           systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
         };
-        setConversationAction({ type: "startRun", runId, mode: "chat", request: chatRequest });
-        setConversationAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
+        dispatchAction({ type: "startRun", runId, mode: "chat", request: chatRequest, templateFields: null });
+        dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
         await executeChatRun(runId, chatRequest);
       } else {
         const request: CardGenerationStreamRequest = {
@@ -207,8 +384,9 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
           messages: conversationMessages,
           systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
         };
-        setConversationAction({ type: "startRun", runId, mode: "cards", request });
-        setConversationAction({
+        const templateFields = cfg.template ? cfg.template.content.fields : null;
+        dispatchAction({ type: "startRun", runId, mode: "cards", request, templateFields });
+        dispatchAction({
           type: "addAssistantMessage",
           runId,
           kind: "generated-cards",
@@ -217,21 +395,26 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
         await executeGenerateRun(runId, request);
       }
     },
-    [setConversationAction, executeChatRun, executeGenerateRun, readState],
+    [ensureConversationId, dispatchAction, executeChatRun, executeGenerateRun, readState],
   );
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) setConversationAction({ type: "cancelRun", runId: currentActiveRunId });
+    if (currentActiveRunId) dispatchAction({ type: "cancelRun", runId: currentActiveRunId });
     cancelGenerate();
     cancelChat();
-  }, [setConversationAction, cancelGenerate, cancelChat, readState]);
+  }, [dispatchAction, cancelGenerate, cancelChat, readState]);
 
   const handleReset = useCallback(() => {
-    resetConversation();
-  }, [resetConversation]);
+    const newId = newConversation();
+    onConversationIdChange(newId);
+  }, [newConversation, onConversationIdChange]);
+
+  const handleRetryLoad = useCallback(() => refetchConversation(), [refetchConversation]);
 
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
+
+  const isRestoring = !!conversationId && conversationQuery.isLoading && restoredIdRef.current !== conversationId;
 
   return {
     profileId,
@@ -246,6 +429,9 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     isModelsError,
     generateError,
     contextLength,
+    isRestoring,
+    loadError: conversationError ?? null,
+    saveError: setConversation.error ?? null,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
@@ -253,6 +439,7 @@ export function useAssistantChat(deckId?: Deck["id"]): UseAssistantChatReturn {
     handleCancel,
     handleReset,
     handleRetry: stableHandleRetry,
+    handleRetryLoad,
     setMode,
   };
 }

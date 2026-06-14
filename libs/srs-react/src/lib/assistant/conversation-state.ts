@@ -16,6 +16,7 @@ export type GenerationRun = {
   cardStatuses: Record<number, CardStatus>;
   templateFields: TemplateFields | null;
   request?: unknown;
+  error?: string;
   startedAt: number;
   elapsedSeconds: number | null;
   usage?: StreamUsage;
@@ -105,6 +106,45 @@ function finishRun(state: ConversationState, runId: string, status: RunStatus): 
 
 function isLocked(state: ConversationState): boolean {
   return state.messages.some((m) => m.role === "user");
+}
+
+export function isConversationState(value: unknown): value is ConversationState {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.id === "string"
+    && typeof v.createdAt === "number"
+    && Array.isArray(v.messages)
+    && typeof v.runs === "object"
+    && v.runs !== null
+    && (v.activeRunId === null || typeof v.activeRunId === "string")
+    && (v.mode === "chat" || v.mode === "cards")
+    && (v.deckId === null || typeof v.deckId === "number")
+  );
+}
+
+export function normalizeRestoredConversation(state: ConversationState): ConversationState {
+  let normalizedAny = false;
+  const runs: Record<string, GenerationRun> = {};
+
+  for (const [runId, run] of Object.entries(state.runs)) {
+    if (run.status !== "streaming") {
+      runs[runId] = run;
+      continue;
+    }
+
+    normalizedAny = true;
+    runs[runId] = {
+      ...run,
+      status: "failed",
+      error: "interrupted",
+      elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt) / 1000),
+    };
+  }
+
+  if (!normalizedAny) return state;
+
+  return { ...state, activeRunId: null, runs };
 }
 
 export function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {

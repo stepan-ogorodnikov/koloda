@@ -4,17 +4,17 @@ import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import {
-  assistantIsProcessingAtom,
-  assistantMessagesAtom,
-  resetAssistantConversationAtom,
-} from "./assistant-conversation-atoms";
+import { assistantIsProcessingAtom, assistantMessagesAtom, newConversationAtom } from "./assistant-conversation-atoms";
 
-export function AssistantNewConversationButton() {
+export type AssistantNewConversationButtonProps = {
+  onConversationIdChange: (id: string) => void;
+};
+
+export function AssistantNewConversationButton({ onConversationIdChange }: AssistantNewConversationButtonProps) {
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
-  const reset = useSetAtom(resetAssistantConversationAtom);
+  const newConversation = useSetAtom(newConversationAtom);
 
   const canStartNewConversation = messages.length > 0 || isProcessing;
 
@@ -23,7 +23,7 @@ export function AssistantNewConversationButton() {
       variants={{ style: "dashed", class: "m-2" }}
       aria-label={_(msg`ai.chat.new-conversation.label`)}
       isDisabled={!canStartNewConversation}
-      onPress={reset}
+      onPress={() => onConversationIdChange(newConversation())}
     >
       <HugeiconsIcon
         className="size-5 min-w-5"
