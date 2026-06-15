@@ -46,7 +46,7 @@ export type ConversationAction =
   | { type: "completeRun"; runId: string }
   | { type: "failRun"; runId: string }
   | { type: "cancelRun"; runId: string }
-  | { type: "restartRun"; runId: string }
+  | { type: "restartRun"; runId: string; request: unknown; templateFields: TemplateFields | null }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
@@ -128,18 +128,40 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
   const runs: Record<string, GenerationRun> = {};
 
   for (const [runId, run] of Object.entries(state.runs)) {
-    if (run.status !== "streaming") {
-      runs[runId] = run;
-      continue;
+    let nextRun: GenerationRun = run;
+    let runChanged = false;
+
+    if (run.status === "streaming") {
+      nextRun = {
+        ...nextRun,
+        status: "failed",
+        error: "interrupted",
+        elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt) / 1000),
+      };
+      runChanged = true;
     }
 
-    normalizedAny = true;
-    runs[runId] = {
-      ...run,
-      status: "failed",
-      error: "interrupted",
-      elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt) / 1000),
-    };
+    let statusesChanged = false;
+    const resetStatuses: Record<number, CardStatus> = {};
+    for (const [index, status] of Object.entries(run.cardStatuses)) {
+      if (status === "pending") {
+        resetStatuses[Number(index)] = "idle";
+        statusesChanged = true;
+      } else {
+        resetStatuses[Number(index)] = status;
+      }
+    }
+    if (statusesChanged) {
+      nextRun = { ...nextRun, cardStatuses: resetStatuses };
+      runChanged = true;
+    }
+
+    if (runChanged) {
+      runs[runId] = nextRun;
+      normalizedAny = true;
+    } else {
+      runs[runId] = run;
+    }
   }
 
   if (!normalizedAny) return state;
@@ -239,7 +261,8 @@ export function conversationReducer(state: ConversationState, action: Conversati
             status: "streaming",
             cards: [],
             cardStatuses: {},
-            templateFields: null,
+            request: action.request,
+            templateFields: action.templateFields,
             startedAt: Date.now(),
             elapsedSeconds: null,
             usage: undefined,

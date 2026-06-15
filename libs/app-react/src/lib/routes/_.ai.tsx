@@ -16,7 +16,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
@@ -43,13 +43,17 @@ function AIRoute() {
   const isLocked = useAtomValue(assistantIsLockedAtom);
   const setDeck = useSetAtom(setAssistantDeckAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const creatingFromDeckRef = useRef(false);
 
   useEffect(() => {
     if (conversationId) {
       setActiveConversationId(conversationId);
+      creatingFromDeckRef.current = false;
       return;
     }
     if (deckIdFromSearch !== undefined) {
+      if (creatingFromDeckRef.current) return;
+      creatingFromDeckRef.current = true;
       const id = newConversation();
       setDeck(deckIdFromSearch);
       setActiveConversationId(id);

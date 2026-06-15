@@ -194,9 +194,13 @@ msgstr "Add cards"
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:63
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:65
 msgid "assistant.generated-no-cards"
 msgstr "No cards were generated"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:53
+msgid "assistant.template-unavailable"
+msgstr "This message was generated with a template that is no longer accessible."
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:41
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:48

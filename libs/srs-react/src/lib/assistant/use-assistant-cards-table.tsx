@@ -5,28 +5,34 @@ import { transformGeneratedCards } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type CellContext, type ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { useAtomValue } from "jotai";
-import { useCallback, useMemo, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useMemo } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
+import { setAssistantCardStatusAtom } from "./assistant-conversation-atoms";
 import type { CardStatus } from "./conversation-state";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 
 type UseAssistantCardsTableOptions = {
+  runId: string;
   cards: GeneratedCard[];
+  cardStatuses: Record<number, CardStatus>;
   template: Template | null | undefined;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
 };
 
 export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
-  const { cards, template, deckId, templateId } = options;
+  const { runId, cards, cardStatuses, template, deckId, templateId } = options;
   const queryClient = useQueryClient();
   const { addCardsMutation } = useAtomValue(queriesAtom);
   const mutation = useMutation(addCardsMutation());
-  const [cardsWithStatus, setCardsWithStatus] = useState<CardWithStatus[]>(() =>
-    cards.map((card) => ({ ...card, status: "idle" as const }))
+  const setCardStatus = useSetAtom(setAssistantCardStatusAtom);
+
+  const cardsWithStatus: CardWithStatus[] = useMemo(
+    () => cards.map((card, index) => ({ ...card, status: cardStatuses[index] ?? "idle" })),
+    [cards, cardStatuses],
   );
 
   const columns = useMemo<ColumnDef<CardWithStatus>[]>(() => {
@@ -78,10 +84,6 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const hasSelection = selectedIndices.length > 0;
   const isAdding = mutation.isPending;
 
-  const updateCardsStatus = useCallback((indices: number[], status: CardStatus) => {
-    setCardsWithStatus((prev) => prev.map((card, idx) => (indices.includes(idx) ? { ...card, status } : card)));
-  }, []);
-
   const handleAddCards = useCallback(() => {
     if (!template || !deckId || !templateId || selectedIndices.length === 0) return;
 
@@ -93,25 +95,39 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
 
     if (cardsToCreate.length === 0) return;
 
-    updateCardsStatus(selectedIndices, "pending");
+    for (const index of selectedIndices) {
+      setCardStatus({ runId, index, status: "pending" });
+    }
 
     mutation.mutate(cardsToCreate, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
         queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
-        updateCardsStatus(selectedIndices, "success");
+        for (let i = 0; i < selectedIndices.length; i++) {
+          const index = selectedIndices[i];
+          const result = response[i];
+          setCardStatus({ runId, index, status: result?.error ? "error" : "success" });
+        }
         table.toggleAllRowsSelected(false);
       },
       onError: () => {
-        updateCardsStatus(selectedIndices, "error");
+        for (const index of selectedIndices) {
+          setCardStatus({ runId, index, status: "error" });
+        }
       },
     });
-  }, [template, selectedIndices, cardsWithStatus, deckId, templateId, mutation, queryClient, updateCardsStatus, table]);
-
-  return {
+  }, [
+    runId,
+    template,
+    selectedIndices,
+    cardsWithStatus,
+    deckId,
+    templateId,
+    mutation,
+    queryClient,
+    setCardStatus,
     table,
-    isAdding,
-    hasSelection,
-    handleAddCards,
-  };
+  ]);
+
+  return { table, isAdding, hasSelection, handleAddCards };
 }

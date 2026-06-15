@@ -4,10 +4,14 @@ import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AssistantCardsTable } from "./assistant-cards-table";
+import type { CardStatus } from "./conversation-state";
 
 export type AssistantCardsMessageProps = {
+  runId: string;
   cards: GeneratedCard[];
+  cardStatuses: Record<number, CardStatus>;
   template: Template | null | undefined;
+  templateUnavailable?: boolean;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   canAdd: boolean;
@@ -20,8 +24,11 @@ export type AssistantCardsMessageProps = {
 };
 
 export function AssistantCardsMessage({
+  runId,
   cards,
+  cardStatuses,
   template,
+  templateUnavailable = false,
   deckId,
   templateId,
   canAdd,
@@ -34,7 +41,7 @@ export function AssistantCardsMessage({
 }: AssistantCardsMessageProps) {
   const { _ } = useLingui();
 
-  if (!template) return null;
+  if (!template && !templateUnavailable) return null;
 
   return (
     <AIChatMessageLayout role="assistant">
@@ -45,10 +52,17 @@ export function AssistantCardsMessage({
         </div>
       )}
       {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
-      {!isGenerating && !isCanceled && !isFailed && cards.length > 0 && (
+      {!isGenerating && !isCanceled && !isFailed && templateUnavailable && (
+        <p className="fg-level-3">
+          {_(msg`assistant.template-unavailable`)}
+        </p>
+      )}
+      {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && cards.length > 0 && (
         <div className="flex flex-col gap-2">
           <AssistantCardsTable
+            runId={runId}
             cards={cards}
+            cardStatuses={cardStatuses}
             template={template}
             deckId={deckId}
             templateId={templateId}
@@ -58,7 +72,7 @@ export function AssistantCardsMessage({
           {elapsedSeconds !== undefined && <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} />}
         </div>
       )}
-      {!isGenerating && !isCanceled && !isFailed && !cards.length && (
+      {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && !cards.length && (
         <p className="fg-level-3">
           {_(msg`assistant.generated-no-cards`)}
         </p>

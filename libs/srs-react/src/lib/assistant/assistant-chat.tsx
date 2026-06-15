@@ -98,7 +98,7 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
   const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
     ? "cards"
     : "chat";
-  const renderMessage = useAssistantMessageRenderer({ template, templateId, handleRetry });
+  const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry });
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });

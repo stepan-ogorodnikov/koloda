@@ -3,11 +3,14 @@ import type { Deck, Template } from "@koloda/srs";
 import { Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import type { CardStatus } from "./conversation-state";
 import { useAssistantCardsTable } from "./use-assistant-cards-table";
 
 type AssistantCardsTableProps = {
+  runId: string;
   cards: GeneratedCard[];
-  template: Template | null | undefined;
+  cardStatuses: Record<number, CardStatus>;
+  template: Template;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   canAdd: boolean;
@@ -15,7 +18,9 @@ type AssistantCardsTableProps = {
 };
 
 export function AssistantCardsTable({
+  runId,
   cards,
+  cardStatuses,
   template,
   deckId,
   templateId,
@@ -25,13 +30,13 @@ export function AssistantCardsTable({
   const { _ } = useLingui();
 
   const { table, isAdding, hasSelection, handleAddCards } = useAssistantCardsTable({
+    runId,
     cards,
+    cardStatuses,
     template,
     deckId,
     templateId,
   });
-
-  if (!template) return null;
 
   return (
     <div className="flex flex-col gap-2">

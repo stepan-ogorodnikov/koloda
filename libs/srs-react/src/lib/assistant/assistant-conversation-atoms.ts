@@ -2,7 +2,7 @@ import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { conversationReducer, initialConversationState } from "./conversation-state";
-import type { ConversationAction, ConversationState } from "./conversation-state";
+import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
 const baseStateAtom = atom<ConversationState>(initialConversationState);
 
@@ -81,3 +81,11 @@ export const newConversationAtom = atom(null, (_get, set, id: string = generateU
   set(pendingSaveAtom, (n) => n + 1);
   return id;
 });
+
+export const setAssistantCardStatusAtom = atom(
+  null,
+  (_get, set, payload: { runId: string; index: number; status: CardStatus }) => {
+    set(assistantConversationStateAtom, { type: "setCardStatus", ...payload });
+    set(pendingSaveAtom, (n) => n + 1);
+  },
+);

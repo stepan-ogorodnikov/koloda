@@ -14,13 +14,12 @@ import {
 import { getChatTextMetadata, getGeneratedCardsMetadata, getTextMessageContent } from "./assistant-messages";
 
 export type UseAssistantMessageRendererOptions = {
-  template: Template | null | undefined;
   templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
 };
 
 export function useAssistantMessageRenderer(
-  { template, templateId, handleRetry }: UseAssistantMessageRendererOptions,
+  { templateId, handleRetry }: UseAssistantMessageRendererOptions,
 ) {
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
@@ -38,13 +37,17 @@ export function useAssistantMessageRenderer(
         if (run?.mode === "cards") {
           const runCards = run.cards;
           const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
-          const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : template;
+          const templateFieldsMissing = run.templateFields === null;
+          const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
 
-          if (cardsTemplate) {
+          if (cardsTemplate || templateFieldsMissing) {
             return (
               <AssistantCardsMessage
+                runId={generatedCardsMetadata.runId}
                 cards={runCards}
+                cardStatuses={run.cardStatuses}
                 template={cardsTemplate}
+                templateUnavailable={templateFieldsMissing}
                 deckId={deckId}
                 templateId={templateId}
                 canAdd={runCards.length > 0 && !isCurrentRun && deckId !== null}
@@ -110,7 +113,7 @@ export function useAssistantMessageRenderer(
 
       return content;
     },
-    [messages, runs, activeRunId, template, templateId, deckId, handleRetry],
+    [messages, runs, activeRunId, templateId, deckId, handleRetry],
   );
 }
 

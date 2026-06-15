@@ -1,5 +1,6 @@
 import type { ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import type { StreamResult } from "@koloda/ai-react";
+import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
@@ -59,22 +60,26 @@ export function useConversationRuns(
     [dispatch, generate, handleStreamResult],
   );
 
-  const handleRetry = useCallback(
-    async (runId: string) => {
+  const retryRun = useCallback(
+    async (
+      runId: string,
+      request: ChatStreamRequest | CardGenerationStreamRequest,
+      templateFields: TemplateFields | null,
+    ) => {
       const run = getState().runs[runId];
-      if (!run?.request) return;
+      if (!run) return;
 
-      dispatch({ type: "restartRun", runId });
+      dispatch({ type: "restartRun", runId, request, templateFields });
 
       if (run.mode === "chat") {
         dispatch({ type: "updateAssistantText", runId, text: "" });
-        await executeChatRun(runId, run.request as ChatStreamRequest);
+        await executeChatRun(runId, request as ChatStreamRequest);
       } else {
-        await executeGenerateRun(runId, run.request as CardGenerationStreamRequest);
+        await executeGenerateRun(runId, request as CardGenerationStreamRequest);
       }
     },
     [executeChatRun, executeGenerateRun, dispatch, getState],
   );
 
-  return { handleStreamResult, executeChatRun, executeGenerateRun, handleRetry };
+  return { handleStreamResult, executeChatRun, executeGenerateRun, retryRun };
 }

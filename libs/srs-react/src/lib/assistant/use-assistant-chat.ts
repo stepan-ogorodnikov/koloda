@@ -6,12 +6,11 @@ import type { AIChatMode } from "@koloda/ai-react";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import { generateUUID } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Template } from "@koloda/srs";
+import type { Template, TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom } from "jotai";
-import { getDefaultStore } from "jotai";
+import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useEffect, useRef } from "react";
 import {
@@ -24,7 +23,7 @@ import {
   restoreConversationAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import { buildConversationMessages } from "./assistant-messages";
+import { buildConversationMessages, getTextMessageContent } from "./assistant-messages";
 import { isConversationState, normalizeRestoredConversation } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
@@ -194,29 +193,73 @@ export function useAssistantChat(
     [setConversationAction, setPendingSave],
   );
 
-  const { executeChatRun, executeGenerateRun, handleRetry: conversationHandleRetry } = useConversationRuns(
+  const { executeChatRun, executeGenerateRun, retryRun } = useConversationRuns(
     streamChat,
     generate,
     dispatchAction,
     readState,
   );
 
-  const handleRetryRef = useRef<(runId: string) => Promise<void>>(conversationHandleRetry);
-  handleRetryRef.current = conversationHandleRetry;
+  const handleRetry = useCallback(
+    async (runId: string) => {
+      const cfg = configRef.current;
+      const currentState = readState();
+      const run = currentState.runs[runId];
+      if (!run) return;
 
-  const stableHandleRetry = useCallback(
-    (runId: string) => handleRetryRef.current(runId),
-    [],
+      const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
+      const promptText = userMessage ? getTextMessageContent(userMessage) : "";
+      if (!promptText || !cfg.profileId || !cfg.modelId) return;
+      if (run.mode === "cards" && !cfg.template) return;
+
+      const conversationMessages = buildConversationMessages(
+        currentState.messages,
+        currentState.runs,
+        cfg.template,
+      );
+
+      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      const input = generateCardsInputSchema.parse({
+        modelId: cfg.modelId,
+        prompt: promptText,
+        temperature: cfg.temperature,
+        reasoningEffort: cfg.reasoningEffort,
+        deckId: cfg.deckId,
+        templateId: cfg.templateId,
+      });
+
+      if (run.mode === "chat") {
+        const chatRequest: ChatStreamRequest = {
+          input,
+          messages: [...conversationMessages, { role: "user", content: promptText }],
+          template: cfg.template ?? undefined,
+          systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
+        };
+        await retryRun(runId, chatRequest, null);
+      } else {
+        const request: CardGenerationStreamRequest = {
+          input,
+          messages: conversationMessages,
+          systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
+        };
+        const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
+        await retryRun(runId, request, templateFields);
+      }
+    },
+    [retryRun, readState],
   );
 
   const setConversation = useMutation({
     ...setConversationMutation(),
     onSuccess: (row) => {
+      lastSavedIdRef.current = row.id;
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
     },
     onError: (error) => {
       console.error("Failed to save conversation", error);
+      // Reset the ref so the next bump will retry the save.
+      lastSavedIdRef.current = null;
     },
   });
 
@@ -232,6 +275,72 @@ export function useAssistantChat(
   // Holds the id assigned locally before the URL has caught up (cold start).
   const localConversationIdRef = useRef<string | null>(conversationId ?? null);
 
+  const store = useStore();
+  const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
+
+  // Subscribe to the save trigger before the restore effect runs so that any
+  // pendingSave bump emitted by restore (e.g. after creating a conversation
+  // from ?deckId) is observed and flushed to the DB.
+  useEffect(() => {
+    if (!conversationId) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let lastFiredAt = 0;
+
+    const flush = () => {
+      timer = null;
+      const state = readStateForSave();
+      if (state.id !== conversationId) return;
+
+      const row: Conversation = {
+        id: state.id,
+        state: state as unknown,
+        createdAt: new Date(state.createdAt),
+        updatedAt: new Date(),
+      };
+      const data: SetConversationData = { id: row.id, state: row.state };
+      setConversation.mutate(data);
+    };
+
+    const handler = () => {
+      if (restoredIdRef.current !== conversationId) return;
+      if (lastSavedIdRef.current !== conversationId) return;
+      const isStreaming = store.get(assistantActiveRunIdAtom) !== null;
+      const now = Date.now();
+      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
+      const sinceLast = now - lastFiredAt;
+      const delay = Math.max(0, wait - sinceLast);
+
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(flush, delay);
+      lastFiredAt = now + delay;
+    };
+
+    const unsub = store.sub(pendingSaveAtom, handler);
+
+    const flushNow = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      flush();
+    };
+
+    const handlePageHide = () => flushNow();
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("beforeunload", handlePageHide);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("beforeunload", handlePageHide);
+      unsub();
+      if (timer) {
+        clearTimeout(timer);
+        flush();
+      }
+    };
+  }, [store, conversationId, readStateForSave, setConversation]);
+
   useEffect(() => {
     if (!conversationId) return;
     if (restoredIdRef.current === conversationId) return;
@@ -244,10 +353,13 @@ export function useAssistantChat(
     // If the atom already contains state for this id, it was created locally
     // (e.g. first message on a cold start) and is newer than anything in the DB.
     // Keep it and mark the conversation as restored.
-    const currentState = getDefaultStore().get(assistantConversationStateAtom);
+    const currentState = store.get(assistantConversationStateAtom);
     if (currentState.id === conversationId) {
       restoredIdRef.current = conversationId;
       lastSavedIdRef.current = conversationId;
+      // Save watcher is gated on the ref; bump the trigger so any state changes
+      // that happened before this point are persisted.
+      setPendingSave((n) => n + 1);
       return;
     }
 
@@ -267,74 +379,28 @@ export function useAssistantChat(
       restoreConversation(fresh);
     }
     restoredIdRef.current = conversationId;
-    lastSavedIdRef.current = conversationId;
+    setPendingSave((n) => n + 1);
   }, [
+    store,
     conversationId,
     conversationData,
     conversationQuery.isLoading,
     conversationQuery.isFetching,
     conversationError,
     restoreConversation,
+    setPendingSave,
   ]);
-
-  const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
 
   const ensureConversationId = useCallback(() => {
     if (conversationId) return conversationId;
     if (!localConversationIdRef.current) {
-      localConversationIdRef.current = generateUUID();
-      onConversationIdChange(localConversationIdRef.current);
+      const id = generateUUID();
+      localConversationIdRef.current = id;
+      dispatchAction({ type: "newConversation", id, createdAt: Date.now() });
+      onConversationIdChange(id);
     }
     return localConversationIdRef.current;
-  }, [conversationId, onConversationIdChange]);
-
-  useEffect(() => {
-    if (!conversationId) return;
-    if (restoredIdRef.current !== conversationId) return;
-
-    const store = getDefaultStore();
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let lastFiredAt = 0;
-
-    const flush = () => {
-      timer = null;
-      const state = readStateForSave();
-      if (state.id !== conversationId) return;
-
-      const row: Conversation = {
-        id: state.id,
-        state: state as unknown,
-        createdAt: new Date(state.createdAt),
-        updatedAt: new Date(),
-      };
-      const data: SetConversationData = { id: row.id, state: row.state };
-      lastSavedIdRef.current = row.id;
-      setConversation.mutate(data);
-    };
-
-    const handler = () => {
-      if (lastSavedIdRef.current !== conversationId) return;
-      const isStreaming = store.get(assistantActiveRunIdAtom) !== null;
-      const now = Date.now();
-      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
-      const sinceLast = now - lastFiredAt;
-      const delay = Math.max(0, wait - sinceLast);
-
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(flush, delay);
-      lastFiredAt = now + delay;
-    };
-
-    const unsub = store.sub(pendingSaveAtom, handler);
-
-    return () => {
-      unsub();
-      if (timer) {
-        clearTimeout(timer);
-        flush();
-      }
-    };
-  }, [conversationId, readStateForSave, setConversation]);
+  }, [conversationId, onConversationIdChange, dispatchAction]);
 
   const handleGenerate = useCallback(
     async (value?: string) => {
@@ -360,8 +426,12 @@ export function useAssistantChat(
         prompt: promptText,
         temperature: cfg.temperature,
         reasoningEffort: cfg.reasoningEffort,
-        deckId: cfg.deckId,
-        templateId: cfg.templateId,
+        ...(currentMode === "cards" && cfg.deckId !== null && cfg.deckId !== undefined
+          ? { deckId: cfg.deckId }
+          : {}),
+        ...(currentMode === "cards" && cfg.templateId !== null && cfg.templateId !== undefined
+          ? { templateId: cfg.templateId }
+          : {}),
       });
 
       dispatchAction({ type: "addUserMessage", runId, text: promptText });
@@ -437,7 +507,7 @@ export function useAssistantChat(
     handleGenerate,
     handleCancel,
     handleReset,
-    handleRetry: stableHandleRetry,
+    handleRetry,
     handleRetryLoad,
     setMode,
   };

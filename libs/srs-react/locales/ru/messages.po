@@ -194,9 +194,13 @@ msgstr "Добавить карточки"
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:63
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:65
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:53
+msgid "assistant.template-unavailable"
+msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:41
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:48

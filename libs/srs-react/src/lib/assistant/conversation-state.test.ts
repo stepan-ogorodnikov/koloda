@@ -95,6 +95,67 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next).toBe(state);
   });
+
+  it("resets pending card statuses to idle while preserving success and error", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "cards",
+          status: "success",
+          cards: [
+            { content: { "1": { text: "A" } } },
+            { content: { "1": { text: "B" } } },
+            { content: { "1": { text: "C" } } },
+            { content: { "1": { text: "D" } } },
+          ],
+          cardStatuses: { 0: "pending", 1: "success", 2: "error", 3: "idle" },
+          templateFields: null,
+          startedAt: 1000,
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state);
+
+    expect(next.runs["r1"].cardStatuses).toEqual({
+      0: "idle",
+      1: "success",
+      2: "error",
+      3: "idle",
+    });
+    expect(next.runs["r1"].status).toBe("success");
+  });
+
+  it("resets pending statuses alongside a streaming run", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "cards",
+          status: "streaming",
+          cards: [{ content: {} }, { content: {} }],
+          cardStatuses: { 0: "pending", 1: "idle" },
+          templateFields: null,
+          startedAt: 0,
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state);
+
+    expect(next.runs["r1"].status).toBe("failed");
+    expect(next.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "idle" });
+    expect(next.activeRunId).toBeNull();
+  });
 });
 
 describe("conversationReducer", () => {
@@ -273,11 +334,17 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, { type: "completeRun", runId: "r1" });
 
       vi.setSystemTime(10_000);
-      state = conversationReducer(state, { type: "restartRun", runId: "r1" });
+      state = conversationReducer(state, {
+        type: "restartRun",
+        runId: "r1",
+        request: { updated: true },
+        templateFields: null,
+      });
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
+      expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toBeNull();
       expect(state.runs["r1"].startedAt).toBe(10_000);
       expect(state.runs["r1"].elapsedSeconds).toBeNull();
@@ -291,8 +358,34 @@ describe("conversationReducer", () => {
       const state = conversationReducer(initialConversationState, {
         type: "restartRun",
         runId: "missing",
+        request: {},
+        templateFields: null,
       });
       expect(state.runs).toEqual({});
+    });
+
+    it("updates request and templateFields on retry", () => {
+      let state = reduce([
+        {
+          type: "startRun",
+          runId: "r1",
+          mode: "cards",
+          request: {},
+          templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+        },
+      ]);
+      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+
+      const nextFields = [{ id: 2, title: "Back", type: "text" as const, isRequired: false }];
+      state = conversationReducer(state, {
+        type: "restartRun",
+        runId: "r1",
+        request: { updated: true },
+        templateFields: nextFields,
+      });
+
+      expect(state.runs["r1"].request).toEqual({ updated: true });
+      expect(state.runs["r1"].templateFields).toEqual(nextFields);
     });
   });
 
