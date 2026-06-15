@@ -112,6 +112,10 @@ msgstr "Новый диалог"
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:16
+msgid "ai.conversation.untitled"
+msgstr "Без названия"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"

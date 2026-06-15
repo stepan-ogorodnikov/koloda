@@ -1,4 +1,4 @@
-import type { GeneratedCard, Message } from "@koloda/ai";
+import { type GeneratedCard, getTextMessageContent, type Message } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
@@ -42,14 +42,6 @@ export function createTextMessage(
 ): UIMessage {
   const part: TextUIPart = { type: "text", text };
   return { id, role, metadata, parts: [part] };
-}
-
-export function getTextMessageContent(message: UIMessage) {
-  return message.parts
-    .filter((part): part is TextUIPart => part.type === "text")
-    .map((part) => part.text.trim())
-    .filter(Boolean)
-    .join("\n\n");
 }
 
 export function serializeGeneratedCards(cards: GeneratedCard[], template: Template) {

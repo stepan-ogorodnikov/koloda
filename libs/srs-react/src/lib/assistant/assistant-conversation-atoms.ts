@@ -1,8 +1,8 @@
 import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
-import { conversationReducer, initialConversationState } from "./conversation-state";
 import { getAssistantMetadata } from "./assistant-messages";
+import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
 const baseStateAtom = atom<ConversationState>(initialConversationState);
@@ -84,7 +84,6 @@ export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null
 
 export const newConversationAtom = atom(null, (_get, set, id: string = generateUUID()) => {
   set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: Date.now() });
-  set(pendingSaveAtom, (n) => n + 1);
   return id;
 });
 

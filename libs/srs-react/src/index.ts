@@ -5,6 +5,7 @@ export * from "./lib/algorithms/clone-algorithm";
 export * from "./lib/algorithms/delete-algorithm";
 export * from "./lib/assistant/assistant-chat";
 export * from "./lib/assistant/assistant-conversation-atoms";
+export * from "./lib/assistant/assistant-conversations-list";
 export * from "./lib/assistant/assistant-messages";
 export * from "./lib/assistant/assistant-new-conversation-button";
 export * from "./lib/assistant/assistant-settings";

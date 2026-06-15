@@ -1,3 +1,4 @@
+import { getTextMessageContent } from "@koloda/ai";
 import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import type { Template, TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
@@ -11,7 +12,7 @@ import {
   assistantMessagesAtom,
   assistantRunsAtom,
 } from "./assistant-conversation-atoms";
-import { getChatTextMetadata, getGeneratedCardsMetadata, getTextMessageContent } from "./assistant-messages";
+import { getChatTextMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
 
 export type UseAssistantMessageRendererOptions = {
   templateId: Template["id"] | undefined;

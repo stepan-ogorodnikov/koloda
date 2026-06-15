@@ -1,5 +1,5 @@
 import type { AISecrets, AssistantSettings, ModelParameter } from "@koloda/ai";
-import { generateCardsInputSchema } from "@koloda/ai";
+import { generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
 import type { ChatStreamRequest } from "@koloda/ai";
 import { useAIProfiles, useChatStream } from "@koloda/ai-react";
 import type { AIChatMode } from "@koloda/ai-react";
@@ -23,7 +23,7 @@ import {
   restoreConversationAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import { buildConversationMessages, getTextMessageContent } from "./assistant-messages";
+import { buildConversationMessages } from "./assistant-messages";
 import { isConversationState, normalizeRestoredConversation } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
@@ -291,6 +291,7 @@ export function useAssistantChat(
       timer = null;
       const state = readStateForSave();
       if (state.id !== conversationId) return;
+      if (state.messages.length === 0 && state.activeRunId === null) return;
 
       const row: Conversation = {
         id: state.id,

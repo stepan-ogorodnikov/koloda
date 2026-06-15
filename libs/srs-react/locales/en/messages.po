@@ -112,6 +112,10 @@ msgstr "New conversation"
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:16
+msgid "ai.conversation.untitled"
+msgstr "Untitled"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Preset"

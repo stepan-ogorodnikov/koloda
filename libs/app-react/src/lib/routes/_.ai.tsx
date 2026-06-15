@@ -4,6 +4,7 @@ import { getActiveConversationId, setActiveConversationId } from "@koloda/app";
 import { queryKeys, useTitle } from "@koloda/core-react";
 import {
   AssistantChat,
+  AssistantConversationsList,
   assistantDeckIdAtom,
   assistantIsLockedAtom,
   AssistantNewConversationButton,
@@ -27,8 +28,9 @@ export const Route = createFileRoute("/_/ai")({
       : undefined,
   }),
   loader: ({ context: { queryClient, queries } }) => {
-    const { getAIProfilesQuery } = queries;
+    const { getAIProfilesQuery, getConversationsQuery } = queries;
     queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
+    queryClient.ensureQueryData({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
     return { title: msg`title.ai` };
   },
 });
@@ -79,6 +81,7 @@ function AIRoute() {
     <>
       <Layout.Sidebar>
         <AssistantNewConversationButton onConversationIdChange={handleConversationIdChange} />
+        <AssistantConversationsList />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
