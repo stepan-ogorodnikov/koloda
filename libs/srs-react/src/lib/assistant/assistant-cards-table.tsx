@@ -8,8 +8,8 @@ import { useAssistantCardsTable } from "./use-assistant-cards-table";
 type AssistantCardsTableProps = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
-  deckId: Deck["id"];
-  templateId: Template["id"];
+  deckId: Deck["id"] | null;
+  templateId: Template["id"] | undefined;
   canAdd: boolean;
   isGenerating: boolean;
 };

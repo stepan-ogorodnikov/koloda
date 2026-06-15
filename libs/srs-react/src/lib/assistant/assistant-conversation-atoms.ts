@@ -20,6 +20,7 @@ export const assistantMessagesAtom = atom((get) => get(assistantConversationStat
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
+export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
 
 export const assistantIsProcessingAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
@@ -29,6 +30,11 @@ export const assistantIsProcessingAtom = atom((get) => {
 export const assistantHasContextAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
   return state.messages.length > 0 || state.activeRunId !== null;
+});
+
+export const assistantIsLockedAtom = atom((get) => {
+  const state = get(assistantConversationStateAtom);
+  return state.messages.some((m) => m.role === "user");
 });
 
 export const assistantContextUsageAtom = atom((get) => {
@@ -62,6 +68,11 @@ export const restoreConversationAtom = atom(null, (_get, set, state: Conversatio
 
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
   set(assistantConversationStateAtom, { type: "setMode", mode });
+  set(pendingSaveAtom, (n) => n + 1);
+});
+
+export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null) => {
+  set(assistantConversationStateAtom, { type: "setDeck", deckId });
   set(pendingSaveAtom, (n) => n + 1);
 });
 

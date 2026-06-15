@@ -17,7 +17,6 @@ import {
   useAutoScroll,
 } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import type { Deck } from "@koloda/srs";
 import { QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -25,31 +24,32 @@ import { useAtomValue } from "jotai";
 import { useRef, useState } from "react";
 import {
   assistantContextUsageAtom,
+  assistantConversationStateAtom,
+  assistantDeckIdAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
-  assistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { AssistantSettings } from "./assistant-settings";
 import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 
 export type AssistantChatProps = {
-  deckId?: Deck["id"];
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
 };
 
-export function AssistantChat({ deckId, conversationId, onConversationIdChange }: AssistantChatProps) {
+export function AssistantChat({ conversationId, onConversationIdChange }: AssistantChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
-  const mode = useAtomValue(assistantModeAtom);
+  const deckId = useAtomValue(assistantDeckIdAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
   const modelPickerRef = useRef<HTMLButtonElement>(null);
   const scroll = useAutoScroll({ messages, isLoading: isProcessing });
+
   const {
     profileId,
     modelId,
@@ -57,6 +57,7 @@ export function AssistantChat({ deckId, conversationId, onConversationIdChange }
     provider,
     modelParameters,
     template,
+    templateId,
     hasRequiredSecrets,
     missingSecretFieldLabels,
     isModelsLoading,
@@ -75,7 +76,7 @@ export function AssistantChat({ deckId, conversationId, onConversationIdChange }
     handleRetry,
     handleRetryLoad,
     setMode,
-  } = useAssistantChat({ deckId, conversationId, onConversationIdChange });
+  } = useAssistantChat({ conversationId, onConversationIdChange });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     onSubmit: handleGenerate,
@@ -94,12 +95,15 @@ export function AssistantChat({ deckId, conversationId, onConversationIdChange }
     isModelsLoading,
     isModelsError,
   });
-  const renderMessage = useAssistantMessageRenderer({ template, deckId: deckId!, handleRetry });
+  const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
+    ? "cards"
+    : "chat";
+  const renderMessage = useAssistantMessageRenderer({ template, templateId, handleRetry });
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: canCancel, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
   useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
-  useAppHotkey(ai.toggleCardsMode, () => setMode(mode === "chat" ? "cards" : "chat"), "", {
+  useAppHotkey(ai.toggleCardsMode, () => setMode(effectiveMode === "chat" ? "cards" : "chat"), "", {
     enabled: !!deckId,
     ignoreInputs: false,
   });
@@ -144,11 +148,7 @@ export function AssistantChat({ deckId, conversationId, onConversationIdChange }
                 )}
                 <div className="grow min-w-3" />
                 <div className="flex flex-row items-center gap-2 shrink-0">
-                  <AIChatModeToggle
-                    mode={mode}
-                    deckId={deckId}
-                    onModeChange={setMode}
-                  />
+                  <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
                   <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
                 </div>
               </div>

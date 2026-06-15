@@ -6,7 +6,7 @@ import type { AIChatMode } from "@koloda/ai-react";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import { generateUUID } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Deck, Template } from "@koloda/srs";
+import type { Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import {
   assistantActiveRunIdAtom,
   assistantCancelFunctionsAtom,
   assistantConversationStateAtom,
+  assistantDeckIdAtom,
   newConversationAtom,
   pendingSaveAtom,
   restoreConversationAtom,
@@ -37,7 +38,6 @@ const STREAM_SAVE_THROTTLE_MS = 1000;
 const IDLE_SAVE_DEBOUNCE_MS = 250;
 
 export type UseAssistantChatOptions = {
-  deckId?: Deck["id"];
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
 };
@@ -49,6 +49,7 @@ export type UseAssistantChatReturn = {
   provider: AISecrets["provider"] | null;
   modelParameters: ModelParameter[];
   template: Template | null | undefined;
+  templateId: Template["id"] | undefined;
   hasRequiredSecrets: boolean;
   missingSecretFieldLabels: string[];
   isModelsLoading: boolean;
@@ -79,7 +80,7 @@ function dispatchAndBump(
 }
 
 export function useAssistantChat(
-  { deckId, conversationId, onConversationIdChange }: UseAssistantChatOptions,
+  { conversationId, onConversationIdChange }: UseAssistantChatOptions,
 ): UseAssistantChatReturn {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
@@ -96,6 +97,7 @@ export function useAssistantChat(
   const restoreConversation = useSetAtom(restoreConversationAtom);
   const setPendingSave = useSetAtom(pendingSaveAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const deckId = useAtomValue(assistantDeckIdAtom);
 
   const { data: aiSettings } = useQuery({
     ...getSettingsQuery("ai"),
@@ -128,10 +130,6 @@ export function useAssistantChat(
       handleProfileChange(defaultProfileId);
     }
   }, [defaultProfileId, profileId, handleProfileChange]);
-
-  useEffect(() => {
-    if (!deckId) setMode("chat");
-  }, [deckId, setMode]);
 
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
@@ -423,6 +421,7 @@ export function useAssistantChat(
     provider,
     modelParameters,
     template,
+    templateId,
     hasRequiredSecrets,
     missingSecretFieldLabels,
     isModelsLoading,

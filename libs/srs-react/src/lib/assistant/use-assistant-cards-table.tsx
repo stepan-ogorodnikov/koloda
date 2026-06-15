@@ -16,8 +16,8 @@ export type CardWithStatus = GeneratedCard & { status: CardStatus };
 type UseAssistantCardsTableOptions = {
   cards: GeneratedCard[];
   template: Template | null | undefined;
-  deckId: Deck["id"];
-  templateId: Template["id"];
+  deckId: Deck["id"] | null;
+  templateId: Template["id"] | undefined;
 };
 
 export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
@@ -83,7 +83,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   }, []);
 
   const handleAddCards = useCallback(() => {
-    if (!template || selectedIndices.length === 0) return;
+    if (!template || !deckId || !templateId || selectedIndices.length === 0) return;
 
     const cardsToCreate = selectedIndices
       .map((index) => cardsWithStatus[index])

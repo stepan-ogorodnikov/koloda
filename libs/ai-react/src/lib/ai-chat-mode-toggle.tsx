@@ -7,7 +7,7 @@ import type { AIChatMode } from "./types";
 
 export type AIChatModeToggleProps = {
   mode?: AIChatMode;
-  deckId?: number;
+  deckId?: number | null;
   onModeChange?: (mode: AIChatMode) => void;
 };
 

@@ -1,25 +1,31 @@
 import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
-import type { Deck, Template } from "@koloda/srs";
+import type { Template, TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
-import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "./assistant-conversation-atoms";
+import {
+  assistantActiveRunIdAtom,
+  assistantConversationStateAtom,
+  assistantMessagesAtom,
+  assistantRunsAtom,
+} from "./assistant-conversation-atoms";
 import { getChatTextMetadata, getGeneratedCardsMetadata, getTextMessageContent } from "./assistant-messages";
 
 export type UseAssistantMessageRendererOptions = {
   template: Template | null | undefined;
-  deckId: Deck["id"];
+  templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
 };
 
 export function useAssistantMessageRenderer(
-  { template, deckId, handleRetry }: UseAssistantMessageRendererOptions,
+  { template, templateId, handleRetry }: UseAssistantMessageRendererOptions,
 ) {
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
   const activeRunId = useAtomValue(assistantActiveRunIdAtom);
+  const deckId = useAtomValue(assistantConversationStateAtom).deckId;
 
   return useCallback(
     (message: UIMessage, content: ReactNode) => {
@@ -29,25 +35,28 @@ export function useAssistantMessageRenderer(
       const generatedCardsMetadata = getGeneratedCardsMetadata(message);
       if (generatedCardsMetadata) {
         const run = runs[generatedCardsMetadata.runId];
-        const runCards = run?.cards ?? [];
-        const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
+        if (run?.mode === "cards") {
+          const runCards = run.cards;
+          const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
+          const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : template;
 
-        if (template) {
-          return (
-            <AssistantCardsMessage
-              cards={runCards}
-              template={template}
-              deckId={deckId}
-              templateId={template.id}
-              canAdd={runCards.length > 0 && !isCurrentRun}
-              isGenerating={isCurrentRun}
-              isCanceled={run?.status === "canceled"}
-              isFailed={run?.status === "failed"}
-              canRetry={isTail && !!run}
-              onRetry={() => handleRetry(generatedCardsMetadata.runId)}
-              elapsedSeconds={run?.elapsedSeconds ?? undefined}
-            />
-          );
+          if (cardsTemplate) {
+            return (
+              <AssistantCardsMessage
+                cards={runCards}
+                template={cardsTemplate}
+                deckId={deckId}
+                templateId={templateId}
+                canAdd={runCards.length > 0 && !isCurrentRun && deckId !== null}
+                isGenerating={isCurrentRun}
+                isCanceled={run.status === "canceled"}
+                isFailed={run.status === "failed"}
+                canRetry={isTail && !!run}
+                onRetry={() => handleRetry(generatedCardsMetadata.runId)}
+                elapsedSeconds={run.elapsedSeconds ?? undefined}
+              />
+            );
+          }
         }
       }
 
@@ -101,6 +110,20 @@ export function useAssistantMessageRenderer(
 
       return content;
     },
-    [messages, runs, activeRunId, template, deckId, handleRetry],
+    [messages, runs, activeRunId, template, templateId, deckId, handleRetry],
   );
+}
+
+function makeHistoricalTemplate(fields: TemplateFields): Template {
+  return {
+    id: 0,
+    title: "",
+    content: {
+      fields,
+      layout: fields.map((field) => ({ field: field.id, operation: "display" as const })),
+    },
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    isLocked: true,
+  };
 }

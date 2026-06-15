@@ -108,6 +108,10 @@ msgstr "New template"
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:124
+msgid "ai.chat.restoring"
+msgstr "Loading"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Preset"
@@ -186,7 +190,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:215
+#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:391
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
@@ -209,11 +213,11 @@ msgstr "Preview"
 msgid "assistant.settings.prompt.reset"
 msgstr "Reset"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:106
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:104
 msgid "assistant.settings.system-prompt.cards.label"
 msgstr "Card generation prompt"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:93
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:91
 msgid "assistant.settings.system-prompt.chat.label"
 msgstr "Chat prompt"
 
@@ -233,7 +237,7 @@ msgstr "Provider"
 msgid "assistant.settings.system-prompt.variables.rules"
 msgstr "Rules"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:127
+#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:124
 msgid "assistant.settings.temperature.label"
 msgstr "Temperature"
 
