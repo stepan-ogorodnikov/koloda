@@ -2,6 +2,7 @@ import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { conversationReducer, initialConversationState } from "./conversation-state";
+import { getAssistantMetadata } from "./assistant-messages";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
 const baseStateAtom = atom<ConversationState>(initialConversationState);
@@ -34,7 +35,12 @@ export const assistantHasContextAtom = atom((get) => {
 
 export const assistantIsLockedAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
-  return state.messages.some((m) => m.role === "user");
+  return state.messages.some((m) => {
+    if (m.role !== "assistant") return false;
+    const metadata = getAssistantMetadata(m);
+    if (metadata?.kind !== "generated-cards") return false;
+    return state.runs[metadata.runId]?.status === "success";
+  });
 });
 
 export const assistantContextUsageAtom = atom((get) => {

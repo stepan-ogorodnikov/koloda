@@ -2,7 +2,7 @@ import type { GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
-import { createTextMessage } from "./assistant-messages";
+import { createTextMessage, getAssistantMetadata } from "./assistant-messages";
 
 export type CardStatus = "idle" | "pending" | "success" | "error";
 
@@ -105,7 +105,13 @@ function finishRun(state: ConversationState, runId: string, status: RunStatus): 
 }
 
 function isLocked(state: ConversationState): boolean {
-  return state.messages.some((m) => m.role === "user");
+  return state.messages.some((m) => {
+    if (m.role !== "assistant") return false;
+    const metadata = getAssistantMetadata(m);
+    if (metadata?.kind !== "generated-cards") return false;
+    const run = state.runs[metadata.runId];
+    return run?.status === "success";
+  });
 }
 
 export function isConversationState(value: unknown): value is ConversationState {
