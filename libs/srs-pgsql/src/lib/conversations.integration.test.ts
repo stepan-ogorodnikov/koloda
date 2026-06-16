@@ -22,9 +22,10 @@ describe("conversations repository integration", () => {
 
   it("round-trips a conversation through save and get", async () => {
     const { db } = testDb;
+    const createdAt = new Date(1700000000000);
     const state = {
       id: "conv-1",
-      createdAt: 1700000000000,
+      createdAt,
       messages: [{ id: "msg-1", role: "user", content: "hello" }],
       runs: {},
       activeRunId: null,
@@ -34,20 +35,22 @@ describe("conversations repository integration", () => {
 
     const saved = await setConversation(db, { id: "conv-1", state });
     expect(saved.id).toBe("conv-1");
-    expect(saved.state).toEqual(state);
+    // The state column is jsonb, so Date instances are serialized to ISO strings.
+    expect(saved.state).toEqual({ ...state, createdAt: createdAt.toISOString() });
     expect(saved.createdAt).toBeInstanceOf(Date);
 
     const loaded = await getConversation(db, "conv-1");
     expect(loaded).not.toBeNull();
     expect(loaded!.id).toBe("conv-1");
-    expect(loaded!.state).toEqual(state);
+    expect(loaded!.state).toEqual({ ...state, createdAt: createdAt.toISOString() });
   });
 
   it("updates an existing conversation on conflict", async () => {
     const { db } = testDb;
+    const createdAt = new Date(1700000000000);
     const stateV1 = {
       id: "conv-1",
-      createdAt: 1700000000000,
+      createdAt,
       messages: [],
       runs: {},
       activeRunId: null,
@@ -56,7 +59,7 @@ describe("conversations repository integration", () => {
     };
     const stateV2 = {
       id: "conv-1",
-      createdAt: 1700000000000,
+      createdAt,
       messages: [{ id: "msg-1", role: "user", content: "hi" }],
       runs: {},
       activeRunId: null,
@@ -67,18 +70,19 @@ describe("conversations repository integration", () => {
     await setConversation(db, { id: "conv-1", state: stateV1 });
     const updated = await setConversation(db, { id: "conv-1", state: stateV2 });
 
-    expect(updated.state).toEqual(stateV2);
+    expect(updated.state).toEqual({ ...stateV2, createdAt: createdAt.toISOString() });
     expect(updated.updatedAt).not.toBeNull();
 
     const loaded = await getConversation(db, "conv-1");
-    expect(loaded!.state).toEqual(stateV2);
+    expect(loaded!.state).toEqual({ ...stateV2, createdAt: createdAt.toISOString() });
   });
 
   it("lists conversations ordered by updated/created time", async () => {
     const { db } = testDb;
+    const createdAt = new Date(1700000000000);
     const state = {
       id: "",
-      createdAt: 1700000000000,
+      createdAt,
       messages: [],
       runs: {},
       activeRunId: null,
@@ -101,9 +105,11 @@ describe("conversations repository integration", () => {
 
   it("handles complex nested state", async () => {
     const { db } = testDb;
+    const createdAt = new Date(1700000000000);
+    const startedAt = new Date(1700000000000);
     const state = {
       id: "conv-complex",
-      createdAt: 1700000000000,
+      createdAt,
       messages: [
         { id: "msg-1", role: "user", content: "Generate cards about animals" },
         { id: "msg-2", role: "assistant", content: "Here are some cards" },
@@ -124,7 +130,7 @@ describe("conversations repository integration", () => {
             type: "text",
             isRequired: true,
           }],
-          startedAt: 1700000000000,
+          startedAt,
           elapsedSeconds: 5,
         },
       },
@@ -134,9 +140,21 @@ describe("conversations repository integration", () => {
     };
 
     const saved = await setConversation(db, { id: "conv-complex", state });
-    expect(saved.state).toEqual(state);
+    expect(saved.state).toEqual({
+      ...state,
+      createdAt: createdAt.toISOString(),
+      runs: {
+        "run-1": { ...state.runs["run-1"], startedAt: startedAt.toISOString() },
+      },
+    });
 
     const loaded = await getConversation(db, "conv-complex");
-    expect(loaded!.state).toEqual(state);
+    expect(loaded!.state).toEqual({
+      ...state,
+      createdAt: createdAt.toISOString(),
+      runs: {
+        "run-1": { ...state.runs["run-1"], startedAt: startedAt.toISOString() },
+      },
+    });
   });
 });

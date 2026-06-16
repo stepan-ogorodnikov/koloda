@@ -83,7 +83,7 @@ export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null
 });
 
 export const newConversationAtom = atom(null, (_get, set, id: string = generateUUID()) => {
-  set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: Date.now() });
+  set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: new Date() });
   return id;
 });
 

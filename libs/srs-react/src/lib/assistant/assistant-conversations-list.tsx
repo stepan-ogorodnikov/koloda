@@ -6,7 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { isConversationState } from "./conversation-state";
+import { coerceConversationState } from "./conversation-state";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 type AssistantConversationsListProps = {
@@ -56,8 +56,9 @@ type ConversationItemProps = {
 
 function ConversationItem({ conversation, fallback, isActive, onActiveDeleted }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
-  const name = isConversationState(conversation.state)
-    ? getConversationName(conversation.state, fallback)
+  const coerced = coerceConversationState(conversation.state);
+  const name = coerced
+    ? getConversationName(coerced, fallback)
     : fallback;
 
   return (

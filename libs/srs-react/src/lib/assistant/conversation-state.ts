@@ -17,14 +17,15 @@ export type GenerationRun = {
   templateFields: TemplateFields | null;
   request?: unknown;
   error?: string;
-  startedAt: number;
+  startedAt: Date;
   elapsedSeconds: number | null;
   usage?: StreamUsage;
 };
 
 export type ConversationState = {
   id: string;
-  createdAt: number;
+  createdAt: Date;
+  updatedAt: Date | null;
   messages: UIMessage[];
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
@@ -51,11 +52,12 @@ export type ConversationAction =
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
   | { type: "setCardStatus"; runId: string; index: number; status: CardStatus }
-  | { type: "newConversation"; id: string; createdAt: number };
+  | { type: "newConversation"; id: string; createdAt: Date };
 
 export const initialConversationState: ConversationState = {
   id: "",
-  createdAt: 0,
+  createdAt: new Date(0),
+  updatedAt: null,
   messages: [],
   runs: {},
   activeRunId: null,
@@ -77,7 +79,7 @@ function makeRun(
     cardStatuses: {},
     templateFields: templateFields ?? null,
     request,
-    startedAt: Date.now(),
+    startedAt: new Date(),
     elapsedSeconds: null,
   };
 }
@@ -100,7 +102,7 @@ function finishRun(state: ConversationState, runId: string, status: RunStatus): 
   return updateRun(state, runId, (run) => ({
     ...run,
     status,
-    elapsedSeconds: Math.floor((Date.now() - run.startedAt) / 1000),
+    elapsedSeconds: Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
   }));
 }
 
@@ -109,24 +111,78 @@ function isLocked(state: ConversationState): boolean {
     if (m.role !== "assistant") return false;
     const metadata = getAssistantMetadata(m);
     if (metadata?.kind !== "generated-cards") return false;
-    const run = state.runs[metadata.runId];
-    return run?.status === "success";
+    return state.runs[metadata.runId]?.status === "success";
   });
 }
 
-export function isConversationState(value: unknown): value is ConversationState {
-  if (typeof value !== "object" || value === null) return false;
+function toDate(value: unknown): Date | null {
+  if (value instanceof Date) return value;
+  if (typeof value === "string") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) return new Date(value);
+  return null;
+}
+
+function coerceRun(value: unknown): GenerationRun | null {
+  if (!value || typeof value !== "object") return null;
   const v = value as Record<string, unknown>;
-  return (
-    typeof v.id === "string"
-    && typeof v.createdAt === "number"
-    && Array.isArray(v.messages)
-    && typeof v.runs === "object"
-    && v.runs !== null
-    && (v.activeRunId === null || typeof v.activeRunId === "string")
-    && (v.mode === "chat" || v.mode === "cards")
-    && (v.deckId === null || typeof v.deckId === "number")
-  );
+  if (typeof v.id !== "string") return null;
+  if (v.mode !== "chat" && v.mode !== "cards") return null;
+  if (typeof v.status !== "string") return null;
+  if (!Array.isArray(v.cards)) return null;
+  if (!v.cardStatuses || typeof v.cardStatuses !== "object") return null;
+  const startedAt = toDate(v.startedAt);
+  if (!startedAt) return null;
+  if (v.elapsedSeconds !== null && typeof v.elapsedSeconds !== "number") return null;
+  if (v.templateFields !== null && !v.templateFields) return null;
+  return {
+    id: v.id,
+    mode: v.mode,
+    status: v.status as RunStatus,
+    cards: v.cards as GeneratedCard[],
+    cardStatuses: v.cardStatuses as Record<number, CardStatus>,
+    templateFields: (v.templateFields ?? null) as TemplateFields | null,
+    request: v.request,
+    error: typeof v.error === "string" ? v.error : undefined,
+    startedAt,
+    elapsedSeconds: (v.elapsedSeconds as number | null) ?? null,
+    usage: v.usage as StreamUsage | undefined,
+  };
+}
+
+export function coerceConversationState(value: unknown): ConversationState | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== "string") return null;
+  const createdAt = toDate(v.createdAt);
+  if (!createdAt) return null;
+  const updatedAt = toDate(v.updatedAt);
+  if (v.updatedAt !== null && v.updatedAt !== undefined && !updatedAt) return null;
+  if (!Array.isArray(v.messages)) return null;
+  if (!v.runs || typeof v.runs !== "object") return null;
+  if (v.activeRunId !== null && typeof v.activeRunId !== "string") return null;
+  if (v.mode !== "chat" && v.mode !== "cards") return null;
+  if (v.deckId !== null && typeof v.deckId !== "number") return null;
+
+  const runs: Record<string, GenerationRun> = {};
+  for (const [runId, run] of Object.entries(v.runs as Record<string, unknown>)) {
+    const coerced = coerceRun(run);
+    if (!coerced) return null;
+    runs[runId] = coerced;
+  }
+
+  return {
+    id: v.id,
+    createdAt,
+    updatedAt,
+    messages: v.messages as UIMessage[],
+    runs,
+    activeRunId: (v.activeRunId as string | null) ?? null,
+    mode: v.mode,
+    deckId: (v.deckId as number | null) ?? null,
+  };
 }
 
 export function normalizeRestoredConversation(state: ConversationState): ConversationState {
@@ -142,7 +198,7 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
         ...nextRun,
         status: "failed",
         error: "interrupted",
-        elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt) / 1000),
+        elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
       };
       runChanged = true;
     }
@@ -269,7 +325,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
             cardStatuses: {},
             request: action.request,
             templateFields: action.templateFields,
-            startedAt: Date.now(),
+            startedAt: new Date(),
             elapsedSeconds: null,
             usage: undefined,
           },
@@ -300,6 +356,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
       return {
         id: action.id,
         createdAt: action.createdAt,
+        updatedAt: null,
         messages: [],
         runs: {},
         activeRunId: null,

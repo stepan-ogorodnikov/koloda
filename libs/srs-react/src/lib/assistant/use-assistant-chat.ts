@@ -24,7 +24,7 @@ import {
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages } from "./assistant-messages";
-import { isConversationState, normalizeRestoredConversation } from "./conversation-state";
+import { coerceConversationState, normalizeRestoredConversation } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
@@ -70,10 +70,12 @@ export type UseAssistantChatReturn = {
 };
 
 function dispatchAndBump(
-  setConversationAction: (action: ConversationAction) => void,
+  setConversationAction: (update: ConversationAction | ((prev: ConversationState) => ConversationState)) => void,
   setPendingSave: (updater: (n: number) => number) => void,
   action: ConversationAction,
 ) {
+  const now = new Date();
+  setConversationAction((prev) => ({ ...prev, updatedAt: now }));
   setConversationAction(action);
   setPendingSave((n) => n + 1);
 }
@@ -255,6 +257,14 @@ export function useAssistantChat(
       lastSavedIdRef.current = row.id;
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+      const savedAt = row.updatedAt;
+      if (savedAt) {
+        setConversationAction((prev) => {
+          if (prev.id !== row.id) return prev;
+          if (prev.updatedAt && prev.updatedAt.getTime() >= savedAt.getTime()) return prev;
+          return { ...prev, updatedAt: savedAt };
+        });
+      }
     },
     onError: (error) => {
       console.error("Failed to save conversation", error);
@@ -296,8 +306,8 @@ export function useAssistantChat(
       const row: Conversation = {
         id: state.id,
         state: state as unknown,
-        createdAt: new Date(state.createdAt),
-        updatedAt: new Date(),
+        createdAt: state.createdAt,
+        updatedAt: state.updatedAt ?? new Date(),
       };
       const data: SetConversationData = { id: row.id, state: row.state };
       setConversation.mutate(data);
@@ -365,12 +375,14 @@ export function useAssistantChat(
     }
 
     const loaded = conversationData?.state;
-    if (isConversationState(loaded)) {
-      restoreConversation(normalizeRestoredConversation(loaded));
+    const coerced = coerceConversationState(loaded);
+    if (coerced) {
+      restoreConversation(normalizeRestoredConversation(coerced));
     } else {
       const fresh: ConversationState = {
         id: conversationId,
-        createdAt: Date.now(),
+        createdAt: new Date(),
+        updatedAt: null,
         messages: [],
         runs: {},
         activeRunId: null,
@@ -397,7 +409,7 @@ export function useAssistantChat(
     if (!localConversationIdRef.current) {
       const id = generateUUID();
       localConversationIdRef.current = id;
-      dispatchAction({ type: "newConversation", id, createdAt: Date.now() });
+      dispatchAction({ type: "newConversation", id, createdAt: new Date() });
       onConversationIdChange(id);
     }
     return localConversationIdRef.current;

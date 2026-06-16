@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  coerceConversationState,
   conversationReducer,
   initialConversationState,
-  isConversationState,
   normalizeRestoredConversation,
 } from "./conversation-state";
 import type { ConversationState } from "./conversation-state";
@@ -14,26 +14,49 @@ function reduce(actions: Parameters<typeof conversationReducer>[1][]) {
   );
 }
 
-describe("isConversationState", () => {
-  it("accepts a valid conversation shape", () => {
-    const state: ConversationState = {
+describe("coerceConversationState", () => {
+  it("accepts a valid conversation shape with Date timestamps", () => {
+    const state = {
       ...initialConversationState,
       id: "conv-1",
-      createdAt: 1,
+      createdAt: new Date(1),
     };
-    expect(isConversationState(state)).toBe(true);
+    expect(coerceConversationState(state)).not.toBeNull();
   });
 
   it("rejects non-objects", () => {
-    expect(isConversationState(null)).toBe(false);
-    expect(isConversationState("string")).toBe(false);
-    expect(isConversationState(123)).toBe(false);
+    expect(coerceConversationState(null)).toBeNull();
+    expect(coerceConversationState("string")).toBeNull();
+    expect(coerceConversationState(123)).toBeNull();
   });
 
   it("rejects objects with wrong field types", () => {
-    expect(isConversationState({ ...initialConversationState, id: 123 })).toBe(false);
-    expect(isConversationState({ ...initialConversationState, mode: "voice" })).toBe(false);
-    expect(isConversationState({ ...initialConversationState, deckId: "5" })).toBe(false);
+    expect(coerceConversationState({ ...initialConversationState, id: 123 })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, mode: "voice" })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, deckId: "5" })).toBeNull();
+  });
+
+  it("coerces ISO string createdAt into a Date", () => {
+    const iso = "2024-01-01T00:00:00.000Z";
+    const coerced = coerceConversationState({
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: iso,
+    });
+    expect(coerced).not.toBeNull();
+    expect(coerced!.createdAt).toBeInstanceOf(Date);
+    expect(coerced!.createdAt.toISOString()).toBe(iso);
+  });
+
+  it("coerces number createdAt into a Date", () => {
+    const coerced = coerceConversationState({
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: 1700000000000,
+    });
+    expect(coerced).not.toBeNull();
+    expect(coerced!.createdAt).toBeInstanceOf(Date);
+    expect(coerced!.createdAt.getTime()).toBe(1700000000000);
   });
 });
 
@@ -54,7 +77,7 @@ describe("normalizeRestoredConversation", () => {
           cards: [],
           cardStatuses: {},
           templateFields: null,
-          startedAt: 5000,
+          startedAt: new Date(5000),
           elapsedSeconds: null,
         },
       },
@@ -85,7 +108,7 @@ describe("normalizeRestoredConversation", () => {
           cards: [],
           cardStatuses: {},
           templateFields: null,
-          startedAt: 1000,
+          startedAt: new Date(1000),
           elapsedSeconds: 5,
         },
       },
@@ -114,7 +137,7 @@ describe("normalizeRestoredConversation", () => {
           ],
           cardStatuses: { 0: "pending", 1: "success", 2: "error", 3: "idle" },
           templateFields: null,
-          startedAt: 1000,
+          startedAt: new Date(1000),
           elapsedSeconds: 5,
         },
       },
@@ -144,7 +167,7 @@ describe("normalizeRestoredConversation", () => {
           cards: [{ content: {} }, { content: {} }],
           cardStatuses: { 0: "pending", 1: "idle" },
           templateFields: null,
-          startedAt: 0,
+          startedAt: new Date(0),
           elapsedSeconds: null,
         },
       },
@@ -222,7 +245,7 @@ describe("conversationReducer", () => {
         cards: [],
         cardStatuses: {},
         templateFields: null,
-        startedAt: 1000,
+        startedAt: new Date(1000),
         elapsedSeconds: null,
       });
 
@@ -346,7 +369,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].cardStatuses).toEqual({});
       expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toBeNull();
-      expect(state.runs["r1"].startedAt).toBe(10_000);
+      expect(state.runs["r1"].startedAt).toEqual(new Date(10_000));
       expect(state.runs["r1"].elapsedSeconds).toBeNull();
       expect(state.runs["r1"].usage).toBeUndefined();
       expect(state.activeRunId).toBe("r1");
@@ -462,16 +485,18 @@ describe("conversationReducer", () => {
 
   describe("newConversation", () => {
     it("resets to a fresh conversation with the provided id and createdAt", () => {
+      const createdAt = new Date(1234);
       let state = reduce([
         { type: "addUserMessage", runId: "r1", text: "Hi" },
         { type: "startRun", runId: "r1", mode: "chat", request: {} },
         { type: "setDeck", deckId: 3 },
       ]);
-      state = conversationReducer(state, { type: "newConversation", id: "new-id", createdAt: 1234 });
+      state = conversationReducer(state, { type: "newConversation", id: "new-id", createdAt });
 
       expect(state).toEqual({
         id: "new-id",
-        createdAt: 1234,
+        createdAt,
+        updatedAt: null,
         messages: [],
         runs: {},
         activeRunId: null,
@@ -493,3 +518,4 @@ describe("conversationReducer", () => {
     });
   });
 });
+

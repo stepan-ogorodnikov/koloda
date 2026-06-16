@@ -1,8 +1,8 @@
 import { index, integer, real, sqliteTable as table, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const timestamps = {
-  updatedAt: integer("updated_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
     .notNull(),
 };
@@ -68,14 +68,14 @@ export const cards = table(
       .references(() => templates.id),
     content: text("content", { mode: "json" }),
     state: integer("state").default(0),
-    dueAt: integer("due_at", { mode: "timestamp" }),
+    dueAt: integer("due_at", { mode: "timestamp_ms" }),
     stability: real("stability").default(0),
     difficulty: real("difficulty").default(0),
     scheduledDays: integer("scheduled_days").default(0),
     learningSteps: integer("learning_steps").default(0),
     reps: integer("reps").default(0),
     lapses: integer("lapses").default(0),
-    lastReviewedAt: integer("last_reviewed_at", { mode: "timestamp" }),
+    lastReviewedAt: integer("last_reviewed_at", { mode: "timestamp_ms" }),
     ...timestamps,
   },
   (t) => [index("cards_due_at_idx").on(t.dueAt)],
@@ -88,14 +88,14 @@ export const reviews = table("reviews", {
     .references(() => cards.id, { onDelete: "cascade" }),
   state: integer("state").notNull().default(0),
   rating: integer("rating").notNull().default(0),
-  dueAt: integer("due_at", { mode: "timestamp" }),
+  dueAt: integer("due_at", { mode: "timestamp_ms" }),
   stability: real("stability").notNull().default(0),
   difficulty: real("difficulty").notNull().default(0),
   scheduledDays: integer("scheduled_days").notNull().default(0),
   learningSteps: integer("learning_steps").notNull().default(0),
   time: integer("time").notNull().default(0),
   isIgnored: integer("is_ignored", { mode: "boolean" }).notNull().default(false),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
     .notNull(),
 });
