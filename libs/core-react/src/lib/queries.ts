@@ -10,6 +10,7 @@ import type {
   AllowedSettings,
   AppError,
   Conversation,
+  DeleteConversationData,
   PatchSettingsData,
   SetConversationData,
   SetSettingsData,
@@ -74,6 +75,7 @@ export type Queries = {
     SetConversationData,
     unknown
   >;
+  deleteConversationMutation: () => UseMutationOptions<unknown, AppError, DeleteConversationData, unknown>;
   getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;
   getAlgorithmQuery: (id: Algorithm["id"]) => QueryOptions<Algorithm | null | undefined>;
   addAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, AppError, InsertAlgorithmData, unknown>;

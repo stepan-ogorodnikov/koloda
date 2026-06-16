@@ -1,6 +1,6 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { getActiveConversationId, setActiveConversationId } from "@koloda/app";
+import { clearActiveConversationId, getActiveConversationId, setActiveConversationId } from "@koloda/app";
 import { queryKeys, useTitle } from "@koloda/core-react";
 import {
   AssistantChat,
@@ -73,6 +73,13 @@ function AIRoute() {
     navigate({ search: { conversationId: id }, replace: true });
   }, [navigate]);
 
+  const handleActiveConversationDeleted = useCallback(() => {
+    clearActiveConversationId();
+    const id = newConversation();
+    setActiveConversationId(id);
+    navigate({ search: { conversationId: id }, replace: true });
+  }, [navigate, newConversation]);
+
   const handleClearDeck = useCallback(() => {
     setDeck(null);
   }, [setDeck]);
@@ -81,7 +88,10 @@ function AIRoute() {
     <>
       <Layout.Sidebar>
         <AssistantNewConversationButton onConversationIdChange={handleConversationIdChange} />
-        <AssistantConversationsList />
+        <AssistantConversationsList
+          activeId={conversationId}
+          onActiveDeleted={handleActiveConversationDeleted}
+        />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>

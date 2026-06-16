@@ -1,4 +1,4 @@
-import { throwKnownError, type SetConversationData } from "@koloda/app";
+import { throwKnownError, type DeleteConversationData, type SetConversationData } from "@koloda/app";
 import { desc, eq } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
@@ -37,5 +37,11 @@ export async function setConversation(db: DB, { id, state }: SetConversationData
       .returning();
 
     return result[0];
+  });
+}
+
+export async function deleteConversation(db: DB, { id }: DeleteConversationData) {
+  return throwKnownError("db.delete", async () => {
+    await db.delete(conversations).where(eq(conversations.id, id));
   });
 }

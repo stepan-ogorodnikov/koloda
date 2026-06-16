@@ -116,6 +116,22 @@ msgstr "Loading"
 msgid "ai.conversation.untitled"
 msgstr "Untitled"
 
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:52
+msgid "ai.conversation.delete.trigger"
+msgstr "Delete conversation"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:69
+msgid "ai.conversation.delete.message"
+msgstr "Delete this conversation? This cannot be undone."
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:78
+msgid "ai.conversation.delete.confirm"
+msgstr "Delete"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:81
+msgid "ai.conversation.delete.cancel"
+msgstr "Cancel"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Preset"

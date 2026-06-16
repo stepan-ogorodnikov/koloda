@@ -7,8 +7,14 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { isConversationState } from "./conversation-state";
+import { DeleteConversationButton } from "./delete-conversation-button";
 
-export function AssistantConversationsList() {
+type AssistantConversationsListProps = {
+  activeId?: string;
+  onActiveDeleted?: () => void;
+};
+
+export function AssistantConversationsList({ activeId, onActiveDeleted }: AssistantConversationsListProps) {
   const { _ } = useLingui();
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
@@ -22,9 +28,11 @@ export function AssistantConversationsList() {
           <div className="flex flex-col gap-1 p-2">
             {data.map((conversation) => (
               <ConversationItem
-                key={conversation.id}
                 conversation={conversation}
                 fallback={fallback}
+                isActive={conversation.id === activeId}
+                onActiveDeleted={onActiveDeleted}
+                key={conversation.id}
               />
             ))}
           </div>
@@ -35,30 +43,41 @@ export function AssistantConversationsList() {
 }
 
 const conversationItem = [
-  "p-2 rounded-lg fg-level-3 text-base whitespace-nowrap truncate focus-ring animate-colors",
-  "hover:bg-main-sidebar-link-active current:bg-main-sidebar-link-active current:fg-level-1",
+  "grow min-w-0 p-2 rounded-lg fg-level-3 text-base whitespace-nowrap truncate focus-ring animate-colors",
+  "group-hover:bg-main-sidebar-link-active current:bg-main-sidebar-link-active current:fg-level-1",
 ].join(" ");
 
 type ConversationItemProps = {
   conversation: Conversation;
   fallback: string;
+  isActive: boolean;
+  onActiveDeleted?: () => void;
 };
 
-function ConversationItem({ conversation, fallback }: ConversationItemProps) {
+function ConversationItem({ conversation, fallback, isActive, onActiveDeleted }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
   const name = isConversationState(conversation.state)
     ? getConversationName(conversation.state, fallback)
     : fallback;
 
   return (
-    <Link
-      className={conversationItem}
-      to="/ai"
-      search={{ conversationId: conversation.id }}
-      viewTransition={isMotionOn}
-      key={conversation.id}
-    >
-      {name}
-    </Link>
+    <div className="group relative flex flex-row items-center">
+      <Link
+        className={conversationItem}
+        to="/ai"
+        search={{ conversationId: conversation.id }}
+        viewTransition={isMotionOn}
+        key={conversation.id}
+      >
+        {name}
+      </Link>
+      <div className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 animate-opacity">
+        <DeleteConversationButton
+          id={conversation.id}
+          isActive={isActive}
+          onActiveDeleted={onActiveDeleted}
+        />
+      </div>
+    </div>
   );
 }

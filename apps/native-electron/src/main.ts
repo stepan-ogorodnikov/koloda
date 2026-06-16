@@ -252,6 +252,7 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_get_conversation", async (_event, args: any) => j(db.getConversation(args)));
   ipcMain.handle("cmd_get_conversations", async () => j(db.getConversations()));
   ipcMain.handle("cmd_set_conversation", async (_event, args: any) => j(db.setConversation(args)));
+  ipcMain.handle("cmd_delete_conversation", async (_event, args: any) => db.deleteConversation(args));
 
   ipcMain.handle("cmd_get_lessons", async (_event, { params }: any) => j(db.getLessons(params)));
   ipcMain.handle("cmd_get_lesson_data", async (_event, { params }: any) => j(db.getLessonData(params)));

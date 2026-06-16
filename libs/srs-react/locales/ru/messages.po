@@ -116,6 +116,22 @@ msgstr "Загрузка"
 msgid "ai.conversation.untitled"
 msgstr "Без названия"
 
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:52
+msgid "ai.conversation.delete.trigger"
+msgstr "Удалить диалог"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:69
+msgid "ai.conversation.delete.message"
+msgstr "Удалить этот диалог? Действие нельзя отменить."
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:78
+msgid "ai.conversation.delete.confirm"
+msgstr "Удалить"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:81
+msgid "ai.conversation.delete.cancel"
+msgstr "Отмена"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"

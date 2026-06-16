@@ -74,3 +74,10 @@ pub fn set_conversation(db: &Database, id: &str, state: Value) -> Result<Convers
 
     get_conversation(db, id)?.ok_or_else(|| AppError::new(crate::app::error::error_codes::DB_UPDATE, None))
 }
+
+pub fn delete_conversation(db: &Database, id: &str) -> Result<(), AppError> {
+    db.with_conn(|conn| {
+        conn.execute("DELETE FROM conversations WHERE id = ?1", params![id])?;
+        Ok(())
+    })
+}

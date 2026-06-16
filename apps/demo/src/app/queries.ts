@@ -1,6 +1,12 @@
 import type { AddAIProfileData } from "@koloda/ai";
 import type { RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type { PatchSettingsData, SetConversationData, SetSettingsData, SettingsName } from "@koloda/app";
+import type {
+  DeleteConversationData,
+  PatchSettingsData,
+  SetConversationData,
+  SetSettingsData,
+  SettingsName,
+} from "@koloda/app";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
@@ -40,6 +46,7 @@ import {
   deleteAlgorithm,
   deleteCard,
   deleteCards,
+  deleteConversation,
   deleteDeck,
   deleteTemplate,
   getAlgorithm,
@@ -100,6 +107,9 @@ export const queriesFn = (db: DB): Queries => ({
   getConversationsQuery: () => ({ queryFn: () => getConversations(db) }),
   setConversationMutation: () => ({
     mutationFn: (data: SetConversationData) => setConversation(db, data),
+  }),
+  deleteConversationMutation: () => ({
+    mutationFn: (data: DeleteConversationData) => deleteConversation(db, data),
   }),
   getAlgorithmsQuery: () => ({ queryFn: () => getAlgorithms(db) }),
   getAlgorithmQuery: (id: Algorithm["id"]) => ({ queryFn: () => getAlgorithm(db, id) }),

@@ -324,6 +324,16 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn delete_conversation(&self, params: serde_json::Value) -> Result<()> {
+        #[derive(serde::Deserialize)]
+        struct P {
+            id: String,
+        }
+        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        repo::conversations::delete_conversation(&self.db, &p.id).map_err(to_napi_error)
+    }
+
+    #[napi]
     pub fn get_lessons(&self, params: serde_json::Value) -> Result<String> {
         let params: GetLessonsParams = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let lessons = repo::lessons::get_lessons(&self.db, params).map_err(to_napi_error)?;

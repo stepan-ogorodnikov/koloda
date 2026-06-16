@@ -5,7 +5,14 @@ import type {
   TouchAIProfileData,
   UpdateAIProfileData,
 } from "@koloda/ai";
-import type { AllowedSettings, PatchSettingsData, SetConversationData, SetSettingsData, SettingsName } from "@koloda/app";
+import type {
+  AllowedSettings,
+  DeleteConversationData,
+  PatchSettingsData,
+  SetConversationData,
+  SetSettingsData,
+  SettingsName,
+} from "@koloda/app";
 import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
@@ -69,6 +76,9 @@ export const queriesFn = (): Queries => ({
   }),
   setConversationMutation: () => ({
     mutationFn: (data: SetConversationData) => invoke("cmd_set_conversation", data),
+  }),
+  deleteConversationMutation: () => ({
+    mutationFn: (data: DeleteConversationData) => invoke("cmd_delete_conversation", { id: data.id }),
   }),
   getAlgorithmsQuery: () => ({
     queryFn: () => invoke("cmd_get_algorithms"),

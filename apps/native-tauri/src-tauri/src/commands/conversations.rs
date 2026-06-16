@@ -17,3 +17,8 @@ pub fn cmd_get_conversations(db: DB<'_>) -> Result<Vec<Conversation>, AppError> 
 pub fn cmd_set_conversation(db: DB<'_>, id: String, state: Value) -> Result<Conversation, AppError> {
     repo::set_conversation(&db, &id, state)
 }
+
+#[command]
+pub fn cmd_delete_conversation(db: DB<'_>, id: String) -> Result<(), AppError> {
+    repo::delete_conversation(&db, &id)
+}
