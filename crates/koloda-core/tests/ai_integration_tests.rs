@@ -113,13 +113,38 @@ fn ai_profile_codex_round_trips_without_secret_store_data() {
     let _guard = test_store::setup();
     let db = test_db();
 
-    let added = ai::add_ai_profile(&db, Some("Codex".to_string()), Some(AISecrets::Codex {}))
-        .expect("profile should be added");
+    let added =
+        ai::add_ai_profile(&db, Some("Codex".to_string()), Some(AISecrets::Codex {})).expect("profile should be added");
 
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     assert!(matches!(retrieved.secrets, Some(AISecrets::Codex { .. })));
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn ai_profile_opencode_go_round_trips_via_secret_store() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenCode Go".to_string()),
+        Some(AISecrets::OpencodeGo {
+            api_key: "go-secret-key".to_string(),
+        }),
+    )
+    .expect("profile should be added");
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+
+    match retrieved.secrets.as_ref() {
+        Some(AISecrets::OpencodeGo { api_key }) => assert_eq!(api_key, "go-secret-key"),
+        other => panic!("expected OpencodeGo secrets, got {:?}", other),
+    }
 
     test_store::teardown(_guard);
 }
