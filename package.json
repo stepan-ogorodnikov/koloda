@@ -16,6 +16,7 @@
     "test:libs": "nx run-many --target=test --projects=tag:type:lib"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.41",
     "@dnd-kit/helpers": "^0.1.21",
     "@dnd-kit/react": "^0.1.21",
     "@electric-sql/pglite": "^0.3.14",

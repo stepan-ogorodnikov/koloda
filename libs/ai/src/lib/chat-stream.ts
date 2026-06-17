@@ -2,8 +2,53 @@ import { streamText } from "ai";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, throwForAIResponse, wrapAIError } from "./error";
 import { compilePromptTemplate } from "./prompts";
-import type { AISecrets, ChatStreamRequest, Message, StreamUsage } from "./types";
-import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./types";
+import type { AiProvider, AISecrets, ChatStreamRequest, Message, StreamUsage } from "./types";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL } from "./types";
+
+async function runOpenAICompatibleChatStream(
+  baseUrl: string,
+  apiKey: string | undefined,
+  provider: Extract<AiProvider, "lmstudio">,
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+): Promise<StreamUsage | undefined> {
+  const endpoint = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
+  return wrapAIError(async () => {
+    const systemMessage = compilePromptTemplate(
+      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+      request.template?.content.fields ?? [],
+      provider,
+      "chat",
+    );
+    const messages = systemMessage
+      ? [
+        { role: "system", content: systemMessage },
+        ...request.messages.map((m) => ({ role: m.role, content: m.content })),
+      ]
+      : request.messages.map((m) => ({ role: m.role, content: m.content }));
+
+    const response = throwForAIResponse(
+      await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          model: request.input.modelId,
+          temperature: resolveGenerationTemperature(request.input.temperature),
+          messages,
+          stream: true,
+          stream_options: { include_usage: true },
+        }),
+        signal: abortSignal,
+      }),
+    );
+
+    return await readOpenAICompatibleChatStream(response, onChunk);
+  });
+}
 
 export async function streamChatWithOpenRouter(
   request: ChatStreamRequest,
@@ -89,39 +134,57 @@ export async function streamChatWithLMStudio(
   abortSignal: AbortSignal,
   secrets: Extract<AISecrets, { provider: "lmstudio" }>,
 ): Promise<StreamUsage | undefined> {
+  return runOpenAICompatibleChatStream(secrets.baseUrl, secrets.apiKey, "lmstudio", request, onChunk, abortSignal);
+}
+
+export async function streamChatWithOpencodeGo(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  secrets: Extract<AISecrets, { provider: "opencodeGo" }>,
+): Promise<StreamUsage | undefined> {
   return wrapAIError(async () => {
-    const systemMessage = compilePromptTemplate(
-      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-      request.template?.content.fields ?? [],
-      "lmstudio",
-      "chat",
-    );
-    const messages = systemMessage
-      ? [
-        { role: "system", content: systemMessage },
-        ...request.messages.map((m) => ({ role: m.role, content: m.content })),
-      ]
-      : request.messages.map((m) => ({ role: m.role, content: m.content }));
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const opencodeGo = createOpenAICompatible({
+      name: "opencode-go",
+      baseURL: OPENCODE_GO_BASE_URL,
+      apiKey: secrets.apiKey,
+    });
+    let streamedError: unknown = null;
+    const result = streamText({
+      model: opencodeGo(request.input.modelId),
+      temperature: resolveGenerationTemperature(request.input.temperature),
+      system: compilePromptTemplate(
+        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+        request.template?.content.fields ?? [],
+        "opencodeGo",
+        "chat",
+      ),
+      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+      abortSignal,
+      onError: ({ error }) => {
+        streamedError = error;
+      },
+    });
 
-    const response = throwForAIResponse(
-      await fetch(new URL("/v1/chat/completions", secrets.baseUrl), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(secrets.apiKey ? { Authorization: `Bearer ${secrets.apiKey}` } : {}),
-        },
-        body: JSON.stringify({
-          model: request.input.modelId,
-          temperature: resolveGenerationTemperature(request.input.temperature),
-          messages,
-          stream: true,
-          stream_options: { include_usage: true },
-        }),
-        signal: abortSignal,
-      }),
-    );
+    try {
+      for await (const chunk of result.textStream) {
+        onChunk(chunk);
+      }
+    } catch (error) {
+      throw streamedError ?? error;
+    }
 
-    return await readOpenAICompatibleChatStream(response, onChunk);
+    if (streamedError) throw streamedError;
+
+    const usage = await result.usage;
+    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
+
+    return {
+      promptTokens: usage.inputTokens ?? 0,
+      completionTokens: usage.outputTokens ?? 0,
+      totalTokens: usage.totalTokens ?? 0,
+    };
   });
 }
 

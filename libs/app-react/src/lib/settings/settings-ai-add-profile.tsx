@@ -2,9 +2,9 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AiProvider, AISecrets } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
+import type { AddAIProfileFormProps } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { AddAIProfileFormProps } from "@koloda/ai";
 import { Button, Dialog, Select } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -15,12 +15,14 @@ import { useEffect, useState } from "react";
 import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
 import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
+import { AddAIProfileOpencodeGo } from "./ai-providers/add-ai-profile-opencode-go";
 import { AddAIProfileOpenRouter } from "./ai-providers/add-ai-profile-openrouter";
 
 const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
   openrouter: AddAIProfileOpenRouter,
   ollama: AddAIProfileOllama,
   lmstudio: AddAIProfileLMStudio,
+  opencodeGo: AddAIProfileOpencodeGo,
   codex: AddAIProfileCodex,
 };
 

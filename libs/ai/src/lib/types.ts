@@ -4,8 +4,11 @@ export const AI_PROVIDER_LABELS = {
   openrouter: "OpenRouter",
   ollama: "Ollama",
   lmstudio: "LM Studio",
+  opencodeGo: "OpenCode Go",
   codex: "Codex",
 } as const;
+
+export const OPENCODE_GO_BASE_URL = "https://opencode.ai/zen/go/v1";
 
 export type AiProvider = keyof typeof AI_PROVIDER_LABELS;
 
@@ -24,18 +27,24 @@ export const lmstudioSecretsValidation = z.object({
   apiKey: z.string().optional(),
 });
 
+export const opencodeGoSecretsValidation = z.object({
+  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+});
+
 export const codexSecretsValidation = z.object({});
 
 export type AIPrompterSecrets =
   | z.infer<typeof openRouterSecretsValidation>
   | z.infer<typeof ollamaSecretsValidation>
   | z.infer<typeof lmstudioSecretsValidation>
+  | z.infer<typeof opencodeGoSecretsValidation>
   | z.infer<typeof codexSecretsValidation>;
 
 const secretsValidation = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("openrouter"), ...openRouterSecretsValidation.shape }),
   z.object({ provider: z.literal("ollama"), ...ollamaSecretsValidation.shape }),
   z.object({ provider: z.literal("lmstudio"), ...lmstudioSecretsValidation.shape }),
+  z.object({ provider: z.literal("opencodeGo"), ...opencodeGoSecretsValidation.shape }),
   z.object({ provider: z.literal("codex") }),
 ]);
 

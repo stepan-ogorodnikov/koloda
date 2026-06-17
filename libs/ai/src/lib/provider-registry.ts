@@ -1,7 +1,18 @@
-import { generateCardsWithLMStudio, generateCardsWithOllama, generateCardsWithOpenRouter } from "./card-generation";
-import { streamChatWithLMStudio, streamChatWithOllama, streamChatWithOpenRouter } from "./chat-stream";
+import {
+  generateCardsWithLMStudio,
+  generateCardsWithOllama,
+  generateCardsWithOpencodeGo,
+  generateCardsWithOpenRouter,
+} from "./card-generation";
+import {
+  streamChatWithLMStudio,
+  streamChatWithOllama,
+  streamChatWithOpencodeGo,
+  streamChatWithOpenRouter,
+} from "./chat-stream";
 import { AIError, throwForAIResponse } from "./error";
 import type { AIModel, AiProvider, AISecrets, ChatStreamGenerator, GenerateCardsFunction, SecretField } from "./types";
+import { OPENCODE_GO_BASE_URL } from "./types";
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -25,6 +36,8 @@ type OllamaModelsResponse = {
 
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
+export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
+
 export async function fetchOpenRouterModels(): Promise<AIModel[]> {
   const response = throwForAIResponse(
     await fetch(OPENROUTER_MODELS_URL, {
@@ -40,9 +53,31 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]> {
+  const response = throwForAIResponse(
+    await fetch(`${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+    }),
+  );
+
+  const data: OpenAICompatibleModelsResponse = await response.json();
+  if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
+
+  return data.data
+    .map((model) => ({
+      id: model.id,
+      name: model.id,
+      context_length: 0,
+    }))
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
-    await fetch(new URL("/v1/models", baseUrl), {
+    await fetch(`${baseUrl.replace(/\/$/, "")}/v1/models`, {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
@@ -134,6 +169,15 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
   };
 }
 
+function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencodeGo" }>): AIGenerationClient {
+  return {
+    provider: "opencodeGo",
+    listModels: () => fetchOpencodeGoModels(secrets.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithOpencodeGo(request, onChunk, abortSignal, secrets),
+    generateCards: (request) => generateCardsWithOpencodeGo(request, secrets),
+  };
+}
+
 function createCodexPlaceholderClient(): AIGenerationClient {
   const unsupported = async () => {
     throw new AIError("unknown", "Codex provider requires the native app runtime.");
@@ -180,6 +224,19 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
       return s.baseUrl ? [] : ["baseUrl"];
     },
     getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "lmstudio" }>).apiKey ?? null,
+  },
+  opencodeGo: {
+    id: "opencodeGo",
+    createClient: (secrets) => createOpencodeGoClient(secrets as Extract<AISecrets, { provider: "opencodeGo" }>),
+    fetchModels: (secrets) => {
+      const s = secrets as Extract<AISecrets, { provider: "opencodeGo" }>;
+      return fetchOpencodeGoModels(s.apiKey);
+    },
+    getMissingSecretFields: (secrets) => {
+      const s = secrets as Extract<AISecrets, { provider: "opencodeGo" }>;
+      return s.apiKey ? [] : ["apiKey"];
+    },
+    getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "opencodeGo" }>).apiKey,
   },
   codex: {
     id: "codex",
