@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, screen } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, net, screen } from "electron";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
@@ -150,6 +150,54 @@ function createWindow() {
   } else {
     win.loadFile(join(__dirname, "../native-electron-react/index.html"));
   }
+
+  win.webContents.session.webRequest.onBeforeSendHeaders(
+    (details, callback) => {
+      const { hostname } = new URL(details.url);
+      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+        const { requestHeaders } = details;
+        requestHeaders["Sec-Fetch-Mode"] = "no-cors";
+        callback({ requestHeaders });
+      } else {
+        callback({ requestHeaders: details.requestHeaders });
+      }
+    },
+  );
+
+  win.webContents.session.webRequest.onHeadersReceived(
+    (details, callback) => {
+      const { hostname } = new URL(details.url);
+      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+        const { responseHeaders = {} } = details;
+        for (const key of Object.keys(responseHeaders)) {
+          if (key.toLowerCase() === "access-control-allow-origin") delete responseHeaders[key];
+          if (key.toLowerCase() === "access-control-allow-headers") delete responseHeaders[key];
+          if (key.toLowerCase() === "access-control-allow-methods") delete responseHeaders[key];
+        }
+        responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+        responseHeaders["Access-Control-Allow-Headers"] = ["*"];
+        responseHeaders["Access-Control-Allow-Methods"] = ["*"];
+        callback({ responseHeaders });
+      } else {
+        callback({ responseHeaders: details.responseHeaders });
+      }
+    },
+  );
+
+  win.webContents.session.protocol.handle("https", async (request) => {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "*",
+          "Access-Control-Allow-Headers": "*",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+    return net.fetch(request, { bypassCustomProtocolHandlers: true });
+  });
 
   return win;
 }
