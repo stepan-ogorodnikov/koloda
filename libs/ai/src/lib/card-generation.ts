@@ -19,7 +19,7 @@ async function runOpenAICompatibleCardGeneration(
   provider: Extract<AiProvider, "lmstudio">,
   request: CardGenerationRequest,
 ): Promise<void> {
-  const endpoint = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
+  const endpoint = new URL("/v1/chat/completions", baseUrl);
   return wrapAIError(() =>
     runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal, systemPromptTemplate }) => {
       const temperature = resolveGenerationTemperature(input.temperature);

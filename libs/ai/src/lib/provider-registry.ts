@@ -77,7 +77,7 @@ export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]>
 
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
-    await fetch(`${baseUrl.replace(/\/$/, "")}/v1/models`, {
+    await fetch(new URL("/v1/models", baseUrl), {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),

@@ -13,7 +13,7 @@ async function runOpenAICompatibleChatStream(
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
 ): Promise<StreamUsage | undefined> {
-  const endpoint = `${baseUrl.replace(/\/$/, "")}/v1/chat/completions`;
+  const endpoint = new URL("/v1/chat/completions", baseUrl);
   return wrapAIError(async () => {
     const systemMessage = compilePromptTemplate(
       request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
