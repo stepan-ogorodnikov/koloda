@@ -257,11 +257,12 @@ export function useAssistantChat(
       lastSavedIdRef.current = row.id;
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
-      const savedAt = row.updatedAt;
+      const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
       if (savedAt) {
         setConversationAction((prev) => {
           if (prev.id !== row.id) return prev;
-          if (prev.updatedAt && prev.updatedAt.getTime() >= savedAt.getTime()) return prev;
+          const prevAt = prev.updatedAt instanceof Date ? prev.updatedAt : null;
+          if (prevAt && prevAt.getTime() >= savedAt.getTime()) return prev;
           return { ...prev, updatedAt: savedAt };
         });
       }
@@ -305,7 +306,7 @@ export function useAssistantChat(
 
       const row: Conversation = {
         id: state.id,
-        state: state as unknown,
+        state: JSON.parse(JSON.stringify(state)),
         createdAt: state.createdAt,
         updatedAt: state.updatedAt ?? new Date(),
       };
