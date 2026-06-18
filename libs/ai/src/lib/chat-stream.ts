@@ -162,6 +162,9 @@ export async function streamChatWithOpencodeGo(
       ),
       messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
       abortSignal,
+      providerOptions: request.input.reasoningEffort
+        ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
+        : undefined,
       onError: ({ error }) => {
         streamedError = error;
       },

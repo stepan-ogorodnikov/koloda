@@ -200,21 +200,27 @@ export function generateCardsWithOpencodeGo(
       baseURL: OPENCODE_GO_BASE_URL,
       apiKey: secrets.apiKey,
     });
-    return runTextCompletionCardGeneration(async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
-      const result = await generateText({
-        model: opencodeGo(input.modelId),
-        temperature: resolveGenerationTemperature(input.temperature),
-        system: compilePromptTemplate(
-          systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-          template.content.fields,
-          "opencodeGo",
-          "generation",
-        ),
-        messages: getConversationMessages(messages, input.prompt),
-        abortSignal,
-      });
-      return result.text;
-    }, request);
+    return runTextCompletionCardGeneration(
+      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
+        const result = await generateText({
+          model: opencodeGo(input.modelId),
+          temperature: resolveGenerationTemperature(input.temperature),
+          system: compilePromptTemplate(
+            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+            template.content.fields,
+            "opencodeGo",
+            "generation",
+          ),
+          messages: getConversationMessages(messages, input.prompt),
+          abortSignal,
+          providerOptions: input.reasoningEffort
+            ? { "opencode-go": { reasoningEffort: input.reasoningEffort } }
+            : undefined,
+        });
+        return result.text;
+      },
+      request,
+    );
   });
 }
 

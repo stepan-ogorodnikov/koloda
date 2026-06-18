@@ -21,10 +21,34 @@ export type AIGenerationClient = {
   generateCards: GenerateCardsFunction;
 };
 
-type OpenRouterModelsResponse = { data: AIModel[] };
+type OpenRouterReasoning = {
+  mandatory?: boolean;
+  default_enabled?: boolean;
+  supported_efforts?: string[];
+  default_effort?: string;
+};
+
+type OpenRouterModelData = Omit<AIModel, "supported_reasoning_levels" | "default_reasoning_level"> & {
+  reasoning?: OpenRouterReasoning;
+};
+
+type OpenRouterModelsResponse = { data: OpenRouterModelData[] };
+
+type OpenAICompatibleModelData = {
+  id: string;
+  name?: string;
+  description?: string;
+  context_length?: number;
+  context_window?: number;
+  top_provider?: AIModel["top_provider"];
+  architecture?: AIModel["architecture"];
+  supported_parameters?: string[];
+  supported_reasoning_levels?: AIModel["supported_reasoning_levels"];
+  default_reasoning_level?: string;
+};
 
 type OpenAICompatibleModelsResponse = {
-  data: Array<{ id: string }>;
+  data: OpenAICompatibleModelData[];
 };
 
 type OllamaModelsResponse = {
@@ -38,6 +62,37 @@ export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
 
+type ReasoningLevels = {
+  levels: Array<{ effort: string; description: string }>;
+  default: string;
+};
+
+const MIMO_LEVELS: ReasoningLevels = {
+  levels: [
+    { effort: "low", description: "" },
+    { effort: "medium", description: "" },
+    { effort: "high", description: "" },
+  ],
+  default: "medium",
+};
+
+const DEEPSEEK_LEVELS: ReasoningLevels = {
+  levels: [
+    { effort: "low", description: "" },
+    { effort: "medium", description: "" },
+    { effort: "high", description: "" },
+    { effort: "xhigh", description: "" },
+  ],
+  default: "medium",
+};
+
+function resolveReasoningLevelsForModel(id: string): ReasoningLevels | undefined {
+  const lower = id.toLowerCase();
+  if (lower.startsWith("deepseek-")) return DEEPSEEK_LEVELS;
+  if (lower.startsWith("mimo-")) return MIMO_LEVELS;
+  return undefined;
+}
+
 export async function fetchOpenRouterModels(): Promise<AIModel[]> {
   const response = throwForAIResponse(
     await fetch(OPENROUTER_MODELS_URL, {
@@ -50,6 +105,17 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
 
   return data.data
     .filter((model) => model.id.includes("/"))
+    .map((model) => {
+      const { reasoning, ...rest } = model;
+      const efforts = reasoning?.supported_efforts;
+      return {
+        ...rest,
+        supported_reasoning_levels: efforts && efforts.length > 0
+          ? efforts.map((effort) => ({ effort, description: "" }))
+          : undefined,
+        default_reasoning_level: reasoning?.default_effort,
+      };
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -67,11 +133,20 @@ export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]>
   if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
 
   return data.data
-    .map((model) => ({
-      id: model.id,
-      name: model.id,
-      context_length: 0,
-    }))
+    .map((model) => {
+      const reasoning = resolveReasoningLevelsForModel(model.id);
+      return {
+        id: model.id,
+        name: model.name ?? model.id,
+        description: model.description,
+        context_length: model.context_length ?? model.context_window ?? 0,
+        top_provider: model.top_provider,
+        architecture: model.architecture,
+        supported_parameters: model.supported_parameters,
+        supported_reasoning_levels: model.supported_reasoning_levels ?? reasoning?.levels,
+        default_reasoning_level: model.default_reasoning_level ?? reasoning?.default,
+      };
+    })
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
