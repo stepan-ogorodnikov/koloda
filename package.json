@@ -48,6 +48,7 @@
     "@tauri-apps/api": "^2.11.0",
     "@types/dompurify": "^3.2.0",
     "ai": "^6.0.86",
+    "ai-sdk-ollama": "^3.8.8",
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.1",
     "drizzle-orm": "^0.44.2",

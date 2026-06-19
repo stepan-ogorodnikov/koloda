@@ -28,6 +28,8 @@ pub enum AISecrets {
     Ollama {
         #[serde(rename = "baseUrl", alias = "base_url")]
         base_url: String,
+        #[serde(rename = "apiKey", alias = "api_key", skip_serializing_if = "Option::is_none")]
+        api_key: Option<String>,
     },
     #[serde(rename = "lmstudio")]
     LmStudio {
@@ -92,7 +94,7 @@ impl AISecrets {
     pub fn api_key(&self) -> Option<&str> {
         match self {
             AISecrets::OpenRouter { api_key } => Some(api_key),
-            AISecrets::Ollama { .. } => None,
+            AISecrets::Ollama { api_key, .. } => api_key.as_deref(),
             AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
             AISecrets::OpencodeGo { api_key } => Some(api_key),
             AISecrets::Codex { .. } => None,
@@ -113,7 +115,7 @@ impl AISecrets {
                     ));
                 }
             }
-            AISecrets::Ollama { base_url } => {
+            AISecrets::Ollama { base_url, .. } => {
                 if base_url.trim().is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
@@ -153,7 +155,7 @@ impl AISecrets {
                     ));
                 }
             }
-            AISecrets::Ollama { base_url } => {
+            AISecrets::Ollama { base_url, .. } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,

@@ -51,13 +51,6 @@ type OpenAICompatibleModelsResponse = {
   data: OpenAICompatibleModelData[];
 };
 
-type OllamaModelsResponse = {
-  models?: Array<{
-    model: string;
-    name?: string;
-  }>;
-};
-
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
@@ -172,17 +165,17 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export async function fetchOllamaModels(baseUrl: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(
-    await fetch(new URL("/api/tags", baseUrl), {
-      headers: { "Content-Type": "application/json" },
-    }),
-  );
+export async function fetchOllamaModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
+  const { Ollama } = await import("ollama");
+  const client = new Ollama({
+    host: baseUrl,
+    ...(apiKey ? { apiKey } : {}),
+  });
 
-  const data: OllamaModelsResponse = await response.json();
-  if (!Array.isArray(data.models)) throw new AIError("ai.invalid-response");
+  const response = await client.list();
+  if (!response.models) throw new AIError("ai.invalid-response");
 
-  return data.models
+  return response.models
     .map((model) => ({
       id: model.model,
       name: model.name ?? model.model,
@@ -229,9 +222,9 @@ function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrou
 function createOllamaClient(secrets: Extract<AISecrets, { provider: "ollama" }>): AIGenerationClient {
   return {
     provider: "ollama",
-    listModels: () => fetchOllamaModels(secrets.baseUrl),
-    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, secrets.baseUrl),
-    generateCards: (request) => generateCardsWithOllama(request, secrets.baseUrl),
+    listModels: () => fetchOllamaModels(secrets.baseUrl, secrets.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, secrets),
+    generateCards: (request) => generateCardsWithOllama(request, secrets),
   };
 }
 

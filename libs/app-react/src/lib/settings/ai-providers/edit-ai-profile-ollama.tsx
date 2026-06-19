@@ -1,7 +1,7 @@
 import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/ai";
+import type { EditAIProfileFormProps } from "@koloda/ai";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
-import type { EditAIProfileFormProps } from "@koloda/ai";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -17,14 +17,19 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: Edi
   const { _ } = useLingui();
   const title = profile.title || undefined;
   const baseUrl = profile.secrets?.provider === "ollama" ? profile.secrets.baseUrl : "";
+  const apiKey = profile.secrets?.provider === "ollama" ? profile.secrets.apiKey ?? "" : "";
 
   const form = useAppForm({
-    defaultValues: { title, baseUrl } as FormValues,
+    defaultValues: { title, baseUrl, apiKey } as FormValues,
     validators: { onSubmit: formSchema },
     onSubmit: async ({ value }) => {
       onSubmit({
         title: value.title,
-        secrets: { provider: "ollama", baseUrl: value.baseUrl },
+        secrets: {
+          provider: "ollama",
+          baseUrl: value.baseUrl,
+          ...(value.apiKey ? { apiKey: value.apiKey } : {}),
+        },
       });
     },
   });
@@ -62,6 +67,20 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: Edi
             >
               <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
               <TextField.Input placeholder="http://localhost:11434" />
+              {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
+            </TextField>
+          )}
+        </form.Field>
+        <form.Field name="apiKey">
+          {(field) => (
+            <TextField
+              type="password"
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={field.handleChange}
+            >
+              <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
+              <TextField.Input />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
             </TextField>
           )}

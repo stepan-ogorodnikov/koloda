@@ -148,38 +148,34 @@ export function generateCardsWithOpenRouter(
 
 export function generateCardsWithOllama(
   request: CardGenerationRequest,
-  baseUrl: string,
+  secrets: Extract<AISecrets, { provider: "ollama" }>,
 ) {
-  return wrapAIError(() =>
-    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal, systemPromptTemplate }) => {
-      const temperature = resolveGenerationTemperature(input.temperature);
-      const response = throwForAIResponse(
-        await fetch(new URL("/api/chat", baseUrl), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: input.modelId,
-            messages: getTextCompletionMessages({
-              fields: template.content.fields,
-              prompt: input.prompt,
-              messages,
-              provider: "ollama",
-              systemPromptTemplate,
-            }),
-            options: { temperature },
-            stream: false,
-          }),
-          signal: abortSignal,
-        }),
-      );
+  return wrapAIError(async () => {
+    const { createOllama } = await import("ai-sdk-ollama");
+    const ollama = createOllama({
+      baseURL: secrets.baseUrl,
+      ...(secrets.apiKey ? { apiKey: secrets.apiKey } : {}),
+    });
 
-      const data = await response.json() as OllamaChatResponse;
-      const content = data.message?.content;
-      if (typeof content !== "string") throw new AIError("ai.invalid-response");
-
-      return content;
-    }, request)
-  );
+    return runTextCompletionCardGeneration(
+      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
+        const result = await generateText({
+          model: ollama(input.modelId),
+          temperature: resolveGenerationTemperature(input.temperature),
+          system: compilePromptTemplate(
+            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+            template.content.fields,
+            "ollama",
+            "generation",
+          ),
+          messages: getConversationMessages(messages, input.prompt),
+          abortSignal,
+        });
+        return result.text;
+      },
+      request,
+    );
+  });
 }
 
 export function generateCardsWithLMStudio(
@@ -227,12 +223,6 @@ export function generateCardsWithOpencodeGo(
 /*
  * Internal helpers
  */
-
-type OllamaChatResponse = {
-  message?: {
-    content?: string | null;
-  };
-};
 
 type OpenAICompatibleChatCompletionsResponse = {
   choices?: Array<{

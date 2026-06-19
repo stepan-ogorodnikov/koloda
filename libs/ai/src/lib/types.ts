@@ -20,6 +20,7 @@ export const openRouterSecretsValidation = z.object({
 
 export const ollamaSecretsValidation = z.object({
   baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+  apiKey: z.string().optional(),
 });
 
 export const lmstudioSecretsValidation = z.object({
