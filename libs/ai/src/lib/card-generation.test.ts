@@ -96,7 +96,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await generateCardsWithOllama(request, "http://localhost:11434");
+    await generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" });
 
     expect(request.onCard).toHaveBeenCalledTimes(1);
     expect(request.onCard).toHaveBeenCalledWith({
@@ -175,7 +175,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await expect(generateCardsWithOllama(request, "http://localhost:11434")).rejects.toMatchObject({
+    await expect(generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" })).rejects.toMatchObject({
       code: "ai.invalid-response",
     });
     expect(request.onCard).not.toHaveBeenCalled();

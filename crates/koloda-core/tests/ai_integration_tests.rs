@@ -43,13 +43,13 @@ mod test_store {
         }
     }
 
-    pub struct Guard(());
+    pub struct Guard(#[allow(dead_code)] std::sync::MutexGuard<'static, ()>);
 
     pub fn setup() -> Guard {
-        let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let store = MockSecretStore::new().into_box();
         set_test_secret_store(Some(store));
-        Guard(())
+        Guard(guard)
     }
 
     pub fn teardown(_guard: Guard) {
@@ -67,6 +67,7 @@ fn ai_profiles_add_get_and_remove() {
         Some("Local model".to_string()),
         Some(AISecrets::Ollama {
             base_url: "http://localhost:11434".to_string(),
+            api_key: None,
         }),
     )
     .expect("profile should be added");

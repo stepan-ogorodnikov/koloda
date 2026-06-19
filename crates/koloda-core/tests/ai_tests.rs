@@ -4,6 +4,7 @@ use koloda_core::domain::ai::{AIProfile, AISecrets};
 fn test_ollama_validate_empty_base_url_fails() {
     let secrets = AISecrets::Ollama {
         base_url: "".to_string(),
+        api_key: None,
     };
 
     let result = secrets.validate();
