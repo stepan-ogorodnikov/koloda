@@ -175,9 +175,10 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await expect(generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" })).rejects.toMatchObject({
-      code: "ai.invalid-response",
-    });
+    await expect(generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" })).rejects
+      .toMatchObject({
+        code: "ai.invalid-response",
+      });
     expect(request.onCard).not.toHaveBeenCalled();
   });
 
@@ -215,7 +216,7 @@ describe("card-generation", () => {
     expect(request.onCard).not.toHaveBeenCalled();
   });
 
-  it("returns an error when LM Studio omits message content", async () => {
+  it("resolves without cards when LM Studio omits message content", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -234,13 +235,14 @@ describe("card-generation", () => {
         )
       ),
     );
+    const request = createRequest();
 
-    await expect(generateCardsWithLMStudio(
-      createRequest(),
+    await generateCardsWithLMStudio(
+      request,
       { provider: "lmstudio", baseUrl: "http://localhost:1234" },
-    )).rejects.toMatchObject({
-      code: "ai.invalid-response",
-    });
+    );
+
+    expect(request.onCard).not.toHaveBeenCalled();
   });
 
   it("parses markdown card output from OpenCode Go responses", async () => {
