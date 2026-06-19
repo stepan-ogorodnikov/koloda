@@ -226,8 +226,8 @@ export function useAssistantChat(
         prompt: promptText,
         temperature: cfg.temperature,
         reasoningEffort: cfg.reasoningEffort,
-        deckId: cfg.deckId,
-        templateId: cfg.templateId,
+        ...(run.mode === "cards" && cfg.deckId != null ? { deckId: cfg.deckId } : {}),
+        ...(run.mode === "cards" && cfg.templateId != null ? { templateId: cfg.templateId } : {}),
       });
 
       if (run.mode === "chat") {
