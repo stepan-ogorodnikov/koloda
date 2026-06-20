@@ -18,11 +18,11 @@ import {
   assistantCancelFunctionsAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
-  conversationErrorsAtom,
-  dismissConversationErrorsAtom,
+  dismissSaveStatusAtom,
   newConversationAtom,
   pendingSaveAtom,
   restoreConversationAtom,
+  saveStatusAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages } from "./assistant-messages";
@@ -55,15 +55,11 @@ export type UseAssistantChatReturn = {
   missingSecretFieldLabels: string[];
   isModelsLoading: boolean;
   isModelsError: boolean;
-  generateError: Error | null;
-  conversationGenerateError: Error | null;
   contextLength: number;
   isRestoring: boolean;
   loadError: Error | null;
-  saveError: Error | null;
-  conversationSaveError: Error | null;
-  isErrorDismissed: boolean;
-  handleDismissErrors: () => void;
+  handleDismissGenerate: () => void;
+  handleDismissSave: () => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
@@ -215,6 +211,7 @@ export function useAssistantChat(
       const run = currentState.runs[runId];
       if (!run) return;
 
+      pendingRunFailureRef.current = null;
       const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
       const promptText = userMessage ? getTextMessageContent(userMessage) : "";
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
@@ -253,14 +250,23 @@ export function useAssistantChat(
         const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
         await retryRun(runId, request, templateFields);
       }
+      pendingRunFailureRef.current = runId;
     },
     [retryRun, readState],
   );
 
+  const saveTokenRef = useRef(0);
+  const tokenAtSaveRef = useRef(0);
+  const conversationIdRef = useRef(conversationId);
+  conversationIdRef.current = conversationId;
+  const setSaveStatus = useSetAtom(saveStatusAtom);
+
+  const { mutationFn: setConversationFn } = setConversationMutation();
   const setConversation = useMutation({
-    ...setConversationMutation(),
+    mutationFn: setConversationFn,
     onSuccess: (row) => {
       lastSavedIdRef.current = row.id;
+      setSaveStatus({ conversationId: conversationIdRef.current ?? null, message: null, isDismissed: false });
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
@@ -275,33 +281,45 @@ export function useAssistantChat(
     },
     onError: (error) => {
       console.error("Failed to save conversation", error);
-      // Reset the ref so the next bump will retry the save.
       lastSavedIdRef.current = null;
+      if (tokenAtSaveRef.current === saveTokenRef.current) {
+        setSaveStatus({
+          conversationId: conversationIdRef.current ?? null,
+          message: (error as Error).message,
+          isDismissed: false,
+        });
+      }
     },
   });
 
-  const saveError = setConversation.error ?? null;
+  const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
+  const pendingRunFailureRef = useRef<string | null>(null);
 
-  const setConversationErrors = useSetAtom(conversationErrorsAtom);
-  const dismissConversationErrors = useSetAtom(dismissConversationErrorsAtom);
-  const conversationErrorsMap = useAtomValue(conversationErrorsAtom);
-  const conversationErrorState = conversationId ? conversationErrorsMap.get(conversationId) : undefined;
-  const isErrorDismissed = conversationErrorState?.isDismissed ?? false;
-  const conversationGenerateError = conversationErrorState?.generateError ?? null;
-  const conversationSaveError = conversationErrorState?.saveError ?? null;
-
-  const prevConversationIdRef = useRef(conversationId);
   useEffect(() => {
-    if (!conversationId) return;
-    const switched = prevConversationIdRef.current !== conversationId;
-    prevConversationIdRef.current = conversationId;
-    if (switched) return;
-    setConversationErrors({ conversationId, errors: { generateError, saveError } });
-  }, [conversationId, generateError, saveError, setConversationErrors]);
+    if (generateError && pendingRunFailureRef.current) {
+      const runId = pendingRunFailureRef.current;
+      pendingRunFailureRef.current = null;
+      dispatchAction({ type: "runFailed", runId, error: { message: generateError.message } });
+    }
+  }, [generateError, dispatchAction]);
 
-  const handleDismissErrors = useCallback(() => {
-    if (conversationId) dismissConversationErrors(conversationId);
-  }, [conversationId, dismissConversationErrors]);
+  const handleDismissGenerate = useCallback(() => {
+    const state = readState();
+    const ids = Object.keys(state.runs);
+    for (let i = ids.length - 1; i >= 0; i--) {
+      const run = state.runs[ids[i]];
+      if (run.status === "failed") {
+        dispatchAction({ type: "dismissRunError", runId: run.id });
+        return;
+      }
+    }
+  }, [readState, dispatchAction]);
+
+  const handleDismissSave = dismissSaveStatus;
+
+  useEffect(() => {
+    saveTokenRef.current += 1;
+  }, [conversationId]);
 
   const conversationQuery = useQuery({
     ...getConversationQuery(conversationId!),
@@ -323,6 +341,7 @@ export function useAssistantChat(
   // from ?deckId) is observed and flushed to the DB.
   useEffect(() => {
     if (!conversationId) return;
+    const effectConversationId = conversationId;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
     let lastFiredAt = 0;
@@ -330,7 +349,7 @@ export function useAssistantChat(
     const flush = () => {
       timer = null;
       const state = readStateForSave();
-      if (state.id !== conversationId) return;
+      if (state.id !== effectConversationId) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
       const row: Conversation = {
@@ -340,6 +359,7 @@ export function useAssistantChat(
         updatedAt: state.updatedAt ?? new Date(),
       };
       const data: SetConversationData = { id: row.id, state: row.state };
+      tokenAtSaveRef.current = saveTokenRef.current;
       setConversation.mutate(data);
     };
 
@@ -398,8 +418,6 @@ export function useAssistantChat(
     if (currentState.id === conversationId) {
       restoredIdRef.current = conversationId;
       lastSavedIdRef.current = conversationId;
-      // Save watcher is gated on the ref; bump the trigger so any state changes
-      // that happened before this point are persisted.
       setPendingSave((n) => n + 1);
       return;
     }
@@ -416,6 +434,7 @@ export function useAssistantChat(
         messages: [],
         runs: {},
         activeRunId: null,
+        dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
       };
@@ -457,6 +476,7 @@ export function useAssistantChat(
       if (currentMode === "cards" && !cfg.template) return;
 
       const runId = generateUUID();
+      pendingRunFailureRef.current = null;
       const conversationMessages = buildConversationMessages(
         currentState.messages,
         currentState.runs,
@@ -488,6 +508,7 @@ export function useAssistantChat(
         };
         dispatchAction({ type: "startRun", runId, mode: "chat", request: chatRequest, templateFields: null });
         dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
+        pendingRunFailureRef.current = runId;
         await executeChatRun(runId, chatRequest);
       } else {
         const request: CardGenerationStreamRequest = {
@@ -503,6 +524,7 @@ export function useAssistantChat(
           kind: "generated-cards",
           text: cfg._(msg`assistant.chat.message.status.pending`),
         });
+        pendingRunFailureRef.current = runId;
         await executeGenerateRun(runId, request);
       }
     },
@@ -539,15 +561,11 @@ export function useAssistantChat(
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
-    generateError,
-    conversationGenerateError,
     contextLength,
     isRestoring,
     loadError: conversationError ?? null,
-    saveError,
-    conversationSaveError,
-    isErrorDismissed,
-    handleDismissErrors,
+    handleDismissGenerate,
+    handleDismissSave,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,

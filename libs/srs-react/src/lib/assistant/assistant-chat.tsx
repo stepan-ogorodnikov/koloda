@@ -26,8 +26,10 @@ import {
   assistantContextUsageAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
+  assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
+  saveStatusAtom,
 } from "./assistant-conversation-atoms";
 import { AssistantSettings } from "./assistant-settings";
 import { useAssistantChat } from "./use-assistant-chat";
@@ -45,6 +47,8 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
+  const erroredRun = useAtomValue(assistantErroredRunAtom);
+  const saveStatus = useAtomValue(saveStatusAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
   const modelPickerRef = useRef<HTMLButtonElement>(null);
@@ -62,13 +66,11 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
-    conversationGenerateError,
     contextLength,
     isRestoring,
     loadError,
-    conversationSaveError,
-    isErrorDismissed,
-    handleDismissErrors,
+    handleDismissGenerate,
+    handleDismissSave,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
@@ -134,11 +136,18 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
           <>
             <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-            <AIChatError
-              error={conversationSaveError?.message ?? conversationGenerateError?.message}
-              isDismissed={isErrorDismissed}
-              onDismiss={handleDismissErrors}
-            />
+            {(() => {
+              const generateErr = erroredRun?.error?.message ?? null;
+              const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed
+                ? saveStatus.message
+                : null;
+              return (
+                <>
+                  {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
+                  {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
+                </>
+              );
+            })()}
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
               <div className="flex flex-row items-center min-w-0">

@@ -23,7 +23,7 @@ export function useConversationRuns(
         dispatch({ type: "completeRun", runId });
         break;
       case "error":
-        dispatch({ type: "failRun", runId });
+        // runFailed is dispatched by the hook-level error effect in useAssistantChat
         break;
       case "aborted":
         dispatch({ type: "cancelRun", runId });

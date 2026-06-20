@@ -5,19 +5,11 @@ import { getAssistantMetadata } from "./assistant-messages";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
-export type ConversationErrorState = {
-  generateError: Error | null;
-  saveError: Error | null;
+export type SaveStatus = {
+  conversationId: string | null;
+  message: string | null;
   isDismissed: boolean;
 };
-
-const initialConversationErrorState: ConversationErrorState = {
-  generateError: null,
-  saveError: null,
-  isDismissed: false,
-};
-
-const baseConversationErrorsAtom = atom<Map<string, ConversationErrorState>>(new Map());
 
 const baseStateAtom = atom<ConversationState>(initialConversationState);
 
@@ -31,30 +23,37 @@ export const assistantConversationStateAtom = atom(
   },
 );
 
-export const conversationErrorsAtom = atom(
-  (get) => get(baseConversationErrorsAtom),
-  (get, set, payload: { conversationId: string; errors: Partial<Omit<ConversationErrorState, "isDismissed">> }) => {
-    const prev = get(baseConversationErrorsAtom);
-    const existing = prev.get(payload.conversationId) ?? initialConversationErrorState;
-    const hasNewError = payload.errors.generateError != null || payload.errors.saveError != null;
-    const next: ConversationErrorState = {
-      ...existing,
-      ...payload.errors,
-      isDismissed: hasNewError ? false : existing.isDismissed,
-    };
-    const nextMap = new Map(prev);
-    nextMap.set(payload.conversationId, next);
-    set(baseConversationErrorsAtom, nextMap);
-  },
-);
+export const saveStatusAtom = atom<SaveStatus>({
+  conversationId: null as string | null,
+  message: null as string | null,
+  isDismissed: false,
+});
 
-export const dismissConversationErrorsAtom = atom(null, (get, set, conversationId: string) => {
-  const prev = get(baseConversationErrorsAtom);
-  const existing = prev.get(conversationId) ?? initialConversationErrorState;
-  const next: ConversationErrorState = { ...existing, isDismissed: true };
-  const nextMap = new Map(prev);
-  nextMap.set(conversationId, next);
-  set(baseConversationErrorsAtom, nextMap);
+export const dismissSaveStatusAtom = atom(null, (_get, set) => {
+  set(saveStatusAtom, (prev) => ({ ...prev, isDismissed: true }));
+});
+
+export const assistantActiveRunAtom = atom((get) => {
+  const state = get(assistantConversationStateAtom);
+  if (state.activeRunId) return state.runs[state.activeRunId] ?? null;
+
+  const ids = Object.keys(state.runs);
+  const last = ids[ids.length - 1];
+
+  return last ? state.runs[last] : null;
+});
+
+export const assistantErroredRunAtom = atom((get) => {
+  const state = get(assistantConversationStateAtom);
+  const ids = Object.keys(state.runs);
+  for (let i = ids.length - 1; i >= 0; i--) {
+    const run = state.runs[ids[i]];
+    if (run.status === "failed" && run.id !== state.dismissedRunErrorId) {
+      return run;
+    }
+  }
+
+  return null;
 });
 
 export const assistantMessagesAtom = atom((get) => get(assistantConversationStateAtom).messages);

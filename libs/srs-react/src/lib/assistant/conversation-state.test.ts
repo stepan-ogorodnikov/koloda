@@ -58,6 +58,11 @@ describe("coerceConversationState", () => {
     expect(coerced!.createdAt).toBeInstanceOf(Date);
     expect(coerced!.createdAt.getTime()).toBe(1700000000000);
   });
+
+  it("accepts legacy rows that pre-date new fields", () => {
+    const coerced = coerceConversationState({ ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
+    expect(coerced).not.toBeNull();
+  });
 });
 
 describe("normalizeRestoredConversation", () => {
@@ -87,7 +92,7 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs["r1"]).toMatchObject({
       status: "failed",
-      error: "interrupted",
+      error: { message: "interrupted" },
       elapsedSeconds: 5,
     });
     expect(next.activeRunId).toBeNull();
@@ -293,6 +298,7 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].status).toBe("success");
       expect(state.runs["r1"].elapsedSeconds).toBe(5);
+      expect(state.runs["r1"].error).toBeUndefined();
       expect(state.activeRunId).toBeNull();
 
       vi.useRealTimers();
@@ -324,6 +330,28 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.runs["r1"].elapsedSeconds).toBe(2);
       expect(state.activeRunId).toBeNull();
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("runFailed", () => {
+    it("sets status to failed, stores error, and computes elapsed time", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(0);
+
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
+
+      vi.setSystemTime(3000);
+      state = conversationReducer(state, {
+        type: "runFailed",
+        runId: "r1",
+        error: { message: "Network error" },
+      });
+
+      expect(state.runs["r1"].status).toBe("failed");
+      expect(state.runs["r1"].error).toEqual({ message: "Network error" });
+      expect(state.runs["r1"].elapsedSeconds).toBe(3);
 
       vi.useRealTimers();
     });
@@ -372,6 +400,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].startedAt).toEqual(new Date(10_000));
       expect(state.runs["r1"].elapsedSeconds).toBeNull();
       expect(state.runs["r1"].usage).toBeUndefined();
+      expect(state.runs["r1"].error).toBeUndefined();
       expect(state.activeRunId).toBe("r1");
 
       vi.useRealTimers();
@@ -500,6 +529,7 @@ describe("conversationReducer", () => {
         messages: [],
         runs: {},
         activeRunId: null,
+        dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
       });
@@ -518,4 +548,3 @@ describe("conversationReducer", () => {
     });
   });
 });
-

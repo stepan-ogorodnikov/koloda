@@ -16,7 +16,7 @@ export type GenerationRun = {
   cardStatuses: Record<number, CardStatus>;
   templateFields: TemplateFields | null;
   request?: unknown;
-  error?: string;
+  error?: { message: string };
   startedAt: Date;
   elapsedSeconds: number | null;
   usage?: StreamUsage;
@@ -29,6 +29,7 @@ export type ConversationState = {
   messages: UIMessage[];
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
+  dismissedRunErrorId: string | null;
   mode: AIChatMode;
   deckId: number | null;
 };
@@ -46,11 +47,13 @@ export type ConversationAction =
   | { type: "addCard"; runId: string; card: GeneratedCard }
   | { type: "completeRun"; runId: string }
   | { type: "failRun"; runId: string }
+  | { type: "runFailed"; runId: string; error: { message: string } }
   | { type: "cancelRun"; runId: string }
   | { type: "restartRun"; runId: string; request: unknown; templateFields: TemplateFields | null }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
+  | { type: "dismissRunError"; runId: string }
   | { type: "setCardStatus"; runId: string; index: number; status: CardStatus }
   | { type: "newConversation"; id: string; createdAt: Date };
 
@@ -61,6 +64,7 @@ export const initialConversationState: ConversationState = {
   messages: [],
   runs: {},
   activeRunId: null,
+  dismissedRunErrorId: null,
   mode: "chat",
   deckId: null,
 };
@@ -145,10 +149,12 @@ function coerceRun(value: unknown): GenerationRun | null {
     cardStatuses: v.cardStatuses as Record<number, CardStatus>,
     templateFields: (v.templateFields ?? null) as TemplateFields | null,
     request: v.request,
-    error: typeof v.error === "string" ? v.error : undefined,
     startedAt,
     elapsedSeconds: (v.elapsedSeconds as number | null) ?? null,
     usage: v.usage as StreamUsage | undefined,
+    error: v.error && typeof v.error === "object"
+      ? { message: String((v.error as Record<string, unknown>).message ?? "") }
+      : undefined,
   };
 }
 
@@ -159,7 +165,7 @@ export function coerceConversationState(value: unknown): ConversationState | nul
   const createdAt = toDate(v.createdAt);
   if (!createdAt) return null;
   const updatedAt = toDate(v.updatedAt);
-  if (v.updatedAt !== null && v.updatedAt !== undefined && !updatedAt) return null;
+  if (v.updatedAt !== null && !updatedAt) return null;
   if (!Array.isArray(v.messages)) return null;
   if (!v.runs || typeof v.runs !== "object") return null;
   if (v.activeRunId !== null && typeof v.activeRunId !== "string") return null;
@@ -180,6 +186,7 @@ export function coerceConversationState(value: unknown): ConversationState | nul
     messages: v.messages as UIMessage[],
     runs,
     activeRunId: (v.activeRunId as string | null) ?? null,
+    dismissedRunErrorId: (v.dismissedRunErrorId as string | null) ?? null,
     mode: v.mode,
     deckId: (v.deckId as number | null) ?? null,
   };
@@ -197,7 +204,7 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
       nextRun = {
         ...nextRun,
         status: "failed",
-        error: "interrupted",
+        error: { message: "interrupted" },
         elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
       };
       runChanged = true;
@@ -291,6 +298,9 @@ export function conversationReducer(state: ConversationState, action: Conversati
       return {
         ...next,
         activeRunId: next.activeRunId === action.runId ? null : next.activeRunId,
+        runs: next.runs[action.runId]
+          ? { ...next.runs, [action.runId]: { ...next.runs[action.runId], error: undefined } }
+          : next.runs,
       };
     }
 
@@ -300,6 +310,15 @@ export function conversationReducer(state: ConversationState, action: Conversati
         ...next,
         activeRunId: next.activeRunId === action.runId ? null : next.activeRunId,
       };
+    }
+
+    case "runFailed": {
+      return updateRun(state, action.runId, (run) => ({
+        ...run,
+        status: "failed",
+        error: action.error,
+        elapsedSeconds: Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
+      }));
     }
 
     case "cancelRun": {
@@ -328,6 +347,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
             startedAt: new Date(),
             elapsedSeconds: null,
             usage: undefined,
+            error: undefined,
           },
         },
       };
@@ -352,6 +372,9 @@ export function conversationReducer(state: ConversationState, action: Conversati
         cardStatuses: { ...run.cardStatuses, [action.index]: action.status },
       }));
 
+    case "dismissRunError":
+      return { ...state, dismissedRunErrorId: action.runId };
+
     case "newConversation":
       return {
         id: action.id,
@@ -360,6 +383,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
         messages: [],
         runs: {},
         activeRunId: null,
+        dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
       };
