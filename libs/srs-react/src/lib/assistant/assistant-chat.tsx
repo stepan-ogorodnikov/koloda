@@ -62,11 +62,13 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
-    generateError,
+    conversationGenerateError,
     contextLength,
     isRestoring,
     loadError,
-    saveError,
+    conversationSaveError,
+    isErrorDismissed,
+    handleDismissErrors,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
@@ -132,8 +134,11 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
           <>
             <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-            <AIChatError error={saveError?.message} />
-            <AIChatError error={generateError?.message} />
+            <AIChatError
+              error={conversationSaveError?.message ?? conversationGenerateError?.message}
+              isDismissed={isErrorDismissed}
+              onDismiss={handleDismissErrors}
+            />
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
               <div className="flex flex-row items-center min-w-0">

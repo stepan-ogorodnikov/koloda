@@ -5,6 +5,20 @@ import { getAssistantMetadata } from "./assistant-messages";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
+export type ConversationErrorState = {
+  generateError: Error | null;
+  saveError: Error | null;
+  isDismissed: boolean;
+};
+
+const initialConversationErrorState: ConversationErrorState = {
+  generateError: null,
+  saveError: null,
+  isDismissed: false,
+};
+
+const baseConversationErrorsAtom = atom<Map<string, ConversationErrorState>>(new Map());
+
 const baseStateAtom = atom<ConversationState>(initialConversationState);
 
 export const assistantConversationStateAtom = atom(
@@ -16,6 +30,32 @@ export const assistantConversationStateAtom = atom(
     set(baseStateAtom, next);
   },
 );
+
+export const conversationErrorsAtom = atom(
+  (get) => get(baseConversationErrorsAtom),
+  (get, set, payload: { conversationId: string; errors: Partial<Omit<ConversationErrorState, "isDismissed">> }) => {
+    const prev = get(baseConversationErrorsAtom);
+    const existing = prev.get(payload.conversationId) ?? initialConversationErrorState;
+    const hasNewError = payload.errors.generateError != null || payload.errors.saveError != null;
+    const next: ConversationErrorState = {
+      ...existing,
+      ...payload.errors,
+      isDismissed: hasNewError ? false : existing.isDismissed,
+    };
+    const nextMap = new Map(prev);
+    nextMap.set(payload.conversationId, next);
+    set(baseConversationErrorsAtom, nextMap);
+  },
+);
+
+export const dismissConversationErrorsAtom = atom(null, (get, set, conversationId: string) => {
+  const prev = get(baseConversationErrorsAtom);
+  const existing = prev.get(conversationId) ?? initialConversationErrorState;
+  const next: ConversationErrorState = { ...existing, isDismissed: true };
+  const nextMap = new Map(prev);
+  nextMap.set(conversationId, next);
+  set(baseConversationErrorsAtom, nextMap);
+});
 
 export const assistantMessagesAtom = atom((get) => get(assistantConversationStateAtom).messages);
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);

@@ -18,6 +18,8 @@ import {
   assistantCancelFunctionsAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
+  conversationErrorsAtom,
+  dismissConversationErrorsAtom,
   newConversationAtom,
   pendingSaveAtom,
   restoreConversationAtom,
@@ -54,10 +56,14 @@ export type UseAssistantChatReturn = {
   isModelsLoading: boolean;
   isModelsError: boolean;
   generateError: Error | null;
+  conversationGenerateError: Error | null;
   contextLength: number;
   isRestoring: boolean;
   loadError: Error | null;
   saveError: Error | null;
+  conversationSaveError: Error | null;
+  isErrorDismissed: boolean;
+  handleDismissErrors: () => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
@@ -273,6 +279,29 @@ export function useAssistantChat(
       lastSavedIdRef.current = null;
     },
   });
+
+  const saveError = setConversation.error ?? null;
+
+  const setConversationErrors = useSetAtom(conversationErrorsAtom);
+  const dismissConversationErrors = useSetAtom(dismissConversationErrorsAtom);
+  const conversationErrorsMap = useAtomValue(conversationErrorsAtom);
+  const conversationErrorState = conversationId ? conversationErrorsMap.get(conversationId) : undefined;
+  const isErrorDismissed = conversationErrorState?.isDismissed ?? false;
+  const conversationGenerateError = conversationErrorState?.generateError ?? null;
+  const conversationSaveError = conversationErrorState?.saveError ?? null;
+
+  const prevConversationIdRef = useRef(conversationId);
+  useEffect(() => {
+    if (!conversationId) return;
+    const switched = prevConversationIdRef.current !== conversationId;
+    prevConversationIdRef.current = conversationId;
+    if (switched) return;
+    setConversationErrors({ conversationId, errors: { generateError, saveError } });
+  }, [conversationId, generateError, saveError, setConversationErrors]);
+
+  const handleDismissErrors = useCallback(() => {
+    if (conversationId) dismissConversationErrors(conversationId);
+  }, [conversationId, dismissConversationErrors]);
 
   const conversationQuery = useQuery({
     ...getConversationQuery(conversationId!),
@@ -511,10 +540,14 @@ export function useAssistantChat(
     isModelsLoading,
     isModelsError,
     generateError,
+    conversationGenerateError,
     contextLength,
     isRestoring,
     loadError: conversationError ?? null,
-    saveError: setConversation.error ?? null,
+    saveError,
+    conversationSaveError,
+    isErrorDismissed,
+    handleDismissErrors,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
