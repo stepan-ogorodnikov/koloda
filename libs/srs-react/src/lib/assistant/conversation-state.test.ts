@@ -336,7 +336,7 @@ describe("conversationReducer", () => {
   });
 
   describe("runFailed", () => {
-    it("sets status to failed, stores error, and computes elapsed time", () => {
+    it("sets status to failed, stores error, computes elapsed time, and clears activeRunId", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
@@ -352,8 +352,25 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.runs["r1"].error).toEqual({ message: "Network error" });
       expect(state.runs["r1"].elapsedSeconds).toBe(3);
+      expect(state.activeRunId).toBeNull();
 
       vi.useRealTimers();
+    });
+
+    it("does not clear activeRunId when a different run fails", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "chat", request: {} },
+        { type: "startRun", runId: "r2", mode: "chat", request: {} },
+      ]);
+      expect(state.activeRunId).toBe("r2");
+
+      state = conversationReducer(state, {
+        type: "runFailed",
+        runId: "r1",
+        error: { message: "Other error" },
+      });
+      expect(state.runs["r1"].status).toBe("failed");
+      expect(state.activeRunId).toBe("r2");
     });
   });
 

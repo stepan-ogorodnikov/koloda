@@ -313,12 +313,15 @@ export function conversationReducer(state: ConversationState, action: Conversati
     }
 
     case "runFailed": {
-      return updateRun(state, action.runId, (run) => ({
-        ...run,
-        status: "failed",
-        error: action.error,
-        elapsedSeconds: Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
-      }));
+      return {
+        ...updateRun(state, action.runId, (run) => ({
+          ...run,
+          status: "failed",
+          error: action.error,
+          elapsedSeconds: Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
+        })),
+        activeRunId: state.activeRunId === action.runId ? null : state.activeRunId,
+      };
     }
 
     case "cancelRun": {
