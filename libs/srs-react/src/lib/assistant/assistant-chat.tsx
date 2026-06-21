@@ -42,9 +42,14 @@ export type AssistantChatProps = {
   onConversationIdChange: (id: string) => void;
   deckPickerRef?: RefObject<HTMLButtonElement | null>;
   onClearDeck?: () => void;
+  onPrevConversation?: () => void;
+  onNextConversation?: () => void;
 };
 
-export function AssistantChat({ conversationId, onConversationIdChange, deckPickerRef, onClearDeck }: AssistantChatProps) {
+export function AssistantChat(
+  { conversationId, onConversationIdChange, deckPickerRef, onClearDeck, onPrevConversation, onNextConversation }:
+    AssistantChatProps,
+) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
@@ -128,6 +133,8 @@ export function AssistantChat({ conversationId, onConversationIdChange, deckPick
     enabled: !isLocked && !!deckId,
     ignoreInputs: false,
   });
+  useAppHotkey(ai.previousConversation, () => onPrevConversation?.(), "", { ignoreInputs: false });
+  useAppHotkey(ai.nextConversation, () => onNextConversation?.(), "", { ignoreInputs: false });
   useAppHotkey(ai.scrollUp, scroll.handleScrollUp, "", { ignoreInputs: false });
   useAppHotkey(ai.scrollDown, scroll.handleScrollDown, "", { ignoreInputs: false });
   useAppHotkey(ai.scrollToTop, scroll.handleScrollToTop, "", { ignoreInputs: false });

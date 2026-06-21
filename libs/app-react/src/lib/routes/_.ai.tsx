@@ -1,7 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { clearActiveConversationId, getActiveConversationId, setActiveConversationId } from "@koloda/app";
-import { queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import {
   AssistantChat,
   AssistantConversationsList,
@@ -15,9 +15,10 @@ import {
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
@@ -45,6 +46,9 @@ function AIRoute() {
   const isLocked = useAtomValue(assistantIsLockedAtom);
   const setDeck = useSetAtom(setAssistantDeckAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const { getConversationsQuery } = useAtomValue(queriesAtom);
+  const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
+  const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
   const creatingFromDeckRef = useRef(false);
   const deckPickerRef = useRef<HTMLButtonElement>(null);
 
@@ -84,6 +88,18 @@ function AIRoute() {
   const handleClearDeck = useCallback(() => {
     setDeck(null);
   }, [setDeck]);
+
+  const handlePrevConversation = useCallback(() => {
+    if (!conversationId || conversations.length === 0) return;
+    const idx = conversations.findIndex((c) => c.id === conversationId);
+    if (idx > 0) handleConversationIdChange(conversations[idx - 1].id);
+  }, [conversations, conversationId, handleConversationIdChange]);
+
+  const handleNextConversation = useCallback(() => {
+    if (!conversationId || conversations.length === 0) return;
+    const idx = conversations.findIndex((c) => c.id === conversationId);
+    if (idx < conversations.length - 1) handleConversationIdChange(conversations[idx + 1].id);
+  }, [conversations, conversationId, handleConversationIdChange]);
 
   return (
     <>
@@ -128,6 +144,8 @@ function AIRoute() {
             onConversationIdChange={handleConversationIdChange}
             deckPickerRef={deckPickerRef}
             onClearDeck={handleClearDeck}
+            onPrevConversation={handlePrevConversation}
+            onNextConversation={handleNextConversation}
           />
         </Layout.Container>
       </Layout.Content>

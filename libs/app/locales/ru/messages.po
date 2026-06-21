@@ -157,6 +157,14 @@ msgstr "Выбор колоды"
 msgid "settings.hotkeys.ai.clear-deck"
 msgstr "Очистить колоду"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
+msgid "settings.hotkeys.ai.previous-conversation"
+msgstr "Предыдущий диалог"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+msgid "settings.hotkeys.ai.next-conversation"
+msgstr "Следующий диалог"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
