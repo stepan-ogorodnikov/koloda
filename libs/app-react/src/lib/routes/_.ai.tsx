@@ -46,6 +46,7 @@ function AIRoute() {
   const setDeck = useSetAtom(setAssistantDeckAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const creatingFromDeckRef = useRef(false);
+  const deckPickerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (conversationId) {
@@ -106,6 +107,7 @@ function AIRoute() {
                 onChange={setDeck}
                 isNullable
                 isDisabled={isLocked}
+                triggerRef={deckPickerRef}
               />
               <Tooltip content={_(msg`ai.deck-picker.clear`)} isDisabled={!deckId || isLocked}>
                 <Button
@@ -124,6 +126,7 @@ function AIRoute() {
           <AssistantChat
             conversationId={conversationId}
             onConversationIdChange={handleConversationIdChange}
+            deckPickerRef={deckPickerRef}
           />
         </Layout.Container>
       </Layout.Content>

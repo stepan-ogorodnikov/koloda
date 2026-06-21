@@ -43,6 +43,7 @@ describe("settings-hotkeys", () => {
         newConversation: [],
         openProfilePicker: [],
         openModelPicker: [],
+        openDeckPicker: [],
         toggleSettings: [],
         toggleCardsMode: [],
         scrollUp: [],

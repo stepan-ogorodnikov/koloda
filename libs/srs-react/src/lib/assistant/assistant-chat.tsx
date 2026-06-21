@@ -21,12 +21,14 @@ import { QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
+import type { RefObject } from "react";
 import { useRef, useState } from "react";
 import {
   assistantContextUsageAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
   assistantErroredRunAtom,
+  assistantIsLockedAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
   saveStatusAtom,
@@ -38,14 +40,16 @@ import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 export type AssistantChatProps = {
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
+  deckPickerRef?: RefObject<HTMLButtonElement | null>;
 };
 
-export function AssistantChat({ conversationId, onConversationIdChange }: AssistantChatProps) {
+export function AssistantChat({ conversationId, onConversationIdChange, deckPickerRef }: AssistantChatProps) {
   const { _ } = useLingui();
   const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
+  const isLocked = useAtomValue(assistantIsLockedAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
   const saveStatus = useAtomValue(saveStatusAtom);
@@ -113,6 +117,10 @@ export function AssistantChat({ conversationId, onConversationIdChange }: Assist
   });
   useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
     enabled: !!profileId,
+    ignoreInputs: false,
+  });
+  useAppHotkey(ai.openDeckPicker, () => deckPickerRef?.current?.click(), "", {
+    enabled: !isLocked,
     ignoreInputs: false,
   });
   useAppHotkey(ai.scrollUp, scroll.handleScrollUp, "", { ignoreInputs: false });

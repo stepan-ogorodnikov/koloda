@@ -150,6 +150,10 @@ msgid "settings.hotkeys.ai.new-conversation"
 msgstr "New conversation"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:48
+msgid "settings.hotkeys.ai.open-deck-picker"
+msgstr "Open deck picker"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
