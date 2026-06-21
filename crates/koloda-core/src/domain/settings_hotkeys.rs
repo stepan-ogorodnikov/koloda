@@ -24,6 +24,7 @@ const AI_KEYS: &[&str] = &[
     "openProfilePicker",
     "openModelPicker",
     "openDeckPicker",
+    "clearDeck",
     "toggleSettings",
     "toggleCardsMode",
     "scrollUp",

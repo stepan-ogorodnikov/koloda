@@ -127,6 +127,7 @@ function AIRoute() {
             conversationId={conversationId}
             onConversationIdChange={handleConversationIdChange}
             deckPickerRef={deckPickerRef}
+            onClearDeck={handleClearDeck}
           />
         </Layout.Container>
       </Layout.Content>

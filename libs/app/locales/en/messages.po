@@ -153,6 +153,10 @@ msgstr "New conversation"
 msgid "settings.hotkeys.ai.open-deck-picker"
 msgstr "Open deck picker"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+msgid "settings.hotkeys.ai.clear-deck"
+msgstr "Clear deck selection"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"

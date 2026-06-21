@@ -44,6 +44,7 @@ describe("settings-hotkeys", () => {
         openProfilePicker: [],
         openModelPicker: [],
         openDeckPicker: [],
+        clearDeck: [],
         toggleSettings: [],
         toggleCardsMode: [],
         scrollUp: [],
