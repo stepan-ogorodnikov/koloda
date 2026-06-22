@@ -192,23 +192,20 @@ export function coerceConversationState(value: unknown): ConversationState | nul
   };
 }
 
-export function normalizeRestoredConversation(state: ConversationState): ConversationState {
+export function normalizeRestoredConversation(state: ConversationState): ConversationState | null {
   let normalizedAny = false;
   const runs: Record<string, GenerationRun> = {};
+  const failedRunIds = new Set<string>();
 
   for (const [runId, run] of Object.entries(state.runs)) {
+    if (run.status === "streaming" || run.status === "failed") {
+      failedRunIds.add(runId);
+      normalizedAny = true;
+      continue;
+    }
+
     let nextRun: GenerationRun = run;
     let runChanged = false;
-
-    if (run.status === "streaming") {
-      nextRun = {
-        ...nextRun,
-        status: "failed",
-        error: { message: "interrupted" },
-        elapsedSeconds: run.elapsedSeconds ?? Math.floor((Date.now() - run.startedAt.getTime()) / 1000),
-      };
-      runChanged = true;
-    }
 
     let statusesChanged = false;
     const resetStatuses: Record<number, CardStatus> = {};
@@ -233,9 +230,19 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
     }
   }
 
-  if (!normalizedAny) return state;
+  if (!normalizedAny && state.activeRunId === null && state.dismissedRunErrorId === null && failedRunIds.size === 0) {
+    return null;
+  }
 
-  return { ...state, activeRunId: null, runs };
+  const messages = state.messages.filter((m) => {
+    const isUser = m.id.startsWith("user-");
+    const isAssistant = m.id.startsWith("assistant-");
+    if (!isUser && !isAssistant) return true;
+    const idSuffix = m.id.slice(isUser ? 5 : 10);
+    return !failedRunIds.has(idSuffix);
+  });
+
+  return { ...state, activeRunId: null, dismissedRunErrorId: null, runs, messages };
 }
 
 export function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {

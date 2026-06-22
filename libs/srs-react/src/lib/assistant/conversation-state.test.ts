@@ -66,14 +66,15 @@ describe("coerceConversationState", () => {
 });
 
 describe("normalizeRestoredConversation", () => {
-  it("forces streaming runs to failed with an interrupted error", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(10_000);
-
+  it("removes streaming runs and their messages", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: "r1",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+      ],
       runs: {
         r1: {
           id: "r1",
@@ -88,23 +89,56 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state);
+    const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs["r1"]).toMatchObject({
-      status: "failed",
-      error: { message: "interrupted" },
-      elapsedSeconds: 5,
-    });
+    expect(next.runs).toEqual({});
+    expect(next.messages).toEqual([]);
     expect(next.activeRunId).toBeNull();
-
-    vi.useRealTimers();
+    expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("leaves non-streaming runs unchanged", () => {
+  it("removes failed runs and their messages", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
+      dismissedRunErrorId: "r1",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          error: { message: "Network error" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 2,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs).toEqual({});
+    expect(next.messages).toEqual([]);
+    expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("leaves successful runs unchanged and preserves their messages", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      dismissedRunErrorId: null,
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Hi there" }] },
+      ],
       runs: {
         r1: {
           id: "r1",
@@ -121,7 +155,7 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state);
 
-    expect(next).toBe(state);
+    expect(next).toBeNull();
   });
 
   it("resets pending card statuses to idle while preserving success and error", () => {
@@ -148,7 +182,7 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state);
+    const next = normalizeRestoredConversation(state)!;
 
     expect(next.runs["r1"].cardStatuses).toEqual({
       0: "idle",
@@ -159,30 +193,79 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"].status).toBe("success");
   });
 
-  it("resets pending statuses alongside a streaming run", () => {
+  it("removes only failed runs and keeps successful ones alongside their messages", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
-      activeRunId: "r1",
+      activeRunId: null,
+      dismissedRunErrorId: null,
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Response 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", parts: [{ type: "text", text: "" }] },
+      ],
       runs: {
         r1: {
           id: "r1",
-          mode: "cards",
-          status: "streaming",
-          cards: [{ content: {} }, { content: {} }],
-          cardStatuses: { 0: "pending", 1: "idle" },
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
           templateFields: null,
-          startedAt: new Date(0),
-          elapsedSeconds: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 3,
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "failed",
+          error: { message: "Network error" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(2000),
+          elapsedSeconds: 1,
         },
       },
     };
 
-    const next = normalizeRestoredConversation(state);
+    const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs["r1"].status).toBe("failed");
-    expect(next.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "idle" });
+    expect(next.runs).toEqual({ r1: state.runs["r1"] });
+    expect(next.messages).toEqual([
+      { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+      { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Response 1" }] },
+    ]);
     expect(next.activeRunId).toBeNull();
+    expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("clears dismissedRunErrorId when all runs are removed", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      dismissedRunErrorId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          error: { message: "Timeout" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs).toEqual({});
+    expect(next.dismissedRunErrorId).toBeNull();
   });
 });
 

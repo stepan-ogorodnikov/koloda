@@ -31,6 +31,7 @@ export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(opt
   initialData: TData;
   accumulate: (prev: TData, chunk: TChunk) => TData;
   executor: StreamExecutor<TChunk, TRequest, TResult>;
+  onError?: (error: Error) => void;
 }): UseStreamingRequestReturn<TData, TChunk, TRequest, TResult> {
   const [data, setData] = useState<TData>(options.initialData);
   const [result, setResult] = useState<TResult | null>(null);
@@ -73,7 +74,9 @@ export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(opt
         return { streamResult: "success" as const, result: executorResult ?? null };
       } catch (e) {
         if (controller.signal.aborted || isAbortError(e)) return { streamResult: "aborted" as const, result: null };
-        setError(e instanceof Error ? e : new Error(String(e)));
+        const error = e instanceof Error ? e : new Error(String(e));
+        optionsRef.current.onError?.(error);
+        setError(error);
         return { streamResult: "error" as const, result: null };
       } finally {
         if (controllerRef.current === controller) {

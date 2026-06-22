@@ -14,7 +14,10 @@ export type UseChatStreamReturn = {
   cancel: () => void;
 };
 
-export function useChatStream(streamGenerator: ChatStreamGenerator): UseChatStreamReturn {
+export function useChatStream(
+  streamGenerator: ChatStreamGenerator,
+  onError?: (error: Error) => void,
+): UseChatStreamReturn {
   const { data: text, result: usage, isRunning: isStreaming, error, start, cancel } = useStreamingRequest<
     string,
     string,
@@ -24,6 +27,7 @@ export function useChatStream(streamGenerator: ChatStreamGenerator): UseChatStre
     initialData: "",
     accumulate: (prev, chunk) => prev + chunk,
     executor: streamGenerator,
+    onError,
   });
 
   const stream = useCallback(

@@ -24,7 +24,10 @@ export type UseAssistantCardGenerationReturn = {
   cancel: () => void;
 };
 
-export function useAssistantCardGeneration(streamGenerator: CardGenerationExecutor): UseAssistantCardGenerationReturn {
+export function useAssistantCardGeneration(
+  streamGenerator: CardGenerationExecutor,
+  onError?: (error: Error) => void,
+): UseAssistantCardGenerationReturn {
   const { data: cards, isRunning: isGenerating, error, start, cancel, reset: clearCards } = useStreamingRequest<
     GeneratedCard[],
     GeneratedCard,
@@ -34,6 +37,7 @@ export function useAssistantCardGeneration(streamGenerator: CardGenerationExecut
     initialData: [],
     accumulate: (prev, card) => [...prev, card],
     executor: streamGenerator,
+    onError,
   });
 
   const generate = useCallback(

@@ -179,23 +179,30 @@ export function useAssistantChat(
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
 
-  const { generate, cancel: cancelGenerate, error: cardGenerationError } = useAssistantCardGeneration(streamGenerator);
-
-  const { stream: streamChat, cancel: cancelChat, error: chatStreamError } = useChatStream(chatStreamGenerator);
-
-  const generateError = cardGenerationError || chatStreamError;
-  const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
-
-  useEffect(() => {
-    setCancelFunctions({ cancelGenerate, cancelChat });
-  }, [cancelGenerate, cancelChat, setCancelFunctions]);
-
   const dispatchAction = useCallback(
     (action: ConversationAction) => {
       dispatchAndBump(setConversationAction, setPendingSave, action);
     },
     [setConversationAction, setPendingSave],
   );
+
+  const handleStreamError = useCallback((error: Error) => {
+    const runId = pendingRunFailureRef.current;
+    if (runId) {
+      pendingRunFailureRef.current = null;
+      dispatchAction({ type: "runFailed", runId, error: { message: error.message } });
+    }
+  }, [dispatchAction]);
+
+  const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleStreamError);
+
+  const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleStreamError);
+
+  const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
+
+  useEffect(() => {
+    setCancelFunctions({ cancelGenerate, cancelChat });
+  }, [cancelGenerate, cancelChat, setCancelFunctions]);
 
   const { executeChatRun, executeGenerateRun, retryRun } = useConversationRuns(
     streamChat,
@@ -294,14 +301,6 @@ export function useAssistantChat(
 
   const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
   const pendingRunFailureRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (generateError && pendingRunFailureRef.current) {
-      const runId = pendingRunFailureRef.current;
-      pendingRunFailureRef.current = null;
-      dispatchAction({ type: "runFailed", runId, error: { message: generateError.message } });
-    }
-  }, [generateError, dispatchAction]);
 
   const handleDismissGenerate = useCallback(() => {
     const state = readState();
@@ -424,8 +423,15 @@ export function useAssistantChat(
 
     const loaded = conversationData?.state;
     const coerced = coerceConversationState(loaded);
+    let normalized = false;
     if (coerced) {
-      restoreConversation(normalizeRestoredConversation(coerced));
+      const clean = normalizeRestoredConversation(coerced);
+      if (clean) {
+        restoreConversation(clean);
+        normalized = true;
+      } else {
+        restoreConversation(coerced);
+      }
     } else {
       const fresh: ConversationState = {
         id: conversationId,
@@ -439,9 +445,13 @@ export function useAssistantChat(
         deckId: null,
       };
       restoreConversation(fresh);
+      normalized = true;
     }
     restoredIdRef.current = conversationId;
-    setPendingSave((n) => n + 1);
+    lastSavedIdRef.current = conversationId;
+    if (normalized) {
+      setPendingSave((n) => n + 1);
+    }
   }, [
     store,
     conversationId,
