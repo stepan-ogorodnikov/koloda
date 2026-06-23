@@ -25,7 +25,7 @@ import {
   saveStatusAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import { buildConversationMessages } from "./assistant-messages";
+import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
 import { coerceConversationState, normalizeRestoredConversation } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
@@ -216,13 +216,19 @@ export function useAssistantChat(
       const cfg = configRef.current;
       const currentState = readState();
       const run = currentState.runs[runId];
-      if (!run) return;
+      let mode: AIChatMode | undefined = run?.mode;
+      if (!mode) {
+        const assistantMessage = currentState.messages.find((m) => m.id === `assistant-${runId}`);
+        const metadata = assistantMessage ? getAssistantMetadata(assistantMessage) : null;
+        if (metadata?.kind === "error") mode = metadata.mode;
+        return;
+      }
 
       pendingRunFailureRef.current = null;
       const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
       const promptText = userMessage ? getTextMessageContent(userMessage) : "";
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (run.mode === "cards" && !cfg.template) return;
+      if (mode === "cards" && !cfg.template) return;
 
       const conversationMessages = buildConversationMessages(
         currentState.messages,
@@ -236,18 +242,18 @@ export function useAssistantChat(
         prompt: promptText,
         temperature: cfg.temperature,
         reasoningEffort: cfg.reasoningEffort,
-        ...(run.mode === "cards" && cfg.deckId != null ? { deckId: cfg.deckId } : {}),
-        ...(run.mode === "cards" && cfg.templateId != null ? { templateId: cfg.templateId } : {}),
+        ...(mode === "cards" && cfg.deckId != null ? { deckId: cfg.deckId } : {}),
+        ...(mode === "cards" && cfg.templateId != null ? { templateId: cfg.templateId } : {}),
       });
 
-      if (run.mode === "chat") {
+      if (mode === "chat") {
         const chatRequest: ChatStreamRequest = {
           input,
           messages: [...conversationMessages, { role: "user", content: promptText }],
           template: cfg.template ?? undefined,
           systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
         };
-        await retryRun(runId, chatRequest, null);
+        await retryRun(runId, chatRequest, null, mode);
       } else {
         const request: CardGenerationStreamRequest = {
           input,
@@ -255,7 +261,7 @@ export function useAssistantChat(
           systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
         };
         const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
-        await retryRun(runId, request, templateFields);
+        await retryRun(runId, request, templateFields, mode);
       }
       pendingRunFailureRef.current = runId;
     },

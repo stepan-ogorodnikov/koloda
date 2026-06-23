@@ -49,7 +49,7 @@ export type ConversationAction =
   | { type: "failRun"; runId: string }
   | { type: "runFailed"; runId: string; error: { message: string } }
   | { type: "cancelRun"; runId: string }
-  | { type: "restartRun"; runId: string; request: unknown; templateFields: TemplateFields | null }
+  | { type: "restartRun"; runId: string; request: unknown; templateFields: TemplateFields | null; mode: AIChatMode }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
@@ -195,10 +195,17 @@ export function coerceConversationState(value: unknown): ConversationState | nul
 export function normalizeRestoredConversation(state: ConversationState): ConversationState | null {
   let normalizedAny = false;
   const runs: Record<string, GenerationRun> = {};
+  const droppedRunIds = new Set<string>();
   const failedRunIds = new Set<string>();
 
   for (const [runId, run] of Object.entries(state.runs)) {
-    if (run.status === "streaming" || run.status === "failed") {
+    if (run.status === "streaming") {
+      droppedRunIds.add(runId);
+      normalizedAny = true;
+      continue;
+    }
+
+    if (run.status === "failed") {
       failedRunIds.add(runId);
       normalizedAny = true;
       continue;
@@ -230,19 +237,51 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
     }
   }
 
-  if (!normalizedAny && state.activeRunId === null && state.dismissedRunErrorId === null && failedRunIds.size === 0) {
+  if (
+    !normalizedAny
+    && state.activeRunId === null
+    && state.dismissedRunErrorId === null
+    && failedRunIds.size === 0
+  ) {
     return null;
   }
 
-  const messages = state.messages.filter((m) => {
-    const isUser = m.id.startsWith("user-");
-    const isAssistant = m.id.startsWith("assistant-");
-    if (!isUser && !isAssistant) return true;
-    const idSuffix = m.id.slice(isUser ? 5 : 10);
-    return !failedRunIds.has(idSuffix);
-  });
+  const messages = state.messages
+    .filter((m) => {
+      if (m.role === "user") {
+        const runId = m.id.startsWith("user-") ? m.id.slice(5) : null;
+        return !runId || !droppedRunIds.has(runId);
+      }
+      if (m.role === "assistant") {
+        const runId = m.id.startsWith("assistant-") ? m.id.slice(10) : null;
+        return !runId || !droppedRunIds.has(runId);
+      }
+      return true;
+    })
+    .map((m) => {
+      if (m.role !== "assistant") return m;
+      if (!m.id.startsWith("assistant-")) return m;
+      const runId = m.id.slice(10);
+      if (!failedRunIds.has(runId)) return m;
+      const run = state.runs[runId];
+      if (!run) return m;
+      const metadata = getAssistantMetadata(m);
+      if (!metadata) return m;
 
-  return { ...state, activeRunId: null, dismissedRunErrorId: null, runs, messages };
+      return {
+        ...m,
+        metadata: { kind: "error" as const, runId: metadata.runId, mode: run.mode },
+        parts: [{ type: "text" as const, text: "" }],
+      };
+    });
+
+  return {
+    ...state,
+    activeRunId: null,
+    dismissedRunErrorId: null,
+    runs,
+    messages,
+  };
 }
 
 export function conversationReducer(state: ConversationState, action: ConversationAction): ConversationState {
@@ -341,25 +380,42 @@ export function conversationReducer(state: ConversationState, action: Conversati
 
     case "restartRun": {
       const run = state.runs[action.runId];
-      if (!run) return state;
+      const nextRun: GenerationRun = run
+        ? {
+          ...run,
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          request: action.request,
+          templateFields: action.templateFields,
+          startedAt: new Date(),
+          elapsedSeconds: null,
+          usage: undefined,
+          error: undefined,
+        }
+        : {
+          ...makeRun(action.runId, action.mode, action.templateFields, action.request),
+        };
+      const messages = run
+        ? state.messages
+        : state.messages.map((m) => {
+          if (m.id !== `assistant-${action.runId}`) return m;
+          const metadata = getAssistantMetadata(m);
+          if (metadata?.kind !== "error") return m;
+          return {
+            ...m,
+            metadata: {
+              kind: action.mode === "cards" ? "generated-cards" as const : "chat-text" as const,
+              runId: action.runId,
+            },
+          };
+        });
+
       return {
         ...state,
         activeRunId: action.runId,
-        runs: {
-          ...state.runs,
-          [action.runId]: {
-            ...run,
-            status: "streaming",
-            cards: [],
-            cardStatuses: {},
-            request: action.request,
-            templateFields: action.templateFields,
-            startedAt: new Date(),
-            elapsedSeconds: null,
-            usage: undefined,
-            error: undefined,
-          },
-        },
+        runs: { ...state.runs, [action.runId]: nextRun },
+        messages,
       };
     }
 

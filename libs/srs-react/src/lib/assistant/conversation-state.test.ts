@@ -97,7 +97,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("removes failed runs and their messages", () => {
+  it("replaces failed runs with an assistant error marker and keeps the user message", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
@@ -105,7 +105,12 @@ describe("normalizeRestoredConversation", () => {
       dismissedRunErrorId: "r1",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: {
         r1: {
@@ -125,8 +130,59 @@ describe("normalizeRestoredConversation", () => {
     const next = normalizeRestoredConversation(state)!;
 
     expect(next.runs).toEqual({});
-    expect(next.messages).toEqual([]);
+    expect(next.messages).toEqual([
+      { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "error", runId: "r1", mode: "chat" },
+      },
+    ]);
     expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("rewrites assistant generated-cards messages from a failed run into an error marker", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "generated-cards", runId: "r1" },
+        },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "cards",
+          status: "failed",
+          error: { message: "Provider error" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs).toEqual({});
+    expect(next.messages).toEqual([
+      { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "error", runId: "r1", mode: "cards" },
+      },
+    ]);
   });
 
   it("leaves successful runs unchanged and preserves their messages", () => {
@@ -193,7 +249,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"].status).toBe("success");
   });
 
-  it("removes only failed runs and keeps successful ones alongside their messages", () => {
+  it("removes only the failed run, keeps the successful run, and rewrites the failed assistant message into an error marker", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
@@ -201,9 +257,19 @@ describe("normalizeRestoredConversation", () => {
       dismissedRunErrorId: null,
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Response 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Response 1" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", parts: [{ type: "text", text: "" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId: "r2" },
+        },
       ],
       runs: {
         r1: {
@@ -235,7 +301,19 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs).toEqual({ r1: state.runs["r1"] });
     expect(next.messages).toEqual([
       { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-      { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Response 1" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "Response 1" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      },
+      { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+      {
+        id: "assistant-r2",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "error", runId: "r2", mode: "chat" },
+      },
     ]);
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
@@ -490,6 +568,7 @@ describe("conversationReducer", () => {
         runId: "r1",
         request: { updated: true },
         templateFields: null,
+        mode: "cards",
       });
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -506,14 +585,72 @@ describe("conversationReducer", () => {
       vi.useRealTimers();
     });
 
-    it("is a no-op when run does not exist", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "restartRun",
-        runId: "missing",
-        request: {},
-        templateFields: null,
+    it("creates a fresh run and rewrites the assistant error marker back to its original kind when the run is missing", () => {
+      const state = conversationReducer(
+        {
+          ...initialConversationState,
+          messages: [
+            { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "error", runId: "r1", mode: "chat" },
+            },
+          ],
+        },
+        {
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "chat",
+        },
+      );
+
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].mode).toBe("chat");
+      expect(state.activeRunId).toBe("r1");
+      expect(state.messages[1]).toEqual({
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "chat-text", runId: "r1" },
       });
-      expect(state.runs).toEqual({});
+    });
+
+    it("creates a fresh run and rewrites the assistant error marker back to generated-cards when the run is missing in cards mode", () => {
+      const state = conversationReducer(
+        {
+          ...initialConversationState,
+          messages: [
+            { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "error", runId: "r1", mode: "cards" },
+            },
+          ],
+        },
+        {
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "cards",
+        },
+      );
+
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].mode).toBe("cards");
+      expect(state.activeRunId).toBe("r1");
+      expect(state.messages[1]).toEqual({
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "generated-cards", runId: "r1" },
+      });
     });
 
     it("updates request and templateFields on retry", () => {
@@ -534,6 +671,7 @@ describe("conversationReducer", () => {
         runId: "r1",
         request: { updated: true },
         templateFields: nextFields,
+        mode: "cards",
       });
 
       expect(state.runs["r1"].request).toEqual({ updated: true });

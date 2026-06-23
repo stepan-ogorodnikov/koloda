@@ -1,19 +1,22 @@
 import { type GeneratedCard, getTextMessageContent, type Message } from "@koloda/ai";
+import type { AIChatMode } from "@koloda/ai-react";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
 export type AssistantMessageMetadata =
   | { kind: "generated-cards"; runId: string }
-  | { kind: "chat-text"; runId: string };
+  | { kind: "chat-text"; runId: string }
+  | { kind: "error"; runId: string; mode: AIChatMode };
 
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
 
-  return (
-    (obj.kind === "generated-cards" || obj.kind === "chat-text")
-    && typeof obj.runId === "string"
-  );
+  if (typeof obj.runId !== "string") return false;
+  if (obj.kind === "generated-cards" || obj.kind === "chat-text") return true;
+  if (obj.kind === "error") return obj.mode === "chat" || obj.mode === "cards";
+
+  return false;
 }
 
 export function getAssistantMetadata(message: UIMessage) {
@@ -32,6 +35,13 @@ export function getChatTextMetadata(
 ): Extract<AssistantMessageMetadata, { kind: "chat-text" }> | null {
   const metadata = getAssistantMetadata(message);
   return metadata?.kind === "chat-text" ? metadata : null;
+}
+
+export function getErrorMetadata(
+  message: UIMessage,
+): Extract<AssistantMessageMetadata, { kind: "error" }> | null {
+  const metadata = getAssistantMetadata(message);
+  return metadata?.kind === "error" ? metadata : null;
 }
 
 export function createTextMessage(
@@ -82,6 +92,8 @@ export function buildConversationMessages(
       if (textContent) conversation.push({ role: "assistant", content: textContent });
       continue;
     }
+
+    if (metadata.kind === "error") continue;
 
     const run = runs[runId];
     if (!run || run.status !== "success" || run.cards.length === 0) continue;

@@ -12,7 +12,7 @@ import {
   assistantMessagesAtom,
   assistantRunsAtom,
 } from "./assistant-conversation-atoms";
-import { getChatTextMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
+import { getChatTextMetadata, getErrorMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
 
 export type UseAssistantMessageRendererOptions = {
   templateId: Template["id"] | undefined;
@@ -62,6 +62,19 @@ export function useAssistantMessageRenderer(
             );
           }
         }
+      }
+
+      const errorMetadata = getErrorMetadata(message);
+      if (errorMetadata) {
+        return (
+          <AIChatMessageLayout role="assistant">
+            <AIChatMessageStatus
+              state="failed"
+              canRetry={isTail}
+              onRetry={() => handleRetry(errorMetadata.runId)}
+            />
+          </AIChatMessageLayout>
+        );
       }
 
       const chatMetadata = getChatTextMetadata(message);

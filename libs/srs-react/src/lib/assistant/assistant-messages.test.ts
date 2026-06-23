@@ -7,6 +7,7 @@ import { createGeneratedCard, createTemplate } from "../../test/test-helpers";
 import {
   buildConversationMessages,
   createTextMessage,
+  getErrorMetadata,
   getGeneratedCardsMetadata,
   getTextMessageContent,
   serializeGeneratedCards,
@@ -24,6 +25,17 @@ describe("aiChatUtility", () => {
       runId: "run-1",
     });
     expect(getGeneratedCardsMetadata(createTextMessage("assistant-2", "assistant", "ready"))).toBeNull();
+  });
+
+  it("reads error metadata from error assistant messages", () => {
+    const message = createTextMessage("assistant-1", "assistant", "", {
+      kind: "error",
+      runId: "run-1",
+      mode: "chat",
+    });
+
+    expect(getErrorMetadata(message)).toEqual({ kind: "error", runId: "run-1", mode: "chat" });
+    expect(getErrorMetadata(createTextMessage("assistant-2", "assistant", "ready"))).toBeNull();
   });
 
   it("creates and extracts text message content without noise from non-text parts", () => {
@@ -87,6 +99,15 @@ function assistantGeneratedCardsMessage(id: string, runId: string): UIMessage {
     role: "assistant",
     parts: [{ type: "text", text: "" }],
     metadata: { kind: "generated-cards", runId },
+  } as UIMessage;
+}
+
+function assistantErrorMessage(id: string, runId: string): UIMessage {
+  return {
+    id,
+    role: "assistant",
+    parts: [{ type: "text", text: "" }],
+    metadata: { kind: "error", runId, mode: "chat" },
   } as UIMessage;
 }
 
@@ -228,5 +249,29 @@ describe("buildConversationMessages", () => {
     expect(result[0]).toEqual({ role: "user", content: "Generate some cards" });
     expect(result[1]).toEqual({ role: "assistant", content: "Sure!" });
     expect(result[2].content).toContain("## Card 1");
+  });
+
+  it("skips assistant error messages when building history", () => {
+    const messages = [
+      userMessage("u1", "What is 2+2?"),
+      assistantErrorMessage("a1", "r1"),
+    ];
+    const result = buildConversationMessages(messages, {}, buildTemplate);
+    expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
+  });
+
+  it("skips assistant error messages in cards mode when building history", () => {
+    const cardError: UIMessage = {
+      id: "a1",
+      role: "assistant",
+      parts: [{ type: "text", text: "" }],
+      metadata: { kind: "error", runId: "r1", mode: "cards" },
+    } as UIMessage;
+    const messages = [
+      userMessage("u1", "Make cards"),
+      cardError,
+    ];
+    const result = buildConversationMessages(messages, {}, buildTemplate);
+    expect(result).toEqual([{ role: "user", content: "Make cards" }]);
   });
 });

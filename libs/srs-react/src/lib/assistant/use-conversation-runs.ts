@@ -1,5 +1,5 @@
 import type { ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import type { StreamResult } from "@koloda/ai-react";
+import type { AIChatMode, StreamResult } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
 import type { ConversationAction, ConversationState } from "./conversation-state";
@@ -65,13 +65,14 @@ export function useConversationRuns(
       runId: string,
       request: ChatStreamRequest | CardGenerationStreamRequest,
       templateFields: TemplateFields | null,
+      mode: AIChatMode,
     ) => {
       const run = getState().runs[runId];
-      if (!run) return;
+      const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      dispatch({ type: "restartRun", runId, request, templateFields });
+      dispatch({ type: "restartRun", runId, request, templateFields, mode: effectiveMode });
 
-      if (run.mode === "chat") {
+      if (effectiveMode === "chat") {
         dispatch({ type: "updateAssistantText", runId, text: "" });
         await executeChatRun(runId, request as ChatStreamRequest);
       } else {
