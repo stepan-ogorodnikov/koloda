@@ -34,6 +34,11 @@ describe("coerceConversationState", () => {
     expect(coerceConversationState({ ...initialConversationState, id: 123 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, mode: "voice" })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, deckId: "5" })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, aiProfileId: 5 })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, modelId: 7 })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, modelParameters: "x" })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }))
+      .toBeNull();
   });
 
   it("coerces ISO string createdAt into a Date", () => {
@@ -59,9 +64,34 @@ describe("coerceConversationState", () => {
     expect(coerced!.createdAt.getTime()).toBe(1700000000000);
   });
 
-  it("accepts legacy rows that pre-date new fields", () => {
+  it("accepts rows that omit the AI configuration fields", () => {
     const coerced = coerceConversationState({ ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
     expect(coerced).not.toBeNull();
+  });
+
+  it("defaults missing AI configuration fields to null and an empty map", () => {
+    const coerced = coerceConversationState({
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+    })!;
+    expect(coerced.aiProfileId).toBeNull();
+    expect(coerced.modelId).toBeNull();
+    expect(coerced.modelParameters).toEqual({});
+  });
+
+  it("preserves stored AI profile, model, and model parameters", () => {
+    const coerced = coerceConversationState({
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+      aiProfileId: "prof-1",
+      modelId: "model-1",
+      modelParameters: { reasoning_effort: "high" },
+    })!;
+    expect(coerced.aiProfileId).toBe("prof-1");
+    expect(coerced.modelId).toBe("model-1");
+    expect(coerced.modelParameters).toEqual({ reasoning_effort: "high" });
   });
 });
 
@@ -757,6 +787,9 @@ describe("conversationReducer", () => {
         { type: "addUserMessage", runId: "r1", text: "Hi" },
         { type: "startRun", runId: "r1", mode: "chat", request: {} },
         { type: "setDeck", deckId: 3 },
+        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+        { type: "setAIModel", modelId: "m2", modelParameters: { reasoning_effort: "low" } },
+        { type: "setAIModelParameter", paramType: "reasoning_effort", value: "medium" },
       ]);
       state = conversationReducer(state, { type: "newConversation", id: "new-id", createdAt });
 
@@ -770,7 +803,91 @@ describe("conversationReducer", () => {
         dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
+        aiProfileId: null,
+        modelId: null,
+        modelParameters: {},
       });
+    });
+  });
+
+  describe("setAIProfile", () => {
+    it("sets the profile, model, and clears parameters by default", () => {
+      let state = reduce([
+        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+      ]);
+      state = conversationReducer(state, { type: "setAIProfile", profileId: "p2", modelId: "m2" });
+      expect(state.aiProfileId).toBe("p2");
+      expect(state.modelId).toBe("m2");
+      expect(state.modelParameters).toEqual({});
+    });
+
+    it("preserves provided parameters", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "setAIProfile",
+        profileId: "p1",
+        modelId: "m1",
+        modelParameters: { reasoning_effort: "low" },
+      });
+      expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
+    });
+  });
+
+  describe("setAIModel", () => {
+    it("sets the model and clears parameters by default", () => {
+      let state = reduce([
+        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+      ]);
+      state = conversationReducer(state, { type: "setAIModel", modelId: "m2" });
+      expect(state.modelId).toBe("m2");
+      expect(state.modelParameters).toEqual({});
+    });
+
+    it("preserves provided parameters", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "setAIModel",
+        modelId: "m2",
+        modelParameters: { reasoning_effort: "low" },
+      });
+      expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
+    });
+  });
+
+  describe("setAIModelParameter", () => {
+    it("sets a single parameter value", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "setAIModelParameter",
+        paramType: "reasoning_effort",
+        value: "high",
+      });
+      expect(state.modelParameters).toEqual({ reasoning_effort: "high" });
+    });
+
+    it("removes the parameter when value is null", () => {
+      let state = conversationReducer(initialConversationState, {
+        type: "setAIModelParameter",
+        paramType: "reasoning_effort",
+        value: "high",
+      });
+      state = conversationReducer(state, {
+        type: "setAIModelParameter",
+        paramType: "reasoning_effort",
+        value: null,
+      });
+      expect(state.modelParameters).toEqual({});
+    });
+
+    it("removes the parameter when value is empty string", () => {
+      let state = conversationReducer(initialConversationState, {
+        type: "setAIModelParameter",
+        paramType: "reasoning_effort",
+        value: "high",
+      });
+      state = conversationReducer(state, {
+        type: "setAIModelParameter",
+        paramType: "reasoning_effort",
+        value: "",
+      });
+      expect(state.modelParameters).toEqual({});
     });
   });
 

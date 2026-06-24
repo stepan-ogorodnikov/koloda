@@ -26,7 +26,7 @@ import {
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
-import { coerceConversationState, normalizeRestoredConversation } from "./conversation-state";
+import { coerceConversationState, initialConversationState, normalizeRestoredConversation } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
@@ -117,13 +117,13 @@ export function useAssistantChat(
     isModelsError,
     selectedProfile,
     provider,
-    temperature,
-    reasoningEffort,
     modelParameters,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
-  } = useAssistantConfiguration(assistantSettings);
+  } = useAssistantConfiguration();
+  const temperature = assistantSettings?.temperature ?? 0.2;
+  const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
 
   const { defaultProfileId, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
@@ -440,15 +440,9 @@ export function useAssistantChat(
       }
     } else {
       const fresh: ConversationState = {
+        ...initialConversationState,
         id: conversationId,
         createdAt: new Date(),
-        updatedAt: null,
-        messages: [],
-        runs: {},
-        activeRunId: null,
-        dismissedRunErrorId: null,
-        mode: "chat",
-        deckId: null,
       };
       restoreConversation(fresh);
       normalized = true;

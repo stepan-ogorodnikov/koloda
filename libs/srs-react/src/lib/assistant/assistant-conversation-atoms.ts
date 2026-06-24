@@ -1,3 +1,4 @@
+import type { ModelParameter } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
@@ -61,6 +62,11 @@ export const assistantRunsAtom = atom((get) => get(assistantConversationStateAto
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
+export const assistantAIProfileIdAtom = atom((get) => get(assistantConversationStateAtom).aiProfileId);
+export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
+export const assistantAIModelParametersAtom = atom(
+  (get) => get(assistantConversationStateAtom).modelParameters,
+);
 
 export const assistantIsProcessingAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
@@ -120,6 +126,38 @@ export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null
   set(assistantConversationStateAtom, { type: "setDeck", deckId });
   set(pendingSaveAtom, (n) => n + 1);
 });
+
+export const setAssistantAIProfileAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    payload: { profileId: string | null; modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> },
+  ) => {
+    set(assistantConversationStateAtom, { type: "setAIProfile", ...payload });
+    set(pendingSaveAtom, (n) => n + 1);
+  },
+);
+
+export const setAssistantAIModelAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    payload: { modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> },
+  ) => {
+    set(assistantConversationStateAtom, { type: "setAIModel", ...payload });
+    set(pendingSaveAtom, (n) => n + 1);
+  },
+);
+
+export const setAssistantAIModelParameterAtom = atom(
+  null,
+  (_get, set, payload: { paramType: ModelParameter["type"]; value: string | null }) => {
+    set(assistantConversationStateAtom, { type: "setAIModelParameter", ...payload });
+    set(pendingSaveAtom, (n) => n + 1);
+  },
+);
 
 export const newConversationAtom = atom(null, (_get, set, id: string = generateUUID()) => {
   set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: new Date() });

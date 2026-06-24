@@ -1,8 +1,16 @@
-import type { AssistantSettings, ModelParameter } from "@koloda/ai";
+import type { ModelParameter } from "@koloda/ai";
 import type { AIModel, AISecrets } from "@koloda/ai";
-import { GENERATION_TEMPERATURE } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useMemo } from "react";
+import {
+  assistantAIProfileIdAtom,
+  assistantAIModelIdAtom,
+  assistantAIModelParametersAtom,
+  setAssistantAIModelAtom,
+  setAssistantAIModelParameterAtom,
+  setAssistantAIProfileAtom,
+} from "./assistant-conversation-atoms";
 
 export type UseAssistantConfigurationReturn = {
   profileId: string;
@@ -14,90 +22,84 @@ export type UseAssistantConfigurationReturn = {
   selectedProfile: ReturnType<typeof useAIProfiles>["selectedProfile"];
   profiles: ReturnType<typeof useAIProfiles>["profiles"];
   provider: AISecrets["provider"] | null;
-  temperature: number;
-  reasoningEffort: string;
   modelParameters: ModelParameter[];
   hasProfiles: boolean;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
-  handleTemperatureChange: (value: number) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
 
-export function useAssistantConfiguration(assistantSettings?: AssistantSettings): UseAssistantConfigurationReturn {
-  const [profileId, setProfileId] = useState("");
-  const [preferredModelId, setPreferredModelId] = useState("");
-  const [temperature, setTemperature] = useState(assistantSettings?.temperature ?? GENERATION_TEMPERATURE);
-  const [reasoningEffort, setReasoningEffort] = useState("");
-  const { profiles, selectedProfile } = useAIProfiles(profileId);
-  const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(profileId);
+export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
+  const storedProfileId = useAtomValue(assistantAIProfileIdAtom);
+  const storedModelId = useAtomValue(assistantAIModelIdAtom);
+  const storedModelParameters = useAtomValue(assistantAIModelParametersAtom);
+
+  const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
+  const setAIModel = useSetAtom(setAssistantAIModelAtom);
+  const setAIModelParameter = useSetAtom(setAssistantAIModelParameterAtom);
+
+  const { profiles, selectedProfile } = useAIProfiles(storedProfileId);
+  const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(storedProfileId);
   const provider = selectedProfile?.secrets?.provider ?? null;
   const hasProfiles = profiles.length > 0;
 
-  const modelId = useMemo(() => {
-    if (!profileId) return "";
-    if (preferredModelId && models.some((m) => m.id === preferredModelId)) return preferredModelId;
-    const profile = profiles.find((p) => p.id === profileId);
+  const resolvedModelId = useMemo(() => {
+    if (!storedProfileId) return "";
+    if (storedModelId && models.some((m) => m.id === storedModelId)) return storedModelId;
+    const profile = profiles.find((p) => p.id === storedProfileId);
     if (profile?.lastUsedModel && models.some((m) => m.id === profile.lastUsedModel)) {
       return profile.lastUsedModel;
     }
     return models[0]?.id ?? "";
-  }, [profileId, preferredModelId, models, profiles]);
+  }, [storedProfileId, storedModelId, models, profiles]);
 
-  const modelName = models.find((m) => m.id === modelId)?.name;
-
-  const prevModelIdRef = useRef(modelId);
-
-  useEffect(() => {
-    if (prevModelIdRef.current === modelId) return;
-    prevModelIdRef.current = modelId;
-
-    if (!modelId) {
-      setReasoningEffort("");
-      return;
-    }
-
-    const modelData = models.find((m) => m.id === modelId);
-    setReasoningEffort(modelData?.default_reasoning_level ?? "");
-  }, [modelId, models]);
+  const modelName = models.find((m) => m.id === resolvedModelId)?.name;
 
   const modelParameters = useMemo((): ModelParameter[] => {
-    const model = models.find((m) => m.id === modelId);
+    const model = models.find((m) => m.id === resolvedModelId);
     const params: ModelParameter[] = [];
 
     const levels = model?.supported_reasoning_levels;
-    if (levels && levels.length > 0) params.push({ type: "reasoning_effort", value: reasoningEffort, levels });
+    if (levels && levels.length > 0) {
+      const stored = storedModelParameters.reasoning_effort;
+      const value = stored && levels.some((l) => l.effort === stored)
+        ? stored
+        : (model?.default_reasoning_level ?? "");
+      params.push({ type: "reasoning_effort", value, levels });
+    }
 
     return params;
-  }, [modelId, models, reasoningEffort]);
+  }, [resolvedModelId, models, storedModelParameters]);
 
-  const handleProfileChange = useCallback((value: string) => {
-    setProfileId(value);
-    const profile = profiles.find((p) => p.id === value);
-    setPreferredModelId(profile?.lastUsedModel ?? "");
-  }, [profiles]);
+  const handleProfileChange = useCallback(
+    (value: string) => {
+      const profile = profiles.find((p) => p.id === value);
+      setAIProfile({ profileId: value, modelId: profile?.lastUsedModel ?? null, modelParameters: {} });
+    },
+    [profiles, setAIProfile],
+  );
 
-  const handleModelChange = useCallback((value: string) => {
-    setPreferredModelId(value);
-  }, []);
+  const handleModelChange = useCallback(
+    (value: string) => {
+      setAIModel({ modelId: value, modelParameters: {} });
+    },
+    [setAIModel],
+  );
 
-  const handleTemperatureChange = useCallback((value: number) => {
-    setTemperature(
-      Number.isNaN(value) ? GENERATION_TEMPERATURE : Math.round(Math.min(2, Math.max(0, value)) * 10) / 10,
-    );
-  }, []);
-
-  const handleModelParameterChange = useCallback((type: ModelParameter["type"], value: string) => {
-    switch (type) {
-      case "reasoning_effort":
-        setReasoningEffort(value);
-        break;
-    }
-  }, []);
+  const handleModelParameterChange = useCallback(
+    (type: ModelParameter["type"], value: string) => {
+      switch (type) {
+        case "reasoning_effort":
+          setAIModelParameter({ paramType: type, value: value || null });
+          break;
+      }
+    },
+    [setAIModelParameter],
+  );
 
   return {
-    profileId,
-    modelId,
+    profileId: storedProfileId ?? "",
+    modelId: resolvedModelId,
     modelName,
     models,
     isModelsLoading,
@@ -105,13 +107,10 @@ export function useAssistantConfiguration(assistantSettings?: AssistantSettings)
     selectedProfile,
     profiles,
     provider,
-    temperature,
-    reasoningEffort,
     modelParameters,
     hasProfiles,
     handleProfileChange,
     handleModelChange,
-    handleTemperatureChange,
     handleModelParameterChange,
   };
 }

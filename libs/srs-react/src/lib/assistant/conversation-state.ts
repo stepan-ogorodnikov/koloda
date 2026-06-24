@@ -1,4 +1,4 @@
-import type { GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
@@ -32,6 +32,9 @@ export type ConversationState = {
   dismissedRunErrorId: string | null;
   mode: AIChatMode;
   deckId: number | null;
+  aiProfileId: string | null;
+  modelId: string | null;
+  modelParameters: Partial<Record<ModelParameter["type"], string>>;
 };
 
 export type ConversationAction =
@@ -53,6 +56,9 @@ export type ConversationAction =
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
+  | { type: "setAIProfile"; profileId: string | null; modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> }
+  | { type: "setAIModel"; modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> }
+  | { type: "setAIModelParameter"; paramType: ModelParameter["type"]; value: string | null }
   | { type: "dismissRunError"; runId: string }
   | { type: "setCardStatus"; runId: string; index: number; status: CardStatus }
   | { type: "newConversation"; id: string; createdAt: Date };
@@ -67,6 +73,9 @@ export const initialConversationState: ConversationState = {
   dismissedRunErrorId: null,
   mode: "chat",
   deckId: null,
+  aiProfileId: null,
+  modelId: null,
+  modelParameters: {},
 };
 
 function makeRun(
@@ -171,6 +180,17 @@ export function coerceConversationState(value: unknown): ConversationState | nul
   if (v.activeRunId !== null && typeof v.activeRunId !== "string") return null;
   if (v.mode !== "chat" && v.mode !== "cards") return null;
   if (v.deckId !== null && typeof v.deckId !== "number") return null;
+  if (v.aiProfileId !== null && v.aiProfileId !== undefined && typeof v.aiProfileId !== "string") return null;
+  if (v.modelId !== null && v.modelId !== undefined && typeof v.modelId !== "string") return null;
+  let modelParameters: Partial<Record<ModelParameter["type"], string>> = {};
+  if (v.modelParameters !== null && v.modelParameters !== undefined) {
+    if (typeof v.modelParameters !== "object") return null;
+    for (const [key, val] of Object.entries(v.modelParameters as Record<string, unknown>)) {
+      if (val === null) continue;
+      if (typeof val !== "string") return null;
+      modelParameters[key as ModelParameter["type"]] = val;
+    }
+  }
 
   const runs: Record<string, GenerationRun> = {};
   for (const [runId, run] of Object.entries(v.runs as Record<string, unknown>)) {
@@ -189,6 +209,9 @@ export function coerceConversationState(value: unknown): ConversationState | nul
     dismissedRunErrorId: (v.dismissedRunErrorId as string | null) ?? null,
     mode: v.mode,
     deckId: (v.deckId as number | null) ?? null,
+    aiProfileId: (v.aiProfileId as string | null) ?? null,
+    modelId: (v.modelId as string | null) ?? null,
+    modelParameters,
   };
 }
 
@@ -432,6 +455,32 @@ export function conversationReducer(state: ConversationState, action: Conversati
       if (isLocked(state)) return state;
       return { ...state, deckId: action.deckId };
 
+    case "setAIProfile":
+      return {
+        ...state,
+        aiProfileId: action.profileId,
+        modelId: action.modelId,
+        modelParameters: action.modelParameters ?? {},
+      };
+
+    case "setAIModel":
+      return {
+        ...state,
+        modelId: action.modelId,
+        modelParameters: action.modelParameters ?? {},
+      };
+
+    case "setAIModelParameter": {
+      const { paramType, value } = action;
+      const nextParameters = { ...state.modelParameters };
+      if (value === null || value === "") {
+        delete nextParameters[paramType];
+      } else {
+        nextParameters[paramType] = value;
+      }
+      return { ...state, modelParameters: nextParameters };
+    }
+
     case "setCardStatus":
       return updateRun(state, action.runId, (run) => ({
         ...run,
@@ -452,6 +501,9 @@ export function conversationReducer(state: ConversationState, action: Conversati
         dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
+        aiProfileId: null,
+        modelId: null,
+        modelParameters: {},
       };
 
     default:
