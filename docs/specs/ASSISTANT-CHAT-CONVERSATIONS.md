@@ -1,23 +1,29 @@
 # Assistant Chat: Conversations
 
-Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, persistence, restore, error handling, and retry.
+Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI configuration, persistence, restore, error handling, and retry.
 Does not cover deck management, AI provider configuration, or the streaming transport layer.
 
 ## What is a Conversation
 
 A conversation is a single threaded interaction between the user and the AI.
 Each conversation has a name, a timestamp, and a history of messages and AI runs.
-Conversations are listed in the sidebar, sorted by most recently updated.
 
-A conversation starts empty — no messages, no runs, no deck selected, in chat mode.
+A conversation starts empty.
+It has no messages, no runs, no deck selected, and is in chat mode.
 It becomes active when the user sends their first message.
+
+## Conversation List
+
+Conversations are listed in the sidebar, sorted by most recently updated.
+The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
 
 ## Messages
 
 Every user message is paired with an assistant message.
 The user types a prompt, the AI responds — that's one exchange, tied to a single run.
 
-Messages are displayed as a scrollable list. User messages appear as bubbles.
+Messages are displayed as a scrollable list.
+User messages appear as bubbles.
 Assistant messages render their content: plain text for chat responses, a table of generated cards for card generation runs.
 
 ### Conversation History
@@ -67,7 +73,8 @@ Each card starts in an idle state and can be independently marked as added to a 
 
 ### Completion
 
-When the stream finishes successfully, the run is marked as success. Token usage is recorded.
+When the stream finishes successfully, the run is marked as success.
+Token usage is recorded.
 For card generation runs, the mode automatically switches back to chat.
 
 ### Failure
@@ -105,10 +112,43 @@ This prevents mixing cards from different decks in the same conversation.
 
 If card generation fails or is canceled, the conversation stays unlocked — the deck can still be changed.
 
+## AI Configuration
+
+Each conversation stores its own AI configuration so switching between conversations restores the right setup.
+
+- **AI profile** — which provider credentials to use.
+- **Model** — which model within the chosen profile.
+- **Model parameters** — values for supported parameters, for example reasoning effort.
+
+All three are persisted on the conversation.
+
+If the user picks a different profile, the model and parameters are reset to that profile's defaults.
+If the user picks a different model, the parameters are reset to that model's defaults.
+
+### Global AI Configuration
+
+In addition to the per-conversation values, the app tracks a single **global AI configuration** shared across all conversations.
+The global record holds the same three fields: profile, model, and model parameters.
+The global record is persisted across sessions.
+
+The global AI configuration is used to initialize a new conversation's own AI configuration.
+When the user starts a new conversation, its profile, model, and model parameters are pre-filled from the global record.
+From that point on, the conversation's own values take over and can diverge from the global one.
+
+**Loading** — on app load, the global record is read from storage.
+If no value is stored yet, the global is reconciled to defaults: the first available profile, that profile's default model, and default parameters.
+If a stored value is present but its profile is no longer available, the global is reconciled to defaults the same way.
+If a stored value is present and its profile is available, it is used as-is.
+
+**When it is updated** — the global record is updated in two cases:
+
+1. When the user starts a run by submitting a prompt in any conversation.
+2. When the user changes any of the three AI configuration values (profile, model, or model parameters) in any conversation.
+
 ## Persistence
 
 Conversations are saved to the database automatically.
-The entire conversation state — messages, runs, mode, deck selection — is saved as a single document.
+The entire conversation state — messages, runs, mode, deck, and AI configuration — is saved as a single document.
 
 ### When Saves Happen
 
@@ -136,8 +176,10 @@ This allows the app to reopen the same conversation on reload.
 When a conversation is loaded from the database, it goes through validation and cleanup:
 
 - **Streaming runs are removed**: if the app crashed or closed mid-stream, any run that was still streaming is discarded along with its messages
-- **Failed runs are replaced with an error marker**: the run record itself is discarded, but the user message and the assistant message stay. The assistant message is rewritten to an error marker that preserves the run's mode, so the user can see what they tried, that the AI failed to answer, and can retry. The conversation is never left empty as a result of a failed run
-- **Pending card statuses are reset**: cards that were mid-operation (pending) are reset to idle
+- **Failed runs are replaced with an error marker**: the run record itself is discarded, but the user message and the assistant message stay
+  The assistant message is rewritten to an error marker that preserves the run's mode, so the user can see what they tried, that the AI failed to answer, and can retry.
+  The conversation is never left empty as a result of a failed run.
+- **Pending card statuses are reset**: cards that were mid-operation are reset to idle
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
 
@@ -151,15 +193,18 @@ Errors are displayed in an error panel at the bottom of the chat.
 
 ### Error State
 
-Each conversation tracks its own errors. The error panel shows the most recent error for the current conversation.
+Each conversation tracks its own errors.
+The error panel shows the most recent error for the current conversation.
 
 Dismissed errors stay hidden until a new error occurs — then the panel reappears with the new error.
 
-The error state does **not** persist across sessions. On page reload all errors are cleared and the error panel is hidden.
+The error state does **not** persist across sessions.
+On page reload all errors are cleared and the error panel is hidden.
 
 ### Stream Errors
 
-When a stream fails mid-way, the error is displayed in the error panel. The partial content generated before the failure remains visible.
+When a stream fails mid-way, the error is displayed in the error panel.
+The partial content generated before the failure remains visible.
 
 ### Save Errors
 
@@ -177,14 +222,16 @@ Save errors are dismissed separately and are cleared by a successful save.
 
 ## Retry
 
-The user can retry a failed or completed run. Retry re-executes the same request with the same parameters.
+The user can retry a failed or completed run.
+Retry re-executes the same request with the same parameters.
 
 - The run ID is reused — the existing message pair is overwritten
 - For chat retries, the previous response text is cleared and replaced with the new stream
 - For card generation retries, previous cards are cleared and new cards stream in from scratch
 - The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs
 
-Retry is only available on the most recent message pair. You cannot retry an older run.
+Retry is only available on the most recent message pair.
+You cannot retry an older run.
 
 Retry preserves the original mode — a chat run retries as chat, a card generation run retries as cards.
 
@@ -204,4 +251,7 @@ When the old conversation is later restored, the streaming run and its messages 
 - Card statuses are always idle when first generated — they only become pending or success through user interaction
 - The deck picker hotkeys are disabled when the conversation is locked
 - Mode toggle is disabled when no deck is selected
+- Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar
+- Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
+  The global last-used record is updated when the user changes the value or submits a prompt
 - When a conversation is loaded and its data is invalid, it's silently reset to empty rather than showing an error
