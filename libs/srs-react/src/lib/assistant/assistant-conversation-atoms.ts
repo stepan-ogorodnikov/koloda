@@ -62,7 +62,7 @@ export const assistantRunsAtom = atom((get) => get(assistantConversationStateAto
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
-export const assistantAIProfileIdAtom = atom((get) => get(assistantConversationStateAtom).aiProfileId);
+export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
 export const assistantAIModelParametersAtom = atom(
   (get) => get(assistantConversationStateAtom).modelParameters,
@@ -127,17 +127,16 @@ export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null
   set(pendingSaveAtom, (n) => n + 1);
 });
 
-export const setAssistantAIProfileAtom = atom(
-  null,
-  (
-    _get,
-    set,
-    payload: { profileId: string | null; modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> },
-  ) => {
-    set(assistantConversationStateAtom, { type: "setAIProfile", ...payload });
-    set(pendingSaveAtom, (n) => n + 1);
-  },
-);
+type SetAssistantAIProfileAtomPayload = {
+  profileId: string | null;
+  modelId: string | null;
+  modelParameters?: Partial<Record<ModelParameter["type"], string>>;
+};
+
+export const setAssistantAIProfileAtom = atom(null, (_get, set, payload: SetAssistantAIProfileAtomPayload) => {
+  set(assistantConversationStateAtom, { type: "setAIProfile", ...payload });
+  set(pendingSaveAtom, (n) => n + 1);
+});
 
 export const setAssistantAIModelAtom = atom(
   null,
@@ -159,8 +158,22 @@ export const setAssistantAIModelParameterAtom = atom(
   },
 );
 
-export const newConversationAtom = atom(null, (_get, set, id: string = generateUUID()) => {
-  set(assistantConversationStateAtom, { type: "newConversation", id, createdAt: new Date() });
+export type NewConversationPayload = {
+  id?: string;
+  profileId?: string | null;
+  modelId?: string | null;
+  modelParameters?: Partial<Record<ModelParameter["type"], string>>;
+};
+
+export const newConversationAtom = atom(null, (_get, set, payload: NewConversationPayload = {}) => {
+  const id = payload.id ?? generateUUID();
+  set(assistantConversationStateAtom, {
+    ...payload,
+    type: "newConversation",
+    id,
+    createdAt: new Date(),
+  });
+
   return id;
 });
 

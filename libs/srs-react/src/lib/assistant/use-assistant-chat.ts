@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useEffect, useRef } from "react";
+import { aiProfileStateAtom } from "./ai-profile-state";
 import {
   assistantActiveRunIdAtom,
   assistantCancelFunctionsAtom,
@@ -23,6 +24,7 @@ import {
   pendingSaveAtom,
   restoreConversationAtom,
   saveStatusAtom,
+  setAssistantAIProfileAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
@@ -34,6 +36,7 @@ import { useAssistantClient } from "./use-assistant-client";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
 import { useConversationRuns } from "./use-conversation-runs";
+import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 const STREAM_SAVE_THROTTLE_MS = 1000;
 const IDLE_SAVE_DEBOUNCE_MS = 250;
@@ -100,12 +103,11 @@ export function useAssistantChat(
   const restoreConversation = useSetAtom(restoreConversationAtom);
   const setPendingSave = useSetAtom(pendingSaveAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
+  const [_state, setGlobalAIProfileState] = useGlobalAIProfileState();
 
-  const { data: aiSettings } = useQuery({
-    ...getSettingsQuery("ai"),
-    queryKey: queryKeys.settings.detail("ai"),
-  });
+  const { data: aiSettings } = useQuery({ ...getSettingsQuery("ai"), queryKey: queryKeys.settings.detail("ai") });
   const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
 
   const {
@@ -125,14 +127,15 @@ export function useAssistantChat(
   const temperature = assistantSettings?.temperature ?? 0.2;
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
 
-  const { defaultProfileId, missingSecretFieldLabels } = useAIProfiles(profileId);
+  const { defaultProfileId, profiles, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
 
   useEffect(() => {
     if (defaultProfileId && !profileId) {
-      handleProfileChange(defaultProfileId);
+      const profile = profiles.find((p) => p.id === defaultProfileId);
+      setAIProfile({ profileId: defaultProfileId, modelId: profile?.lastUsedModel ?? null, modelParameters: {} });
     }
-  }, [defaultProfileId, profileId, handleProfileChange]);
+  }, [defaultProfileId, profileId, profiles, setAIProfile]);
 
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
@@ -178,6 +181,7 @@ export function useAssistantChat(
   configRef.current = conversationConfig;
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
+  const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
 
   const dispatchAction = useCallback(
     (action: ConversationAction) => {
@@ -230,6 +234,8 @@ export function useAssistantChat(
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
       if (mode === "cards" && !cfg.template) return;
 
+      setGlobalAIProfileState(cfg);
+
       const conversationMessages = buildConversationMessages(
         currentState.messages,
         currentState.runs,
@@ -265,7 +271,7 @@ export function useAssistantChat(
       }
       pendingRunFailureRef.current = runId;
     },
-    [retryRun, readState],
+    [retryRun, readState, setGlobalAIProfileState],
   );
 
   const saveTokenRef = useRef(0);
@@ -439,10 +445,12 @@ export function useAssistantChat(
         restoreConversation(coerced);
       }
     } else {
+      const stored = readLastUsed();
       const fresh: ConversationState = {
         ...initialConversationState,
         id: conversationId,
         createdAt: new Date(),
+        ...stored,
       };
       restoreConversation(fresh);
       normalized = true;
@@ -461,6 +469,7 @@ export function useAssistantChat(
     conversationError,
     restoreConversation,
     setPendingSave,
+    readLastUsed,
   ]);
 
   const ensureConversationId = useCallback(() => {
@@ -468,11 +477,17 @@ export function useAssistantChat(
     if (!localConversationIdRef.current) {
       const id = generateUUID();
       localConversationIdRef.current = id;
-      dispatchAction({ type: "newConversation", id, createdAt: new Date() });
+      const stored = readLastUsed();
+      dispatchAction({
+        type: "newConversation",
+        id,
+        createdAt: new Date(),
+        ...stored,
+      });
       onConversationIdChange(id);
     }
     return localConversationIdRef.current;
-  }, [conversationId, onConversationIdChange, dispatchAction]);
+  }, [conversationId, onConversationIdChange, dispatchAction, readLastUsed]);
 
   const handleGenerate = useCallback(
     async (value?: string) => {
@@ -487,6 +502,9 @@ export function useAssistantChat(
 
       const runId = generateUUID();
       pendingRunFailureRef.current = null;
+
+      setGlobalAIProfileState(cfg);
+
       const conversationMessages = buildConversationMessages(
         currentState.messages,
         currentState.runs,
@@ -538,7 +556,14 @@ export function useAssistantChat(
         await executeGenerateRun(runId, request);
       }
     },
-    [ensureConversationId, dispatchAction, executeChatRun, executeGenerateRun, readState],
+    [
+      ensureConversationId,
+      dispatchAction,
+      executeChatRun,
+      executeGenerateRun,
+      readState,
+      setGlobalAIProfileState,
+    ],
   );
 
   const handleCancel = useCallback(() => {
@@ -549,9 +574,10 @@ export function useAssistantChat(
   }, [dispatchAction, cancelGenerate, cancelChat, readState]);
 
   const handleReset = useCallback(() => {
-    const newId = newConversation();
+    const stored = readLastUsed();
+    const newId = newConversation(stored ?? undefined);
     onConversationIdChange(newId);
-  }, [newConversation, onConversationIdChange]);
+  }, [newConversation, onConversationIdChange, readLastUsed]);
 
   const handleRetryLoad = useCallback(() => refetchConversation(), [refetchConversation]);
 

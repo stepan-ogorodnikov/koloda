@@ -4,13 +4,14 @@ import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import {
-  assistantAIProfileIdAtom,
   assistantAIModelIdAtom,
   assistantAIModelParametersAtom,
+  assistantProfileIdAtom,
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
   setAssistantAIProfileAtom,
 } from "./assistant-conversation-atoms";
+import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type UseAssistantConfigurationReturn = {
   profileId: string;
@@ -30,13 +31,15 @@ export type UseAssistantConfigurationReturn = {
 };
 
 export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
-  const storedProfileId = useAtomValue(assistantAIProfileIdAtom);
+  const storedProfileId = useAtomValue(assistantProfileIdAtom);
   const storedModelId = useAtomValue(assistantAIModelIdAtom);
   const storedModelParameters = useAtomValue(assistantAIModelParametersAtom);
 
   const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
   const setAIModel = useSetAtom(setAssistantAIModelAtom);
   const setAIModelParameter = useSetAtom(setAssistantAIModelParameterAtom);
+
+  const [_state, setGlobalAIProfileState] = useGlobalAIProfileState();
 
   const { profiles, selectedProfile } = useAIProfiles(storedProfileId);
   const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(storedProfileId);
@@ -74,27 +77,36 @@ export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
   const handleProfileChange = useCallback(
     (value: string) => {
       const profile = profiles.find((p) => p.id === value);
-      setAIProfile({ profileId: value, modelId: profile?.lastUsedModel ?? null, modelParameters: {} });
+      const modelId = profile?.lastUsedModel ?? null;
+      setAIProfile({ profileId: value, modelId, modelParameters: {} });
+      setGlobalAIProfileState({ profileId: value, modelId, modelParameters: {} });
     },
-    [profiles, setAIProfile],
+    [profiles, setAIProfile, setGlobalAIProfileState],
   );
 
   const handleModelChange = useCallback(
     (value: string) => {
       setAIModel({ modelId: value, modelParameters: {} });
+      setGlobalAIProfileState({ profileId: storedProfileId, modelId: value, modelParameters: {} });
     },
-    [setAIModel],
+    [setAIModel, setGlobalAIProfileState, storedProfileId],
   );
 
   const handleModelParameterChange = useCallback(
     (type: ModelParameter["type"], value: string) => {
+      const nextValue = value || null;
       switch (type) {
         case "reasoning_effort":
-          setAIModelParameter({ paramType: type, value: value || null });
+          setAIModelParameter({ paramType: type, value: nextValue });
           break;
       }
+      setGlobalAIProfileState({
+        profileId: storedProfileId,
+        modelId: storedModelId,
+        modelParameters: { [type]: nextValue ?? "" },
+      });
     },
-    [setAIModelParameter],
+    [setAIModelParameter, setGlobalAIProfileState, storedProfileId, storedModelId],
   );
 
   return {

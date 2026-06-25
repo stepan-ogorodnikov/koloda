@@ -5,6 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { assistantIsProcessingAtom, assistantMessagesAtom, newConversationAtom } from "./assistant-conversation-atoms";
+import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type AssistantNewConversationButtonProps = {
   onConversationIdChange: (id: string) => void;
@@ -15,6 +16,7 @@ export function AssistantNewConversationButton({ onConversationIdChange }: Assis
   const messages = useAtomValue(assistantMessagesAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const [globalAIProfileState] = useGlobalAIProfileState();
 
   const canStartNewConversation = messages.length > 0 || isProcessing;
 
@@ -23,7 +25,7 @@ export function AssistantNewConversationButton({ onConversationIdChange }: Assis
       variants={{ style: "dashed", class: "m-2" }}
       aria-label={_(msg`ai.chat.new-conversation.label`)}
       isDisabled={!canStartNewConversation}
-      onPress={() => onConversationIdChange(newConversation())}
+      onPress={() => onConversationIdChange(newConversation(globalAIProfileState))}
     >
       <HugeiconsIcon
         className="size-5 min-w-5"

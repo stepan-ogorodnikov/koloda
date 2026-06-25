@@ -11,6 +11,7 @@ import {
   DeckPicker,
   newConversationAtom,
   setAssistantDeckAtom,
+  useGlobalAIProfileState,
 } from "@koloda/srs-react";
 import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -49,6 +50,7 @@ function AIRoute() {
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
+  const [globalAIProfileState] = useGlobalAIProfileState();
   const creatingFromDeckRef = useRef(false);
   const deckPickerRef = useRef<HTMLButtonElement>(null);
 
@@ -61,7 +63,7 @@ function AIRoute() {
     if (deckIdFromSearch !== undefined) {
       if (creatingFromDeckRef.current) return;
       creatingFromDeckRef.current = true;
-      const id = newConversation();
+      const id = newConversation(globalAIProfileState);
       setDeck(deckIdFromSearch);
       setActiveConversationId(id);
       navigate({ search: { conversationId: id }, replace: true });
@@ -71,7 +73,7 @@ function AIRoute() {
     if (stored) {
       navigate({ search: { conversationId: stored }, replace: true });
     }
-  }, [conversationId, deckIdFromSearch, navigate, newConversation, setDeck]);
+  }, [conversationId, deckIdFromSearch, navigate, newConversation, setDeck, globalAIProfileState]);
 
   const handleConversationIdChange = useCallback((id: string) => {
     setActiveConversationId(id);
@@ -80,10 +82,10 @@ function AIRoute() {
 
   const handleActiveConversationDeleted = useCallback(() => {
     clearActiveConversationId();
-    const id = newConversation();
+    const id = newConversation(globalAIProfileState);
     setActiveConversationId(id);
     navigate({ search: { conversationId: id }, replace: true });
-  }, [navigate, newConversation]);
+  }, [navigate, newConversation, globalAIProfileState]);
 
   const handleClearDeck = useCallback(() => {
     setDeck(null);

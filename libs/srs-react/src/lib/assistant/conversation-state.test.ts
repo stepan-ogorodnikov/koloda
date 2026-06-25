@@ -34,7 +34,7 @@ describe("coerceConversationState", () => {
     expect(coerceConversationState({ ...initialConversationState, id: 123 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, mode: "voice" })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, deckId: "5" })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, aiProfileId: 5 })).toBeNull();
+    expect(coerceConversationState({ ...initialConversationState, profileId: 5 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, modelId: 7 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, modelParameters: "x" })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }))
@@ -75,7 +75,7 @@ describe("coerceConversationState", () => {
       id: "conv-1",
       createdAt: new Date(1),
     })!;
-    expect(coerced.aiProfileId).toBeNull();
+    expect(coerced.profileId).toBeNull();
     expect(coerced.modelId).toBeNull();
     expect(coerced.modelParameters).toEqual({});
   });
@@ -85,11 +85,11 @@ describe("coerceConversationState", () => {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date(1),
-      aiProfileId: "prof-1",
+      profileId: "prof-1",
       modelId: "model-1",
       modelParameters: { reasoning_effort: "high" },
     })!;
-    expect(coerced.aiProfileId).toBe("prof-1");
+    expect(coerced.profileId).toBe("prof-1");
     expect(coerced.modelId).toBe("model-1");
     expect(coerced.modelParameters).toEqual({ reasoning_effort: "high" });
   });
@@ -803,7 +803,7 @@ describe("conversationReducer", () => {
         dismissedRunErrorId: null,
         mode: "chat",
         deckId: null,
-        aiProfileId: null,
+        profileId: null,
         modelId: null,
         modelParameters: {},
       });
@@ -816,7 +816,7 @@ describe("conversationReducer", () => {
         { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
       ]);
       state = conversationReducer(state, { type: "setAIProfile", profileId: "p2", modelId: "m2" });
-      expect(state.aiProfileId).toBe("p2");
+      expect(state.profileId).toBe("p2");
       expect(state.modelId).toBe("m2");
       expect(state.modelParameters).toEqual({});
     });

@@ -1,6 +1,6 @@
 # Assistant Chat: Conversations
 
-Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI configuration, persistence, restore, error handling, and retry.
+Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI profile state, persistence, restore, error handling, and retry.
 Does not cover deck management, AI provider configuration, or the streaming transport layer.
 
 ## What is a Conversation
@@ -112,9 +112,9 @@ This prevents mixing cards from different decks in the same conversation.
 
 If card generation fails or is canceled, the conversation stays unlocked — the deck can still be changed.
 
-## AI Configuration
+## AI Profile State
 
-Each conversation stores its own AI configuration so switching between conversations restores the right setup.
+Each conversation stores its own AI profile state so switching between conversations restores the right setup.
 
 - **AI profile** — which provider credentials to use.
 - **Model** — which model within the chosen profile.
@@ -125,13 +125,13 @@ All three are persisted on the conversation.
 If the user picks a different profile, the model and parameters are reset to that profile's defaults.
 If the user picks a different model, the parameters are reset to that model's defaults.
 
-### Global AI Configuration
+### Global AI Profile State
 
-In addition to the per-conversation values, the app tracks a single **global AI configuration** shared across all conversations.
+In addition to the per-conversation values, the app tracks a single **global AI profile state** shared across all conversations.
 The global record holds the same three fields: profile, model, and model parameters.
 The global record is persisted across sessions.
 
-The global AI configuration is used to initialize a new conversation's own AI configuration.
+The global AI profile state is used to initialize a new conversation's own AI profile state.
 When the user starts a new conversation, its profile, model, and model parameters are pre-filled from the global record.
 From that point on, the conversation's own values take over and can diverge from the global one.
 
@@ -143,12 +143,12 @@ If a stored value is present and its profile is available, it is used as-is.
 **When it is updated** — the global record is updated in two cases:
 
 1. When the user starts a run by submitting a prompt in any conversation.
-2. When the user changes any of the three AI configuration values (profile, model, or model parameters) in any conversation.
+2. When the user changes any of the three AI profile state values (profile, model, or model parameters) in any conversation.
 
 ## Persistence
 
 Conversations are saved to the database automatically.
-The entire conversation state — messages, runs, mode, deck, and AI configuration — is saved as a single document.
+The entire conversation state — messages, runs, mode, deck, and AI profile state — is saved as a single document.
 
 ### When Saves Happen
 
