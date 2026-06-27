@@ -8,6 +8,7 @@ export type Conversation = Timestamps & {
 export type SetConversationData = {
   id: string;
   state: unknown;
+  updatedAt?: Date | null;
 };
 
 export type DeleteConversationData = Pick<Conversation, "id">;

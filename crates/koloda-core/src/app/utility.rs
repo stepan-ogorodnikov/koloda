@@ -47,6 +47,16 @@ fn parse_timestamp<E: serde::de::Error>(value: &str) -> Result<i64, E> {
     Err(serde::de::Error::custom(format!("Invalid date string: {}", value)))
 }
 
+pub fn parse_iso_to_millis(value: &str) -> anyhow::Result<i64> {
+    if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(value) {
+        return Ok(dt.timestamp_millis());
+    }
+    if let Ok(dt) = chrono::DateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.fZ") {
+        return Ok(dt.timestamp_millis());
+    }
+    anyhow::bail!("Invalid date string: {}", value)
+}
+
 fn visit_map_timestamp<'de, M>(mut map: M) -> Result<i64, M::Error>
 where
     M: serde::de::MapAccess<'de>,

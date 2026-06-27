@@ -367,9 +367,13 @@ export function useAssistantChat(
         id: state.id,
         state: JSON.parse(JSON.stringify(state)),
         createdAt: state.createdAt,
-        updatedAt: state.updatedAt ?? new Date(),
+        updatedAt: state.updatedAt ?? null,
       };
-      const data: SetConversationData = { id: row.id, state: row.state };
+      const data: SetConversationData = {
+        id: row.id,
+        state: row.state,
+        updatedAt: state.updatedAt,
+      };
       tokenAtSaveRef.current = saveTokenRef.current;
       setConversation.mutate(data);
     };

@@ -113,7 +113,15 @@ pub fn insert_review_row(db: &Database, card_id: i64, state: i32, is_ignored: i3
 pub fn add_conversation(db: &Database, id: &str, state: serde_json::Value) -> String {
     use koloda_core::repo::conversations;
 
-    conversations::set_conversation(db, id, state).expect("conversation should be created");
+    conversations::set_conversation(
+        db,
+        conversations::SetConversationInput {
+            id: id.to_string(),
+            state,
+            updated_at: None,
+        },
+    )
+    .expect("conversation should be created");
 
     id.to_string()
 }

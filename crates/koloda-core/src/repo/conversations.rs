@@ -1,9 +1,10 @@
 use rusqlite::{params, OptionalExtension};
+use serde::Deserialize;
 use serde_json::Value;
 
 use crate::app::db::Database;
 use crate::app::error::AppError;
-use crate::app::utility::get_current_timestamp;
+use crate::app::utility::{deserialize_optional_timestamp, get_current_timestamp};
 use crate::domain::conversations::Conversation;
 
 fn get_conversation_row(row: &rusqlite::Row<'_>) -> Result<Conversation, rusqlite::Error> {
@@ -55,7 +56,16 @@ pub fn get_conversations(db: &Database) -> Result<Vec<Conversation>, AppError> {
     })
 }
 
-pub fn set_conversation(db: &Database, id: &str, state: Value) -> Result<Conversation, AppError> {
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetConversationInput {
+    pub id: String,
+    pub state: Value,
+    #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
+    pub updated_at: Option<i64>,
+}
+
+pub fn set_conversation(db: &Database, input: SetConversationInput) -> Result<Conversation, AppError> {
     let now = get_current_timestamp()?;
 
     db.with_conn(|conn| {
@@ -65,14 +75,14 @@ pub fn set_conversation(db: &Database, id: &str, state: Value) -> Result<Convers
             VALUES (?1, ?2, ?3, NULL)
             ON CONFLICT(id) DO UPDATE SET
                 state = excluded.state,
-                updated_at = ?4
+                updated_at = COALESCE(?4, ?5)
             "#,
-            params![id, state.to_string(), now, now],
+            params![input.id, input.state.to_string(), now, input.updated_at, now],
         )?;
         Ok(())
     })?;
 
-    get_conversation(db, id)?.ok_or_else(|| AppError::new(crate::app::error::error_codes::DB_UPDATE, None))
+    get_conversation(db, &input.id)?.ok_or_else(|| AppError::new(crate::app::error::error_codes::DB_UPDATE, None))
 }
 
 pub fn delete_conversation(db: &Database, id: &str) -> Result<(), AppError> {

@@ -77,6 +77,54 @@ describe("conversations repository integration", () => {
     expect(loaded!.state).toEqual({ ...stateV2, createdAt: createdAt.toISOString() });
   });
 
+  it("preserves the provided updatedAt on subsequent saves", async () => {
+    const { db } = testDb;
+    const id = "conv-pinned";
+    const state = {
+      id,
+      createdAt: new Date(1700000000000),
+      messages: [],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+    const pinned = new Date(1650000000000);
+
+    await setConversation(db, { id, state, updatedAt: pinned });
+    const reloaded = await getConversation(db, id);
+    expect(reloaded!.updatedAt).toEqual(pinned);
+
+    // A follow-up save that explicitly passes the same timestamp must not
+    // advance it. This guards against model/profile/parameter changes silently
+    // bumping the sidebar order.
+    const after = await setConversation(db, { id, state, updatedAt: pinned });
+    expect(after.updatedAt).toEqual(pinned);
+  });
+
+  it("falls back to CURRENT_TIMESTAMP when updatedAt is omitted", async () => {
+    const { db } = testDb;
+    const id = "conv-default";
+    const state = {
+      id,
+      createdAt: new Date(1700000000000),
+      messages: [],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    const before = Date.now();
+    const saved = await setConversation(db, { id, state });
+    const after = Date.now();
+
+    expect(saved.updatedAt).not.toBeNull();
+    const ts = saved.updatedAt!.getTime();
+    expect(ts).toBeGreaterThanOrEqual(before);
+    expect(ts).toBeLessThanOrEqual(after);
+  });
+
   it("lists conversations ordered by updated/created time", async () => {
     const { db } = testDb;
     const createdAt = new Date(1700000000000);

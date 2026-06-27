@@ -6,6 +6,21 @@ mod common;
 use common::fixtures::add_conversation;
 use common::test_db;
 
+fn set(
+    db: &koloda_core::app::db::Database,
+    id: &str,
+    state: serde_json::Value,
+) -> Result<Conversation, koloda_core::app::error::AppError> {
+    repo::set_conversation(
+        db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state,
+            updated_at: None,
+        },
+    )
+}
+
 // ============================================================================
 // SET CONVERSATION
 // ============================================================================
@@ -46,14 +61,30 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
     let db = test_db();
     let id = "conv-upsert";
 
-    let initial = repo::set_conversation(&db, id, json!({"version": 1})).expect("initial insert should succeed");
+    let initial = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({"version": 1}),
+            updated_at: None,
+        },
+    )
+    .expect("initial insert should succeed");
     assert!(initial.updated_at.is_none(), "updated_at starts NULL");
 
     // 50ms exceeds the default Windows timer resolution (~15ms), guaranteeing
     // a strictly later timestamp on every platform.
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    let updated = repo::set_conversation(&db, id, json!({"version": 2})).expect("upsert should succeed");
+    let updated = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({"version": 2}),
+            updated_at: None,
+        },
+    )
+    .expect("upsert should succeed");
 
     assert_eq!(updated.id, id);
     assert_eq!(updated.state, json!({"version": 2}));
@@ -69,12 +100,12 @@ fn set_conversation_preserves_created_at_on_update() {
     let db = test_db();
     let id = "conv-preserve";
 
-    let initial = repo::set_conversation(&db, id, json!({"v": 1})).expect("initial insert should succeed");
+    let initial = set(&db, id, json!({"v": 1})).expect("initial insert should succeed");
     let original_created_at = initial.created_at;
 
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    let updated = repo::set_conversation(&db, id, json!({"v": 2})).expect("upsert should succeed");
+    let updated = set(&db, id, json!({"v": 2})).expect("upsert should succeed");
 
     assert_eq!(
         updated.created_at, original_created_at,
@@ -83,6 +114,48 @@ fn set_conversation_preserves_created_at_on_update() {
     assert!(
         updated.updated_at.unwrap() > original_created_at,
         "updated_at should advance past created_at"
+    );
+}
+
+#[test]
+fn set_conversation_with_explicit_updated_at_preserves_timestamp() {
+    let db = test_db();
+    let id = "conv-explicit-updated";
+
+    // First insert with no updated_at: row should have NULL updated_at.
+    let initial = set(&db, id, json!({"v": 1})).expect("initial insert should succeed");
+    assert!(initial.updated_at.is_none(), "updated_at starts NULL on insert");
+
+    // An arbitrary historical timestamp that the caller wants to keep.
+    let provided = 1_700_000_000_123_i64;
+
+    let stored = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({"v": 2}),
+            updated_at: Some(provided),
+        },
+    )
+    .expect("upsert with explicit updated_at should succeed");
+
+    assert_eq!(
+        stored.updated_at,
+        Some(provided),
+        "explicit updated_at should be persisted as-is"
+    );
+
+    // A follow-up save without an updated_at should still bump it via the
+    // server-side fallback.
+    std::thread::sleep(std::time::Duration::from_millis(50));
+    let _ = set(&db, id, json!({"v": 3})).expect("follow-up upsert should succeed");
+
+    let after = repo::get_conversation(&db, id)
+        .expect("query should succeed")
+        .expect("conversation should exist");
+    assert!(
+        after.updated_at.unwrap() > provided,
+        "missing updated_at should fall back to the current time"
     );
 }
 
@@ -98,7 +171,7 @@ fn set_conversation_persists_complex_state_payload() {
         "tags": ["a", "b", "c"],
     });
 
-    let stored = repo::set_conversation(&db, "conv-complex", state.clone()).expect("set should succeed");
+    let stored = set(&db, "conv-complex", state.clone()).expect("set should succeed");
 
     assert_eq!(stored.state, state);
 
@@ -111,8 +184,7 @@ fn set_conversation_persists_complex_state_payload() {
 #[test]
 fn set_conversation_accepts_null_state_payload() {
     let db = test_db();
-    let stored =
-        repo::set_conversation(&db, "conv-null", serde_json::Value::Null).expect("null state should be accepted");
+    let stored = set(&db, "conv-null", serde_json::Value::Null).expect("null state should be accepted");
 
     assert_eq!(stored.state, serde_json::Value::Null);
 }
@@ -173,19 +245,19 @@ fn get_conversations_returns_all_rows() {
 fn get_conversations_orders_by_updated_at_desc_then_created_at_desc() {
     let db = test_db();
 
-    let older = repo::set_conversation(&db, "older", json!({"v": 1})).expect("insert should succeed");
+    let older = set(&db, "older", json!({"v": 1})).expect("insert should succeed");
 
     // Ensure a strictly later created_at (50ms exceeds Windows ~15ms timer resolution).
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    let newer = repo::set_conversation(&db, "newer", json!({"v": 1})).expect("insert should succeed");
+    let newer = set(&db, "newer", json!({"v": 1})).expect("insert should succeed");
     assert!(newer.created_at > older.created_at);
 
     std::thread::sleep(std::time::Duration::from_millis(50));
 
     // Touch the older conversation: it should now have an updated_at and jump
     // to the front of the order.
-    let touched = repo::set_conversation(&db, "older", json!({"v": 2})).expect("upsert should succeed");
+    let touched = set(&db, "older", json!({"v": 2})).expect("upsert should succeed");
     assert!(touched.updated_at.is_some());
 
     let result = repo::get_conversations(&db).expect("query should succeed");
@@ -198,13 +270,13 @@ fn get_conversations_orders_by_updated_at_desc_then_created_at_desc() {
 #[test]
 fn get_conversations_groups_rows_with_null_updated_at_after_touched_rows() {
     let db = test_db();
-    let first = repo::set_conversation(&db, "first", json!({})).expect("insert should succeed");
+    let first = set(&db, "first", json!({})).expect("insert should succeed");
     std::thread::sleep(std::time::Duration::from_millis(50));
-    let second = repo::set_conversation(&db, "second", json!({})).expect("insert should succeed");
+    let second = set(&db, "second", json!({})).expect("insert should succeed");
 
     // Only touch "first"; "second" remains with NULL updated_at.
     std::thread::sleep(std::time::Duration::from_millis(50));
-    let _touched = repo::set_conversation(&db, "first", json!({"v": 2})).expect("upsert should succeed");
+    let _touched = set(&db, "first", json!({"v": 2})).expect("upsert should succeed");
 
     let result = repo::get_conversations(&db).expect("query should succeed");
     assert_eq!(result.len(), 2);
