@@ -223,7 +223,7 @@ Save errors are dismissed separately and are cleared by a successful save.
 ## Retry
 
 The user can retry a failed or completed run.
-Retry re-executes the same request with the same parameters.
+Retry re-executes the same request against the AI provider.
 
 - The run ID is reused — the existing message pair is overwritten
 - For chat retries, the previous response text is cleared and replaced with the new stream
@@ -234,6 +234,13 @@ Retry is only available on the most recent message pair.
 You cannot retry an older run.
 
 Retry preserves the original mode — a chat run retries as chat, a card generation run retries as cards.
+
+### AI Profile State on Retry
+
+Retry uses the conversation's **current** AI profile state — profile, model, and model parameters — not the values that were in effect when the original request was made.
+This lets the user fix a failed run by switching profile, model, or parameters and then retrying, without having to send a new message.
+
+If the user has not changed anything, retry behaves the same as the original request.
 
 ## Concurrent Behavior
 

@@ -14,9 +14,10 @@ If your task matches one of these, read the specified doc first, then target the
 | Change conversation history rules | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Conversation History) | libs/ai-react (atom state/reducer), libs/ai/src/lib/conversations.ts | "What the user sees is what the model gets" (incl. partial fails, excl. card outputs). |
 | Change chat ⇄ cards mode switching | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Mode Switching) | libs/ai-react/src/lib/ai-chat-mode-toggle.tsx, deck-lock atoms | Auto-switch back to chat ONLY on success. Deck must be selected to toggle. |
 | Change deck locking logic | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Deck Selection) | libs/ai-react (atoms), app layer (persistence) | Locks on FIRST successful card run. Once locked, deck is immutable. |
-| Fix AI config (profile/model/params) | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§AI Configuration) | libs/ai-react/src/lib/ai-profile-picker.tsx, ai-model-picker.tsx, ai-model-parameters.tsx | Changing profile resets model + params. Changing model resets params. |
+| Fix AI profile state (profile/model/params) | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§AI Configuration) | libs/ai-react/src/lib/ai-profile-picker.tsx, ai-model-picker.tsx, ai-model-parameters.tsx | Changing profile resets model + params. Changing model resets params. |
 | Modify card generation parsing | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§During Streaming) | libs/ai/src/lib/card-generation.ts, card-parsing.ts | Structured streaming (OpenRouter) vs Text completion (Ollama/LMStudio). |
 | Change persistence / restore | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Persistence) | drizzle/, crates/koloda-core/src/repo, app layer | Failed runs must not break conversation persistence. |
+| Change retry behavior | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Retry) | libs/srs-react/src/lib/assistant/use-assistant-chat.ts (handleRetry), use-conversation-runs.ts (retryRun) | Retry reuses the run ID; mode is preserved from the original run. AI profile/model/params come from the **current** selection, not the original request. |
 
 ## Layer Boundaries (Enforce these)
 
