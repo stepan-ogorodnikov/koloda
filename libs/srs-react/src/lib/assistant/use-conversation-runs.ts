@@ -55,7 +55,6 @@ export function useConversationRuns(
       });
 
       handleStreamResult(result, runId);
-      if (result === "success") dispatch({ type: "setMode", mode: "chat" });
     },
     [dispatch, generate, handleStreamResult],
   );
