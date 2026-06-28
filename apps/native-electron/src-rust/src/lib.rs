@@ -1,7 +1,6 @@
 use koloda_core::app::db::Database;
 use koloda_core::app::error::AppError;
 use koloda_core::app::init::{self as init_mod, SeedData};
-use koloda_core::app::utility::parse_iso_to_millis;
 use koloda_core::domain::lessons::GetLessonsParams;
 use koloda_core::domain::reviews::GetReviewTotalsParams;
 use koloda_core::domain::settings::SettingsName;
@@ -15,18 +14,6 @@ fn to_napi_error(err: AppError) -> Error {
         "details": err.details
     });
     Error::from_reason(error_json.to_string())
-}
-
-fn value_to_millis(value: &serde_json::Value) -> Result<i64> {
-    match value {
-        serde_json::Value::Number(n) => n
-            .as_i64()
-            .ok_or_else(|| Error::from_reason("Invalid timestamp number".to_string())),
-        serde_json::Value::String(s) => parse_iso_to_millis(s).map_err(|e| Error::from_reason(e.to_string())),
-        _ => Err(Error::from_reason(
-            "updated_at must be a number or ISO string".to_string(),
-        )),
-    }
 }
 
 fn parse_settings_name(name: &str) -> Result<SettingsName> {
@@ -326,25 +313,9 @@ impl KolodaDb {
 
     #[napi]
     pub fn set_conversation(&self, params: serde_json::Value) -> Result<String> {
-        #[derive(serde::Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        struct P {
-            id: String,
-            state: serde_json::Value,
-            #[serde(default)]
-            updated_at: Option<serde_json::Value>,
-        }
-        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
-        let updated_at = p.updated_at.as_ref().map(value_to_millis).transpose()?;
-        let conversation = repo::conversations::set_conversation(
-            &self.db,
-            repo::conversations::SetConversationInput {
-                id: p.id,
-                state: p.state,
-                updated_at,
-            },
-        )
-        .map_err(to_napi_error)?;
+        let input: repo::conversations::SetConversationInput =
+            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let conversation = repo::conversations::set_conversation(&self.db, input).map_err(to_napi_error)?;
         as_json(&conversation)
     }
 

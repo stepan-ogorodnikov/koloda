@@ -1,4 +1,5 @@
 use koloda_core::domain::conversations::Conversation;
+use koloda_core::repo::conversations::SetConversationInput;
 use serde_json::json;
 
 // ============================================================================
@@ -215,6 +216,20 @@ fn test_conversation_deserialization_explicit_null_updated_at_is_none() {
 }
 
 #[test]
+fn test_set_conversation_input_deserialization_accepts_f64_updated_at() {
+    let data = json!({
+        "id": "conv-1",
+        "state": {"messages": []},
+        "updatedAt": 1_700_000_001_000_f64,
+    });
+
+    let input: SetConversationInput =
+        serde_json::from_value(data).expect("f64 updatedAt from JS wire format should deserialize");
+
+    assert_eq!(input.updated_at, Some(1_700_000_001_000));
+}
+
+#[test]
 fn test_conversation_deserialization_invalid_updated_at_string_fails() {
     let data = json!({
         "id": "conv-1",
@@ -374,8 +389,14 @@ fn test_conversation_round_trip_via_iso_strings() {
     };
 
     let serialized = serde_json::to_value(&original).expect("serialize");
-    assert!(serialized["createdAt"].is_string(), "createdAt serializes as ISO string");
-    assert!(serialized["updatedAt"].is_string(), "updatedAt serializes as ISO string");
+    assert!(
+        serialized["createdAt"].is_string(),
+        "createdAt serializes as ISO string"
+    );
+    assert!(
+        serialized["updatedAt"].is_string(),
+        "updatedAt serializes as ISO string"
+    );
 
     let restored: Conversation = serde_json::from_value(serialized).expect("serialized form should round-trip");
     assert_eq!(restored.id, original.id);

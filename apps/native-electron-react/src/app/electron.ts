@@ -1,4 +1,5 @@
 import { AppError, type ErrorCode } from "@koloda/app";
+import { fromWire, toWire } from "./ipc";
 
 declare global {
   interface Window {
@@ -53,7 +54,9 @@ function parseElectronError(error: unknown): ConstructorParameters<typeof AppErr
 
 export async function invoke<T>(cmd: string, args?: unknown): Promise<T> {
   try {
-    return await window.electronAPI.invoke<T>(cmd, args);
+    const wire = args === undefined ? args : toWire(args);
+    const raw = await window.electronAPI.invoke<unknown>(cmd, wire);
+    return fromWire<T>(raw);
   } catch (error) {
     throw new AppError(...parseElectronError(error));
   }
