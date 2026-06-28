@@ -7,6 +7,8 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
 
+const DEFAULT_BASEURL = "http://localhost:11434";
+
 const formSchema = ollamaSecretsValidation.extend({
   title: aiProfileValidation.shape.title,
 });
@@ -15,7 +17,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const defaultValues: FormValues = {
   title: "",
-  baseUrl: "",
+  baseUrl: DEFAULT_BASEURL,
   apiKey: "",
 };
 
@@ -69,7 +71,7 @@ export function AddAIProfileOllama({ onSubmit, isPending, error }: AddAIProfileF
               isRequired
             >
               <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
-              <TextField.Input placeholder="http://localhost:11434" />
+              <TextField.Input placeholder={DEFAULT_BASEURL} />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
             </TextField>
           )}

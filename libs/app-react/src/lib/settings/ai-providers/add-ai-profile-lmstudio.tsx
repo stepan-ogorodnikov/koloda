@@ -1,11 +1,13 @@
 import { aiProfileValidation, lmstudioSecretsValidation } from "@koloda/ai";
+import type { AddAIProfileFormProps } from "@koloda/ai";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
-import type { AddAIProfileFormProps } from "@koloda/ai";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
+
+const DEFAULT_BASEURL = "http://localhost:1234/v1";
 
 const formSchema = lmstudioSecretsValidation.extend({
   title: aiProfileValidation.shape.title,
@@ -15,7 +17,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const defaultValues: FormValues = {
   title: "",
-  baseUrl: "",
+  baseUrl: DEFAULT_BASEURL,
   apiKey: "",
 };
 
@@ -69,7 +71,7 @@ export function AddAIProfileLMStudio({ onSubmit, isPending, error }: AddAIProfil
               isRequired
             >
               <Label>{_(msg`settings.ai.profiles.base-url.label`)}</Label>
-              <TextField.Input placeholder="http://localhost:1234/v1" />
+              <TextField.Input placeholder={DEFAULT_BASEURL} />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
             </TextField>
           )}
