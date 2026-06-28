@@ -1,7 +1,16 @@
 import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import { Button, button, dispatchKey, formLayoutSection, formLayoutSectionContent, Label, popover } from "@koloda/ui";
+import {
+  Button,
+  button,
+  dispatchKey,
+  formLayoutSection,
+  formLayoutSectionContent,
+  Label,
+  matchesAnyHotkey,
+  popover,
+} from "@koloda/ui";
 import type { LabelProps, TWVProps } from "@koloda/ui";
 import { Popover } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
@@ -198,11 +207,18 @@ type SelectSearchFieldProps = {
 };
 
 function SelectSearchField({ label, placeholder }: SelectSearchFieldProps) {
+  const state = useContext(SelectStateContext);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (state?.isOpen && inputRef.current) inputRef.current.focus();
+  }, [state?.isOpen]);
+
   return (
     <SearchField variants={{ class: "w-full" }} aria-label={label}>
       <SearchField.Group variants={{ style: "ghost", focusable: false, class: "mt-1 -mb-1" }}>
         <SearchField.Icon />
-        <SearchField.Input placeholder={placeholder} />
+        <SearchField.Input placeholder={placeholder} ref={inputRef} />
       </SearchField.Group>
     </SearchField>
   );
@@ -304,43 +320,39 @@ function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
 function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   const { ui } = useHotkeysSettings();
   const state = useContext(SelectStateContext);
-  const options: HotkeyOptions = { target: ref.current, ignoreInputs: false, conflictBehavior: "allow" };
+  const options: HotkeyOptions = { target: ref.current ?? document, ignoreInputs: false, conflictBehavior: "allow" };
   useAppHotkey(ui.focusNext, () => dispatchSelectNavigationKey(ref, state, "ArrowDown"), "", options);
   useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", options);
-  useAppHotkey(ui.close, () => dispatchSelectKey(ref, state, "Escape"), "", options);
 
-  // Fix for hotkeys with 'Alt' modifier breaking selecting with 'Space'
+  // Capture-phase listener for the close hotkey. This fires before the Autocomplete's
+  // onKeyDown can call stopPropagation (which in React 19 also stops the native event),
+  // so the hotkey works even when focus is on the search input.
   useEffect(() => {
     if (!state?.isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT") return;
-
-      if (e.key === " " || e.key === "Space") {
-        const focusedKey = state?.selectionManager.focusedKey;
-        if (focusedKey) {
-          e.preventDefault();
-          e.stopPropagation();
-          state.selectionManager.select(focusedKey);
+      if (matchesAnyHotkey(e, ui.close)) {
+        e.preventDefault();
+        e.stopPropagation();
+        state.close();
+      } else if ((e.target as HTMLElement).tagName !== "INPUT") {
+        // Fix for hotkeys with 'Alt' modifier breaking selecting with 'Space'
+        if (e.key === " " || e.key === "Space") {
+          const focusedKey = state.selectionManager.focusedKey;
+          if (focusedKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            state.selectionManager.select(focusedKey);
+          }
         }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [state]);
+  }, [state, ui.close]);
 
   return null;
-}
-
-function dispatchSelectKey(
-  ref: RefObject<HTMLElement | null>,
-  state: SelectState,
-  key: string,
-) {
-  if (!state?.isOpen) return;
-  dispatchKey(ref, key);
 }
 
 function dispatchSelectNavigationKey(

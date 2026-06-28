@@ -3,6 +3,7 @@ import type { AppHotkeys } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useMemo } from "react";
 
 export function useHotkeysSettings(): AppHotkeys {
   const { getSettingsQuery } = useAtomValue(queriesAtom);
@@ -11,7 +12,9 @@ export function useHotkeysSettings(): AppHotkeys {
     queryKey: queryKeys.settings.detail("hotkeys"),
   });
 
-  return data?.content
-    ? hotkeysSettingsValidation.parse(data.content) as AppHotkeys
-    : DEFAULT_HOTKEYS_SETTINGS as AppHotkeys;
+  return useMemo(() => (
+    data?.content
+      ? hotkeysSettingsValidation.parse(data.content) as AppHotkeys
+      : DEFAULT_HOTKEYS_SETTINGS as AppHotkeys
+  ), [data]);
 }

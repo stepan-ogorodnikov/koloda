@@ -2,8 +2,9 @@ import { Cancel01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, FieldGroup, fieldGroup } from "@koloda/ui";
 import type { ButtonProps, FieldGroupProps, TWVProps } from "@koloda/ui";
+import type { ComponentProps } from "react";
 import { Input, SearchField as ReactAriaSearchField } from "react-aria-components";
-import type { InputProps, SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
+import type { SearchFieldProps as ReactAriaSearchFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const searchField = tv({ base: "flex" });
@@ -34,7 +35,7 @@ export const searchFieldInput = tv({
   base: "w-full min-w-0 px-2 border-0 bg-transparent outline-none",
 });
 
-export type SearchFieldInputProps = InputProps & TWVProps<typeof searchFieldInput>;
+export type SearchFieldInputProps = ComponentProps<typeof Input> & TWVProps<typeof searchFieldInput>;
 
 export function SearchFieldInput({ variants, ...props }: SearchFieldInputProps) {
   return <Input className={searchFieldInput(variants)} {...props} />;
