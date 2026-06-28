@@ -2,17 +2,19 @@ import {
   generateCardsWithLMStudio,
   generateCardsWithOllama,
   generateCardsWithOpencodeGo,
+  generateCardsWithOpencodeZen,
   generateCardsWithOpenRouter,
 } from "./card-generation";
 import {
   streamChatWithLMStudio,
   streamChatWithOllama,
   streamChatWithOpencodeGo,
+  streamChatWithOpencodeZen,
   streamChatWithOpenRouter,
 } from "./chat-stream";
 import { AIError, throwForAIResponse } from "./error";
 import type { AIModel, AiProvider, AISecrets, ChatStreamGenerator, GenerateCardsFunction, SecretField } from "./types";
-import { OPENCODE_GO_BASE_URL } from "./types";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -54,6 +56,8 @@ type OpenAICompatibleModelsResponse = {
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
+
+export const OPENCODE_ZEN_MODELS_URL = `${OPENCODE_ZEN_BASE_URL}/models`;
 
 type ReasoningLevels = {
   levels: Array<{ effort: string; description: string }>;
@@ -115,6 +119,37 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
 export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
     await fetch(`${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+    }),
+  );
+
+  const data: OpenAICompatibleModelsResponse = await response.json();
+  if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
+
+  return data.data
+    .map((model) => {
+      const reasoning = resolveReasoningLevelsForModel(model.id);
+      return {
+        id: model.id,
+        name: model.name ?? model.id,
+        description: model.description,
+        context_length: model.context_length ?? model.context_window ?? 0,
+        top_provider: model.top_provider,
+        architecture: model.architecture,
+        supported_parameters: model.supported_parameters,
+        supported_reasoning_levels: model.supported_reasoning_levels ?? reasoning?.levels,
+        default_reasoning_level: model.default_reasoning_level ?? reasoning?.default,
+      };
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+}
+
+export async function fetchOpencodeZenModels(apiKey?: string): Promise<AIModel[]> {
+  const response = throwForAIResponse(
+    await fetch(`${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`, {
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
@@ -246,6 +281,15 @@ function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencod
   };
 }
 
+function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "opencodeZen" }>): AIGenerationClient {
+  return {
+    provider: "opencodeZen",
+    listModels: () => fetchOpencodeZenModels(secrets.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithOpencodeZen(request, onChunk, abortSignal, secrets),
+    generateCards: (request) => generateCardsWithOpencodeZen(request, secrets),
+  };
+}
+
 function createCodexPlaceholderClient(): AIGenerationClient {
   const unsupported = async () => {
     throw new AIError("unknown", "Codex provider requires the native app runtime.");
@@ -305,6 +349,19 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
       return s.apiKey ? [] : ["apiKey"];
     },
     getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "opencodeGo" }>).apiKey,
+  },
+  opencodeZen: {
+    id: "opencodeZen",
+    createClient: (secrets) => createOpencodeZenClient(secrets as Extract<AISecrets, { provider: "opencodeZen" }>),
+    fetchModels: (secrets) => {
+      const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
+      return fetchOpencodeZenModels(s.apiKey);
+    },
+    getMissingSecretFields: (secrets) => {
+      const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
+      return s.apiKey ? [] : ["apiKey"];
+    },
+    getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "opencodeZen" }>).apiKey,
   },
   codex: {
     id: "codex",

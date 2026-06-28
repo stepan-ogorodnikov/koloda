@@ -103,6 +103,28 @@ fn test_valid_ai_settings_with_opencode_go_profile() {
     assert!(settings.validate().is_ok());
 }
 
+#[test]
+fn test_valid_ai_settings_with_opencode_zen_profile() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-5",
+                "title": "OpenCode Zen",
+                "secrets": {
+                    "provider": "opencodeZen",
+                    "apiKey": "zen-key"
+                },
+                "lastUsedModel": null,
+                "createdAt": "2026-01-01T00:00:00Z",
+                "lastUsedAt": null
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok());
+}
+
 // ============================================================================
 // MISSING FIELDS
 // ============================================================================

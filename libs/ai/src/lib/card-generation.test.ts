@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { generateCardsWithLMStudio, generateCardsWithOllama, generateCardsWithOpencodeGo } from "./card-generation";
+import {
+  generateCardsWithLMStudio,
+  generateCardsWithOllama,
+  generateCardsWithOpencodeGo,
+  generateCardsWithOpencodeZen,
+} from "./card-generation";
 import { getCardContentSchema } from "./card-parsing";
 import { buildSystemPromptForProvider } from "./prompts";
-import { OPENCODE_GO_BASE_URL } from "./types";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
 import type { CardGenerationFields } from "./types";
 
 function createFields(): CardGenerationFields {
@@ -44,6 +49,10 @@ describe("card-generation", () => {
       "Provider-specific format instructions:",
     );
     expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain("**Front**: <value>");
+    expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain(
+      "Provider-specific format instructions:",
+    );
+    expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain("**Front**: <value>");
   });
 
   it("validates required and optional generated card content", () => {
@@ -279,6 +288,51 @@ describe("card-generation", () => {
     });
     const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(call?.[0]?.toString()).toBe(`${OPENCODE_GO_BASE_URL}/chat/completions`);
+    const init = call?.[1];
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+    expect(headers["Authorization"] ?? headers["authorization"]).toBe("Bearer test-key");
+    const body = JSON.parse(init?.body as string) as {
+      model: string;
+      messages: Array<{ role: string }>;
+    };
+    expect(body.model).toBe("openrouter/gpt-5-mini");
+    expect(body.messages[0]?.role).toBe("system");
+  });
+
+  it("parses markdown card output from OpenCode Zen responses", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{
+            message: {
+              content: [
+                "## Card 1",
+                "**Front**: First question",
+                "**Back**: First answer",
+              ].join("\n"),
+            },
+          }],
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      )
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const request = createRequest();
+
+    await generateCardsWithOpencodeZen(request, { provider: "opencodeZen", apiKey: "test-key" });
+
+    expect(request.onCard).toHaveBeenCalledTimes(1);
+    expect(request.onCard).toHaveBeenCalledWith({
+      content: {
+        "1": { text: "First question" },
+        "2": { text: "First answer" },
+      },
+    });
+    const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(call?.[0]?.toString()).toBe(`${OPENCODE_ZEN_BASE_URL}/chat/completions`);
     const init = call?.[1];
     const headers = (init?.headers ?? {}) as Record<string, string>;
     expect(headers["Authorization"] ?? headers["authorization"]).toBe("Bearer test-key");

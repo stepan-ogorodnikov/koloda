@@ -36,6 +36,7 @@ fn redact_secrets(secrets: &AISecrets) -> AISecrets {
             api_key: None,
         },
         AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: String::new() },
+        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: String::new() },
         AISecrets::Codex { .. } => AISecrets::Codex {},
     }
 }
@@ -52,6 +53,7 @@ fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
             api_key: Some(api_key),
         },
         AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key },
+        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key },
         AISecrets::Codex { .. } => AISecrets::Codex {},
     }
 }

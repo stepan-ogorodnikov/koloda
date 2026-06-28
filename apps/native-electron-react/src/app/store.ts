@@ -62,6 +62,6 @@ store.set(hotkeysScopesAtom, DEFAULT_HOTKEYS_SCOPES);
 
 store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 
-store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "opencodeGo"]);
+store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"]);
 
 store.set(appEntryAtom, { component: AppEntry });

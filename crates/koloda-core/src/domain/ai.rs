@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
 
-pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "codex"];
+pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "codex"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,6 +40,11 @@ pub enum AISecrets {
     },
     #[serde(rename = "opencodeGo")]
     OpencodeGo {
+        #[serde(rename = "apiKey", alias = "api_key")]
+        api_key: String,
+    },
+    #[serde(rename = "opencodeZen")]
+    OpencodeZen {
         #[serde(rename = "apiKey", alias = "api_key")]
         api_key: String,
     },
@@ -87,6 +92,7 @@ impl AISecrets {
             AISecrets::Ollama { .. } => "ollama",
             AISecrets::LmStudio { .. } => "lmstudio",
             AISecrets::OpencodeGo { .. } => "opencodeGo",
+            AISecrets::OpencodeZen { .. } => "opencodeZen",
             AISecrets::Codex { .. } => "codex",
         }
     }
@@ -97,6 +103,7 @@ impl AISecrets {
             AISecrets::Ollama { api_key, .. } => api_key.as_deref(),
             AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
             AISecrets::OpencodeGo { api_key } => Some(api_key),
+            AISecrets::OpencodeZen { api_key } => Some(api_key),
             AISecrets::Codex { .. } => None,
         }
     }
@@ -139,6 +146,14 @@ impl AISecrets {
                     ));
                 }
             }
+            AISecrets::OpencodeZen { api_key } => {
+                if api_key.trim().is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        Some("opencodeZen.apiKey is required".to_string()),
+                    ));
+                }
+            }
             AISecrets::Codex { .. } => {}
         }
 
@@ -176,6 +191,14 @@ impl AISecrets {
                     return Err(AppError::new(
                         error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
                         Some("opencodeGo.apiKey cannot be whitespace only".to_string()),
+                    ));
+                }
+            }
+            AISecrets::OpencodeZen { api_key } => {
+                if !api_key.is_empty() && api_key.trim().is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        Some("opencodeZen.apiKey cannot be whitespace only".to_string()),
                     ));
                 }
             }

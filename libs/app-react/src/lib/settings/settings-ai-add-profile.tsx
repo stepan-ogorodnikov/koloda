@@ -16,6 +16,7 @@ import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
 import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
 import { AddAIProfileOpencodeGo } from "./ai-providers/add-ai-profile-opencode-go";
+import { AddAIProfileOpencodeZen } from "./ai-providers/add-ai-profile-opencode-zen";
 import { AddAIProfileOpenRouter } from "./ai-providers/add-ai-profile-openrouter";
 
 const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
@@ -23,6 +24,7 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> =
   ollama: AddAIProfileOllama,
   lmstudio: AddAIProfileLMStudio,
   opencodeGo: AddAIProfileOpencodeGo,
+  opencodeZen: AddAIProfileOpencodeZen,
   codex: AddAIProfileCodex,
 };
 

@@ -14,6 +14,7 @@ import { EditAIProfileCodex } from "./ai-providers/edit-ai-profile-codex";
 import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
 import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
 import { EditAIProfileOpencodeGo } from "./ai-providers/edit-ai-profile-opencode-go";
+import { EditAIProfileOpencodeZen } from "./ai-providers/edit-ai-profile-opencode-zen";
 import { EditAIProfileOpenRouter } from "./ai-providers/edit-ai-profile-openrouter";
 
 const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> = {
@@ -21,6 +22,7 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> 
   ollama: EditAIProfileOllama,
   lmstudio: EditAIProfileLMStudio,
   opencodeGo: EditAIProfileOpencodeGo,
+  opencodeZen: EditAIProfileOpencodeZen,
   codex: EditAIProfileCodex,
 };
 

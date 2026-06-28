@@ -122,6 +122,51 @@ fn test_ai_secrets_opencode_go_deserialize_api_key_alias() {
 }
 
 #[test]
+fn test_opencode_zen_validate_ok_with_api_key() {
+    let secrets = AISecrets::OpencodeZen {
+        api_key: "zen-secret".to_string(),
+    };
+
+    assert!(secrets.validate().is_ok());
+    assert_eq!(secrets.provider(), "opencodeZen");
+    assert_eq!(secrets.api_key(), Some("zen-secret"));
+}
+
+#[test]
+fn test_opencode_zen_validate_empty_api_key_fails() {
+    let secrets = AISecrets::OpencodeZen {
+        api_key: "".to_string(),
+    };
+
+    let result = secrets.validate();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+}
+
+#[test]
+fn test_opencode_zen_validate_whitespace_api_key_fails() {
+    let secrets = AISecrets::OpencodeZen {
+        api_key: "  ".to_string(),
+    };
+
+    let result = secrets.validate();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+}
+
+#[test]
+fn test_ai_secrets_opencode_zen_deserialize_api_key_alias() {
+    let json = r#"{
+        "provider": "opencodeZen",
+        "api_key": "alias-key"
+    }"#;
+
+    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
+    assert_eq!(secrets.provider(), "opencodeZen");
+    assert_eq!(secrets.api_key(), Some("alias-key"));
+}
+
+#[test]
 fn test_ai_secrets_invalid_provider_fails() {
     let json = r#"{
         "provider": "unknown",

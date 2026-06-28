@@ -4,7 +4,7 @@ import { getConversationMessages } from "./chat-stream";
 import { wrapAIError } from "./error";
 import { compilePromptTemplate } from "./prompts";
 import type { AISecrets, CardGenerationRequest, GeneratedCard } from "./types";
-import { DEFAULT_GENERATION_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL } from "./types";
+import { DEFAULT_GENERATION_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
 
 async function runStructuredCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
@@ -179,6 +179,38 @@ export function generateCardsWithOpencodeGo(
           abortSignal,
           providerOptions: input.reasoningEffort
             ? { "opencode-go": { reasoningEffort: input.reasoningEffort } }
+            : undefined,
+        });
+        return result.text;
+      },
+      request,
+    );
+  });
+}
+
+export function generateCardsWithOpencodeZen(
+  request: CardGenerationRequest,
+  { apiKey }: Extract<AISecrets, { provider: "opencodeZen" }>,
+) {
+  return wrapAIError(async () => {
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const opencodeZen = createOpenAICompatible({ name: "opencode-zen", baseURL: OPENCODE_ZEN_BASE_URL, apiKey });
+
+    return runTextCompletionCardGeneration(
+      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
+        const result = await generateText({
+          model: opencodeZen(input.modelId),
+          temperature: resolveGenerationTemperature(input.temperature),
+          system: compilePromptTemplate(
+            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+            template.content.fields,
+            "opencodeZen",
+            "generation",
+          ),
+          messages: getConversationMessages(messages, input.prompt),
+          abortSignal,
+          providerOptions: input.reasoningEffort
+            ? { "opencode-zen": { reasoningEffort: input.reasoningEffort } }
             : undefined,
         });
         return result.text;

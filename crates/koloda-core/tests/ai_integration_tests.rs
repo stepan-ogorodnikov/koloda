@@ -149,3 +149,28 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
 
     test_store::teardown(_guard);
 }
+
+#[test]
+fn ai_profile_opencode_zen_round_trips_via_secret_store() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenCode Zen".to_string()),
+        Some(AISecrets::OpencodeZen {
+            api_key: "zen-secret-key".to_string(),
+        }),
+    )
+    .expect("profile should be added");
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+
+    match retrieved.secrets.as_ref() {
+        Some(AISecrets::OpencodeZen { api_key }) => assert_eq!(api_key, "zen-secret-key"),
+        other => panic!("expected OpencodeZen secrets, got {:?}", other),
+    }
+
+    test_store::teardown(_guard);
+}
