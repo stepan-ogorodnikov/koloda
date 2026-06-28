@@ -59,7 +59,7 @@ function walkWire(value: unknown, seen: WeakSet<object>, path: string): JsonValu
   if (Array.isArray(value)) {
     if (seen.has(value)) throw new WireError("Circular reference", path);
     seen.add(value);
-    const out: JsonValue[] = new Array(value.length);
+    const out: JsonValue[] = Array.from({ length: value.length });
     for (let i = 0; i < value.length; i++) {
       out[i] = walkWire(value[i], seen, path ? `${path}[${i}]` : `[${i}]`);
     }
@@ -101,7 +101,7 @@ function revive(value: unknown, path: string, reviver: WireReviver): unknown {
   if (typeof r === "string" || typeof r === "number" || typeof r === "boolean") return r;
   if (r instanceof Date) return r;
   if (Array.isArray(r)) {
-    const out = new Array(r.length);
+    const out = Array.from({ length: r.length });
     for (let i = 0; i < r.length; i++) {
       out[i] = revive(r[i], path ? `${path}[${i}]` : `[${i}]`, reviver);
     }

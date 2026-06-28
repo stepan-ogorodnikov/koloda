@@ -66,6 +66,14 @@
       "options": {
         "script": "lingui compile"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config apps/native-electron-react/vitest.config.mjs --configLoader runner"
+      },
+      "inputs": ["default", "^default"],
+      "configurations": {}
     }
   }
 }
