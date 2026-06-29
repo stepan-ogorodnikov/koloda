@@ -16,10 +16,11 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
-import { QueryError } from "@koloda/ui";
+import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
+import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
 import { useRef, useState } from "react";
 import {
@@ -126,53 +127,63 @@ export function AssistantChat(
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
-      {isRestoring
-        ? (
-          <div className="flex grow items-center justify-center fg-level-2">
-            {_(msg`ai.chat.restoring`)}
-          </div>
-        )
-        : loadError
-        ? <QueryError error={loadError} onRetry={handleRetryLoad} />
-        : areSettingsOpen
-        ? <AssistantSettings template={template} provider={provider} />
-        : (
-          <>
-            <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
-            <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-            {(() => {
-              const generateErr = erroredRun?.error?.message ?? null;
-              const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed
-                ? saveStatus.message
-                : null;
-              return (
-                <>
-                  {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
-                  {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
-                </>
-              );
-            })()}
-            <AIChatPromptPanel onSubmit={handleSubmit}>
-              <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
-              <div className="flex flex-row items-center min-w-0">
-                <AIModelPicker
-                  profileId={profileId}
-                  value={modelId}
-                  onChange={handleModelChange}
-                  triggerRef={modelPickerRef}
-                />
-                {modelParameters.length > 0 && (
-                  <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
-                )}
-                <div className="grow min-w-3" />
-                <div className="flex flex-row items-center gap-2 shrink-0">
-                  <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
-                  <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
+      <AnimatePresence mode="wait">
+        {isRestoring
+          ? (
+            <Fade key="restoring" className="grow flex items-center justify-center fg-level-2">
+              {_(msg`ai.chat.restoring`)}
+            </Fade>
+          )
+          : loadError
+          ? (
+            <Fade key="error" className="grow">
+              <QueryError error={loadError} onRetry={handleRetryLoad} />
+            </Fade>
+          )
+          : areSettingsOpen
+          ? (
+            <Fade key="settings" className="grow">
+              <AssistantSettings template={template} provider={provider} />
+            </Fade>
+          )
+          : (
+            <Fade key="chat" className="grow flex flex-col min-h-0">
+              <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
+              <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
+              {(() => {
+                const generateErr = erroredRun?.error?.message ?? null;
+                const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed
+                  ? saveStatus.message
+                  : null;
+                return (
+                  <>
+                    {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
+                    {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
+                  </>
+                );
+              })()}
+              <AIChatPromptPanel onSubmit={handleSubmit}>
+                <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
+                <div className="flex flex-row items-center min-w-0">
+                  <AIModelPicker
+                    profileId={profileId}
+                    value={modelId}
+                    onChange={handleModelChange}
+                    triggerRef={modelPickerRef}
+                  />
+                  {modelParameters.length > 0 && (
+                    <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
+                  )}
+                  <div className="grow min-w-3" />
+                  <div className="flex flex-row items-center gap-2 shrink-0">
+                    <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
+                    <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
+                  </div>
                 </div>
-              </div>
-            </AIChatPromptPanel>
-          </>
-        )}
+              </AIChatPromptPanel>
+            </Fade>
+          )}
+      </AnimatePresence>
       <AIChatFooter>
         <AIProfilePicker value={profileId} onChange={handleProfileChange} triggerRef={profilePickerRef} />
         <div className="grow min-w-3" />
