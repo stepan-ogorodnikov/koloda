@@ -141,6 +141,10 @@ msgstr "Source template not found"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Interrupt"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+msgid "settings.hotkeys.ai.clear-deck"
+msgstr "Clear deck selection"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Focus chat input"
@@ -149,23 +153,15 @@ msgstr "Focus chat input"
 msgid "settings.hotkeys.ai.new-conversation"
 msgstr "New conversation"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
-msgid "settings.hotkeys.ai.open-deck-picker"
-msgstr "Open deck picker"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
-msgid "settings.hotkeys.ai.clear-deck"
-msgstr "Clear deck selection"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
-msgid "settings.hotkeys.ai.previous-conversation"
-msgstr "Previous conversation"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:54
 msgid "settings.hotkeys.ai.next-conversation"
 msgstr "Next conversation"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:48
+msgid "settings.hotkeys.ai.open-deck-picker"
+msgstr "Open deck picker"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
@@ -173,27 +169,31 @@ msgstr "Open AI model picker"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Open AI profile picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+msgid "settings.hotkeys.ai.previous-conversation"
+msgstr "Previous conversation"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:56
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Scroll down"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:54
+#: ../../libs/app/src/lib/settings-hotkeys.ts:58
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Scroll to bottom"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+#: ../../libs/app/src/lib/settings-hotkeys.ts:57
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Scroll to top"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
+#: ../../libs/app/src/lib/settings-hotkeys.ts:55
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Scroll up"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
 msgid "settings.hotkeys.ai.toggle-cards-mode"
 msgstr "Toggle cards mode"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Toggle settings"
 

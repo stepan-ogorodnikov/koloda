@@ -6,6 +6,7 @@ import type { CardGenerationExecutor } from "./use-assistant-card-generation";
 export type AssistantConversationConfig = {
   profileId: string;
   modelId: string;
+  modelName?: string;
   temperature: number;
   reasoningEffort: string;
   deckId: Deck["id"];

@@ -21,6 +21,7 @@ export type AssistantCardsMessageProps = {
   canRetry: boolean;
   onRetry: () => void;
   elapsedSeconds?: number;
+  modelName?: string;
 };
 
 export function AssistantCardsMessage({
@@ -38,6 +39,7 @@ export function AssistantCardsMessage({
   canRetry,
   onRetry,
   elapsedSeconds,
+  modelName,
 }: AssistantCardsMessageProps) {
   const { _ } = useLingui();
 
@@ -69,7 +71,9 @@ export function AssistantCardsMessage({
             canAdd={canAdd}
             isGenerating={isGenerating}
           />
-          {elapsedSeconds !== undefined && <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} />}
+          {elapsedSeconds !== undefined && (
+            <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
+          )}
         </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && !cards.length && (

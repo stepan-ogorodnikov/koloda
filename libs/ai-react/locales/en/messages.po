@@ -40,7 +40,7 @@ msgstr "m"
 msgid "ai.chat.elapsed-time.periods.seconds"
 msgstr "s"
 
-#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:33
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:32
 msgid "ai.chat.error.close"
 msgstr "Hide errors"
 
@@ -52,23 +52,19 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:61
 msgid "ai.chat.message.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:40
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:47
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Interrupted after"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:48
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:55
 msgid "ai.chat.message.status.failed"
 msgstr "Failed to get a response"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:31
-msgid "ai.chat.message.status.finished-in"
-msgstr "Finished in"
-
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:25
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:27
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 

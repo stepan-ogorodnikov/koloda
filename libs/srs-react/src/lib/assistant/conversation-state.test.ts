@@ -93,6 +93,57 @@ describe("coerceConversationState", () => {
     expect(coerced.modelId).toBe("model-1");
     expect(coerced.modelParameters).toEqual({ reasoning_effort: "high" });
   });
+
+  describe("run modelName coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "chat",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    it("preserves a string modelName on a run", () => {
+      const coerced = coerceConversationState(
+        makeStateWithRun(baseRun({ modelName: "GPT-4" })),
+      )!;
+      expect(coerced.runs["r1"].modelName).toBe("GPT-4");
+    });
+
+    it("defaults modelName to undefined when the field is missing", () => {
+      const coerced = coerceConversationState(makeStateWithRun(baseRun()))!;
+      expect(coerced.runs["r1"].modelName).toBeUndefined();
+    });
+
+    it("accepts explicit null and coerces it to undefined", () => {
+      const coerced = coerceConversationState(
+        makeStateWithRun(baseRun({ modelName: null })),
+      )!;
+      expect(coerced.runs["r1"].modelName).toBeUndefined();
+    });
+
+    it("rejects a non-string modelName", () => {
+      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: 5 })))).toBeNull();
+      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: true })))).toBeNull();
+      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: {} })))).toBeNull();
+    });
+  });
 });
 
 describe("normalizeRestoredConversation", () => {
@@ -461,6 +512,29 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].templateFields).toEqual(fields);
     });
+
+    it("stamps modelName on the new run when provided", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "startRun",
+        runId: "r1",
+        mode: "chat",
+        request: {},
+        modelName: "GPT-4",
+      });
+
+      expect(state.runs["r1"].modelName).toBe("GPT-4");
+    });
+
+    it("leaves modelName undefined when not provided", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "startRun",
+        runId: "r1",
+        mode: "chat",
+        request: {},
+      });
+
+      expect(state.runs["r1"].modelName).toBeUndefined();
+    });
   });
 
   describe("addCard", () => {
@@ -706,6 +780,72 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toEqual(nextFields);
+    });
+
+    it("overwrites modelName when a new value is provided", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
+      ]);
+      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+
+      state = conversationReducer(state, {
+        type: "restartRun",
+        runId: "r1",
+        request: {},
+        templateFields: null,
+        mode: "chat",
+        modelName: "Claude",
+      });
+
+      expect(state.runs["r1"].modelName).toBe("Claude");
+    });
+
+    it("preserves the existing modelName when restartRun omits it", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
+      ]);
+      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+
+      state = conversationReducer(state, {
+        type: "restartRun",
+        runId: "r1",
+        request: {},
+        templateFields: null,
+        mode: "chat",
+      });
+
+      expect(state.runs["r1"].modelName).toBe("GPT-4");
+    });
+
+    it("preserves the existing modelName when restartRun sets it to undefined", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
+      ]);
+      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+
+      state = conversationReducer(state, {
+        type: "restartRun",
+        runId: "r1",
+        request: {},
+        templateFields: null,
+        mode: "chat",
+        modelName: undefined,
+      });
+
+      expect(state.runs["r1"].modelName).toBe("GPT-4");
+    });
+
+    it("uses the action's modelName when the run is missing", () => {
+      const state = conversationReducer(initialConversationState, {
+        type: "restartRun",
+        runId: "r1",
+        request: {},
+        templateFields: null,
+        mode: "chat",
+        modelName: "Claude",
+      });
+
+      expect(state.runs["r1"].modelName).toBe("Claude");
     });
   });
 

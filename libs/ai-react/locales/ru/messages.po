@@ -40,7 +40,7 @@ msgstr "м"
 msgid "ai.chat.elapsed-time.periods.seconds"
 msgstr "с"
 
-#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:33
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:32
 msgid "ai.chat.error.close"
 msgstr "Скрыть ошибки"
 
@@ -52,23 +52,19 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:61
 msgid "ai.chat.message.retry"
 msgstr "Повторить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:40
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:47
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Прервано через"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:48
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:55
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось выполнить запрос"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:31
-msgid "ai.chat.message.status.finished-in"
-msgstr "Завершено за"
-
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:25
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:27
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 

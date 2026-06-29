@@ -141,6 +141,10 @@ msgstr "Исходный шаблон не найден"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Прервать"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+msgid "settings.hotkeys.ai.clear-deck"
+msgstr "Очистить колоду"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Фокус на поле ввода"
@@ -149,23 +153,15 @@ msgstr "Фокус на поле ввода"
 msgid "settings.hotkeys.ai.new-conversation"
 msgstr "Новый диалог"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
-msgid "settings.hotkeys.ai.open-deck-picker"
-msgstr "Выбор колоды"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
-msgid "settings.hotkeys.ai.clear-deck"
-msgstr "Очистить колоду"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
-msgid "settings.hotkeys.ai.previous-conversation"
-msgstr "Предыдущий диалог"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:54
 msgid "settings.hotkeys.ai.next-conversation"
 msgstr "Следующий диалог"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:48
+msgid "settings.hotkeys.ai.open-deck-picker"
+msgstr "Выбор колоды"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 
@@ -173,27 +169,31 @@ msgstr "Выбор модели ИИ"
 msgid "settings.hotkeys.ai.open-profile-picker"
 msgstr "Выбор профиля ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+msgid "settings.hotkeys.ai.previous-conversation"
+msgstr "Предыдущий диалог"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:56
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Прокрутить вниз"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:54
+#: ../../libs/app/src/lib/settings-hotkeys.ts:58
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Прокрутить в конец"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+#: ../../libs/app/src/lib/settings-hotkeys.ts:57
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Прокрутить на начало"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
+#: ../../libs/app/src/lib/settings-hotkeys.ts:55
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Прокрутить вверх"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
 msgid "settings.hotkeys.ai.toggle-cards-mode"
 msgstr "Переключить режим карточек"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"
 

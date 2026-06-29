@@ -164,6 +164,7 @@ export function useAssistantChat(
   const conversationConfig: AssistantConversationConfig = {
     profileId,
     modelId,
+    modelName,
     temperature,
     reasoningEffort,
     deckId: deckId!,
@@ -259,7 +260,7 @@ export function useAssistantChat(
           template: cfg.template ?? undefined,
           systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
         };
-        await retryRun(runId, chatRequest, null, mode);
+        await retryRun(runId, chatRequest, null, mode, cfg.modelName);
       } else {
         const request: CardGenerationStreamRequest = {
           input,
@@ -267,7 +268,7 @@ export function useAssistantChat(
           systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
         };
         const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
-        await retryRun(runId, request, templateFields, mode);
+        await retryRun(runId, request, templateFields, mode, cfg.modelName);
       }
       pendingRunFailureRef.current = runId;
     },
@@ -538,7 +539,14 @@ export function useAssistantChat(
           template: cfg.template ?? undefined,
           systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
         };
-        dispatchAction({ type: "startRun", runId, mode: "chat", request: chatRequest, templateFields: null });
+        dispatchAction({
+          type: "startRun",
+          runId,
+          mode: "chat",
+          request: chatRequest,
+          templateFields: null,
+          modelName: cfg.modelName,
+        });
         dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
         pendingRunFailureRef.current = runId;
         await executeChatRun(runId, chatRequest);
@@ -549,7 +557,14 @@ export function useAssistantChat(
           systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
         };
         const templateFields = cfg.template ? cfg.template.content.fields : null;
-        dispatchAction({ type: "startRun", runId, mode: "cards", request, templateFields });
+        dispatchAction({
+          type: "startRun",
+          runId,
+          mode: "cards",
+          request,
+          templateFields,
+          modelName: cfg.modelName,
+        });
         dispatchAction({
           type: "addAssistantMessage",
           runId,

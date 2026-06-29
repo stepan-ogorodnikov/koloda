@@ -103,34 +103,34 @@ msgstr "Новый шаблон"
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:24
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:34
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:26
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:36
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:124
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:148
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:16
-msgid "ai.conversation.untitled"
-msgstr "Без названия"
-
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:52
-msgid "ai.conversation.delete.trigger"
-msgstr "Удалить диалог"
-
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:69
-msgid "ai.conversation.delete.message"
-msgstr "Удалить этот диалог? Действие нельзя отменить."
-
 #: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:78
+msgid "ai.conversation.delete.cancel"
+msgstr "Отмена"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:75
 msgid "ai.conversation.delete.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:81
-msgid "ai.conversation.delete.cancel"
-msgstr "Отмена"
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:65
+msgid "ai.conversation.delete.message"
+msgstr "Удалить этот диалог? Действие нельзя отменить."
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:49
+msgid "ai.conversation.delete.trigger"
+msgstr "Удалить диалог"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:21
+msgid "ai.conversation.untitled"
+msgstr "Без названия"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -206,21 +206,17 @@ msgstr "Удалить интервал переучивания номер {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Тип временного отрезка для интервала переучивания номер {0}"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table.tsx:49
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table.tsx:54
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:391
+#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:572
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:65
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:81
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
-
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:53
-msgid "assistant.template-unavailable"
-msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:41
 #: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:48
@@ -276,6 +272,10 @@ msgstr "В обработке"
 #: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:45
 msgid "assistant.table.columns.status.success"
 msgstr "Успешно"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:59
+msgid "assistant.template-unavailable"
+msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
 
 #: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
 msgid "assistant.trigger"

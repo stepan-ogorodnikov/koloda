@@ -65,11 +65,12 @@ export function useConversationRuns(
       request: ChatStreamRequest | CardGenerationStreamRequest,
       templateFields: TemplateFields | null,
       mode: AIChatMode,
+      modelName?: string,
     ) => {
       const run = getState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      dispatch({ type: "restartRun", runId, request, templateFields, mode: effectiveMode });
+      dispatch({ type: "restartRun", runId, request, templateFields, mode: effectiveMode, modelName });
 
       if (effectiveMode === "chat") {
         dispatch({ type: "updateAssistantText", runId, text: "" });

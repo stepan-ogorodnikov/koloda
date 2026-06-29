@@ -58,6 +58,7 @@ export function useAssistantMessageRenderer(
                 canRetry={isTail && !!run}
                 onRetry={() => handleRetry(generatedCardsMetadata.runId)}
                 elapsedSeconds={run.elapsedSeconds ?? undefined}
+                modelName={run.modelName}
               />
             );
           }
@@ -96,7 +97,7 @@ export function useAssistantMessageRenderer(
             return (
               <div className="flex flex-col gap-2 self-start w-full">
                 {content}
-                <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} />
+                <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} modelName={run.modelName} />
               </div>
             );
           }

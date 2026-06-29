@@ -9,6 +9,7 @@ export type AIChatMessageStatusState = "pending" | "success" | "canceled" | "fai
 export type AIChatMessageStatusProps = {
   state: AIChatMessageStatusState;
   elapsedSeconds?: number;
+  modelName?: string;
   canRetry?: boolean;
   onRetry?: () => void;
 };
@@ -16,6 +17,7 @@ export type AIChatMessageStatusProps = {
 export function AIChatMessageStatus({
   state,
   elapsedSeconds,
+  modelName,
   canRetry,
   onRetry,
 }: AIChatMessageStatusProps) {
@@ -28,7 +30,12 @@ export function AIChatMessageStatus({
   if (state === "success") {
     return (
       <p className="fg-level-4 flex flex-row items-center gap-1">
-        {_(msg`ai.chat.message.status.finished-in`)}
+        {modelName && (
+          <>
+            {modelName}
+            <span aria-hidden="true">·</span>
+          </>
+        )}
         <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
       </p>
     );

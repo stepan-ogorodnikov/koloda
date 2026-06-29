@@ -19,6 +19,7 @@ export type GenerationRun = {
   error?: { message: string };
   startedAt: Date;
   elapsedSeconds: number | null;
+  modelName?: string;
   usage?: StreamUsage;
 };
 
@@ -46,13 +47,27 @@ export type ConversationAction =
     text: string;
   }
   | { type: "updateAssistantText"; runId: string; text: string }
-  | { type: "startRun"; runId: string; mode: AIChatMode; request: unknown; templateFields?: TemplateFields | null }
+  | {
+    type: "startRun";
+    runId: string;
+    mode: AIChatMode;
+    request: unknown;
+    templateFields?: TemplateFields | null;
+    modelName?: string;
+  }
   | { type: "addCard"; runId: string; card: GeneratedCard }
   | { type: "completeRun"; runId: string }
   | { type: "failRun"; runId: string }
   | { type: "runFailed"; runId: string; error: { message: string } }
   | { type: "cancelRun"; runId: string }
-  | { type: "restartRun"; runId: string; request: unknown; templateFields: TemplateFields | null; mode: AIChatMode }
+  | {
+    type: "restartRun";
+    runId: string;
+    request: unknown;
+    templateFields: TemplateFields | null;
+    mode: AIChatMode;
+    modelName?: string;
+  }
   | { type: "setUsage"; runId: string; usage: StreamUsage }
   | { type: "setMode"; mode: AIChatMode }
   | { type: "setDeck"; deckId: number | null }
@@ -94,6 +109,7 @@ function makeRun(
   runId: string,
   mode: AIChatMode,
   templateFields: TemplateFields | null | undefined,
+  modelName?: string,
   request?: unknown,
 ): GenerationRun {
   return {
@@ -106,6 +122,7 @@ function makeRun(
     request,
     startedAt: new Date(),
     elapsedSeconds: null,
+    modelName,
   };
 }
 
@@ -162,6 +179,8 @@ function coerceRun(value: unknown): GenerationRun | null {
   if (!startedAt) return null;
   if (v.elapsedSeconds !== null && typeof v.elapsedSeconds !== "number") return null;
   if (v.templateFields !== null && !v.templateFields) return null;
+  if (v.modelName !== null && v.modelName !== undefined && typeof v.modelName !== "string") return null;
+
   return {
     id: v.id,
     mode: v.mode,
@@ -172,6 +191,7 @@ function coerceRun(value: unknown): GenerationRun | null {
     request: v.request,
     startedAt,
     elapsedSeconds: (v.elapsedSeconds as number | null) ?? null,
+    modelName: (v.modelName as string | undefined) ?? undefined,
     usage: v.usage as StreamUsage | undefined,
     error: v.error && typeof v.error === "object"
       ? { message: String((v.error as Record<string, unknown>).message ?? "") }
@@ -363,7 +383,13 @@ export function conversationReducer(state: ConversationState, action: Conversati
         activeRunId: action.runId,
         runs: {
           ...state.runs,
-          [action.runId]: makeRun(action.runId, action.mode, action.templateFields, action.request),
+          [action.runId]: makeRun(
+            action.runId,
+            action.mode,
+            action.templateFields,
+            action.modelName,
+            action.request,
+          ),
         },
       };
 
@@ -425,11 +451,18 @@ export function conversationReducer(state: ConversationState, action: Conversati
           templateFields: action.templateFields,
           startedAt: new Date(),
           elapsedSeconds: null,
+          modelName: action.modelName !== undefined ? action.modelName : run.modelName,
           usage: undefined,
           error: undefined,
         }
         : {
-          ...makeRun(action.runId, action.mode, action.templateFields, action.request),
+          ...makeRun(
+            action.runId,
+            action.mode,
+            action.templateFields,
+            action.modelName,
+            action.request,
+          ),
         };
       const messages = run
         ? state.messages
