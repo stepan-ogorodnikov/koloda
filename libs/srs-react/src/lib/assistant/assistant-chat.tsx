@@ -16,7 +16,6 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
-import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,13 +27,13 @@ import {
   assistantConversationStateAtom,
   assistantDeckIdAtom,
   assistantErroredRunAtom,
-  assistantIsLockedAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
 import { AssistantSettings } from "./assistant-settings";
 import { useAssistantChat } from "./use-assistant-chat";
+import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 
 export type AssistantChatProps = {
@@ -51,11 +50,9 @@ export function AssistantChat(
     AssistantChatProps,
 ) {
   const { _ } = useLingui();
-  const { ai } = useHotkeysSettings();
   const messages = useAtomValue(assistantMessagesAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
-  const isLocked = useAtomValue(assistantIsLockedAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
   const saveStatus = useAtomValue(saveStatusAtom);
@@ -109,36 +106,23 @@ export function AssistantChat(
     isModelsLoading,
     isModelsError,
   });
+
   const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
     ? "cards"
     : "chat";
   const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry });
 
-  useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: canCancel, ignoreInputs: false });
-  useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
-  useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
-  useAppHotkey(ai.toggleCardsMode, () => setMode(effectiveMode === "chat" ? "cards" : "chat"), "", {
-    enabled: !!deckId,
-    ignoreInputs: false,
+  useAssistantChatHotkeys({
+    handleCancel,
+    handleNewConversation,
+    scroll,
+    profilePickerRef,
+    modelPickerRef,
+    deckPickerRef,
+    onClearDeck,
+    onPrevConversation,
+    onNextConversation,
   });
-  useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
-    enabled: !!profileId,
-    ignoreInputs: false,
-  });
-  useAppHotkey(ai.openDeckPicker, () => deckPickerRef?.current?.click(), "", {
-    enabled: !isLocked,
-    ignoreInputs: false,
-  });
-  useAppHotkey(ai.clearDeck, () => onClearDeck?.(), "", {
-    enabled: !isLocked && !!deckId,
-    ignoreInputs: false,
-  });
-  useAppHotkey(ai.previousConversation, () => onPrevConversation?.(), "", { ignoreInputs: false });
-  useAppHotkey(ai.nextConversation, () => onNextConversation?.(), "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollUp, scroll.handleScrollUp, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollDown, scroll.handleScrollDown, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollToTop, scroll.handleScrollToTop, "", { ignoreInputs: false });
-  useAppHotkey(ai.scrollToBottom, scroll.handleScrollToBottom, "", { ignoreInputs: false });
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
