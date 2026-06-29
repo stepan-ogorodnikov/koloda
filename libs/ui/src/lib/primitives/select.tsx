@@ -1,6 +1,6 @@
 import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import {
   Button,
   button,
@@ -319,10 +319,17 @@ function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
 
 function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   const { ui } = useHotkeysSettings();
+  const { disableScope, enableScope } = useHotkeysStatus();
   const state = useContext(SelectStateContext);
+  const isOpen = state?.isOpen ?? false;
   const options: HotkeyOptions = { target: ref.current ?? document, ignoreInputs: false, conflictBehavior: "allow" };
+
   useAppHotkey(ui.focusNext, () => dispatchSelectNavigationKey(ref, state, "ArrowDown"), "", options);
   useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", options);
+
+  useEffect(() => {
+    (isOpen ? disableScope : enableScope)("nav");
+  }, [isOpen, disableScope, enableScope]);
 
   // Capture-phase listener for the close hotkey. This fires before the Autocomplete's
   // onKeyDown can call stopPropagation (which in React 19 also stops the native event),
