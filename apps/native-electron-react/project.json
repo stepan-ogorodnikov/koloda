@@ -15,7 +15,8 @@
       ],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/native-electron-react"
+        "outputPath": "dist/apps/native-electron-react",
+        "configFile": "apps/native-electron-react/vite.config.ts"
       },
       "configurations": {
         "development": {
