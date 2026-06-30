@@ -42,7 +42,7 @@ Messages that don't belong to any run are also excluded.
 
 ### Conversation Name
 
-The conversation is named after the first user message, truncated to 48 characters.
+The conversation is named after the first user message, truncated to 255 characters.
 If the message is longer, it's trimmed with an ellipsis.
 If there are no user messages yet, the name defaults to "Untitled".
 

@@ -23,5 +23,5 @@ When modifying database schema:
 5. **Manually port the new SQLite migration** into Refinery format at `crates/koloda-core/src/migrations/V<next>__<name>.sql`:
    - Strip backticks and `--> statement-breakpoint` markers
    - Add `IF NOT EXISTS` to `CREATE TABLE` / `CREATE INDEX` / `CREATE UNIQUE INDEX`
-   - Use the next sequential `V` number matching the drizzle `0000_*` ordering (e.g. drizzle `0002_*.sql` → refinery `V3__*.sql`)
+   - Use the next sequential `V` number (drizzle number + 1), and keep the exact same name from the drizzle migration (the part after `0000_`). E.g. drizzle `0002_create_users.sql` → refinery `V3__create_users.sql`
 6. **Verify**: `cargo check -p koloda-core` to ensure the embedded migrations compile
