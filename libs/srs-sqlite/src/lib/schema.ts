@@ -100,11 +100,16 @@ export const reviews = table("reviews", {
     .notNull(),
 });
 
-export const conversations = table("conversations", {
-  id: text("id").primaryKey(),
-  state: text("state", { mode: "json" }).notNull(),
-  ...timestamps,
-});
+export const conversations = table(
+  "conversations",
+  {
+    id: text("id").primaryKey(),
+    title: text("title"),
+    state: text("state", { mode: "json" }).notNull(),
+    ...timestamps,
+  },
+  (t) => [index("conversations_updated_at_idx").on(t.updatedAt, t.createdAt)],
+);
 
 export const schema = {
   settings,

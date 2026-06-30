@@ -1,5 +1,5 @@
 import type { AISecrets, AssistantSettings, ModelParameter } from "@koloda/ai";
-import { generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
+import { computeConversationTitle, generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
 import type { ChatStreamRequest } from "@koloda/ai";
 import { useAIProfiles, useChatStream } from "@koloda/ai-react";
 import type { AIChatMode } from "@koloda/ai-react";
@@ -364,8 +364,10 @@ export function useAssistantChat(
       if (state.id !== effectConversationId) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
+      const title = computeConversationTitle(state);
       const row: Conversation = {
         id: state.id,
+        title,
         state: JSON.parse(JSON.stringify(state)),
         createdAt: state.createdAt,
         updatedAt: state.updatedAt ?? null,
@@ -373,6 +375,7 @@ export function useAssistantChat(
       const data: SetConversationData = {
         id: row.id,
         state: row.state,
+        title,
         updatedAt: state.updatedAt,
       };
       tokenAtSaveRef.current = saveTokenRef.current;

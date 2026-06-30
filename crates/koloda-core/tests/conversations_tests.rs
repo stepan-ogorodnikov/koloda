@@ -10,6 +10,7 @@ use serde_json::json;
 fn test_conversation_serialization_uses_camel_case_keys() {
     let conversation = Conversation {
         id: "conv-1".to_string(),
+        title: Some("My title".to_string()),
         state: json!({"messages": []}),
         created_at: 1_700_000_000_000,
         updated_at: Some(1_700_000_001_000),
@@ -19,6 +20,7 @@ fn test_conversation_serialization_uses_camel_case_keys() {
     let obj = serialized.as_object().expect("serialized value should be an object");
 
     assert!(obj.contains_key("id"), "missing camelCase key 'id'");
+    assert!(obj.contains_key("title"), "missing camelCase key 'title'");
     assert!(obj.contains_key("state"), "missing camelCase key 'state'");
     assert!(obj.contains_key("createdAt"), "missing camelCase key 'createdAt'");
     assert!(obj.contains_key("updatedAt"), "missing camelCase key 'updatedAt'");
@@ -36,6 +38,7 @@ fn test_conversation_serialization_uses_camel_case_keys() {
 fn test_conversation_serialization_renders_timestamps_as_iso_strings() {
     let conversation = Conversation {
         id: "conv-1".to_string(),
+        title: None,
         state: json!({}),
         created_at: 1_700_000_000_000,
         updated_at: Some(1_700_000_001_000),
@@ -68,6 +71,7 @@ fn test_conversation_serialization_renders_timestamps_as_iso_strings() {
 fn test_conversation_serialization_renders_null_updated_at_when_absent() {
     let conversation = Conversation {
         id: "conv-1".to_string(),
+        title: None,
         state: json!({}),
         created_at: 1_700_000_000_000,
         updated_at: None,
@@ -82,6 +86,24 @@ fn test_conversation_serialization_renders_null_updated_at_when_absent() {
 }
 
 #[test]
+fn test_conversation_serialization_renders_null_title_when_absent() {
+    let conversation = Conversation {
+        id: "conv-1".to_string(),
+        title: None,
+        state: json!({}),
+        created_at: 1_700_000_000_000,
+        updated_at: None,
+    };
+
+    let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
+
+    assert!(
+        serialized.get("title").map(|v| v.is_null()).unwrap_or(false),
+        "title should be serialized as null when None"
+    );
+}
+
+#[test]
 fn test_conversation_serialization_preserves_state_payload() {
     let state = json!({
         "messages": [
@@ -92,6 +114,7 @@ fn test_conversation_serialization_preserves_state_payload() {
     });
     let conversation = Conversation {
         id: "conv-1".to_string(),
+        title: None,
         state: state.clone(),
         created_at: 1_700_000_000_000,
         updated_at: None,
@@ -109,6 +132,7 @@ fn test_conversation_serialization_preserves_state_payload() {
 fn test_conversation_deserialization_from_camel_case() {
     let data = json!({
         "id": "conv-1",
+        "title": "My title",
         "state": {"messages": []},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": 1_700_000_001_000_i64,
@@ -117,9 +141,53 @@ fn test_conversation_deserialization_from_camel_case() {
     let conversation: Conversation = serde_json::from_value(data).expect("conversation should deserialize");
 
     assert_eq!(conversation.id, "conv-1");
+    assert_eq!(conversation.title.as_deref(), Some("My title"));
     assert_eq!(conversation.state, json!({"messages": []}));
     assert_eq!(conversation.created_at, 1_700_000_000_000);
     assert_eq!(conversation.updated_at, Some(1_700_000_001_000));
+}
+
+#[test]
+fn test_conversation_deserialization_omitted_title_is_none() {
+    // Backwards compatibility: rows saved before the title column was
+    // added deserialise with title = None rather than failing.
+    let data = json!({
+        "id": "conv-1",
+        "state": {"messages": []},
+        "createdAt": 1_700_000_000_000_i64,
+        "updatedAt": 1_700_000_001_000_i64,
+    });
+
+    let conversation: Conversation = serde_json::from_value(data).expect("missing title should deserialize as None");
+
+    assert!(conversation.title.is_none());
+}
+
+#[test]
+fn test_conversation_deserialization_explicit_null_title_is_none() {
+    let data = json!({
+        "id": "conv-1",
+        "title": null,
+        "state": {},
+        "createdAt": 1_700_000_000_000_i64,
+        "updatedAt": null,
+    });
+
+    let conversation: Conversation = serde_json::from_value(data).expect("null title should deserialize");
+
+    assert!(conversation.title.is_none());
+}
+
+#[test]
+fn test_set_conversation_input_deserialization_omitted_title_is_none() {
+    let data = json!({
+        "id": "conv-1",
+        "state": {"messages": []},
+    });
+
+    let input: SetConversationInput = serde_json::from_value(data).expect("missing title should deserialize as None");
+
+    assert!(input.title.is_none());
 }
 
 #[test]
@@ -132,6 +200,7 @@ fn test_conversation_deserialization_accepts_iso_string_for_updated_at() {
 
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": updated_at,
@@ -150,6 +219,7 @@ fn test_conversation_deserialization_accepts_iso_string_for_created_at() {
 
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": created_at,
         "updatedAt": null,
@@ -164,6 +234,7 @@ fn test_conversation_deserialization_accepts_iso_string_for_created_at() {
 fn test_conversation_deserialization_missing_created_at_uses_default() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "updatedAt": null,
     });
@@ -190,6 +261,7 @@ fn test_conversation_deserialization_missing_created_at_uses_default() {
 fn test_conversation_deserialization_missing_updated_at_is_none() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
     });
@@ -204,6 +276,7 @@ fn test_conversation_deserialization_missing_updated_at_is_none() {
 fn test_conversation_deserialization_explicit_null_updated_at_is_none() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
@@ -233,6 +306,7 @@ fn test_set_conversation_input_deserialization_accepts_f64_updated_at() {
 fn test_conversation_deserialization_invalid_updated_at_string_fails() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": "not-a-timestamp",
@@ -246,6 +320,7 @@ fn test_conversation_deserialization_invalid_updated_at_string_fails() {
 fn test_conversation_deserialization_state_accepts_string_payload() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": "raw-string-state",
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
@@ -261,6 +336,7 @@ fn test_conversation_deserialization_state_accepts_string_payload() {
 fn test_conversation_deserialization_state_accepts_arbitrary_json() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": [
             1,
             2,
@@ -279,6 +355,7 @@ fn test_conversation_deserialization_state_accepts_arbitrary_json() {
 #[test]
 fn test_conversation_deserialization_missing_id_fails() {
     let data = json!({
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
@@ -292,6 +369,7 @@ fn test_conversation_deserialization_missing_id_fails() {
 fn test_conversation_deserialization_missing_state_fails() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
     });
@@ -308,6 +386,7 @@ fn test_conversation_deserialization_missing_state_fails() {
 fn test_conversation_deserialization_ignores_extra_fields() {
     let data = json!({
         "id": "conv-1",
+        "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
@@ -329,6 +408,7 @@ fn test_conversation_deserialization_ignores_extra_fields() {
 fn test_conversation_round_trip_preserves_state() {
     let original = Conversation {
         id: "conv-1".to_string(),
+        title: Some("My title".to_string()),
         state: json!({
             "messages": [
                 {"role": "user", "content": "What is Rust?"},
@@ -354,12 +434,14 @@ fn test_conversation_round_trip_preserves_state() {
     assert_eq!(restored.state, original.state);
     assert_eq!(restored.created_at, original.created_at);
     assert_eq!(restored.updated_at, original.updated_at);
+    assert_eq!(restored.title, original.title);
 }
 
 #[test]
 fn test_conversation_round_trip_with_null_updated_at() {
     let original = Conversation {
         id: "conv-2".to_string(),
+        title: None,
         state: json!({}),
         created_at: 1_700_000_000_000,
         updated_at: None,
@@ -383,6 +465,7 @@ fn test_conversation_round_trip_via_iso_strings() {
     // the serialized output round-trips back into a Conversation cleanly.
     let original = Conversation {
         id: "conv-1".to_string(),
+        title: Some("My title".to_string()),
         state: json!({"k": "v"}),
         created_at: 1_700_000_000_000,
         updated_at: Some(1_700_000_005_000),
@@ -403,4 +486,5 @@ fn test_conversation_round_trip_via_iso_strings() {
     assert_eq!(restored.state, original.state);
     assert_eq!(restored.created_at, original.created_at);
     assert_eq!(restored.updated_at, original.updated_at);
+    assert_eq!(restored.title, original.title);
 }

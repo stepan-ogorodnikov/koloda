@@ -10,6 +10,7 @@ use crate::app::utility::{
 #[serde(rename_all = "camelCase")]
 pub struct Conversation {
     pub id: String,
+    pub title: Option<String>,
     pub state: Value,
     #[serde(
         default = "default_now",

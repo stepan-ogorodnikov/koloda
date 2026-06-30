@@ -1,13 +1,18 @@
 import type { Timestamps } from "./db";
 
-export type Conversation = Timestamps & {
+export type ConversationListItem = Timestamps & {
   id: string;
+  title: string | null;
+};
+
+export type Conversation = ConversationListItem & {
   state: unknown;
 };
 
 export type SetConversationData = {
   id: string;
   state: unknown;
+  title?: string | null;
   updatedAt?: Date | null;
 };
 

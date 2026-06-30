@@ -1,12 +1,10 @@
-import { getConversationName } from "@koloda/ai";
-import type { Conversation } from "@koloda/app";
+import type { ConversationListItem } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Link, QueryState, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { coerceConversationState } from "./conversation-state";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 type AssistantConversationsListProps = {
@@ -48,7 +46,7 @@ const conversationItem = [
 ].join(" ");
 
 type ConversationItemProps = {
-  conversation: Conversation;
+  conversation: ConversationListItem;
   fallback: string;
   isActive: boolean;
   onActiveDeleted?: () => void;
@@ -56,10 +54,7 @@ type ConversationItemProps = {
 
 function ConversationItem({ conversation, fallback, isActive, onActiveDeleted }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
-  const coerced = coerceConversationState(conversation.state);
-  const name = coerced
-    ? getConversationName(coerced, fallback)
-    : fallback;
+  const name = conversation.title ?? fallback;
 
   return (
     <div className="group relative flex flex-row items-center">

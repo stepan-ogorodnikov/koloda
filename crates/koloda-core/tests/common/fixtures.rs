@@ -118,6 +118,7 @@ pub fn add_conversation(db: &Database, id: &str, state: serde_json::Value) -> St
         conversations::SetConversationInput {
             id: id.to_string(),
             state,
+            title: None,
             updated_at: None,
         },
     )

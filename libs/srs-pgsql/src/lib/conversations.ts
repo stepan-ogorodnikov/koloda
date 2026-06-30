@@ -1,4 +1,5 @@
-import { type DeleteConversationData, type SetConversationData, throwKnownError } from "@koloda/app";
+import type { Conversation, DeleteConversationData, SetConversationData } from "@koloda/app";
+import { throwKnownError } from "@koloda/app";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
@@ -19,7 +20,12 @@ export async function getConversation(db: DB, id: string) {
 export async function getConversations(db: DB) {
   return throwKnownError("db.get", async () => {
     return db
-      .select()
+      .select({
+        id: conversations.id,
+        title: conversations.title,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+      })
       .from(conversations)
       .orderBy(
         sql`${conversations.updatedAt} DESC NULLS LAST`,
@@ -28,11 +34,12 @@ export async function getConversations(db: DB) {
   });
 }
 
-export async function setConversation(db: DB, { id, state, updatedAt }: SetConversationData) {
+export async function setConversation(db: DB, { id, state, title, updatedAt }: SetConversationData) {
   return throwKnownError("db.update", async () => {
     const insertValues = {
       id,
       state,
+      title: title ?? null,
       updatedAt: updatedAt ?? new Date(),
     };
     const result = await db
@@ -41,12 +48,12 @@ export async function setConversation(db: DB, { id, state, updatedAt }: SetConve
       .onConflictDoUpdate({
         target: conversations.id,
         set: updatedAt
-          ? { state, updatedAt }
-          : withUpdatedAt({ state }),
+          ? { state, title: title ?? null, updatedAt }
+          : withUpdatedAt({ state, title: title ?? null }),
       })
       .returning();
 
-    return result[0];
+    return result[0] as Conversation;
   });
 }
 

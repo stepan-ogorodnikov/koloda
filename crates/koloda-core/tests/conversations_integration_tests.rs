@@ -16,6 +16,7 @@ fn set(
         repo::SetConversationInput {
             id: id.to_string(),
             state,
+            title: None,
             updated_at: None,
         },
     )
@@ -54,6 +55,7 @@ fn set_conversation_inserts_new_row_with_timestamps() {
         stored.updated_at.is_none(),
         "updated_at should be NULL on initial insert"
     );
+    assert!(stored.title.is_none(), "title should be NULL on initial insert");
 }
 
 #[test]
@@ -66,6 +68,7 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
         repo::SetConversationInput {
             id: id.to_string(),
             state: json!({"version": 1}),
+            title: None,
             updated_at: None,
         },
     )
@@ -81,6 +84,7 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
         repo::SetConversationInput {
             id: id.to_string(),
             state: json!({"version": 2}),
+            title: None,
             updated_at: None,
         },
     )
@@ -134,6 +138,7 @@ fn set_conversation_with_explicit_updated_at_preserves_timestamp() {
         repo::SetConversationInput {
             id: id.to_string(),
             state: json!({"v": 2}),
+            title: None,
             updated_at: Some(provided),
         },
     )
@@ -286,6 +291,129 @@ fn get_conversations_groups_rows_with_null_updated_at_after_touched_rows() {
     // created_at on "second" is still strictly later than "first.created_at",
     // but "first" wins because it has a non-null updated_at.
     assert!(second.created_at > first.created_at);
+}
+
+// ============================================================================
+// TITLE COLUMN
+// ============================================================================
+
+#[test]
+fn set_conversation_persists_explicit_title() {
+    let db = test_db();
+    let stored = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: "conv-titled".to_string(),
+            state: json!({"messages": []}),
+            title: Some("My conversation".to_string()),
+            updated_at: None,
+        },
+    )
+    .expect("set should succeed");
+
+    assert_eq!(stored.title.as_deref(), Some("My conversation"));
+
+    let loaded = repo::get_conversation(&db, "conv-titled")
+        .expect("query should succeed")
+        .expect("conversation should exist");
+    assert_eq!(loaded.title.as_deref(), Some("My conversation"));
+}
+
+#[test]
+fn set_conversation_omitted_title_stores_null() {
+    let db = test_db();
+    let stored = set(&db, "conv-no-title", json!({"messages": []})).expect("set should succeed");
+    assert!(stored.title.is_none(), "omitted title should store NULL");
+}
+
+#[test]
+fn set_conversation_upsert_replaces_title() {
+    let db = test_db();
+    let id = "conv-rename";
+
+    repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({"v": 1}),
+            title: Some("Old title".to_string()),
+            updated_at: None,
+        },
+    )
+    .expect("initial insert should succeed");
+
+    let updated = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({"v": 2}),
+            title: Some("New title".to_string()),
+            updated_at: None,
+        },
+    )
+    .expect("upsert should succeed");
+
+    assert_eq!(updated.title.as_deref(), Some("New title"));
+}
+
+#[test]
+fn set_conversation_upsert_can_clear_title_with_null() {
+    let db = test_db();
+    let id = "conv-clear";
+
+    repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({}),
+            title: Some("Has title".to_string()),
+            updated_at: None,
+        },
+    )
+    .expect("initial insert should succeed");
+
+    let updated = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: id.to_string(),
+            state: json!({}),
+            title: None,
+            updated_at: None,
+        },
+    )
+    .expect("upsert should succeed");
+
+    assert!(
+        updated.title.is_none(),
+        "title should be cleared when explicitly set to None"
+    );
+}
+
+#[test]
+fn get_conversations_returns_title_on_each_row() {
+    let db = test_db();
+
+    repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: "with-title".to_string(),
+            state: json!({}),
+            title: Some("Titled".to_string()),
+            updated_at: None,
+        },
+    )
+    .expect("set should succeed");
+
+    set(&db, "without-title", json!({})).expect("set should succeed");
+
+    let list = repo::get_conversations(&db).expect("query should succeed");
+    assert_eq!(list.len(), 2);
+
+    let titled = list.iter().find(|c| c.id == "with-title").expect("row should exist");
+    let untitled = list.iter().find(|c| c.id == "without-title").expect("row should exist");
+
+    assert_eq!(titled.title.as_deref(), Some("Titled"));
+    assert!(untitled.title.is_none());
 }
 
 // ============================================================================

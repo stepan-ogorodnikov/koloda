@@ -108,11 +108,16 @@ export const reviews = table("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const conversations = table("conversations", {
-  id: varchar({ length: 36 }).primaryKey(),
-  state: jsonb().notNull(),
-  ...timestamps,
-});
+export const conversations = table(
+  "conversations",
+  {
+    id: varchar({ length: 36 }).primaryKey(),
+    title: varchar({ length: 255 }),
+    state: jsonb().notNull(),
+    ...timestamps,
+  },
+  (table) => [index("conversations_updated_at_idx").on(table.updatedAt, table.createdAt)],
+);
 
 export const schema = {
   settings,

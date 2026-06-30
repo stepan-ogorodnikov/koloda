@@ -205,4 +205,104 @@ describe("conversations repository integration", () => {
       },
     });
   });
+
+  it("persists and round-trips an explicit title", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-titled",
+      createdAt: new Date(1700000000000),
+      messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    const saved = await setConversation(db, { id: "conv-titled", state, title: "My custom title" });
+    expect(saved.title).toBe("My custom title");
+
+    const loaded = await getConversation(db, "conv-titled");
+    expect(loaded!.title).toBe("My custom title");
+  });
+
+  it("overwrites a previous title on subsequent saves", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-rename",
+      createdAt: new Date(1700000000000),
+      messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    await setConversation(db, { id: "conv-rename", state, title: "Old title" });
+    const updated = await setConversation(db, { id: "conv-rename", state, title: "New title" });
+    expect(updated.title).toBe("New title");
+
+    const loaded = await getConversation(db, "conv-rename");
+    expect(loaded!.title).toBe("New title");
+  });
+
+  it("stores null when title is omitted", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-untitled",
+      createdAt: new Date(1700000000000),
+      messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    const saved = await setConversation(db, { id: "conv-untitled", state });
+    expect(saved.title).toBeNull();
+
+    const loaded = await getConversation(db, "conv-untitled");
+    expect(loaded!.title).toBeNull();
+  });
+
+  it("getConversations returns list items without the state column", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-list",
+      createdAt: new Date(1700000000000),
+      messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    await setConversation(db, { id: "conv-list", state, title: "Sidebar title" });
+
+    const list = await getConversations(db);
+    expect(list).toHaveLength(1);
+    const item = list[0];
+    expect(item.id).toBe("conv-list");
+    expect(item.title).toBe("Sidebar title");
+    expect(item.createdAt).toBeInstanceOf(Date);
+    // The list projection must not ship `state`.
+    expect("state" in item).toBe(false);
+  });
+
+  it("preserves null titles through a null-stored list query", async () => {
+    const { db } = testDb;
+    const state = {
+      id: "conv-null-title",
+      createdAt: new Date(1700000000000),
+      messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
+      runs: {},
+      activeRunId: null,
+      mode: "chat",
+      deckId: null,
+    };
+
+    await setConversation(db, { id: "conv-null-title", state });
+
+    const list = await getConversations(db);
+    expect(list[0].title).toBeNull();
+  });
 });

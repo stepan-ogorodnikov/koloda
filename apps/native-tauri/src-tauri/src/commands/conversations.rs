@@ -22,6 +22,8 @@ pub fn cmd_get_conversations(db: DB<'_>) -> Result<Vec<Conversation>, AppError> 
 pub(crate) struct SetConversationArgs {
     id: String,
     state: Value,
+    #[serde(default)]
+    title: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
     updated_at: Option<i64>,
 }
@@ -33,6 +35,7 @@ pub fn cmd_set_conversation(db: DB<'_>, args: SetConversationArgs) -> Result<Con
         repo::SetConversationInput {
             id: args.id,
             state: args.state,
+            title: args.title,
             updated_at: args.updated_at,
         },
     )

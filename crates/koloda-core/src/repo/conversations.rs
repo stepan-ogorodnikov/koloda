@@ -8,15 +8,16 @@ use crate::app::utility::{deserialize_optional_timestamp, get_current_timestamp}
 use crate::domain::conversations::Conversation;
 
 fn get_conversation_row(row: &rusqlite::Row<'_>) -> Result<Conversation, rusqlite::Error> {
-    let state_str: String = row.get(1)?;
+    let state_str: String = row.get(2)?;
     let state = serde_json::from_str(&state_str)
-        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(1, rusqlite::types::Type::Text, Box::new(e)))?;
+        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(2, rusqlite::types::Type::Text, Box::new(e)))?;
 
     Ok(Conversation {
         id: row.get(0)?,
+        title: row.get(1)?,
         state,
-        created_at: row.get(2)?,
-        updated_at: row.get(3)?,
+        created_at: row.get(3)?,
+        updated_at: row.get(4)?,
     })
 }
 
@@ -24,7 +25,7 @@ pub fn get_conversation(db: &Database, id: &str) -> Result<Option<Conversation>,
     db.with_conn(|conn| {
         conn.query_row(
             r#"
-            SELECT id, state, created_at, updated_at
+            SELECT id, title, state, created_at, updated_at
             FROM conversations
             WHERE id = ?1
             LIMIT 1
@@ -41,7 +42,7 @@ pub fn get_conversations(db: &Database) -> Result<Vec<Conversation>, AppError> {
     db.with_conn(|conn| {
         let mut stmt = conn.prepare(
             r#"
-            SELECT id, state, created_at, updated_at
+            SELECT id, title, state, created_at, updated_at
             FROM conversations
             ORDER BY updated_at DESC, created_at DESC
             "#,
@@ -61,6 +62,8 @@ pub fn get_conversations(db: &Database) -> Result<Vec<Conversation>, AppError> {
 pub struct SetConversationInput {
     pub id: String,
     pub state: Value,
+    #[serde(default)]
+    pub title: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
     pub updated_at: Option<i64>,
 }
@@ -71,13 +74,21 @@ pub fn set_conversation(db: &Database, input: SetConversationInput) -> Result<Co
     db.with_conn(|conn| {
         conn.execute(
             r#"
-            INSERT INTO conversations (id, state, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL)
+            INSERT INTO conversations (id, title, state, created_at, updated_at)
+            VALUES (?1, ?2, ?3, ?4, NULL)
             ON CONFLICT(id) DO UPDATE SET
+                title = excluded.title,
                 state = excluded.state,
-                updated_at = COALESCE(?4, ?5)
+                updated_at = COALESCE(?5, ?6)
             "#,
-            params![input.id, input.state.to_string(), now, input.updated_at, now],
+            params![
+                input.id,
+                input.title,
+                input.state.to_string(),
+                now,
+                input.updated_at,
+                now,
+            ],
         )?;
         Ok(())
     })?;

@@ -10,6 +10,7 @@ import type {
   AllowedSettings,
   AppError,
   Conversation,
+  ConversationListItem,
   DeleteConversationData,
   PatchSettingsData,
   SetConversationData,
@@ -68,7 +69,7 @@ export type Queries = {
     unknown
   >;
   getConversationQuery: (id: string) => QueryOptions<Conversation | null>;
-  getConversationsQuery: () => QueryOptions<Conversation[]>;
+  getConversationsQuery: () => QueryOptions<ConversationListItem[]>;
   setConversationMutation: () => UseMutationOptions<
     Conversation,
     AppError,
