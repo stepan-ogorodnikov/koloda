@@ -8,6 +8,7 @@ import {
   assistantDeckIdAtom,
   assistantIsLockedAtom,
   AssistantNewConversationButton,
+  CONVERSATION_TITLE_FALLBACK,
   DeckPicker,
   newConversationAtom,
   setAssistantDeckAtom,
@@ -50,6 +51,10 @@ function AIRoute() {
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
+  const { title } = useMemo(
+    () => conversations.find((c) => c.id === conversationId),
+    [conversations, conversationId],
+  ) || {};
   const [globalAIProfileState] = useGlobalAIProfileState();
   const creatingFromDeckRef = useRef(false);
   const deckPickerRef = useRef<HTMLButtonElement>(null);
@@ -114,8 +119,10 @@ function AIRoute() {
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
-          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl px-2">
-            <Layout.H1>{_(msg`title.ai`)}</Layout.H1>
+          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl pr-2">
+            <Layout.H1 variants={{ class: title ? "" : "fg-disabled" }}>
+              {title || _(CONVERSATION_TITLE_FALLBACK)}
+            </Layout.H1>
             <div className="flex flex-row items-center gap-1 pl-2">
               <DeckPicker
                 variants={{ class: "flex-row items-center gap-2" }}

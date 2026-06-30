@@ -108,7 +108,7 @@ msgstr "Новый шаблон"
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:148
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:134
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
@@ -128,9 +128,9 @@ msgstr "Удалить этот диалог? Действие нельзя от
 msgid "ai.conversation.delete.trigger"
 msgstr "Удалить диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:21
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:10
 msgid "ai.conversation.untitled"
-msgstr "Без названия"
+msgstr "Диалог без названия"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -210,7 +210,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:572
+#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:575
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 

@@ -13,8 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:130
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:133
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:135
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:138
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -305,8 +305,7 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:36
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:118
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:37
 msgid "title.ai"
 msgstr "Assistant"
 

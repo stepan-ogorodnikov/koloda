@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
+export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;
+
 type AssistantConversationsListProps = {
   activeId?: string;
   onActiveDeleted?: () => void;
@@ -16,7 +18,6 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
   const { _ } = useLingui();
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
-  const fallback = _(msg`ai.conversation.untitled`);
 
   return (
     <QueryState query={query}>
@@ -27,7 +28,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
             {data.map((conversation) => (
               <ConversationItem
                 conversation={conversation}
-                fallback={fallback}
+                fallback={_(CONVERSATION_TITLE_FALLBACK)}
                 isActive={conversation.id === activeId}
                 onActiveDeleted={onActiveDeleted}
                 key={conversation.id}

@@ -108,7 +108,7 @@ msgstr "New template"
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:148
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:134
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
@@ -128,9 +128,9 @@ msgstr "Delete this conversation? This cannot be undone."
 msgid "ai.conversation.delete.trigger"
 msgstr "Delete conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:21
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:10
 msgid "ai.conversation.untitled"
-msgstr "Untitled"
+msgstr "Untitled conversation"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -210,7 +210,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:572
+#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:575
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
