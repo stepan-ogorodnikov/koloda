@@ -4,15 +4,15 @@ import {
   assistantActiveRunIdAtom,
   assistantConversationStateAtom,
   bumpPendingSaveAtom,
-  dispatchToConversation,
+  dispatchToConversationOnStore,
   pendingSaveAtom,
   setAssistantDeckAtom,
   setAssistantModeAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
+import type { ConversationAction, ConversationState } from "./conversation-state";
 import { initialConversationState } from "./conversation-state";
-import type { ConversationState } from "./conversation-state";
 
 function makeConversation(id: string, overrides: Partial<ConversationState> = {}): ConversationState {
   return {
@@ -24,18 +24,16 @@ function makeConversation(id: string, overrides: Partial<ConversationState> = {}
 }
 
 /**
- * Helper: dispatch an action to a specific conversation via the store,
- * mimicking how `dispatchFor` works in `useAssistantChat`.
+ * Helper: dispatch an action to a specific conversation via the store.
+ * Mirrors how `dispatchFor` works in `useAssistantChat` (the hook now
+ * delegates to `dispatchToConversationOnStore`).
  */
 function dispatchTo(
   store: ReturnType<typeof createStore>,
   id: string,
-  action: Parameters<typeof dispatchToConversation>[1],
+  action: ConversationAction | ((prev: ConversationState) => ConversationState),
 ) {
-  dispatchToConversation(id, action)(
-    (atom) => store.get(atom),
-    (atom, ...args) => store.set(atom, ...args),
-  );
+  dispatchToConversationOnStore(store, id, action);
 }
 
 describe("assistantConversationStateAtom (per-conversation store)", () => {

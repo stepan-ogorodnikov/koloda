@@ -1,3 +1,4 @@
+import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import { DEFAULT_TEMPLATE } from "@koloda/srs";
@@ -9,7 +10,6 @@ import {
   createTextMessage,
   getErrorMetadata,
   getGeneratedCardsMetadata,
-  getTextMessageContent,
   serializeGeneratedCards,
 } from "./assistant-messages";
 

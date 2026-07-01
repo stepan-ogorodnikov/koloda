@@ -1,17 +1,17 @@
 import type { ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import type { AIChatMode, StreamResult } from "@koloda/ai-react";
+import type { StreamResult } from "@koloda/ai-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { describe, expect, it, vi } from "vitest";
 import {
   assistantConversationStateAtom,
   conversationsAtom,
-  dispatchToConversation,
+  dispatchToConversationOnStore,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
-import { initialConversationState } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
+import { initialConversationState } from "./conversation-state";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useConversationRuns } from "./use-conversation-runs";
 
@@ -40,10 +40,7 @@ function createHarness() {
 
   const dispatchFor: DispatchFor = (id, action) => {
     dispatchToMap.push({ id, action });
-    dispatchToConversation(id, action)(
-      (atom) => store.get(atom),
-      (atom, ...args) => store.set(atom, ...args),
-    );
+    dispatchToConversationOnStore(store, id, action);
   };
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);

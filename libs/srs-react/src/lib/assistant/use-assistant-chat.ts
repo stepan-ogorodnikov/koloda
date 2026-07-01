@@ -21,7 +21,7 @@ import {
   bumpPendingSaveAtom,
   conversationsAtom,
   dismissSaveStatusAtom,
-  dispatchToConversation,
+  dispatchToConversationOnStore,
   newConversationAtom,
   pendingSaveAtom,
   saveStatusAtom,
@@ -212,10 +212,7 @@ export function useAssistantChat(
   // that chunks and completion land on the originating conversation.
   const dispatchFor = useCallback(
     (id: string, action: ConversationAction) => {
-      dispatchToConversation(id, action)(
-        (atom) => store.get(atom),
-        (atom, ...args) => store.set(atom, ...args),
-      );
+      dispatchToConversationOnStore(store, id, action);
     },
     [store],
   );

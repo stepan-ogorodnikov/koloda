@@ -3,6 +3,7 @@ import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
+import type { Store } from "jotai/vanilla/store";
 import { getAssistantMetadata } from "./assistant-messages";
 import { conversationReducer, initialConversationState } from "./conversation-state";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
@@ -90,6 +91,21 @@ export function dispatchToConversation(
     if (next === prev) return;
     set(conversationsAtom, { ...store, [id]: next });
   };
+}
+
+/**
+ * Helper that calls the `dispatchToConversation` thunk against a concrete
+ * jotai `Store`. Use this anywhere a `Store` is in scope (e.g. inside a
+ * React hook via `useStore`, or in a test that owns its own `createStore`).
+ * Centralises the `(store.get, store.set)` plumbing so callers can't forget
+ * to invoke the returned thunk.
+ */
+export function dispatchToConversationOnStore(
+  store: Store,
+  id: string,
+  action: ConversationAction | ((prev: ConversationState) => ConversationState),
+): void {
+  dispatchToConversation(id, action)(store.get, store.set);
 }
 
 /**
