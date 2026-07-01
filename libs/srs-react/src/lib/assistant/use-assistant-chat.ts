@@ -15,17 +15,20 @@ import { useAtomCallback } from "jotai/utils";
 import { useCallback, useEffect, useRef } from "react";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import {
-  assistantActiveRunIdAtom,
   assistantCancelFunctionsAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
+  bumpPendingSaveAtom,
+  conversationsAtom,
   dismissSaveStatusAtom,
+  dispatchToConversation,
   newConversationAtom,
   pendingSaveAtom,
-  restoreConversationAtom,
   saveStatusAtom,
   setAssistantAIProfileAtom,
   setAssistantModeAtom,
+  setCurrentConversationIdAtom,
+  upsertConversationAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
 import { coerceConversationState, initialConversationState, normalizeRestoredConversation } from "./conversation-state";
@@ -76,13 +79,13 @@ export type UseAssistantChatReturn = {
 
 function dispatchAndBump(
   setConversationAction: (update: ConversationAction | ((prev: ConversationState) => ConversationState)) => void,
-  setPendingSave: (updater: (n: number) => number) => void,
+  bumpPendingSave: () => void,
   action: ConversationAction,
 ) {
   const now = new Date();
   setConversationAction((prev) => ({ ...prev, updatedAt: now }));
   setConversationAction(action);
-  setPendingSave((n) => n + 1);
+  bumpPendingSave();
 }
 
 export function useAssistantChat(
@@ -100,8 +103,9 @@ export function useAssistantChat(
   } = useAtomValue(queriesAtom);
   const setConversationAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
-  const restoreConversation = useSetAtom(restoreConversationAtom);
-  const setPendingSave = useSetAtom(pendingSaveAtom);
+  const setCurrentConversationId = useSetAtom(setCurrentConversationIdAtom);
+  const upsertConversation = useSetAtom(upsertConversationAtom);
+  const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
@@ -184,24 +188,70 @@ export function useAssistantChat(
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
 
+  const store = useStore();
+
+  // Pending-run-failure refs, one per stream hook. We keep them separate
+  // (rather than a single Map) because the underlying stream hooks
+  // (`useAssistantCardGeneration` and `useChatStream`) are independent
+  // and can each have an in-flight run on a different conversation. The
+  // error callback for each hook only fires for *its* stream, so a single
+  // shared ref + iterating lookup would route errors to the wrong
+  // conversation when both streams are in flight.
+  const pendingChatRunRef = useRef<{ id: string; runId: string } | null>(null);
+  const pendingCardRunRef = useRef<{ id: string; runId: string } | null>(null);
+
   const dispatchAction = useCallback(
     (action: ConversationAction) => {
-      dispatchAndBump(setConversationAction, setPendingSave, action);
+      dispatchAndBump(setConversationAction, bumpPendingSave, action);
     },
-    [setConversationAction, setPendingSave],
+    [setConversationAction, bumpPendingSave],
   );
 
-  const handleStreamError = useCallback((error: Error) => {
-    const runId = pendingRunFailureRef.current;
-    if (runId) {
-      pendingRunFailureRef.current = null;
-      dispatchAction({ type: "runFailed", runId, error: { message: error.message } });
+  // Dispatch an action to a specific conversation by id, regardless of which
+  // conversation is currently visible. Used by background stream callbacks so
+  // that chunks and completion land on the originating conversation.
+  const dispatchFor = useCallback(
+    (id: string, action: ConversationAction) => {
+      dispatchToConversation(id, action)(
+        (atom) => store.get(atom),
+        (atom, ...args) => store.set(atom, ...args),
+      );
+    },
+    [store],
+  );
+
+  const handleChatStreamError = useCallback((error: Error) => {
+    const entry = pendingChatRunRef.current;
+    if (!entry) return;
+    pendingChatRunRef.current = null;
+    dispatchFor(entry.id, { type: "runFailed", runId: entry.runId, error: { message: error.message } });
+  }, [dispatchFor]);
+
+  const handleCardStreamError = useCallback((error: Error) => {
+    const entry = pendingCardRunRef.current;
+    if (!entry) return;
+    pendingCardRunRef.current = null;
+    dispatchFor(entry.id, { type: "runFailed", runId: entry.runId, error: { message: error.message } });
+  }, [dispatchFor]);
+
+  // Called by `executeChatRun` after the chat stream ends. Only clears the
+  // ref if the runId still matches — otherwise a previous (now-aborted)
+  // stream's `finally` would clobber a newer stream's entry.
+  const onChatStreamComplete = useCallback((runId: string) => {
+    if (pendingChatRunRef.current?.runId === runId) {
+      pendingChatRunRef.current = null;
     }
-  }, [dispatchAction]);
+  }, []);
 
-  const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleStreamError);
+  const onCardStreamComplete = useCallback((runId: string) => {
+    if (pendingCardRunRef.current?.runId === runId) {
+      pendingCardRunRef.current = null;
+    }
+  }, []);
 
-  const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleStreamError);
+  const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
+
+  const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
 
   const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
 
@@ -213,13 +263,17 @@ export function useAssistantChat(
     streamChat,
     generate,
     dispatchAction,
+    dispatchFor,
     readState,
+    onChatStreamComplete,
+    onCardStreamComplete,
   );
 
   const handleRetry = useCallback(
     async (runId: string) => {
       const cfg = configRef.current;
       const currentState = readState();
+      const conversationId = currentState.id;
       const run = currentState.runs[runId];
       let mode: AIChatMode | undefined = run?.mode;
       if (!mode) {
@@ -229,7 +283,12 @@ export function useAssistantChat(
         return;
       }
 
-      pendingRunFailureRef.current = null;
+      // Arm the per-stream failure ref *before* the retry stream starts so
+      // that an error during the retry is routed to the right conversation
+      // and run. The execute function clears it on completion.
+      const pendingRef = mode === "chat" ? pendingChatRunRef : pendingCardRunRef;
+      pendingRef.current = { id: conversationId, runId };
+
       const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
       const promptText = userMessage ? getTextMessageContent(userMessage) : "";
       if (!promptText || !cfg.profileId || !cfg.modelId) return;
@@ -270,7 +329,8 @@ export function useAssistantChat(
         const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
         await retryRun(runId, request, templateFields, mode, cfg.modelName);
       }
-      pendingRunFailureRef.current = runId;
+      // The execute function's `finally` clears the failure ref now that the
+      // stream has ended. No re-arm needed.
     },
     [retryRun, readState, setGlobalAIProfileState],
   );
@@ -313,7 +373,6 @@ export function useAssistantChat(
   });
 
   const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
-  const pendingRunFailureRef = useRef<string | null>(null);
 
   const handleDismissGenerate = useCallback(() => {
     const state = readState();
@@ -345,7 +404,6 @@ export function useAssistantChat(
   // Holds the id assigned locally before the URL has caught up (cold start).
   const localConversationIdRef = useRef<string | null>(conversationId ?? null);
 
-  const store = useStore();
   const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
 
   // Subscribe to the save trigger before the restore effect runs so that any
@@ -353,15 +411,17 @@ export function useAssistantChat(
   // from ?deckId) is observed and flushed to the DB.
   useEffect(() => {
     if (!conversationId) return;
-    const effectConversationId = conversationId;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
     let lastFiredAt = 0;
 
     const flush = () => {
       timer = null;
-      const state = readStateForSave();
-      if (state.id !== effectConversationId) return;
+      // Read the conversation state directly from the store map so we always
+      // get the latest data regardless of which conversation is current.
+      const storeState = store.get(conversationsAtom);
+      const state = storeState[conversationId];
+      if (!state) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
       const title = computeConversationTitle(state);
@@ -385,7 +445,8 @@ export function useAssistantChat(
     const handler = () => {
       if (restoredIdRef.current !== conversationId) return;
       if (lastSavedIdRef.current !== conversationId) return;
-      const isStreaming = store.get(assistantActiveRunIdAtom) !== null;
+      // Check if this specific conversation has an active run.
+      const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
       const now = Date.now();
       const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
       const sinceLast = now - lastFiredAt;
@@ -430,14 +491,19 @@ export function useAssistantChat(
     // The UI will surface the error and offer a retry.
     if (conversationError) return;
 
-    // If the atom already contains state for this id, it was created locally
-    // (e.g. first message on a cold start) and is newer than anything in the DB.
-    // Keep it and mark the conversation as restored.
-    const currentState = store.get(assistantConversationStateAtom);
-    if (currentState.id === conversationId) {
+    // Switch to the new conversation. This is a read-only swap — the old
+    // conversation's state remains in conversationsAtom.
+    setCurrentConversationId(conversationId);
+
+    // If the store already has state for this id (e.g. it was created locally
+    // on a cold start, or a background run kept it warm), keep it — do NOT
+    // overwrite from the DB. This is the key behavioral change that lets
+    // background runs survive conversation switches.
+    const storeState = store.get(conversationsAtom);
+    if (storeState[conversationId]) {
       restoredIdRef.current = conversationId;
       lastSavedIdRef.current = conversationId;
-      setPendingSave((n) => n + 1);
+      bumpPendingSave();
       return;
     }
 
@@ -447,10 +513,10 @@ export function useAssistantChat(
     if (coerced) {
       const clean = normalizeRestoredConversation(coerced);
       if (clean) {
-        restoreConversation(clean);
+        upsertConversation(clean);
         normalized = true;
       } else {
-        restoreConversation(coerced);
+        upsertConversation(coerced);
       }
     } else {
       const stored = readLastUsed();
@@ -460,13 +526,13 @@ export function useAssistantChat(
         createdAt: new Date(),
         ...stored,
       };
-      restoreConversation(fresh);
+      upsertConversation(fresh);
       normalized = true;
     }
     restoredIdRef.current = conversationId;
     lastSavedIdRef.current = conversationId;
     if (normalized) {
-      setPendingSave((n) => n + 1);
+      bumpPendingSave();
     }
   }, [
     store,
@@ -475,8 +541,9 @@ export function useAssistantChat(
     conversationQuery.isLoading,
     conversationQuery.isFetching,
     conversationError,
-    restoreConversation,
-    setPendingSave,
+    setCurrentConversationId,
+    upsertConversation,
+    bumpPendingSave,
     readLastUsed,
   ]);
 
@@ -509,7 +576,14 @@ export function useAssistantChat(
       if (currentMode === "cards" && !cfg.template) return;
 
       const runId = generateUUID();
-      pendingRunFailureRef.current = null;
+      // After ensureConversationId(), the conversation is in the store.
+      // Use the state's id rather than the prop (which may be undefined on cold start).
+      const activeConversationId = readState().id;
+      // Arm the per-stream failure ref so an error during this run routes
+      // back to the originating conversation. The execute function's
+      // `finally` clears it on completion.
+      const pendingRef = currentMode === "chat" ? pendingChatRunRef : pendingCardRunRef;
+      pendingRef.current = { id: activeConversationId, runId };
 
       setGlobalAIProfileState(cfg);
 
@@ -551,8 +625,7 @@ export function useAssistantChat(
           modelName: cfg.modelName,
         });
         dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
-        pendingRunFailureRef.current = runId;
-        await executeChatRun(runId, chatRequest);
+        await executeChatRun(activeConversationId, runId, chatRequest);
       } else {
         const request: CardGenerationStreamRequest = {
           input,
@@ -574,8 +647,7 @@ export function useAssistantChat(
           kind: "generated-cards",
           text: cfg._(msg`assistant.chat.message.status.pending`),
         });
-        pendingRunFailureRef.current = runId;
-        await executeGenerateRun(runId, request);
+        await executeGenerateRun(activeConversationId, runId, request);
       }
     },
     [
