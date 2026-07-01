@@ -46,8 +46,14 @@ const wire = vi.hoisted(() => {
     // Captured error callbacks so the test can trigger errors.
     onChatError: null as null | ((error: Error) => void),
     onCardError: null as null | ((error: Error) => void),
-    // Save mutation spy
-    setConversationCalls: [] as Array<{ id: string; title: string | null }>,
+    // Save mutation spy. The `state` payload is the full serialized
+    // ConversationState — tests that need to assert on the run status
+    // (e.g. the pagehide-cancellation test) inspect this field.
+    setConversationCalls: [] as Array<{
+      id: string;
+      title: string | null;
+      state: { runs: Record<string, { status: string }> } | null;
+    }>,
   };
 });
 
@@ -195,7 +201,11 @@ function buildQueries(): Queries {
     getConversationsQuery: () => ({ queryFn: async () => [] }),
     setConversationMutation: () => ({
       mutationFn: async (data: { id: string; title?: string | null }) => {
-        wire.setConversationCalls.push({ id: data.id, title: data.title ?? null });
+        wire.setConversationCalls.push({
+          id: data.id,
+          title: data.title ?? null,
+          state: (data.state as { runs: Record<string, { status: string }> } | undefined) ?? null,
+        });
         return {
           id: data.id,
           title: data.title ?? null,
@@ -561,5 +571,242 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     // of the bump).
     const lastCall = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(lastCall.id).toBe("B");
+  });
+
+  it("throttled save during a streaming run persists the run as canceled, not streaming", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    // Keep the chat stream in flight so the run stays in "streaming"
+    // status while the throttled save fires.
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result } = renderHook(
+      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
+      { wrapper: TestWrapper },
+    );
+
+    // Start a streaming run. This dispatches addUserMessage + startRun +
+    // addAssistantMessage, each of which bumps the save counter and
+    // schedules the throttled save.
+    await act(async () => {
+      void result.current.handleGenerate("Hello from A");
+      await Promise.resolve();
+    });
+
+    // Advance the throttled save's timer past the streaming window
+    // (1000ms) so it fires and dispatches a save.
+    await act(async () => {
+      vi.advanceTimersByTime(1100);
+    });
+
+    // A save was issued.
+    expect(wire.setConversationCalls.length).toBeGreaterThanOrEqual(1);
+    const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
+    expect(persisted.id).toBe("A");
+
+    // The throttled save's persisted state has the run as "canceled"
+    // (not "streaming") so that a later race between this mutation and
+    // a pagehide/cleanup mutation cannot resurrect a "streaming"
+    // snapshot that would cause normalizeRestoredConversation to drop
+    // the user/assistant messages on next mount.
+    const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
+    expect(persistedRunIds.length).toBe(1);
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
+    expect(persisted.title).toBe("Hello from A");
+
+    // The in-memory state was not touched by the persist transform.
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[persistedRunIds[0]!]?.status).toBe("streaming");
+
+    // Cleanup: resolve the in-flight stream so the test exits cleanly.
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+    });
+  });
+
+  it("pagehide during a streaming run persists the run as canceled, not streaming", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    // Keep the chat stream in flight so the run stays in "streaming"
+    // status while we fire pagehide.
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result } = renderHook(
+      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
+      { wrapper: TestWrapper },
+    );
+
+    // Fire and forget — the stream promise never resolves, so the
+    // generation run remains in "streaming" status.
+    await act(async () => {
+      void result.current.handleGenerate("Hello from A");
+      await Promise.resolve();
+    });
+
+    // Sanity check: the in-memory run is streaming.
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeRunIds.length).toBe(1);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    // Simulate the user closing the tab. The save effect's pagehide
+    // listener should fire `flushNow` with `cancelStreamingRuns: true`.
+    const callsBeforePagehide = wire.setConversationCalls.length;
+    await act(async () => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    // A save was issued.
+    expect(wire.setConversationCalls.length).toBe(callsBeforePagehide + 1);
+    const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
+    expect(persisted.id).toBe("A");
+
+    // The persisted state has the run as "canceled" (not "streaming"),
+    // and the title is derived from the user message (i.e. the
+    // user-message text is visible in the persisted title).
+    const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
+    expect(persistedRunIds.length).toBe(1);
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
+    expect(persisted.title).toBe("Hello from A");
+
+    // Crucially: the in-memory run is still "streaming" — we only
+    // transformed the persist-time snapshot, not the live state. The
+    // background stream is still legitimately in flight.
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    // Cleanup: resolve the in-flight stream so the test exits cleanly.
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+    });
+  });
+
+  it("unmount during a streaming run persists the run as canceled (cleanup does not overwrite pagehide's 'canceled' save with 'streaming')", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result, unmount } = renderHook(
+      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
+      { wrapper: TestWrapper },
+    );
+
+    // Start a streaming run.
+    await act(async () => {
+      void result.current.handleGenerate("Hello from A");
+      await Promise.resolve();
+    });
+
+    // The run is streaming in memory.
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeRunIds.length).toBe(1);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    // Simulate a hard close: pagehide fires, then React unmounts the
+    // tree. The order matters — pagehide must run before unmount for
+    // the bug to manifest, so we dispatch it explicitly.
+    await act(async () => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    // Now unmount. The save effect's cleanup runs `flush({ cancelStreamingRuns: true })`.
+    await act(async () => {
+      unmount();
+    });
+
+    // The cleanup must dispatch its own save with "canceled" — NOT
+    // overwrite the pagehide save with "streaming". We assert that the
+    // very last persisted state for A has the run as "canceled".
+    const lastForA = [...wire.setConversationCalls].reverse().find((c) => c.id === "A");
+    expect(lastForA).toBeDefined();
+    const lastRunIds = Object.keys(lastForA?.state?.runs ?? {});
+    expect(lastRunIds.length).toBe(1);
+    expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("canceled");
+    expect(lastForA?.title).toBe("Hello from A");
+
+    // The in-memory state was not touched by the persist transform.
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    // Cleanup: resolve the in-flight stream so the test exits cleanly.
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+    });
   });
 });

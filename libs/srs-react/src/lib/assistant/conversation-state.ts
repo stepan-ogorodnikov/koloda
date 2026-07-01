@@ -148,6 +148,20 @@ function finishRun(state: ConversationState, runId: string, status: RunStatus): 
   }));
 }
 
+export function cancelStreamingRuns(state: ConversationState): ConversationState {
+  let next = state;
+  let changed = false;
+  for (const [runId, run] of Object.entries(state.runs)) {
+    if (run.status === "streaming") {
+      next = finishRun(next, runId, "canceled");
+      changed = true;
+    }
+  }
+  if (!changed) return state;
+
+  return { ...next, activeRunId: null };
+}
+
 function isLocked(state: ConversationState): boolean {
   return state.messages.some((m) => {
     if (m.role !== "assistant") return false;

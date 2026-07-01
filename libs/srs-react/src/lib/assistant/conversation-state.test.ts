@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  cancelStreamingRuns,
   coerceConversationState,
   conversationReducer,
   initialConversationState,
@@ -1041,5 +1042,154 @@ describe("conversationReducer", () => {
       );
       expect(state).toBe(initialConversationState);
     });
+  });
+});
+
+describe("cancelStreamingRuns", () => {
+  // The persist-time transform needs a deterministic clock so the
+  // recomputed `elapsedSeconds` is predictable. We freeze the wall clock
+  // for the duration of each test and let `Date.now()` pick it up.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T12:00:30Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("marks a single streaming run as canceled, clears activeRunId, and recomputes elapsedSeconds", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = cancelStreamingRuns(state);
+
+    expect(next.runs["r1"]?.status).toBe("canceled");
+    expect(next.runs["r1"]?.elapsedSeconds).toBe(30);
+    expect(next.activeRunId).toBeNull();
+  });
+
+  it("cancels every streaming run in the map, leaving terminal-status runs untouched", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r2",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 5,
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:10Z"),
+          elapsedSeconds: null,
+        },
+        r3: {
+          id: "r3",
+          mode: "cards",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:20Z"),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = cancelStreamingRuns(state);
+
+    expect(next.runs["r1"]).toBe(state.runs["r1"]);
+    expect(next.runs["r2"]?.status).toBe("canceled");
+    expect(next.runs["r2"]?.elapsedSeconds).toBe(20);
+    expect(next.runs["r3"]?.status).toBe("canceled");
+    expect(next.runs["r3"]?.elapsedSeconds).toBe(10);
+    expect(next.activeRunId).toBeNull();
+  });
+
+  it("returns the same reference when no runs are streaming", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
+    expect(cancelStreamingRuns(state)).toBe(state);
+  });
+
+  it("does not touch non-run fields such as messages, deckId, or modelParameters", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      mode: "cards",
+      deckId: 42,
+      profileId: "prof-1",
+      modelId: "model-1",
+      activeRunId: "r1",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = cancelStreamingRuns(state);
+
+    expect(next.messages).toBe(state.messages);
+    expect(next.deckId).toBe(42);
+    expect(next.profileId).toBe("prof-1");
+    expect(next.modelId).toBe("model-1");
+    expect(next.modelParameters).toEqual({ temperature: "0.2" });
+    expect(next.createdAt).toBe(state.createdAt);
   });
 });

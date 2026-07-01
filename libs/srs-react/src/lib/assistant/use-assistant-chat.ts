@@ -31,7 +31,12 @@ import {
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
-import { coerceConversationState, initialConversationState, normalizeRestoredConversation } from "./conversation-state";
+import {
+  cancelStreamingRuns,
+  coerceConversationState,
+  initialConversationState,
+  normalizeRestoredConversation,
+} from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
@@ -200,22 +205,16 @@ export function useAssistantChat(
   const pendingChatRunRef = useRef<{ id: string; runId: string } | null>(null);
   const pendingCardRunRef = useRef<{ id: string; runId: string } | null>(null);
 
-  const dispatchAction = useCallback(
-    (action: ConversationAction) => {
-      dispatchAndBump(setConversationAction, bumpPendingSave, action);
-    },
-    [setConversationAction, bumpPendingSave],
-  );
+  const dispatchAction = useCallback((action: ConversationAction) => {
+    dispatchAndBump(setConversationAction, bumpPendingSave, action);
+  }, [setConversationAction, bumpPendingSave]);
 
   // Dispatch an action to a specific conversation by id, regardless of which
   // conversation is currently visible. Used by background stream callbacks so
   // that chunks and completion land on the originating conversation.
-  const dispatchFor = useCallback(
-    (id: string, action: ConversationAction) => {
-      dispatchToConversationOnStore(store, id, action);
-    },
-    [store],
-  );
+  const dispatchFor = useCallback((id: string, action: ConversationAction) => {
+    dispatchToConversationOnStore(store, id, action);
+  }, [store]);
 
   const handleChatStreamError = useCallback((error: Error) => {
     const entry = pendingChatRunRef.current;
@@ -412,7 +411,7 @@ export function useAssistantChat(
     let timer: ReturnType<typeof setTimeout> | null = null;
     let lastFiredAt = 0;
 
-    const flush = () => {
+    const flush = (options: { cancelStreamingRuns?: boolean } = {}) => {
       timer = null;
       // Read the conversation state directly from the store map so we always
       // get the latest data regardless of which conversation is current.
@@ -421,19 +420,36 @@ export function useAssistantChat(
       if (!state) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
-      const title = computeConversationTitle(state);
+      // When `cancelStreamingRuns` is set, rewrite any in-flight runs to
+      // "canceled" in the persisted snapshot. This is what the throttled
+      // save, the pagehide/beforeunload handler, and the effect cleanup
+      // all do, so that the persisted state stays consistent with what
+      // normalizeRestoredConversation will surface on the next mount:
+      // the user/assistant messages stay in place (because the runs are
+      // no longer "streaming") and the title derived from the first user
+      // message matches the visible content. Without this, a conversation
+      // whose stream was cut short by the user closing the tab would
+      // resurface as an empty row with a non-null title derived from
+      // the dropped user message.
+      //
+      // The transform is only applied at persist time. The live
+      // in-memory state continues to track the run as "streaming" until
+      // the underlying stream actually ends.
+      const persistState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
+
+      const title = computeConversationTitle(persistState);
       const row: Conversation = {
-        id: state.id,
+        id: persistState.id,
         title,
-        state: JSON.parse(JSON.stringify(state)),
-        createdAt: state.createdAt,
-        updatedAt: state.updatedAt ?? null,
+        state: JSON.parse(JSON.stringify(persistState)),
+        createdAt: persistState.createdAt,
+        updatedAt: persistState.updatedAt ?? null,
       };
       const data: SetConversationData = {
         id: row.id,
         state: row.state,
         title,
-        updatedAt: state.updatedAt,
+        updatedAt: persistState.updatedAt,
       };
       tokenAtSaveRef.current = saveTokenRef.current;
       setConversation.mutate(data);
@@ -450,21 +466,45 @@ export function useAssistantChat(
       const delay = Math.max(0, wait - sinceLast);
 
       if (timer) clearTimeout(timer);
-      timer = setTimeout(flush, delay);
+      // Persist in-flight runs as "canceled" so a later race between
+      // the throttled save's mutation and the pagehide/cleanup mutation
+      // cannot resurrect a "streaming" snapshot. See the comment on
+      // handlePageHide below for the full rationale.
+      timer = setTimeout(() => flush({ cancelStreamingRuns: true }), delay);
       lastFiredAt = now + delay;
     };
 
     const unsub = store.sub(pendingSaveAtom, handler);
 
-    const flushNow = () => {
+    const flushNow = (options: { cancelStreamingRuns?: boolean } = {}) => {
       if (timer) {
         clearTimeout(timer);
         timer = null;
       }
-      flush();
+      flush(options);
     };
 
-    const handlePageHide = () => flushNow();
+    // Every save path (throttled, pagehide, cleanup) writes streaming
+    // runs as "canceled" so that the persisted snapshot stays consistent
+    // with what normalizeRestoredConversation will surface on the next
+    // mount: the user/assistant messages stay in place (because the
+    // runs are no longer "streaming") and the title derived from the
+    // first user message matches the visible content.
+    //
+    // Without this, a conversation whose stream was cut short by the
+    // user closing the tab or reloading would resurface as an empty
+    // row with a non-null title (because normalizeRestoredConversation
+    // drops messages for runs whose status === "streaming" or
+    // "failed").
+    //
+    // The cleanup only flushes when there is a pending throttled save
+    // timer. The setConversation mutation object from React Query is a
+    // new reference on every render, so unconditionally flushing in
+    // the cleanup would cause the effect to re-run on every render and
+    // dispatch an unbounded number of mutations. The pending-timer
+    // guard breaks that cycle because once the timer is cleared,
+    // subsequent cleanups are no-ops.
+    const handlePageHide = () => flushNow({ cancelStreamingRuns: true });
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
 
@@ -474,7 +514,7 @@ export function useAssistantChat(
       unsub();
       if (timer) {
         clearTimeout(timer);
-        flush();
+        flush({ cancelStreamingRuns: true });
       }
     };
   }, [store, conversationId, readStateForSave, setConversation]);
