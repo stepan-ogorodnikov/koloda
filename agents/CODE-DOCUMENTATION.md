@@ -24,9 +24,13 @@ Document these scenarios:
 - Invariants: State transitions or data shapes that must not change.
 - Edge cases: Handling of partial failures, aborted streams, or empty states.
 
-## Mandatory Comment Tags
+## Strict Commenting Rules
 
-Use these specific tags to prefix comments.
+RULE: Do not write comments unless they strictly match one of the following tags. 
+
+If a piece of code does not require a tag, it must not have a comment. Do not write JSDoc, do not explain "what" the code does, and do not leave notes. LLMs are excellent at reading code; only document the traps.
+
+### Allowed Tags:
 
 1. `// WHY`:
 
@@ -80,7 +84,11 @@ Example:
 // We intentionally use text completion and parse it manually for Ollama/LMStudio.
 async function runTextCompletionCardGeneration(...) { ... }
 ```
- 
+
+### The Only Exception: Complex Logic
+
+The only time you may write a comment without a tag is inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline). Even then, only comment the steps, not the obvious lines.
+
 ## Comments vs. Architecture Decision Records (ADRs)
 
 How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
