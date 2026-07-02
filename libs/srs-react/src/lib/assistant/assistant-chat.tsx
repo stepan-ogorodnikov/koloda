@@ -86,7 +86,7 @@ export function AssistantChat(
     handleCancel,
     handleReset,
     handleRetry,
-    handleRetryLoad,
+    retryLoad,
     setMode,
   } = useAssistantChat({ conversationId, onConversationIdChange });
 
@@ -137,7 +137,7 @@ export function AssistantChat(
           : loadError
           ? (
             <Fade key="error" className="grow">
-              <QueryError error={loadError} onRetry={handleRetryLoad} />
+              <QueryError error={loadError} onRetry={retryLoad} />
             </Fade>
           )
           : areSettingsOpen
