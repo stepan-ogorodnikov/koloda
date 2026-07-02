@@ -1,12 +1,9 @@
 import type { AISecrets, AssistantSettings, ModelParameter } from "@koloda/ai";
-import { generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
-import type { ChatStreamRequest } from "@koloda/ai";
 import { useAIProfiles, useChatStream } from "@koloda/ai-react";
 import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Template, TemplateFields } from "@koloda/srs";
-import { msg } from "@lingui/core/macro";
+import type { Template } from "@koloda/srs";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
@@ -23,16 +20,15 @@ import {
   setAssistantAIProfileAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
-import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useAssistantClient } from "./use-assistant-client";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
 import { useConversationPersistence } from "./use-conversation-persistence";
 import { useConversationRuns } from "./use-conversation-runs";
 import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
+import { useRunOrchestration } from "./use-run-orchestration";
 
 export type UseAssistantChatOptions = {
   conversationId: string | undefined;
@@ -166,7 +162,7 @@ export function useAssistantChat(
 
   const store = useStore();
 
-  // Pending-run-failure refs, one per stream hook. We keep them separate
+  // Per-stream failure refs, one per stream hook. We keep them separate
   // (rather than a single Map) because the underlying stream hooks
   // (`useAssistantCardGeneration` and `useChatStream`) are independent
   // and can each have an in-flight run on a different conversation. The
@@ -232,83 +228,18 @@ export function useAssistantChat(
     onCardStreamComplete,
   );
 
-  const handleRetry = useCallback(
-    async (runId: string) => {
-      const cfg = configRef.current;
-      const currentState = readState();
-      const conversationId = currentState.id;
-      const run = currentState.runs[runId];
-      let mode: AIChatMode | undefined = run?.mode;
-      if (!mode) {
-        const assistantMessage = currentState.messages.find((m) => m.id === `assistant-${runId}`);
-        const metadata = assistantMessage ? getAssistantMetadata(assistantMessage) : null;
-        if (metadata?.kind === "error") mode = metadata.mode;
-        return;
-      }
+  const handleCancel = useCallback(() => {
+    const currentActiveRunId = readState().activeRunId;
+    if (currentActiveRunId) dispatchAction({ type: "cancelRun", runId: currentActiveRunId });
+    cancelGenerate();
+    cancelChat();
+  }, [dispatchAction, cancelGenerate, cancelChat, readState]);
 
-      // Arm the per-stream failure ref *before* the retry stream starts so
-      // that an error during the retry is routed to the right conversation
-      // and run. The execute function clears it on completion.
-      const pendingRef = mode === "chat" ? pendingChatRunRef : pendingCardRunRef;
-      pendingRef.current = { id: conversationId, runId };
-
-      const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
-      const promptText = userMessage ? getTextMessageContent(userMessage) : "";
-      if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (mode === "cards" && !cfg.template) return;
-
-      setGlobalAIProfileState(cfg);
-
-      const conversationMessages = buildConversationMessages(
-        currentState.messages,
-        currentState.runs,
-        cfg.template,
-      );
-
-      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
-      const input = generateCardsInputSchema.parse({
-        modelId: cfg.modelId,
-        prompt: promptText,
-        temperature: cfg.temperature,
-        reasoningEffort: cfg.reasoningEffort,
-        ...(mode === "cards" && cfg.deckId != null ? { deckId: cfg.deckId } : {}),
-        ...(mode === "cards" && cfg.templateId != null ? { templateId: cfg.templateId } : {}),
-      });
-
-      if (mode === "chat") {
-        const chatRequest: ChatStreamRequest = {
-          input,
-          messages: [...conversationMessages, { role: "user", content: promptText }],
-          template: cfg.template ?? undefined,
-          systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
-        };
-        await retryRun(runId, chatRequest, null, mode, cfg.modelName);
-      } else {
-        const request: CardGenerationStreamRequest = {
-          input,
-          messages: conversationMessages,
-          systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
-        };
-        const templateFields: TemplateFields | null = cfg.template ? cfg.template.content.fields : null;
-        await retryRun(runId, request, templateFields, mode, cfg.modelName);
-      }
-      // The execute function's `finally` clears the failure ref now that the
-      // stream has ended. No re-arm needed.
-    },
-    [retryRun, readState, setGlobalAIProfileState],
-  );
-
-  const handleDismissGenerate = useCallback(() => {
-    const state = readState();
-    const ids = Object.keys(state.runs);
-    for (let i = ids.length - 1; i >= 0; i--) {
-      const run = state.runs[ids[i]];
-      if (run.status === "failed") {
-        dispatchAction({ type: "dismissRunError", runId: run.id });
-        return;
-      }
-    }
-  }, [readState, dispatchAction]);
+  const handleReset = useCallback(() => {
+    const stored = readLastUsed();
+    const newId = newConversation(stored ?? undefined);
+    onConversationIdChange(newId);
+  }, [newConversation, onConversationIdChange, readLastUsed]);
 
   // Holds the id assigned locally before the URL has caught up (cold start).
   const localConversationIdRef = useRef<string | null>(conversationId ?? null);
@@ -333,107 +264,18 @@ export function useAssistantChat(
     return localConversationIdRef.current;
   }, [conversationId, onConversationIdChange, dispatchAction, readLastUsed]);
 
-  const handleGenerate = useCallback(
-    async (value?: string) => {
-      ensureConversationId();
-      const cfg = configRef.current;
-      const currentState = readState();
-      const currentMode = currentState.mode;
-
-      const promptText = (value ?? "").trim();
-      if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (currentMode === "cards" && !cfg.template) return;
-
-      const runId = generateUUID();
-      // After ensureConversationId(), the conversation is in the store.
-      // Use the state's id rather than the prop (which may be undefined on cold start).
-      const activeConversationId = readState().id;
-      // Arm the per-stream failure ref so an error during this run routes
-      // back to the originating conversation. The execute function's
-      // `finally` clears it on completion.
-      const pendingRef = currentMode === "chat" ? pendingChatRunRef : pendingCardRunRef;
-      pendingRef.current = { id: activeConversationId, runId };
-
-      setGlobalAIProfileState(cfg);
-
-      const conversationMessages = buildConversationMessages(
-        currentState.messages,
-        currentState.runs,
-        cfg.template,
-      );
-
-      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
-      const input = generateCardsInputSchema.parse({
-        modelId: cfg.modelId,
-        prompt: promptText,
-        temperature: cfg.temperature,
-        reasoningEffort: cfg.reasoningEffort,
-        ...(currentMode === "cards" && cfg.deckId !== null && cfg.deckId !== undefined
-          ? { deckId: cfg.deckId }
-          : {}),
-        ...(currentMode === "cards" && cfg.templateId !== null && cfg.templateId !== undefined
-          ? { templateId: cfg.templateId }
-          : {}),
-      });
-
-      dispatchAction({ type: "addUserMessage", runId, text: promptText });
-
-      if (currentMode === "chat") {
-        const chatRequest: ChatStreamRequest = {
-          input,
-          messages: [...conversationMessages, { role: "user", content: promptText }],
-          template: cfg.template ?? undefined,
-          systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
-        };
-        dispatchAction({
-          type: "startRun",
-          runId,
-          mode: "chat",
-          request: chatRequest,
-          templateFields: null,
-          modelName: cfg.modelName,
-        });
-        dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
-        await executeChatRun(activeConversationId, runId, chatRequest);
-      } else {
-        const request: CardGenerationStreamRequest = {
-          input,
-          messages: conversationMessages,
-          systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
-        };
-        const templateFields = cfg.template ? cfg.template.content.fields : null;
-        dispatchAction({
-          type: "startRun",
-          runId,
-          mode: "cards",
-          request,
-          templateFields,
-          modelName: cfg.modelName,
-        });
-        dispatchAction({
-          type: "addAssistantMessage",
-          runId,
-          kind: "generated-cards",
-          text: cfg._(msg`assistant.chat.message.status.pending`),
-        });
-        await executeGenerateRun(activeConversationId, runId, request);
-      }
-    },
-    [ensureConversationId, dispatchAction, executeChatRun, executeGenerateRun, readState, setGlobalAIProfileState],
-  );
-
-  const handleCancel = useCallback(() => {
-    const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) dispatchAction({ type: "cancelRun", runId: currentActiveRunId });
-    cancelGenerate();
-    cancelChat();
-  }, [dispatchAction, cancelGenerate, cancelChat, readState]);
-
-  const handleReset = useCallback(() => {
-    const stored = readLastUsed();
-    const newId = newConversation(stored ?? undefined);
-    onConversationIdChange(newId);
-  }, [newConversation, onConversationIdChange, readLastUsed]);
+  const { handleGenerate, handleRetry, handleDismissGenerate } = useRunOrchestration({
+    configRef,
+    readState,
+    dispatchAction,
+    setGlobalAIProfileState,
+    executeChatRun,
+    executeGenerateRun,
+    retryRun,
+    ensureConversationId,
+    pendingChatRunRef,
+    pendingCardRunRef,
+  });
 
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 
