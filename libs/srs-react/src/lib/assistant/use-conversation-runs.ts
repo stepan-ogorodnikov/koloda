@@ -16,18 +16,13 @@ export function useConversationRuns(
     request: CardGenerationStreamRequest,
     onCard?: (card: { content: Record<string, { text: string }> }) => void,
   ) => Promise<StreamResult>,
-  dispatch: React.Dispatch<ConversationAction>, // current conversation
-  dispatchFor: DispatchForConversation, // any conversation by id
+  dispatch: React.Dispatch<ConversationAction>,
+  dispatchFor: DispatchForConversation,
   getState: () => ConversationState,
-  // Called when a chat stream ends (success, abort, or error) with the
-  // runId of the stream that just finished. The caller is expected to use
-  // this to clear its pending-failure ref so that a stream error cannot be
-  // routed to a stale conversation. The caller should compare the
-  // runId against its current ref before clearing — a stream that was
-  // aborted by a newer start will still call this, and the caller may
-  // already be tracking a different run.
+  // WHY: Must be called even on abort/error so the caller can clear its
+  // pending-failure ref. A stream aborted by a newer start will still
+  // fire this — caller must guard the clear against stale runIds.
   onChatStreamComplete?: (runId: string) => void,
-  // Same as `onChatStreamComplete`, but for the card-generation stream.
   onCardStreamComplete?: (runId: string) => void,
 ) {
   const handleStreamResult = useCallback((conversationId: string, result: StreamResult, runId: string) => {
@@ -36,7 +31,6 @@ export function useConversationRuns(
         dispatchFor(conversationId, { type: "completeRun", runId });
         break;
       case "error":
-        // runFailed is dispatched by the hook-level error effect in useAssistantChat
         break;
       case "aborted":
         dispatchFor(conversationId, { type: "cancelRun", runId });
@@ -61,9 +55,6 @@ export function useConversationRuns(
 
         handleStreamResult(conversationId, streamResult, runId);
       } finally {
-        // Always notify the caller that this stream has ended. The caller
-        // is responsible for guarding the clear against a newer run that
-        // has since taken its place in the ref
         onChatStreamComplete?.(runId);
       }
     },
@@ -96,7 +87,6 @@ export function useConversationRuns(
       const run = getState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      // retryRun always targets the currently-visible conversation
       dispatch({ type: "restartRun", runId, request, templateFields, mode: effectiveMode, modelName });
 
       if (effectiveMode === "chat") {

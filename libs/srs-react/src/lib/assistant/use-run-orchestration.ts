@@ -12,20 +12,10 @@ import type { ConversationAction, ConversationState } from "./conversation-state
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
 
-/**
- * Discriminated union for the two kinds of stream requests.
- * The caller destructures `kind` to decide which executor to use.
- */
 export type StreamRequestResult =
   | { kind: "chat"; request: ChatStreamRequest; templateFields: null }
   | { kind: "cards"; request: CardGenerationStreamRequest; templateFields: TemplateFields | null };
 
-/**
- * Build the stream request (chat or cards) from the current config, mode,
- * prompt text, and conversation history. This is the single source of
- * truth for request construction, used by both `handleGenerate` and
- * `handleRetry`.
- */
 function buildStreamRequest(
   cfg: AssistantConversationConfig,
   mode: AIChatMode,
@@ -113,9 +103,6 @@ export function useRunOrchestration({
       if (!mode) return;
     }
 
-    // Arm the per-stream failure ref *before* the retry stream starts so
-    // that an error during the retry is routed to the right conversation
-    // and run. The execute function clears it on completion.
     armPendingRun(mode, conversationId, runId);
 
     const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
@@ -130,8 +117,6 @@ export function useRunOrchestration({
 
     const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
     await retryRun(runId, result.request, result.templateFields, mode, cfg.modelName);
-    // The execute function's `finally` clears the failure ref now that the
-    // stream has ended. No re-arm needed.
   }, [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun]);
 
   const handleDismissGenerate = useCallback(() => {
@@ -157,12 +142,9 @@ export function useRunOrchestration({
     if (currentMode === "cards" && !cfg.template) return;
 
     const runId = generateUUID();
-    // After ensureConversationId(), the conversation is in the store.
+    // WHY: After ensureConversationId(), the conversation is in the store.
     // Use the state's id rather than the prop (which may be undefined on cold start).
     const activeConversationId = readState().id;
-    // Arm the per-stream failure ref so an error during this run routes
-    // back to the originating conversation. The execute function's
-    // `finally` clears it on completion.
     armPendingRun(currentMode, activeConversationId, runId);
 
     setGlobalAIProfileState(cfg);

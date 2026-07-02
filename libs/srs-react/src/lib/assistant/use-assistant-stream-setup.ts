@@ -21,17 +21,13 @@ export type UseAssistantStreamSetupOptions = {
 };
 
 export type UseAssistantStreamSetupReturn = {
-  /** Arm the failure ref before starting a stream. */
   armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
-  /** Execute a chat stream run. */
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
-  /** Execute a card generation stream run. */
   executeGenerateRun: (
     conversationId: string,
     runId: string,
     request: CardGenerationStreamRequest,
   ) => Promise<void>;
-  /** Retry a previous run. */
   retryRun: (
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
@@ -39,15 +35,9 @@ export type UseAssistantStreamSetupReturn = {
     mode: AIChatMode,
     modelName?: string,
   ) => Promise<void>;
-  /** Cancel all in-flight streams. */
   cancel: () => void;
 };
 
-/**
- * Sets up the streaming infrastructure: stream hooks, error routing,
- * run execution, and cancel registration. This is the "plumbing" layer
- * that `useAssistantChat` delegates to.
- */
 export function useAssistantStreamSetup({
   streamGenerator,
   chatStreamGenerator,
@@ -55,13 +45,9 @@ export function useAssistantStreamSetup({
   dispatchFor,
   readState,
 }: UseAssistantStreamSetupOptions): UseAssistantStreamSetupReturn {
-  // Centralised per-stream failure refs. `arm` must be called before starting
-  // a stream; `handleError` is the onError callback for the stream hooks;
-  // `onComplete` is called in the executor's finally block.
+  const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
   const pendingRunRefs = usePendingRunRefs(dispatchFor);
 
-  // Mode-bound wrappers so the stream hooks (which only know their own
-  // stream type) can call into the centralised ref management.
   const handleChatStreamError = useCallback((error: Error) => (
     pendingRunRefs.handleError("chat", error)
   ), [pendingRunRefs]);
@@ -80,8 +66,6 @@ export function useAssistantStreamSetup({
 
   const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
   const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
-
-  const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
 
   useEffect(() => {
     setCancelFunctions({ cancelGenerate, cancelChat });

@@ -85,7 +85,6 @@ export function useAssistantChat(
   const { defaultProfileId, profiles, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
 
-  // Set default profile on first mount
   useEffect(() => {
     if (defaultProfileId && !profileId) {
       const profile = profiles.find((p) => p.id === defaultProfileId);
@@ -105,9 +104,6 @@ export function useAssistantChat(
     bumpPendingSave();
   }, [setConversationAction, bumpPendingSave]);
 
-  // Dispatch an action to a specific conversation by id, regardless of which
-  // conversation is currently visible. Used by background stream callbacks so
-  // that chunks and completion land on the originating conversation.
   const dispatchFor = useCallback((id: string, action: ConversationAction) => {
     dispatchToConversationOnStore(store, id, action);
   }, [store]);
@@ -132,7 +128,9 @@ export function useAssistantChat(
     onConversationIdChange(newId);
   }, [newConversation, onConversationIdChange, readLastUsed]);
 
-  // Holds the id assigned locally before the URL has caught up (cold start).
+  // WHY: On cold start, conversationId is undefined until the URL catches up.
+  // We hold the locally-assigned id here so ensureConversationId can return
+  // it synchronously before the router navigates.
   const localConversationIdRef = useRef<string | null>(conversationId ?? null);
 
   const { handleDismissSave, isRestoring, loadError, retryLoad } = useConversationPersistence({ conversationId });

@@ -14,33 +14,15 @@ export type SaveStatus = {
   isDismissed: boolean;
 };
 
-/**
- * @section Per-conversation store
- */
-
 export type ConversationStore = Readonly<Record<string, ConversationState>>;
 
 export const conversationsAtom = atom<ConversationStore>({});
 const currentConversationIdAtom = atom<string | null>(null);
 
-/**
- * Apply an update (action or function form) to a conversation's state and
- * stamp `updatedAt` on any non-no-op result. Returns the new state, or
- * `prev` unchanged when the update produced the same reference — which lets
- * callers skip the store write and avoids spurious `updatedAt` bumps.
- *
- * This is the single source of truth for "user-driven state change ⇒
- * refresh `updatedAt`". Both the writable form of
- * `assistantConversationStateAtom` and `dispatchToConversation` route
- * through here so the timestamp semantics are consistent across every
- * dispatch path (current conversation and background streams targeting a
- * specific id).
- *
- * `newConversation` must NOT go through this helper — the reducer
- * explicitly sets `updatedAt: null` for fresh conversations, and that
- * must be preserved. The writable atom handles `newConversation` as a
- * special case before reaching here.
- */
+// INVARIANT: `newConversation` must NOT go through this helper — the reducer
+// explicitly sets `updatedAt: null` for fresh conversations, and that
+// must be preserved. The writable atom handles `newConversation` as a
+// special case before reaching here.
 function applyConversationUpdate(
   prev: ConversationState,
   update: ConversationAction | ((prev: ConversationState) => ConversationState),
@@ -52,19 +34,6 @@ function applyConversationUpdate(
   return { ...next, updatedAt: new Date() };
 }
 
-/**
- * Derived atom that reads the current conversation's state and writes
- * target the current conversation. All existing write atoms
- * (`setAssistantModeAtom`, `setAssistantDeckAtom`, …) continue to work
- * unchanged because they call `set(assistantConversationStateAtom, action)`.
- *
- * The `newConversation` action is the one exception: it carries its own
- * target id, so the writable form inserts the fresh entry at that id in
- * the map and switches the current id to it. This is the only safe way
- * to populate the map when no conversation is current (cold start) and
- * the only safe way to create a new conversation without corrupting the
- * currently-viewed one.
- */
 export const assistantConversationStateAtom = atom(
   (get) => {
     const id = get(currentConversationIdAtom);
@@ -72,11 +41,10 @@ export const assistantConversationStateAtom = atom(
     return get(conversationsAtom)[id] ?? initialConversationState;
   },
   (get, set, update: ConversationAction | ((prev: ConversationState) => ConversationState)) => {
-    // Special case: a newConversation action names its own id. Insert the
-    // fresh state at that id and switch the current id to it. This must
-    // happen even when `currentConversationIdAtom` is null (cold start).
-    // The reducer explicitly sets `updatedAt: null` for a fresh
-    // conversation, which is what we want — we do NOT stamp it.
+    // WHY: newConversation carries its own target id. We must insert the
+    // fresh entry and switch the current id even on cold start (when
+    // currentConversationIdAtom is null). The reducer sets updatedAt: null
+    // for fresh conversations, which is what we want — we do NOT stamp it.
     if (typeof update !== "function" && update.type === "newConversation") {
       const store = get(conversationsAtom);
       const next = conversationReducer(store[update.id] ?? initialConversationState, update);
@@ -96,16 +64,6 @@ export const assistantConversationStateAtom = atom(
   },
 );
 
-/**
- * Dispatch an action (or updater function) to a specific conversation by id.
- * Returns a thunk `(get, set) => void` for use inside jotai atom write
- * functions or via `useAtomCallback`.
- *
- * Unknown conversation ids are silently ignored (the dispatch is a no-op).
- * Callers that need the dispatch to land must ensure the conversation is
- * in the map first (e.g. via `upsertConversationAtom` or by routing a
- * `newConversation` action through `assistantConversationStateAtom`).
- */
 export function dispatchToConversation(
   id: string,
   update: ConversationAction | ((prev: ConversationState) => ConversationState),
@@ -120,13 +78,6 @@ export function dispatchToConversation(
   };
 }
 
-/**
- * Helper that calls the `dispatchToConversation` thunk against a concrete
- * jotai `Store`. Use this anywhere a `Store` is in scope (e.g. inside a
- * React hook via `useStore`, or in a test that owns its own `createStore`).
- * Centralises the `(store.get, store.set)` plumbing so callers can't forget
- * to invoke the returned thunk.
- */
 export function dispatchToConversationOnStore(
   store: Store,
   id: string,
@@ -134,10 +85,6 @@ export function dispatchToConversationOnStore(
 ): void {
   dispatchToConversation(id, action)(store.get, store.set);
 }
-
-/**
- * @section Save status
- */
 
 export const saveStatusAtom = atom<SaveStatus>({
   conversationId: null as string | null,
@@ -148,10 +95,6 @@ export const saveStatusAtom = atom<SaveStatus>({
 export const dismissSaveStatusAtom = atom(null, (_get, set) => {
   set(saveStatusAtom, (prev) => ({ ...prev, isDismissed: true }));
 });
-
-/**
- * @section Derived read atoms
- */
 
 export const assistantActiveRunAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
@@ -230,51 +173,27 @@ export const assistantCancelFunctionsAtom = atom<{
   cancelChat?: () => void;
 }>({});
 
-/**
- * @section Pending save
- */
-
 const pendingSaveByConversationAtom = atom<Record<string, number>>({});
 
-/**
- * Number of pending save bumps for the currently-viewed conversation.
- * Re-evaluates when the current id changes or when its counter changes.
- * The save effect in `useAssistantChat` subscribes to this atom.
- */
 export const pendingSaveAtom = atom((get) => {
   const id = get(currentConversationIdAtom);
   if (!id) return 0;
   return get(pendingSaveByConversationAtom)[id] ?? 0;
 });
 
-/**
- * Bump the current conversation's pending-save counter. No-op if no
- * conversation is current. Used by write atoms that dirty conversation
- * state and by `dispatchAction` in `useAssistantChat`.
- */
 export const bumpPendingSaveAtom = atom(null, (get, set) => {
   const id = get(currentConversationIdAtom);
   if (!id) return;
   set(pendingSaveByConversationAtom, (prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
 });
 
-/**
- * @section Navigation atoms
- */
-
-/** Sets the currently-viewed conversation id. Idempotent. */
 export const setCurrentConversationIdAtom = atom(null, (_get, set, id: string | null) => {
   set(currentConversationIdAtom, id);
 });
 
-/** Inserts or replaces a conversation in the store. */
 export const upsertConversationAtom = atom(null, (_get, set, state: ConversationState) => {
   set(conversationsAtom, (prev) => ({ ...prev, [state.id]: state }));
 });
-
-/**
- * @section Write atoms
- */
 
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
   set(assistantConversationStateAtom, { type: "setMode", mode });

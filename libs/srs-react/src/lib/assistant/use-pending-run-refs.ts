@@ -33,7 +33,6 @@ export type UsePendingRunRefsReturn = {
 };
 
 export function usePendingRunRefs(dispatchFor: DispatchForConversation): UsePendingRunRefsReturn {
-  // Per-stream failure refs, one per stream hook.
   const chatRef = useRef<{ id: string; runId: string } | null>(null);
   const cardRef = useRef<{ id: string; runId: string } | null>(null);
 

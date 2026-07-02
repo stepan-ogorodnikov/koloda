@@ -23,11 +23,6 @@ export type UseAssistantConfigReturn = {
   configRef: RefObject<AssistantConversationConfig>;
 };
 
-/**
- * Resolves deck/template queries, creates stream clients, and assembles
- * the `AssistantConversationConfig` object. All data-fetching and
- * client creation is localised here so the orchestrator hook stays thin.
- */
 export function useAssistantConfig({
   profileId,
   modelId,
@@ -42,7 +37,6 @@ export function useAssistantConfig({
   const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
   const temperature = assistantSettings?.temperature ?? 0.2;
 
-  // Deck → template resolution
   const deckQuery = useQuery({
     queryKey: queryKeys.decks.detail(deckId!),
     ...getDeckQuery(deckId!),
@@ -57,10 +51,8 @@ export function useAssistantConfig({
   });
   const template = templateQuery.data;
 
-  // Stream clients
   const { streamGenerator, chatStreamGenerator } = useAssistantClient({ selectedProfile, template });
 
-  // Config assembly
   const touchProfileMutation = useMutation(touchAIProfileMutation());
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;

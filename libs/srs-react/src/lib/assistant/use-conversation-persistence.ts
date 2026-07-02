@@ -101,7 +101,7 @@ export function useConversationPersistence(
 
   const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
 
-  // Subscribe to the save trigger before the restore effect runs so that any
+  // WHY: Subscribe to the save trigger before the restore effect runs so that any
   // pendingSave bump emitted by restore (e.g. after creating a conversation
   // from ?deckId) is observed and flushed to the DB.
   useEffect(() => {
@@ -112,28 +112,15 @@ export function useConversationPersistence(
 
     const flush = (options: { cancelStreamingRuns?: boolean } = {}) => {
       timer = null;
-      // Read the conversation state directly from the store map so we always
-      // get the latest data regardless of which conversation is current.
       const storeState = store.get(conversationsAtom);
       const state = storeState[conversationId];
       if (!state) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
-      // When `cancelStreamingRuns` is set, rewrite any in-flight runs to
-      // "canceled" in the persisted snapshot. This is what the throttled
-      // save, the pagehide/beforeunload handler, and the effect cleanup
-      // all do, so that the persisted state stays consistent with what
-      // normalizeRestoredConversation will surface on the next mount:
-      // the user/assistant messages stay in place (because the runs are
-      // no longer "streaming") and the title derived from the first user
-      // message matches the visible content. Without this, a conversation
-      // whose stream was cut short by the user closing the tab would
-      // resurface as an empty row with a non-null title derived from
-      // the dropped user message.
-      //
-      // The transform is only applied at persist time. The live
-      // in-memory state continues to track the run as "streaming" until
-      // the underlying stream actually ends.
+      // WHY: Persisting a "streaming" run would cause normalizeRestoredConversation
+      // to drop its messages on next mount, leaving an empty row with a stale
+      // title. Rewriting to "canceled" keeps messages visible and title correct.
+      // The live in-memory state keeps "streaming" until the stream actually ends.
       const persistState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
 
       const title = computeConversationTitle(persistState);
@@ -157,7 +144,6 @@ export function useConversationPersistence(
     const handler = () => {
       if (restoredIdRef.current !== conversationId) return;
       if (lastSavedIdRef.current !== conversationId) return;
-      // Check if this specific conversation has an active run.
       const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
       const now = Date.now();
       const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
@@ -165,10 +151,7 @@ export function useConversationPersistence(
       const delay = Math.max(0, wait - sinceLast);
 
       if (timer) clearTimeout(timer);
-      // Persist in-flight runs as "canceled" so a later race between
-      // the throttled save's mutation and the pagehide/cleanup mutation
-      // cannot resurrect a "streaming" snapshot. See the comment on
-      // handlePageHide below for the full rationale.
+      // WHY: See the handlePageHide comment for full rationale.
       timer = setTimeout(() => flush({ cancelStreamingRuns: true }), delay);
       lastFiredAt = now + delay;
     };
@@ -183,26 +166,9 @@ export function useConversationPersistence(
       flush(options);
     };
 
-    // Every save path (throttled, pagehide, cleanup) writes streaming
-    // runs as "canceled" so that the persisted snapshot stays consistent
-    // with what normalizeRestoredConversation will surface on the next
-    // mount: the user/assistant messages stay in place (because the
-    // runs are no longer "streaming") and the title derived from the
-    // first user message matches the visible content.
-    //
-    // Without this, a conversation whose stream was cut short by the
-    // user closing the tab or reloading would resurface as an empty
-    // row with a non-null title (because normalizeRestoredConversation
-    // drops messages for runs whose status === "streaming" or
-    // "failed").
-    //
-    // The cleanup only flushes when there is a pending throttled save
-    // timer. The setConversation mutation object from React Query is a
-    // new reference on every render, so unconditionally flushing in
-    // the cleanup would cause the effect to re-run on every render and
-    // dispatch an unbounded number of mutations. The pending-timer
-    // guard breaks that cycle because once the timer is cleared,
-    // subsequent cleanups are no-ops.
+    // WHY: Same cancelStreamingRuns rationale as above. The cleanup only flushes
+    // when there is a pending throttled save timer. Unconditionally flushing would
+    // cause re-renders because the mutation ref changes every render.
     const handlePageHide = () => flushNow({ cancelStreamingRuns: true });
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
@@ -223,18 +189,13 @@ export function useConversationPersistence(
     if (restoredIdRef.current === conversationId) return;
     if (isLoading) return;
     if (isFetching && !conversationData) return;
-    // Don't overwrite the atom with a fresh empty state when the query failed.
-    // The UI will surface the error and offer a retry.
+    // WHY: Don't overwrite with a fresh empty state when the query failed.
     if (conversationError) return;
 
-    // Switch to the new conversation. This is a read-only swap — the old
-    // conversation's state remains in conversationsAtom.
     setCurrentConversationId(conversationId);
 
-    // If the store already has state for this id (e.g. it was created locally
-    // on a cold start, or a background run kept it warm), keep it — do NOT
-    // overwrite from the DB. This is the key behavioral change that lets
-    // background runs survive conversation switches.
+    // WHY: If the store already has state for this id (cold start or background
+    // run), keep it — overwriting from DB would kill in-flight streams.
     const storeState = store.get(conversationsAtom);
     if (storeState[conversationId]) {
       restoredIdRef.current = conversationId;
