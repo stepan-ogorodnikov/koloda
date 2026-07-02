@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   assistantActiveRunIdAtom,
   assistantConversationStateAtom,
+  assistantIsLockedAtom,
   bumpPendingSaveAtom,
   dispatchToConversationOnStore,
   pendingSaveAtom,
@@ -402,5 +403,58 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     // Switch back to A — A's counter still shows 2, B's shows 1
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(pendingSaveAtom)).toBe(2);
+  });
+});
+
+describe("setAssistantDeckAtom lock check", () => {
+  /**
+   * Locking is enforced at the write-atom layer (not the reducer) so the
+   * "what counts as locked" rule lives in one place: `assistantIsLockedAtom`.
+   */
+  function lockConversationWithGeneratedCards(store: ReturnType<typeof createStore>, id: string) {
+    dispatchTo(store, id, { type: "addUserMessage", runId: "r1", text: "Hi" });
+    dispatchTo(store, id, { type: "startRun", runId: "r1", mode: "cards", request: {} });
+    dispatchTo(store, id, { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" });
+    dispatchTo(store, id, { type: "completeRun", runId: "r1" });
+  }
+
+  it("refuses to change the deck when a generated-cards run has completed successfully", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    expect(store.get(assistantIsLockedAtom)).toBe(false);
+
+    lockConversationWithGeneratedCards(store, "A");
+    expect(store.get(assistantIsLockedAtom)).toBe(true);
+
+    store.set(setAssistantDeckAtom, 9);
+    expect(store.get(assistantConversationStateAtom).deckId).toBe(5);
+  });
+
+  it("does not bump the pending-save counter when the deck change is rejected", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    lockConversationWithGeneratedCards(store, "A");
+    expect(store.get(pendingSaveAtom)).toBe(0);
+
+    store.set(setAssistantDeckAtom, 9);
+    expect(store.get(pendingSaveAtom)).toBe(0);
+  });
+
+  it("allows the deck change when no successful generated-cards run is present", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    // User message + a started but not-yet-completed run does not lock.
+    dispatchTo(store, "A", { type: "addUserMessage", runId: "r1", text: "Hi" });
+    dispatchTo(store, "A", { type: "startRun", runId: "r1", mode: "cards", request: {} });
+    expect(store.get(assistantIsLockedAtom)).toBe(false);
+
+    store.set(setAssistantDeckAtom, 9);
+    expect(store.get(assistantConversationStateAtom).deckId).toBe(9);
   });
 });

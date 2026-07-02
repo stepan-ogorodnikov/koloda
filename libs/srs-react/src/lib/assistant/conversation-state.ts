@@ -162,15 +162,6 @@ export function cancelStreamingRuns(state: ConversationState): ConversationState
   return { ...next, activeRunId: null };
 }
 
-function isLocked(state: ConversationState): boolean {
-  return state.messages.some((m) => {
-    if (m.role !== "assistant") return false;
-    const metadata = getAssistantMetadata(m);
-    if (metadata?.kind !== "generated-cards") return false;
-    return state.runs[metadata.runId]?.status === "success";
-  });
-}
-
 function toDate(value: unknown): Date | null {
   if (value instanceof Date) return value;
   if (typeof value === "string") {
@@ -511,7 +502,6 @@ export function conversationReducer(state: ConversationState, action: Conversati
       return { ...state, mode: action.mode };
 
     case "setDeck":
-      if (isLocked(state)) return state;
       return { ...state, deckId: action.deckId };
 
     case "setAIProfile":

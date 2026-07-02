@@ -347,9 +347,9 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
 
     // Hold the chat stream open so both runs stay in flight while we
-    // trigger the error. The mock returns a deferred promise so
-    // `onChatStreamComplete` is never called and `pendingChatRunRef`
-    // stays set.
+    // trigger the error. The mock returns a deferred promise so the
+    // chat completion callback is never invoked and the chat
+    // pending-failure ref (managed by `usePendingRunRefs`) stays set.
     wire.chatStream.keepInFlight = true;
 
     function TestWrapper({ children }: PropsWithChildren) {
@@ -389,7 +389,8 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     expect(wire.chatStream.started).toBe(2);
 
     // Now reject the chat stream — this simulates a stream error for B.
-    // The error should be routed to B's run via the pendingChatRunRef.
+    // The error should be routed to B's run via the chat pending-failure
+    // ref managed by `usePendingRunRefs`.
     expect(wire.onChatError).not.toBeNull();
     await act(async () => {
       wire.onChatError!(new Error("stream blew up"));

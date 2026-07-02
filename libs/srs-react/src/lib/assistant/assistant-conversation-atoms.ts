@@ -24,6 +24,35 @@ export const conversationsAtom = atom<ConversationStore>({});
 const currentConversationIdAtom = atom<string | null>(null);
 
 /**
+ * Apply an update (action or function form) to a conversation's state and
+ * stamp `updatedAt` on any non-no-op result. Returns the new state, or
+ * `prev` unchanged when the update produced the same reference — which lets
+ * callers skip the store write and avoids spurious `updatedAt` bumps.
+ *
+ * This is the single source of truth for "user-driven state change ⇒
+ * refresh `updatedAt`". Both the writable form of
+ * `assistantConversationStateAtom` and `dispatchToConversation` route
+ * through here so the timestamp semantics are consistent across every
+ * dispatch path (current conversation and background streams targeting a
+ * specific id).
+ *
+ * `newConversation` must NOT go through this helper — the reducer
+ * explicitly sets `updatedAt: null` for fresh conversations, and that
+ * must be preserved. The writable atom handles `newConversation` as a
+ * special case before reaching here.
+ */
+function applyConversationUpdate(
+  prev: ConversationState,
+  update: ConversationAction | ((prev: ConversationState) => ConversationState),
+): ConversationState {
+  const next = typeof update === "function"
+    ? (update as (p: ConversationState) => ConversationState)(prev)
+    : conversationReducer(prev, update);
+  if (next === prev) return prev;
+  return { ...next, updatedAt: new Date() };
+}
+
+/**
  * Derived atom that reads the current conversation's state and writes
  * target the current conversation. All existing write atoms
  * (`setAssistantModeAtom`, `setAssistantDeckAtom`, …) continue to work
@@ -46,6 +75,8 @@ export const assistantConversationStateAtom = atom(
     // Special case: a newConversation action names its own id. Insert the
     // fresh state at that id and switch the current id to it. This must
     // happen even when `currentConversationIdAtom` is null (cold start).
+    // The reducer explicitly sets `updatedAt: null` for a fresh
+    // conversation, which is what we want — we do NOT stamp it.
     if (typeof update !== "function" && update.type === "newConversation") {
       const store = get(conversationsAtom);
       const next = conversationReducer(store[update.id] ?? initialConversationState, update);
@@ -59,11 +90,9 @@ export const assistantConversationStateAtom = atom(
     if (!id) return;
     const store = get(conversationsAtom);
     const prev = store[id] ?? initialConversationState;
-    const next = typeof update === "function"
-      ? (update as (p: ConversationState) => ConversationState)(prev)
-      : conversationReducer(prev, update);
-    if (next === prev) return;
-    set(conversationsAtom, { ...store, [id]: next });
+    const stamped = applyConversationUpdate(prev, update);
+    if (stamped === prev) return;
+    set(conversationsAtom, { ...store, [id]: stamped });
   },
 );
 
@@ -85,11 +114,9 @@ export function dispatchToConversation(
     const store = get(conversationsAtom);
     const prev = store[id];
     if (!prev) return; // unknown conversation — drop
-    const next = typeof update === "function"
-      ? (update as (p: ConversationState) => ConversationState)(prev)
-      : conversationReducer(prev, update);
-    if (next === prev) return;
-    set(conversationsAtom, { ...store, [id]: next });
+    const stamped = applyConversationUpdate(prev, update);
+    if (stamped === prev) return;
+    set(conversationsAtom, { ...store, [id]: stamped });
   };
 }
 
@@ -223,7 +250,7 @@ export const pendingSaveAtom = atom((get) => {
 /**
  * Bump the current conversation's pending-save counter. No-op if no
  * conversation is current. Used by write atoms that dirty conversation
- * state, and by `dispatchAndBump` in `useAssistantChat`.
+ * state and by `dispatchAction` in `useAssistantChat`.
  */
 export const bumpPendingSaveAtom = atom(null, (get, set) => {
   const id = get(currentConversationIdAtom);
@@ -254,7 +281,8 @@ export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => 
   set(bumpPendingSaveAtom);
 });
 
-export const setAssistantDeckAtom = atom(null, (_get, set, deckId: number | null) => {
+export const setAssistantDeckAtom = atom(null, (get, set, deckId: number | null) => {
+  if (get(assistantIsLockedAtom)) return;
   set(assistantConversationStateAtom, { type: "setDeck", deckId });
   set(bumpPendingSaveAtom);
 });

@@ -884,20 +884,6 @@ describe("conversationReducer", () => {
       expect(state.deckId).toBe(5);
     });
 
-    it("is a no-op when a generated-cards run has completed successfully", () => {
-      let state = reduce([
-        { type: "addUserMessage", runId: "r1", text: "Hi" },
-        { type: "startRun", runId: "r1", mode: "cards", request: {} },
-        { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" },
-      ]);
-      state = conversationReducer(state, { type: "setDeck", deckId: 5 });
-      expect(state.deckId).toBe(5);
-
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
-      state = conversationReducer(state, { type: "setDeck", deckId: 9 });
-      expect(state.deckId).toBe(5);
-    });
-
     it("stays unlocked when a generated-cards run is still streaming or failed", () => {
       let state = reduce([
         { type: "addUserMessage", runId: "r1", text: "Hi" },

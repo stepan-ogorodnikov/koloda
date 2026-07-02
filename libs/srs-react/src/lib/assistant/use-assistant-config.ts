@@ -1,0 +1,89 @@
+import type { AIProfile, AssistantSettings } from "@koloda/ai";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { useLingui } from "@lingui/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
+import { useRef } from "react";
+import type { RefObject } from "react";
+import { assistantDeckIdAtom } from "./assistant-conversation-atoms";
+import { useAssistantClient } from "./use-assistant-client";
+import type { AssistantConversationConfig } from "./use-assistant-conversation";
+
+export type UseAssistantConfigOptions = {
+  profileId: string;
+  modelId: string;
+  modelName: string | undefined;
+  reasoningEffort: string;
+  selectedProfile: AIProfile | null;
+};
+
+export type UseAssistantConfigReturn = {
+  template: AssistantConversationConfig["template"];
+  templateId: AssistantConversationConfig["templateId"] | undefined;
+  configRef: RefObject<AssistantConversationConfig>;
+};
+
+/**
+ * Resolves deck/template queries, creates stream clients, and assembles
+ * the `AssistantConversationConfig` object. All data-fetching and
+ * client creation is localised here so the orchestrator hook stays thin.
+ */
+export function useAssistantConfig({
+  profileId,
+  modelId,
+  modelName,
+  reasoningEffort,
+  selectedProfile,
+}: UseAssistantConfigOptions): UseAssistantConfigReturn {
+  const { _ } = useLingui();
+  const { getDeckQuery, getTemplateQuery, touchAIProfileMutation, getSettingsQuery } = useAtomValue(queriesAtom);
+  const deckId = useAtomValue(assistantDeckIdAtom);
+  const { data: aiSettings } = useQuery({ ...getSettingsQuery("ai"), queryKey: queryKeys.settings.detail("ai") });
+  const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
+  const temperature = assistantSettings?.temperature ?? 0.2;
+
+  // Deck → template resolution
+  const deckQuery = useQuery({
+    queryKey: queryKeys.decks.detail(deckId!),
+    ...getDeckQuery(deckId!),
+    enabled: !!deckId,
+  });
+  const templateId = deckQuery.data?.templateId;
+
+  const templateQuery = useQuery({
+    queryKey: queryKeys.templates.detail(templateId!),
+    ...getTemplateQuery(templateId!),
+    enabled: !!templateId,
+  });
+  const template = templateQuery.data;
+
+  // Stream clients
+  const { streamGenerator, chatStreamGenerator } = useAssistantClient({ selectedProfile, template });
+
+  // Config assembly
+  const touchProfileMutation = useMutation(touchAIProfileMutation());
+  const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
+  const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
+
+  const conversationConfig: AssistantConversationConfig = {
+    profileId,
+    modelId,
+    modelName,
+    temperature,
+    reasoningEffort,
+    deckId: deckId!,
+    templateId: templateId!,
+    streamGenerator,
+    chatStreamGenerator,
+    template,
+    touchProfileMutate: (args) => touchProfileMutation.mutate(args),
+    cardsPromptTemplate,
+    chatPromptTemplate,
+    _,
+  };
+
+  const configRef = useRef(conversationConfig);
+  configRef.current = conversationConfig;
+
+  return { template, templateId, configRef };
+}
