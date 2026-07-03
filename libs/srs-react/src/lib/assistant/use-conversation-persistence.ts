@@ -1,5 +1,5 @@
 import { computeConversationTitle } from "@koloda/ai";
-import type { Conversation, SetConversationData } from "@koloda/app";
+import type { SetConversationData } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
@@ -124,16 +124,14 @@ export function useConversationPersistence(
       const persistState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
 
       const title = computeConversationTitle(persistState);
-      const row: Conversation = {
-        id: persistState.id,
-        title,
-        state: JSON.parse(JSON.stringify(persistState)),
-        createdAt: persistState.createdAt,
-        updatedAt: persistState.updatedAt ?? null,
-      };
+      // WHY: structuredClone detaches persistState from the Jotai store so the
+      // async mutation below doesn't capture a reference the reducer will
+      // keep mutating. Unlike JSON.parse(JSON.stringify(...)) it preserves
+      // Date instances; serialization to the jsonb column happens at the DB
+      // layer.
       const data: SetConversationData = {
-        id: row.id,
-        state: row.state,
+        id: persistState.id,
+        state: structuredClone(persistState),
         title,
         updatedAt: persistState.updatedAt,
       };
