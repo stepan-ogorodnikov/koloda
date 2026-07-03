@@ -1,33 +1,40 @@
+import type { ProviderOptions } from "@ai-sdk/provider-utils";
 import { generateText, Output, streamText } from "ai";
 import { getCardContentSchema, parseGeneratedCardsText, resolveGenerationTemperature } from "./card-parsing";
 import { getConversationMessages } from "./chat-stream";
 import { wrapAIError } from "./error";
 import { compilePromptTemplate } from "./prompts";
-import type { AISecrets, CardGenerationRequest, GeneratedCard } from "./types";
+import type { AiProvider, AISecrets, CardGenerationRequest, GeneratedCard } from "./types";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
 
-async function runStructuredCardGeneration(
+async function runCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
+  providerLabel: AiProvider,
   request: CardGenerationRequest,
+  providerOptions?: ProviderOptions,
 ): Promise<void> {
   const { template, input, messages = [], onCard, abortSignal, systemPromptTemplate } = request;
   const elementSchema = getCardContentSchema(template.content.fields);
   const temperature = resolveGenerationTemperature(input.temperature);
-  let streamedError: unknown = null;
+  const systemPrompt = compilePromptTemplate(
+    systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+    template.content.fields,
+    providerLabel,
+    "generation",
+  );
+  const chatMessages = getConversationMessages(messages, input.prompt);
 
+  // Try structured output first (streaming)
   try {
+    let streamedError: unknown = null;
     const result = streamText({
       model: modelFactory(input.modelId),
       temperature,
       output: Output.array({ element: elementSchema }),
-      system: compilePromptTemplate(
-        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-        template.content.fields,
-        "openrouter",
-        "generation",
-      ),
-      messages: getConversationMessages(messages, input.prompt),
+      system: systemPrompt,
+      messages: chatMessages,
       abortSignal,
+      ...(providerOptions ? { providerOptions } : {}),
       onError: ({ error }) => {
         streamedError = error;
       },
@@ -41,6 +48,7 @@ async function runStructuredCardGeneration(
 
     if (cardsCount > 0) return;
 
+    // Structured stream returned nothing — try parsing the raw text
     const streamedText = await result.text;
     const streamedTextCards = parseGeneratedCardsText(streamedText, template.content.fields);
     if (streamedTextCards.length > 0) {
@@ -48,37 +56,25 @@ async function runStructuredCardGeneration(
       return;
     }
 
-    const fallbackTextResult = await generateText({
-      model: modelFactory(input.modelId),
-      temperature,
-      system: compilePromptTemplate(
-        systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-        template.content.fields,
-        "openrouter",
-        "generation",
-      ),
-      messages: getConversationMessages(messages, input.prompt),
-      abortSignal,
-    });
-    const fallbackCards = parseGeneratedCardsText(fallbackTextResult.text, template.content.fields);
-
-    for (const card of fallbackCards) {
-      onCard(card);
-    }
+    if (streamedError) throw streamedError;
   } catch (error) {
-    throw streamedError ?? error;
+    // Structured output failed (provider/model doesn't support it, etc.)
+    // Fall through to plain text completion below.
+    // If the error was an abort, re-throw immediately.
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
   }
-}
 
-async function runTextCompletionCardGeneration(
-  completeText: (request: CardGenerationRequest) => Promise<string>,
-  request: CardGenerationRequest,
-): Promise<void> {
-  const text = await completeText(request);
-  const { template, onCard } = request;
-  const cards = parseGeneratedCardsText(text, template.content.fields);
-
-  for (const card of cards) {
+  // Fallback: plain text generation + heuristic parsing
+  const fallbackResult = await generateText({
+    model: modelFactory(input.modelId),
+    temperature,
+    system: systemPrompt,
+    messages: chatMessages,
+    abortSignal,
+    ...(providerOptions ? { providerOptions } : {}),
+  });
+  const fallbackCards = parseGeneratedCardsText(fallbackResult.text, template.content.fields);
+  for (const card of fallbackCards) {
     onCard(card);
   }
 }
@@ -94,7 +90,7 @@ export function generateCardsWithOpenRouter(
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
     const openrouter = createOpenRouter({ apiKey });
-    return runStructuredCardGeneration((modelId) => openrouter(modelId), request);
+    return runCardGeneration((modelId) => openrouter(modelId), "openrouter", request);
   });
 }
 
@@ -105,23 +101,9 @@ export function generateCardsWithOllama(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
-
-    return runTextCompletionCardGeneration(
-      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
-        const result = await generateText({
-          model: ollama(input.modelId),
-          temperature: resolveGenerationTemperature(input.temperature),
-          system: compilePromptTemplate(
-            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-            template.content.fields,
-            "ollama",
-            "generation",
-          ),
-          messages: getConversationMessages(messages, input.prompt),
-          abortSignal,
-        });
-        return result.text;
-      },
+    return runCardGeneration(
+      (modelId) => ollama(modelId, { structuredOutputs: true }),
+      "ollama",
       request,
     );
   });
@@ -133,26 +115,13 @@ export function generateCardsWithLMStudio(
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-    const lmstudio = createOpenAICompatible({ name: "lmstudio", baseURL: baseUrl, apiKey });
-
-    return runTextCompletionCardGeneration(
-      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
-        const result = await generateText({
-          model: lmstudio(input.modelId),
-          temperature: resolveGenerationTemperature(input.temperature),
-          system: compilePromptTemplate(
-            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-            template.content.fields,
-            "lmstudio",
-            "generation",
-          ),
-          messages: getConversationMessages(messages, input.prompt),
-          abortSignal,
-        });
-        return result.text;
-      },
-      request,
-    );
+    const lmstudio = createOpenAICompatible({
+      name: "lmstudio",
+      baseURL: baseUrl,
+      apiKey,
+      supportsStructuredOutputs: true,
+    });
+    return runCardGeneration((modelId) => lmstudio(modelId), "lmstudio", request);
   });
 }
 
@@ -162,28 +131,20 @@ export function generateCardsWithOpencodeGo(
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-    const opencodeGo = createOpenAICompatible({ name: "opencode-go", baseURL: OPENCODE_GO_BASE_URL, apiKey });
-
-    return runTextCompletionCardGeneration(
-      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
-        const result = await generateText({
-          model: opencodeGo(input.modelId),
-          temperature: resolveGenerationTemperature(input.temperature),
-          system: compilePromptTemplate(
-            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-            template.content.fields,
-            "opencodeGo",
-            "generation",
-          ),
-          messages: getConversationMessages(messages, input.prompt),
-          abortSignal,
-          providerOptions: input.reasoningEffort
-            ? { "opencode-go": { reasoningEffort: input.reasoningEffort } }
-            : undefined,
-        });
-        return result.text;
-      },
+    const opencodeGo = createOpenAICompatible({
+      name: "opencode-go",
+      baseURL: OPENCODE_GO_BASE_URL,
+      apiKey,
+      supportsStructuredOutputs: true,
+    });
+    const providerOptions = request.input.reasoningEffort
+      ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
+      : undefined;
+    return runCardGeneration(
+      (modelId) => opencodeGo(modelId),
+      "opencodeGo",
       request,
+      providerOptions,
     );
   });
 }
@@ -194,28 +155,20 @@ export function generateCardsWithOpencodeZen(
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-    const opencodeZen = createOpenAICompatible({ name: "opencode-zen", baseURL: OPENCODE_ZEN_BASE_URL, apiKey });
-
-    return runTextCompletionCardGeneration(
-      async ({ template, input, messages = [], abortSignal, systemPromptTemplate }) => {
-        const result = await generateText({
-          model: opencodeZen(input.modelId),
-          temperature: resolveGenerationTemperature(input.temperature),
-          system: compilePromptTemplate(
-            systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-            template.content.fields,
-            "opencodeZen",
-            "generation",
-          ),
-          messages: getConversationMessages(messages, input.prompt),
-          abortSignal,
-          providerOptions: input.reasoningEffort
-            ? { "opencode-zen": { reasoningEffort: input.reasoningEffort } }
-            : undefined,
-        });
-        return result.text;
-      },
+    const opencodeZen = createOpenAICompatible({
+      name: "opencode-zen",
+      baseURL: OPENCODE_ZEN_BASE_URL,
+      apiKey,
+      supportsStructuredOutputs: true,
+    });
+    const providerOptions = request.input.reasoningEffort
+      ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
+      : undefined;
+    return runCardGeneration(
+      (modelId) => opencodeZen(modelId),
+      "opencodeZen",
       request,
+      providerOptions,
     );
   });
 }
