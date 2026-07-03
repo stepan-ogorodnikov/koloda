@@ -19,6 +19,14 @@ export function useConversationRuns(
   dispatch: React.Dispatch<ConversationAction>,
   dispatchFor: DispatchForConversation,
   getState: () => ConversationState,
+  // WHY: terminal-stream actions go through `dispatchFor` (per-id) so a
+  // background stream on a non-current conversation still lands on the
+  // originating conversation. `dispatchFor` does NOT bump the pending
+  // save counter — without an explicit bump, the throttled save scheduled
+  // at run start would fire during streaming and persist the run as
+  // "canceled" (via `cancelStreamingRuns`) before the real terminal
+  // status is ever saved.
+  bumpPendingSave?: () => void,
   // WHY: Must be called even on abort/error so the caller can clear its
   // pending-failure ref. A stream aborted by a newer start will still
   // fire this — caller must guard the clear against stale runIds.
@@ -29,14 +37,23 @@ export function useConversationRuns(
     switch (result) {
       case "success":
         dispatchFor(conversationId, { type: "completeRun", runId });
+        // WHY: Force a save with the post-completion state so a
+        // throttled save that fires during streaming cannot leave a
+        // successful run persisted as "canceled" with elapsedSeconds: 0.
+        bumpPendingSave?.();
         break;
       case "error":
         break;
       case "aborted":
         dispatchFor(conversationId, { type: "cancelRun", runId });
+        // WHY: Same rationale as success — the throttled save is still
+        // queued from run start and would otherwise persist a "canceled"
+        // snapshot derived from `cancelStreamingRuns` rather than the
+        // real cancelRun terminal state.
+        bumpPendingSave?.();
         break;
     }
-  }, [dispatchFor]);
+  }, [dispatchFor, bumpPendingSave]);
 
   const executeChatRun = useCallback(
     async (conversationId: string, runId: string, request: ChatStreamRequest) => {

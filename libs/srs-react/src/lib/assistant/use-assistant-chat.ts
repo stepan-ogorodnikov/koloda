@@ -114,6 +114,7 @@ export function useAssistantChat(
     dispatchAction,
     dispatchFor,
     readState,
+    bumpPendingSave,
   });
 
   const handleCancel = useCallback(() => {

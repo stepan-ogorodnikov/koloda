@@ -92,6 +92,7 @@ describe("useConversationRuns", () => {
         harness.dispatch,
         harness.dispatchFor,
         harness.getState,
+        undefined,
         onChatStreamComplete,
       )
     );
@@ -179,6 +180,7 @@ describe("useConversationRuns", () => {
         harness.dispatchFor,
         harness.getState,
         undefined,
+        undefined,
         onCardStreamComplete,
       )
     );
@@ -236,6 +238,7 @@ describe("useConversationRuns", () => {
         harness.dispatch,
         harness.dispatchFor,
         harness.getState,
+        undefined,
       )
     );
 
@@ -247,5 +250,96 @@ describe("useConversationRuns", () => {
     const cancelActions = harness.dispatchToMap.filter((entry) => entry.action.type === "cancelRun");
     expect(cancelActions).toHaveLength(1);
     expect(cancelActions[0].id).toBe("A");
+  });
+
+  it("bumps the pending save when a successful card generation run completes", async () => {
+    // WHY: terminal-stream actions go through `dispatchFor` (per-id)
+    // and therefore do NOT bump the pending-save counter on their own.
+    // Without an explicit bump, the throttled save scheduled at run
+    // start would fire during streaming and persist a successful run
+    // as "canceled" (via `cancelStreamingRuns`) before the real
+    // "success" status is ever saved — which is the
+    // `Interrupted after 0s` reload bug.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, {
+      type: "startRun",
+      runId: "run-A",
+      mode: "cards",
+      request: {},
+    });
+
+    const bumpPendingSave = vi.fn();
+    const generate = vi.fn(async (
+      _request: CardGenerationStreamRequest,
+      onCard: (card: { content: Record<string, { text: string }> }) => void,
+    ) => {
+      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
+      return "success" as StreamResult;
+    });
+
+    const { result } = renderHook(() =>
+      useConversationRuns(
+        vi.fn() as never,
+        generate as never,
+        harness.dispatch,
+        harness.dispatchFor,
+        harness.getState,
+        bumpPendingSave,
+      )
+    );
+
+    await act(async () => {
+      await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
+    });
+
+    // The completion was recorded on the run.
+    const completeActions = harness.dispatchToMap.filter((entry) => entry.action.type === "completeRun");
+    expect(completeActions).toHaveLength(1);
+    expect(completeActions[0].id).toBe("A");
+
+    // AND the save counter was bumped so a fresh save fires with the
+    // post-completion state (i.e. "success", not "canceled").
+    expect(bumpPendingSave).toHaveBeenCalledTimes(1);
+  });
+
+  it("bumps the pending save when an aborted card generation run is canceled", async () => {
+    // WHY: same as the success case — a user-initiated cancel must
+    // also schedule a save with the real terminal state, not a
+    // `cancelStreamingRuns`-derived snapshot.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, {
+      type: "startRun",
+      runId: "run-A",
+      mode: "cards",
+      request: {},
+    });
+
+    const bumpPendingSave = vi.fn();
+    const generate = vi.fn(async () => "aborted" as StreamResult);
+
+    const { result } = renderHook(() =>
+      useConversationRuns(
+        vi.fn() as never,
+        generate as never,
+        harness.dispatch,
+        harness.dispatchFor,
+        harness.getState,
+        bumpPendingSave,
+      )
+    );
+
+    await act(async () => {
+      await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
+    });
+
+    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action.type === "cancelRun");
+    expect(cancelActions).toHaveLength(1);
+    expect(cancelActions[0].id).toBe("A");
+
+    expect(bumpPendingSave).toHaveBeenCalledTimes(1);
   });
 });

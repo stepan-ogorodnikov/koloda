@@ -18,6 +18,7 @@ export type UseAssistantStreamSetupOptions = {
   dispatchAction: (action: ConversationAction) => void;
   dispatchFor: DispatchForConversation;
   readState: () => ConversationState;
+  bumpPendingSave: () => void;
 };
 
 export type UseAssistantStreamSetupReturn = {
@@ -44,6 +45,7 @@ export function useAssistantStreamSetup({
   dispatchAction,
   dispatchFor,
   readState,
+  bumpPendingSave,
 }: UseAssistantStreamSetupOptions): UseAssistantStreamSetupReturn {
   const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
   const pendingRunRefs = usePendingRunRefs(dispatchFor);
@@ -77,6 +79,7 @@ export function useAssistantStreamSetup({
     dispatchAction,
     dispatchFor,
     readState,
+    bumpPendingSave,
     onChatStreamComplete,
     onCardStreamComplete,
   );
