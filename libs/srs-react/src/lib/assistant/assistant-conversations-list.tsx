@@ -5,9 +5,11 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { conversationsAtom } from "./assistant-conversation-atoms";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;
+export const CONVERSATION_RUNNING_LABEL = msg`ai.conversation.running`;
 
 type AssistantConversationsListProps = {
   activeId?: string;
@@ -17,6 +19,7 @@ type AssistantConversationsListProps = {
 export function AssistantConversationsList({ activeId, onActiveDeleted }: AssistantConversationsListProps) {
   const { _ } = useLingui();
   const { getConversationsQuery } = useAtomValue(queriesAtom);
+  const conversations = useAtomValue(conversationsAtom);
   const query = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
 
   return (
@@ -30,6 +33,8 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
                 conversation={conversation}
                 fallback={_(CONVERSATION_TITLE_FALLBACK)}
                 isActive={conversation.id === activeId}
+                hasActiveRun={conversations[conversation.id]?.activeRunId != null}
+                runningLabel={_(CONVERSATION_RUNNING_LABEL)}
                 onActiveDeleted={onActiveDeleted}
                 key={conversation.id}
               />
@@ -50,10 +55,19 @@ type ConversationItemProps = {
   conversation: ConversationListItem;
   fallback: string;
   isActive: boolean;
+  hasActiveRun: boolean;
+  runningLabel: string;
   onActiveDeleted?: () => void;
 };
 
-function ConversationItem({ conversation, fallback, isActive, onActiveDeleted }: ConversationItemProps) {
+function ConversationItem({
+  conversation,
+  fallback,
+  isActive,
+  hasActiveRun,
+  runningLabel,
+  onActiveDeleted,
+}: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
   const name = conversation.title ?? fallback;
 
@@ -66,7 +80,12 @@ function ConversationItem({ conversation, fallback, isActive, onActiveDeleted }:
         viewTransition={isMotionOn}
         key={conversation.id}
       >
-        {name}
+        <span className="flex items-center gap-2 min-w-0">
+          <span className="flex items-center justify-center w-4">
+            {hasActiveRun && <div className="size-2 rounded-full bg-fg-link animate-pulse" aria-label={runningLabel} />}
+          </span>
+          <span className="truncate">{name}</span>
+        </span>
       </Link>
       <div className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 animate-opacity">
         <DeleteConversationButton

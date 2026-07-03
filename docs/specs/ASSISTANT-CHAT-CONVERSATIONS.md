@@ -17,6 +17,8 @@ It becomes active when the user sends their first message.
 Conversations are listed in the sidebar, sorted by most recently updated.
 The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
 
+Conversations with an active run display an indicator next to their name.
+
 ## Messages
 
 Every user message is paired with an assistant message.
