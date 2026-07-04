@@ -269,6 +269,30 @@ export const upsertConversationAtom = atom(null, (_get, set, state: Conversation
   set(conversationsAtom, (prev) => ({ ...prev, [state.id]: state }));
 });
 
+// WHY: After a successful DB delete we must drop the conversation from the
+// in-memory store as well. Otherwise the pending-save effect in
+// `useConversationPersistence` keeps a reference to the deleted state and
+// its cleanup-time `flush` will upsert the row back into the database via
+// `setConversation`'s `onConflictDoUpdate` — making the conversation
+// reappear in the list as soon as the list query is invalidated. This only
+// affected the *active* conversation because that is the only one for
+// which `useConversationPersistence` is mounted, which matches the user
+// report of "only the first conversation reappears".
+export const removeConversationAtom = atom(null, (_get, set, id: string) => {
+  set(conversationsAtom, (prev) => {
+    if (!(id in prev)) return prev;
+    const next = { ...prev };
+    delete next[id];
+    return next;
+  });
+  set(pendingSaveByConversationAtom, (prev) => {
+    if (!(id in prev)) return prev;
+    const next = { ...prev };
+    delete next[id];
+    return next;
+  });
+});
+
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
   set(assistantConversationStateAtom, { type: "setMode", mode });
   set(bumpPendingSaveAtom);

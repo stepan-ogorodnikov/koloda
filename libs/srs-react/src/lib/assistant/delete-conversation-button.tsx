@@ -7,9 +7,10 @@ import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useStore } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
+import { removeConversationAtom } from "./assistant-conversation-atoms";
 
 type DeleteConversationButtonProps = {
   id: DeleteConversationData["id"];
@@ -20,6 +21,7 @@ type DeleteConversationButtonProps = {
 export function DeleteConversationButton({ id, onActiveDeleted, isActive = false }: DeleteConversationButtonProps) {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
+  const store = useStore();
   const { deleteConversationMutation } = useAtomValue(queriesAtom);
   const { mutate, error, reset } = useMutation(deleteConversationMutation());
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +34,14 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
   const handleClick = () => {
     mutate({ id }, {
       onSuccess: () => {
+        // WHY: Drop the in-memory conversation before any re-render driven
+        // by `onActiveDeleted` re-runs `useConversationPersistence` with
+        // a new id. That hook's effect cleanup unconditionally calls
+        // `flush` for the *previous* id when a debounce timer is pending,
+        // and `flush` would otherwise re-insert the row via
+        // `setConversation`'s upsert. Removing the state here makes
+        // `flush`'s `if (!state) return` short-circuit.
+        store.set(removeConversationAtom, id);
         setIsOpen(false);
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
         queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(id) });
