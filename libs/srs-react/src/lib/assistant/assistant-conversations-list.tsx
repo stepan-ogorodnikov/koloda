@@ -5,11 +5,12 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { conversationsAtom } from "./assistant-conversation-atoms";
+import { conversationsAtom, unreadConversationIdsAtom } from "./assistant-conversation-atoms";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;
 export const CONVERSATION_RUNNING_LABEL = msg`ai.conversation.running`;
+export const CONVERSATION_UNREAD_LABEL = msg`ai.conversation.unread`;
 
 type AssistantConversationsListProps = {
   activeId?: string;
@@ -20,6 +21,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
   const { _ } = useLingui();
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversations = useAtomValue(conversationsAtom);
+  const unreadIds = useAtomValue(unreadConversationIdsAtom);
   const query = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
 
   return (
@@ -34,7 +36,9 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
                 fallback={_(CONVERSATION_TITLE_FALLBACK)}
                 isActive={conversation.id === activeId}
                 hasActiveRun={conversations[conversation.id]?.activeRunId != null}
+                hasUnread={unreadIds.has(conversation.id)}
                 runningLabel={_(CONVERSATION_RUNNING_LABEL)}
+                unreadLabel={_(CONVERSATION_UNREAD_LABEL)}
                 onActiveDeleted={onActiveDeleted}
                 key={conversation.id}
               />
@@ -56,7 +60,9 @@ type ConversationItemProps = {
   fallback: string;
   isActive: boolean;
   hasActiveRun: boolean;
+  hasUnread: boolean;
   runningLabel: string;
+  unreadLabel: string;
   onActiveDeleted?: () => void;
 };
 
@@ -65,11 +71,18 @@ function ConversationItem({
   fallback,
   isActive,
   hasActiveRun,
+  hasUnread,
   runningLabel,
+  unreadLabel,
   onActiveDeleted,
 }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
   const name = conversation.title ?? fallback;
+  // WHY: The active-run pulse is more salient than the unread dot, so it
+  // wins when both are true. Keeping the order explicit avoids showing
+  // an unread dot for a run the user is actively watching.
+  const showActive = hasActiveRun;
+  const showUnread = !showActive && hasUnread;
 
   return (
     <div className="group relative flex flex-row items-center">
@@ -82,7 +95,21 @@ function ConversationItem({
       >
         <span className="flex items-center gap-2 min-w-0">
           <span className="flex items-center justify-center w-4">
-            {hasActiveRun && <div className="size-2 rounded-full bg-fg-link animate-pulse" aria-label={runningLabel} />}
+            {showActive
+              ? (
+                <div
+                  className="size-2 rounded-full bg-fg-level-4 animate-pulse"
+                  aria-label={runningLabel}
+                />
+              )
+              : showUnread
+              ? (
+                <div
+                  className="size-2 rounded-full bg-fg-link"
+                  aria-label={unreadLabel}
+                />
+              )
+              : null}
           </span>
           <span className="truncate">{name}</span>
         </span>

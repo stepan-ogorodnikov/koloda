@@ -190,43 +190,39 @@ export function useConversationPersistence(
     // WHY: Don't overwrite with a fresh empty state when the query failed.
     if (conversationError) return;
 
-    setCurrentConversationId(conversationId);
-
     // WHY: If the store already has state for this id (cold start or background
     // run), keep it — overwriting from DB would kill in-flight streams.
     const storeState = store.get(conversationsAtom);
-    if (storeState[conversationId]) {
-      restoredIdRef.current = conversationId;
-      lastSavedIdRef.current = conversationId;
-      bumpPendingSave();
-      return;
-    }
-
-    const loaded = conversationData?.state;
-    const coerced = coerceConversationState(loaded);
-    let normalized = false;
-    if (coerced) {
-      const clean = normalizeRestoredConversation(coerced);
-      if (clean) {
-        upsertConversation(clean);
-        normalized = true;
+    if (!storeState[conversationId]) {
+      const loaded = conversationData?.state;
+      const coerced = coerceConversationState(loaded);
+      if (coerced) {
+        const clean = normalizeRestoredConversation(coerced);
+        if (clean) {
+          upsertConversation(clean);
+        } else {
+          upsertConversation(coerced);
+        }
       } else {
-        upsertConversation(coerced);
+        const stored = readLastUsed();
+        const fresh: ConversationState = {
+          ...initialConversationState,
+          id: conversationId,
+          createdAt: new Date(),
+          ...stored,
+        };
+        upsertConversation(fresh);
       }
-    } else {
-      const stored = readLastUsed();
-      const fresh: ConversationState = {
-        ...initialConversationState,
-        id: conversationId,
-        createdAt: new Date(),
-        ...stored,
-      };
-      upsertConversation(fresh);
-      normalized = true;
     }
     restoredIdRef.current = conversationId;
     lastSavedIdRef.current = conversationId;
-    if (normalized) bumpPendingSave();
+    // WHY: Setting the current id AFTER the conversation is in the store
+    // lets `setCurrentConversationIdAtom`'s mark-read side effect find
+    // the latest run id and dispatch a `markRead`. The pending-save bump
+    // below persists the refreshed `lastReadRunId` on first restore, so
+    // a freshly opened conversation is not shown as unread on next load.
+    setCurrentConversationId(conversationId);
+    bumpPendingSave();
   }, [
     store,
     conversationId,

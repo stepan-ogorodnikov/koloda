@@ -132,6 +132,14 @@ msgstr "Удалить диалог"
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
 
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:11
+msgid "ai.conversation.running"
+msgstr "Выполняется"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
+msgid "ai.conversation.unread"
+msgstr "Не прочитано"
+
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"

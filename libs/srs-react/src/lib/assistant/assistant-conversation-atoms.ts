@@ -31,6 +31,13 @@ function applyConversationUpdate(
     ? (update as (p: ConversationState) => ConversationState)(prev)
     : conversationReducer(prev, update);
   if (next === prev) return prev;
+  // WHY: `markRead` only updates the read-pointer (`lastReadRunId`) — a
+  // UI concern that tracks which runs the user has seen. It is not a
+  // content change and must not bump `updatedAt`; otherwise opening an
+  // unread conversation would re-sort it to the top of the list every
+  // time, defeating the unread indicator. See
+  // ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status.
+  if (typeof update !== "function" && update.type === "markRead") return next;
   return { ...next, updatedAt: new Date() };
 }
 
@@ -56,13 +63,34 @@ export const assistantConversationStateAtom = atom(
 
     const id = get(currentConversationIdAtom);
     if (!id) return;
-    const store = get(conversationsAtom);
-    const prev = store[id] ?? initialConversationState;
-    const stamped = applyConversationUpdate(prev, update);
-    if (stamped === prev) return;
-    set(conversationsAtom, { ...store, [id]: stamped });
+    dispatchToConversation(id, update)(get, set);
   },
 );
+
+// WHY: A run that finishes while the user is viewing the conversation
+// has been implicitly "read" — the user watched it stream. Bumping
+// `lastReadRunId` to the just-finished run id keeps the conversation
+// out of `unreadConversationIdsAtom` after the user navigates away.
+// We detect the transition by comparing the latest run id in `prev`
+// and `next` and checking that its status moved out of `streaming`;
+// this works for both the explicit `completeRun` / `failRun` /
+// `runFailed` / `cancelRun` actions and for function-form updaters
+// that mutate the run status directly.
+function detectRunJustFinished(prev: ConversationState, next: ConversationState) {
+  const prevIds = Object.keys(prev.runs);
+  const nextIds = Object.keys(next.runs);
+  if (prevIds.length === 0 || nextIds.length === 0) return null;
+  const prevLatest = prevIds[prevIds.length - 1]!;
+  const nextLatest = nextIds[nextIds.length - 1]!;
+  if (prevLatest !== nextLatest) return null;
+  const prevRun = prev.runs[prevLatest];
+  const nextRun = next.runs[nextLatest];
+  if (!prevRun || !nextRun) return null;
+  if (prevRun.status !== "streaming") return null;
+  if (nextRun.status === "streaming") return null;
+
+  return nextLatest;
+}
 
 export function dispatchToConversation(
   id: string,
@@ -71,10 +99,21 @@ export function dispatchToConversation(
   return (get, set) => {
     const store = get(conversationsAtom);
     const prev = store[id];
-    if (!prev) return; // unknown conversation — drop
+    if (!prev) return;
     const stamped = applyConversationUpdate(prev, update);
     if (stamped === prev) return;
-    set(conversationsAtom, { ...store, [id]: stamped });
+
+    // WHY: See `detectRunJustFinished`. We only mark-as-read when the
+    // dispatch targets the currently-viewed conversation; a background
+    // run finishing in a non-current conversation must remain unread
+    // so the user notices it when they return.
+    const currentId = get(currentConversationIdAtom);
+    const finishedRunId = id === currentId ? detectRunJustFinished(prev, stamped) : null;
+    const final = finishedRunId !== null && stamped.lastReadRunId !== finishedRunId
+      ? { ...stamped, lastReadRunId: finishedRunId }
+      : stamped;
+
+    set(conversationsAtom, { ...store, [id]: final });
   };
 }
 
@@ -187,8 +226,43 @@ export const bumpPendingSaveAtom = atom(null, (get, set) => {
   set(pendingSaveByConversationAtom, (prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
 });
 
-export const setCurrentConversationIdAtom = atom(null, (_get, set, id: string | null) => {
+export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | null) => {
   set(currentConversationIdAtom, id);
+  // WHY: Opening a conversation is what marks it as read (see
+  // ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status). Dispatch a markRead
+  // for the latest run, so the conversation clears its unread state and
+  // the updated `lastReadRunId` is persisted. We do this here rather than
+  // at the route layer so any future caller of this atom (deep links,
+  // keyboard shortcuts, etc.) gets the same behavior.
+  if (id) {
+    const state = get(conversationsAtom)[id];
+    if (state) {
+      const runIds = Object.keys(state.runs);
+      const latestRunId = runIds[runIds.length - 1] ?? null;
+      if (latestRunId && latestRunId !== state.lastReadRunId) {
+        dispatchToConversation(id, { type: "markRead", runId: latestRunId })(get, set);
+        set(bumpPendingSaveAtom);
+      }
+    }
+  }
+});
+
+// WHY: Use one derived atom for the whole list instead of per-conversation
+// derived atoms, which would create N subscriptions.
+export const unreadConversationIdsAtom = atom((get) => {
+  const store = get(conversationsAtom);
+  const unread = new Set<string>();
+  for (const [id, state] of Object.entries(store)) {
+    const runIds = Object.keys(state.runs);
+    if (runIds.length === 0) continue;
+    const latestRunId = runIds[runIds.length - 1]!;
+    const latestRun = state.runs[latestRunId];
+    if (!latestRun) continue;
+    if (latestRun.status === "streaming") continue;
+    if (latestRun.id === state.lastReadRunId) continue;
+    unread.add(id);
+  }
+  return unread;
 });
 
 export const upsertConversationAtom = atom(null, (_get, set, state: ConversationState) => {

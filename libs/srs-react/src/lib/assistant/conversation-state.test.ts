@@ -95,6 +95,58 @@ describe("coerceConversationState", () => {
     expect(coerced.modelParameters).toEqual({ reasoning_effort: "high" });
   });
 
+  describe("lastReadRunId coercion", () => {
+    it("defaults lastReadRunId to null when the field is missing", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+      })!;
+      expect(coerced.lastReadRunId).toBeNull();
+    });
+
+    it("accepts an explicit null lastReadRunId", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        lastReadRunId: null,
+      })!;
+      expect(coerced.lastReadRunId).toBeNull();
+    });
+
+    it("preserves a string lastReadRunId", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        lastReadRunId: "r-42",
+      })!;
+      expect(coerced.lastReadRunId).toBe("r-42");
+    });
+
+    it("rejects a non-string, non-null lastReadRunId", () => {
+      expect(coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        lastReadRunId: 42,
+      })).toBeNull();
+      expect(coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        lastReadRunId: true,
+      })).toBeNull();
+      expect(coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        lastReadRunId: {},
+      })).toBeNull();
+    });
+  });
+
   describe("run modelName coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
@@ -426,6 +478,92 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs).toEqual({});
     expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("clears lastReadRunId when the run it points to is dropped as streaming", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      lastReadRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs).toEqual({});
+    expect(next.lastReadRunId).toBeNull();
+  });
+
+  it("clears lastReadRunId when the run it points to is dropped as failed", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      lastReadRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          error: { message: "Network error" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs).toEqual({});
+    expect(next.lastReadRunId).toBeNull();
+  });
+
+  it("preserves lastReadRunId when the run it points to survives normalization", () => {
+    // WHY: Force normalization via pending card statuses so the
+    // function returns a non-null state. The lastReadRunId should
+    // survive the round-trip because the run it points to is kept.
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      lastReadRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "cards",
+          status: "success",
+          cards: [
+            { content: { "1": { text: "A" } } },
+            { content: { "1": { text: "B" } } },
+          ],
+          cardStatuses: { 0: "pending", 1: "success" },
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.runs["r1"].status).toBe("success");
+    expect(next.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "success" });
+    expect(next.lastReadRunId).toBe("r1");
   });
 });
 
@@ -907,6 +1045,60 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("markRead", () => {
+    function withRun(state: ConversationState, runId: string): ConversationState {
+      return {
+        ...state,
+        runs: {
+          ...state.runs,
+          [runId]: {
+            id: runId,
+            mode: "chat",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1),
+            elapsedSeconds: 1,
+          },
+        },
+      };
+    }
+
+    it("sets lastReadRunId to the action's runId", () => {
+      const state = withRun(initialConversationState, "r1");
+      const next = conversationReducer(state, { type: "markRead", runId: "r1" });
+      expect(next.lastReadRunId).toBe("r1");
+    });
+
+    it("replaces the previous lastReadRunId when the run id changes", () => {
+      let state = withRun(initialConversationState, "r1");
+      state = conversationReducer(state, { type: "markRead", runId: "r1" });
+      expect(state.lastReadRunId).toBe("r1");
+
+      state = withRun(state, "r2");
+      const next = conversationReducer(state, { type: "markRead", runId: "r2" });
+      expect(next.lastReadRunId).toBe("r2");
+    });
+
+    it("is idempotent on the same run id (returns the same state reference)", () => {
+      let state = withRun(initialConversationState, "r1");
+      state = conversationReducer(state, { type: "markRead", runId: "r1" });
+
+      const next = conversationReducer(state, { type: "markRead", runId: "r1" });
+      // WHY: Returning the same reference lets `applyConversationUpdate`
+      // skip the updatedAt stamp on idempotent markRead dispatches.
+      expect(next).toBe(state);
+    });
+
+    it("ignores an unknown run id (no pointer to update)", () => {
+      const state = withRun(initialConversationState, "r1");
+      const next = conversationReducer(state, { type: "markRead", runId: "missing" });
+      expect(next).toBe(state);
+      expect(next.lastReadRunId).toBeNull();
+    });
+  });
+
   describe("newConversation", () => {
     it("resets to a fresh conversation with the provided id and createdAt", () => {
       const createdAt = new Date(1234);
@@ -933,6 +1125,7 @@ describe("conversationReducer", () => {
         profileId: null,
         modelId: null,
         modelParameters: {},
+        lastReadRunId: null,
       });
     });
   });

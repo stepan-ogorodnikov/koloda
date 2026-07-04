@@ -16,8 +16,24 @@ It becomes active when the user sends their first message.
 
 Conversations are listed in the sidebar, sorted by most recently updated.
 The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
+One of the following indicators could be shown in the sidebar next to the conversation's name.
 
-Conversations with an active run display an indicator next to their name.
+### Working Status
+
+A conversation is **working** when it has an active run that is still streaming.
+The working status indicator takes priority over the unread status indicator.
+The indicator is shown when the latest run is streaming.
+The working indicator is cleared when the run completes, fails, or is canceled.
+
+### Unread Status
+
+A conversation is **unread** when its most recent run has finished and the user has not yet opened it since the run finished.
+A finished run is one whose status is success, failed, or canceled — never streaming.
+The indicator is shown when the latest run finished streaming and has not been read by the user.
+The unread indicator is cleared when the user opens the conversation.
+
+A run that finishes in the currently-open conversation is automatically marked as read — the user has just watched it stream, so it cannot be unread.
+This keeps the conversation out of the unread set the next time the user navigates away, and is what `lastReadRunId` tracks on the conversation state.
 
 ## Messages
 

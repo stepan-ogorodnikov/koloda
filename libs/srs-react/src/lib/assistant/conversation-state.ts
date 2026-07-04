@@ -36,6 +36,10 @@ export type ConversationState = {
   profileId: string | null;
   modelId: string | null;
   modelParameters: Partial<Record<ModelParameter["type"], string>>;
+  // INVARIANT: A conversation is unread when its latest non-streaming
+  // run's id differs from this pointer. The pointer is cleared when the
+  // referenced run is dropped so the unread predicate stays correct.
+  lastReadRunId: string | null;
 };
 
 export type ConversationAction =
@@ -81,6 +85,7 @@ export type ConversationAction =
   | { type: "setAIModelParameter"; paramType: ModelParameter["type"]; value: string | null }
   | { type: "dismissRunError"; runId: string }
   | { type: "setCardStatus"; runId: string; index: number; status: CardStatus }
+  | { type: "markRead"; runId: string }
   | {
     type: "newConversation";
     id: string;
@@ -103,6 +108,7 @@ export const initialConversationState: ConversationState = {
   profileId: null,
   modelId: null,
   modelParameters: {},
+  lastReadRunId: null,
 };
 
 function makeRun(
@@ -219,6 +225,7 @@ export function coerceConversationState(value: unknown): ConversationState | nul
   if (v.deckId !== null && typeof v.deckId !== "number") return null;
   if (v.profileId !== null && v.profileId !== undefined && typeof v.profileId !== "string") return null;
   if (v.modelId !== null && v.modelId !== undefined && typeof v.modelId !== "string") return null;
+  if (v.lastReadRunId !== null && v.lastReadRunId !== undefined && typeof v.lastReadRunId !== "string") return null;
   let modelParameters: Partial<Record<ModelParameter["type"], string>> = {};
   if (v.modelParameters !== null && v.modelParameters !== undefined) {
     if (typeof v.modelParameters !== "object") return null;
@@ -249,6 +256,7 @@ export function coerceConversationState(value: unknown): ConversationState | nul
     profileId: (v.profileId as string | null) ?? null,
     modelId: (v.modelId as string | null) ?? null,
     modelParameters,
+    lastReadRunId: (v.lastReadRunId as string | null) ?? null,
   };
 }
 
@@ -302,6 +310,7 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
     && state.activeRunId === null
     && state.dismissedRunErrorId === null
     && failedRunIds.size === 0
+    && (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
   ) {
     return null;
   }
@@ -339,6 +348,12 @@ export function normalizeRestoredConversation(state: ConversationState): Convers
     ...state,
     activeRunId: null,
     dismissedRunErrorId: null,
+    // WHY: If the run the user last read is about to be dropped, the
+    // pointer is stale. Clear it so the unread predicate correctly
+    // evaluates against the new latest run on next read.
+    lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined
+      ? null
+      : state.lastReadRunId,
     runs,
     messages,
   };
@@ -539,6 +554,17 @@ export function conversationReducer(state: ConversationState, action: Conversati
     case "dismissRunError":
       return { ...state, dismissedRunErrorId: action.runId };
 
+    case "markRead": {
+      // WHY: An unknown run id is ignored (no pointer to update). The
+      // pointer is replaced only when it actually changes, so the
+      // reducer avoids allocating a new state on the idempotent path.
+      // The `applyConversationUpdate` helper is what guarantees a
+      // `markRead` never stamps `updatedAt` — see its comment.
+      if (!state.runs[action.runId]) return state;
+      if (state.lastReadRunId === action.runId) return state;
+      return { ...state, lastReadRunId: action.runId };
+    }
+
     case "newConversation":
       return {
         id: action.id,
@@ -553,6 +579,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
         profileId: action.profileId ?? null,
         modelId: action.modelId ?? null,
         modelParameters: action.modelParameters ?? {},
+        lastReadRunId: null,
       };
 
     default:
