@@ -29,7 +29,7 @@ export function AIChatMessageStatus({
 
   if (state === "success") {
     return (
-      <p className="fg-level-4 flex flex-row items-center gap-1">
+      <p className="fg-level-4 flex flex-row items-center gap-1 px-3">
         {modelName && (
           <>
             {modelName}
@@ -43,7 +43,7 @@ export function AIChatMessageStatus({
 
   if (state === "canceled") {
     return (
-      <p className="fg-level-4 flex flex-row items-center gap-1">
+      <p className="fg-level-4 flex flex-row items-center gap-1 px-3">
         {_(msg`ai.chat.message.status.canceled-in`)}
         <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
       </p>
@@ -51,7 +51,7 @@ export function AIChatMessageStatus({
   }
 
   return (
-    <div className="flex flex-row flex-wrap items-center gap-2">
+    <div className="flex flex-row flex-wrap items-center gap-2 px-3">
       <p className="fg-level-4">{_(msg`ai.chat.message.status.failed`)}</p>
       {canRetry && (
         <Button

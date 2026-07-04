@@ -57,6 +57,7 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
                 })}
               </>
             )}
+          <div className="min-h-2 w-full" />
         </div>
       </div>
       <AnimatePresence>

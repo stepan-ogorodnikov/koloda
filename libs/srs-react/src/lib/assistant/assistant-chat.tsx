@@ -164,7 +164,7 @@ export function AssistantChat(
               })()}
               <AIChatPromptPanel onSubmit={handleSubmit}>
                 <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
-                <div className="flex flex-row items-center min-w-0">
+                <div className="flex flex-row items-center min-w-0 px-1 pb-2">
                   <AIModelPicker
                     profileId={profileId}
                     value={modelId}
@@ -175,7 +175,7 @@ export function AssistantChat(
                     <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
                   )}
                   <div className="grow min-w-3" />
-                  <div className="flex flex-row items-center gap-2 shrink-0">
+                  <div className="flex flex-row items-center gap-2 shrink-0 px-1">
                     <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
                     <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
                   </div>
