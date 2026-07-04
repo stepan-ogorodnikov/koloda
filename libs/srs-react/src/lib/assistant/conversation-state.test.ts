@@ -1343,6 +1343,7 @@ describe("cancelStreamingRuns", () => {
       deckId: 42,
       profileId: "prof-1",
       modelId: "model-1",
+      modelParameters: { temperature: "0.2" },
       activeRunId: "r1",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
