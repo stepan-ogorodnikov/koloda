@@ -1,3 +1,5 @@
+import { ChangeScreenModeIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -30,6 +32,7 @@ export function CloneConversationButton({ id, onClone, onClose }: CloneConversat
       onPress={handlePress}
       isDisabled={!hasContext}
     >
+      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ChangeScreenModeIcon} aria-hidden="true" />
       {_(msg`ai.conversation.clone.action`)}
     </Button>
   );
