@@ -260,6 +260,33 @@ This lets the user fix a failed run by switching profile, model, or parameters a
 
 If the user has not changed anything, retry behaves the same as the original request.
 
+## Clone
+
+The user can clone an existing conversation to create an independent copy.
+
+### What Gets Cloned
+
+The following are copied into the new conversation:
+
+- All messages (user and assistant)
+- All completed runs (success, failed, or canceled) — streaming runs are not cloned
+- AI profile state (profile, model, model parameters)
+- Deck selection and lock state
+- Current mode (chat or cards)
+- Conversation name
+
+### What Does Not Get Cloned
+
+- The conversation ID — the clone gets a new ID
+- Unread status — the clone starts as read
+- Active streaming state — any in-progress run is not copied
+
+### Clone Trigger
+
+Cloning is triggered from the conversation header's dots menu.
+The clone appears immediately in the sidebar, sorted by its new timestamp.
+The user is navigated to the cloned conversation.
+
 ## Concurrent Behavior
 
 Only one run can be active at a time per conversation.

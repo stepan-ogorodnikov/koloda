@@ -9,6 +9,7 @@ import {
   assistantIsLockedAtom,
   AssistantNewConversationButton,
   CONVERSATION_TITLE_FALLBACK,
+  ConversationHeaderMenu,
   DeckPicker,
   newConversationAtom,
   setAssistantDeckAtom,
@@ -119,7 +120,7 @@ function AIRoute() {
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header variants={{ class: "justify-center" }}>
-          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl pr-2">
+          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl">
             <Layout.H1 variants={{ class: title ? "" : "fg-disabled" }}>
               {title || _(CONVERSATION_TITLE_FALLBACK)}
             </Layout.H1>
@@ -144,6 +145,12 @@ function AIRoute() {
                   <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
                 </Button>
               </Tooltip>
+              {conversationId && (
+                <ConversationHeaderMenu
+                  conversationId={conversationId}
+                  onClone={handleConversationIdChange}
+                />
+              )}
             </div>
           </div>
         </Layout.Header>

@@ -179,6 +179,12 @@ export const assistantHasContextAtom = atom((get) => {
   return state.messages.length > 0 || state.activeRunId !== null;
 });
 
+export const assistantConversationHasContextAtom = (id: string) =>
+  atom((get) => {
+    const state = get(conversationsAtom)[id];
+    return state ? state.messages.length > 0 || state.activeRunId !== null : false;
+  });
+
 export const assistantIsLockedAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
   return state.messages.some((m) => {
@@ -361,3 +367,86 @@ export const setAssistantCardStatusAtom = atom(
     set(bumpPendingSaveAtom);
   },
 );
+
+export type CloneConversationPayload = {
+  sourceId: string;
+};
+
+// WHY: Clone is implemented as a store-level action so all the derived
+// atoms (sidebar list, unread indicators, active-run pulse, locked state)
+// observe the new conversation in a single synchronous write — the
+// sidebar shows the clone immediately and the route navigates to it
+// without a re-render race. The reducer in `conversation-state.ts`
+// would not help here: messages are only ever appended one at a time
+// via `addUserMessage` / `addAssistantMessage`, and we need to copy an
+// arbitrary prefix of the source's message history while dropping the
+// `user-<runId>` / `assistant-<runId>` pair for any streaming run. So
+// the clone is assembled here directly and inserted into the store as a
+// complete unit (see ASSISTANT-CHAT-CONVERSATIONS.md §Clone).
+export const cloneConversationAtom = atom(null, (get, set, payload: CloneConversationPayload) => {
+  const { sourceId } = payload;
+  const store = get(conversationsAtom);
+  const source = store[sourceId];
+  if (!source) return null;
+
+  const newId = generateUUID();
+  const now = new Date();
+
+  // WHY: Identify streaming runs upfront so we can drop their runs
+  // and the user/assistant message pair that belongs to them. §Clone
+  // explicitly excludes in-flight runs from the copy.
+  const droppedRunIds = new Set(
+    Object.entries(source.runs)
+      .filter(([, run]) => run.status === "streaming")
+      .map(([runId]) => runId),
+  );
+
+  const messages = source.messages.filter((m) => {
+    if (m.role === "user") {
+      const runId = m.id.startsWith("user-") ? m.id.slice(5) : null;
+      return !runId || !droppedRunIds.has(runId);
+    }
+    if (m.role === "assistant") {
+      const runId = m.id.startsWith("assistant-") ? m.id.slice(10) : null;
+      return !runId || !droppedRunIds.has(runId);
+    }
+    return true;
+  });
+
+  const runs: ConversationState["runs"] = {};
+  for (const [runId, run] of Object.entries(source.runs)) {
+    if (run.status === "streaming") continue;
+    runs[runId] = run;
+  }
+
+  // WHY: The clone starts out as read. `unreadConversationIdsAtom`
+  // treats a conversation as read when `lastReadRunId` matches the
+  // latest run id; setting it to the cloned run map's last key makes
+  // the unread indicator stay hidden. If the clone ends up with no
+  // runs (only-streaming source) the unread atom short-circuits on
+  // empty runs, so `null` is fine there too.
+  const clonedRunIds = Object.keys(runs);
+  const latestClonedRunId = clonedRunIds.length > 0 ? clonedRunIds[clonedRunIds.length - 1]! : null;
+
+  const cloned: ConversationState = {
+    ...source,
+    id: newId,
+    createdAt: now,
+    // WHY: `null` (not `now`) so the clone sorts by `createdAt` rather
+    // than pinning itself to the top of the list. The next
+    // content-changing dispatch will stamp a real `updatedAt` via
+    // `applyConversationUpdate`. Mirrors the `newConversation` path.
+    updatedAt: null,
+    messages,
+    runs,
+    activeRunId: null,
+    deckId: source.deckId,
+    dismissedRunErrorId: null,
+    lastReadRunId: latestClonedRunId,
+  };
+
+  set(conversationsAtom, { ...store, [newId]: cloned });
+  set(currentConversationIdAtom, newId);
+  set(pendingSaveByConversationAtom, (prev) => ({ ...prev, [newId]: (prev[newId] ?? 0) + 1 }));
+  return newId;
+});

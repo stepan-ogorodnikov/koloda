@@ -128,6 +128,14 @@ msgstr "Delete this conversation? This cannot be undone."
 msgid "ai.conversation.delete.trigger"
 msgstr "Delete conversation"
 
+#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:40
+msgid "ai.conversation.clone.action"
+msgstr "Clone"
+
+#: ../../libs/srs-react/src/lib/assistant/conversation-header-menu.tsx:26
+msgid "ai.conversation.menu.trigger"
+msgstr "Conversation actions"
+
 #: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:10
 msgid "ai.conversation.untitled"
 msgstr "Untitled conversation"

@@ -128,6 +128,14 @@ msgstr "Удалить этот диалог? Действие нельзя от
 msgid "ai.conversation.delete.trigger"
 msgstr "Удалить диалог"
 
+#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:40
+msgid "ai.conversation.clone.action"
+msgstr "Клонировать"
+
+#: ../../libs/srs-react/src/lib/assistant/conversation-header-menu.tsx:26
+msgid "ai.conversation.menu.trigger"
+msgstr "Действия с диалогом"
+
 #: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:10
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
