@@ -124,7 +124,7 @@ function AIRoute() {
             <Layout.H1 variants={{ class: title ? "" : "fg-disabled" }}>
               {title || _(CONVERSATION_TITLE_FALLBACK)}
             </Layout.H1>
-            <div className="flex flex-row items-center gap-1 pl-2">
+            <div className="flex flex-row items-center gap-1 px-2">
               <DeckPicker
                 variants={{ class: "flex-row items-center gap-2" }}
                 labelVariants={{ class: "fg-level-2 font-medium" }}

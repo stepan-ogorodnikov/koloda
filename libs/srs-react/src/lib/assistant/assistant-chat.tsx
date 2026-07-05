@@ -142,7 +142,7 @@ export function AssistantChat(
           )
           : areSettingsOpen
           ? (
-            <Fade key="settings" className="grow">
+            <Fade key="settings" className="grow flex flex-col">
               <AssistantSettings template={template} provider={provider} />
             </Fade>
           )

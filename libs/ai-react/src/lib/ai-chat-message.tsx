@@ -22,7 +22,7 @@ const aiChatMessage = tv({
   base: "flex flex-col gap-4 py-2 px-3",
   variants: {
     isUser: {
-      true: "self-end max-w-5/6 border-2 rounded-xl bg-chat-message border-chat-message",
+      true: "self-end max-w-5/6 mx-2 border-2 rounded-xl bg-chat-message border-chat-message",
       false: "self-start w-full",
     },
   },

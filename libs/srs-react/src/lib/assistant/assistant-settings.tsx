@@ -78,7 +78,7 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
 
   return (
     <form
-      className="self-center grow flex flex-col gap-6 w-full max-w-3xl px-4"
+      className="self-center grow flex flex-col gap-6 w-full max-w-3xl px-2"
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
