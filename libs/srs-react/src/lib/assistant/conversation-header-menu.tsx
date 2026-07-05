@@ -3,7 +3,9 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useState } from "react";
+import { useAtomValue } from "jotai";
+import { useMemo, useState } from "react";
+import { assistantConversationHasContextAtom } from "./assistant-conversation-atoms";
 import { CloneConversationButton } from "./clone-conversation-button";
 
 export type ConversationHeaderMenuProps = {
@@ -14,12 +16,15 @@ export type ConversationHeaderMenuProps = {
 export function ConversationHeaderMenu({ conversationId, onClone }: ConversationHeaderMenuProps) {
   const { _ } = useLingui();
   const [isOpen, setIsOpen] = useState(false);
+  const hasContextAtom = useMemo(() => assistantConversationHasContextAtom(conversationId), [conversationId]);
+  const hasContext = useAtomValue(hasContextAtom);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button
         variants={{ style: "ghost", size: "smallIcon" }}
         aria-label={_(msg`ai.conversation.menu.trigger`)}
+        isDisabled={!hasContext}
       >
         <HugeiconsIcon
           className="size-5 min-w-5"
