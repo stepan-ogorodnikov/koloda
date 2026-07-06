@@ -236,9 +236,19 @@ export function useConversationPersistence(
     readLastUsed,
   ]);
 
+  // WHY: A conversation just created via `newConversationAtom` or
+  // `cloneConversationAtom` is already in the store but its queryKey
+  // has never been fetched, so `isLoading: true` on the first render
+  // would briefly swap the chat branch for the restoring branch and
+  // remount the prompt panel. Skip restoring when the id is already
+  // in the store — the restore effect above uses the same condition
+  // to decide whether to load from DB.
   return {
     handleDismissSave: dismissSaveStatus,
-    isRestoring: !!conversationId && isLoading && restoredIdRef.current !== conversationId,
+    isRestoring: !!conversationId
+      && isLoading
+      && restoredIdRef.current !== conversationId
+      && !store.get(conversationsAtom)[conversationId],
     loadError: conversationError ?? null,
     retryLoad: refetch,
   };
