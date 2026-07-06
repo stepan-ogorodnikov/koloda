@@ -119,8 +119,8 @@ function AIRoute() {
         />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
-        <Layout.Header variants={{ class: "justify-center" }}>
-          <div className="self-center flex flex-row flex-wrap items-center w-full max-w-3xl">
+        <Layout.Header>
+          <div className="flex flex-row flex-wrap items-center w-full max-w-3xl mx-auto">
             <Layout.H1 variants={{ class: title ? "" : "fg-disabled" }}>
               {title || _(CONVERSATION_TITLE_FALLBACK)}
             </Layout.H1>

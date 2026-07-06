@@ -12,7 +12,7 @@ export function SettingsAi({ data }: SettingsAiProps) {
   const { _ } = useLingui();
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="self-center flex flex-col gap-4 w-full max-w-main p-4">
       <div className="flex items-center gap-4">
         <h2 className="text-lg font-semibold">{_(msg`settings.ai.profiles.title`)}</h2>
         <SettingsAIAddProfile />

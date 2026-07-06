@@ -14,7 +14,7 @@ export function Lessons() {
   const query = useQuery({ queryKey: queryKeys.lessons.all(), ...getLessonsQuery() });
 
   return (
-    <div className="w-full wd:max-w-180 mx-auto p-4 wd:overflow-auto">
+    <div className="w-full wd:max-w-180 mx-auto p-4">
       <CurrentLesson />
       <QueryState query={query}>
         {(data) => (isMobile ? <LessonsList data={data} /> : <LessonsTable data={data} />)}

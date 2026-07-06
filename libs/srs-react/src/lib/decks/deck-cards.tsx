@@ -2,12 +2,12 @@ import { AiMagicIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
-import { Link, QueryState, Tooltip, button, getCSSVar } from "@koloda/ui";
+import { button, getCSSVar, Link, QueryState, Tooltip } from "@koloda/ui";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { AddCard } from "../cards/add-card";
@@ -33,7 +33,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
   if (!data) return null;
 
   return (
-    <div className="flex flex-col gap-2 p-2 wd:p-4">
+    <div className="self-center flex flex-col gap-2 w-full max-w-main p-2 wd:p-4">
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />

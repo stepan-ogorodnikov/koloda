@@ -26,13 +26,15 @@ function TemplateRoute() {
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 
   return (
-    <Layout.Container ref={ref} tabIndex={-1}>
+    <>
       <Layout.Header>
         <Layout.H1>{query.data?.title}</Layout.H1>
       </Layout.Header>
-      <QueryState query={query}>
-        {() => <Template id={id} key={templateId} />}
-      </QueryState>
-    </Layout.Container>
+      <Layout.Container ref={ref} tabIndex={-1}>
+        <QueryState query={query}>
+          {() => <Template id={id} key={templateId} />}
+        </QueryState>
+      </Layout.Container>
+    </>
   );
 }

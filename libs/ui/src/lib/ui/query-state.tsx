@@ -26,7 +26,7 @@ export function QueryState<TData>({ query, children }: QueryStateProps<TData>) {
         </Fade>
       )}
       {!isLoading && !error && isSuccess && (
-        <Fade key="data">
+        <Fade className="flex flex-col" key="data">
           {children(data as NonNullable<TData>)}
         </Fade>
       )}

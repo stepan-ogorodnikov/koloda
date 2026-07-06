@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { ComponentProps } from "react";
 import { tv } from "tailwind-variants";
 
-export const formLayout = "grow flex flex-col py-2 px-4";
+export const formLayout = "grow self-center flex flex-col w-full max-w-main py-2 px-4";
 
 type FormLayoutProps = ComponentProps<"div">;
 
