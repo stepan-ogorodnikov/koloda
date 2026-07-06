@@ -31,17 +31,19 @@ function SettingsRoute() {
           <Layout.H1>{_(msg`settings.title`)}</Layout.H1>
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>
-          {LINKS.map(({ id, t, url }) => (
-            <Layout.SidebarItem key={id}>
-              <Link
-                className={layoutSidebarItemLink}
-                to={`/settings/${url}`}
-                viewTransition={isMotionOn}
-              >
-                <Layout.SidebarItemLinkContent>{_(t)}</Layout.SidebarItemLinkContent>
-              </Link>
-            </Layout.SidebarItem>
-          ))}
+          <div className="flex flex-col">
+            {LINKS.map(({ id, t, url }) => (
+              <Layout.SidebarItem key={id}>
+                <Link
+                  className={layoutSidebarItemLink}
+                  to={`/settings/${url}`}
+                  viewTransition={isMotionOn}
+                >
+                  <Layout.SidebarItemLinkContent>{_(t)}</Layout.SidebarItemLinkContent>
+                </Link>
+              </Layout.SidebarItem>
+            ))}
+          </div>
         </Layout.Container>
       </Layout.Sidebar>
       <Layout.Content>
