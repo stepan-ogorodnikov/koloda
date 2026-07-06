@@ -1,7 +1,7 @@
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { QueryState } from "@koloda/ui";
-import { Layout, useRouteFocus } from "@koloda/ui";
+import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -20,8 +20,9 @@ export const Route = createFileRoute("/_/settings/hotkeys")({
 
 function SettingsHotkeysRoute() {
   useTitle();
-  const ref = useRouteFocus();
   const { _ } = useLingui();
+  const ref = useRouteFocus();
+  useLayoutHeaderScrollShadow(ref);
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const query = useQuery({
     ...getSettingsQuery<"hotkeys">("hotkeys"),

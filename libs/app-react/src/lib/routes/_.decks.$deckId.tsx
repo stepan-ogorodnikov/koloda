@@ -1,7 +1,7 @@
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { DeckCards } from "@koloda/srs-react";
 import { DeckDetails } from "@koloda/srs-react";
-import { NotFound } from "@koloda/ui";
+import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
 import { Layout, Tabs, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -31,6 +31,7 @@ function DeckRoute() {
   const { _ } = useLingui();
   const { deckId } = Route.useParams();
   const ref = useRouteFocus(deckId);
+  useLayoutHeaderScrollShadow(ref);
   const id = Number(deckId);
   const { getDeckQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });

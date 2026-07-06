@@ -15,7 +15,7 @@ import {
   setAssistantDeckAtom,
   useGlobalAIProfileState,
 } from "@koloda/srs-react";
-import { Button, Layout, Tooltip, useRouteFocus } from "@koloda/ui";
+import { Button, Layout, Tooltip, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -41,8 +41,9 @@ export const Route = createFileRoute("/_/ai")({
 
 function AIRoute() {
   useTitle();
-  const ref = useRouteFocus();
   const { _ } = useLingui();
+  const ref = useRouteFocus();
+  useLayoutHeaderScrollShadow(ref);
   const navigate = Route.useNavigate();
   const { conversationId, deckId: deckIdFromSearch } = Route.useSearch();
   const deckId = useAtomValue(assistantDeckIdAtom);

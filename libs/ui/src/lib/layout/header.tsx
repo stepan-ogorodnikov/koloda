@@ -1,19 +1,28 @@
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../types";
+import { useLayoutHeaderScroll } from "./header-scroll";
 
 const layoutHeader = tv({
-  base: "flex flex-col items-center min-h-14 overflow-hidden",
+  base: [
+    "flex flex-col items-center min-h-14 border-b-2 border-transparent",
+    "box-content overflow-hidden animate-colors",
+  ],
   variants: {
-    type: { sidebar: "border-b-2 border-main", content: "" },
+    type: { sidebar: "border-main", content: "" },
+    isScrolled: { true: "border-main", false: "" },
   },
 });
 
 type LayoutHeaderProps = PropsWithChildren & TWVProps<typeof layoutHeader>;
 
 export function LayoutHeader({ variants, children }: LayoutHeaderProps) {
+  const scrollContext = useLayoutHeaderScroll();
+  const contextIsScrolled = scrollContext?.isScrolled ?? false;
+  const isScrolled = variants?.isScrolled ?? contextIsScrolled;
+
   return (
-    <div className={layoutHeader(variants)}>
+    <div className={layoutHeader({ ...variants, isScrolled })}>
       <div className="flex flex-row items-center wd:gap-2 w-full min-w-0 max-w-main min-h-14 wd:h-14 px-2">
         {children}
       </div>

@@ -1,6 +1,6 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Template } from "@koloda/srs-react";
-import { NotFound } from "@koloda/ui";
+import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
 import { Layout, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_/templates/$templateId")({
 function TemplateRoute() {
   const { templateId } = Route.useParams();
   const ref = useRouteFocus(templateId);
+  useLayoutHeaderScrollShadow(ref);
   const id = Number(templateId);
   const { getTemplateQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) });

@@ -1,5 +1,5 @@
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
-import { QueryState } from "@koloda/ui";
+import { QueryState, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -19,8 +19,9 @@ export const Route = createFileRoute("/_/settings/ai")({
 
 function SettingsAiRoute() {
   useTitle();
-  const ref = useRouteFocus();
   const { _ } = useLingui();
+  const ref = useRouteFocus();
+  useLayoutHeaderScrollShadow(ref);
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ ...getAIProfilesQuery(), queryKey: queryKeys.ai.profiles() });
 

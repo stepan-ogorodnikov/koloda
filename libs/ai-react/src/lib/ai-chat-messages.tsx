@@ -1,6 +1,6 @@
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Fade, Tooltip } from "@koloda/ui";
+import { Button, Fade, Tooltip, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { UIMessage } from "ai";
@@ -20,6 +20,7 @@ export type AIChatMessagesProps = {
 
 export function AIChatMessages({ messages, modelName, emptyState = null, renderMessage, scroll }: AIChatMessagesProps) {
   const { _ } = useLingui();
+  useLayoutHeaderScrollShadow(scroll.scrollViewportRef);
 
   return (
     <div className="relative flex-1 min-h-0 -mx-4 px-4">

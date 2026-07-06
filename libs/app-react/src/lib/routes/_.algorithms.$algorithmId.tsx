@@ -1,6 +1,6 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Algorithm } from "@koloda/srs-react";
-import { NotFound } from "@koloda/ui";
+import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
 import { Layout, useRouteFocus } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
 function AlgorithmRoute() {
   const { algorithmId } = Route.useParams();
   const ref = useRouteFocus(algorithmId);
+  useLayoutHeaderScrollShadow(ref);
   const id = Number(algorithmId);
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });

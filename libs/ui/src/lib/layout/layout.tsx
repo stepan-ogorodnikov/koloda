@@ -6,6 +6,7 @@ import type { TWVProps } from "../types";
 import { LayoutContainer, LayoutContent } from "./content";
 import { LayoutDrawer } from "./drawer";
 import { LayoutH1, LayoutHeader } from "./header";
+import { LayoutHeaderScrollProvider } from "./header-scroll";
 import { LayoutNav, LayoutNavLink } from "./nav";
 import { LayoutSidebar, LayoutSidebarItem, LayoutSidebarItemLinkContent } from "./sidebar";
 
@@ -33,14 +34,16 @@ export function Layout({ variants, titlebar, children }: LayoutProps) {
     <div className={layout(variants)}>
       {titlebar}
       <LayoutPortalContext.Provider value={portalValue}>
-        <div
-          className="relative grow flex flex-row h-full w-full min-w-80 min-h-0 overflow-hidden bg-level-1"
-          id="main"
-          tabIndex={-1}
-        >
-          <LayoutDrawer setNavPortal={setNavPortal} setSidebarPortal={setSidebarPortal} />
-          {children}
-        </div>
+        <LayoutHeaderScrollProvider>
+          <div
+            className="relative grow flex flex-row h-full w-full min-w-80 min-h-0 overflow-hidden bg-level-1"
+            id="main"
+            tabIndex={-1}
+          >
+            <LayoutDrawer setNavPortal={setNavPortal} setSidebarPortal={setSidebarPortal} />
+            {children}
+          </div>
+        </LayoutHeaderScrollProvider>
       </LayoutPortalContext.Provider>
     </div>
   );

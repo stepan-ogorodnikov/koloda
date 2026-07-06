@@ -1,5 +1,5 @@
 import { queryKeys, useTitle } from "@koloda/core-react";
-import { Layout, useRouteFocus } from "@koloda/ui";
+import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -16,8 +16,9 @@ export const Route = createFileRoute("/_/settings/interface")({
 
 function SettingsInterfaceRoute() {
   useTitle();
-  const ref = useRouteFocus();
   const { _ } = useLingui();
+  const ref = useRouteFocus();
+  useLayoutHeaderScrollShadow(ref);
 
   return (
     <>
