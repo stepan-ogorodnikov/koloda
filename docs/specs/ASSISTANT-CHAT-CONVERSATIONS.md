@@ -168,6 +168,8 @@ If a stored value is present and its profile is available, it is used as-is.
 Conversations are saved to the database automatically.
 The entire conversation state — messages, runs, mode, deck, and AI profile state — is saved as a single document.
 
+The revert state is not saved — see the Revert section for details.
+
 ### When Saves Happen
 
 - **During streaming**: saves are throttled to at most once per second
@@ -200,8 +202,9 @@ When a conversation is loaded from the database, it goes through validation and 
 - **Pending card statuses are reset**: cards that were mid-operation are reset to idle
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
+- **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
 
-This ensures a clean state on restore — no orphaned messages, no zombie streaming states.
+This ensures a clean state on restore — no orphaned messages, no zombie streaming states, no leftover revert overlays.
 
 If the stored data is corrupted or invalid, the conversation is reset to a fresh empty state with the same ID and current timestamp.
 
@@ -290,16 +293,36 @@ The user is navigated to the cloned conversation.
 ## Revert
 
 The user can revert the conversation to the state it was in before any past user message.
-Revert rewinds the conversation: the target user message and everything after it is removed.
+Revert is a visual action.
+It hides the target user message and everything after it from the UI.
+The hidden messages are only actually deleted when the user submits a new prompt.
+The user can also restore a reverted conversation, bringing the hidden messages back.
 Full behavior is specified in MESSAGES.md (§Reverting the Conversation).
 
-Conversation-level implications:
+### Revert State
 
-- The conversation history sent on the next run is rebuilt from the now-shorter message list
-- Deck lock and deck contents are not affected by revert, even if the run that caused the lock is among the removed messages
-- If the revert leaves the conversation with no messages, the conversation falls under the existing rule that empty conversations are not persisted
+Revert does not persist across sessions.
+Reloading the app clears the revert state, and the messages become visible again as if revert had never been pressed.
 
-The re-triggered prompt starts a fresh run, not a retry — the new run is independent and has its own run ID.
+### Conversation-Level Implications
+
+- The conversation history sent to the next run is filtered by the revert state — hidden messages are not included.
+- Deck lock and deck contents are not affected by revert, even if the run that caused the lock is among the hidden messages.
+- A conversation that looks empty because of revert is still saved, since the messages are still in the conversation state.
+- Restore clears the revert state, making all messages visible again, and returns the prompt input to its pre-revert state.
+
+### Deletion on New Prompt
+
+When the user submits a new prompt while in a reverted state, the hidden messages and their runs are permanently removed from the conversation state.
+A fresh run starts with a new run ID.
+The conversation history sent to the AI is rebuilt from the now-shorter message list.
+If the deletion leaves the conversation with no messages, the conversation falls under the existing rule that empty conversations are not saved.
+Deck lock and deck contents are preserved through the deletion, even if the run that caused the lock is among the removed messages.
+
+### Cloning a Reverted Conversation
+
+Cloning a conversation in a reverted state produces a clone without the revert state.
+The clone is created from the underlying conversation data with all messages visible.
 
 ## Concurrent Behavior
 
@@ -321,5 +344,4 @@ When the old conversation is later restored, the streaming run and its messages 
 - Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
   The global last-used record is updated when the user changes the value or submits a prompt
 - When a conversation is loaded and its data is invalid, it's silently reset to empty rather than showing an error
-- Revert removes the target user message and everything after it; lock state and deck contents are not coupled to the message history
-- Re-triggering after revert creates a fresh run with a new run ID, even though the prompt text matches a previously reverted message
+- Revert never persists; reloading the app clears the revert state and the messages become visible again.

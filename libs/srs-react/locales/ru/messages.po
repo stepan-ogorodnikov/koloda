@@ -103,17 +103,25 @@ msgstr "Новый шаблон"
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:27
+msgid "ai.chat.message.restore.label"
+msgstr "Восстановить"
+
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:21
+msgid "ai.chat.message.revert.indicator"
+msgstr "Сообщения сброшены"
+
 #: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:15
-#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:18
+#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:22
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Сбросить до этого сообщения"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:26
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:36
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:39
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:158
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:192
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
@@ -231,7 +239,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:183
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:199
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 

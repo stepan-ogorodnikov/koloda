@@ -117,32 +117,52 @@ The mode is preserved — a chat run retries as chat, a card generation run retr
 ### Reverting the Conversation
 
 The user can revert the conversation to the state it was in before any past user message.
-Revert rewinds the conversation: the target user message and everything after it is removed, while earlier messages remain untouched.
+Revert is a visual action.
+It hides the target user message and everything after it from the UI, while leaving the underlying data intact.
+The hidden messages are only actually deleted when the user submits a new prompt.
 
 The revert affordance is available next to every user message.
 
-#### What Is Removed
+#### What Is Hidden
+
+After revert, the following are hidden from the UI:
 
 - The target user message
-- Its paired assistant message (including any error marker)
+- Its paired assistant message, including any error marker
 - All subsequent user and assistant messages
-- All runs tied to the removed messages, and any partial or complete content they produced (streamed text, generated cards)
-- If a run is currently streaming, it is canceled first and its partial content is discarded as part of the revert
+- If a run is currently streaming, it is canceled first; its messages and partial content are hidden along with the rest
 
-#### What Is Preserved
+The hidden messages and runs remain in the conversation state.
+They are filtered out of the UI but the data is not modified.
 
-- AI profile state (profile, model, parameters)
-- Deck selection and lock state — the deck stays locked even if the run that caused the lock is among the removed messages
-- Cards already accepted into the deck — revert only affects the conversation's message history, not the deck contents
-- The current mode is updated, see Re-trigger below
+#### Reverting Again
+
+Reverting to a different user message while in a reverted state updates the revert point.
+No messages are actually deleted by changing the revert point.
+The pre-fill in the prompt input is updated to the new target message's text.
+
+#### Restore
+
+Restore is the inverse of revert.
+It clears the revert state and makes all messages visible again.
+The restore affordance is shown while the conversation is in a reverted state, near the prompt input.
+Restore returns the prompt input to its pre-revert state, removing the pre-fill that revert applied.
+Restore does not delete anything.
 
 #### Re-trigger
 
-After revert, the prompt input is pre-filled with the text of the reverted user message, and the mode is set to the mode that message was sent in (chat or cards).
+After revert, the prompt input is pre-filled with the text of the reverted user message.
+The mode is set to the mode that message was sent in.
+Any text the user had typed in the input before the revert is held in the revert state and replaced by the pre-fill.
 
-Sending the pre-filled prompt — edited or as-is — starts a fresh run against the now-shorter conversation history.
+Sending the pre-filled prompt — edited or as-is — does two things in order:
 
-Any text the user had already typed in the input is replaced by the pre-fill.
+1. Permanently removes the hidden messages and their runs from the conversation state.
+2. Creates a new user message with the submitted text and starts a fresh run.
+
+The fresh run uses a new run ID.
+It is a new run, not a retry.
+The conversation history sent to the AI is rebuilt from the now-shorter message list.
 
 ## Message Content
 
@@ -170,5 +190,4 @@ Non-text parts are ignored.
 - Retry metadata is rewritten from error back to its original kind so the renderer displays it correctly
 - Messages without metadata are rendered as raw content without status indicators
 - Revert is available on any user message regardless of its assistant's status — success, failed, canceled, or error marker. A streaming run is auto-canceled as part of the revert.
-- Reverting the only user message leaves the conversation temporarily empty; sending the pre-filled prompt re-persists it
-- Revert overwrites any text already in the prompt input with the reverted message's text
+- The conversation history sent to the AI excludes hidden messages while revert is active.

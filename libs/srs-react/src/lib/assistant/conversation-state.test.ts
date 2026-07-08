@@ -3,6 +3,7 @@ import {
   cancelStreamingRuns,
   coerceConversationState,
   conversationReducer,
+  getVisibleMessages,
   initialConversationState,
   normalizeRestoredConversation,
 } from "./conversation-state";
@@ -1126,6 +1127,7 @@ describe("conversationReducer", () => {
         modelId: null,
         modelParameters: {},
         lastReadRunId: null,
+        revertState: null,
       });
     });
   });
@@ -1375,7 +1377,110 @@ describe("cancelStreamingRuns", () => {
 });
 
 // WHY: See ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
-describe("conversationReducer → revertToUserMessage", () => {
+// Revert is now a visual overlay (setRevertState) backed by an explicit
+// commit step (commitRevert) that performs the actual deletion on the
+// next prompt submit.
+describe("conversationReducer → setRevertState", () => {
+  it("is a no-op when the new revert state equals the current one", () => {
+    const revertState = { revertedToUserMessageId: "user-r1", preRevertInputText: "old" };
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      revertState,
+    };
+    const next = conversationReducer(state, { type: "setRevertState", revertState });
+    expect(next).toBe(state);
+  });
+
+  it("sets the revert state without removing any messages or runs", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+      ],
+      runs: {
+        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r2: { id: "r2", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+      },
+    };
+    const next = conversationReducer(state, {
+      type: "setRevertState",
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+    });
+    // WHY: Visual revert only — data is untouched.
+    expect(next.messages).toBe(state.messages);
+    expect(next.runs).toBe(state.runs);
+    expect(next.activeRunId).toBe(state.activeRunId);
+    expect(next.revertState).toEqual({ revertedToUserMessageId: "user-r2", preRevertInputText: "draft" });
+  });
+
+  it("clears the revert state when given null", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+      ],
+      runs: {
+        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+      },
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
+    };
+    const next = conversationReducer(state, { type: "setRevertState", revertState: null });
+    expect(next.revertState).toBeNull();
+    // WHY: Restore is purely visual — messages and runs are intact.
+    expect(next.messages).toBe(state.messages);
+    expect(next.runs).toBe(state.runs);
+  });
+});
+
+// WHY: Reverting to a different user message is a state overwrite, not
+// a deletion. The data layer keeps all messages and runs intact; only
+// the revert point moves.
+describe("conversationReducer → re-revert (setRevertState over an existing revert)", () => {
+  it("updates the revert point without deleting anything", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
+        { id: "assistant-r3", role: "assistant", metadata: { kind: "chat-text", runId: "r3" }, parts: [{ type: "text", text: "Reply 3" }] },
+      ],
+      runs: {
+        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r2: { id: "r2", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r3: { id: "r3", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+      },
+      revertState: { revertedToUserMessageId: "user-r3", preRevertInputText: "draft-3" },
+    };
+    const next = conversationReducer(state, {
+      type: "setRevertState",
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" },
+    });
+    expect(next.revertState).toEqual({ revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" });
+    expect(next.messages).toBe(state.messages);
+    expect(Object.keys(next.runs).sort()).toEqual(["r1", "r2", "r3"]);
+  });
+});
+
+// WHY: commitRevert is the only step that actually deletes hidden
+// messages and runs. It is fired when the user submits a new prompt
+// while the conversation is in a reverted state. See
+// ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
+describe("conversationReducer → commitRevert", () => {
   function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" = "success") {
     return {
       id: runId,
@@ -1389,20 +1494,7 @@ describe("conversationReducer → revertToUserMessage", () => {
     };
   }
 
-  function cardsRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" = "success") {
-    return {
-      id: runId,
-      mode: "cards" as const,
-      status,
-      cards: [],
-      cardStatuses: {},
-      templateFields: null,
-      startedAt: new Date("2026-07-01T12:00:00Z"),
-      elapsedSeconds: status === "streaming" ? null : 1,
-    };
-  }
-
-  it("is a no-op when the target user message does not exist", () => {
+  it("is a no-op when no revert state is set", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
@@ -1413,8 +1505,25 @@ describe("conversationReducer → revertToUserMessage", () => {
       ],
       runs: { r1: chatRun("r1") },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-missing" });
-    expect(next).toBe(state);
+    expect(conversationReducer(state, { type: "commitRevert" })).toBe(state);
+  });
+
+  it("clears a stale revert state when the target message no longer exists", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+      ],
+      runs: { r1: chatRun("r1") },
+      revertState: { revertedToUserMessageId: "user-gone", preRevertInputText: "draft" },
+    };
+    const next = conversationReducer(state, { type: "commitRevert" });
+    expect(next.revertState).toBeNull();
+    expect(next.messages).toBe(state.messages);
+    expect(next.runs).toBe(state.runs);
   });
 
   it("removes the target user message and all subsequent messages", () => {
@@ -1432,63 +1541,12 @@ describe("conversationReducer → revertToUserMessage", () => {
         { id: "assistant-r3", role: "assistant", metadata: { kind: "chat-text", runId: "r3" }, parts: [{ type: "text", text: "Reply 3" }] },
       ],
       runs: { r1: chatRun("r1"), r2: chatRun("r2"), r3: chatRun("r3") },
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
-  });
-
-  it("removes the target run and all subsequent runs", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
-      ],
-      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
-    };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
     expect(Object.keys(next.runs)).toEqual(["r1"]);
-  });
-
-  it("sets mode to the reverted run's mode when reverting a cards run", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      mode: "chat",
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "generated-cards", runId: "r2" }, parts: [{ type: "text", text: "" }] },
-      ],
-      runs: { r1: chatRun("r1"), r2: cardsRun("r2") },
-    };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
-    expect(next.mode).toBe("cards");
-  });
-
-  it("resolves mode from assistant message metadata when the run is missing (failed-restored case)", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      mode: "chat",
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        // WHY: error markers are left behind when a failed run is removed
-        // on restore (see normalizeRestoredConversation). The mode is
-        // preserved on the error marker metadata.
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "error", runId: "r1", mode: "cards" }, parts: [{ type: "text", text: "" }] },
-      ],
-      runs: {},
-    };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
-    expect(next.mode).toBe("cards");
+    expect(next.revertState).toBeNull();
   });
 
   it("clears activeRunId and dismissedRunErrorId", () => {
@@ -1505,8 +1563,9 @@ describe("conversationReducer → revertToUserMessage", () => {
         { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
       ],
       runs: { r1: chatRun("r1"), r2: chatRun("r2", "streaming") },
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
   });
@@ -1524,8 +1583,9 @@ describe("conversationReducer → revertToUserMessage", () => {
         { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
       ],
       runs: { r1: chatRun("r1"), r2: chatRun("r2") },
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.lastReadRunId).toBeNull();
   });
 
@@ -1542,12 +1602,13 @@ describe("conversationReducer → revertToUserMessage", () => {
         { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
       ],
       runs: { r1: chatRun("r1"), r2: chatRun("r2") },
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.lastReadRunId).toBe("r1");
   });
 
-  it("preserves deckId, profileId, modelId, and modelParameters", () => {
+  it("preserves deckId, profileId, modelId, modelParameters, and mode", () => {
     const state: ConversationState = {
       ...initialConversationState,
       id: "conv-1",
@@ -1556,17 +1617,20 @@ describe("conversationReducer → revertToUserMessage", () => {
       profileId: "prof-1",
       modelId: "model-1",
       modelParameters: { reasoning_effort: "high" },
+      mode: "chat",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
         { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
       ],
       runs: { r1: chatRun("r1") },
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.deckId).toBe(42);
     expect(next.profileId).toBe("prof-1");
     expect(next.modelId).toBe("model-1");
     expect(next.modelParameters).toEqual({ reasoning_effort: "high" });
+    expect(next.mode).toBe("chat");
   });
 
   it("results in an empty state when reverting the only user message", () => {
@@ -1579,30 +1643,54 @@ describe("conversationReducer → revertToUserMessage", () => {
         { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
       ],
       runs: { r1: chatRun("r1") },
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.messages).toEqual([]);
     expect(next.runs).toEqual({});
     expect(next.activeRunId).toBeNull();
+    expect(next.revertState).toBeNull();
+  });
+});
+
+// WHY: getVisibleMessages drives the UI filter; it must reflect the
+// revert state without touching the underlying list. See
+// ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
+describe("getVisibleMessages", () => {
+  const messages = [
+    { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "First" }] },
+    { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Reply 1" }] },
+    { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Second" }] },
+    { id: "assistant-r2", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r2" }, parts: [{ type: "text" as const, text: "Reply 2" }] },
+  ];
+
+  it("returns the input unchanged when no revert state is set", () => {
+    expect(getVisibleMessages(messages, null)).toBe(messages);
   });
 
-  it("preserves the deckId and other config when reverting a cards run that would have caused a lock", () => {
-    // WHY: Per ASSISTANT-CHAT-MESSAGES.md, the deck stays locked even if
-    // the run that caused the lock is reverted. The reducer must not
-    // touch deckId / profileId / modelId.
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      mode: "cards",
-      deckId: 7,
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "generated-cards", runId: "r1" }, parts: [{ type: "text", text: "" }] },
-      ],
-      runs: { r1: cardsRun("r1", "success") },
-    };
-    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
-    expect(next.deckId).toBe(7);
+  it("returns the prefix before the revert point", () => {
+    const visible = getVisibleMessages(messages, {
+      revertedToUserMessageId: "user-r2",
+      preRevertInputText: "draft",
+    });
+    expect(visible.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
+  });
+
+  it("returns an empty list when reverting the only user message", () => {
+    const visible = getVisibleMessages(
+      [messages[0]!, messages[1]!],
+      { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
+    );
+    expect(visible).toEqual([]);
+  });
+
+  it("returns the input unchanged when the revert target cannot be found", () => {
+    // WHY: Stale revert state must not crash the UI; the filter falls
+    // back to the full list so the conversation stays readable.
+    const visible = getVisibleMessages(messages, {
+      revertedToUserMessageId: "user-missing",
+      preRevertInputText: "draft",
+    });
+    expect(visible).toBe(messages);
   });
 });

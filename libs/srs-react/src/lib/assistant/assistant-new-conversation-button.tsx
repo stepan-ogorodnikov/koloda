@@ -4,7 +4,7 @@ import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { assistantIsProcessingAtom, assistantMessagesAtom, newConversationAtom } from "./assistant-conversation-atoms";
+import { assistantHasContextAtom, newConversationAtom } from "./assistant-conversation-atoms";
 import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type AssistantNewConversationButtonProps = {
@@ -13,12 +13,15 @@ export type AssistantNewConversationButtonProps = {
 
 export function AssistantNewConversationButton({ onConversationIdChange }: AssistantNewConversationButtonProps) {
   const { _ } = useLingui();
-  const messages = useAtomValue(assistantMessagesAtom);
-  const isProcessing = useAtomValue(assistantIsProcessingAtom);
+  // WHY: Revert hides messages but the conversation is still saved. The
+  // "no point in a second empty conversation" check must look at the
+  // underlying state, not the user-visible prefix, otherwise revert
+  // would let the user spawn an empty conversation.
+  const hasContext = useAtomValue(assistantHasContextAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const [globalAIProfileState] = useGlobalAIProfileState();
 
-  const canStartNewConversation = messages.length > 0 || isProcessing;
+  const canStartNewConversation = hasContext;
 
   return (
     <Button

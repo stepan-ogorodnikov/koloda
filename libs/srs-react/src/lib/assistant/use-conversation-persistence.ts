@@ -121,7 +121,11 @@ export function useConversationPersistence(
       // to drop its messages on next mount, leaving an empty row with a stale
       // title. Rewriting to "canceled" keeps messages visible and title correct.
       // The live in-memory state keeps "streaming" until the stream actually ends.
-      const persistState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
+      const cancelApplied = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
+      // WHY: Revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
+      // §Revert). Strip the revert state from the persisted payload so
+      // reload never resurrects a hidden prefix.
+      const persistState = { ...cancelApplied, revertState: null };
 
       const title = computeConversationTitle(persistState);
       // WHY: structuredClone detaches persistState from the Jotai store so the

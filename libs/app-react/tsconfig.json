@@ -4,25 +4,22 @@
   "include": [],
   "references": [
     {
-      "path": "../app"
-    },
-    {
-      "path": "../ai"
-    },
-    {
-      "path": "../ai-react"
-    },
-    {
-      "path": "../core-react"
+      "path": "../ui"
     },
     {
       "path": "../srs"
     },
     {
-      "path": "../srs-react"
+      "path": "../core-react"
     },
     {
-      "path": "../ui"
+      "path": "../ai-react"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../app"
     },
     {
       "path": "./tsconfig.lib.json"

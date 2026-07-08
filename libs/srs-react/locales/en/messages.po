@@ -103,17 +103,25 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:27
+msgid "ai.chat.message.restore.label"
+msgstr "Restore"
+
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:21
+msgid "ai.chat.message.revert.indicator"
+msgstr "Messages reverted"
+
 #: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:15
-#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:18
+#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:22
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Revert message"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:26
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:36
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:39
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:158
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:192
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
@@ -231,7 +239,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:183
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:199
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 

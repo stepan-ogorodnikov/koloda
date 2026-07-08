@@ -17,6 +17,7 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
+import type { AIChatMode } from "@koloda/ai-react";
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -31,10 +32,12 @@ import {
   assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
-  bumpPendingSaveAtom,
+  assistantRevertStateAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
+import { getAssistantMetadata } from "./assistant-messages";
 import { AssistantSettings } from "./assistant-settings";
+import { RevertBanner } from "./revert-banner";
 import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
@@ -59,6 +62,7 @@ export function AssistantChat(
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
   const saveStatus = useAtomValue(saveStatusAtom);
+  const revertState = useAtomValue(assistantRevertStateAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
   const modelPickerRef = useRef<HTMLButtonElement>(null);
@@ -102,7 +106,6 @@ export function AssistantChat(
   });
 
   const setConversationState = useSetAtom(assistantConversationStateAtom);
-  const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
 
   const handleRevert = useCallback((userMessageId: string) => {
     const state = readState();
@@ -111,12 +114,47 @@ export function AssistantChat(
     const promptText = getTextMessageContent(userMessage);
     if (!promptText) return;
 
-    // Abort any active stream before removing its run and messages.
+    // WHY: Revert is visual; the actual deletion happens on the next
+    // prompt submit. We just set the in-memory revert state and update
+    // the prompt input. Any active stream is canceled because its run
+    // will be among the hidden messages and must not keep streaming.
     handleCancel();
-    setConversationState({ type: "revertToUserMessage", userMessageId });
-    bumpPendingSave();
+    setConversationState({
+      type: "setRevertState",
+      revertState: { revertedToUserMessageId: userMessageId, preRevertInputText: inputValue },
+    });
+    // WHY: Mirror the mode of the target message so the prompt input
+    // lines up with what the run was sent in. The run record is the
+    // source of truth; if it was removed on restore, the assistant
+    // message metadata still carries the original mode.
+    const runId = userMessageId.startsWith("user-") ? userMessageId.slice(5) : null;
+    let targetMode: AIChatMode | null = null;
+    if (runId) {
+      const run = state.runs[runId];
+      if (run) {
+        targetMode = run.mode;
+      } else {
+        const assistantMessage = state.messages.find((m) => m.id === `assistant-${runId}`);
+        if (assistantMessage) {
+          const metadata = getAssistantMetadata(assistantMessage);
+          if (metadata?.kind === "error") targetMode = metadata.mode;
+          else if (metadata?.kind === "generated-cards") targetMode = "cards";
+          else if (metadata?.kind === "chat-text") targetMode = "chat";
+        }
+      }
+    }
+    if (targetMode && targetMode !== state.mode) {
+      setConversationState({ type: "setMode", mode: targetMode });
+    }
     setInputValue(promptText);
-  }, [readState, handleCancel, setConversationState, bumpPendingSave, setInputValue]);
+  }, [readState, handleCancel, setConversationState, inputValue, setInputValue]);
+
+  const handleRestore = useCallback(() => {
+    const state = readState();
+    if (!state.revertState) return;
+    setInputValue(state.revertState.preRevertInputText);
+    setConversationState({ type: "setRevertState", revertState: null });
+  }, [readState, setConversationState, setInputValue]);
 
   const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,
@@ -182,6 +220,7 @@ export function AssistantChat(
                   </>
                 );
               })()}
+              {revertState && <RevertBanner onRestore={handleRestore} />}
               <AIChatPromptPanel onSubmit={handleSubmit}>
                 <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
                 <div className="flex flex-row items-center min-w-0 px-1 pb-2">

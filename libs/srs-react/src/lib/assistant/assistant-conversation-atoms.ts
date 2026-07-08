@@ -5,7 +5,7 @@ import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
 import type { Store } from "jotai/vanilla/store";
 import { getAssistantMetadata } from "./assistant-messages";
-import { conversationReducer, initialConversationState } from "./conversation-state";
+import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-state";
 import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
 
 export type SaveStatus = {
@@ -31,13 +31,10 @@ function applyConversationUpdate(
     ? (update as (p: ConversationState) => ConversationState)(prev)
     : conversationReducer(prev, update);
   if (next === prev) return prev;
-  // WHY: `markRead` only updates the read-pointer (`lastReadRunId`) — a
-  // UI concern that tracks which runs the user has seen. It is not a
-  // content change and must not bump `updatedAt`; otherwise opening an
-  // unread conversation would re-sort it to the top of the list every
-  // time, defeating the unread indicator. See
-  // ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status.
-  if (typeof update !== "function" && update.type === "markRead") return next;
+  if (typeof update !== "function" && (update.type === "markRead" || update.type === "setRevertState")) {
+    return next;
+  }
+
   return { ...next, updatedAt: new Date() };
 }
 
@@ -158,16 +155,19 @@ export const assistantErroredRunAtom = atom((get) => {
   return null;
 });
 
-export const assistantMessagesAtom = atom((get) => get(assistantConversationStateAtom).messages);
+export const assistantMessagesAtom = atom((get) => {
+  const state = get(assistantConversationStateAtom);
+  return getVisibleMessages(state.messages, state.revertState);
+});
+
+export const assistantRevertStateAtom = atom((get) => get(assistantConversationStateAtom).revertState);
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
-export const assistantAIModelParametersAtom = atom(
-  (get) => get(assistantConversationStateAtom).modelParameters,
-);
+export const assistantAIModelParametersAtom = atom((get) => get(assistantConversationStateAtom).modelParameters);
 
 export const assistantIsProcessingAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);

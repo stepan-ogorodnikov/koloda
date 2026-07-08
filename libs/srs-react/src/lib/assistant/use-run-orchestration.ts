@@ -8,6 +8,7 @@ import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
+import { getVisibleMessages } from "./conversation-state";
 import type { ConversationAction, ConversationState } from "./conversation-state";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
@@ -105,14 +106,18 @@ export function useRunOrchestration({
 
     armPendingRun(mode, conversationId, runId);
 
-    const userMessage = currentState.messages.find((m) => m.id === `user-${runId}`);
+    // WHY: Retry is exposed only on the visible tail. The history sent
+    // to the AI must mirror what the user sees, so filter out anything
+    // hidden by revert before walking the message list.
+    const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
+    const userMessage = visibleMessages.find((m) => m.id === `user-${runId}`);
     const promptText = userMessage ? getTextMessageContent(userMessage) : "";
     if (!promptText || !cfg.profileId || !cfg.modelId) return;
     if (mode === "cards" && !cfg.template) return;
 
     setGlobalAIProfileState(cfg);
 
-    const conversationMessages = buildConversationMessages(currentState.messages, currentState.runs, cfg.template);
+    const conversationMessages = buildConversationMessages(visibleMessages, currentState.runs, cfg.template);
     cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
 
     const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
@@ -134,7 +139,18 @@ export function useRunOrchestration({
   const handleGenerate = useCallback(async (value?: string) => {
     ensureConversationId();
     const cfg = configRef.current;
-    const currentState = readState();
+    let currentState = readState();
+
+    // WHY: Revert is visual until the user submits a new prompt. Commit
+    // it now so the hidden messages and their runs are actually
+    // removed; the prompt then becomes the latest user message and
+    // starts a fresh run. Re-read the state afterwards so the rest of
+    // this handler sees the post-commit shape.
+    if (currentState.revertState) {
+      dispatchAction({ type: "commitRevert" });
+      currentState = readState();
+    }
+
     const currentMode = currentState.mode;
 
     const promptText = (value ?? "").trim();

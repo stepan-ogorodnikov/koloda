@@ -23,6 +23,11 @@ export type GenerationRun = {
   usage?: StreamUsage;
 };
 
+export type RevertState = {
+  revertedToUserMessageId: string;
+  preRevertInputText: string;
+};
+
 export type ConversationState = {
   id: string;
   createdAt: Date;
@@ -40,6 +45,7 @@ export type ConversationState = {
   // run's id differs from this pointer. The pointer is cleared when the
   // referenced run is dropped so the unread predicate stays correct.
   lastReadRunId: string | null;
+  revertState: RevertState | null;
 };
 
 export type ConversationAction =
@@ -94,7 +100,8 @@ export type ConversationAction =
     modelId?: string | null;
     modelParameters?: Partial<Record<ModelParameter["type"], string>>;
   }
-  | { type: "revertToUserMessage"; userMessageId: string };
+  | { type: "setRevertState"; revertState: RevertState | null }
+  | { type: "commitRevert" };
 
 export const initialConversationState: ConversationState = {
   id: "",
@@ -110,7 +117,23 @@ export const initialConversationState: ConversationState = {
   modelId: null,
   modelParameters: {},
   lastReadRunId: null,
+  revertState: null,
 };
+
+// WHY: With revert active, the target user message and everything after
+// it must be hidden from the UI. The conversation state still holds the
+// full message list; this function returns the user-visible prefix.
+export function getVisibleMessages(
+  messages: UIMessage[],
+  revertState: RevertState | null,
+): UIMessage[] {
+  if (!revertState) return messages;
+  const userMessageIndex = messages.findIndex(
+    (m) => m.id === revertState.revertedToUserMessageId,
+  );
+  if (userMessageIndex === -1) return messages;
+  return messages.slice(0, userMessageIndex);
+}
 
 function makeRun(
   runId: string,
@@ -258,6 +281,9 @@ export function coerceConversationState(value: unknown): ConversationState | nul
     modelId: (v.modelId as string | null) ?? null,
     modelParameters,
     lastReadRunId: (v.lastReadRunId as string | null) ?? null,
+    // WHY: Revert is in-memory only. The DB never stores it; if a
+    // stale row ever contains one, ignore it and start clean.
+    revertState: null,
   };
 }
 
@@ -581,29 +607,25 @@ export function conversationReducer(state: ConversationState, action: Conversati
         modelId: action.modelId ?? null,
         modelParameters: action.modelParameters ?? {},
         lastReadRunId: null,
+        revertState: null,
       };
 
-    case "revertToUserMessage": {
-      const userMessageIndex = state.messages.findIndex((m) => m.id === action.userMessageId);
-      if (userMessageIndex === -1) return state;
+    case "setRevertState": {
+      if (state.revertState === action.revertState) return state;
+      return { ...state, revertState: action.revertState };
+    }
 
-      const runId = action.userMessageId.startsWith("user-")
-        ? action.userMessageId.slice(5)
-        : null;
-      if (!runId) return state;
-
-      let targetMode: AIChatMode = state.mode;
-      const run = state.runs[runId];
-      if (run) {
-        targetMode = run.mode;
-      } else {
-        const assistantMessage = state.messages.find((m) => m.id === `assistant-${runId}`);
-        if (assistantMessage) {
-          const metadata = getAssistantMetadata(assistantMessage);
-          if (metadata?.kind === "error") targetMode = metadata.mode;
-          else if (metadata?.kind === "generated-cards") targetMode = "cards";
-          else if (metadata?.kind === "chat-text") targetMode = "chat";
-        }
+    case "commitRevert": {
+      if (!state.revertState) return state;
+      const { revertedToUserMessageId } = state.revertState;
+      const userMessageIndex = state.messages.findIndex(
+        (m) => m.id === revertedToUserMessageId,
+      );
+      if (userMessageIndex === -1) {
+        // WHY: Stale revert state (target message was removed by some
+        // other path). Clear the revert state so the UI stops hiding
+        // nothing; nothing actually needs deleting.
+        return { ...state, revertState: null };
       }
 
       const messages = state.messages.slice(0, userMessageIndex);
@@ -632,7 +654,7 @@ export function conversationReducer(state: ConversationState, action: Conversati
         activeRunId: null,
         dismissedRunErrorId: null,
         lastReadRunId,
-        mode: targetMode,
+        revertState: null,
       };
     }
 
