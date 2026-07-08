@@ -1,6 +1,6 @@
 # Assistant Chat: Conversations
 
-Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI profile state, persistence, restore, error handling, and retry.
+Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI profile state, persistence, restore, error handling, retry, and revert.
 Does not cover deck management, AI provider configuration, or the streaming transport layer.
 
 ## What is a Conversation
@@ -287,6 +287,20 @@ Cloning is triggered from the conversation header's dots menu.
 The clone appears immediately in the sidebar, sorted by its new timestamp.
 The user is navigated to the cloned conversation.
 
+## Revert
+
+The user can revert the conversation to the state it was in before any past user message.
+Revert rewinds the conversation: the target user message and everything after it is removed.
+Full behavior is specified in MESSAGES.md (§Reverting the Conversation).
+
+Conversation-level implications:
+
+- The conversation history sent on the next run is rebuilt from the now-shorter message list
+- Deck lock and deck contents are not affected by revert, even if the run that caused the lock is among the removed messages
+- If the revert leaves the conversation with no messages, the conversation falls under the existing rule that empty conversations are not persisted
+
+The re-triggered prompt starts a fresh run, not a retry — the new run is independent and has its own run ID.
+
 ## Concurrent Behavior
 
 Only one run can be active at a time per conversation.
@@ -307,3 +321,5 @@ When the old conversation is later restored, the streaming run and its messages 
 - Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
   The global last-used record is updated when the user changes the value or submits a prompt
 - When a conversation is loaded and its data is invalid, it's silently reset to empty rather than showing an error
+- Revert removes the target user message and everything after it; lock state and deck contents are not coupled to the message history
+- Re-triggering after revert creates a fresh run with a new run ID, even though the prompt text matches a previously reverted message

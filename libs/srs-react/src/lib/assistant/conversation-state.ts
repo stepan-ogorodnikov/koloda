@@ -93,7 +93,8 @@ export type ConversationAction =
     profileId?: string | null;
     modelId?: string | null;
     modelParameters?: Partial<Record<ModelParameter["type"], string>>;
-  };
+  }
+  | { type: "revertToUserMessage"; userMessageId: string };
 
 export const initialConversationState: ConversationState = {
   id: "",
@@ -581,6 +582,59 @@ export function conversationReducer(state: ConversationState, action: Conversati
         modelParameters: action.modelParameters ?? {},
         lastReadRunId: null,
       };
+
+    case "revertToUserMessage": {
+      const userMessageIndex = state.messages.findIndex((m) => m.id === action.userMessageId);
+      if (userMessageIndex === -1) return state;
+
+      const runId = action.userMessageId.startsWith("user-")
+        ? action.userMessageId.slice(5)
+        : null;
+      if (!runId) return state;
+
+      let targetMode: AIChatMode = state.mode;
+      const run = state.runs[runId];
+      if (run) {
+        targetMode = run.mode;
+      } else {
+        const assistantMessage = state.messages.find((m) => m.id === `assistant-${runId}`);
+        if (assistantMessage) {
+          const metadata = getAssistantMetadata(assistantMessage);
+          if (metadata?.kind === "error") targetMode = metadata.mode;
+          else if (metadata?.kind === "generated-cards") targetMode = "cards";
+          else if (metadata?.kind === "chat-text") targetMode = "chat";
+        }
+      }
+
+      const messages = state.messages.slice(0, userMessageIndex);
+
+      const survivingRunIds = new Set<string>();
+      for (const m of messages) {
+        if (m.role === "user" && m.id.startsWith("user-")) {
+          survivingRunIds.add(m.id.slice(5));
+        } else if (m.role === "assistant" && m.id.startsWith("assistant-")) {
+          survivingRunIds.add(m.id.slice(10));
+        }
+      }
+      const runs: Record<string, GenerationRun> = {};
+      for (const [id, r] of Object.entries(state.runs)) {
+        if (survivingRunIds.has(id)) runs[id] = r;
+      }
+
+      const lastReadRunId = state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined
+        ? null
+        : state.lastReadRunId;
+
+      return {
+        ...state,
+        messages,
+        runs,
+        activeRunId: null,
+        dismissedRunErrorId: null,
+        lastReadRunId,
+        mode: targetMode,
+      };
+    }
 
     default:
       return state;

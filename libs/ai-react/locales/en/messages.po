@@ -68,7 +68,7 @@ msgstr "Failed to get a response"
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:34
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:35
 msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
@@ -93,8 +93,8 @@ msgstr "Selected AI profile is missing required data"
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:65
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:68
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:67
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:70
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 

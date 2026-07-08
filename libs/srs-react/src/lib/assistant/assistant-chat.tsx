@@ -1,3 +1,4 @@
+import { getTextMessageContent } from "@koloda/ai";
 import {
   AiChatContextUsage,
   AIChatError,
@@ -19,10 +20,10 @@ import {
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   assistantContextUsageAtom,
   assistantConversationStateAtom,
@@ -30,6 +31,7 @@ import {
   assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
+  bumpPendingSaveAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
 import { AssistantSettings } from "./assistant-settings";
@@ -88,6 +90,7 @@ export function AssistantChat(
     handleRetry,
     retryLoad,
     setMode,
+    readState,
   } = useAssistantChat({ conversationId, onConversationIdChange });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
@@ -97,6 +100,23 @@ export function AssistantChat(
     isLoading: isProcessing,
     scroll,
   });
+
+  const setConversationState = useSetAtom(assistantConversationStateAtom);
+  const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
+
+  const handleRevert = useCallback((userMessageId: string) => {
+    const state = readState();
+    const userMessage = state.messages.find((m) => m.id === userMessageId);
+    if (!userMessage) return;
+    const promptText = getTextMessageContent(userMessage);
+    if (!promptText) return;
+
+    // Abort any active stream before removing its run and messages.
+    handleCancel();
+    setConversationState({ type: "revertToUserMessage", userMessageId });
+    bumpPendingSave();
+    setInputValue(promptText);
+  }, [readState, handleCancel, setConversationState, bumpPendingSave, setInputValue]);
 
   const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,
@@ -111,7 +131,7 @@ export function AssistantChat(
   const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
     ? "cards"
     : "chat";
-  const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry });
+  const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry, handleRevert });
 
   useAssistantChatHotkeys({
     handleCancel,

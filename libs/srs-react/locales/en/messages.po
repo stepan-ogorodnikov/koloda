@@ -103,50 +103,55 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
+#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:15
+#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:18
+msgid "ai.chat.message.revert.tooltip"
+msgstr "Revert message"
+
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:26
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:36
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:134
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:158
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:78
+#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:36
+msgid "ai.conversation.clone.action"
+msgstr "Clone"
+
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:88
 msgid "ai.conversation.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:75
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:85
 msgid "ai.conversation.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:65
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:75
 msgid "ai.conversation.delete.message"
 msgstr "Delete this conversation? This cannot be undone."
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:49
+#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:59
 msgid "ai.conversation.delete.trigger"
 msgstr "Delete conversation"
-
-#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:40
-msgid "ai.conversation.clone.action"
-msgstr "Clone"
 
 #: ../../libs/srs-react/src/lib/assistant/conversation-header-menu.tsx:26
 msgid "ai.conversation.menu.trigger"
 msgstr "Conversation actions"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:10
-msgid "ai.conversation.untitled"
-msgstr "Untitled conversation"
-
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:11
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
 msgid "ai.conversation.running"
 msgstr "Running"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:13
 msgid "ai.conversation.unread"
 msgstr "Unread"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:11
+msgid "ai.conversation.untitled"
+msgstr "Untitled conversation"
 
 #: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
 msgid "algorithm-picker.label"
@@ -226,7 +231,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-assistant-chat.ts:575
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:183
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
@@ -437,43 +442,43 @@ msgstr "Stack"
 msgid "cards.views.table"
 msgstr "Table"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:90
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:85
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:109
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:104
 msgid "clone-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:125
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:120
 msgid "clone-algorithm.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:122
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:117
 msgid "clone-algorithm.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:70
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:65
 msgid "clone-algorithm.trigger"
 msgstr "Clone preset"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:90
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:85
 msgid "clone-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:109
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:104
 msgid "clone-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:120
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:115
 msgid "clone-template.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:120
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:115
 msgid "clone-template.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:70
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:65
 msgid "clone-template.trigger"
 msgstr "Clone template"
 

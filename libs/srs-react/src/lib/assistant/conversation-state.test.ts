@@ -1373,3 +1373,236 @@ describe("cancelStreamingRuns", () => {
     expect(next.createdAt).toBe(state.createdAt);
   });
 });
+
+// WHY: See ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
+describe("conversationReducer → revertToUserMessage", () => {
+  function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" = "success") {
+    return {
+      id: runId,
+      mode: "chat" as const,
+      status,
+      cards: [],
+      cardStatuses: {},
+      templateFields: null,
+      startedAt: new Date("2026-07-01T12:00:00Z"),
+      elapsedSeconds: status === "streaming" ? null : 1,
+    };
+  }
+
+  function cardsRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" = "success") {
+    return {
+      id: runId,
+      mode: "cards" as const,
+      status,
+      cards: [],
+      cardStatuses: {},
+      templateFields: null,
+      startedAt: new Date("2026-07-01T12:00:00Z"),
+      elapsedSeconds: status === "streaming" ? null : 1,
+    };
+  }
+
+  it("is a no-op when the target user message does not exist", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+      ],
+      runs: { r1: chatRun("r1") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-missing" });
+    expect(next).toBe(state);
+  });
+
+  it("removes the target user message and all subsequent messages", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      mode: "chat",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
+        { id: "assistant-r3", role: "assistant", metadata: { kind: "chat-text", runId: "r3" }, parts: [{ type: "text", text: "Reply 3" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: chatRun("r2"), r3: chatRun("r3") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(next.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
+  });
+
+  it("removes the target run and all subsequent runs", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(Object.keys(next.runs)).toEqual(["r1"]);
+  });
+
+  it("sets mode to the reverted run's mode when reverting a cards run", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      mode: "chat",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "generated-cards", runId: "r2" }, parts: [{ type: "text", text: "" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: cardsRun("r2") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(next.mode).toBe("cards");
+  });
+
+  it("resolves mode from assistant message metadata when the run is missing (failed-restored case)", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      mode: "chat",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        // WHY: error markers are left behind when a failed run is removed
+        // on restore (see normalizeRestoredConversation). The mode is
+        // preserved on the error marker metadata.
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "error", runId: "r1", mode: "cards" }, parts: [{ type: "text", text: "" }] },
+      ],
+      runs: {},
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    expect(next.mode).toBe("cards");
+  });
+
+  it("clears activeRunId and dismissedRunErrorId", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      activeRunId: "r2",
+      dismissedRunErrorId: "r1",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: chatRun("r2", "streaming") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(next.activeRunId).toBeNull();
+    expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("clears lastReadRunId when it points to a removed run", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      lastReadRunId: "r2",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(next.lastReadRunId).toBeNull();
+  });
+
+  it("preserves lastReadRunId when it points to a surviving run", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      lastReadRunId: "r1",
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+      ],
+      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r2" });
+    expect(next.lastReadRunId).toBe("r1");
+  });
+
+  it("preserves deckId, profileId, modelId, and modelParameters", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      deckId: 42,
+      profileId: "prof-1",
+      modelId: "model-1",
+      modelParameters: { reasoning_effort: "high" },
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+      ],
+      runs: { r1: chatRun("r1") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    expect(next.deckId).toBe(42);
+    expect(next.profileId).toBe("prof-1");
+    expect(next.modelId).toBe("model-1");
+    expect(next.modelParameters).toEqual({ reasoning_effort: "high" });
+  });
+
+  it("results in an empty state when reverting the only user message", () => {
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+      ],
+      runs: { r1: chatRun("r1") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    expect(next.messages).toEqual([]);
+    expect(next.runs).toEqual({});
+    expect(next.activeRunId).toBeNull();
+  });
+
+  it("preserves the deckId and other config when reverting a cards run that would have caused a lock", () => {
+    // WHY: Per ASSISTANT-CHAT-MESSAGES.md, the deck stays locked even if
+    // the run that caused the lock is reverted. The reducer must not
+    // touch deckId / profileId / modelId.
+    const state: ConversationState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      mode: "cards",
+      deckId: 7,
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+        { id: "assistant-r1", role: "assistant", metadata: { kind: "generated-cards", runId: "r1" }, parts: [{ type: "text", text: "" }] },
+      ],
+      runs: { r1: cardsRun("r1", "success") },
+    };
+    const next = conversationReducer(state, { type: "revertToUserMessage", userMessageId: "user-r1" });
+    expect(next.deckId).toBe(7);
+  });
+});

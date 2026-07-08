@@ -13,8 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:135
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:138
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:139
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:142
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -30,7 +30,7 @@ msgstr "Cards"
 msgid "deck.tabs.details"
 msgstr "Details"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:45
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:46
 msgid "deck.tabs.label"
 msgstr "Deck tabs"
 
@@ -74,7 +74,7 @@ msgstr "Settings"
 msgid "nav.templates"
 msgstr "Templates"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:30
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "AI"
@@ -196,12 +196,12 @@ msgstr "Title"
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:34
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:35
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.hotkeys"
 msgstr "Hotkeys"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:25
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:26
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
 msgid "settings.interface"
 msgstr "Interface"
@@ -218,7 +218,7 @@ msgstr "Animations"
 msgid "settings.interface.theme"
 msgstr "Theme"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:34
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:35
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Learning"
@@ -305,7 +305,7 @@ msgstr "Light"
 msgid "theme.system"
 msgstr "System"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:38
 msgid "title.ai"
 msgstr "Assistant"
 

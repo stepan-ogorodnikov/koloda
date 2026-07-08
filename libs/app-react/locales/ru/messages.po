@@ -13,8 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:135
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:138
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:139
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:142
 msgid "ai.deck-picker.clear"
 msgstr "Очистить выбор"
 
@@ -30,7 +30,7 @@ msgstr "Карточки"
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:45
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:46
 msgid "deck.tabs.label"
 msgstr "Вкладки колоды"
 
@@ -74,7 +74,7 @@ msgstr "Настройки"
 msgid "nav.templates"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:30
+#: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "ИИ"
@@ -196,12 +196,12 @@ msgstr "Название"
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Без названия"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:34
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:35
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.hotkeys"
 msgstr "Горячие клавиши"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:25
+#: ../../libs/app-react/src/lib/routes/_.settings.interface.tsx:26
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:15
 msgid "settings.interface"
 msgstr "Интерфейс"
@@ -218,7 +218,7 @@ msgstr "Анимации"
 msgid "settings.interface.theme"
 msgstr "Тема оформления"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:34
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:35
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Изучение"
@@ -305,7 +305,7 @@ msgstr "Светлая"
 msgid "theme.system"
 msgstr "Системная"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:37
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:38
 msgid "title.ai"
 msgstr "Ассистент"
 

@@ -15,7 +15,7 @@ import {
   setAssistantAIProfileAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationAction } from "./conversation-state";
+import type { ConversationAction, ConversationState } from "./conversation-state";
 import { useAssistantConfig } from "./use-assistant-config";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
@@ -54,6 +54,7 @@ export type UseAssistantChatReturn = {
   handleRetry: (runId: string) => Promise<void>;
   retryLoad: () => Promise<unknown>;
   setMode: (mode: AIChatMode) => void;
+  readState: () => ConversationState;
 };
 
 export function useAssistantChat(
@@ -191,5 +192,6 @@ export function useAssistantChat(
     handleRetry,
     retryLoad,
     setMode,
+    readState,
   };
 }

@@ -114,6 +114,36 @@ The existing message content is cleared.
 New content streams in from scratch.
 The mode is preserved — a chat run retries as chat, a card generation run retries as cards.
 
+### Reverting the Conversation
+
+The user can revert the conversation to the state it was in before any past user message.
+Revert rewinds the conversation: the target user message and everything after it is removed, while earlier messages remain untouched.
+
+The revert affordance is available next to every user message.
+
+#### What Is Removed
+
+- The target user message
+- Its paired assistant message (including any error marker)
+- All subsequent user and assistant messages
+- All runs tied to the removed messages, and any partial or complete content they produced (streamed text, generated cards)
+- If a run is currently streaming, it is canceled first and its partial content is discarded as part of the revert
+
+#### What Is Preserved
+
+- AI profile state (profile, model, parameters)
+- Deck selection and lock state — the deck stays locked even if the run that caused the lock is among the removed messages
+- Cards already accepted into the deck — revert only affects the conversation's message history, not the deck contents
+- The current mode is updated, see Re-trigger below
+
+#### Re-trigger
+
+After revert, the prompt input is pre-filled with the text of the reverted user message, and the mode is set to the mode that message was sent in (chat or cards).
+
+Sending the pre-filled prompt — edited or as-is — starts a fresh run against the now-shorter conversation history.
+
+Any text the user had already typed in the input is replaced by the pre-fill.
+
 ## Message Content
 
 Message content is composed of typed parts.
@@ -139,3 +169,6 @@ Non-text parts are ignored.
 - Only the most recent message pair can be retried — older runs are not retryable
 - Retry metadata is rewritten from error back to its original kind so the renderer displays it correctly
 - Messages without metadata are rendered as raw content without status indicators
+- Revert is available on any user message regardless of its assistant's status — success, failed, canceled, or error marker. A streaming run is auto-canceled as part of the revert.
+- Reverting the only user message leaves the conversation temporarily empty; sending the pre-filled prompt re-persists it
+- Revert overwrites any text already in the prompt input with the reverted message's text
