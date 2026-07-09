@@ -2,11 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   cancelStreamingRuns,
   coerceConversationState,
-  conversationReducer,
-  getVisibleMessages,
-  initialConversationState,
   normalizeRestoredConversation,
-} from "./conversation-reducer";
+} from "./conversation-persistence";
+import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 // Helper: convert old-style action objects to new tuple format for tests

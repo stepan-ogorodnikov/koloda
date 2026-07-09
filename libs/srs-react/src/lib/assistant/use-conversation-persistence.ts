@@ -19,9 +19,9 @@ import {
 import {
   cancelStreamingRuns,
   coerceConversationState,
-  initialConversationState,
   normalizeRestoredConversation,
-} from "./conversation-reducer";
+} from "./conversation-persistence";
+import { initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 
 const STREAM_SAVE_THROTTLE_MS = 1000;
