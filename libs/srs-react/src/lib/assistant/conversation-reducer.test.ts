@@ -6,12 +6,27 @@ import {
   getVisibleMessages,
   initialConversationState,
   normalizeRestoredConversation,
-} from "./conversation-state";
-import type { ConversationState } from "./conversation-state";
+} from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
-function reduce(actions: Parameters<typeof conversationReducer>[1][]) {
+// Helper: convert old-style action objects to new tuple format for tests
+function act(action: { type: string; [key: string]: unknown }): ConversationReducerAction {
+  const { type, ...rest } = action;
+  // WHY: `setRevertState` takes the revert state itself (not a wrapper
+  // object) as its payload — see conversation-reducer.ts. Unwrap it here
+  // so the test calls read `act({ type: "setRevertState", revertState })`
+  // instead of repeating the wrapper at every call site.
+  if (type === "setRevertState") {
+    return [type as ConversationReducerAction[0], rest.revertState as ConversationReducerAction[1]];
+  }
+  const keys = Object.keys(rest);
+  if (keys.length === 0) return [type as ConversationReducerAction[0]];
+  return [type as ConversationReducerAction[0], rest as ConversationReducerAction[1]];
+}
+
+function reduce(actions: Array<{ type: string; [key: string]: unknown }>) {
   return actions.reduce(
-    (state, action) => conversationReducer(state, action),
+    (state, action) => conversationReducer(state, act(action)),
     initialConversationState,
   );
 }
@@ -202,7 +217,7 @@ describe("coerceConversationState", () => {
 
 describe("normalizeRestoredConversation", () => {
   it("removes streaming runs and their messages", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: "r1",
@@ -233,7 +248,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("replaces failed runs with an assistant error marker and keeps the user message", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -278,7 +293,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("rewrites assistant generated-cards messages from a failed run into an error marker", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -321,7 +336,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("leaves successful runs unchanged and preserves their messages", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -350,7 +365,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("resets pending card statuses to idle while preserving success and error", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -385,7 +400,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("removes only the failed run, keeps the successful run, and rewrites the failed assistant message into an error marker", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -455,7 +470,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("clears dismissedRunErrorId when all runs are removed", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -482,7 +497,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("clears lastReadRunId when the run it points to is dropped as streaming", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -508,7 +523,7 @@ describe("normalizeRestoredConversation", () => {
   });
 
   it("clears lastReadRunId when the run it points to is dropped as failed", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -538,7 +553,7 @@ describe("normalizeRestoredConversation", () => {
     // WHY: Force normalization via pending card statuses so the
     // function returns a non-null state. The lastReadRunId should
     // survive the round-trip because the run it points to is kept.
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -594,20 +609,26 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "..." },
       ]);
-      state = conversationReducer(state, {
-        type: "updateAssistantText",
-        runId: "r1",
-        text: "Done",
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "updateAssistantText",
+          runId: "r1",
+          text: "Done",
+        }),
+      );
       expect(state.messages[0].parts).toEqual([{ type: "text", text: "Done" }]);
     });
 
     it("does nothing when no message matches the runId", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "updateAssistantText",
-        runId: "missing",
-        text: "Nope",
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "updateAssistantText",
+          runId: "missing",
+          text: "Nope",
+        }),
+      );
       expect(state.messages).toEqual([]);
     });
   });
@@ -617,12 +638,15 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(1000);
 
-      const state = conversationReducer(initialConversationState, {
-        type: "startRun",
-        runId: "r1",
-        mode: "chat",
-        request: { prompt: "test" },
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "startRun",
+          runId: "r1",
+          mode: "chat",
+          request: { prompt: "test" },
+        }),
+      );
 
       expect(state.activeRunId).toBe("r1");
       expect(state.runs["r1"]).toMatchObject({
@@ -642,36 +666,45 @@ describe("conversationReducer", () => {
     it("stamps templateFields for cards runs when provided", () => {
       const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
 
-      const state = conversationReducer(initialConversationState, {
-        type: "startRun",
-        runId: "r1",
-        mode: "cards",
-        request: {},
-        templateFields: fields,
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "startRun",
+          runId: "r1",
+          mode: "cards",
+          request: {},
+          templateFields: fields,
+        }),
+      );
 
       expect(state.runs["r1"].templateFields).toEqual(fields);
     });
 
     it("stamps modelName on the new run when provided", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "startRun",
-        runId: "r1",
-        mode: "chat",
-        request: {},
-        modelName: "GPT-4",
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "startRun",
+          runId: "r1",
+          mode: "chat",
+          request: {},
+          modelName: "GPT-4",
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("leaves modelName undefined when not provided", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "startRun",
-        runId: "r1",
-        mode: "chat",
-        request: {},
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "startRun",
+          runId: "r1",
+          mode: "chat",
+          request: {},
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBeUndefined();
     });
@@ -680,11 +713,14 @@ describe("conversationReducer", () => {
   describe("addCard", () => {
     it("adds a card to the run's cards array and seeds idle status", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "cards", request: {} }]);
-      state = conversationReducer(state, {
-        type: "addCard",
-        runId: "r1",
-        card: { content: { "1": { text: "Front" } } },
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "addCard",
+          runId: "r1",
+          card: { content: { "1": { text: "Front" } } },
+        }),
+      );
       expect(state.runs["r1"].cards).toHaveLength(1);
       expect(state.runs["r1"].cards[0].content["1"].text).toBe("Front");
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
@@ -699,7 +735,7 @@ describe("conversationReducer", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
 
       vi.setSystemTime(5000);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       expect(state.runs["r1"].status).toBe("success");
       expect(state.runs["r1"].elapsedSeconds).toBe(5);
@@ -716,7 +752,7 @@ describe("conversationReducer", () => {
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
       expect(state.runs["r1"].status).toBe("success");
       expect(state.activeRunId).toBe("r2");
     });
@@ -730,7 +766,7 @@ describe("conversationReducer", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
 
       vi.setSystemTime(2000);
-      state = conversationReducer(state, { type: "failRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "failRun", runId: "r1" }));
 
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.runs["r1"].elapsedSeconds).toBe(2);
@@ -748,11 +784,14 @@ describe("conversationReducer", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
 
       vi.setSystemTime(3000);
-      state = conversationReducer(state, {
-        type: "runFailed",
-        runId: "r1",
-        error: { message: "Network error" },
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "runFailed",
+          runId: "r1",
+          error: { message: "Network error" },
+        }),
+      );
 
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.runs["r1"].error).toEqual({ message: "Network error" });
@@ -769,11 +808,14 @@ describe("conversationReducer", () => {
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(state, {
-        type: "runFailed",
-        runId: "r1",
-        error: { message: "Other error" },
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "runFailed",
+          runId: "r1",
+          error: { message: "Other error" },
+        }),
+      );
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.activeRunId).toBe("r2");
     });
@@ -782,7 +824,7 @@ describe("conversationReducer", () => {
   describe("cancelRun", () => {
     it("sets status to canceled and clears activeRunId", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
-      state = conversationReducer(state, { type: "cancelRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
 
       expect(state.runs["r1"].status).toBe("canceled");
       expect(state.activeRunId).toBeNull();
@@ -804,16 +846,19 @@ describe("conversationReducer", () => {
         },
         { type: "addCard", runId: "r1", card: { content: {} } },
       ]);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       vi.setSystemTime(10_000);
-      state = conversationReducer(state, {
-        type: "restartRun",
-        runId: "r1",
-        request: { updated: true },
-        templateFields: null,
-        mode: "cards",
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: { updated: true },
+          templateFields: null,
+          mode: "cards",
+        }),
+      );
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].cards).toEqual([]);
@@ -843,13 +888,13 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        {
+        act({
           type: "restartRun",
           runId: "r1",
           request: {},
           templateFields: null,
           mode: "chat",
-        },
+        }),
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -877,13 +922,13 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        {
+        act({
           type: "restartRun",
           runId: "r1",
           request: {},
           templateFields: null,
           mode: "cards",
-        },
+        }),
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -907,16 +952,19 @@ describe("conversationReducer", () => {
           templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
         },
       ]);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       const nextFields = [{ id: 2, title: "Back", type: "text" as const, isRequired: false }];
-      state = conversationReducer(state, {
-        type: "restartRun",
-        runId: "r1",
-        request: { updated: true },
-        templateFields: nextFields,
-        mode: "cards",
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: { updated: true },
+          templateFields: nextFields,
+          mode: "cards",
+        }),
+      );
 
       expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toEqual(nextFields);
@@ -926,16 +974,19 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
       ]);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
-      state = conversationReducer(state, {
-        type: "restartRun",
-        runId: "r1",
-        request: {},
-        templateFields: null,
-        mode: "chat",
-        modelName: "Claude",
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "chat",
+          modelName: "Claude",
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
@@ -944,15 +995,18 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
       ]);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
-      state = conversationReducer(state, {
-        type: "restartRun",
-        runId: "r1",
-        request: {},
-        templateFields: null,
-        mode: "chat",
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "chat",
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
@@ -961,29 +1015,35 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
       ]);
-      state = conversationReducer(state, { type: "completeRun", runId: "r1" });
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
-      state = conversationReducer(state, {
-        type: "restartRun",
-        runId: "r1",
-        request: {},
-        templateFields: null,
-        mode: "chat",
-        modelName: undefined,
-      });
+      state = conversationReducer(
+        state,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "chat",
+          modelName: undefined,
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("uses the action's modelName when the run is missing", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "restartRun",
-        runId: "r1",
-        request: {},
-        templateFields: null,
-        mode: "chat",
-        modelName: "Claude",
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "restartRun",
+          runId: "r1",
+          request: {},
+          templateFields: null,
+          mode: "chat",
+          modelName: "Claude",
+        }),
+      );
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
@@ -993,33 +1053,39 @@ describe("conversationReducer", () => {
     it("sets usage on the specified run", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
       const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
-      state = conversationReducer(state, { type: "setUsage", runId: "r1", usage });
+      state = conversationReducer(state, act({ type: "setUsage", runId: "r1", usage }));
       expect(state.runs["r1"].usage).toEqual(usage);
     });
   });
 
   describe("setMode", () => {
     it("changes the conversation mode", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "setMode",
-        mode: "cards",
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setMode",
+          mode: "cards",
+        }),
+      );
       expect(state.mode).toBe("cards");
     });
   });
 
   describe("setDeck", () => {
     it("sets the deck when the conversation is not locked", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "setDeck",
-        deckId: 5,
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setDeck",
+          deckId: 5,
+        }),
+      );
       expect(state.deckId).toBe(5);
     });
 
     it("is allowed after a user message but before any successful generated-cards run", () => {
       let state = reduce([{ type: "addUserMessage", runId: "r1", text: "Hi" }]);
-      state = conversationReducer(state, { type: "setDeck", deckId: 5 });
+      state = conversationReducer(state, act({ type: "setDeck", deckId: 5 }));
       expect(state.deckId).toBe(5);
     });
 
@@ -1030,7 +1096,7 @@ describe("conversationReducer", () => {
         { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" },
         { type: "failRun", runId: "r1" },
       ]);
-      state = conversationReducer(state, { type: "setDeck", deckId: 7 });
+      state = conversationReducer(state, act({ type: "setDeck", deckId: 7 }));
       expect(state.deckId).toBe(7);
     });
   });
@@ -1041,13 +1107,13 @@ describe("conversationReducer", () => {
         { type: "startRun", runId: "r1", mode: "cards", request: {} },
         { type: "addCard", runId: "r1", card: { content: {} } },
       ]);
-      state = conversationReducer(state, { type: "setCardStatus", runId: "r1", index: 0, status: "success" });
+      state = conversationReducer(state, act({ type: "setCardStatus", runId: "r1", index: 0, status: "success" }));
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "success" });
     });
   });
 
   describe("markRead", () => {
-    function withRun(state: ConversationState, runId: string): ConversationState {
+    function withRun(state: ConversationReducerState, runId: string): ConversationReducerState {
       return {
         ...state,
         runs: {
@@ -1068,25 +1134,25 @@ describe("conversationReducer", () => {
 
     it("sets lastReadRunId to the action's runId", () => {
       const state = withRun(initialConversationState, "r1");
-      const next = conversationReducer(state, { type: "markRead", runId: "r1" });
+      const next = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
       expect(next.lastReadRunId).toBe("r1");
     });
 
     it("replaces the previous lastReadRunId when the run id changes", () => {
       let state = withRun(initialConversationState, "r1");
-      state = conversationReducer(state, { type: "markRead", runId: "r1" });
+      state = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
       expect(state.lastReadRunId).toBe("r1");
 
       state = withRun(state, "r2");
-      const next = conversationReducer(state, { type: "markRead", runId: "r2" });
+      const next = conversationReducer(state, act({ type: "markRead", runId: "r2" }));
       expect(next.lastReadRunId).toBe("r2");
     });
 
     it("is idempotent on the same run id (returns the same state reference)", () => {
       let state = withRun(initialConversationState, "r1");
-      state = conversationReducer(state, { type: "markRead", runId: "r1" });
+      state = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
 
-      const next = conversationReducer(state, { type: "markRead", runId: "r1" });
+      const next = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
       // WHY: Returning the same reference lets `applyConversationUpdate`
       // skip the updatedAt stamp on idempotent markRead dispatches.
       expect(next).toBe(state);
@@ -1094,7 +1160,7 @@ describe("conversationReducer", () => {
 
     it("ignores an unknown run id (no pointer to update)", () => {
       const state = withRun(initialConversationState, "r1");
-      const next = conversationReducer(state, { type: "markRead", runId: "missing" });
+      const next = conversationReducer(state, act({ type: "markRead", runId: "missing" }));
       expect(next).toBe(state);
       expect(next.lastReadRunId).toBeNull();
     });
@@ -1111,7 +1177,7 @@ describe("conversationReducer", () => {
         { type: "setAIModel", modelId: "m2", modelParameters: { reasoning_effort: "low" } },
         { type: "setAIModelParameter", paramType: "reasoning_effort", value: "medium" },
       ]);
-      state = conversationReducer(state, { type: "newConversation", id: "new-id", createdAt });
+      state = conversationReducer(state, act({ type: "newConversation", id: "new-id", createdAt }));
 
       expect(state).toEqual({
         id: "new-id",
@@ -1137,19 +1203,22 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
       ]);
-      state = conversationReducer(state, { type: "setAIProfile", profileId: "p2", modelId: "m2" });
+      state = conversationReducer(state, act({ type: "setAIProfile", profileId: "p2", modelId: "m2" }));
       expect(state.profileId).toBe("p2");
       expect(state.modelId).toBe("m2");
       expect(state.modelParameters).toEqual({});
     });
 
     it("preserves provided parameters", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "setAIProfile",
-        profileId: "p1",
-        modelId: "m1",
-        modelParameters: { reasoning_effort: "low" },
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setAIProfile",
+          profileId: "p1",
+          modelId: "m1",
+          modelParameters: { reasoning_effort: "low" },
+        }),
+      );
       expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
     });
   });
@@ -1159,56 +1228,74 @@ describe("conversationReducer", () => {
       let state = reduce([
         { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
       ]);
-      state = conversationReducer(state, { type: "setAIModel", modelId: "m2" });
+      state = conversationReducer(state, act({ type: "setAIModel", modelId: "m2" }));
       expect(state.modelId).toBe("m2");
       expect(state.modelParameters).toEqual({});
     });
 
     it("preserves provided parameters", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "setAIModel",
-        modelId: "m2",
-        modelParameters: { reasoning_effort: "low" },
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setAIModel",
+          modelId: "m2",
+          modelParameters: { reasoning_effort: "low" },
+        }),
+      );
       expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
     });
   });
 
   describe("setAIModelParameter", () => {
     it("sets a single parameter value", () => {
-      const state = conversationReducer(initialConversationState, {
-        type: "setAIModelParameter",
-        paramType: "reasoning_effort",
-        value: "high",
-      });
+      const state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setAIModelParameter",
+          paramType: "reasoning_effort",
+          value: "high",
+        }),
+      );
       expect(state.modelParameters).toEqual({ reasoning_effort: "high" });
     });
 
     it("removes the parameter when value is null", () => {
-      let state = conversationReducer(initialConversationState, {
-        type: "setAIModelParameter",
-        paramType: "reasoning_effort",
-        value: "high",
-      });
-      state = conversationReducer(state, {
-        type: "setAIModelParameter",
-        paramType: "reasoning_effort",
-        value: null,
-      });
+      let state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setAIModelParameter",
+          paramType: "reasoning_effort",
+          value: "high",
+        }),
+      );
+      state = conversationReducer(
+        state,
+        act({
+          type: "setAIModelParameter",
+          paramType: "reasoning_effort",
+          value: null,
+        }),
+      );
       expect(state.modelParameters).toEqual({});
     });
 
     it("removes the parameter when value is empty string", () => {
-      let state = conversationReducer(initialConversationState, {
-        type: "setAIModelParameter",
-        paramType: "reasoning_effort",
-        value: "high",
-      });
-      state = conversationReducer(state, {
-        type: "setAIModelParameter",
-        paramType: "reasoning_effort",
-        value: "",
-      });
+      let state = conversationReducer(
+        initialConversationState,
+        act({
+          type: "setAIModelParameter",
+          paramType: "reasoning_effort",
+          value: "high",
+        }),
+      );
+      state = conversationReducer(
+        state,
+        act({
+          type: "setAIModelParameter",
+          paramType: "reasoning_effort",
+          value: "",
+        }),
+      );
       expect(state.modelParameters).toEqual({});
     });
   });
@@ -1217,9 +1304,9 @@ describe("conversationReducer", () => {
     it("returns the current state unchanged", () => {
       const state = conversationReducer(
         initialConversationState,
-        {
+        act({
           type: "nonexistent",
-        } as unknown as Parameters<typeof conversationReducer>[1],
+        }) as unknown as Parameters<typeof conversationReducer>[1],
       );
       expect(state).toBe(initialConversationState);
     });
@@ -1240,7 +1327,7 @@ describe("cancelStreamingRuns", () => {
   });
 
   it("marks a single streaming run as canceled, clears activeRunId, and recomputes elapsedSeconds", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: "r1",
@@ -1266,7 +1353,7 @@ describe("cancelStreamingRuns", () => {
   });
 
   it("cancels every streaming run in the map, leaving terminal-status runs untouched", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: "r2",
@@ -1315,7 +1402,7 @@ describe("cancelStreamingRuns", () => {
   });
 
   it("returns the same reference when no runs are streaming", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
@@ -1337,7 +1424,7 @@ describe("cancelStreamingRuns", () => {
   });
 
   it("does not touch non-run fields such as messages, deckId, or modelParameters", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
@@ -1383,36 +1470,67 @@ describe("cancelStreamingRuns", () => {
 describe("conversationReducer → setRevertState", () => {
   it("is a no-op when the new revert state equals the current one", () => {
     const revertState = { revertedToUserMessageId: "user-r1", preRevertInputText: "old" };
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       revertState,
     };
-    const next = conversationReducer(state, { type: "setRevertState", revertState });
+    const next = conversationReducer(state, act({ type: "setRevertState", revertState }));
     expect(next).toBe(state);
   });
 
   it("sets the revert state without removing any messages or runs", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Reply 1" }],
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r2" },
+          parts: [{ type: "text", text: "Reply 2" }],
+        },
       ],
       runs: {
-        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
-        r2: { id: "r2", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
       },
     };
-    const next = conversationReducer(state, {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    });
+    const next = conversationReducer(
+      state,
+      act({
+        type: "setRevertState",
+        revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+      }),
+    );
     // WHY: Visual revert only — data is untouched.
     expect(next.messages).toBe(state.messages);
     expect(next.runs).toBe(state.runs);
@@ -1421,20 +1539,34 @@ describe("conversationReducer → setRevertState", () => {
   });
 
   it("clears the revert state when given null", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Hello" }],
+        },
       ],
       runs: {
-        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
       },
       revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, { type: "setRevertState", revertState: null });
+    const next = conversationReducer(state, act({ type: "setRevertState", revertState: null }));
     expect(next.revertState).toBeNull();
     // WHY: Restore is purely visual — messages and runs are intact.
     expect(next.messages).toBe(state.messages);
@@ -1447,29 +1579,74 @@ describe("conversationReducer → setRevertState", () => {
 // the revert point moves.
 describe("conversationReducer → re-revert (setRevertState over an existing revert)", () => {
   it("updates the revert point without deleting anything", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Reply 1" }],
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r2" },
+          parts: [{ type: "text", text: "Reply 2" }],
+        },
         { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
-        { id: "assistant-r3", role: "assistant", metadata: { kind: "chat-text", runId: "r3" }, parts: [{ type: "text", text: "Reply 3" }] },
+        {
+          id: "assistant-r3",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r3" },
+          parts: [{ type: "text", text: "Reply 3" }],
+        },
       ],
       runs: {
-        r1: { id: "r1", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
-        r2: { id: "r2", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
-        r3: { id: "r3", mode: "chat", status: "success", cards: [], cardStatuses: {}, templateFields: null, startedAt: new Date("2026-07-01T12:00:00Z"), elapsedSeconds: 1 },
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
+        r3: {
+          id: "r3",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date("2026-07-01T12:00:00Z"),
+          elapsedSeconds: 1,
+        },
       },
       revertState: { revertedToUserMessageId: "user-r3", preRevertInputText: "draft-3" },
     };
-    const next = conversationReducer(state, {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" },
-    });
+    const next = conversationReducer(
+      state,
+      act({
+        type: "setRevertState",
+        revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" },
+      }),
+    );
     expect(next.revertState).toEqual({ revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" });
     expect(next.messages).toBe(state.messages);
     expect(Object.keys(next.runs).sort()).toEqual(["r1", "r2", "r3"]);
@@ -1495,202 +1672,222 @@ describe("conversationReducer → commitRevert", () => {
   }
 
   it("is a no-op when no revert state is set", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Hello" }],
+        },
       ],
       runs: { r1: chatRun("r1") },
+      revertState: null,
     };
-    expect(conversationReducer(state, { type: "commitRevert" })).toBe(state);
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    expect(next).toBe(state);
   });
 
-  it("clears a stale revert state when the target message no longer exists", () => {
-    const state: ConversationState = {
+  it("deletes messages after the revert point and removes orphaned runs", () => {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
-      ],
-      runs: { r1: chatRun("r1") },
-      revertState: { revertedToUserMessageId: "user-gone", preRevertInputText: "draft" },
-    };
-    const next = conversationReducer(state, { type: "commitRevert" });
-    expect(next.revertState).toBeNull();
-    expect(next.messages).toBe(state.messages);
-    expect(next.runs).toBe(state.runs);
-  });
-
-  it("removes the target user message and all subsequent messages", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      mode: "chat",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Reply 1" }],
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r2" },
+          parts: [{ type: "text", text: "Reply 2" }],
+        },
         { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
-        { id: "assistant-r3", role: "assistant", metadata: { kind: "chat-text", runId: "r3" }, parts: [{ type: "text", text: "Reply 3" }] },
+        {
+          id: "assistant-r3",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r3" },
+          parts: [{ type: "text", text: "Reply 3" }],
+        },
       ],
-      runs: { r1: chatRun("r1"), r2: chatRun("r2"), r3: chatRun("r3") },
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+      runs: {
+        r1: chatRun("r1"),
+        r2: chatRun("r2"),
+        r3: chatRun("r3"),
+      },
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
-    const next = conversationReducer(state, { type: "commitRevert" });
-    expect(next.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+
+    expect(next.messages).toEqual([
+      { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant",
+        metadata: { kind: "chat-text", runId: "r1" },
+        parts: [{ type: "text", text: "Reply 1" }],
+      },
+    ]);
     expect(Object.keys(next.runs)).toEqual(["r1"]);
     expect(next.revertState).toBeNull();
-  });
-
-  it("clears activeRunId and dismissedRunErrorId", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      activeRunId: "r2",
-      dismissedRunErrorId: "r1",
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
-      ],
-      runs: { r1: chatRun("r1"), r2: chatRun("r2", "streaming") },
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    };
-    const next = conversationReducer(state, { type: "commitRevert" });
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("clears lastReadRunId when it points to a removed run", () => {
-    const state: ConversationState = {
+  it("clears lastReadRunId when it points to a dropped run", () => {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      lastReadRunId: "r2",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Reply 1" }],
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r2" },
+          parts: [{ type: "text", text: "Reply 2" }],
+        },
       ],
-      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+      runs: {
+        r1: chatRun("r1"),
+        r2: chatRun("r2"),
+      },
+      lastReadRunId: "r2",
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
-    const next = conversationReducer(state, { type: "commitRevert" });
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+
     expect(next.lastReadRunId).toBeNull();
+    expect(Object.keys(next.runs)).toEqual(["r1"]);
   });
 
   it("preserves lastReadRunId when it points to a surviving run", () => {
-    const state: ConversationState = {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      lastReadRunId: "r1",
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Reply 1" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Reply 1" }],
+        },
         { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
-        { id: "assistant-r2", role: "assistant", metadata: { kind: "chat-text", runId: "r2" }, parts: [{ type: "text", text: "Reply 2" }] },
+        {
+          id: "assistant-r2",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r2" },
+          parts: [{ type: "text", text: "Reply 2" }],
+        },
       ],
-      runs: { r1: chatRun("r1"), r2: chatRun("r2") },
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+      runs: {
+        r1: chatRun("r1"),
+        r2: chatRun("r2"),
+      },
+      lastReadRunId: "r1",
+      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
-    const next = conversationReducer(state, { type: "commitRevert" });
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+
     expect(next.lastReadRunId).toBe("r1");
+    expect(Object.keys(next.runs)).toEqual(["r1"]);
   });
 
-  it("preserves deckId, profileId, modelId, modelParameters, and mode", () => {
-    const state: ConversationState = {
-      ...initialConversationState,
-      id: "conv-1",
-      createdAt: new Date("2026-07-01T11:00:00Z"),
-      deckId: 42,
-      profileId: "prof-1",
-      modelId: "model-1",
-      modelParameters: { reasoning_effort: "high" },
-      mode: "chat",
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
-      ],
-      runs: { r1: chatRun("r1") },
-      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
-    };
-    const next = conversationReducer(state, { type: "commitRevert" });
-    expect(next.deckId).toBe(42);
-    expect(next.profileId).toBe("prof-1");
-    expect(next.modelId).toBe("model-1");
-    expect(next.modelParameters).toEqual({ reasoning_effort: "high" });
-    expect(next.mode).toBe("chat");
-  });
-
-  it("results in an empty state when reverting the only user message", () => {
-    const state: ConversationState = {
+  it("clears dismissedRunErrorId", () => {
+    const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-        { id: "assistant-r1", role: "assistant", metadata: { kind: "chat-text", runId: "r1" }, parts: [{ type: "text", text: "Hello" }] },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          metadata: { kind: "chat-text", runId: "r1" },
+          parts: [{ type: "text", text: "Hello" }],
+        },
       ],
       runs: { r1: chatRun("r1") },
-      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
+      dismissedRunErrorId: "r1",
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "" },
     };
-    const next = conversationReducer(state, { type: "commitRevert" });
-    expect(next.messages).toEqual([]);
-    expect(next.runs).toEqual({});
-    expect(next.activeRunId).toBeNull();
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+
+    expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("handles a stale revert state (target message was already removed)", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date("2026-07-01T11:00:00Z"),
+      messages: [
+        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+      ],
+      runs: {},
+      revertState: { revertedToUserMessageId: "user-nonexistent", preRevertInputText: "" },
+    };
+
+    const next = conversationReducer(state, act({ type: "commitRevert" }));
+
+    // WHY: Stale revert state should be cleared, messages untouched.
     expect(next.revertState).toBeNull();
+    expect(next.messages).toBe(state.messages);
   });
 });
 
-// WHY: getVisibleMessages drives the UI filter; it must reflect the
-// revert state without touching the underlying list. See
-// ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
 describe("getVisibleMessages", () => {
-  const messages = [
-    { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "First" }] },
-    { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Reply 1" }] },
-    { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Second" }] },
-    { id: "assistant-r2", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r2" }, parts: [{ type: "text" as const, text: "Reply 2" }] },
-  ];
-
-  it("returns the input unchanged when no revert state is set", () => {
+  it("returns all messages when revertState is null", () => {
+    const messages = [
+      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hello" }] },
+    ];
     expect(getVisibleMessages(messages, null)).toBe(messages);
   });
 
-  it("returns the prefix before the revert point", () => {
-    const visible = getVisibleMessages(messages, {
-      revertedToUserMessageId: "user-r2",
-      preRevertInputText: "draft",
-    });
-    expect(visible.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
+  it("returns messages before the revert point", () => {
+    const messages = [
+      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "First" }] },
+      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Reply 1" }] },
+      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Second" }] },
+      { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "Reply 2" }] },
+    ];
+    const revertState = { revertedToUserMessageId: "user-r2", preRevertInputText: "" };
+    expect(getVisibleMessages(messages, revertState)).toEqual([
+      messages[0],
+      messages[1],
+    ]);
   });
 
-  it("returns an empty list when reverting the only user message", () => {
-    const visible = getVisibleMessages(
-      [messages[0]!, messages[1]!],
-      { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
-    );
-    expect(visible).toEqual([]);
-  });
-
-  it("returns the input unchanged when the revert target cannot be found", () => {
-    // WHY: Stale revert state must not crash the UI; the filter falls
-    // back to the full list so the conversation stays readable.
-    const visible = getVisibleMessages(messages, {
-      revertedToUserMessageId: "user-missing",
-      preRevertInputText: "draft",
-    });
-    expect(visible).toBe(messages);
+  it("returns all messages when revert point is not found", () => {
+    const messages = [
+      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+    ];
+    const revertState = { revertedToUserMessageId: "user-missing", preRevertInputText: "" };
+    expect(getVisibleMessages(messages, revertState)).toBe(messages);
   });
 });

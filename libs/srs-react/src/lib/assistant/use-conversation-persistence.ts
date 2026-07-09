@@ -21,8 +21,8 @@ import {
   coerceConversationState,
   initialConversationState,
   normalizeRestoredConversation,
-} from "./conversation-state";
-import type { ConversationState } from "./conversation-state";
+} from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-reducer";
 
 const STREAM_SAVE_THROTTLE_MS = 1000;
 const IDLE_SAVE_DEBOUNCE_MS = 250;
@@ -50,7 +50,7 @@ export function useConversationPersistence(
     enabled: !!conversationId,
   });
   const { mutationFn: setConversationFn } = setConversationMutation();
-  const setConversationAction = useSetAtom(assistantConversationStateAtom);
+  const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
   const setCurrentConversationId = useSetAtom(setCurrentConversationIdAtom);
   const upsertConversation = useSetAtom(upsertConversationAtom);
@@ -74,7 +74,7 @@ export function useConversationPersistence(
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
       if (savedAt) {
-        setConversationAction((prev) => {
+        setConversationReducerAction((prev) => {
           if (prev.id !== row.id) return prev;
           const prevAt = prev.updatedAt instanceof Date ? prev.updatedAt : null;
           if (prevAt && prevAt.getTime() >= savedAt.getTime()) return prev;
@@ -209,7 +209,7 @@ export function useConversationPersistence(
         }
       } else {
         const stored = readLastUsed();
-        const fresh: ConversationState = {
+        const fresh: ConversationReducerState = {
           ...initialConversationState,
           id: conversationId,
           createdAt: new Date(),

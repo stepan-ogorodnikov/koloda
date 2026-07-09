@@ -5,7 +5,7 @@ import type { TemplateFields } from "@koloda/srs";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect } from "react";
 import { assistantCancelFunctionsAtom } from "./assistant-conversation-atoms";
-import type { ConversationAction, ConversationState } from "./conversation-state";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useConversationRuns } from "./use-conversation-runs";
@@ -15,9 +15,9 @@ import { usePendingRunRefs } from "./use-pending-run-refs";
 export type UseAssistantStreamSetupOptions = {
   streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
-  dispatchAction: (action: ConversationAction) => void;
+  dispatchAction: (action: ConversationReducerAction) => void;
   dispatchFor: DispatchForConversation;
-  readState: () => ConversationState;
+  readState: () => ConversationReducerState;
   bumpPendingSave: () => void;
 };
 

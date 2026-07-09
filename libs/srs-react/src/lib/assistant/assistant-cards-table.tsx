@@ -3,7 +3,7 @@ import type { Deck, Template } from "@koloda/srs";
 import { Button, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { CardStatus } from "./conversation-state";
+import type { CardStatus } from "./conversation-reducer";
 import { useAssistantCardsTable } from "./use-assistant-cards-table";
 
 type AssistantCardsTableProps = {

@@ -10,16 +10,16 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationAction, ConversationState } from "./conversation-state";
-import { initialConversationState } from "./conversation-state";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useConversationRuns } from "./use-conversation-runs";
 
-type Dispatch = (action: ConversationAction) => void;
-type DispatchFor = (id: string, action: ConversationAction) => void;
-type GetState = () => ConversationState;
+type Dispatch = (action: ConversationReducerAction) => void;
+type DispatchFor = (id: string, action: ConversationReducerAction) => void;
+type GetState = () => ConversationReducerState;
 
-function makeConversation(id: string, overrides: Partial<ConversationState> = {}): ConversationState {
+function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {
     ...initialConversationState,
     id,
@@ -30,8 +30,8 @@ function makeConversation(id: string, overrides: Partial<ConversationState> = {}
 
 function createHarness() {
   const store = createStore();
-  const dispatchToMap: Array<{ id: string; action: ConversationAction }> = [];
-  const dispatchToCurrent: Array<ConversationAction> = [];
+  const dispatchToMap: Array<{ id: string; action: ConversationReducerAction }> = [];
+  const dispatchToCurrent: Array<ConversationReducerAction> = [];
 
   const dispatch: Dispatch = (action) => {
     dispatchToCurrent.push(action);
@@ -54,18 +54,16 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    harness.store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-1",
       mode: "chat",
       request: {},
-    });
-    harness.store.set(assistantConversationStateAtom, {
-      type: "addAssistantMessage",
+    }]);
+    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
       runId: "run-1",
       kind: "chat-text",
       text: "",
-    });
+    }]);
 
     // Start a chat run on A, then switch the current view to B mid-stream.
     let streamStarted = false;
@@ -116,7 +114,7 @@ describe("useConversationRuns", () => {
     // Every updateAssistantText action went through dispatchFor (per-id),
     // not dispatch (current), so B is unaffected.
     const updateActions = harness.dispatchToMap
-      .filter((entry) => entry.action.type === "updateAssistantText")
+      .filter((entry) => entry.action[0] === "updateAssistantText")
       .map((entry) => entry);
     expect(updateActions.length).toBeGreaterThan(0);
     for (const entry of updateActions) {
@@ -124,7 +122,7 @@ describe("useConversationRuns", () => {
     }
 
     // completeRun also went through dispatchFor with id "A".
-    const completeActions = harness.dispatchToMap.filter((entry) => entry.action.type === "completeRun");
+    const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
 
@@ -146,18 +144,16 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    harness.store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "cards",
       request: {},
-    });
-    harness.store.set(assistantConversationStateAtom, {
-      type: "addAssistantMessage",
+    }]);
+    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
       runId: "run-A",
       kind: "generated-cards",
       text: "",
-    });
+    }]);
 
     // Switch the current view to B before the generator runs.
     harness.store.set(setCurrentConversationIdAtom, "B");
@@ -190,7 +186,7 @@ describe("useConversationRuns", () => {
     });
 
     // addCard went to A, not B.
-    const addCardActions = harness.dispatchToMap.filter((entry) => entry.action.type === "addCard");
+    const addCardActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "addCard");
     expect(addCardActions.length).toBe(2);
     for (const entry of addCardActions) {
       expect(entry.id).toBe("A");
@@ -209,18 +205,16 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    harness.store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "chat",
       request: {},
-    });
-    harness.store.set(assistantConversationStateAtom, {
-      type: "addAssistantMessage",
+    }]);
+    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
       runId: "run-A",
       kind: "chat-text",
       text: "",
-    });
+    }]);
     harness.store.set(setCurrentConversationIdAtom, "B");
 
     const streamChat = vi.fn(async (
@@ -247,7 +241,7 @@ describe("useConversationRuns", () => {
     });
 
     // cancelRun landed on A, not B.
-    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action.type === "cancelRun");
+    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
     expect(cancelActions).toHaveLength(1);
     expect(cancelActions[0].id).toBe("A");
   });
@@ -263,12 +257,11 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    harness.store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "cards",
       request: {},
-    });
+    }]);
 
     const bumpPendingSave = vi.fn();
     const generate = vi.fn(async (
@@ -295,7 +288,7 @@ describe("useConversationRuns", () => {
     });
 
     // The completion was recorded on the run.
-    const completeActions = harness.dispatchToMap.filter((entry) => entry.action.type === "completeRun");
+    const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
 
@@ -311,12 +304,11 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    harness.store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "cards",
       request: {},
-    });
+    }]);
 
     const bumpPendingSave = vi.fn();
     const generate = vi.fn(async () => "aborted" as StreamResult);
@@ -336,7 +328,7 @@ describe("useConversationRuns", () => {
       await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
     });
 
-    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action.type === "cancelRun");
+    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
     expect(cancelActions).toHaveLength(1);
     expect(cancelActions[0].id).toBe("A");
 

@@ -18,8 +18,8 @@ import {
   unreadConversationIdsAtom,
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationAction, ConversationState, GenerationRun } from "./conversation-state";
-import { initialConversationState } from "./conversation-state";
+import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-reducer";
 
 function makeRun(id: string, status: GenerationRun["status"]): GenerationRun {
   return {
@@ -34,7 +34,7 @@ function makeRun(id: string, status: GenerationRun["status"]): GenerationRun {
   };
 }
 
-function makeConversation(id: string, overrides: Partial<ConversationState> = {}): ConversationState {
+function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {
     ...initialConversationState,
     id,
@@ -51,7 +51,7 @@ function makeConversation(id: string, overrides: Partial<ConversationState> = {}
 function dispatchTo(
   store: ReturnType<typeof createStore>,
   id: string,
-  action: ConversationAction | ((prev: ConversationState) => ConversationState),
+  action: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ) {
   dispatchToConversationOnStore(store, id, action);
 }
@@ -70,11 +70,10 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // Dispatch via the writable atom (targets current conversation)
-    store.set(assistantConversationStateAtom, {
-      type: "addUserMessage",
+    store.set(assistantConversationStateAtom, ["addUserMessage", {
       runId: "r1",
       text: "Hello from A",
-    });
+    }]);
 
     // The derived atom should reflect the change
     const state = store.get(assistantConversationStateAtom);
@@ -92,19 +91,17 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Add a message to A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, {
-      type: "addUserMessage",
+    store.set(assistantConversationStateAtom, ["addUserMessage", {
       runId: "r1",
       text: "Message in A",
-    });
+    }]);
 
     // Switch to B and add a message
     store.set(setCurrentConversationIdAtom, "B");
-    store.set(assistantConversationStateAtom, {
-      type: "addUserMessage",
+    store.set(assistantConversationStateAtom, ["addUserMessage", {
       runId: "r2",
       text: "Message in B",
-    });
+    }]);
 
     // Switch back to A — its message should still be there
     store.set(setCurrentConversationIdAtom, "A");
@@ -121,28 +118,25 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "chat",
       request: {},
-    });
-    store.set(assistantConversationStateAtom, {
-      type: "addAssistantMessage",
+    }]);
+    store.set(assistantConversationStateAtom, ["addAssistantMessage", {
       runId: "run-A",
       kind: "chat-text",
       text: "",
-    });
+    }]);
 
     // Switch to B
     store.set(setCurrentConversationIdAtom, "B");
 
     // Dispatch a text update to A (simulating a background stream chunk)
-    dispatchTo(store, "A", {
-      type: "updateAssistantText",
+    dispatchTo(store, "A", ["updateAssistantText", {
       runId: "run-A",
       text: "Hello from background",
-    });
+    }]);
 
     // B should be unaffected — no messages, no active run
     const stateB = store.get(assistantConversationStateAtom);
@@ -158,18 +152,17 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-A",
       mode: "chat",
       request: {},
-    });
+    }]);
 
     // Switch to B
     store.set(setCurrentConversationIdAtom, "B");
 
     // Complete the run on A via targeted dispatch
-    dispatchTo(store, "A", { type: "completeRun", runId: "run-A" });
+    dispatchTo(store, "A", ["completeRun", { runId: "run-A" }]);
 
     // A should show success — read it by switching back
     store.set(setCurrentConversationIdAtom, "A");
@@ -184,11 +177,10 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // Dispatch to a non-existent conversation — should be a no-op
-    dispatchTo(store, "UNKNOWN", {
-      type: "addUserMessage",
+    dispatchTo(store, "UNKNOWN", ["addUserMessage", {
       runId: "r1",
       text: "This should not appear",
-    });
+    }]);
 
     // A should be unchanged
     const stateA = store.get(assistantConversationStateAtom);
@@ -251,13 +243,12 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // No conversation has been inserted or selected. The writable form
     // must accept a newConversation action and route it to the new id in
     // the map, then make that id current.
-    store.set(assistantConversationStateAtom, {
-      type: "newConversation",
+    store.set(assistantConversationStateAtom, ["newConversation", {
       id: "cold-start",
       createdAt: new Date(1),
       profileId: "p1",
       modelId: "m1",
-    });
+    }]);
 
     // The store now has the new conversation.
     const state = store.get(assistantConversationStateAtom);
@@ -270,20 +261,18 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
   it("subsequent dispatches after a cold-start newConversation target the new id", () => {
     const store = createStore();
-    store.set(assistantConversationStateAtom, {
-      type: "newConversation",
+    store.set(assistantConversationStateAtom, ["newConversation", {
       id: "cold-start",
       createdAt: new Date(1),
-    });
+    }]);
 
     // The writable form should now accept regular actions targeting the
     // current (newly-created) conversation. This is the path that
     // ensureConversationId → handleGenerate relies on.
-    store.set(assistantConversationStateAtom, {
-      type: "addUserMessage",
+    store.set(assistantConversationStateAtom, ["addUserMessage", {
       runId: "r1",
       text: "Hello",
-    });
+    }]);
 
     const state = store.get(assistantConversationStateAtom);
     expect(state.id).toBe("cold-start");
@@ -305,11 +294,10 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // Start a new conversation. The old A entry must be untouched.
-    store.set(assistantConversationStateAtom, {
-      type: "newConversation",
+    store.set(assistantConversationStateAtom, ["newConversation", {
       id: "B",
       createdAt: new Date(2),
-    });
+    }]);
 
     // The new current is B with no messages.
     const stateB = store.get(assistantConversationStateAtom);
@@ -353,12 +341,11 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     expect(store.get(assistantActiveRunIdAtom)).toBeNull();
 
     // Start a run on B
-    store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    store.set(assistantConversationStateAtom, ["startRun", {
       runId: "run-B",
       mode: "chat",
       request: {},
-    });
+    }]);
     expect(store.get(assistantActiveRunIdAtom)).toBe("run-B");
 
     // Switch back to A — activeRunId should be null for A
@@ -431,10 +418,10 @@ describe("setAssistantDeckAtom lock check", () => {
    * "what counts as locked" rule lives in one place: `assistantIsLockedAtom`.
    */
   function lockConversationWithGeneratedCards(store: ReturnType<typeof createStore>, id: string) {
-    dispatchTo(store, id, { type: "addUserMessage", runId: "r1", text: "Hi" });
-    dispatchTo(store, id, { type: "startRun", runId: "r1", mode: "cards", request: {} });
-    dispatchTo(store, id, { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" });
-    dispatchTo(store, id, { type: "completeRun", runId: "r1" });
+    dispatchTo(store, id, ["addUserMessage", { runId: "r1", text: "Hi" }]);
+    dispatchTo(store, id, ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, id, ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
+    dispatchTo(store, id, ["completeRun", { runId: "r1" }]);
   }
 
   it("refuses to change the deck when a generated-cards run has completed successfully", () => {
@@ -469,8 +456,8 @@ describe("setAssistantDeckAtom lock check", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // User message + a started but not-yet-completed run does not lock.
-    dispatchTo(store, "A", { type: "addUserMessage", runId: "r1", text: "Hi" });
-    dispatchTo(store, "A", { type: "startRun", runId: "r1", mode: "cards", request: {} });
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
     expect(store.get(assistantIsLockedAtom)).toBe(false);
 
     store.set(setAssistantDeckAtom, 9);
@@ -548,18 +535,16 @@ describe("unreadConversationIdsAtom", () => {
     // this, navigating away would surface the brand-new conversation
     // as unread.
     const store = createStore();
-    store.set(assistantConversationStateAtom, {
-      type: "newConversation",
+    store.set(assistantConversationStateAtom, ["newConversation", {
       id: "A",
       createdAt: new Date(1),
-    });
-    store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    }]);
+    store.set(assistantConversationStateAtom, ["startRun", {
       runId: "r1",
       mode: "chat",
       request: {},
-    });
-    store.set(assistantConversationStateAtom, { type: "completeRun", runId: "r1" });
+    }]);
+    store.set(assistantConversationStateAtom, ["completeRun", { runId: "r1" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
@@ -576,13 +561,12 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    store.set(assistantConversationStateAtom, {
-      type: "startRun",
+    store.set(assistantConversationStateAtom, ["startRun", {
       runId: "r2",
       mode: "chat",
       request: {},
-    });
-    store.set(assistantConversationStateAtom, { type: "completeRun", runId: "r2" });
+    }]);
+    store.set(assistantConversationStateAtom, ["completeRun", { runId: "r2" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
@@ -604,8 +588,8 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "B");
 
-    dispatchTo(store, "A", { type: "startRun", runId: "r2", mode: "chat", request: {} });
-    dispatchTo(store, "A", { type: "completeRun", runId: "r2" });
+    dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
@@ -616,13 +600,13 @@ describe("unreadConversationIdsAtom", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", { type: "startRun", runId: "r1", mode: "chat", request: {} });
-    dispatchTo(store, "A", { type: "failRun", runId: "r1" });
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["failRun", { runId: "r1" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 
-    dispatchTo(store, "A", { type: "startRun", runId: "r2", mode: "chat", request: {} });
-    dispatchTo(store, "A", { type: "cancelRun", runId: "r2" });
+    dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["cancelRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
@@ -639,13 +623,12 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    store.set(assistantConversationStateAtom, {
-      type: "restartRun",
+    store.set(assistantConversationStateAtom, ["restartRun", {
       runId: "r1",
       mode: "chat",
       request: {},
       templateFields: null,
-    });
+    }]);
 
     expect(store.get(conversationsAtom)["A"].runs["r1"].status).toBe("streaming");
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
@@ -756,8 +739,8 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     store.set(upsertConversationAtom, makeConversation("B", { runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "B");
 
-    dispatchTo(store, "A", { type: "startRun", runId: "r2", mode: "chat", request: {} });
-    dispatchTo(store, "A", { type: "completeRun", runId: "r2" });
+    dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
 
     store.set(setCurrentConversationIdAtom, "A");
@@ -787,8 +770,8 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", { type: "startRun", runId: "r2", mode: "chat", request: {} });
-    dispatchTo(store, "A", { type: "completeRun", runId: "r2" });
+    dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 
@@ -824,7 +807,7 @@ describe("cloneConversationAtom", () => {
 
   it("preserves the source conversation unchanged", () => {
     const store = createStore();
-    const source: ConversationState = makeConversation("A", {
+    const source: ConversationReducerState = makeConversation("A", {
       messages: [
         { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
         { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Hi there" }] },
@@ -957,10 +940,10 @@ describe("cloneConversationAtom", () => {
     // inherit the lock so the user cannot retarget to a different deck.
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    dispatchTo(store, "A", { type: "addUserMessage", runId: "r1", text: "Hi" });
-    dispatchTo(store, "A", { type: "startRun", runId: "r1", mode: "cards", request: {} });
-    dispatchTo(store, "A", { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" });
-    dispatchTo(store, "A", { type: "completeRun", runId: "r1" });
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
+    dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
     store.set(setCurrentConversationIdAtom, "A");
 
     expect(store.get(assistantIsLockedAtom)).toBe(true);
@@ -1207,9 +1190,19 @@ describe("revert state in-memory lifecycle", () => {
     const store = createStore();
     const messages = [
       { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r1" },
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
       { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
-      { id: "assistant-r2", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r2" }, parts: [{ type: "text" as const, text: "Bye!" }] },
+      {
+        id: "assistant-r2",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r2" },
+        parts: [{ type: "text" as const, text: "Bye!" }],
+      },
     ];
     store.set(
       upsertConversationAtom,
@@ -1224,7 +1217,7 @@ describe("revert state in-memory lifecycle", () => {
     // We still want to confirm that a setRevertState dispatch does not
     // stamp it with a fresh date, so we make a content-changing dispatch
     // first to seed a value, then verify revert leaves it alone.
-    dispatchTo(store, "A", { type: "addUserMessage", runId: "r99", text: "Seed" });
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r99", text: "Seed" }]);
     const seeded = store.get(assistantConversationStateAtom);
     expect(seeded.updatedAt).not.toBeNull();
     const seededAt = seeded.updatedAt!.getTime();
@@ -1235,10 +1228,7 @@ describe("revert state in-memory lifecycle", () => {
       // spin until the clock advances past `beforeDispatch`.
     }
 
-    dispatchTo(store, "A", {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    });
+    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" }]);
 
     const after = store.get(assistantConversationStateAtom);
     expect(after.revertState).toEqual({
@@ -1252,9 +1242,19 @@ describe("revert state in-memory lifecycle", () => {
     const store = createStore();
     const messages = [
       { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r1" },
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
       { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
-      { id: "assistant-r2", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r2" }, parts: [{ type: "text" as const, text: "Bye!" }] },
+      {
+        id: "assistant-r2",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r2" },
+        parts: [{ type: "text" as const, text: "Bye!" }],
+      },
     ];
     store.set(
       upsertConversationAtom,
@@ -1269,10 +1269,7 @@ describe("revert state in-memory lifecycle", () => {
       "assistant-r2",
     ]);
 
-    dispatchTo(store, "A", {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    });
+    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" }]);
 
     expect(store.get(assistantMessagesAtom).map((m) => m.id)).toEqual([
       "user-r1",
@@ -1293,19 +1290,21 @@ describe("revert state in-memory lifecycle", () => {
     const store = createStore();
     const messages = [
       { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r1" },
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
       { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
     ];
     store.set(upsertConversationAtom, makeConversation("A", { messages, runs: { r1: chatRun("r1") } }));
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    });
+    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" }]);
     expect(store.get(assistantMessagesAtom)).toEqual([messages[0], messages[1]]);
 
-    dispatchTo(store, "A", { type: "setRevertState", revertState: null });
+    dispatchTo(store, "A", ["setRevertState", null]);
     expect(store.get(assistantMessagesAtom)).toBe(messages);
     expect(store.get(assistantConversationStateAtom).messages).toBe(messages);
   });
@@ -1314,9 +1313,19 @@ describe("revert state in-memory lifecycle", () => {
     const store = createStore();
     const messages = [
       { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r1" }, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r1" },
+        parts: [{ type: "text" as const, text: "Hello" }],
+      },
       { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
-      { id: "assistant-r2", role: "assistant" as const, metadata: { kind: "chat-text" as const, runId: "r2" }, parts: [{ type: "text" as const, text: "Bye!" }] },
+      {
+        id: "assistant-r2",
+        role: "assistant" as const,
+        metadata: { kind: "chat-text" as const, runId: "r2" },
+        parts: [{ type: "text" as const, text: "Bye!" }],
+      },
     ];
     store.set(
       upsertConversationAtom,
@@ -1324,13 +1333,10 @@ describe("revert state in-memory lifecycle", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", {
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-    });
+    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" }]);
     expect(store.get(assistantMessagesAtom).map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);
 
-    dispatchTo(store, "A", { type: "commitRevert" });
+    dispatchTo(store, "A", ["commitRevert"]);
 
     const after = store.get(assistantConversationStateAtom);
     expect(after.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1"]);

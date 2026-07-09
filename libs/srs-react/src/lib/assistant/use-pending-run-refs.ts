@@ -46,7 +46,7 @@ export function usePendingRunRefs(dispatchFor: DispatchForConversation): UsePend
     const entry = ref.current;
     if (!entry) return;
     ref.current = null;
-    dispatchFor(entry.id, { type: "runFailed", runId: entry.runId, error: { message: error.message } });
+    dispatchFor(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
   }, [dispatchFor]);
 
   const onComplete = useCallback((mode: AIChatMode, runId: string) => {

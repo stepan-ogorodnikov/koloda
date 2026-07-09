@@ -105,7 +105,7 @@ export function AssistantChat(
     scroll,
   });
 
-  const setConversationState = useSetAtom(assistantConversationStateAtom);
+  const setConversationReducerState = useSetAtom(assistantConversationStateAtom);
 
   const handleRevert = useCallback((userMessageId: string) => {
     const state = readState();
@@ -119,10 +119,10 @@ export function AssistantChat(
     // the prompt input. Any active stream is canceled because its run
     // will be among the hidden messages and must not keep streaming.
     handleCancel();
-    setConversationState({
-      type: "setRevertState",
-      revertState: { revertedToUserMessageId: userMessageId, preRevertInputText: inputValue },
-    });
+    setConversationReducerState([
+      "setRevertState",
+      { revertedToUserMessageId: userMessageId, preRevertInputText: inputValue },
+    ]);
     // WHY: Mirror the mode of the target message so the prompt input
     // lines up with what the run was sent in. The run record is the
     // source of truth; if it was removed on restore, the assistant
@@ -144,17 +144,17 @@ export function AssistantChat(
       }
     }
     if (targetMode && targetMode !== state.mode) {
-      setConversationState({ type: "setMode", mode: targetMode });
+      setConversationReducerState(["setMode", { mode: targetMode }]);
     }
     setInputValue(promptText);
-  }, [readState, handleCancel, setConversationState, inputValue, setInputValue]);
+  }, [readState, handleCancel, setConversationReducerState, inputValue, setInputValue]);
 
   const handleRestore = useCallback(() => {
     const state = readState();
     if (!state.revertState) return;
     setInputValue(state.revertState.preRevertInputText);
-    setConversationState({ type: "setRevertState", revertState: null });
-  }, [readState, setConversationState, setInputValue]);
+    setConversationReducerState(["setRevertState", null]);
+  }, [readState, setConversationReducerState, setInputValue]);
 
   const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,

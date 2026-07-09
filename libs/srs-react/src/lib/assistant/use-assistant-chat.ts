@@ -15,7 +15,7 @@ import {
   setAssistantAIProfileAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationAction, ConversationState } from "./conversation-state";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { useAssistantConfig } from "./use-assistant-config";
 import { useAssistantConfiguration } from "./use-assistant-configuration";
 import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
@@ -54,13 +54,13 @@ export type UseAssistantChatReturn = {
   handleRetry: (runId: string) => Promise<void>;
   retryLoad: () => Promise<unknown>;
   setMode: (mode: AIChatMode) => void;
-  readState: () => ConversationState;
+  readState: () => ConversationReducerState;
 };
 
 export function useAssistantChat(
   { conversationId, onConversationIdChange }: UseAssistantChatOptions,
 ): UseAssistantChatReturn {
-  const setConversationAction = useSetAtom(assistantConversationStateAtom);
+  const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
   const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
   const newConversation = useSetAtom(newConversationAtom);
@@ -100,12 +100,12 @@ export function useAssistantChat(
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
   const store = useStore();
 
-  const dispatchAction = useCallback((action: ConversationAction) => {
-    setConversationAction(action);
+  const dispatchAction = useCallback((action: ConversationReducerAction) => {
+    setConversationReducerAction(action);
     bumpPendingSave();
-  }, [setConversationAction, bumpPendingSave]);
+  }, [setConversationReducerAction, bumpPendingSave]);
 
-  const dispatchFor = useCallback((id: string, action: ConversationAction) => {
+  const dispatchFor = useCallback((id: string, action: ConversationReducerAction) => {
     dispatchToConversationOnStore(store, id, action);
   }, [store]);
 
@@ -120,7 +120,7 @@ export function useAssistantChat(
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) dispatchAction({ type: "cancelRun", runId: currentActiveRunId });
+    if (currentActiveRunId) dispatchAction(["cancelRun", { runId: currentActiveRunId }]);
     cancel();
   }, [dispatchAction, cancel, readState]);
 
@@ -143,12 +143,10 @@ export function useAssistantChat(
       const id = generateUUID();
       localConversationIdRef.current = id;
       const stored = readLastUsed();
-      dispatchAction({
-        type: "newConversation",
-        id,
-        createdAt: new Date(),
-        ...stored,
-      });
+      dispatchAction([
+        "newConversation",
+        { ...stored, id, createdAt: new Date() },
+      ]);
       onConversationIdChange(id);
     }
     return localConversationIdRef.current;

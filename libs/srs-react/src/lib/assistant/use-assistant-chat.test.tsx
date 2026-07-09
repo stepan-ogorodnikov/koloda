@@ -15,8 +15,8 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationState } from "./conversation-state";
-import { initialConversationState } from "./conversation-state";
+import type { ConversationReducerState } from "./conversation-reducer";
+import { initialConversationState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useAssistantChat } from "./use-assistant-chat";
 
@@ -47,7 +47,7 @@ const wire = vi.hoisted(() => {
     onChatError: null as null | ((error: Error) => void),
     onCardError: null as null | ((error: Error) => void),
     // Save mutation spy. The `state` payload is the full serialized
-    // ConversationState — tests that need to assert on the run status
+    // ConversationReducerState — tests that need to assert on the run status
     // (e.g. the pagehide-cancellation test) inspect this field.
     setConversationCalls: [] as Array<{
       id: string;
@@ -265,7 +265,7 @@ function buildQueries(): Queries {
   };
 }
 
-function makeConversation(id: string, overrides: Partial<ConversationState> = {}): ConversationState {
+function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {
     ...initialConversationState,
     id,

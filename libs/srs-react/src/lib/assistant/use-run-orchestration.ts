@@ -8,8 +8,8 @@ import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
-import { getVisibleMessages } from "./conversation-state";
-import type { ConversationAction, ConversationState } from "./conversation-state";
+import { getVisibleMessages } from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
 
@@ -58,8 +58,8 @@ function buildStreamRequest(
 
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
-  readState: () => ConversationState;
-  dispatchAction: (action: ConversationAction) => void;
+  readState: () => ConversationReducerState;
+  dispatchAction: (action: ConversationReducerAction) => void;
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
@@ -130,7 +130,7 @@ export function useRunOrchestration({
     for (let i = ids.length - 1; i >= 0; i--) {
       const run = state.runs[ids[i]];
       if (run.status === "failed") {
-        dispatchAction({ type: "dismissRunError", runId: run.id });
+        dispatchAction(["dismissRunError", { runId: run.id }]);
         return;
       }
     }
@@ -147,7 +147,7 @@ export function useRunOrchestration({
     // starts a fresh run. Re-read the state afterwards so the rest of
     // this handler sees the post-commit shape.
     if (currentState.revertState) {
-      dispatchAction({ type: "commitRevert" });
+      dispatchAction(["commitRevert"]);
       currentState = readState();
     }
 
@@ -170,34 +170,40 @@ export function useRunOrchestration({
 
     const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
 
-    dispatchAction({ type: "addUserMessage", runId, text: promptText });
+    dispatchAction(["addUserMessage", { runId, text: promptText }]);
 
     if (result.kind === "chat") {
-      dispatchAction({
-        type: "startRun",
-        runId,
-        mode: "chat",
-        request: result.request,
-        templateFields: null,
-        modelName: cfg.modelName,
-      });
-      dispatchAction({ type: "addAssistantMessage", runId, kind: "chat-text", text: "" });
+      dispatchAction([
+        "startRun",
+        {
+          runId,
+          mode: "chat",
+          request: result.request,
+          templateFields: null,
+          modelName: cfg.modelName,
+        },
+      ]);
+      dispatchAction(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
       await executeChatRun(activeConversationId, runId, result.request);
     } else {
-      dispatchAction({
-        type: "startRun",
-        runId,
-        mode: "cards",
-        request: result.request,
-        templateFields: result.templateFields,
-        modelName: cfg.modelName,
-      });
-      dispatchAction({
-        type: "addAssistantMessage",
-        runId,
-        kind: "generated-cards",
-        text: cfg._(msg`assistant.chat.message.status.pending`),
-      });
+      dispatchAction([
+        "startRun",
+        {
+          runId,
+          mode: "cards",
+          request: result.request,
+          templateFields: result.templateFields,
+          modelName: cfg.modelName,
+        },
+      ]);
+      dispatchAction([
+        "addAssistantMessage",
+        {
+          runId,
+          kind: "generated-cards",
+          text: cfg._(msg`assistant.chat.message.status.pending`),
+        },
+      ]);
       await executeGenerateRun(activeConversationId, runId, result.request);
     }
   }, [

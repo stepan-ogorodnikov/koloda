@@ -5,8 +5,8 @@ import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
 import type { Store } from "jotai/vanilla/store";
 import { getAssistantMetadata } from "./assistant-messages";
-import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-state";
-import type { CardStatus, ConversationAction, ConversationState } from "./conversation-state";
+import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
+import type { CardStatus, ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 export type SaveStatus = {
   conversationId: string | null;
@@ -14,7 +14,7 @@ export type SaveStatus = {
   isDismissed: boolean;
 };
 
-export type ConversationStore = Readonly<Record<string, ConversationState>>;
+export type ConversationStore = Readonly<Record<string, ConversationReducerState>>;
 
 export const conversationsAtom = atom<ConversationStore>({});
 const currentConversationIdAtom = atom<string | null>(null);
@@ -24,14 +24,14 @@ const currentConversationIdAtom = atom<string | null>(null);
 // must be preserved. The writable atom handles `newConversation` as a
 // special case before reaching here.
 function applyConversationUpdate(
-  prev: ConversationState,
-  update: ConversationAction | ((prev: ConversationState) => ConversationState),
-): ConversationState {
+  prev: ConversationReducerState,
+  update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
+): ConversationReducerState {
   const next = typeof update === "function"
-    ? (update as (p: ConversationState) => ConversationState)(prev)
+    ? (update as (p: ConversationReducerState) => ConversationReducerState)(prev)
     : conversationReducer(prev, update);
   if (next === prev) return prev;
-  if (typeof update !== "function" && (update.type === "markRead" || update.type === "setRevertState")) {
+  if (typeof update !== "function" && (update[0] === "markRead" || update[0] === "setRevertState")) {
     return next;
   }
 
@@ -44,17 +44,17 @@ export const assistantConversationStateAtom = atom(
     if (!id) return initialConversationState;
     return get(conversationsAtom)[id] ?? initialConversationState;
   },
-  (get, set, update: ConversationAction | ((prev: ConversationState) => ConversationState)) => {
+  (get, set, update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState)) => {
     // WHY: newConversation carries its own target id. We must insert the
     // fresh entry and switch the current id even on cold start (when
     // currentConversationIdAtom is null). The reducer sets updatedAt: null
     // for fresh conversations, which is what we want — we do NOT stamp it.
-    if (typeof update !== "function" && update.type === "newConversation") {
+    if (typeof update !== "function" && update[0] === "newConversation") {
       const store = get(conversationsAtom);
-      const next = conversationReducer(store[update.id] ?? initialConversationState, update);
-      if (next === (store[update.id] ?? initialConversationState)) return;
-      set(conversationsAtom, { ...store, [update.id]: next });
-      set(currentConversationIdAtom, update.id);
+      const next = conversationReducer(store[update[1].id] ?? initialConversationState, update);
+      if (next === (store[update[1].id] ?? initialConversationState)) return;
+      set(conversationsAtom, { ...store, [update[1].id]: next });
+      set(currentConversationIdAtom, update[1].id);
       return;
     }
 
@@ -73,7 +73,7 @@ export const assistantConversationStateAtom = atom(
 // this works for both the explicit `completeRun` / `failRun` /
 // `runFailed` / `cancelRun` actions and for function-form updaters
 // that mutate the run status directly.
-function detectRunJustFinished(prev: ConversationState, next: ConversationState) {
+function detectRunJustFinished(prev: ConversationReducerState, next: ConversationReducerState) {
   const prevIds = Object.keys(prev.runs);
   const nextIds = Object.keys(next.runs);
   if (prevIds.length === 0 || nextIds.length === 0) return null;
@@ -91,7 +91,7 @@ function detectRunJustFinished(prev: ConversationState, next: ConversationState)
 
 export function dispatchToConversation(
   id: string,
-  update: ConversationAction | ((prev: ConversationState) => ConversationState),
+  update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ): (get: Getter, set: Setter) => void {
   return (get, set) => {
     const store = get(conversationsAtom);
@@ -117,7 +117,7 @@ export function dispatchToConversation(
 export function dispatchToConversationOnStore(
   store: Store,
   id: string,
-  action: ConversationAction | ((prev: ConversationState) => ConversationState),
+  action: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ): void {
   dispatchToConversation(id, action)(store.get, store.set);
 }
@@ -246,7 +246,7 @@ export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | n
       const runIds = Object.keys(state.runs);
       const latestRunId = runIds[runIds.length - 1] ?? null;
       if (latestRunId && latestRunId !== state.lastReadRunId) {
-        dispatchToConversation(id, { type: "markRead", runId: latestRunId })(get, set);
+        dispatchToConversation(id, ["markRead", { runId: latestRunId }])(get, set);
         set(bumpPendingSaveAtom);
       }
     }
@@ -271,7 +271,7 @@ export const unreadConversationIdsAtom = atom((get) => {
   return unread;
 });
 
-export const upsertConversationAtom = atom(null, (_get, set, state: ConversationState) => {
+export const upsertConversationAtom = atom(null, (_get, set, state: ConversationReducerState) => {
   set(conversationsAtom, (prev) => ({ ...prev, [state.id]: state }));
 });
 
@@ -300,13 +300,13 @@ export const removeConversationAtom = atom(null, (_get, set, id: string) => {
 });
 
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
-  set(assistantConversationStateAtom, { type: "setMode", mode });
+  set(assistantConversationStateAtom, ["setMode", { mode }]);
   set(bumpPendingSaveAtom);
 });
 
 export const setAssistantDeckAtom = atom(null, (get, set, deckId: number | null) => {
   if (get(assistantIsLockedAtom)) return;
-  set(assistantConversationStateAtom, { type: "setDeck", deckId });
+  set(assistantConversationStateAtom, ["setDeck", { deckId }]);
   set(bumpPendingSaveAtom);
 });
 
@@ -317,7 +317,7 @@ type SetAssistantAIProfileAtomPayload = {
 };
 
 export const setAssistantAIProfileAtom = atom(null, (_get, set, payload: SetAssistantAIProfileAtomPayload) => {
-  set(assistantConversationStateAtom, { type: "setAIProfile", ...payload });
+  set(assistantConversationStateAtom, ["setAIProfile", payload]);
   set(bumpPendingSaveAtom);
 });
 
@@ -328,7 +328,7 @@ export const setAssistantAIModelAtom = atom(
     set,
     payload: { modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> },
   ) => {
-    set(assistantConversationStateAtom, { type: "setAIModel", ...payload });
+    set(assistantConversationStateAtom, ["setAIModel", payload]);
     set(bumpPendingSaveAtom);
   },
 );
@@ -336,7 +336,7 @@ export const setAssistantAIModelAtom = atom(
 export const setAssistantAIModelParameterAtom = atom(
   null,
   (_get, set, payload: { paramType: ModelParameter["type"]; value: string | null }) => {
-    set(assistantConversationStateAtom, { type: "setAIModelParameter", ...payload });
+    set(assistantConversationStateAtom, ["setAIModelParameter", payload]);
     set(bumpPendingSaveAtom);
   },
 );
@@ -350,12 +350,10 @@ export type NewConversationPayload = {
 
 export const newConversationAtom = atom(null, (_get, set, payload: NewConversationPayload = {}) => {
   const id = payload.id ?? generateUUID();
-  set(assistantConversationStateAtom, {
-    ...payload,
-    type: "newConversation",
-    id,
-    createdAt: new Date(),
-  });
+  set(assistantConversationStateAtom, [
+    "newConversation",
+    { ...payload, id, createdAt: new Date() },
+  ]);
 
   return id;
 });
@@ -363,7 +361,7 @@ export const newConversationAtom = atom(null, (_get, set, payload: NewConversati
 export const setAssistantCardStatusAtom = atom(
   null,
   (_get, set, payload: { runId: string; index: number; status: CardStatus }) => {
-    set(assistantConversationStateAtom, { type: "setCardStatus", ...payload });
+    set(assistantConversationStateAtom, ["setCardStatus", payload]);
     set(bumpPendingSaveAtom);
   },
 );
@@ -376,7 +374,7 @@ export type CloneConversationPayload = {
 // atoms (sidebar list, unread indicators, active-run pulse, locked state)
 // observe the new conversation in a single synchronous write — the
 // sidebar shows the clone immediately and the route navigates to it
-// without a re-render race. The reducer in `conversation-state.ts`
+// without a re-render race. The reducer in `conversation-reducer.ts`
 // would not help here: messages are only ever appended one at a time
 // via `addUserMessage` / `addAssistantMessage`, and we need to copy an
 // arbitrary prefix of the source's message history while dropping the
@@ -413,7 +411,7 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     return true;
   });
 
-  const runs: ConversationState["runs"] = {};
+  const runs: ConversationReducerState["runs"] = {};
   for (const [runId, run] of Object.entries(source.runs)) {
     if (run.status === "streaming") continue;
     runs[runId] = run;
@@ -428,7 +426,7 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
   const clonedRunIds = Object.keys(runs);
   const latestClonedRunId = clonedRunIds.length > 0 ? clonedRunIds[clonedRunIds.length - 1]! : null;
 
-  const cloned: ConversationState = {
+  const cloned: ConversationReducerState = {
     ...source,
     id: newId,
     createdAt: now,
