@@ -1,4 +1,3 @@
-import { getTextMessageContent } from "@koloda/ai";
 import {
   AiChatContextUsage,
   AIChatError,
@@ -20,13 +19,12 @@ import {
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
 import { useCallback, useRef, useState } from "react";
 import {
   assistantContextUsageAtom,
-  assistantConversationStateAtom,
   assistantDeckIdAtom,
   assistantEffectiveModeAtom,
   assistantErroredRunAtom,
@@ -35,9 +33,7 @@ import {
   assistantRevertStateAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
-import { getRunIdFromMessageId } from "./assistant-messages";
 import { AssistantSettings } from "./assistant-settings";
-import { resolveRunMode } from "./conversation-reducer";
 import { RevertBanner } from "./revert-banner";
 import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
@@ -94,9 +90,10 @@ export function AssistantChat(
     handleCancel,
     handleReset,
     handleRetry,
+    handleRevert: revertToMessage,
+    handleRestore: restoreFromRevert,
     retryLoad,
     setMode,
-    readState,
   } = useAssistantChat({ conversationId, onConversationIdChange });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
@@ -107,41 +104,15 @@ export function AssistantChat(
     scroll,
   });
 
-  const setConversationReducerState = useSetAtom(assistantConversationStateAtom);
-
   const handleRevert = useCallback((userMessageId: string) => {
-    const state = readState();
-    const userMessage = state.messages.find((m) => m.id === userMessageId);
-    if (!userMessage) return;
-    const promptText = getTextMessageContent(userMessage);
-    if (!promptText) return;
-
-    // WHY: Revert is visual; the actual deletion happens on the next
-    // prompt submit. We just set the in-memory revert state and update
-    // the prompt input. Any active stream is canceled because its run
-    // will be among the hidden messages and must not keep streaming.
-    handleCancel();
-    setConversationReducerState([
-      "setRevertState",
-      { revertedToUserMessageId: userMessageId, preRevertInputText: inputValue },
-    ]);
-    // WHY: Mirror the mode of the target message so the prompt input
-    // lines up with what the run was sent in. Use setMode (bumps save)
-    // rather than a raw setMode dispatch so the change persists.
-    const runId = getRunIdFromMessageId(userMessageId);
-    const targetMode = runId ? resolveRunMode(state, runId) : null;
-    if (targetMode && targetMode !== state.mode) {
-      setMode(targetMode);
-    }
-    setInputValue(promptText);
-  }, [readState, handleCancel, setConversationReducerState, inputValue, setInputValue, setMode]);
+    const promptText = revertToMessage(userMessageId, inputValue);
+    if (promptText != null) setInputValue(promptText);
+  }, [revertToMessage, inputValue, setInputValue]);
 
   const handleRestore = useCallback(() => {
-    const state = readState();
-    if (!state.revertState) return;
-    setInputValue(state.revertState.preRevertInputText);
-    setConversationReducerState(["setRevertState", null]);
-  }, [readState, setConversationReducerState, setInputValue]);
+    const text = restoreFromRevert();
+    if (text != null) setInputValue(text);
+  }, [restoreFromRevert, setInputValue]);
 
   const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,

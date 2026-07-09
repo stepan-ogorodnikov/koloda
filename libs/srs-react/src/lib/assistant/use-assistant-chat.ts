@@ -13,7 +13,7 @@ import {
   newConversationAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerAction } from "./conversation-reducer";
 import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
@@ -49,9 +49,10 @@ export type UseAssistantChatReturn = {
   handleCancel: () => void;
   handleReset: () => void;
   handleRetry: (runId: string) => Promise<void>;
+  handleRevert: (userMessageId: string, currentInputText: string) => string | null;
+  handleRestore: () => string | null;
   retryLoad: () => Promise<unknown>;
   setMode: (mode: AIChatMode) => void;
-  readState: () => ConversationReducerState;
 };
 
 export function useAssistantChat(
@@ -146,11 +147,14 @@ export function useAssistantChat(
     return localConversationIdRef.current;
   }, [conversationId, onConversationIdChange, dispatchAction, readLastUsed]);
 
-  const { handleGenerate, handleRetry, handleDismissGenerate } = useRunOrchestration({
+  const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } = useRunOrchestration({
     configRef,
     readState,
     dispatchAction,
+    dispatchLocal: setConversationReducerAction,
     setGlobalAIProfileState,
+    cancelActiveRun: handleCancel,
+    setMode,
     executeChatRun,
     executeGenerateRun,
     retryRun,
@@ -182,8 +186,9 @@ export function useAssistantChat(
     handleCancel,
     handleReset,
     handleRetry,
+    handleRevert,
+    handleRestore,
     retryLoad,
     setMode,
-    readState,
   };
 }

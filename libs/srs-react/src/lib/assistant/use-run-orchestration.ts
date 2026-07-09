@@ -7,11 +7,11 @@ import { msg } from "@lingui/core/macro";
 import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
-import { buildConversationMessages, userMessageId } from "./assistant-messages";
+import type { AssistantConversationConfig } from "./assistant-conversation-config";
+import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
 import { getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
-import type { AssistantConversationConfig } from "./assistant-conversation-config";
 
 export type StreamRequestResult =
   | { kind: "chat"; request: ChatStreamRequest; templateFields: null }
@@ -60,7 +60,12 @@ export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
   readState: () => ConversationReducerState;
   dispatchAction: (action: ConversationReducerAction) => void;
+  // WHY: Revert is visual/in-memory only and must not bump pending save
+  // (persist strips revertState). Mode changes still go through setMode.
+  dispatchLocal: (action: ConversationReducerAction) => void;
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
+  cancelActiveRun: () => void;
+  setMode: (mode: AIChatMode) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
@@ -78,13 +83,20 @@ export type UseRunOrchestrationReturn = {
   handleGenerate: (value?: string) => Promise<void>;
   handleRetry: (runId: string) => Promise<void>;
   handleDismissGenerate: () => void;
+  /** Returns prompt text for the input, or null when the revert is a no-op. */
+  handleRevert: (userMessageId: string, currentInputText: string) => string | null;
+  /** Returns the pre-revert input text to restore, or null when nothing to restore. */
+  handleRestore: () => string | null;
 };
 
 export function useRunOrchestration({
   configRef,
   readState,
   dispatchAction,
+  dispatchLocal,
   setGlobalAIProfileState,
+  cancelActiveRun,
+  setMode,
   executeChatRun,
   executeGenerateRun,
   retryRun,
@@ -211,5 +223,40 @@ export function useRunOrchestration({
     armPendingRun,
   ]);
 
-  return { handleGenerate, handleRetry, handleDismissGenerate };
+  const handleRevert = useCallback((userMessageId: string, currentInputText: string) => {
+    const state = readState();
+    const userMessage = state.messages.find((m) => m.id === userMessageId);
+    if (!userMessage) return null;
+    const promptText = getTextMessageContent(userMessage);
+    if (!promptText) return null;
+
+    // WHY: Revert is visual; the actual deletion happens on the next
+    // prompt submit. We just set the in-memory revert state. Any active
+    // stream is canceled because its run will be among the hidden
+    // messages and must not keep streaming.
+    cancelActiveRun();
+    dispatchLocal([
+      "setRevertState",
+      { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
+    ]);
+    // WHY: Mirror the mode of the target message so the prompt input
+    // lines up with what the run was sent in. Use setMode (bumps save)
+    // rather than a raw setMode dispatch so the change persists.
+    const runId = getRunIdFromMessageId(userMessageId);
+    const targetMode = runId ? resolveRunMode(state, runId) : null;
+    if (targetMode && targetMode !== state.mode) {
+      setMode(targetMode);
+    }
+    return promptText;
+  }, [readState, cancelActiveRun, dispatchLocal, setMode]);
+
+  const handleRestore = useCallback(() => {
+    const state = readState();
+    if (!state.revertState) return null;
+    const text = state.revertState.preRevertInputText;
+    dispatchLocal(["setRevertState", null]);
+    return text;
+  }, [readState, dispatchLocal]);
+
+  return { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore };
 }
