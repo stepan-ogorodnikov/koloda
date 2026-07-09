@@ -784,6 +784,185 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
   });
 });
 
+// WHY: ASSISTANT-CHAT-CONVERSATIONS.md §Conversation List — "The timestamp
+// is bumped only when a new run starts". Every other action (streaming
+// chunks, completions, cancellations, deck/mode/profile changes, etc.)
+// must NOT touch updatedAt.
+describe("updatedAt stamping (only on run start)", () => {
+  function seedUpdatedAt(store: ReturnType<typeof createStore>, id: string) {
+    const original = store.get(conversationsAtom)[id]!.updatedAt;
+    dispatchTo(store, id, ["startRun", { runId: "seed", mode: "chat", request: {} }]);
+    const seeded = store.get(conversationsAtom)[id]!.updatedAt;
+    expect(seeded).not.toBeNull();
+    expect(seeded).not.toEqual(original);
+    return seeded!.getTime();
+  }
+
+  function advanceClock() {
+    const t = Date.now();
+    while (Date.now() === t) { /* spin */ }
+  }
+
+  it("startRun bumps updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat", request: {} }]);
+    const after = store.get(conversationsAtom)["A"]!;
+    expect(after.updatedAt).not.toBeNull();
+  });
+
+  it("restartRun bumps updatedAt", () => {
+    const store = createStore();
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        runs: { r1: makeRun("r1", "success") },
+      }),
+    );
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["restartRun", {
+      runId: "r1", mode: "chat", request: {}, templateFields: null,
+    }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
+  });
+
+  it("addUserMessage does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("addAssistantMessage does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("updateAssistantText does NOT bump updatedAt (streaming chunk)", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["updateAssistantText", { runId: "seed", text: "chunk" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("addCard does NOT bump updatedAt (streaming chunk)", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    const ts = store.get(conversationsAtom)["A"]!.updatedAt!.getTime();
+    advanceClock();
+
+    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: {} } }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("completeRun does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["completeRun", { runId: "seed" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("cancelRun does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["cancelRun", { runId: "seed" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("dismissRunError does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["dismissRunError", { runId: "seed" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("setMode does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["setMode", { mode: "cards" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("setDeck does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["setDeck", { deckId: 42 }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("setAIProfile does NOT bump updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", ["setAIProfile", { profileId: "p1", modelId: "m1" }]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("commitRevert does NOT bump updatedAt", () => {
+    const store = createStore();
+    const messages = [
+      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hello" }] },
+    ];
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", { messages, runs: { r1: makeRun("r1", "success") } }),
+    );
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+
+    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r1", preRevertInputText: "" }]);
+    advanceClock();
+
+    dispatchTo(store, "A", ["commitRevert"]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+});
+
 describe("cloneConversationAtom", () => {
   it("creates a new conversation with a fresh id and switches the current id to it", () => {
     const store = createStore();
@@ -1215,9 +1394,9 @@ describe("revert state in-memory lifecycle", () => {
 
     // WHY: updatedAt starts as null on a freshly upserted conversation.
     // We still want to confirm that a setRevertState dispatch does not
-    // stamp it with a fresh date, so we make a content-changing dispatch
+    // stamp it with a fresh date, so we make a run-starting dispatch
     // first to seed a value, then verify revert leaves it alone.
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r99", text: "Seed" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r99", mode: "chat", request: {} }]);
     const seeded = store.get(assistantConversationStateAtom);
     expect(seeded.updatedAt).not.toBeNull();
     const seededAt = seeded.updatedAt!.getTime();
