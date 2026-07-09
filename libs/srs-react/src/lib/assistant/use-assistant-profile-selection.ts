@@ -2,7 +2,8 @@ import type { ModelParameter } from "@koloda/ai";
 import type { AIModel, AISecrets } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import type { AIProfileStateUpdater } from "./ai-profile-state";
 import {
   assistantAIModelIdAtom,
   assistantAIModelParametersAtom,
@@ -11,7 +12,7 @@ import {
   setAssistantAIModelParameterAtom,
   setAssistantAIProfileAtom,
 } from "./assistant-conversation-atoms";
-import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
+import { useSetGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type UseAssistantProfileSelectionReturn = {
   profileId: string;
@@ -22,9 +23,12 @@ export type UseAssistantProfileSelectionReturn = {
   isModelsError: boolean;
   selectedProfile: ReturnType<typeof useAIProfiles>["selectedProfile"];
   profiles: ReturnType<typeof useAIProfiles>["profiles"];
+  defaultProfileId: string | null;
+  missingSecretFieldLabels: string[];
   provider: AISecrets["provider"] | null;
   modelParameters: ModelParameter[];
   hasProfiles: boolean;
+  setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
@@ -39,12 +43,28 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const setAIModel = useSetAtom(setAssistantAIModelAtom);
   const setAIModelParameter = useSetAtom(setAssistantAIModelParameterAtom);
 
-  const [_state, setGlobalAIProfileState] = useGlobalAIProfileState();
+  const setGlobalAIProfileState = useSetGlobalAIProfileState();
 
-  const { profiles, selectedProfile } = useAIProfiles(storedProfileId);
+  const {
+    profiles,
+    selectedProfile,
+    defaultProfileId,
+    missingSecretFieldLabels,
+  } = useAIProfiles(storedProfileId);
   const { models, isLoading: isModelsLoading, isError: isModelsError } = useAIModels(storedProfileId);
   const provider = selectedProfile?.secrets?.provider ?? null;
   const hasProfiles = profiles.length > 0;
+
+  useEffect(() => {
+    if (defaultProfileId && !storedProfileId) {
+      const profile = profiles.find((p) => p.id === defaultProfileId);
+      setAIProfile({
+        profileId: defaultProfileId,
+        modelId: profile?.lastUsedModel ?? null,
+        modelParameters: {},
+      });
+    }
+  }, [defaultProfileId, storedProfileId, profiles, setAIProfile]);
 
   const resolvedModelId = useMemo(() => {
     if (!storedProfileId) return "";
@@ -118,9 +138,12 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     isModelsError,
     selectedProfile,
     profiles,
+    defaultProfileId,
+    missingSecretFieldLabels,
     provider,
     modelParameters,
     hasProfiles,
+    setGlobalAIProfileState,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,

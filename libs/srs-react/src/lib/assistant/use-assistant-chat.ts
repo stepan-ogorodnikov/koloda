@@ -1,18 +1,16 @@
 import type { AISecrets, ModelParameter } from "@koloda/ai";
-import { useAIProfiles } from "@koloda/ai-react";
 import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import type { Template } from "@koloda/srs";
 import { useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import {
   assistantConversationStateAtom,
   bumpPendingSaveAtom,
   dispatchToConversationOnStore,
   newConversationAtom,
-  setAssistantAIProfileAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
@@ -20,7 +18,6 @@ import { useAssistantProfileSelection } from "./use-assistant-profile-selection"
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
 import { useConversationPersistence } from "./use-conversation-persistence";
-import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 import { useRunOrchestration } from "./use-run-orchestration";
 
 export type UseAssistantChatOptions = {
@@ -64,8 +61,6 @@ export function useAssistantChat(
   const setMode = useSetAtom(setAssistantModeAtom);
   const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
   const newConversation = useSetAtom(newConversationAtom);
-  const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
-  const [_state, setGlobalAIProfileState] = useGlobalAIProfileState();
 
   const {
     profileId,
@@ -75,23 +70,16 @@ export function useAssistantChat(
     isModelsLoading,
     isModelsError,
     selectedProfile,
+    missingSecretFieldLabels,
     provider,
     modelParameters,
+    setGlobalAIProfileState,
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
   } = useAssistantProfileSelection();
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
-
-  const { defaultProfileId, profiles, missingSecretFieldLabels } = useAIProfiles(profileId);
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
-
-  useEffect(() => {
-    if (defaultProfileId && !profileId) {
-      const profile = profiles.find((p) => p.id === defaultProfileId);
-      setAIProfile({ profileId: defaultProfileId, modelId: profile?.lastUsedModel ?? null, modelParameters: {} });
-    }
-  }, [defaultProfileId, profileId, profiles, setAIProfile]);
 
   const assistantConfig = useAssistantRuntimeConfig({
     profileId,

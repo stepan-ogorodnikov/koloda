@@ -9,17 +9,16 @@ export type UseGlobalAIProfileStateReturn = [
   (updater: AIProfileStateUpdater) => void,
 ];
 
-export function useGlobalAIProfileState(): UseGlobalAIProfileStateReturn {
+/**
+ * Write-only access to the persisted last-used profile/model.
+ * Prefer this inside the assistant chat tree so callers that already
+ * own a `useAIProfiles` subscription do not subscribe a second time.
+ */
+export function useSetGlobalAIProfileState(): (updater: AIProfileStateUpdater) => void {
   const stored = useAtomValue(aiProfileStateAtom);
   const setStored = useSetAtom(aiProfileStateAtom);
-  const { profiles } = useAIProfiles();
 
-  const state = useMemo(
-    () => reconcileAIProfileState(stored, profiles),
-    [stored, profiles],
-  );
-
-  const setState = useCallback(
+  return useCallback(
     (updater: AIProfileStateUpdater) => {
       const nextModelParameters: Record<string, string> = { ...stored?.modelParameters };
       if (updater.modelParameters) {
@@ -39,6 +38,17 @@ export function useGlobalAIProfileState(): UseGlobalAIProfileStateReturn {
       });
     },
     [setStored, stored],
+  );
+}
+
+export function useGlobalAIProfileState(): UseGlobalAIProfileStateReturn {
+  const stored = useAtomValue(aiProfileStateAtom);
+  const { profiles } = useAIProfiles();
+  const setState = useSetGlobalAIProfileState();
+
+  const state = useMemo(
+    () => reconcileAIProfileState(stored, profiles),
+    [stored, profiles],
   );
 
   return [state, setState];
