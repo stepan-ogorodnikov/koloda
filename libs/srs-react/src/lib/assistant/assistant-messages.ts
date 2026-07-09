@@ -44,6 +44,28 @@ export function getErrorMetadata(
   return metadata?.kind === "error" ? metadata : null;
 }
 
+export function userMessageId(runId: string) {
+  return `user-${runId}`;
+}
+
+export function assistantMessageId(runId: string) {
+  return `assistant-${runId}`;
+}
+
+export function getRunIdFromMessageId(messageId: string) {
+  if (messageId.startsWith("user-")) return messageId.slice(5);
+  if (messageId.startsWith("assistant-")) return messageId.slice(10);
+  return null;
+}
+
+export function modeToMessageKind(mode: AIChatMode): "generated-cards" | "chat-text" {
+  return mode === "cards" ? "generated-cards" : "chat-text";
+}
+
+export function getEffectiveChatMode(mode: AIChatMode, deckId: number | null): AIChatMode {
+  return mode === "cards" && deckId !== null ? "cards" : "chat";
+}
+
 export function createTextMessage(
   id: string,
   role: UIMessage["role"],

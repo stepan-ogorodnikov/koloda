@@ -4,7 +4,14 @@ import { dispatchReducerAction, type ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { produce } from "immer";
-import { createTextMessage, getAssistantMetadata } from "./assistant-messages";
+import {
+  assistantMessageId,
+  createTextMessage,
+  getAssistantMetadata,
+  getRunIdFromMessageId,
+  modeToMessageKind,
+  userMessageId,
+} from "./assistant-messages";
 
 export type CardStatus = "idle" | "pending" | "success" | "error";
 
@@ -75,7 +82,6 @@ const actions = {
   addCard,
   setCardStatus,
   completeRun,
-  failRun,
   runFailed,
   cancelRun,
   restartRun,
@@ -137,21 +143,28 @@ export function dropRuns(
   droppedRunIds: ReadonlySet<string>,
 ): { messages: UIMessage[]; runs: Record<string, GenerationRun> } {
   const messages = state.messages.filter((m) => {
-    if (m.role === "user") {
-      const runId = m.id.startsWith("user-") ? m.id.slice(5) : null;
-      return !runId || !droppedRunIds.has(runId);
-    }
-    if (m.role === "assistant") {
-      const runId = m.id.startsWith("assistant-") ? m.id.slice(10) : null;
-      return !runId || !droppedRunIds.has(runId);
-    }
-    return true;
+    const runId = getRunIdFromMessageId(m.id);
+    return !runId || !droppedRunIds.has(runId);
   });
   const runs: Record<string, GenerationRun> = {};
   for (const [runId, run] of Object.entries(state.runs)) {
     if (!droppedRunIds.has(runId)) runs[runId] = run;
   }
   return { messages, runs };
+}
+
+export function resolveRunMode(state: ConversationReducerState, runId: string): AIChatMode | null {
+  const run = state.runs[runId];
+  if (run) return run.mode;
+
+  const assistantMessage = state.messages.find((m) => m.id === assistantMessageId(runId));
+  if (!assistantMessage) return null;
+  const metadata = getAssistantMetadata(assistantMessage);
+  if (!metadata) return null;
+  if (metadata.kind === "error") return metadata.mode;
+  if (metadata.kind === "generated-cards") return "cards";
+  if (metadata.kind === "chat-text") return "chat";
+  return null;
 }
 
 function toDate(value: unknown): Date | null {
@@ -309,9 +322,8 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   const messages = filtered.messages
     .map((m) => {
       if (m.role !== "assistant") return m;
-      if (!m.id.startsWith("assistant-")) return m;
-      const runId = m.id.slice(10);
-      if (!failedRunIds.has(runId)) return m;
+      const runId = getRunIdFromMessageId(m.id);
+      if (!runId || !failedRunIds.has(runId)) return m;
       const run = state.runs[runId];
       if (!run) return m;
       const metadata = getAssistantMetadata(m);
@@ -353,14 +365,14 @@ function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
 type AddUserMessagePayload = { runId: string; text: string };
 
 function addUserMessage(draft: ConversationReducerState, payload: AddUserMessagePayload) {
-  draft.messages.push(createTextMessage(`user-${payload.runId}`, "user", payload.text));
+  draft.messages.push(createTextMessage(userMessageId(payload.runId), "user", payload.text));
 }
 
 type AddAssistantMessagePayload = { runId: string; kind: "chat-text" | "generated-cards"; text: string };
 
 function addAssistantMessage(draft: ConversationReducerState, payload: AddAssistantMessagePayload) {
   draft.messages.push(
-    createTextMessage(`assistant-${payload.runId}`, "assistant", payload.text, {
+    createTextMessage(assistantMessageId(payload.runId), "assistant", payload.text, {
       kind: payload.kind,
       runId: payload.runId,
     }),
@@ -370,7 +382,7 @@ function addAssistantMessage(draft: ConversationReducerState, payload: AddAssist
 type UpdateAssistantTextPayload = { runId: string; text: string };
 
 function updateAssistantText(draft: ConversationReducerState, payload: UpdateAssistantTextPayload) {
-  const msg = draft.messages.find((m) => m.id === `assistant-${payload.runId}`);
+  const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
   if (msg) {
     msg.parts = [{ type: "text" as const, text: payload.text }];
   }
@@ -420,20 +432,12 @@ function completeRun(draft: ConversationReducerState, payload: RunIdPayload) {
   if (run) run.error = undefined;
 }
 
-function failRun(draft: ConversationReducerState, payload: RunIdPayload) {
-  finishRun(draft, payload.runId, "failed");
-  clearActiveIfRun(draft, payload.runId);
-}
-
 type RunFailedPayload = { runId: string; error: { message: string } };
 
 function runFailed(draft: ConversationReducerState, payload: RunFailedPayload) {
+  finishRun(draft, payload.runId, "failed");
   const run = draft.runs[payload.runId];
-  if (run) {
-    run.status = "failed";
-    run.error = payload.error;
-    run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
-  }
+  if (run) run.error = payload.error;
   clearActiveIfRun(draft, payload.runId);
 }
 
@@ -472,12 +476,12 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
       payload.request,
     );
     // Fix up the error→assistant message if it existed
-    const msg = draft.messages.find((m) => m.id === `assistant-${payload.runId}`);
+    const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
     if (msg) {
       const metadata = getAssistantMetadata(msg);
       if (metadata?.kind === "error") {
         msg.metadata = {
-          kind: payload.mode === "cards" ? ("generated-cards" as const) : ("chat-text" as const),
+          kind: modeToMessageKind(payload.mode),
           runId: payload.runId,
         };
       }
@@ -598,11 +602,8 @@ function commitRevert(draft: ConversationReducerState) {
 
   const survivingRunIds = new Set<string>();
   for (const m of draft.messages) {
-    if (m.role === "user" && m.id.startsWith("user-")) {
-      survivingRunIds.add(m.id.slice(5));
-    } else if (m.role === "assistant" && m.id.startsWith("assistant-")) {
-      survivingRunIds.add(m.id.slice(10));
-    }
+    const runId = getRunIdFromMessageId(m.id);
+    if (runId) survivingRunIds.add(runId);
   }
   for (const id of Object.keys(draft.runs)) {
     if (!survivingRunIds.has(id)) delete draft.runs[id];
@@ -624,8 +625,7 @@ export function cancelStreamingRuns(state: ConversationReducerState): Conversati
   const next = produce(state, (draft) => {
     for (const run of Object.values(draft.runs)) {
       if (run.status === "streaming") {
-        run.status = "canceled";
-        run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
+        finishRun(draft, run.id, "canceled");
         changed = true;
       }
     }

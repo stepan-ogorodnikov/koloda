@@ -3,8 +3,8 @@ import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { RefObject } from "react";
 import {
-  assistantConversationStateAtom,
   assistantDeckIdAtom,
+  assistantEffectiveModeAtom,
   assistantIsLockedAtom,
   assistantIsProcessingAtom,
   assistantProfileIdAtom,
@@ -42,9 +42,7 @@ export function useAssistantChatHotkeys(
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const profileId = useAtomValue(assistantProfileIdAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
-  const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
-    ? "cards"
-    : "chat";
+  const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
   useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });

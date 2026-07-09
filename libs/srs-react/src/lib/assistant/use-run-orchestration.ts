@@ -7,8 +7,8 @@ import { msg } from "@lingui/core/macro";
 import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
-import { buildConversationMessages, getAssistantMetadata } from "./assistant-messages";
-import { getVisibleMessages } from "./conversation-reducer";
+import { buildConversationMessages, userMessageId } from "./assistant-messages";
+import { getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import type { AssistantConversationConfig } from "./use-assistant-conversation";
@@ -95,14 +95,8 @@ export function useRunOrchestration({
     const cfg = configRef.current;
     const currentState = readState();
     const conversationId = currentState.id;
-    const run = currentState.runs[runId];
-    let mode: AIChatMode | undefined = run?.mode;
-    if (!mode) {
-      const assistantMessage = currentState.messages.find((m) => m.id === `assistant-${runId}`);
-      const metadata = assistantMessage ? getAssistantMetadata(assistantMessage) : null;
-      if (metadata?.kind === "error") mode = metadata.mode;
-      if (!mode) return;
-    }
+    const mode = resolveRunMode(currentState, runId);
+    if (!mode) return;
 
     armPendingRun(mode, conversationId, runId);
 
@@ -110,7 +104,7 @@ export function useRunOrchestration({
     // to the AI must mirror what the user sees, so filter out anything
     // hidden by revert before walking the message list.
     const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
-    const userMessage = visibleMessages.find((m) => m.id === `user-${runId}`);
+    const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
     const promptText = userMessage ? getTextMessageContent(userMessage) : "";
     if (!promptText || !cfg.profileId || !cfg.modelId) return;
     if (mode === "cards" && !cfg.template) return;
@@ -129,7 +123,7 @@ export function useRunOrchestration({
     const ids = Object.keys(state.runs);
     for (let i = ids.length - 1; i >= 0; i--) {
       const run = state.runs[ids[i]];
-      if (run.status === "failed") {
+      if (run.status === "failed" && run.id !== state.dismissedRunErrorId) {
         dispatchAction(["dismissRunError", { runId: run.id }]);
         return;
       }

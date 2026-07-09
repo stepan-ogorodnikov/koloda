@@ -2,9 +2,7 @@ import type { ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai-react";
 import { useChatStream } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
-import { useSetAtom } from "jotai";
-import { useCallback, useEffect } from "react";
-import { assistantCancelFunctionsAtom } from "./assistant-conversation-atoms";
+import { useCallback } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
@@ -47,7 +45,6 @@ export function useAssistantStreamSetup({
   readState,
   bumpPendingSave,
 }: UseAssistantStreamSetupOptions): UseAssistantStreamSetupReturn {
-  const setCancelFunctions = useSetAtom(assistantCancelFunctionsAtom);
   const pendingRunRefs = usePendingRunRefs(dispatchFor);
 
   const handleChatStreamError = useCallback((error: Error) => (
@@ -68,10 +65,6 @@ export function useAssistantStreamSetup({
 
   const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
   const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
-
-  useEffect(() => {
-    setCancelFunctions({ cancelGenerate, cancelChat });
-  }, [cancelGenerate, cancelChat, setCancelFunctions]);
 
   const { executeChatRun, executeGenerateRun, retryRun } = useConversationRuns(
     streamChat,

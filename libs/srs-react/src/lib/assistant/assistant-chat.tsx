@@ -17,7 +17,6 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
-import type { AIChatMode } from "@koloda/ai-react";
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -29,14 +28,16 @@ import {
   assistantContextUsageAtom,
   assistantConversationStateAtom,
   assistantDeckIdAtom,
+  assistantEffectiveModeAtom,
   assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
   assistantRevertStateAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
-import { getAssistantMetadata } from "./assistant-messages";
+import { getRunIdFromMessageId } from "./assistant-messages";
 import { AssistantSettings } from "./assistant-settings";
+import { resolveRunMode } from "./conversation-reducer";
 import { RevertBanner } from "./revert-banner";
 import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
@@ -63,6 +64,7 @@ export function AssistantChat(
   const erroredRun = useAtomValue(assistantErroredRunAtom);
   const saveStatus = useAtomValue(saveStatusAtom);
   const revertState = useAtomValue(assistantRevertStateAtom);
+  const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
   const profilePickerRef = useRef<HTMLButtonElement>(null);
   const modelPickerRef = useRef<HTMLButtonElement>(null);
@@ -124,30 +126,15 @@ export function AssistantChat(
       { revertedToUserMessageId: userMessageId, preRevertInputText: inputValue },
     ]);
     // WHY: Mirror the mode of the target message so the prompt input
-    // lines up with what the run was sent in. The run record is the
-    // source of truth; if it was removed on restore, the assistant
-    // message metadata still carries the original mode.
-    const runId = userMessageId.startsWith("user-") ? userMessageId.slice(5) : null;
-    let targetMode: AIChatMode | null = null;
-    if (runId) {
-      const run = state.runs[runId];
-      if (run) {
-        targetMode = run.mode;
-      } else {
-        const assistantMessage = state.messages.find((m) => m.id === `assistant-${runId}`);
-        if (assistantMessage) {
-          const metadata = getAssistantMetadata(assistantMessage);
-          if (metadata?.kind === "error") targetMode = metadata.mode;
-          else if (metadata?.kind === "generated-cards") targetMode = "cards";
-          else if (metadata?.kind === "chat-text") targetMode = "chat";
-        }
-      }
-    }
+    // lines up with what the run was sent in. Use setMode (bumps save)
+    // rather than a raw setMode dispatch so the change persists.
+    const runId = getRunIdFromMessageId(userMessageId);
+    const targetMode = runId ? resolveRunMode(state, runId) : null;
     if (targetMode && targetMode !== state.mode) {
-      setConversationReducerState(["setMode", { mode: targetMode }]);
+      setMode(targetMode);
     }
     setInputValue(promptText);
-  }, [readState, handleCancel, setConversationReducerState, inputValue, setInputValue]);
+  }, [readState, handleCancel, setConversationReducerState, inputValue, setInputValue, setMode]);
 
   const handleRestore = useCallback(() => {
     const state = readState();
@@ -166,9 +153,6 @@ export function AssistantChat(
     isModelsError,
   });
 
-  const effectiveMode = useAtomValue(assistantConversationStateAtom).mode === "cards" && deckId !== null
-    ? "cards"
-    : "chat";
   const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry, handleRevert });
 
   useAssistantChatHotkeys({
@@ -182,6 +166,11 @@ export function AssistantChat(
     onPrevConversation,
     onNextConversation,
   });
+
+  const generateErr = erroredRun?.error?.message ?? null;
+  const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed
+    ? saveStatus.message
+    : null;
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
@@ -208,18 +197,8 @@ export function AssistantChat(
             <Fade key="chat" className="grow flex flex-col min-h-0">
               <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
               <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-              {(() => {
-                const generateErr = erroredRun?.error?.message ?? null;
-                const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed
-                  ? saveStatus.message
-                  : null;
-                return (
-                  <>
-                    {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
-                    {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
-                  </>
-                );
-              })()}
+              {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
+              {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
               {revertState && <RevertBanner onRestore={handleRestore} />}
               <AIChatPromptPanel onSubmit={handleSubmit}>
                 <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />

@@ -4,8 +4,8 @@ import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
 import type { Store } from "jotai/vanilla/store";
-import { getAssistantMetadata } from "./assistant-messages";
-import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
+import { getAssistantMetadata, getEffectiveChatMode } from "./assistant-messages";
+import { conversationReducer, dropRuns, getVisibleMessages, initialConversationState } from "./conversation-reducer";
 import type { CardStatus, ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 export type SaveStatus = {
@@ -79,8 +79,8 @@ export const assistantConversationStateAtom = atom(
 // out of `unreadConversationIdsAtom` after the user navigates away.
 // We detect the transition by comparing the latest run id in `prev`
 // and `next` and checking that its status moved out of `streaming`;
-// this works for both the explicit `completeRun` / `failRun` /
-// `runFailed` / `cancelRun` actions and for function-form updaters
+// this works for both the explicit `completeRun` / `runFailed` /
+// `cancelRun` actions and for function-form updaters
 // that mutate the run status directly.
 function detectRunJustFinished(prev: ConversationReducerState, next: ConversationReducerState) {
   const prevIds = Object.keys(prev.runs);
@@ -141,16 +141,6 @@ export const dismissSaveStatusAtom = atom(null, (_get, set) => {
   set(saveStatusAtom, (prev) => ({ ...prev, isDismissed: true }));
 });
 
-export const assistantActiveRunAtom = atom((get) => {
-  const state = get(assistantConversationStateAtom);
-  if (state.activeRunId) return state.runs[state.activeRunId] ?? null;
-
-  const ids = Object.keys(state.runs);
-  const last = ids[ids.length - 1];
-
-  return last ? state.runs[last] : null;
-});
-
 export const assistantErroredRunAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
   const ids = Object.keys(state.runs);
@@ -174,6 +164,9 @@ export const assistantRunsAtom = atom((get) => get(assistantConversationStateAto
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
+export const assistantEffectiveModeAtom = atom((get) =>
+  getEffectiveChatMode(get(assistantModeAtom), get(assistantDeckIdAtom))
+);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
 export const assistantAIModelParametersAtom = atom((get) => get(assistantConversationStateAtom).modelParameters);
@@ -221,11 +214,6 @@ export const assistantContextUsageAtom = atom((get) => {
   if (!hasUsage) return null;
   return { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens };
 });
-
-export const assistantCancelFunctionsAtom = atom<{
-  cancelGenerate?: () => void;
-  cancelChat?: () => void;
-}>({});
 
 const pendingSaveByConversationAtom = atom<Record<string, number>>({});
 
@@ -399,32 +387,13 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
   const newId = generateUUID();
   const now = new Date();
 
-  // WHY: Identify streaming runs upfront so we can drop their runs
-  // and the user/assistant message pair that belongs to them. §Clone
-  // explicitly excludes in-flight runs from the copy.
   const droppedRunIds = new Set(
     Object.entries(source.runs)
       .filter(([, run]) => run.status === "streaming")
       .map(([runId]) => runId),
   );
 
-  const messages = source.messages.filter((m) => {
-    if (m.role === "user") {
-      const runId = m.id.startsWith("user-") ? m.id.slice(5) : null;
-      return !runId || !droppedRunIds.has(runId);
-    }
-    if (m.role === "assistant") {
-      const runId = m.id.startsWith("assistant-") ? m.id.slice(10) : null;
-      return !runId || !droppedRunIds.has(runId);
-    }
-    return true;
-  });
-
-  const runs: ConversationReducerState["runs"] = {};
-  for (const [runId, run] of Object.entries(source.runs)) {
-    if (run.status === "streaming") continue;
-    runs[runId] = run;
-  }
+  const { messages, runs } = dropRuns(source, droppedRunIds);
 
   // WHY: The clone starts out as read. `unreadConversationIdsAtom`
   // treats a conversation as read when `lastReadRunId` matches the
@@ -450,6 +419,7 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     deckId: source.deckId,
     dismissedRunErrorId: null,
     lastReadRunId: latestClonedRunId,
+    revertState: null,
   };
 
   set(conversationsAtom, { ...store, [newId]: cloned });

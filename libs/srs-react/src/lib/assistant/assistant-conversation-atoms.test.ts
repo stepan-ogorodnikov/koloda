@@ -601,7 +601,7 @@ describe("unreadConversationIdsAtom", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat", request: {} }]);
-    dispatchTo(store, "A", ["failRun", { runId: "r1" }]);
+    dispatchTo(store, "A", ["runFailed", { runId: "r1", error: { message: "failed" } }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 
@@ -826,7 +826,10 @@ describe("updatedAt stamping (only on run start)", () => {
     advanceClock();
 
     dispatchTo(store, "A", ["restartRun", {
-      runId: "r1", mode: "chat", request: {}, templateFields: null,
+      runId: "r1",
+      mode: "chat",
+      request: {},
+      templateFields: null,
     }]);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
   });

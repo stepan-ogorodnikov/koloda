@@ -8,7 +8,7 @@ import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
 import {
   assistantActiveRunIdAtom,
-  assistantConversationStateAtom,
+  assistantDeckIdAtom,
   assistantMessagesAtom,
   assistantRunsAtom,
 } from "./assistant-conversation-atoms";
@@ -27,7 +27,8 @@ export function useAssistantMessageRenderer(
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
   const activeRunId = useAtomValue(assistantActiveRunIdAtom);
-  const deckId = useAtomValue(assistantConversationStateAtom).deckId;
+  const deckId = useAtomValue(assistantDeckIdAtom);
+  const tailMessageId = messages.at(-1)?.id;
 
   return useCallback((message: UIMessage, content: ReactNode) => {
     if (message.role === "user") {
@@ -39,8 +40,7 @@ export function useAssistantMessageRenderer(
       );
     }
 
-    const messageIndex = messages.findIndex((m) => m.id === message.id);
-    const isTail = messageIndex >= 0 && messageIndex >= messages.length - 1;
+    const isTail = message.id === tailMessageId;
 
     const generatedCardsMetadata = getGeneratedCardsMetadata(message);
     if (generatedCardsMetadata) {
@@ -137,7 +137,7 @@ export function useAssistantMessageRenderer(
     }
 
     return content;
-  }, [messages, runs, activeRunId, templateId, deckId, handleRetry, handleRevert]);
+  }, [tailMessageId, runs, activeRunId, templateId, deckId, handleRetry, handleRevert]);
 }
 
 function makeHistoricalTemplate(fields: TemplateFields): Template {

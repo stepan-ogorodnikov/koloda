@@ -758,24 +758,6 @@ describe("conversationReducer", () => {
     });
   });
 
-  describe("failRun", () => {
-    it("sets status to failed and clears activeRunId", () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(0);
-
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
-
-      vi.setSystemTime(2000);
-      state = conversationReducer(state, act({ type: "failRun", runId: "r1" }));
-
-      expect(state.runs["r1"].status).toBe("failed");
-      expect(state.runs["r1"].elapsedSeconds).toBe(2);
-      expect(state.activeRunId).toBeNull();
-
-      vi.useRealTimers();
-    });
-  });
-
   describe("runFailed", () => {
     it("sets status to failed, stores error, computes elapsed time, and clears activeRunId", () => {
       vi.useFakeTimers();
@@ -1094,7 +1076,7 @@ describe("conversationReducer", () => {
         { type: "addUserMessage", runId: "r1", text: "Hi" },
         { type: "startRun", runId: "r1", mode: "cards", request: {} },
         { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" },
-        { type: "failRun", runId: "r1" },
+        { type: "runFailed", runId: "r1", error: { message: "failed" } },
       ]);
       state = conversationReducer(state, act({ type: "setDeck", deckId: 7 }));
       expect(state.deckId).toBe(7);
