@@ -13,7 +13,7 @@ import {
 } from "./assistant-conversation-atoms";
 import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
-export type UseAssistantConfigurationReturn = {
+export type UseAssistantProfileSelectionReturn = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
@@ -30,7 +30,7 @@ export type UseAssistantConfigurationReturn = {
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
 
-export function useAssistantConfiguration(): UseAssistantConfigurationReturn {
+export function useAssistantProfileSelection(): UseAssistantProfileSelectionReturn {
   const storedProfileId = useAtomValue(assistantProfileIdAtom);
   const storedModelId = useAtomValue(assistantAIModelIdAtom);
   const storedModelParameters = useAtomValue(assistantAIModelParametersAtom);

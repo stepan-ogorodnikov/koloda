@@ -5,11 +5,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import type { RefObject } from "react";
+import type { AssistantConversationConfig } from "./assistant-conversation-config";
 import { assistantDeckIdAtom } from "./assistant-conversation-atoms";
 import { useAssistantClient } from "./use-assistant-client";
-import type { AssistantConversationConfig } from "./use-assistant-conversation";
 
-export type UseAssistantConfigOptions = {
+export type UseAssistantRuntimeConfigOptions = {
   profileId: string;
   modelId: string;
   modelName: string | undefined;
@@ -17,19 +17,19 @@ export type UseAssistantConfigOptions = {
   selectedProfile: AIProfile | null;
 };
 
-export type UseAssistantConfigReturn = {
+export type UseAssistantRuntimeConfigReturn = {
   template: AssistantConversationConfig["template"];
   templateId: AssistantConversationConfig["templateId"] | undefined;
   configRef: RefObject<AssistantConversationConfig>;
 };
 
-export function useAssistantConfig({
+export function useAssistantRuntimeConfig({
   profileId,
   modelId,
   modelName,
   reasoningEffort,
   selectedProfile,
-}: UseAssistantConfigOptions): UseAssistantConfigReturn {
+}: UseAssistantRuntimeConfigOptions): UseAssistantRuntimeConfigReturn {
   const { _ } = useLingui();
   const { getDeckQuery, getTemplateQuery, touchAIProfileMutation, getSettingsQuery } = useAtomValue(queriesAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);

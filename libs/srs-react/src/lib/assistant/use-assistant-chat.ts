@@ -16,8 +16,8 @@ import {
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
-import { useAssistantConfig } from "./use-assistant-config";
-import { useAssistantConfiguration } from "./use-assistant-configuration";
+import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
+import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
 import { useConversationPersistence } from "./use-conversation-persistence";
 import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
@@ -80,7 +80,7 @@ export function useAssistantChat(
     handleProfileChange,
     handleModelChange,
     handleModelParameterChange,
-  } = useAssistantConfiguration();
+  } = useAssistantProfileSelection();
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
 
   const { defaultProfileId, profiles, missingSecretFieldLabels } = useAIProfiles(profileId);
@@ -93,7 +93,13 @@ export function useAssistantChat(
     }
   }, [defaultProfileId, profileId, profiles, setAIProfile]);
 
-  const assistantConfig = useAssistantConfig({ profileId, modelId, modelName, reasoningEffort, selectedProfile });
+  const assistantConfig = useAssistantRuntimeConfig({
+    profileId,
+    modelId,
+    modelName,
+    reasoningEffort,
+    selectedProfile,
+  });
   const { template, templateId, configRef } = assistantConfig;
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));

@@ -11,7 +11,7 @@ import { buildConversationMessages, userMessageId } from "./assistant-messages";
 import { getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
-import type { AssistantConversationConfig } from "./use-assistant-conversation";
+import type { AssistantConversationConfig } from "./assistant-conversation-config";
 
 export type StreamRequestResult =
   | { kind: "chat"; request: ChatStreamRequest; templateFields: null }

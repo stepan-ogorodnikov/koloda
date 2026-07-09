@@ -140,12 +140,12 @@ vi.mock("./use-assistant-card-generation", () => ({
   },
 }));
 
-vi.mock("./use-assistant-configuration", () => {
+vi.mock("./use-assistant-profile-selection", () => {
   // Re-export a thin shim that reads from the same `wire` used by the
   // mock of `@koloda/ai-react`. The shim mirrors the public shape of
-  // `useAssistantConfiguration` exactly.
+  // `useAssistantProfileSelection` exactly.
   return {
-    useAssistantConfiguration: () => {
+    useAssistantProfileSelection: () => {
       const profile = wire.profiles[0] ?? null;
       return {
         profileId: profile?.id ?? "",
