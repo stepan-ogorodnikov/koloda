@@ -1,23 +1,9 @@
 import { atom } from "jotai";
 import { getAssistantMetadata, getEffectiveChatMode } from "./assistant-messages";
-import { getVisibleMessages } from "./conversation-reducer";
-import {
-  assistantConversationStateAtom,
-  conversationsAtom,
-} from "./conversation-store";
+import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
+import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
 
-export const assistantErroredRunAtom = atom((get) => {
-  const state = get(assistantConversationStateAtom);
-  const ids = Object.keys(state.runs);
-  for (let i = ids.length - 1; i >= 0; i--) {
-    const run = state.runs[ids[i]];
-    if (run.status === "failed" && run.id !== state.dismissedRunErrorId) {
-      return run;
-    }
-  }
-
-  return null;
-});
+export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
 
 export const assistantMessagesAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);

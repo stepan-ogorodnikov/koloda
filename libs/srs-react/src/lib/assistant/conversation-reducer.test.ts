@@ -4,7 +4,12 @@ import {
   coerceConversationState,
   normalizeRestoredConversation,
 } from "./conversation-persistence";
-import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
+import {
+  conversationReducer,
+  findLatestErroredRun,
+  getVisibleMessages,
+  initialConversationState,
+} from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 // Helper: convert old-style action objects to new tuple format for tests
@@ -578,6 +583,96 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"].status).toBe("success");
     expect(next.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "success" });
     expect(next.lastReadRunId).toBe("r1");
+  });
+});
+
+describe("findLatestErroredRun", () => {
+  it("returns the latest failed run that is not dismissed", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      dismissedRunErrorId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1),
+          elapsedSeconds: 1,
+          error: { message: "old" },
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(2),
+          elapsedSeconds: 1,
+        },
+        r3: {
+          id: "r3",
+          mode: "cards",
+          status: "failed",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(3),
+          elapsedSeconds: 1,
+          error: { message: "latest" },
+        },
+      },
+    };
+
+    expect(findLatestErroredRun(state)?.id).toBe("r3");
+  });
+
+  it("returns null when the only failed run is dismissed", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      dismissedRunErrorId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1),
+          elapsedSeconds: 1,
+          error: { message: "gone" },
+        },
+      },
+    };
+
+    expect(findLatestErroredRun(state)).toBeNull();
+  });
+
+  it("returns null when there are no failed runs", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    expect(findLatestErroredRun(state)).toBeNull();
   });
 });
 

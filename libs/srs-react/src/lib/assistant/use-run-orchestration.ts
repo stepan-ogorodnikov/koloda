@@ -9,7 +9,7 @@ import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
 import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
-import { getVisibleMessages, resolveRunMode } from "./conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 
@@ -131,15 +131,8 @@ export function useRunOrchestration({
   }, [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun]);
 
   const handleDismissGenerate = useCallback(() => {
-    const state = readState();
-    const ids = Object.keys(state.runs);
-    for (let i = ids.length - 1; i >= 0; i--) {
-      const run = state.runs[ids[i]];
-      if (run.status === "failed" && run.id !== state.dismissedRunErrorId) {
-        dispatchAction(["dismissRunError", { runId: run.id }]);
-        return;
-      }
-    }
+    const run = findLatestErroredRun(readState());
+    if (run) dispatchAction(["dismissRunError", { runId: run.id }]);
   }, [readState, dispatchAction]);
 
   const handleGenerate = useCallback(async (value?: string) => {

@@ -167,6 +167,18 @@ export function resolveRunMode(state: ConversationReducerState, runId: string): 
   return null;
 }
 
+/** Latest failed run that has not been dismissed, or null. */
+export function findLatestErroredRun(state: ConversationReducerState): GenerationRun | null {
+  const ids = Object.keys(state.runs);
+  for (let i = ids.length - 1; i >= 0; i--) {
+    const run = state.runs[ids[i]];
+    if (run && run.status === "failed" && run.id !== state.dismissedRunErrorId) {
+      return run;
+    }
+  }
+  return null;
+}
+
 function finishRun(draft: ConversationReducerState, runId: string, status: RunStatus) {
   const run = draft.runs[runId];
   if (!run) return;
