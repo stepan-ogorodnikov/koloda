@@ -165,10 +165,6 @@ msgstr "Open deck picker"
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:47
-msgid "settings.hotkeys.ai.open-profile-picker"
-msgstr "Open AI profile picker"
-
 #: ../../libs/app/src/lib/settings-hotkeys.ts:53
 msgid "settings.hotkeys.ai.previous-conversation"
 msgstr "Previous conversation"

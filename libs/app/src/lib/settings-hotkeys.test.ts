@@ -41,7 +41,6 @@ describe("settings-hotkeys", () => {
         cancel: [],
         focusPrompt: [],
         newConversation: [],
-        openProfilePicker: [],
         openModelPicker: [],
         openDeckPicker: [],
         clearDeck: [],
