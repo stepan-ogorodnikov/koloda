@@ -1,7 +1,6 @@
 import type { GenerateCardsInput, GeneratedCard, Message } from "@koloda/ai";
-import type { StreamResult } from "@koloda/ai-react";
-import { useStreamingRequest } from "@koloda/ai-react";
 import { useCallback } from "react";
+import { type StreamResult, useStreamingRequest } from "./use-streaming-request";
 
 export type CardGenerationStreamRequest = {
   input: GenerateCardsInput;
@@ -24,6 +23,7 @@ export type UseAssistantCardGenerationReturn = {
   cancel: () => void;
 };
 
+/** Cards-mode stream transport — twin of `useChatStream` for structured card output. */
 export function useAssistantCardGeneration(
   streamGenerator: CardGenerationExecutor,
   onError?: (error: Error) => void,

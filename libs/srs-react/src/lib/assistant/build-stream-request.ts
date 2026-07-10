@@ -1,8 +1,8 @@
 import type { AIChatMode, ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
 import { generateCardsInputSchema } from "@koloda/ai";
+import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
-import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 
 export type StreamRequestResult =
   | { kind: "chat"; request: ChatStreamRequest; templateFields: null }

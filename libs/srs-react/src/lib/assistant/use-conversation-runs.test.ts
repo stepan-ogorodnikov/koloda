@@ -1,6 +1,6 @@
 import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
-import type { StreamResult } from "@koloda/ai-react";
+import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -13,7 +13,6 @@ import {
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useConversationRuns } from "./use-conversation-runs";
 
 type Dispatch = (action: ConversationReducerAction) => void;
@@ -56,15 +55,6 @@ vi.mock("@koloda/ai-react", async () => {
       cancel: wire.cancelChat,
       reset: vi.fn(),
     }),
-  };
-});
-
-vi.mock("./use-assistant-card-generation", async () => {
-  const actual = await vi.importActual<typeof import("./use-assistant-card-generation")>(
-    "./use-assistant-card-generation",
-  );
-  return {
-    ...actual,
     useAssistantCardGeneration: () => ({
       cards: [],
       isGenerating: false,

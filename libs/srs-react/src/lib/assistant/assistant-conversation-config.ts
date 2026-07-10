@@ -1,7 +1,7 @@
 import type { ChatStreamGenerator } from "@koloda/ai";
+import type { CardGenerationExecutor } from "@koloda/ai-react";
 import type { Deck, Template } from "@koloda/srs";
 import type { I18nContext } from "@lingui/react";
-import type { CardGenerationExecutor } from "./use-assistant-card-generation";
 
 export type AssistantConversationConfig = {
   profileId: string;

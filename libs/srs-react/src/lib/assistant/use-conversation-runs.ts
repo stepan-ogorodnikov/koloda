@@ -1,11 +1,9 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
-import { useChatStream } from "@koloda/ai-react";
-import type { StreamResult } from "@koloda/ai-react";
+import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
+import { useAssistantCardGeneration, useChatStream } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
-import { useAssistantCardGeneration } from "./use-assistant-card-generation";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { usePendingRunRefs } from "./use-pending-run-refs";
 
 export type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;

@@ -1,8 +1,8 @@
 import type { AIProfile, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import { createAIGenerationClient } from "@koloda/ai";
+import type { CardGenerationExecutor } from "@koloda/ai-react";
 import type { Template } from "@koloda/srs";
 import { useCallback } from "react";
-import type { CardGenerationExecutor } from "./use-assistant-card-generation";
 
 export type UseAssistantClientOptions = {
   selectedProfile: AIProfile | null;

@@ -1,6 +1,6 @@
 import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
-import type { StreamResult } from "@koloda/ai-react";
+import type { CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,7 +17,6 @@ import {
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
-import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useAssistantChat } from "./use-assistant-chat";
 
 /**
@@ -92,6 +91,25 @@ vi.mock("@koloda/ai-react", async () => {
         cancel: () => {},
       };
     },
+    useAssistantCardGeneration: (_streamGenerator: unknown, onError?: (error: Error) => void) => {
+      wire.onCardError = onError ?? null;
+      return {
+        cards: [],
+        isGenerating: false,
+        error: null,
+        generate: async (
+          _request: CardGenerationStreamRequest,
+          onCard?: (card: GeneratedCard) => void,
+        ) => {
+          wire.cardStream.started += 1;
+          wire.cardStream.onCard = onCard ?? null;
+          wire.cardStream.onStart?.(_request, onCard ?? (() => {}));
+          return "success" as StreamResult;
+        },
+        clearCards: () => {},
+        cancel: () => {},
+      };
+    },
     useAIProfiles: (profileId?: string | null) => {
       const profile = wire.profiles[0] ?? null;
       const selectedProfile = profileId ? profile : null;
@@ -114,31 +132,6 @@ vi.mock("@koloda/ai-react", async () => {
     }),
   };
 });
-
-vi.mock("./use-assistant-card-generation", () => ({
-  useAssistantCardGeneration: (
-    _streamGenerator: unknown,
-    onError?: (error: Error) => void,
-  ) => {
-    wire.onCardError = onError ?? null;
-    return {
-      cards: [],
-      isGenerating: false,
-      error: null,
-      generate: async (
-        _request: CardGenerationStreamRequest,
-        onCard?: (card: GeneratedCard) => void,
-      ) => {
-        wire.cardStream.started += 1;
-        wire.cardStream.onCard = onCard ?? null;
-        wire.cardStream.onStart?.(_request, onCard ?? (() => {}));
-        return "success" as StreamResult;
-      },
-      clearCards: () => {},
-      cancel: () => {},
-    };
-  },
-}));
 
 vi.mock("./use-assistant-profile-selection", () => {
   // Re-export a thin shim that reads from the same `wire` used by the

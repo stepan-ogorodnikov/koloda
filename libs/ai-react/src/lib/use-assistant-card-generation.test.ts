@@ -1,9 +1,19 @@
-import type { StreamResult } from "@koloda/ai-react";
+import type { GeneratedCard } from "@koloda/ai";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createGeneratedCard } from "../../test/test-helpers";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
+import type { StreamResult } from "./use-streaming-request";
+
+function createGeneratedCard(overrides: Partial<GeneratedCard> = {}): GeneratedCard {
+  return {
+    content: {
+      "1": { text: "Front" },
+      "2": { text: "Back" },
+    },
+    ...overrides,
+  };
+}
 
 function createRequest(overrides: Partial<CardGenerationStreamRequest> = {}): CardGenerationStreamRequest {
   return {

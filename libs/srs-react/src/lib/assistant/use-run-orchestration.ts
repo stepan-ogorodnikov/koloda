@@ -1,5 +1,6 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
+import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
@@ -11,7 +12,6 @@ import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from 
 import { buildStreamRequest } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
-import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;

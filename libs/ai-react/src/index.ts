@@ -20,6 +20,7 @@ export * from "./lib/use-ai-chat-validation";
 export * from "./lib/use-ai-models";
 export * from "./lib/use-ai-profiles";
 export * from "./lib/use-ai-profiles-models";
+export * from "./lib/use-assistant-card-generation";
 export * from "./lib/use-auto-scroll";
 export * from "./lib/use-chat-stream";
 export * from "./lib/use-streaming-request";

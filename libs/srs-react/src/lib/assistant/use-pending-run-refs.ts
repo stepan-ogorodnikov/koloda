@@ -7,11 +7,12 @@ import type { DispatchToConversation } from "./use-conversation-runs";
  * originating conversation and run.
  *
  * We keep separate refs for chat and card streams (rather than a single
- * Map) because the underlying stream hooks (`useAssistantCardGeneration`
- * and `useChatStream`) are independent and can each have an in-flight run
- * on a different conversation. The error callback for each hook only fires
- * for *its* stream, so a single shared ref + iterating lookup would route
- * errors to the wrong conversation when both streams are in flight.
+ * Map) because the underlying stream hooks in `@koloda/ai-react`
+ * (`useChatStream` and `useAssistantCardGeneration`) are independent and
+ * can each have an in-flight run on a different conversation. The error
+ * callback for each hook only fires for *its* stream, so a single shared
+ * ref + iterating lookup would route errors to the wrong conversation when
+ * both streams are in flight.
  *
  * ## Contract
  *
