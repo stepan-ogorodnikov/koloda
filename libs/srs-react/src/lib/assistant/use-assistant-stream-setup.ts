@@ -1,5 +1,4 @@
-import type { ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai-react";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import { useChatStream } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";

@@ -11,7 +11,7 @@ Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client fa
 ## Architectural Map
 
 - Provider registry & abstraction seam: `provider-registry.ts` — `AI_PROVIDER_REGISTRY` maps each provider to a client factory, model fetcher, missing-secrets probe, and api-key getter. `AIGenerationClient` is the uniform interface (listModels, chat, generateCards). Adding a provider = one registry entry.
-- Provider enum & secrets (TS half of the Rust mirror): `types.ts` — `AI_PROVIDER_LABELS` (openrouter, ollama, lmstudio, opencodeGo, codex), zod `secretsValidation` discriminated union keyed by provider, `AIModel` type with reasoning levels, prompt template constants.
+- Provider enum & secrets (TS half of the Rust mirror): `types.ts` — `AI_PROVIDER_LABELS` (openrouter, ollama, lmstudio, opencodeGo, codex), zod `secretsValidation` discriminated union keyed by provider, `AIModel` type with reasoning levels, `AIChatMode` (`"chat" | "cards"`), prompt template constants.
 - Chat streaming: `chat-stream.ts` — per-provider `streamChatWith<Provider>` functions over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them.
 - Card generation (two strategies): `card-generation.ts` — `runStructuredCardGeneration` streams structured elements via `Output.array` (OpenRouter, OpencodeGo); `runTextCompletionCardGeneration` does a text completion then parses (Ollama, LMStudio). The structured path also falls back to text parsing if no elements arrive.
 - Card parsing & schema: `card-parsing.ts` — `getCardContentSchema` (zod schema per template fields), `parseGeneratedCardsText` (text → cards), `resolveGenerationTemperature`.

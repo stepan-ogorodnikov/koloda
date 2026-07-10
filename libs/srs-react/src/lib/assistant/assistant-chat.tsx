@@ -34,9 +34,11 @@ import {
 } from "./assistant-conversation-atoms";
 import { AssistantSettings } from "./assistant-settings";
 import { RevertBanner } from "./revert-banner";
-import { useAssistantChat } from "./use-assistant-chat";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
+import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
+import { useAssistantSession } from "./use-assistant-session";
+import { useConversationPersistence } from "./use-conversation-persistence";
 
 export type AssistantChatProps = {
   conversationId: string | undefined;
@@ -68,30 +70,45 @@ export function AssistantChat(
     profileId,
     modelId,
     modelName,
+    models,
     provider,
     modelParameters,
-    template,
-    templateId,
-    hasRequiredSecrets,
+    selectedProfile,
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
-    contextLength,
-    isRestoring,
-    loadError,
-    handleDismissGenerate,
-    handleDismissSave,
+    setGlobalAIProfileState,
     handleModelProfileChange,
     handleModelParameterChange,
+  } = useAssistantProfileSelection();
+  const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
+  const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
+
+  const { isRestoring, loadError, handleDismissSave, retryLoad } = useConversationPersistence({
+    conversationId,
+  });
+
+  const {
+    template,
+    templateId,
     handleGenerate,
     handleCancel,
     handleReset,
     handleRetry,
     handleRevert: revertToMessage,
     handleRestore: restoreFromRevert,
-    retryLoad,
+    handleDismissGenerate,
     setMode,
-  } = useAssistantChat({ conversationId, onConversationIdChange });
+  } = useAssistantSession({
+    conversationId,
+    onConversationIdChange,
+    profileId,
+    modelId,
+    modelName,
+    modelParameters,
+    selectedProfile,
+    setGlobalAIProfileState,
+  });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     onSubmit: handleGenerate,

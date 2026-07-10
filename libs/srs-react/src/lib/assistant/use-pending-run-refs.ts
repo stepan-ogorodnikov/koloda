@@ -1,4 +1,4 @@
-import type { AIChatMode } from "@koloda/ai-react";
+import type { AIChatMode } from "@koloda/ai";
 import { useCallback, useRef } from "react";
 import type { DispatchToConversation } from "./use-conversation-runs";
 

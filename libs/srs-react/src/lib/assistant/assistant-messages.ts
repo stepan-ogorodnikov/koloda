@@ -1,5 +1,5 @@
 import { type GeneratedCard, getTextMessageContent, type Message } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai-react";
+import type { AIChatMode } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 

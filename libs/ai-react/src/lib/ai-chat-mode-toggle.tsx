@@ -1,9 +1,9 @@
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { AIChatMode } from "@koloda/ai";
 import { ClipboardIcon } from "@koloda/ui";
 import { Button, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { AIChatMode } from "./types";
 
 export type AIChatModeToggleProps = {
   mode?: AIChatMode;

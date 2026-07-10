@@ -93,7 +93,7 @@ Each card starts in an idle state and can be independently marked as added to a 
 
 When the stream finishes successfully, the run is marked as success.
 Token usage is recorded.
-For card generation runs, the mode automatically switches back to chat.
+Conversation mode is unchanged.
 
 ### Failure
 
@@ -117,8 +117,8 @@ The assistant operates in two modes: **chat** and **cards**.
 The user can toggle between modes using a keyboard shortcut, but only when a deck is selected.
 If no deck is selected, the app stays in chat mode regardless of the toggle.
 
-After a card generation run completes successfully, the mode automatically switches back to chat.
-If the run fails or is canceled, the mode stays as cards.
+Mode is user-controlled: toggle, hotkey, or revert (which mirrors the target run's mode).
+Run completion, failure, and cancellation do not change mode.
 
 ## Deck Selection and Locking
 

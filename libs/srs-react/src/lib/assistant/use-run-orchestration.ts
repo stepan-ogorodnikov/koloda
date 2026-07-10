@@ -1,6 +1,5 @@
-import type { ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
+import type { AIChatMode, ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
 import { generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";

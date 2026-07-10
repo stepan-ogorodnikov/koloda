@@ -185,6 +185,9 @@ export type OnCardGenerated = (card: GeneratedCard) => void;
 
 export type Message = { role: "user" | "assistant" | "system"; content: string };
 
+/** Assistant chat operating mode: free-form text vs structured card generation. */
+export type AIChatMode = "chat" | "cards";
+
 export type CardGenerationFields = Array<{ id: number; title: string; isRequired: boolean; type?: string }>;
 
 export type ChatStreamRequest = {

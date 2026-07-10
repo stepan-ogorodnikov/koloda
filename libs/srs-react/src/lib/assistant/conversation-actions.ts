@@ -1,5 +1,5 @@
 import type { ModelParameter } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai-react";
+import type { AIChatMode } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { dropRuns } from "./conversation-reducer";
