@@ -2,6 +2,8 @@
 
 Before modifying the assistant chat feature, read this map to load the correct spec and target the correct files. The behavioral rules live in the specs; do not infer them from the code.
 
+**This map is the ownership source of truth.** Package READMEs (`libs/ai`, `libs/ai-react`) describe their own surface; if they disagree with the layer boundaries below, trust this map.
+
 ## Task Routing Table
 
 If your task matches one of these, read the specified doc first, then target the specified files.

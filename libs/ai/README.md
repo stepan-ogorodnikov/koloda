@@ -4,7 +4,9 @@ Provider-agnostic AI abstraction: streams chat completions and generates structu
 
 ## Where it sits
 
-Consumed only by `libs/ai-react`. Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD_AI_PROVIDER.md`. Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
+Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client factory, pure helpers). Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD_AI_PROVIDER.md`. Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
+
+**Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over package READMEs when routing edits.
 
 ## Architectural Map
 
@@ -20,12 +22,13 @@ Consumed only by `libs/ai-react`. Mirrors the provider enum and secrets schema i
 
 ### Does NOT own (prevent scope creep)
 
-- Conversation / run lifecycle state — `libs/ai-react`
+- Conversation / run lifecycle state — `libs/srs-react/.../assistant`
 - Persistence schema & secrets storage — `drizzle/` + `crates/koloda-core/repo`
-- UI rendering — `libs/ai-react`
+- UI rendering / streaming hooks — `libs/ai-react`
 - The canonical provider enum — Rust (`crates/koloda-core/domain/ai.rs`) is source of truth; this lib mirrors it
 
 ## Read next
 
+- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
 - `agents/ADD_AI_PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming/generation)
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the domain behavior this lib serves

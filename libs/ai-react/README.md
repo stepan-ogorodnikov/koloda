@@ -1,21 +1,26 @@
 # @koloda/ai-react
 
-React binding for the assistant chat feature. Owns the runtime state of the assistant chat (runs, streaming, modes, deck locking, AI config); delegates persistence to the app layer and provider calls to @koloda/ai.
+Shared React UI primitives and streaming transport hooks for assistant chat. Presentational components and abortable stream helpers only — no conversation store, no run lifecycle, no deck locking, no persistence.
 
 ## Where it sits
 
-Consumed only by `apps/*`. It is the sole consumer of `@koloda/ai`. State is held in atoms; UI subscribes via hooks. Persistence and restore are delegated to the app layer, which calls into `crates/koloda-core` through Tauri commands.
+Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces). Calls into `@koloda/ai` for provider types, profile/model queries, and stream executors. Conversation state, orchestration, and persistence live in `libs/srs-react/src/lib/assistant/`.
+
+**Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing edits.
 
 ## Architectural Map
 
-- Run lifecycle & streaming: `use-streaming-request.ts` (the streaming → success | failed | canceled state machine) and `use-chat-stream.ts` (feeds chunks into state).
-- Mode & deck rules: ai-chat-mode-toggle.tsx and deck-lock atoms (chat ⇄ cards transitions, "auto-switch back to chat on success" rule).
-- AI configuration: `ai-model-profile-picker.tsx`, ai-model-parameters.tsx (profile sections → model → params reset cascade).
-- Message rendering: `ai-chat-messages.tsx` (list) and `ai-chat-message.tsx` (bubbles / card tables).
-- Input & validation: `ai-chat-prompt-panel.tsx` (container), `use-ai-chat-validation.ts` (send-enabled rules).
+- Streaming transport: `use-streaming-request.ts` (generic abortable stream → success | aborted | error) and `use-chat-stream.ts` (chat specialization). Callers in srs-react feed chunks into the conversation reducer.
+- Mode toggle UI: `ai-chat-mode-toggle.tsx` — controlled component; mode/deck-lock rules live in srs-react.
+- AI configuration UI: `ai-model-profile-picker.tsx`, `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-models.ts`, `use-ai-profiles-models.ts` (profile/model queries and pickers). Cascade reset policy is owned by srs-react profile selection.
+- Message list shell: `ai-chat-messages.tsx`, `ai-chat-message.tsx`, status/error/elapsed helpers — layout only; message domain rendering is in srs-react.
+- Input & validation: `ai-chat-prompt-panel.tsx`, `use-ai-chat-input.ts`, `use-ai-chat-validation.ts`, submit/footer/settings-toggle primitives.
+- Scroll: `use-auto-scroll.ts`.
 
 ### Does NOT own (prevent scope creep)
 
+- Conversation / run lifecycle state — `libs/srs-react/.../assistant`
+- Mode switching policy, deck locking, revert — `libs/srs-react/.../assistant`
 - Provider HTTP calls — `@koloda/ai`
 - Secrets storage / redaction — `crates/koloda-core`
 - Persistence schema — `drizzle/`
@@ -23,4 +28,5 @@ Consumed only by `apps/*`. It is the sole consumer of `@koloda/ai`. State is hel
 
 ## Read next
 
-- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the behavior this UI implements
+- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
+- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — behavioral rules the chat feature implements
