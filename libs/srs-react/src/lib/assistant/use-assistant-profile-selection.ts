@@ -31,8 +31,11 @@ export type UseAssistantProfileSelectionReturn = {
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
+  handleModelProfileChange: (next: { profileId: string; modelId: string }) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
+
+type HandleModelProfileChangeParams = { profileId: string; modelId: string };
 
 export function useAssistantProfileSelection(): UseAssistantProfileSelectionReturn {
   const storedProfileId = useAtomValue(assistantProfileIdAtom);
@@ -94,40 +97,42 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     return params;
   }, [resolvedModelId, models, storedModelParameters]);
 
-  const handleProfileChange = useCallback(
-    (value: string) => {
-      const profile = profiles.find((p) => p.id === value);
-      const modelId = profile?.lastUsedModel ?? null;
-      setAIProfile({ profileId: value, modelId, modelParameters: {} });
-      setGlobalAIProfileState({ profileId: value, modelId, modelParameters: {} });
-    },
-    [profiles, setAIProfile, setGlobalAIProfileState],
-  );
+  const handleProfileChange = useCallback((value: string) => {
+    const profile = profiles.find((p) => p.id === value);
+    const modelId = profile?.lastUsedModel ?? null;
+    setAIProfile({ profileId: value, modelId, modelParameters: {} });
+    setGlobalAIProfileState({ profileId: value, modelId, modelParameters: {} });
+  }, [profiles, setAIProfile, setGlobalAIProfileState]);
 
-  const handleModelChange = useCallback(
-    (value: string) => {
-      setAIModel({ modelId: value, modelParameters: {} });
-      setGlobalAIProfileState({ profileId: storedProfileId, modelId: value, modelParameters: {} });
-    },
-    [setAIModel, setGlobalAIProfileState, storedProfileId],
-  );
+  const handleModelChange = useCallback((value: string) => {
+    setAIModel({ modelId: value, modelParameters: {} });
+    setGlobalAIProfileState({ profileId: storedProfileId, modelId: value, modelParameters: {} });
+  }, [setAIModel, setGlobalAIProfileState, storedProfileId]);
 
-  const handleModelParameterChange = useCallback(
-    (type: ModelParameter["type"], value: string) => {
-      const nextValue = value || null;
-      switch (type) {
-        case "reasoning_effort":
-          setAIModelParameter({ paramType: type, value: nextValue });
-          break;
-      }
-      setGlobalAIProfileState({
-        profileId: storedProfileId,
-        modelId: storedModelId,
-        modelParameters: { [type]: nextValue ?? "" },
-      });
-    },
-    [setAIModelParameter, setGlobalAIProfileState, storedProfileId, storedModelId],
-  );
+  const handleModelProfileChange = useCallback((params: HandleModelProfileChangeParams) => {
+    const { profileId: nextProfileId, modelId: nextModelId } = params;
+    if (nextProfileId !== storedProfileId) {
+      setAIProfile({ profileId: nextProfileId, modelId: nextModelId, modelParameters: {} });
+      setGlobalAIProfileState({ profileId: nextProfileId, modelId: nextModelId, modelParameters: {} });
+      return;
+    }
+    setAIModel({ modelId: nextModelId, modelParameters: {} });
+    setGlobalAIProfileState({ profileId: storedProfileId, modelId: nextModelId, modelParameters: {} });
+  }, [setAIProfile, setAIModel, setGlobalAIProfileState, storedProfileId]);
+
+  const handleModelParameterChange = useCallback((type: ModelParameter["type"], value: string) => {
+    const nextValue = value || null;
+    switch (type) {
+      case "reasoning_effort":
+        setAIModelParameter({ paramType: type, value: nextValue });
+        break;
+    }
+    setGlobalAIProfileState({
+      profileId: storedProfileId,
+      modelId: storedModelId,
+      modelParameters: { [type]: nextValue ?? "" },
+    });
+  }, [setAIModelParameter, setGlobalAIProfileState, storedProfileId, storedModelId]);
 
   return {
     profileId: storedProfileId ?? "",
@@ -146,6 +151,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     setGlobalAIProfileState,
     handleProfileChange,
     handleModelChange,
+    handleModelProfileChange,
     handleModelParameterChange,
   };
 }

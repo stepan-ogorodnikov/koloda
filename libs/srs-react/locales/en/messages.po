@@ -121,7 +121,7 @@ msgstr "Revert message"
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:192
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:148
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
@@ -239,7 +239,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:199
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:203
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 

@@ -107,38 +107,41 @@ msgstr "Settings"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:100
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:126
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:62
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:65
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:130
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:133
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:38
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:90
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:74
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:125
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:150
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:39
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:76
+msgid "ai.model-picker.not-selected"
+msgstr "Not selected"
+
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:77
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:40
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:89
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:41
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:90
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
-
-#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:25
-msgid "ai.profile-picker.label"
-msgstr "Select AI profile"
 
 #: ../../libs/ai-react/src/lib/use-ai-profiles.ts:13
 msgid "settings.ai.profiles.api-key.label"
@@ -147,7 +150,3 @@ msgstr "API Key"
 #: ../../libs/ai-react/src/lib/use-ai-profiles.ts:14
 msgid "settings.ai.profiles.base-url.label"
 msgstr "Base URL"
-
-#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:32
-msgid "settings.ai.profiles.title.placeholder"
-msgstr "Untitled"

@@ -10,7 +10,7 @@ Consumed only by `apps/*`. It is the sole consumer of `@koloda/ai`. State is hel
 
 - Run lifecycle & streaming: `use-streaming-request.ts` (the streaming → success | failed | canceled state machine) and `use-chat-stream.ts` (feeds chunks into state).
 - Mode & deck rules: ai-chat-mode-toggle.tsx and deck-lock atoms (chat ⇄ cards transitions, "auto-switch back to chat on success" rule).
-- AI configuration: `ai-profile-picker.tsx`, ai-model-picker.tsx, ai-model-parameters.tsx (profile → model → params reset cascade).
+- AI configuration: `ai-model-profile-picker.tsx`, ai-model-parameters.tsx (profile sections → model → params reset cascade).
 - Message rendering: `ai-chat-messages.tsx` (list) and `ai-chat-message.tsx` (bubbles / card tables).
 - Input & validation: `ai-chat-prompt-panel.tsx` (container), `use-ai-chat-validation.ts` (send-enabled rules).
 

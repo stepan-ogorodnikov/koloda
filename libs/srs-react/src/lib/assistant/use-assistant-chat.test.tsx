@@ -164,6 +164,7 @@ vi.mock("./use-assistant-profile-selection", () => {
         setGlobalAIProfileState: () => {},
         handleProfileChange: () => {},
         handleModelChange: () => {},
+        handleModelProfileChange: () => {},
         handleModelParameterChange: () => {},
       };
     },

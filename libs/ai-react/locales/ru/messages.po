@@ -107,38 +107,41 @@ msgstr "Настройки"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Интеллект"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:100
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:126
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:62
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:65
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:130
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:133
 msgid "ai.model-picker.error.retry"
 msgstr "Обновить"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:38
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
 msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:90
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:74
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:125
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:150
 msgid "ai.model-picker.loading.label"
 msgstr "Загрузка"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:39
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:76
+msgid "ai.model-picker.not-selected"
+msgstr "Не выбрана"
+
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:77
 msgid "ai.model-picker.placeholder"
 msgstr "Выберите модель"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:40
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:89
 msgid "ai.model-picker.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/ai-react/src/lib/ai-model-picker.tsx:41
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:90
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
-
-#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:25
-msgid "ai.profile-picker.label"
-msgstr "Выбор профиля ИИ"
 
 #: ../../libs/ai-react/src/lib/use-ai-profiles.ts:13
 msgid "settings.ai.profiles.api-key.label"
@@ -147,7 +150,3 @@ msgstr "API-ключ"
 #: ../../libs/ai-react/src/lib/use-ai-profiles.ts:14
 msgid "settings.ai.profiles.base-url.label"
 msgstr "Базовый URL"
-
-#: ../../libs/ai-react/src/lib/ai-profile-picker.tsx:32
-msgid "settings.ai.profiles.title.placeholder"
-msgstr "Без названия"

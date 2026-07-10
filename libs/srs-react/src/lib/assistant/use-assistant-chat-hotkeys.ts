@@ -7,7 +7,6 @@ import {
   assistantEffectiveModeAtom,
   assistantIsLockedAtom,
   assistantIsProcessingAtom,
-  assistantProfileIdAtom,
   setAssistantModeAtom,
 } from "./assistant-conversation-atoms";
 
@@ -15,8 +14,7 @@ export type UseAssistantChatHotkeysOptions = {
   handleCancel: () => void;
   handleNewConversation: () => void;
   scroll: UseAutoScrollReturn;
-  profilePickerRef: RefObject<HTMLButtonElement | null>;
-  modelPickerRef: RefObject<HTMLButtonElement | null>;
+  modelProfilePickerRef: RefObject<HTMLButtonElement | null>;
   deckPickerRef?: RefObject<HTMLButtonElement | null>;
   onClearDeck?: () => void;
   onPrevConversation?: () => void;
@@ -28,8 +26,7 @@ export function useAssistantChatHotkeys(
     handleCancel,
     handleNewConversation,
     scroll,
-    profilePickerRef,
-    modelPickerRef,
+    modelProfilePickerRef,
     deckPickerRef,
     onClearDeck,
     onPrevConversation,
@@ -40,19 +37,16 @@ export function useAssistantChatHotkeys(
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isLocked = useAtomValue(assistantIsLockedAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
-  const profileId = useAtomValue(assistantProfileIdAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
   const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
-  useAppHotkey(ai.openProfilePicker, () => profilePickerRef.current?.click(), "", { ignoreInputs: false });
   useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
   useAppHotkey(ai.toggleCardsMode, () => setMode(effectiveMode === "chat" ? "cards" : "chat"), "", {
     enabled: !!deckId,
     ignoreInputs: false,
   });
-  useAppHotkey(ai.openModelPicker, () => modelPickerRef.current?.click(), "", {
-    enabled: !!profileId,
+  useAppHotkey(ai.openModelPicker, () => modelProfilePickerRef.current?.click(), "", {
     ignoreInputs: false,
   });
   useAppHotkey(ai.openDeckPicker, () => deckPickerRef?.current?.click(), "", {

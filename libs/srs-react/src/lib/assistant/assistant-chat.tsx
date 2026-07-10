@@ -10,8 +10,7 @@ import {
   AIChatSettingsToggle,
   AIChatSubmit,
   AIModelParameters,
-  AIModelPicker,
-  AIProfilePicker,
+  AIModelProfilePicker,
   useAIChatInput,
   useAIChatValidation,
   useAutoScroll,
@@ -62,8 +61,7 @@ export function AssistantChat(
   const revertState = useAtomValue(assistantRevertStateAtom);
   const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
-  const profilePickerRef = useRef<HTMLButtonElement>(null);
-  const modelPickerRef = useRef<HTMLButtonElement>(null);
+  const modelProfilePickerRef = useRef<HTMLButtonElement>(null);
   const scroll = useAutoScroll({ messages, isLoading: isProcessing });
 
   const {
@@ -83,8 +81,7 @@ export function AssistantChat(
     loadError,
     handleDismissGenerate,
     handleDismissSave,
-    handleProfileChange,
-    handleModelChange,
+    handleModelProfileChange,
     handleModelParameterChange,
     handleGenerate,
     handleCancel,
@@ -130,8 +127,7 @@ export function AssistantChat(
     handleCancel,
     handleNewConversation,
     scroll,
-    profilePickerRef,
-    modelPickerRef,
+    modelProfilePickerRef,
     deckPickerRef,
     onClearDeck,
     onPrevConversation,
@@ -174,15 +170,6 @@ export function AssistantChat(
               <AIChatPromptPanel onSubmit={handleSubmit}>
                 <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />
                 <div className="flex flex-row items-center min-w-0 px-1 pb-2">
-                  <AIModelPicker
-                    profileId={profileId}
-                    value={modelId}
-                    onChange={handleModelChange}
-                    triggerRef={modelPickerRef}
-                  />
-                  {modelParameters.length > 0 && (
-                    <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
-                  )}
                   <div className="grow min-w-3" />
                   <div className="flex flex-row items-center gap-2 shrink-0 px-1">
                     <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
@@ -194,7 +181,15 @@ export function AssistantChat(
           )}
       </AnimatePresence>
       <AIChatFooter>
-        <AIProfilePicker value={profileId} onChange={handleProfileChange} triggerRef={profilePickerRef} />
+        <AIModelProfilePicker
+          profileId={profileId}
+          modelId={modelId}
+          onChange={handleModelProfileChange}
+          triggerRef={modelProfilePickerRef}
+        />
+        {modelParameters.length > 0 && (
+          <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
+        )}
         <div className="grow min-w-3" />
         {contextUsage !== undefined && contextLength !== undefined && (
           <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />

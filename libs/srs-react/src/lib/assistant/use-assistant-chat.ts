@@ -44,6 +44,7 @@ export type UseAssistantChatReturn = {
   handleDismissSave: () => void;
   handleProfileChange: (value: string) => void;
   handleModelChange: (value: string) => void;
+  handleModelProfileChange: (next: { profileId: string; modelId: string }) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
   handleGenerate: (value?: string) => Promise<void>;
   handleCancel: () => void;
@@ -77,6 +78,7 @@ export function useAssistantChat(
     setGlobalAIProfileState,
     handleProfileChange,
     handleModelChange,
+    handleModelProfileChange,
     handleModelParameterChange,
   } = useAssistantProfileSelection();
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
@@ -181,6 +183,7 @@ export function useAssistantChat(
     handleDismissSave,
     handleProfileChange,
     handleModelChange,
+    handleModelProfileChange,
     handleModelParameterChange,
     handleGenerate,
     handleCancel,
