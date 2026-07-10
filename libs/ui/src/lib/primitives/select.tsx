@@ -19,8 +19,11 @@ import type { ComponentProps, ReactNode, RefObject } from "react";
 import { useContext, useEffect, useMemo, useRef } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
+  Collection as ReactAriaCollection,
+  Header as ReactAriaHeader,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
   ListLayout,
   Select as ReactAriaSelect,
   SelectStateContext,
@@ -29,8 +32,11 @@ import {
   Virtualizer,
 } from "react-aria-components";
 import type {
+  CollectionProps,
+  HeaderProps,
   ListBoxItemProps,
   ListBoxProps,
+  ListBoxSectionProps,
   PopoverProps,
   SelectProps as ReactAriaSelectProps,
   SelectValueProps as ReactAriaSelectValueProps,
@@ -258,6 +264,7 @@ const selectListBoxItem = tv({
     "flex flex-row items-center justify-between gap-2 mx-1 py-2 px-2",
     "outline-none rounded-lg cursor-default select-none truncate",
     "cursor-default select-none focus:bg-picker-item-hover",
+    "disabled:fg-level-3 disabled:focus:bg-transparent",
   ],
 });
 
@@ -279,6 +286,28 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
       )}
     </ListBoxItem>
   );
+}
+
+function SelectListBoxSection<T extends object>(props: ListBoxSectionProps<T>) {
+  return (
+    <ListBoxSection
+      className="flex flex-col outline-none"
+      {...props}
+    />
+  );
+}
+
+function SelectHeader(props: HeaderProps) {
+  return (
+    <ReactAriaHeader
+      className="mx-1 mt-1 px-2 py-1 fg-level-4 truncate select-none"
+      {...props}
+    />
+  );
+}
+
+function SelectCollection<T extends object>(props: CollectionProps<T>) {
+  return <ReactAriaCollection {...props} />;
 }
 
 // Delegate for Select that:
@@ -380,3 +409,6 @@ Select.Autocomplete = ReactAriaAutocomplete;
 Select.SearchField = SelectSearchField;
 Select.ListBox = SelectListBox;
 Select.ListBoxItem = SelectListBoxItem;
+Select.ListBoxSection = SelectListBoxSection;
+Select.Header = SelectHeader;
+Select.Collection = SelectCollection;
