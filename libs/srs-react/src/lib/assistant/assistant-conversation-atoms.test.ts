@@ -43,11 +43,6 @@ function makeConversation(id: string, overrides: Partial<ConversationReducerStat
   };
 }
 
-/**
- * Helper: dispatch an action to a specific conversation via the store.
- * Mirrors how `dispatchFor` works in `useAssistantChat` (the hook now
- * delegates to `dispatchToConversationOnStore`).
- */
 function dispatchTo(
   store: ReturnType<typeof createStore>,
   id: string,

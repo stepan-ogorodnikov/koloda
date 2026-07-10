@@ -1,6 +1,6 @@
 import type { AIChatMode } from "@koloda/ai-react";
 import { useCallback, useRef } from "react";
-import type { DispatchForConversation } from "./use-conversation-runs";
+import type { DispatchToConversation } from "./use-conversation-runs";
 
 /**
  * Manages per-stream failure refs for routing stream errors back to the
@@ -32,7 +32,7 @@ export type UsePendingRunRefsReturn = {
   onComplete: (mode: AIChatMode, runId: string) => void;
 };
 
-export function usePendingRunRefs(dispatchFor: DispatchForConversation): UsePendingRunRefsReturn {
+export function usePendingRunRefs(dispatchToConversation: DispatchToConversation): UsePendingRunRefsReturn {
   const chatRef = useRef<{ id: string; runId: string } | null>(null);
   const cardRef = useRef<{ id: string; runId: string } | null>(null);
 
@@ -46,8 +46,8 @@ export function usePendingRunRefs(dispatchFor: DispatchForConversation): UsePend
     const entry = ref.current;
     if (!entry) return;
     ref.current = null;
-    dispatchFor(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
-  }, [dispatchFor]);
+    dispatchToConversation(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
+  }, [dispatchToConversation]);
 
   const onComplete = useCallback((mode: AIChatMode, runId: string) => {
     const ref = mode === "chat" ? chatRef : cardRef;

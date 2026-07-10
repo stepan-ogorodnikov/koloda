@@ -59,10 +59,10 @@ function buildStreamRequest(
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
   readState: () => ConversationReducerState;
-  dispatchAction: (action: ConversationReducerAction) => void;
+  dispatchPersisted: (action: ConversationReducerAction) => void;
   // WHY: Revert is visual/in-memory only and must not bump pending save
   // (persist strips revertState). Mode changes still go through setMode.
-  dispatchLocal: (action: ConversationReducerAction) => void;
+  dispatchEphemeral: (action: ConversationReducerAction) => void;
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
@@ -83,17 +83,15 @@ export type UseRunOrchestrationReturn = {
   handleGenerate: (value?: string) => Promise<void>;
   handleRetry: (runId: string) => Promise<void>;
   handleDismissGenerate: () => void;
-  /** Returns prompt text for the input, or null when the revert is a no-op. */
   handleRevert: (userMessageId: string, currentInputText: string) => string | null;
-  /** Returns the pre-revert input text to restore, or null when nothing to restore. */
   handleRestore: () => string | null;
 };
 
 export function useRunOrchestration({
   configRef,
   readState,
-  dispatchAction,
-  dispatchLocal,
+  dispatchPersisted,
+  dispatchEphemeral,
   setGlobalAIProfileState,
   cancelActiveRun,
   setMode,
@@ -132,8 +130,8 @@ export function useRunOrchestration({
 
   const handleDismissGenerate = useCallback(() => {
     const run = findLatestErroredRun(readState());
-    if (run) dispatchAction(["dismissRunError", { runId: run.id }]);
-  }, [readState, dispatchAction]);
+    if (run) dispatchPersisted(["dismissRunError", { runId: run.id }]);
+  }, [readState, dispatchPersisted]);
 
   const handleGenerate = useCallback(async (value?: string) => {
     ensureConversationId();
@@ -146,7 +144,7 @@ export function useRunOrchestration({
     // starts a fresh run. Re-read the state afterwards so the rest of
     // this handler sees the post-commit shape.
     if (currentState.revertState) {
-      dispatchAction(["commitRevert"]);
+      dispatchPersisted(["commitRevert"]);
       currentState = readState();
     }
 
@@ -169,10 +167,10 @@ export function useRunOrchestration({
 
     const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
 
-    dispatchAction(["addUserMessage", { runId, text: promptText }]);
+    dispatchPersisted(["addUserMessage", { runId, text: promptText }]);
 
     if (result.kind === "chat") {
-      dispatchAction([
+      dispatchPersisted([
         "startRun",
         {
           runId,
@@ -182,10 +180,10 @@ export function useRunOrchestration({
           modelName: cfg.modelName,
         },
       ]);
-      dispatchAction(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
+      dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
       await executeChatRun(activeConversationId, runId, result.request);
     } else {
-      dispatchAction([
+      dispatchPersisted([
         "startRun",
         {
           runId,
@@ -195,7 +193,7 @@ export function useRunOrchestration({
           modelName: cfg.modelName,
         },
       ]);
-      dispatchAction([
+      dispatchPersisted([
         "addAssistantMessage",
         {
           runId,
@@ -208,7 +206,7 @@ export function useRunOrchestration({
   }, [
     configRef,
     ensureConversationId,
-    dispatchAction,
+    dispatchPersisted,
     executeChatRun,
     executeGenerateRun,
     readState,
@@ -228,7 +226,7 @@ export function useRunOrchestration({
     // stream is canceled because its run will be among the hidden
     // messages and must not keep streaming.
     cancelActiveRun();
-    dispatchLocal([
+    dispatchEphemeral([
       "setRevertState",
       { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
     ]);
@@ -241,15 +239,15 @@ export function useRunOrchestration({
       setMode(targetMode);
     }
     return promptText;
-  }, [readState, cancelActiveRun, dispatchLocal, setMode]);
+  }, [readState, cancelActiveRun, dispatchEphemeral, setMode]);
 
   const handleRestore = useCallback(() => {
     const state = readState();
     if (!state.revertState) return null;
     const text = state.revertState.preRevertInputText;
-    dispatchLocal(["setRevertState", null]);
+    dispatchEphemeral(["setRevertState", null]);
     return text;
-  }, [readState, dispatchLocal]);
+  }, [readState, dispatchEphemeral]);
 
   return { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore };
 }

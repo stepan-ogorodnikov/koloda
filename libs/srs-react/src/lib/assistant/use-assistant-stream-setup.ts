@@ -7,14 +7,14 @@ import type { ConversationReducerAction, ConversationReducerState } from "./conv
 import { useAssistantCardGeneration } from "./use-assistant-card-generation";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
 import { useConversationRuns } from "./use-conversation-runs";
-import type { DispatchForConversation } from "./use-conversation-runs";
+import type { DispatchToConversation } from "./use-conversation-runs";
 import { usePendingRunRefs } from "./use-pending-run-refs";
 
 export type UseAssistantStreamSetupOptions = {
   streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
-  dispatchAction: (action: ConversationReducerAction) => void;
-  dispatchFor: DispatchForConversation;
+  dispatchPersisted: (action: ConversationReducerAction) => void;
+  dispatchToConversation: DispatchToConversation;
   readState: () => ConversationReducerState;
   bumpPendingSave: () => void;
 };
@@ -40,12 +40,12 @@ export type UseAssistantStreamSetupReturn = {
 export function useAssistantStreamSetup({
   streamGenerator,
   chatStreamGenerator,
-  dispatchAction,
-  dispatchFor,
+  dispatchPersisted,
+  dispatchToConversation,
   readState,
   bumpPendingSave,
 }: UseAssistantStreamSetupOptions): UseAssistantStreamSetupReturn {
-  const pendingRunRefs = usePendingRunRefs(dispatchFor);
+  const pendingRunRefs = usePendingRunRefs(dispatchToConversation);
 
   const handleChatStreamError = useCallback((error: Error) => (
     pendingRunRefs.handleError("chat", error)
@@ -69,8 +69,8 @@ export function useAssistantStreamSetup({
   const { executeChatRun, executeGenerateRun, retryRun } = useConversationRuns(
     streamChat,
     generate,
-    dispatchAction,
-    dispatchFor,
+    dispatchPersisted,
+    dispatchToConversation,
     readState,
     bumpPendingSave,
     onChatStreamComplete,

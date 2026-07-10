@@ -2,11 +2,10 @@ import type { ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import type { AIChatMode, StreamResult } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
-import type { Dispatch } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
 
-export type DispatchForConversation = (id: string, action: ConversationReducerAction) => void;
+export type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 
 export function useConversationRuns(
   streamChat: (
@@ -17,12 +16,12 @@ export function useConversationRuns(
     request: CardGenerationStreamRequest,
     onCard?: (card: { content: Record<string, { text: string }> }) => void,
   ) => Promise<StreamResult>,
-  dispatch: Dispatch<ConversationReducerAction>,
-  dispatchFor: DispatchForConversation,
+  dispatchPersisted: (action: ConversationReducerAction) => void,
+  dispatchToConversation: DispatchToConversation,
   getState: () => ConversationReducerState,
-  // WHY: terminal-stream actions go through `dispatchFor` (per-id) so a
+  // WHY: terminal-stream actions go through `dispatchToConversation` (per-id) so a
   // background stream on a non-current conversation still lands on the
-  // originating conversation. `dispatchFor` does NOT bump the pending
+  // originating conversation. `dispatchToConversation` does NOT bump the pending
   // save counter — without an explicit bump, the throttled save scheduled
   // at run start would fire during streaming and persist the run as
   // "canceled" (via `cancelStreamingRuns`) before the real terminal
@@ -37,7 +36,7 @@ export function useConversationRuns(
   const handleStreamResult = useCallback((conversationId: string, result: StreamResult, runId: string) => {
     switch (result) {
       case "success":
-        dispatchFor(conversationId, ["completeRun", { runId }]);
+        dispatchToConversation(conversationId, ["completeRun", { runId }]);
         // WHY: Force a save with the post-completion state so a
         // throttled save that fires during streaming cannot leave a
         // successful run persisted as "canceled" with elapsedSeconds: 0.
@@ -46,7 +45,7 @@ export function useConversationRuns(
       case "error":
         break;
       case "aborted":
-        dispatchFor(conversationId, ["cancelRun", { runId }]);
+        dispatchToConversation(conversationId, ["cancelRun", { runId }]);
         // WHY: Same rationale as success — the throttled save is still
         // queued from run start and would otherwise persist a "canceled"
         // snapshot derived from `cancelStreamingRuns` rather than the
@@ -54,7 +53,7 @@ export function useConversationRuns(
         bumpPendingSave?.();
         break;
     }
-  }, [dispatchFor, bumpPendingSave]);
+  }, [dispatchToConversation, bumpPendingSave]);
 
   const executeChatRun = useCallback(
     async (conversationId: string, runId: string, request: ChatStreamRequest) => {
@@ -62,28 +61,28 @@ export function useConversationRuns(
         let currentText = "";
         const { streamResult, usage } = await streamChat(request, (chunk) => {
           currentText += chunk;
-          dispatchFor(conversationId, ["updateAssistantText", { runId, text: currentText }]);
+          dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
         });
 
         if (streamResult === "aborted") {
-          dispatchFor(conversationId, ["updateAssistantText", { runId, text: currentText }]);
+          dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
         }
 
-        if (usage) dispatchFor(conversationId, ["setUsage", { runId, usage }]);
+        if (usage) dispatchToConversation(conversationId, ["setUsage", { runId, usage }]);
 
         handleStreamResult(conversationId, streamResult, runId);
       } finally {
         onChatStreamComplete?.(runId);
       }
     },
-    [dispatchFor, streamChat, handleStreamResult, onChatStreamComplete],
+    [dispatchToConversation, streamChat, handleStreamResult, onChatStreamComplete],
   );
 
   const executeGenerateRun = useCallback(
     async (conversationId: string, runId: string, request: CardGenerationStreamRequest) => {
       try {
         const result = await generate(request, (card) => {
-          dispatchFor(conversationId, ["addCard", { runId, card }]);
+          dispatchToConversation(conversationId, ["addCard", { runId, card }]);
         });
 
         handleStreamResult(conversationId, result, runId);
@@ -91,7 +90,7 @@ export function useConversationRuns(
         onCardStreamComplete?.(runId);
       }
     },
-    [dispatchFor, generate, handleStreamResult, onCardStreamComplete],
+    [dispatchToConversation, generate, handleStreamResult, onCardStreamComplete],
   );
 
   const retryRun = useCallback(
@@ -105,16 +104,16 @@ export function useConversationRuns(
       const run = getState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      dispatch(["restartRun", { runId, request, templateFields, mode: effectiveMode, modelName }]);
+      dispatchPersisted(["restartRun", { runId, request, templateFields, mode: effectiveMode, modelName }]);
 
       if (effectiveMode === "chat") {
-        dispatch(["updateAssistantText", { runId, text: "" }]);
+        dispatchPersisted(["updateAssistantText", { runId, text: "" }]);
         await executeChatRun(getState().id, runId, request as ChatStreamRequest);
       } else {
         await executeGenerateRun(getState().id, runId, request as CardGenerationStreamRequest);
       }
     },
-    [executeChatRun, executeGenerateRun, dispatch, getState],
+    [executeChatRun, executeGenerateRun, dispatchPersisted, getState],
   );
 
   return { handleStreamResult, executeChatRun, executeGenerateRun, retryRun };

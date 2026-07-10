@@ -97,29 +97,38 @@ export function useAssistantChat(
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
   const store = useStore();
 
-  const dispatchAction = useCallback((action: ConversationReducerAction) => {
+  // WHY: Keep three named helpers (persisted / by-id / ephemeral) instead of
+  // one options-bag dispatch. Collapsing them makes it easy to bump save on
+  // stream chunks or revert and persist mid-stream "canceled" runs or
+  // in-memory revertState. `dispatchToConversation` never auto-bumps —
+  // terminal success/abort bumps explicitly in useConversationRuns.
+  const dispatchPersisted = useCallback((action: ConversationReducerAction) => {
     setConversationReducerAction(action);
     bumpPendingSave();
   }, [setConversationReducerAction, bumpPendingSave]);
 
-  const dispatchFor = useCallback((id: string, action: ConversationReducerAction) => {
+  const dispatchToConversation = useCallback((id: string, action: ConversationReducerAction) => {
     dispatchToConversationOnStore(store, id, action);
   }, [store]);
+
+  const dispatchEphemeral = useCallback((action: ConversationReducerAction) => {
+    setConversationReducerAction(action);
+  }, [setConversationReducerAction]);
 
   const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useAssistantStreamSetup({
     streamGenerator: configRef.current.streamGenerator,
     chatStreamGenerator: configRef.current.chatStreamGenerator,
-    dispatchAction,
-    dispatchFor,
+    dispatchPersisted,
+    dispatchToConversation,
     readState,
     bumpPendingSave,
   });
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) dispatchAction(["cancelRun", { runId: currentActiveRunId }]);
+    if (currentActiveRunId) dispatchPersisted(["cancelRun", { runId: currentActiveRunId }]);
     cancel();
-  }, [dispatchAction, cancel, readState]);
+  }, [dispatchPersisted, cancel, readState]);
 
   const handleReset = useCallback(() => {
     const stored = readLastUsed();
@@ -140,20 +149,17 @@ export function useAssistantChat(
       const id = generateUUID();
       localConversationIdRef.current = id;
       const stored = readLastUsed();
-      dispatchAction([
-        "newConversation",
-        { ...stored, id, createdAt: new Date() },
-      ]);
+      dispatchPersisted(["newConversation", { ...stored, id, createdAt: new Date() }]);
       onConversationIdChange(id);
     }
     return localConversationIdRef.current;
-  }, [conversationId, onConversationIdChange, dispatchAction, readLastUsed]);
+  }, [conversationId, onConversationIdChange, dispatchPersisted, readLastUsed]);
 
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } = useRunOrchestration({
     configRef,
     readState,
-    dispatchAction,
-    dispatchLocal: setConversationReducerAction,
+    dispatchPersisted,
+    dispatchEphemeral,
     setGlobalAIProfileState,
     cancelActiveRun: handleCancel,
     setMode,

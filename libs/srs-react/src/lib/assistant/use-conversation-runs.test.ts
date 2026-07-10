@@ -16,7 +16,7 @@ import type { CardGenerationStreamRequest } from "./use-assistant-card-generatio
 import { useConversationRuns } from "./use-conversation-runs";
 
 type Dispatch = (action: ConversationReducerAction) => void;
-type DispatchFor = (id: string, action: ConversationReducerAction) => void;
+type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 type GetState = () => ConversationReducerState;
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
@@ -33,23 +33,23 @@ function createHarness() {
   const dispatchToMap: Array<{ id: string; action: ConversationReducerAction }> = [];
   const dispatchToCurrent: Array<ConversationReducerAction> = [];
 
-  const dispatch: Dispatch = (action) => {
+  const dispatchPersisted: Dispatch = (action) => {
     dispatchToCurrent.push(action);
     store.set(assistantConversationStateAtom, action);
   };
 
-  const dispatchFor: DispatchFor = (id, action) => {
+  const dispatchToConversation: DispatchToConversation = (id, action) => {
     dispatchToMap.push({ id, action });
     dispatchToConversationOnStore(store, id, action);
   };
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);
 
-  return { store, dispatch, dispatchFor, getState, dispatchToMap, dispatchToCurrent };
+  return { store, dispatchPersisted, dispatchToConversation, getState, dispatchToMap, dispatchToCurrent };
 }
 
 describe("useConversationRuns", () => {
-  it("executeChatRun dispatches updateAssistantText via dispatchFor (per-id) so background streams land on the originating conversation", async () => {
+  it("executeChatRun dispatches updateAssistantText via dispatchToConversation (per-id) so background streams land on the originating conversation", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
@@ -87,8 +87,8 @@ describe("useConversationRuns", () => {
       useConversationRuns(
         streamChat as never,
         vi.fn() as never,
-        harness.dispatch,
-        harness.dispatchFor,
+        harness.dispatchPersisted,
+        harness.dispatchToConversation,
         harness.getState,
         undefined,
         onChatStreamComplete,
@@ -111,7 +111,7 @@ describe("useConversationRuns", () => {
       await runPromise;
     });
 
-    // Every updateAssistantText action went through dispatchFor (per-id),
+    // Every updateAssistantText action went through dispatchToConversation (per-id),
     // not dispatch (current), so B is unaffected.
     const updateActions = harness.dispatchToMap
       .filter((entry) => entry.action[0] === "updateAssistantText")
@@ -121,7 +121,7 @@ describe("useConversationRuns", () => {
       expect(entry.id).toBe("A");
     }
 
-    // completeRun also went through dispatchFor with id "A".
+    // completeRun also went through dispatchToConversation with id "A".
     const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
@@ -139,7 +139,7 @@ describe("useConversationRuns", () => {
     expect(onChatStreamComplete).toHaveBeenCalledWith("run-1");
   });
 
-  it("executeGenerateRun dispatches addCard via dispatchFor (per-id)", async () => {
+  it("executeGenerateRun dispatches addCard via dispatchToConversation (per-id)", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
@@ -172,8 +172,8 @@ describe("useConversationRuns", () => {
       useConversationRuns(
         vi.fn() as never,
         generate as never,
-        harness.dispatch,
-        harness.dispatchFor,
+        harness.dispatchPersisted,
+        harness.dispatchToConversation,
         harness.getState,
         undefined,
         undefined,
@@ -229,8 +229,8 @@ describe("useConversationRuns", () => {
       useConversationRuns(
         streamChat as never,
         vi.fn() as never,
-        harness.dispatch,
-        harness.dispatchFor,
+        harness.dispatchPersisted,
+        harness.dispatchToConversation,
         harness.getState,
         undefined,
       )
@@ -247,7 +247,7 @@ describe("useConversationRuns", () => {
   });
 
   it("bumps the pending save when a successful card generation run completes", async () => {
-    // WHY: terminal-stream actions go through `dispatchFor` (per-id)
+    // WHY: terminal-stream actions go through `dispatchToConversation` (per-id)
     // and therefore do NOT bump the pending-save counter on their own.
     // Without an explicit bump, the throttled save scheduled at run
     // start would fire during streaming and persist a successful run
@@ -276,8 +276,8 @@ describe("useConversationRuns", () => {
       useConversationRuns(
         vi.fn() as never,
         generate as never,
-        harness.dispatch,
-        harness.dispatchFor,
+        harness.dispatchPersisted,
+        harness.dispatchToConversation,
         harness.getState,
         bumpPendingSave,
       )
@@ -317,8 +317,8 @@ describe("useConversationRuns", () => {
       useConversationRuns(
         vi.fn() as never,
         generate as never,
-        harness.dispatch,
-        harness.dispatchFor,
+        harness.dispatchPersisted,
+        harness.dispatchToConversation,
         harness.getState,
         bumpPendingSave,
       )
