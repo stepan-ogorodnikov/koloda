@@ -13,16 +13,17 @@ import {
   assistantRunsAtom,
 } from "./assistant-conversation-atoms";
 import { getChatTextMetadata, getErrorMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
+import type { GenerationRun } from "./conversation-reducer";
 import { RevertMessageButton } from "./revert-message-button";
 
-export type UseAssistantMessageRendererOptions = {
+export type UseAssistantMessageRendererProps = {
   templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
   handleRevert: (userMessageId: string) => void;
 };
 
 export function useAssistantMessageRenderer(
-  { templateId, handleRetry, handleRevert }: UseAssistantMessageRendererOptions,
+  { templateId, handleRetry, handleRevert }: UseAssistantMessageRendererProps,
 ) {
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
@@ -31,14 +32,7 @@ export function useAssistantMessageRenderer(
   const tailMessageId = messages.at(-1)?.id;
 
   return useCallback((message: UIMessage, content: ReactNode) => {
-    if (message.role === "user") {
-      return (
-        <div className="group self-end flex flex-row items-center justify-end gap-1 w-full">
-          <RevertMessageButton onPress={() => handleRevert(message.id)} />
-          {content}
-        </div>
-      );
-    }
+    if (message.role === "user") return renderUserMessage(message, content, handleRevert);
 
     const isTail = message.id === tailMessageId;
 
@@ -46,98 +40,141 @@ export function useAssistantMessageRenderer(
     if (generatedCardsMetadata) {
       const run = runs[generatedCardsMetadata.runId];
       if (run?.mode === "cards") {
-        const runCards = run.cards;
-        const isCurrentRun = generatedCardsMetadata.runId === activeRunId;
-        const templateFieldsMissing = run.templateFields === null;
-        const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
-
-        if (cardsTemplate || templateFieldsMissing) {
-          return (
-            <AssistantCardsMessage
-              runId={generatedCardsMetadata.runId}
-              cards={runCards}
-              cardStatuses={run.cardStatuses}
-              template={cardsTemplate}
-              templateUnavailable={templateFieldsMissing}
-              deckId={deckId}
-              templateId={templateId}
-              canAdd={runCards.length > 0 && !isCurrentRun && deckId !== null}
-              isGenerating={isCurrentRun}
-              isCanceled={run.status === "canceled"}
-              isFailed={run.status === "failed"}
-              canRetry={isTail && !!run}
-              onRetry={() => handleRetry(generatedCardsMetadata.runId)}
-              elapsedSeconds={run.elapsedSeconds ?? undefined}
-              modelName={run.modelName}
-            />
-          );
-        }
+        const rendered = renderCardsMessage({
+          run,
+          runId: generatedCardsMetadata.runId,
+          isCurrentRun: generatedCardsMetadata.runId === activeRunId,
+          isTail,
+          deckId,
+          templateId,
+          handleRetry,
+        });
+        if (rendered) return rendered;
       }
     }
 
     const errorMetadata = getErrorMetadata(message);
-    if (errorMetadata) {
-      return (
-        <AIChatMessageLayout role="assistant">
-          <AIChatMessageStatus
-            state="failed"
-            canRetry={isTail}
-            onRetry={() => handleRetry(errorMetadata.runId)}
-          />
-        </AIChatMessageLayout>
-      );
-    }
+    if (errorMetadata) return renderErrorMessage(errorMetadata.runId, isTail, handleRetry);
 
     const chatMetadata = getChatTextMetadata(message);
     if (chatMetadata) {
       const run = runs[chatMetadata.runId];
-
-      if (run) {
-        if (run.status === "streaming") {
-          if (getTextMessageContent(message)) return content;
-
-          return (
-            <AIChatMessageLayout role="assistant">
-              <AIChatMessageStatus state="pending" />
-            </AIChatMessageLayout>
-          );
-        }
-
-        if (run.status === "success" && run.elapsedSeconds !== null) {
-          return (
-            <div className="flex flex-col gap-2 self-start w-full">
-              {content}
-              <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} modelName={run.modelName} />
-            </div>
-          );
-        }
-
-        if (run.status === "canceled" && run.elapsedSeconds !== null) {
-          return (
-            <div className="flex flex-col gap-2 self-start w-full">
-              {content}
-              <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} />
-            </div>
-          );
-        }
-
-        if (run.status === "failed") {
-          return (
-            <div className="flex flex-col gap-2 self-start w-full">
-              {content}
-              <AIChatMessageStatus
-                state="failed"
-                canRetry={isTail}
-                onRetry={() => handleRetry(chatMetadata.runId)}
-              />
-            </div>
-          );
-        }
-      }
+      if (run) return renderChatMessage({ message, content, run, runId: chatMetadata.runId, isTail, handleRetry });
     }
 
     return content;
   }, [tailMessageId, runs, activeRunId, templateId, deckId, handleRetry, handleRevert]);
+}
+
+function renderUserMessage(message: UIMessage, content: ReactNode, handleRevert: (id: string) => void) {
+  return (
+    <div className="group self-end flex flex-row items-center justify-end gap-1 w-full">
+      <RevertMessageButton onPress={() => handleRevert(message.id)} />
+      {content}
+    </div>
+  );
+}
+
+function renderCardsMessage(options: {
+  run: GenerationRun;
+  runId: string;
+  isCurrentRun: boolean;
+  isTail: boolean;
+  deckId: number | null;
+  templateId: Template["id"] | undefined;
+  handleRetry: (runId: string) => Promise<void>;
+}) {
+  const { run, runId, isCurrentRun, isTail, deckId, templateId, handleRetry } = options;
+  const templateFieldsMissing = run.templateFields === null;
+  const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
+
+  if (!cardsTemplate && !templateFieldsMissing) return null;
+
+  return (
+    <AssistantCardsMessage
+      runId={runId}
+      cards={run.cards}
+      cardStatuses={run.cardStatuses}
+      template={cardsTemplate}
+      templateUnavailable={templateFieldsMissing}
+      deckId={deckId}
+      templateId={templateId}
+      canAdd={run.cards.length > 0 && !isCurrentRun && deckId !== null}
+      isGenerating={isCurrentRun}
+      isCanceled={run.status === "canceled"}
+      isFailed={run.status === "failed"}
+      canRetry={isTail && !!run}
+      onRetry={() => handleRetry(runId)}
+      elapsedSeconds={run.elapsedSeconds ?? undefined}
+      modelName={run.modelName}
+    />
+  );
+}
+
+function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId: string) => Promise<void>) {
+  return (
+    <AIChatMessageLayout role="assistant">
+      <AIChatMessageStatus
+        state="failed"
+        canRetry={isTail}
+        onRetry={() => handleRetry(runId)}
+      />
+    </AIChatMessageLayout>
+  );
+}
+
+function renderChatMessage(options: {
+  message: UIMessage;
+  content: ReactNode;
+  run: GenerationRun;
+  runId: string;
+  isTail: boolean;
+  handleRetry: (runId: string) => Promise<void>;
+}) {
+  const { message, content, run, runId, isTail, handleRetry } = options;
+
+  if (run.status === "streaming") {
+    if (getTextMessageContent(message)) return content;
+
+    return (
+      <AIChatMessageLayout role="assistant">
+        <AIChatMessageStatus state="pending" />
+      </AIChatMessageLayout>
+    );
+  }
+
+  if (run.status === "success" && run.elapsedSeconds !== null) {
+    return (
+      <div className="flex flex-col gap-2 self-start w-full">
+        {content}
+        <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} modelName={run.modelName} />
+      </div>
+    );
+  }
+
+  if (run.status === "canceled" && run.elapsedSeconds !== null) {
+    return (
+      <div className="flex flex-col gap-2 self-start w-full">
+        {content}
+        <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} />
+      </div>
+    );
+  }
+
+  if (run.status === "failed") {
+    return (
+      <div className="flex flex-col gap-2 self-start w-full">
+        {content}
+        <AIChatMessageStatus
+          state="failed"
+          canRetry={isTail}
+          onRetry={() => handleRetry(runId)}
+        />
+      </div>
+    );
+  }
+
+  return content;
 }
 
 function makeHistoricalTemplate(fields: TemplateFields): Template {
