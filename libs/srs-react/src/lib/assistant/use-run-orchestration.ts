@@ -1,5 +1,5 @@
-import type { AIChatMode, ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
-import { generateCardsInputSchema, getTextMessageContent } from "@koloda/ai";
+import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
+import { getTextMessageContent } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
@@ -8,52 +8,10 @@ import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
 import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
+import { buildStreamRequest } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
-
-export type StreamRequestResult =
-  | { kind: "chat"; request: ChatStreamRequest; templateFields: null }
-  | { kind: "cards"; request: CardGenerationStreamRequest; templateFields: TemplateFields | null };
-
-function buildStreamRequest(
-  cfg: AssistantConversationConfig,
-  mode: AIChatMode,
-  promptText: string,
-  conversationMessages: Message[],
-): StreamRequestResult {
-  const input: GenerateCardsInput = generateCardsInputSchema.parse({
-    modelId: cfg.modelId,
-    prompt: promptText,
-    temperature: cfg.temperature,
-    reasoningEffort: cfg.reasoningEffort,
-    ...(mode === "cards" && cfg.deckId != null ? { deckId: cfg.deckId } : {}),
-    ...(mode === "cards" && cfg.templateId != null ? { templateId: cfg.templateId } : {}),
-  });
-
-  if (mode === "chat") {
-    return {
-      kind: "chat",
-      request: {
-        input,
-        messages: [...conversationMessages, { role: "user", content: promptText }],
-        template: cfg.template ?? undefined,
-        systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
-      },
-      templateFields: null,
-    };
-  }
-
-  return {
-    kind: "cards",
-    request: {
-      input,
-      messages: conversationMessages,
-      systemPromptTemplate: cfg.cardsPromptTemplate ?? undefined,
-    },
-    templateFields: cfg.template?.content.fields ?? null,
-  };
-}
 
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;

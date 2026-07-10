@@ -15,7 +15,7 @@ import {
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerAction } from "./conversation-reducer";
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
-import { useAssistantStreamSetup } from "./use-assistant-stream-setup";
+import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";
 
 export type UseAssistantSessionOptions = {
@@ -89,7 +89,7 @@ export function useAssistantSession({
     setConversationReducerAction(action);
   }, [setConversationReducerAction]);
 
-  const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useAssistantStreamSetup({
+  const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
     streamGenerator: configRef.current.streamGenerator,
     chatStreamGenerator: configRef.current.chatStreamGenerator,
     dispatchPersisted,

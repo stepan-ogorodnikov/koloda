@@ -1,38 +1,67 @@
-import type { AIChatMode, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
+import { useChatStream } from "@koloda/ai-react";
 import type { StreamResult } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
-import type { CardGenerationStreamRequest } from "./use-assistant-card-generation";
+import { useAssistantCardGeneration } from "./use-assistant-card-generation";
+import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./use-assistant-card-generation";
+import { usePendingRunRefs } from "./use-pending-run-refs";
 
 export type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 
-export function useConversationRuns(
-  streamChat: (
-    request: ChatStreamRequest,
-    onChunk: (chunk: string) => void,
-  ) => Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>,
-  generate: (
+export type UseConversationRunsOptions = {
+  streamGenerator: CardGenerationExecutor;
+  chatStreamGenerator: ChatStreamGenerator;
+  dispatchPersisted: (action: ConversationReducerAction) => void;
+  dispatchToConversation: DispatchToConversation;
+  readState: () => ConversationReducerState;
+  bumpPendingSave: () => void;
+};
+
+export type UseConversationRunsReturn = {
+  armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
+  executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
+  executeGenerateRun: (
+    conversationId: string,
+    runId: string,
     request: CardGenerationStreamRequest,
-    onCard?: (card: { content: Record<string, { text: string }> }) => void,
-  ) => Promise<StreamResult>,
-  dispatchPersisted: (action: ConversationReducerAction) => void,
-  dispatchToConversation: DispatchToConversation,
-  getState: () => ConversationReducerState,
-  // WHY: terminal-stream actions go through `dispatchToConversation` (per-id) so a
-  // background stream on a non-current conversation still lands on the
-  // originating conversation. `dispatchToConversation` does NOT bump the pending
-  // save counter — without an explicit bump, the throttled save scheduled
-  // at run start would fire during streaming and persist the run as
-  // "canceled" (via `cancelStreamingRuns`) before the real terminal
-  // status is ever saved.
-  bumpPendingSave?: () => void,
-  // WHY: Must be called even on abort/error so the caller can clear its
-  // pending-failure ref. A stream aborted by a newer start will still
-  // fire this — caller must guard the clear against stale runIds.
-  onChatStreamComplete?: (runId: string) => void,
-  onCardStreamComplete?: (runId: string) => void,
-) {
+  ) => Promise<void>;
+  retryRun: (
+    runId: string,
+    request: ChatStreamRequest | CardGenerationStreamRequest,
+    templateFields: TemplateFields | null,
+    mode: AIChatMode,
+    modelName?: string,
+  ) => Promise<void>;
+  cancel: () => void;
+};
+
+/**
+ * Wires chat/card stream transport to conversation run execution:
+ * pending-run error routing, chunk/card dispatch, terminal status, retry.
+ */
+export function useConversationRuns({
+  streamGenerator,
+  chatStreamGenerator,
+  dispatchPersisted,
+  dispatchToConversation,
+  readState,
+  bumpPendingSave,
+}: UseConversationRunsOptions): UseConversationRunsReturn {
+  const pendingRunRefs = usePendingRunRefs(dispatchToConversation);
+
+  const handleChatStreamError = useCallback((error: Error) => (
+    pendingRunRefs.handleError("chat", error)
+  ), [pendingRunRefs]);
+
+  const handleCardStreamError = useCallback((error: Error) => (
+    pendingRunRefs.handleError("cards", error)
+  ), [pendingRunRefs]);
+
+  const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
+  const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
+
   const handleStreamResult = useCallback((conversationId: string, result: StreamResult, runId: string) => {
     switch (result) {
       case "success":
@@ -40,7 +69,7 @@ export function useConversationRuns(
         // WHY: Force a save with the post-completion state so a
         // throttled save that fires during streaming cannot leave a
         // successful run persisted as "canceled" with elapsedSeconds: 0.
-        bumpPendingSave?.();
+        bumpPendingSave();
         break;
       case "error":
         break;
@@ -50,7 +79,7 @@ export function useConversationRuns(
         // queued from run start and would otherwise persist a "canceled"
         // snapshot derived from `cancelStreamingRuns` rather than the
         // real cancelRun terminal state.
-        bumpPendingSave?.();
+        bumpPendingSave();
         break;
     }
   }, [dispatchToConversation, bumpPendingSave]);
@@ -72,10 +101,12 @@ export function useConversationRuns(
 
         handleStreamResult(conversationId, streamResult, runId);
       } finally {
-        onChatStreamComplete?.(runId);
+        // WHY: Must clear even on abort/error. A stream aborted by a newer
+        // start still fires this — pending refs guard against stale runIds.
+        pendingRunRefs.onComplete("chat", runId);
       }
     },
-    [dispatchToConversation, streamChat, handleStreamResult, onChatStreamComplete],
+    [dispatchToConversation, streamChat, handleStreamResult, pendingRunRefs],
   );
 
   const executeGenerateRun = useCallback(
@@ -87,10 +118,10 @@ export function useConversationRuns(
 
         handleStreamResult(conversationId, result, runId);
       } finally {
-        onCardStreamComplete?.(runId);
+        pendingRunRefs.onComplete("cards", runId);
       }
     },
-    [dispatchToConversation, generate, handleStreamResult, onCardStreamComplete],
+    [dispatchToConversation, generate, handleStreamResult, pendingRunRefs],
   );
 
   const retryRun = useCallback(
@@ -101,20 +132,31 @@ export function useConversationRuns(
       mode: AIChatMode,
       modelName?: string,
     ) => {
-      const run = getState().runs[runId];
+      const run = readState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
       dispatchPersisted(["restartRun", { runId, request, templateFields, mode: effectiveMode, modelName }]);
 
       if (effectiveMode === "chat") {
         dispatchPersisted(["updateAssistantText", { runId, text: "" }]);
-        await executeChatRun(getState().id, runId, request as ChatStreamRequest);
+        await executeChatRun(readState().id, runId, request as ChatStreamRequest);
       } else {
-        await executeGenerateRun(getState().id, runId, request as CardGenerationStreamRequest);
+        await executeGenerateRun(readState().id, runId, request as CardGenerationStreamRequest);
       }
     },
-    [executeChatRun, executeGenerateRun, dispatchPersisted, getState],
+    [executeChatRun, executeGenerateRun, dispatchPersisted, readState],
   );
 
-  return { handleStreamResult, executeChatRun, executeGenerateRun, retryRun };
+  const cancel = useCallback(() => {
+    cancelGenerate();
+    cancelChat();
+  }, [cancelGenerate, cancelChat]);
+
+  return {
+    armPendingRun: pendingRunRefs.arm,
+    executeChatRun,
+    executeGenerateRun,
+    retryRun,
+    cancel,
+  };
 }
