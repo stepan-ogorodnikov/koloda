@@ -9,7 +9,6 @@ import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
 import { useMemo } from "react";
 import { decodeAIModelProfileKey, encodeAIModelProfileKey } from "./ai-model-profile-key";
-import { useAIProfiles } from "./use-ai-profiles";
 import { useAIProfilesModels } from "./use-ai-profiles-models";
 
 export type AIModelProfileChange = {
@@ -18,6 +17,8 @@ export type AIModelProfileChange = {
 };
 
 export type AIModelProfilePickerProps = {
+  profiles: AIProfile[];
+  areProfilesLoading?: boolean;
   profileId: string | null;
   modelId: string;
   onChange: (next: AIModelProfileChange) => void;
@@ -35,9 +36,15 @@ type ProfileSection = {
   refetch: () => void;
 };
 
-export function AIModelProfilePicker({ profileId, modelId, onChange, triggerRef }: AIModelProfilePickerProps) {
+export function AIModelProfilePicker({
+  profiles,
+  areProfilesLoading = false,
+  profileId,
+  modelId,
+  onChange,
+  triggerRef,
+}: AIModelProfilePickerProps) {
   const { _ } = useLingui();
-  const { profiles, isLoading: isProfilesLoading } = useAIProfiles();
   const profileIds = useMemo(() => profiles.map((profile) => profile.id), [profiles]);
   const { byProfileId } = useAIProfilesModels(profileIds);
 
@@ -76,7 +83,7 @@ export function AIModelProfilePicker({ profileId, modelId, onChange, triggerRef 
       ? _(msg`ai.model-picker.not-selected`)
       : _(msg`ai.model-picker.placeholder`));
 
-  if (isProfilesLoading) return null;
+  if (areProfilesLoading) return null;
 
   return (
     <Fade className="min-w-0">

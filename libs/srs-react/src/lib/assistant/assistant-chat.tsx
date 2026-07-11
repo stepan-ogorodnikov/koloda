@@ -71,12 +71,14 @@ export function AssistantChat(
     modelId,
     modelName,
     models,
+    profiles,
     provider,
     modelParameters,
     selectedProfile,
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
+    areProfilesLoading,
     setGlobalAIProfileState,
     handleModelProfileChange,
     handleModelParameterChange,
@@ -199,6 +201,8 @@ export function AssistantChat(
       </AnimatePresence>
       <AIChatFooter>
         <AIModelProfilePicker
+          profiles={profiles}
+          areProfilesLoading={areProfilesLoading}
           profileId={profileId}
           modelId={modelId}
           onChange={handleModelProfileChange}

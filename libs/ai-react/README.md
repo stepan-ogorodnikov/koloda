@@ -12,7 +12,7 @@ Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces
 
 - Streaming transport: `use-streaming-request.ts` (generic abortable stream → success | aborted | error), `use-chat-stream.ts` (chat mode), and `use-assistant-card-generation.ts` (cards mode). Callers in srs-react feed chunks/cards into the conversation reducer.
 - Mode toggle UI: `ai-chat-mode-toggle.tsx` — controlled component; `AIChatMode` type lives in `@koloda/ai` (re-exported from `types.ts` for convenience). Mode/deck-lock rules live in srs-react.
-- AI configuration UI: `ai-model-profile-picker.tsx`, `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-models.ts`, `use-ai-profiles-models.ts` (profile/model queries and pickers). Cascade reset policy is owned by srs-react profile selection.
+- AI configuration UI: `ai-model-profile-picker.tsx` (presentational — takes `profiles` props; does not call `useAIProfiles`), `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-models.ts`, `use-ai-profiles-models.ts`. Cascade reset and the chat-tree `useAIProfiles` subscription are owned by srs-react profile selection.
 - Message list shell: `ai-chat-messages.tsx`, `ai-chat-message.tsx`, status/error/elapsed helpers — layout only; message domain rendering is in srs-react.
 - Input & validation: `ai-chat-prompt-panel.tsx`, `use-ai-chat-input.ts`, `use-ai-chat-validation.ts`, submit/footer/settings-toggle primitives.
 - Scroll: `use-auto-scroll.ts`.

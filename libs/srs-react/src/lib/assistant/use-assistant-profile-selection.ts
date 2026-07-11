@@ -21,6 +21,7 @@ export type UseAssistantProfileSelectionReturn = {
   models: AIModel[];
   isModelsLoading: boolean;
   isModelsError: boolean;
+  areProfilesLoading: boolean;
   selectedProfile: ReturnType<typeof useAIProfiles>["selectedProfile"];
   profiles: ReturnType<typeof useAIProfiles>["profiles"];
   defaultProfileId: string | null;
@@ -50,6 +51,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
 
   const {
     profiles,
+    isLoading: areProfilesLoading,
     selectedProfile,
     defaultProfileId,
     missingSecretFieldLabels,
@@ -141,6 +143,7 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     models,
     isModelsLoading,
     isModelsError,
+    areProfilesLoading,
     selectedProfile,
     profiles,
     defaultProfileId,
