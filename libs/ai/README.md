@@ -4,21 +4,24 @@ Provider-agnostic AI abstraction: streams chat completions and generates structu
 
 ## Where it sits
 
-Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client factory, pure helpers). Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD_AI_PROVIDER.md`. Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
+Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client factory, pure helpers). Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`. Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
 
 **Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over package READMEs when routing edits.
 
 ## Architectural Map
 
-- Provider registry & abstraction seam: `provider-registry.ts` — `AI_PROVIDER_REGISTRY` maps each provider to a client factory, model fetcher, missing-secrets probe, and api-key getter. `AIGenerationClient` is the uniform interface (listModels, chat, generateCards). Adding a provider = one registry entry.
-- Provider enum & secrets (TS half of the Rust mirror): `types.ts` — `AI_PROVIDER_LABELS` (openrouter, ollama, lmstudio, opencodeGo, codex), zod `secretsValidation` discriminated union keyed by provider, `AIModel` type with reasoning levels, `AIChatMode` (`"chat" | "cards"`), prompt template constants.
+- Provider registry & abstraction seam: `providers/` — one module per provider (`openrouter.ts`, `ollama.ts`, …) owning fetchModels + createClient + secrets probes; `provider-registry.ts` holds `AIGenerationClient` / `AIProviderEntry` types and wires `AI_PROVIDER_REGISTRY`. Adding a provider = one new file under `providers/` + one registry line (+ export from `src/index.ts` if public).
+- Provider catalog (TS half of the Rust mirror): `provider-catalog.ts` — `AI_PROVIDER_LABELS` / `AiProvider` / base URLs; `provider-secrets.ts` — per-provider zod schemas and `aiSecretsValidation` discriminated union.
+- Settings & profiles: `settings.ts` — profile/settings zod schemas, CRUD DTOs, `DEFAULT_AI_SETTINGS`.
+- Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (`AIChatMode`, chat/card request types, `generateCardsInputSchema`).
 - Chat streaming: `chat-stream.ts` — per-provider `streamChatWith<Provider>` functions over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them.
 - Card generation (two strategies): `card-generation.ts` — `runStructuredCardGeneration` streams structured elements via `Output.array` (OpenRouter, OpencodeGo); `runTextCompletionCardGeneration` does a text completion then parses (Ollama, LMStudio). The structured path also falls back to text parsing if no elements arrive.
 - Card parsing & schema: `card-parsing.ts` — `getCardContentSchema` (zod schema per template fields), `parseGeneratedCardsText` (text → cards), `resolveGenerationTemperature`.
-- Prompt compilation: `prompts.ts` — `compilePromptTemplate` injects fields, rules, provider, and mode into the template strings from `types.ts`.
+- Prompt compilation: `prompts.ts` — default prompt templates, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (fields/rules/provider/mode injection).
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
-- Reasoning levels: `provider-registry.ts` — OpenRouter models get levels from the API; deepseek-* and mimo-* model IDs get hardcoded levels via `resolveReasoningLevelsForModel`.
+- Reasoning levels: `providers/openrouter.ts` (API-provided); `providers/openai-compatible.ts` hardcodes deepseek-* / mimo-* via `resolveReasoningLevelsForModel` (Opencode Go/Zen).
+- Compatibility: `types.ts` re-exports the domain modules above; prefer importing from the specific files.
 
 ### Does NOT own (prevent scope creep)
 
@@ -30,5 +33,5 @@ Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client fa
 ## Read next
 
 - `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
-- `agents/ADD_AI_PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming/generation)
+- `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming/generation)
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the domain behavior this lib serves

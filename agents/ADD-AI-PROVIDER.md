@@ -4,22 +4,24 @@
 
 ## Overview
 
-AI providers require changes across 5 layers: TypeScript types, Rust domain, UI forms, streaming/generation, and provider registry.
+AI providers require changes across 5 layers: TypeScript catalog/secrets, Rust domain, UI forms, streaming/generation, and provider registry.
 
 ## Workflow
 
-### 1. TypeScript Types (`libs/ai/src/lib/types.ts`)
+### 1. TypeScript Catalog & Secrets
 
-Add provider label and validation schema:
+**`libs/ai/src/lib/provider-catalog.ts`** — add the provider label:
 
 ```typescript
-// Add to AI_PROVIDER_LABELS
 export const AI_PROVIDER_LABELS = {
   // ...
   myProvider: "My Provider",
 } as const;
+```
 
-// Add secrets validation schema
+**`libs/ai/src/lib/provider-secrets.ts`** — add secrets validation:
+
+```typescript
 export const myProviderSecretsValidation = z.object({
   apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
   // Optional fields:
@@ -31,8 +33,8 @@ export type AIPrompterSecrets =
   // ...
   | z.infer<typeof myProviderSecretsValidation>;
 
-// Add to secretsValidation discriminated union
-const secretsValidation = z.discriminatedUnion("provider", [
+// Add to aiSecretsValidation discriminated union
+export const aiSecretsValidation = z.discriminatedUnion("provider", [
   // ...
   z.object({ provider: z.literal("myProvider"), ...myProviderSecretsValidation.shape }),
 ]);
@@ -94,22 +96,18 @@ AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key: String::new() }
 AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key },
 ```
 
-### 4. Provider Registry (`libs/ai/src/lib/provider-registry.ts`)
+### 4. Provider module (`libs/ai/src/lib/providers/`)
 
-Register the provider client and fetch functions:
+Add one file per provider (e.g. `my-provider.ts`) that owns fetchModels, createClient, and the `AIProviderEntry`. Types (`AIGenerationClient`, `AIProviderEntry`) live in `provider-registry.ts`. Then wire the entry there. Reuse `openai-compatible.ts` helpers when the models API is OpenAI-compatible.
 
 ```typescript
-// Import streaming and generation functions
-import {
-  generateCardsWithMyProvider,
-  // ...
-} from "./card-generation";
-import {
-  streamChatWithMyProvider,
-  // ...
-} from "./chat-stream";
+// libs/ai/src/lib/providers/my-provider.ts
+import { generateCardsWithMyProvider } from "../card-generation";
+import { streamChatWithMyProvider } from "../chat-stream";
+import { AIError, throwForAIResponse } from "../error";
+import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
+import type { AIModel, AISecrets } from "../types";
 
-// Add fetch models function
 export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
     await fetch("https://api.myprovider.com/models", {
@@ -120,19 +118,18 @@ export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> 
     }),
   );
 
-  const data: OpenAICompatibleModelsResponse = await response.json();
+  const data = await response.json();
   if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
 
   return data.data
-    .map((model) => ({
+    .map((model: { id: string; name?: string; context_length?: number }) => ({
       id: model.id,
       name: model.name ?? model.id,
       context_length: model.context_length ?? 0,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a: AIModel, b: AIModel) => a.name.localeCompare(b.name));
 }
 
-// Add client creation function
 function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvider" }>): AIGenerationClient {
   return {
     provider: "myProvider",
@@ -142,24 +139,32 @@ function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvi
   };
 }
 
-// Add to AI_PROVIDER_REGISTRY
-export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
-  // ...
-  myProvider: {
-    id: "myProvider",
-    createClient: (secrets) => createMyProviderClient(secrets as Extract<AISecrets, { provider: "myProvider" }>),
-    fetchModels: (secrets) => {
-      const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
-      return fetchMyProviderModels(s.apiKey);
-    },
-    getMissingSecretFields: (secrets) => {
-      const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
-      return s.apiKey ? [] : ["apiKey"];
-    },
-    getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "myProvider" }>).apiKey,
+export const myProviderEntry: AIProviderEntry = {
+  id: "myProvider",
+  createClient: (secrets) => createMyProviderClient(secrets as Extract<AISecrets, { provider: "myProvider" }>),
+  fetchModels: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
+    return fetchMyProviderModels(s.apiKey);
   },
+  getMissingSecretFields: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
+    return s.apiKey ? [] : ["apiKey"];
+  },
+  getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "myProvider" }>).apiKey,
 };
 ```
+
+```typescript
+// libs/ai/src/lib/provider-registry.ts — add one line
+import { myProviderEntry } from "./providers/my-provider";
+
+export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
+  // ...
+  myProvider: myProviderEntry,
+};
+```
+
+If the new fetch/URL is part of the public `@koloda/ai` surface, also re-export the provider module from `libs/ai/src/index.ts`.
 
 ### 5. Chat Streaming (`libs/ai/src/lib/chat-stream.ts`)
 
@@ -259,7 +264,7 @@ Create add and edit form components:
 **add-ai-profile-my-provider.tsx**:
 ```tsx
 import { aiProfileValidation, myProviderSecretsValidation } from "@koloda/ai";
-import type { AddAIProfileFormProps } from "@koloda/ai";
+import type { AddAIProfileFormProps } from "./ai-profile-form-props";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
@@ -377,10 +382,11 @@ store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "myProvider"]);
 
 | Layer | File | Purpose |
 |-------|------|---------|
-| Types | `libs/ai/src/lib/types.ts` | Labels, validation schemas |
+| Catalog | `libs/ai/src/lib/provider-catalog.ts` | Provider labels, IDs, base URLs |
+| Secrets | `libs/ai/src/lib/provider-secrets.ts` | Per-provider zod schemas, `AISecrets` |
 | Rust Domain | `crates/koloda-core/src/domain/ai.rs` | Provider enum, validation |
 | Rust Repo | `crates/koloda-core/src/repo/ai.rs` | Secret redaction/reconstruction |
-| Registry | `libs/ai/src/lib/provider-registry.ts` | Client creation, model fetching |
+| Registry | `libs/ai/src/lib/providers/<provider>.ts` + `provider-registry.ts` | Per-provider client/fetch; types + wiring table |
 | Streaming | `libs/ai/src/lib/chat-stream.ts` | Chat stream implementation |
 | Generation | `libs/ai/src/lib/card-generation.ts` | Card generation implementation |
 | Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-*.tsx` | Add profile UI |

@@ -6,9 +6,9 @@ import {
   generateCardsWithOpencodeZen,
 } from "./card-generation";
 import { getCardContentSchema } from "./card-parsing";
+import type { CardGenerationFields } from "./generation";
 import { buildSystemPromptForProvider } from "./prompts";
-import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
-import type { CardGenerationFields } from "./types";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 
 function createFields(): CardGenerationFields {
   return [

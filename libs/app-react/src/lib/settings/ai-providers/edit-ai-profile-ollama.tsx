@@ -1,11 +1,11 @@
 import { aiProfileValidation, ollamaSecretsValidation } from "@koloda/ai";
-import type { EditAIProfileFormProps } from "@koloda/ai";
 import type { ZodIssue } from "@koloda/app";
 import { toFormErrors } from "@koloda/app";
 import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { z } from "zod";
+import type { EditAIProfileFormProps } from "./ai-profile-form-props";
 
 const formSchema = ollamaSecretsValidation.extend({
   title: aiProfileValidation.shape.title,

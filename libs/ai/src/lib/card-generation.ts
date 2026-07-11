@@ -3,9 +3,12 @@ import { generateText, Output, streamText } from "ai";
 import { getCardContentSchema, parseGeneratedCardsText, resolveGenerationTemperature } from "./card-parsing";
 import { getConversationMessages } from "./chat-stream";
 import { wrapAIError } from "./error";
+import type { CardGenerationRequest, GeneratedCard } from "./generation";
 import { compilePromptTemplate } from "./prompts";
-import type { AiProvider, AISecrets, CardGenerationRequest, GeneratedCard } from "./types";
-import { DEFAULT_GENERATION_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
+import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./prompts";
+import type { AiProvider } from "./provider-catalog";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import type { AISecrets } from "./provider-secrets";
 
 async function runCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],

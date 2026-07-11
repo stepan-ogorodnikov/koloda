@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AIError } from "./error";
-import type { CardGenerationFields, GeneratedCard } from "./types";
-import { GENERATION_TEMPERATURE } from "./types";
+import type { CardGenerationFields, GeneratedCard } from "./generation";
+import { GENERATION_TEMPERATURE } from "./prompts";
 
 export function getCardContentSchema(fields: CardGenerationFields) {
   const fieldSchema = fields.reduce((acc, field) => {

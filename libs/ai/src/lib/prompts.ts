@@ -1,4 +1,24 @@
-import type { AiProvider, CardGenerationFields } from "./types";
+import type { CardGenerationFields } from "./generation";
+import type { AiProvider } from "./provider-catalog";
+
+export const GENERATION_TEMPERATURE = 0.2;
+
+export const DEFAULT_GENERATION_PROMPT_TEMPLATE = [
+  "You are a flashcard generator that must produce strictly structured flashcard data.",
+  "The flashcards have the following fields:",
+  "{{fields}}",
+  "",
+  "Rules:",
+  "{{rules}}",
+  "",
+  "{{provider}}",
+].join("\n");
+
+export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
+  "You are a helpful AI study assistant embedded in a flashcard app.",
+  "You can answer questions, explain concepts, and have conversations.",
+  "Keep responses concise, educational, and accurate.",
+].join("\n");
 
 function buildFieldDescriptions(fields: CardGenerationFields): string {
   return fields

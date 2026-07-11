@@ -1,9 +1,12 @@
 import { streamText } from "ai";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { wrapAIError } from "./error";
+import type { ChatStreamRequest, Message } from "./generation";
+import type { StreamUsage } from "./models";
 import { compilePromptTemplate } from "./prompts";
-import type { AISecrets, ChatStreamRequest, Message, StreamUsage } from "./types";
-import { DEFAULT_CHAT_PROMPT_TEMPLATE, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./types";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
+import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import type { AISecrets } from "./provider-secrets";
 
 export async function streamChatWithOpenRouter(
   request: ChatStreamRequest,
