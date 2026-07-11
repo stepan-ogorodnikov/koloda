@@ -47,11 +47,7 @@ Instead of "the system handles errors gracefully," describe: "if the stream fail
 
 ## Formatting
 
-- Each sentence starts on a new line.
-- This makes diffs cleaner and improves readability in plain-text editors.
-- Keep sentences short.
-- One idea per sentence.
-- If a sentence needs a comma, consider splitting it.
+Follow `agents/MARKDOWN.md`.
 
 ## Structure
 

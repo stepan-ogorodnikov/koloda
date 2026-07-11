@@ -15,7 +15,8 @@ Do not write JSDoc or block comments for simple functions, getters, or standard 
 
 ## What TO Document (The "Traps")
 
-You must document code that is non-obvious, fragile, or intentionally divergent. Always ask: "If another developer (or LLM) saw this, would they try to 'fix' it and break something?" If yes, document it.
+You must document code that is non-obvious, fragile, or intentionally divergent.
+Always ask: "If another developer (or LLM) saw this, would they try to 'fix' it and break something?" If yes, document it.
 
 Document these scenarios:
 
@@ -28,7 +29,8 @@ Document these scenarios:
 
 RULE: Do not write comments unless they strictly match one of the following tags. 
 
-If a piece of code does not require a tag, it must not have a comment. Do not write JSDoc, do not explain "what" the code does, and do not leave notes. LLMs are excellent at reading code; only document the traps.
+If a piece of code does not require a tag, it must not have a comment. Do not write JSDoc, do not explain "what" the code does, and do not leave notes.
+LLMs are excellent at reading code; only document the traps.
 
 ### Allowed Tags:
 
@@ -87,14 +89,16 @@ async function runTextCompletionCardGeneration(...) { ... }
 
 ### The Only Exception: Complex Logic
 
-The only time you may write a comment without a tag is inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline). Even then, only comment the steps, not the obvious lines.
+The only time you may write a comment without a tag is inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline).
+Even then, only comment the steps, not the obvious lines.
 
 ## Comments vs. Architecture Decision Records (ADRs)
 
 How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
 
 - Use a Code Comment when the decision is localized to a single function or file.
-- Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual card generation strategies). A comment in `types.ts` won't be seen by an agent editing `domain/ai.rs`. ADRs bridge that gap.
+- Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual card generation strategies).
+  A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`. ADRs bridge that gap.
 
 Summary Checklist for Agents
 
