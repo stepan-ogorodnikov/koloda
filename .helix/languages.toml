@@ -2,7 +2,7 @@
 [[language]]
 name = "rust"
 language-servers = ["rust-analyzer"]
-formatter = { command = "rustfmt" }
+formatter = { command = "dprint", args = ["fmt", "--stdin", "rs"] }
 auto-format = true
 
 [language-server.rust-analyzer.config.check]
