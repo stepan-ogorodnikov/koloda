@@ -9,11 +9,11 @@ export function act(action: { type: string; [key: string]: unknown }): Conversat
   // so the test calls read `act({ type: "setRevertState", revertState })`
   // instead of repeating the wrapper at every call site.
   if (type === "setRevertState") {
-    return [type as ConversationReducerAction[0], rest.revertState as ConversationReducerAction[1]];
+    return [type, rest.revertState] as ConversationReducerAction;
   }
   const keys = Object.keys(rest);
-  if (keys.length === 0) return [type as ConversationReducerAction[0]];
-  return [type as ConversationReducerAction[0], rest as ConversationReducerAction[1]];
+  if (keys.length === 0) return [type] as ConversationReducerAction;
+  return [type, rest] as ConversationReducerAction;
 }
 
 export function reduce(actions: Array<{ type: string; [key: string]: unknown }>) {
