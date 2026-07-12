@@ -9,7 +9,9 @@ use koloda_core::domain::settings_interface::InterfaceSettings;
 fn test_valid_interface_settings_full() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
+        "lightTheme": "atom-one-light",
+        "darkTheme": "atom-one-dark",
         "motion": "system"
     }"#;
 
@@ -21,7 +23,7 @@ fn test_valid_interface_settings_full() {
 fn test_valid_language_en() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -33,7 +35,7 @@ fn test_valid_language_en() {
 fn test_valid_language_ru() {
     let json = r#"{
         "language": "ru",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -42,10 +44,10 @@ fn test_valid_language_ru() {
 }
 
 #[test]
-fn test_valid_theme_light() {
+fn test_valid_scheme_light() {
     let json = r#"{
         "language": "en",
-        "theme": "light",
+        "scheme": "light",
         "motion": "system"
     }"#;
 
@@ -54,10 +56,10 @@ fn test_valid_theme_light() {
 }
 
 #[test]
-fn test_valid_theme_dark() {
+fn test_valid_scheme_dark() {
     let json = r#"{
         "language": "en",
-        "theme": "dark",
+        "scheme": "dark",
         "motion": "system"
     }"#;
 
@@ -66,10 +68,10 @@ fn test_valid_theme_dark() {
 }
 
 #[test]
-fn test_valid_theme_system() {
+fn test_valid_scheme_system() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "off"
     }"#;
 
@@ -81,7 +83,7 @@ fn test_valid_theme_system() {
 fn test_valid_motion_on() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "on"
     }"#;
 
@@ -93,7 +95,7 @@ fn test_valid_motion_on() {
 fn test_valid_motion_off() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "off"
     }"#;
 
@@ -105,7 +107,7 @@ fn test_valid_motion_off() {
 fn test_valid_motion_system() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -120,7 +122,7 @@ fn test_valid_motion_system() {
 #[test]
 fn test_missing_language_fails() {
     let json = r#"{
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -129,21 +131,21 @@ fn test_missing_language_fails() {
 }
 
 #[test]
-fn test_missing_theme_fails() {
+fn test_missing_scheme_fails() {
     let json = r#"{
         "language": "en",
         "motion": "system"
     }"#;
 
     let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when theme is missing");
+    assert!(result.is_err(), "Should fail when scheme is missing");
 }
 
 #[test]
 fn test_missing_motion_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "system"
+        "scheme": "system"
     }"#;
 
     let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
@@ -166,7 +168,7 @@ fn test_empty_json_object_fails() {
 fn test_extra_fields_ignored() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system",
         "nonexistent": "ignored",
         "another": 123
@@ -184,7 +186,7 @@ fn test_extra_fields_ignored() {
 fn test_invalid_language_fails() {
     let json = r#"{
         "language": "invalid",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -198,7 +200,7 @@ fn test_invalid_language_fails() {
 fn test_empty_language_fails() {
     let json = r#"{
         "language": "",
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -212,7 +214,7 @@ fn test_empty_language_fails() {
 fn test_language_with_different_case_fails() {
     let json = r#"{
         "language": "EN",
-        "theme": "light",
+        "scheme": "light",
         "motion": "off"
     }"#;
 
@@ -226,7 +228,7 @@ fn test_language_with_different_case_fails() {
 fn test_language_invalid_type_fails() {
     let json = r#"{
         "language": 123,
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -238,7 +240,7 @@ fn test_language_invalid_type_fails() {
 fn test_language_as_null_fails() {
     let json = r#"{
         "language": null,
-        "theme": "system",
+        "scheme": "system",
         "motion": "system"
     }"#;
 
@@ -247,73 +249,107 @@ fn test_language_as_null_fails() {
 }
 
 // ============================================================================
-// INVALID THEME
+// INVALID SCHEME
 // ============================================================================
 
 #[test]
-fn test_invalid_theme_fails() {
+fn test_invalid_scheme_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "blue",
+        "scheme": "blue",
         "motion": "system"
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid theme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.theme");
+    assert!(result.is_err(), "Should fail with invalid scheme");
+    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
 }
 
 #[test]
-fn test_empty_theme_fails() {
+fn test_empty_scheme_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "",
+        "scheme": "",
         "motion": "system"
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with empty theme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.theme");
+    assert!(result.is_err(), "Should fail with empty scheme");
+    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
 }
 
 #[test]
-fn test_theme_with_different_case_fails() {
+fn test_scheme_with_different_case_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "Light",
+        "scheme": "Light",
         "motion": "system"
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with capitalized theme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.theme");
+    assert!(result.is_err(), "Should fail with capitalized scheme");
+    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
 }
 
 #[test]
-fn test_theme_invalid_type_fails() {
+fn test_scheme_invalid_type_fails() {
     let json = r#"{
         "language": "en",
-        "theme": 123,
+        "scheme": 123,
         "motion": "off"
     }"#;
 
     let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when theme is a number");
+    assert!(result.is_err(), "Should fail when scheme is a number");
 }
 
 #[test]
-fn test_theme_as_null_fails() {
+fn test_scheme_as_null_fails() {
     let json = r#"{
         "language": "en",
-        "theme": null,
+        "scheme": null,
         "motion": "system"
     }"#;
 
     let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when theme is null");
+    assert!(result.is_err(), "Should fail when scheme is null");
+}
+
+// ============================================================================
+// INVALID THEMES
+// ============================================================================
+
+#[test]
+fn test_invalid_light_theme_fails() {
+    let json = r#"{
+        "language": "en",
+        "scheme": "system",
+        "lightTheme": "solarized",
+        "motion": "system"
+    }"#;
+
+    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Should fail with invalid light theme");
+    assert_eq!(result.unwrap_err().code, "validation.settings-interface.light-theme");
+}
+
+#[test]
+fn test_invalid_dark_theme_fails() {
+    let json = r#"{
+        "language": "en",
+        "scheme": "system",
+        "darkTheme": "solarized",
+        "motion": "system"
+    }"#;
+
+    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Should fail with invalid dark theme");
+    assert_eq!(result.unwrap_err().code, "validation.settings-interface.dark-theme");
 }
 
 // ============================================================================
@@ -324,7 +360,7 @@ fn test_theme_as_null_fails() {
 fn test_invalid_motion_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "partial"
     }"#;
 
@@ -338,7 +374,7 @@ fn test_invalid_motion_fails() {
 fn test_empty_motion_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": ""
     }"#;
 
@@ -352,7 +388,7 @@ fn test_empty_motion_fails() {
 fn test_motion_with_different_case_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": "On"
     }"#;
 
@@ -366,7 +402,7 @@ fn test_motion_with_different_case_fails() {
 fn test_motion_as_number_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "system",
+        "scheme": "system",
         "motion": 123
     }"#;
 
@@ -378,7 +414,7 @@ fn test_motion_as_number_fails() {
 fn test_motion_as_null_fails() {
     let json = r#"{
         "language": "en",
-        "theme": "light",
+        "scheme": "light",
         "motion": null
     }"#;
 
@@ -409,23 +445,23 @@ fn test_settings_name_interface_validation_with_array_content() {
 #[test]
 fn test_settings_name_interface_all_valid_combinations() {
     let languages = vec!["en", "ru"];
-    let themes = vec!["light", "dark", "system"];
+    let schemes = vec!["light", "dark", "system"];
     let motions = vec!["on", "off", "system"];
 
     for lang in &languages {
-        for theme in &themes {
+        for scheme in &schemes {
             for motion in &motions {
                 let content = serde_json::json!({
                     "language": lang,
-                    "theme": theme,
+                    "scheme": scheme,
                     "motion": motion
                 });
 
                 assert!(
                     SettingsName::Interface.validate(&content).is_ok(),
-                    "Should be valid: lang={}, theme={}, motion={}",
+                    "Should be valid: lang={}, scheme={}, motion={}",
                     lang,
-                    theme,
+                    scheme,
                     motion
                 );
             }

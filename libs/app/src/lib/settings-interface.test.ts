@@ -5,7 +5,9 @@ describe("interfaceSettingsValidation", () => {
   it("provides defaults when parsing an empty object", () => {
     expect(interfaceSettingsValidation.parse({})).toEqual({
       language: "en",
-      theme: "system",
+      scheme: "system",
+      lightTheme: "atom-one-light",
+      darkTheme: "atom-one-dark",
       motion: "system",
     });
   });
@@ -13,12 +15,16 @@ describe("interfaceSettingsValidation", () => {
   it("accepts valid explicit values", () => {
     const result = interfaceSettingsValidation.parse({
       language: "ru",
-      theme: "dark",
+      scheme: "dark",
+      lightTheme: "atom-one-light",
+      darkTheme: "atom-one-dark",
       motion: "off",
     });
     expect(result).toEqual({
       language: "ru",
-      theme: "dark",
+      scheme: "dark",
+      lightTheme: "atom-one-light",
+      darkTheme: "atom-one-dark",
       motion: "off",
     });
   });
@@ -28,8 +34,18 @@ describe("interfaceSettingsValidation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects invalid theme", () => {
-    const result = interfaceSettingsValidation.safeParse({ theme: "blue" });
+  it("rejects invalid scheme", () => {
+    const result = interfaceSettingsValidation.safeParse({ scheme: "blue" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid light theme", () => {
+    const result = interfaceSettingsValidation.safeParse({ lightTheme: "solarized" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid dark theme", () => {
+    const result = interfaceSettingsValidation.safeParse({ darkTheme: "solarized" });
     expect(result.success).toBe(false);
   });
 

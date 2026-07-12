@@ -1,21 +1,21 @@
 import type { AllowedSettings } from "@koloda/app";
-import { queriesAtom, queryKeys, themeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab, useMotionSetting } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
-const THEME_CYCLE = ["light", "dark", "system"] as const;
+const SCHEME_CYCLE = ["light", "dark", "system"] as const;
 
 export function useAppHotkeys() {
   const { navigation, ui } = useHotkeysSettings();
   const navigate = useNavigate();
   const isMotionOn = useMotionSetting();
-  const setTheme = useSetAtom(themeAtom);
+  const setScheme = useSetAtom(schemeAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const queryClient = useQueryClient();
-  const { mutate: persistTheme } = useMutation({
+  const { mutate: persistScheme } = useMutation({
     onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
       queryClient.setQueryData(queryKeys.settings.detail("interface"), settings);
     },
@@ -23,13 +23,13 @@ export function useAppHotkeys() {
   });
 
   const toggleColorScheme = useCallback(() => {
-    setTheme((current) => {
-      const index = THEME_CYCLE.indexOf(current as typeof THEME_CYCLE[number]);
-      const next = THEME_CYCLE[(index + 1) % THEME_CYCLE.length];
-      persistTheme({ name: "interface", content: { theme: next } });
+    setScheme((current) => {
+      const index = SCHEME_CYCLE.indexOf(current as typeof SCHEME_CYCLE[number]);
+      const next = SCHEME_CYCLE[(index + 1) % SCHEME_CYCLE.length];
+      persistScheme({ name: "interface", content: { scheme: next } });
       return next;
     });
-  }, [persistTheme, setTheme]);
+  }, [persistScheme, setScheme]);
 
   useAppHotkey(navigation.dashboard, () => navigate({ to: "/dashboard", viewTransition: isMotionOn }), "nav");
   useAppHotkey(navigation.decks, () => navigate({ to: "/decks", viewTransition: isMotionOn }), "nav");

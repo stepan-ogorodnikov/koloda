@@ -1,20 +1,22 @@
 import { MOTION_SETTINGS } from "@koloda/app";
 import type { AllowedSettings } from "@koloda/app";
-import { themeAtom } from "@koloda/core-react";
+import { schemeAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
 import { FormLayout, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { DarkThemePicker, LightThemePicker } from "./interface-controls/color-theme-picker";
 import { LanguageSelect } from "./interface-controls/language-select";
 
 export function SettingsInterface() {
   useTitle();
   const { _ } = useLingui();
   const queryClient = useQueryClient();
-  const theme = useAtomValue(themeAtom);
+  const scheme = useAtomValue(schemeAtom);
+  const setScheme = useSetAtom(schemeAtom);
   const motion = useAtomValue(motionSettingAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation({
@@ -27,18 +29,22 @@ export function SettingsInterface() {
   return (
     <FormLayout>
       <LanguageSelect variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} withIcon={false} />
-      <FormLayout.Section term={_(msg`settings.interface.theme`)}>
+      <FormLayout.Section term={_(msg`settings.interface.scheme`)}>
         <ToggleGroup
-          selectedKeys={[theme]}
+          selectedKeys={[scheme]}
           onSelectionChange={([value]) => {
-            mutate({ name: "interface", content: { theme: value.toString() } });
+            const next = value.toString();
+            setScheme(next);
+            mutate({ name: "interface", content: { scheme: next } });
           }}
         >
-          <ToggleGroup.Item id="light">{_(msg`theme.light`)}</ToggleGroup.Item>
-          <ToggleGroup.Item id="dark">{_(msg`theme.dark`)}</ToggleGroup.Item>
-          <ToggleGroup.Item id="system">{_(msg`theme.system`)}</ToggleGroup.Item>
+          <ToggleGroup.Item id="light">{_(msg`scheme.light`)}</ToggleGroup.Item>
+          <ToggleGroup.Item id="dark">{_(msg`scheme.dark`)}</ToggleGroup.Item>
+          <ToggleGroup.Item id="system">{_(msg`scheme.system`)}</ToggleGroup.Item>
         </ToggleGroup>
       </FormLayout.Section>
+      <LightThemePicker variants={{ layout: "form" }} />
+      <DarkThemePicker variants={{ layout: "form" }} />
       <FormLayout.Section term={_(msg`settings.interface.motion`)}>
         <ToggleGroup
           selectedKeys={[motion]}

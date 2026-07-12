@@ -51,7 +51,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
 }
 
 const conversationItem = [
-  "grow min-w-0 p-2 rounded-lg fg-level-3 text-base whitespace-nowrap truncate focus-ring animate-colors",
+  "grow min-w-0 p-2 rounded-lg fg-level-2 text-base whitespace-nowrap truncate focus-ring animate-colors",
   "group-hover:bg-main-sidebar-link-active current:bg-main-sidebar-link-active current:fg-level-1",
 ].join(" ");
 

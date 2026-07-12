@@ -5,7 +5,7 @@ export async function setupPageDefaults(page: Page) {
   await page.addInitScript(() => {
     window.localStorage.clear();
     window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("theme", "light");
+    window.localStorage.setItem("scheme", "light");
     window.localStorage.setItem("motion", "off");
   });
 }

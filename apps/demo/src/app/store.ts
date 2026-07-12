@@ -1,4 +1,4 @@
-import { aiProvidersAtom, appEntryAtom, langAtom, themeAtom } from "@koloda/core-react";
+import { aiProvidersAtom, appEntryAtom, darkThemeAtom, langAtom, lightThemeAtom, schemeAtom } from "@koloda/core-react";
 import { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
@@ -20,9 +20,9 @@ store.sub(langAtom, () => {
 
 store.set(langAtom, getLanguage());
 
-store.sub(themeAtom, () => {
-  const theme = store.get(themeAtom);
-  localStorage.setItem("theme", theme);
+store.sub(schemeAtom, () => {
+  const scheme = store.get(schemeAtom);
+  localStorage.setItem("scheme", scheme);
   const prefersQuery = window.matchMedia("(prefers-color-scheme: dark)");
   onPrefersColorSchemeChange(prefersQuery);
   prefersQuery.addEventListener("change", onPrefersColorSchemeChange);
@@ -33,15 +33,26 @@ store.sub(themeAtom, () => {
 });
 
 function onPrefersColorSchemeChange(e: MediaQueryListEvent | MediaQueryList) {
-  const theme = store.get(themeAtom);
+  const scheme = store.get(schemeAtom);
   const value = e.matches
-    ? (theme === "light" ? "light" : "dark")
-    : (theme === "dark" ? "dark" : "light");
+    ? (scheme === "light" ? "light" : "dark")
+    : (scheme === "dark" ? "dark" : "light");
   document.documentElement.classList.remove("light", "dark");
   document.documentElement.classList.add(value);
 }
 
-store.set(themeAtom, "system");
+store.set(schemeAtom, "system");
+
+store.sub(lightThemeAtom, () => {
+  document.documentElement.dataset.lightTheme = store.get(lightThemeAtom);
+});
+
+store.sub(darkThemeAtom, () => {
+  document.documentElement.dataset.darkTheme = store.get(darkThemeAtom);
+});
+
+store.set(lightThemeAtom, "atom-one-light");
+store.set(darkThemeAtom, "atom-one-dark");
 
 store.sub(motionSettingAtom, () => {
   const prefersQuery = window.matchMedia("(prefers-reduced-motion: reduce)");

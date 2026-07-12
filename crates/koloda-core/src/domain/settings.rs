@@ -80,6 +80,11 @@ impl SettingsName {
 
     pub fn normalize(&self, content: Value) -> Result<Value, AppError> {
         match self {
+            SettingsName::Interface => {
+                let settings: InterfaceSettings = serde_json::from_value(content)?;
+                settings.validate()?;
+                Ok(serde_json::to_value(settings)?)
+            }
             SettingsName::Learning => {
                 let settings: LearningSettings = serde_json::from_value(content)?;
                 settings.validate()?;
@@ -91,7 +96,7 @@ impl SettingsName {
                 settings.validate()?;
                 Ok(serde_json::to_value(settings)?)
             }
-            _ => {
+            SettingsName::Ai => {
                 self.validate(&content)?;
                 Ok(content)
             }

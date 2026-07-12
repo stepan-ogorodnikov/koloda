@@ -22,6 +22,14 @@ msgstr "Очистить выбор"
 msgid "algorithms.title"
 msgstr "Алгоритмы"
 
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-scheme-picker.tsx:31
+msgid "color-scheme-picker.label"
+msgstr "Цветовая схема"
+
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:79
+msgid "dark-theme-picker.label"
+msgstr "Тёмная тема"
+
 #: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
 msgid "deck.tabs.cards"
 msgstr "Карточки"
@@ -50,6 +58,10 @@ msgstr "Сменить сочетание клавиш"
 msgid "language-select.label"
 msgstr "Язык интерфейса"
 
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:64
+msgid "light-theme-picker.label"
+msgstr "Светлая тема"
+
 #: ../../libs/app-react/src/lib/components/app.tsx:22
 msgid "nav.ai"
 msgstr "Ассистент"
@@ -73,6 +85,18 @@ msgstr "Настройки"
 #: ../../libs/app-react/src/lib/components/app.tsx:21
 msgid "nav.templates"
 msgstr "Шаблоны"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
+msgid "scheme.dark"
+msgstr "Тёмная"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:41
+msgid "scheme.light"
+msgstr "Светлая"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:43
+msgid "scheme.system"
+msgstr "Системная"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
@@ -206,17 +230,25 @@ msgstr "Горячие клавиши"
 msgid "settings.interface"
 msgstr "Интерфейс"
 
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:29
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:78
+msgid "settings.interface.dark-theme"
+msgstr "Тёмная тема"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:31
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:63
+msgid "settings.interface.light-theme"
+msgstr "Светлая тема"
+
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:48
 msgid "settings.interface.motion"
 msgstr "Анимации"
 
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:30
-msgid "settings.interface.theme"
-msgstr "Тема оформления"
+#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:32
+msgid "settings.interface.scheme"
+msgstr "Цветовая схема"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:35
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
@@ -288,22 +320,6 @@ msgstr "Настройки"
 #: ../../libs/app-react/src/lib/routes/_.templates.tsx:33
 msgid "templates.title"
 msgstr "Шаблоны"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/theme-select.tsx:32
-msgid "theme-select.label"
-msgstr "Тема оформления"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:38
-msgid "theme.dark"
-msgstr "Тёмная"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:37
-msgid "theme.light"
-msgstr "Светлая"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:39
-msgid "theme.system"
-msgstr "Системная"
 
 #: ../../libs/app-react/src/lib/routes/_.ai.tsx:38
 msgid "title.ai"

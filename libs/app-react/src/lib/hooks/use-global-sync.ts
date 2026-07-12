@@ -1,4 +1,11 @@
-import { defaultAlgorithmAtom, defaultTemplateAtom, langAtom, themeAtom } from "@koloda/core-react";
+import {
+  darkThemeAtom,
+  defaultAlgorithmAtom,
+  defaultTemplateAtom,
+  langAtom,
+  lightThemeAtom,
+  schemeAtom,
+} from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +21,9 @@ export function useGlobalSync() {
   const { data } = useQuery({ ...getSettingsQuery("interface"), queryKey: queryKeys.settings.detail("interface") });
   const setDefaultAlgorithm = useSetAtom(defaultAlgorithmAtom);
   const setDefaultTemplate = useSetAtom(defaultTemplateAtom);
-  const setTheme = useSetAtom(themeAtom);
+  const setScheme = useSetAtom(schemeAtom);
+  const setLightTheme = useSetAtom(lightThemeAtom);
+  const setDarkTheme = useSetAtom(darkThemeAtom);
   const setMotion = useSetAtom(motionSettingAtom);
   const language = useAtomValue(langAtom);
 
@@ -27,10 +36,12 @@ export function useGlobalSync() {
 
   useEffect(() => {
     if (data) {
-      if (data?.content?.theme) setTheme(data.content.theme);
+      if (data?.content?.scheme) setScheme(data.content.scheme);
+      if (data?.content?.lightTheme) setLightTheme(data.content.lightTheme);
+      if (data?.content?.darkTheme) setDarkTheme(data.content.darkTheme);
       if (data?.content?.motion) setMotion(data.content.motion);
     }
-  }, [data, setTheme, setMotion]);
+  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion]);
 
   useEffect(() => {
     document.documentElement.lang = language;

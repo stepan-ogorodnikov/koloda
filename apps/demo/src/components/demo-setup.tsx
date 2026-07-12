@@ -1,5 +1,5 @@
-import { LanguageSelect, ThemeSelect } from "@koloda/app-react";
-import { langAtom, themeAtom } from "@koloda/core-react";
+import { ColorSchemePicker, LanguageSelect } from "@koloda/app-react";
+import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
   Button,
   overlayFrame,
@@ -22,10 +22,10 @@ export function DemoSetup() {
   const navigate = useNavigate();
   const { mutate } = useMutation(demoSetupMutationOptions);
   const language = useAtomValue(langAtom);
-  const theme = useAtomValue(themeAtom);
+  const scheme = useAtomValue(schemeAtom);
 
   const handleClick = () => {
-    mutate({ language, theme, t: _ }, {
+    mutate({ language, scheme, t: _ }, {
       onSuccess: (result) => {
         if (result) {
           queryClient.resetQueries({ queryKey: ["app"] });
@@ -53,7 +53,7 @@ export function DemoSetup() {
         </OverlayFrameFooter>
       </div>
       <div className="flex flex-row gap-2">
-        <ThemeSelect buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <ColorSchemePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
         <LanguageSelect buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
       </div>
     </div>

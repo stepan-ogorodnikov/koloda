@@ -28,7 +28,7 @@ export function LayoutSidebarItem({ children }: PropsWithChildren) {
 
 export const layoutSidebarItemLink = [
   "group flex flex-col p-4 text-lg no-focus-ring animate-colors",
-  "fg-level-3 current:bg-main-sidebar-link-active current:fg-level-1",
+  "fg-level-2 current:bg-main-sidebar-link-active current:fg-level-1",
 ].join(" ");
 
 export function LayoutSidebarItemLinkContent({ children }: PropsWithChildren) {

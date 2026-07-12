@@ -1,8 +1,7 @@
 import { ComputerPhoneSyncIcon, Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { THEMES } from "@koloda/app";
-import { themeAtom } from "@koloda/core-react";
-import { queriesAtom } from "@koloda/core-react";
+import { SCHEMES } from "@koloda/app";
+import { queriesAtom, schemeAtom } from "@koloda/core-react";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -16,35 +15,35 @@ const ITEMS = [
   { id: "system", Icon: ComputerPhoneSyncIcon },
 ] as const;
 
-type ThemeSelectProps = Partial<SelectProps<typeof ITEMS[number]>> & {
+type ColorSchemePicker = Partial<SelectProps<typeof ITEMS[number]>> & {
   isPersisted?: boolean;
 };
 
-export function ThemeSelect({ isPersisted = true, ...props }: ThemeSelectProps) {
+export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemePicker) {
   const { _ } = useLingui();
-  const [theme, setTheme] = useAtom(themeAtom);
+  const [scheme, setScheme] = useAtom(schemeAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation(patchSettingsMutation());
 
   return (
     <Select
       popoverVariants={{ class: "min-w-48" }}
-      aria-label={_(msg`theme-select.label`)}
+      aria-label={_(msg`color-scheme-picker.label`)}
       items={ITEMS}
-      value={theme}
+      value={scheme}
       onChange={(key) => {
         if (key) {
-          setTheme(key.toString());
-          if (isPersisted) mutate({ name: "interface", content: { theme: key.toString() } });
+          setScheme(key.toString());
+          if (isPersisted) mutate({ name: "interface", content: { scheme: key.toString() } });
         }
       }}
       {...props}
     >
       {({ id, Icon }) => (
-        <Select.ListBoxItem id={id} textValue={_(THEMES[id])} key={id}>
+        <Select.ListBoxItem id={id} textValue={_(SCHEMES[id])} key={id}>
           <span className="flex flex-row items-center gap-2">
             <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={Icon} aria-hidden="true" />
-            <Trans id={THEMES[id].id} />
+            <Trans id={SCHEMES[id].id} />
           </span>
         </Select.ListBoxItem>
       )}

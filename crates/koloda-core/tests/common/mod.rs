@@ -83,10 +83,12 @@ pub fn simple_template() -> koloda_core::domain::templates::InsertTemplateData {
     }
 }
 
-pub fn interface_settings(language: &str, theme: &str, motion: &str) -> serde_json::Value {
+pub fn interface_settings(language: &str, scheme: &str, motion: &str) -> serde_json::Value {
     json!({
         "language": language,
-        "theme": theme,
+        "scheme": scheme,
+        "lightTheme": "atom-one-light",
+        "darkTheme": "atom-one-dark",
         "motion": motion,
     })
 }

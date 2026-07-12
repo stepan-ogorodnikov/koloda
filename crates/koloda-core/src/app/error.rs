@@ -37,7 +37,9 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_HOTKEYS_INVALID_KEY: &str = "validation.settings-hotkeys.invalid-key";
 
     pub const VALIDATION_SETTINGS_INTERFACE_LANGUAGE: &str = "validation.settings-interface.language";
-    pub const VALIDATION_SETTINGS_INTERFACE_THEME: &str = "validation.settings-interface.theme";
+    pub const VALIDATION_SETTINGS_INTERFACE_SCHEME: &str = "validation.settings-interface.scheme";
+    pub const VALIDATION_SETTINGS_INTERFACE_LIGHT_THEME: &str = "validation.settings-interface.light-theme";
+    pub const VALIDATION_SETTINGS_INTERFACE_DARK_THEME: &str = "validation.settings-interface.dark-theme";
     pub const VALIDATION_SETTINGS_INTERFACE_MOTION: &str = "validation.settings-interface.motion";
 
     pub const VALIDATION_ALGORITHM_FSRS_RETENTION: &str = "validation.algorithm.fsrs.retention";

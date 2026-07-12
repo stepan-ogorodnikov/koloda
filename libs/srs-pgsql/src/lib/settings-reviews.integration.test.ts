@@ -1,8 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { addCard } from "./cards";
-import { settings } from "./schema";
-import { getSettings, patchSettings, setSettings } from "./settings";
-import { getTodaysReviewTotals } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
 import {
   createCardContent,
@@ -11,6 +7,10 @@ import {
   seedDeckContext,
   seedLearningSettings,
 } from "../test/test-helpers";
+import { addCard } from "./cards";
+import { getTodaysReviewTotals } from "./reviews";
+import { settings } from "./schema";
+import { getSettings, patchSettings, setSettings } from "./settings";
 
 describe("settings and review totals integration", () => {
   let testDb: TestDb;
@@ -77,7 +77,9 @@ describe("settings and review totals integration", () => {
 
     expect(result?.content).toEqual({
       language: "ru",
-      theme: "system",
+      scheme: "system",
+      lightTheme: "atom-one-light",
+      darkTheme: "atom-one-dark",
       motion: "system",
     });
   });

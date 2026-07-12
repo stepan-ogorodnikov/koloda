@@ -24,7 +24,7 @@ fn set_settings_updates_row_and_sets_updated_at() {
     assert_eq!(created.id, updated.id, "upsert should update existing row");
     assert!(updated.updated_at.is_some(), "updated_at should be set after update");
     assert_eq!(updated.content["language"], "ru");
-    assert_eq!(updated.content["theme"], "dark");
+    assert_eq!(updated.content["scheme"], "dark");
     assert_eq!(updated.content["motion"], "off");
 }
 

@@ -5,24 +5,40 @@
 @import "./utilities";
 @import "./base";
 
-:root {
-  --titlebar-overlay-color: #f5f5f4;
-  --titlebar-overlay-symbol-color: #303030;
-  --bg-body: var(--color-stone-100);
-  --bg-level-1: oklch(98% 0 0);
-  --bg-level-2: oklch(97% 0 0);
-  --fg-level-1: oklch(31% 0 0);
-  --fg-level-2: oklch(32% 0 0);
-  --fg-level-3: oklch(35% 0 0);
-  --fg-level-4: oklch(52% 0 0);
-  --fg-inactive: oklch(50% 0 0);
-  --fg-disabled: oklch(73% 0 0);
-  --fg-link: oklch(from var(--color-blue-500) calc(l - 0.08) c h);
-  --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
-  --fg-error: oklch(from var(--color-red-500) calc(l - 0.12) calc(c - 0.04) h);
-  --fg-success: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
-  --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.15) calc(c - 0.03) h);
-  --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.08) c h);
+:root,
+:root.light[data-light-theme="atom-one-light"],
+:root:not(.dark)[data-light-theme="atom-one-light"] {
+  /* palette */
+  --color-bg: #fafafa;
+  --color-mono-1: #383a42;
+  --color-mono-2: #696c77;
+  --color-mono-3: #a0a1a7;
+  --color-cyan: #0184bc;
+  --color-blue: #4078f2;
+  --color-purple: #a626a4;
+  --color-green: #50a14f;
+  --color-red: #e45649;
+  --color-red-2: #ca1243;
+  --color-orange: #986801;
+  --color-orange-2: #c18401;
+  /* semantic */
+  --titlebar-overlay-color: #f3f3f3; /* electron doesn't accept oklch */
+  --titlebar-overlay-symbol-color: #383a42; /* electron doesn't accept oklch */
+  --bg-body: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --bg-level-1: var(--color-bg);
+  --bg-level-2: oklch(from var(--color-bg) calc(l - 0.025) c h);
+  --fg-level-1: var(--color-mono-1);
+  --fg-level-2: var(--color-mono-2);
+  --fg-level-3: var(--color-mono-3);
+  --fg-level-4: oklch(from var(--fg-level-3) calc(l + 0.08) c h);
+  --fg-inactive: var(--fg-level-2);
+  --fg-disabled: var(--fg-level-3);
+  --fg-link: var(--color-blue);
+  --fg-link-hover: oklch(from var(--color-blue) calc(l + 0.06) c h);
+  --fg-error: var(--color-red);
+  --fg-success: var(--color-green);
+  --outline-focus-ring: var(--color-orange-2);
+  --outline-error-ring: var(--color-red);
   /* scrollbar */
   --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l - 0.13) c h);
   --scrollbar-track: transparent;
@@ -33,8 +49,8 @@
   --shadow-input: inset 0 0.125rem 0.125rem oklch(75% 0 0 / 6%);
   /* button */
   --shadow-button-pressed: var(--shadow-input);
-  --bg-button-hover: oklch(0% 0 0 / 2%);
-  --bg-button-pressed: oklch(0% 0 0 / 4%);
+  --bg-button-hover: oklch(0% 0 0 / 4%);
+  --bg-button-pressed: oklch(0% 0 0 / 5%);
   --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
   --border-button-bordered: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
   --bg-button-primary: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
@@ -42,20 +58,20 @@
   --bg-button-primary-disabled: transparent;
   --border-button-primary: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
   --shadow-button-primary: inset 0 0.5rem 0.5rem oklch(100% 0 0 / 30%);
-   /* switch */
-   --bg-switch: oklch(0% 0 0 / 5%);
-   --bg-switch-selected: oklch(from var(--color-green-700) calc(l + 0.06) calc(c - 0.02) h);
-   --shadow-switch: var(--shadow-input);
-   --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
-   --border-switch-selected: oklch(from var(--color-green-700) calc(l - 0.01) calc(c - 0.02) h);
-   --bg-switch-bullet: oklch(100% 0 0);
-   /* checkbox */
-   --bg-checkbox: oklch(0% 0 0 / 5%);
-   --bg-checkbox-selected: oklch(from var(--color-green-900) calc(l + 0.28) calc(c - 0.02) h);
-   --shadow-checkbox: var(--shadow-input);
-   --border-checkbox: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
-   --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l - 0.08) c h);
-   --fg-checkbox-check: oklch(100% 0 0);
+  /* switch */
+  --bg-switch: oklch(0% 0 0 / 5%);
+  --bg-switch-selected: var(--color-green);
+  --shadow-switch: var(--shadow-input);
+  --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+  --border-switch-selected: oklch(from var(--color-green) calc(l - 0.08) c h);
+  --bg-switch-bullet: oklch(100% 0 0);
+  /* checkbox */
+  --bg-checkbox: oklch(0% 0 0 / 5%);
+  --bg-checkbox-selected: var(--color-green);
+  --shadow-checkbox: var(--shadow-input);
+  --border-checkbox: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+  --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l - 0.08) c h);
+  --fg-checkbox-check: oklch(100% 0 0);
   /* pickers */
   --bg-picker-item-hover: oklch(50% 0 0 / 5%);
   /* toggle group */
@@ -72,11 +88,10 @@
   /* table */
   --border-table: oklch(0% 0 0 / 5%);
   --bg-table-head: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
-  --fg-table-head: oklch(56% 0 0);
-  --fg-table-head-inactive: oklch(78% 0 0);
+  --fg-table-head: var(--fg-level-2);
+  --fg-table-head-inactive: var(--fg-level-3);
   /* tabs */
   --fg-tabs-item: var(--fg-level-4);
-  --fg-tabs-item-active: oklch(from var(--color-blue-500) calc(l - 0.06) c h);
   --fg-tabs-item-active: var(--fg-level-1);
   /* progress bar */
   --bg-progress-bar: oklch(0% 0 0 / 6%);
@@ -84,12 +99,12 @@
   --shadow-progress-bar: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 4%);
   --shadow-progress-bar-fill: inset 0 0.125rem 0.125rem oklch(100% 0 0 / 30%);
   /* lesson type */
-  --bg-lesson-type-blue: oklch(from var(--color-blue-900) calc(l + 0.27) c h);
-  --bg-lesson-type-red: oklch(from var(--color-red-900) calc(l + 0.18) c h);
-  --bg-lesson-type-green: oklch(from var(--color-green-900) calc(l + 0.23) c h);
-  --fg-lesson-type-blue: oklch(from var(--color-blue-900) calc(l + 0.18) c h);
-  --fg-lesson-type-red: oklch(from var(--color-red-900) calc(l + 0.18) c h);
-  --fg-lesson-type-green: oklch(from var(--color-green-900) calc(l + 0.18) c h);
+  --fg-lesson-type-blue: var(--color-blue);
+  --fg-lesson-type-red: var(--color-red);
+  --fg-lesson-type-green: var(--color-green);
+  --bg-lesson-type-blue: oklch(from var(--fg-lesson-type-blue) calc(l + 0.18) c h);
+  --bg-lesson-type-red: oklch(from var(--fg-lesson-type-red) calc(l + 0.16) calc(c + 0.03) h);
+  --bg-lesson-type-green: oklch(from var(--fg-lesson-type-green) calc(l + 0.08) c h);
   /* nav */
   --bg-nav-active: oklch(0% 0 0 / 2%);
   --border-nav-active: oklch(from var(--bg-body) calc(l - 0.05) c h);
@@ -100,24 +115,39 @@
   --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l - 0.02) c h);
 }
 
-:root.dark {
-  --titlebar-overlay-color: #181818;
-  --titlebar-overlay-symbol-color: #e3e3e3;
-  --bg-body: oklch(21% 0 0);
-  --bg-level-1: oklch(22% 0 0);
-  --bg-level-2: oklch(23% 0 0);
-  --fg-level-1: oklch(91.5% 0 0);
-  --fg-level-2: oklch(75% 0 0);
-  --fg-level-3: oklch(67% 0 0);
-  --fg-level-4: oklch(59% 0 0);
-  --fg-inactive: var(--color-neutral-400);
-  --fg-disabled: oklch(43% 0 0);
-  --fg-link: oklch(from var(--color-blue-900) calc(l + 0.21) c h);
-  --fg-link-hover: oklch(from var(--fg-link) calc(l + 0.1) c h);
-  --fg-error: oklch(from var(--color-red-500) calc(l - 0.03) calc(c - 0.02) h);
-  --fg-success: oklch(from var(--color-green-500) calc(l - 0.13) calc(c - 0.06) h);
-  --outline-focus-ring: oklch(from var(--color-orange-500) calc(l + 0.02) c h);
-  --outline-error-ring: oklch(from var(--color-red-500) calc(l - 0.05) c h);
+:root.dark,
+:root.dark[data-dark-theme="atom-one-dark"] {
+  /* palette */
+  --color-bg: #282c34;
+  --color-mono-1: #abb2bf;
+  --color-mono-2: #828997;
+  --color-mono-3: #5c6370;
+  --color-cyan: #56b6c2;
+  --color-blue: #61afef;
+  --color-purple: #c678dd;
+  --color-green: #98c379;
+  --color-red: #e06c75;
+  --color-red-2: #be5046;
+  --color-orange: #d19a66;
+  --color-orange-2: #e5c07b;
+  /* semantic */
+  --titlebar-overlay-color: #23272f; /* electron doesn't accept oklch */
+  --titlebar-overlay-symbol-color: #abb2bf; /* electron doesn't accept oklch */
+  --bg-body: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --bg-level-1: var(--color-bg);
+  --bg-level-2: oklch(from var(--color-bg) calc(l + 0.015) c h);
+  --fg-level-1: var(--color-mono-1);
+  --fg-level-2: var(--color-mono-2);
+  --fg-level-3: var(--color-mono-3);
+  --fg-level-4: oklch(from var(--fg-level-3) calc(l - 0.08) c h);
+  --fg-inactive: var(--fg-level-2);
+  --fg-disabled: var(--fg-level-3);
+  --fg-link: var(--color-blue);
+  --fg-link-hover: oklch(from var(--color-blue) calc(l + 0.06) c h);
+  --fg-error: var(--color-red);
+  --fg-success: var(--color-green);
+  --outline-focus-ring: var(--color-orange);
+  --outline-error-ring: var(--color-red);
   /* scrollbar */
   --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l + 0.14) c h);
   --scrollbar-track: transparent;
@@ -137,20 +167,20 @@
   --bg-button-primary-disabled: transparent;
   --border-button-primary: oklch(from var(--bg-level-1) calc(l + 0.06) c h);
   --shadow-button-primary: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 1%);
-   /* switch */
-   --bg-switch: var(--bg-input);
-   --bg-switch-selected: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.04) h);
-   --shadow-switch: var(--shadow-input);
-   --border-switch: var(--border-input);
-   --border-switch-selected: oklch(from var(--color-green-500) calc(l - 0.21) calc(c - 0.04) h);
-   --bg-switch-bullet: var(--fg-level-1);
-   /* checkbox */
-   --bg-checkbox: var(--bg-input);
-   --bg-checkbox-selected: oklch(from var(--color-green-900) calc(l + 0.08) calc(c + 0.04) h);
-   --shadow-checkbox: var(--shadow-input);
-   --border-checkbox: var(--border-input);
-   --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l + 0.04) c h);
-   --fg-checkbox-check: var(--fg-level-1);
+  /* switch */
+  --bg-switch: var(--bg-input);
+  --bg-switch-selected: oklch(from var(--color-green) calc(l - 0.3) calc(c + 0.1) h);
+  --shadow-switch: var(--shadow-input);
+  --border-switch: var(--border-input);
+  --border-switch-selected: oklch(from var(--bg-switch-selected) calc(l + 0.03) c h);
+  --bg-switch-bullet: var(--fg-level-1);
+  /* checkbox */
+  --bg-checkbox: var(--bg-input);
+  --bg-checkbox-selected: oklch(from var(--color-green) calc(l - 0.34) calc(c + 0.08) h);
+  --shadow-checkbox: var(--shadow-input);
+  --border-checkbox: var(--border-input);
+  --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l + 0.04) c h);
+  --fg-checkbox-check: var(--color-bg);
   /* pickers */
   --bg-picker-item-hover: oklch(100% 0 0 / 4%);
   /* toggle group */
@@ -162,28 +192,28 @@
   --bg-overlay: oklch(50% 0 0 / 5%);
   --shadow-overlay-frame: none;
   /* main */
-  --border-main: oklch(30% 0 0 / 75%);
+  --border-main: oklch(from var(--fg-level-1) calc(l - 0.43) c h);
   --bg-main-sidebar-link-active: oklch(from var(--bg-level-1) calc(l + 0.02) c h);
   /* table */
-  --border-table: oklch(100% 0 0 / 10%);
+  --border-table: oklch(from var(--fg-level-1) calc(l - 0.4) c h);
   --bg-table-head: oklch(from var(--bg-level-1) calc(l + 0.02) c h);
   --fg-table-head: var(--fg-level-2);
-  --fg-table-head-inactive: var(--fg-level-4);
+  --fg-table-head-inactive: var(--fg-level-3);
   /* tabs */
-  --fg-tabs-item: var(--fg-level-3);
-  --fg-tabs-item-active: var(--color-sky-100);
+  --fg-tabs-item: var(--fg-level-4);
+  --fg-tabs-item-active: var(--fg-level-1);
   /* progress bar */
   --bg-progress-bar: oklch(100% 0 0 / 6%);
   --bg-progress-bar-fill: oklch(100% 0 0 / 35%);
   --shadow-progress-bar: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 10%);
   --shadow-progress-bar-fill: inset 0 0.0625rem 0.0625rem oklch(100% 0 0 / 10%);
   /* lesson type */
-  --bg-lesson-type-blue: oklch(from var(--color-blue-500) calc(l - 0.08) c h);
-  --bg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.2) calc(c - 0.05) h);
-  --bg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.25) calc(c - 0.05) h);
-  --fg-lesson-type-blue: oklch(from var(--color-blue-500) calc(l - 0.05) calc(c - 0.06) h);
-  --fg-lesson-type-red: oklch(from var(--color-red-500) calc(l - 0.13) calc(c - 0.08) h);
-  --fg-lesson-type-green: oklch(from var(--color-green-500) calc(l - 0.1) calc(c - 0.08) h);
+  --fg-lesson-type-blue: var(--color-blue);
+  --fg-lesson-type-red: var(--color-red);
+  --fg-lesson-type-green: var(--color-green);
+  --bg-lesson-type-blue: oklch(from var(--fg-lesson-type-blue) calc(l - 0.24) c h);
+  --bg-lesson-type-red: oklch(from var(--fg-lesson-type-red) calc(l - 0.28) calc(c - 0.05) h);
+  --bg-lesson-type-green: oklch(from var(--fg-lesson-type-green) calc(l - 0.32) calc(c + 0.13) h);
   /* nav */
   --bg-nav-active: oklch(50% 0 0 / 9%);
   --border-nav-active: oklch(from var(--bg-body) calc(l + 0.1) c h);
@@ -205,6 +235,7 @@
   /* fonts */
   --font-sans: "Inter Variable", sans-serif;
   /* colors */
+  --color-*: initial;
   --color-bg-body: var(--bg-body);
   --color-bg-level-1: var(--bg-level-1);
   --color-bg-level-2: var(--bg-level-2);
@@ -236,21 +267,21 @@
   --color-bg-button-primary-hover: var(--bg-button-primary-hover);
   --color-border-button-primary: var(--border-button-primary);
   --shadow-button-primary: var(--shadow-button-primary);
-   /* switch */
-   --color-bg-switch: var(--bg-switch);
-   --color-bg-switch-selected: var(--bg-switch-selected);
-   --shadow-switch: var(--shadow-switch);
-   --color-border-switch: var(--border-switch);
-   --color-border-switch-selected: var(--border-switch-selected);
-   --color-bg-switch-bullet: var(--bg-switch-bullet);
-   /* checkbox */
-   --color-bg-checkbox: var(--bg-checkbox);
-   --color-bg-checkbox-selected: var(--bg-checkbox-selected);
-   --shadow-checkbox: var(--shadow-checkbox);
-   --color-border-checkbox: var(--border-checkbox);
-   --color-border-checkbox-selected: var(--border-checkbox-selected);
-   --color-fg-checkbox-check: var(--fg-checkbox-check);
-   /* pickers */
+  /* switch */
+  --color-bg-switch: var(--bg-switch);
+  --color-bg-switch-selected: var(--bg-switch-selected);
+  --shadow-switch: var(--shadow-switch);
+  --color-border-switch: var(--border-switch);
+  --color-border-switch-selected: var(--border-switch-selected);
+  --color-bg-switch-bullet: var(--bg-switch-bullet);
+  /* checkbox */
+  --color-bg-checkbox: var(--bg-checkbox);
+  --color-bg-checkbox-selected: var(--bg-checkbox-selected);
+  --shadow-checkbox: var(--shadow-checkbox);
+  --color-border-checkbox: var(--border-checkbox);
+  --color-border-checkbox-selected: var(--border-checkbox-selected);
+  --color-fg-checkbox-check: var(--fg-checkbox-check);
+  /* pickers */
   --color-bg-picker-item-hover: var(--bg-picker-item-hover);
   /* toggle group */
   --color-bg-toggle-group: var(--bg-toggle-group);
