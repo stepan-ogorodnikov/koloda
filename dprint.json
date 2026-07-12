@@ -1,6 +1,4 @@
 {
-  "typescript": {
-  },
   "json": {
   },
   "malva": {
@@ -9,6 +7,15 @@
   "markup": {
   },
   "yaml": {
+  },
+  "oxc": {
+    "lineWidth": 120,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "quoteStyle": "double",
+    "jsxQuoteStyle": "double",
+    "semicolons": "always",
+    "trailingCommas": "all"
   },
   "exec": {
     "cwd": "${configDir}",
@@ -22,10 +29,11 @@
   },
   "excludes": [
     "**/node_modules",
-    "**/*-lock.json"
+    "**/*-lock.json",
+    "**/locales/*.ts"
   ],
   "plugins": [
-    "https://plugins.dprint.dev/typescript-0.93.4.wasm",
+    "https://plugins.dprint.dev/oxc-0.28.0.wasm",
     "https://plugins.dprint.dev/json-0.19.4.wasm",
     "https://plugins.dprint.dev/g-plane/malva-v0.11.1.wasm",
     "https://plugins.dprint.dev/g-plane/markup_fmt-v0.18.0.wasm",
