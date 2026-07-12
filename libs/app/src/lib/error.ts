@@ -6,7 +6,7 @@ export type ZodIssue = ZodError["issues"][number];
 export type FormError = StandardSchemaV1Issue | ZodIssue;
 
 export const ERROR_MESSAGES = {
-  "unknown": msg`unknown`,
+  unknown: msg`unknown`,
   "ai.http": ({ status }: any) => msg`ai.http ${status}`,
   "ai.network": msg`ai.network`,
   "ai.invalid-response": msg`ai.invalid-response`,
@@ -37,16 +37,11 @@ export const ERROR_MESSAGES = {
   "validation.common.title.too-short": msg`validation.common.title.too-short`,
   "validation.common.title.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.common.title.too-long" })}`,
-  "validation.settings-learning.daily-limits.untouched-exceeds-total":
-    msg`validation.settings-learning.daily-limits.untouched-exceeds-total`,
-  "validation.settings-learning.daily-limits.learn-exceeds-total":
-    msg`validation.settings-learning.daily-limits.learn-exceeds-total`,
-  "validation.settings-learning.daily-limits.review-exceeds-total":
-    msg`validation.settings-learning.daily-limits.review-exceeds-total`,
-  "validation.settings-learning.learn-ahead-limit.hours-range":
-    msg`validation.settings-learning.learn-ahead-limit.hours-range`,
-  "validation.settings-learning.learn-ahead-limit.minutes-range":
-    msg`validation.settings-learning.learn-ahead-limit.minutes-range`,
+  "validation.settings-learning.daily-limits.untouched-exceeds-total": msg`validation.settings-learning.daily-limits.untouched-exceeds-total`,
+  "validation.settings-learning.daily-limits.learn-exceeds-total": msg`validation.settings-learning.daily-limits.learn-exceeds-total`,
+  "validation.settings-learning.daily-limits.review-exceeds-total": msg`validation.settings-learning.daily-limits.review-exceeds-total`,
+  "validation.settings-learning.learn-ahead-limit.hours-range": msg`validation.settings-learning.learn-ahead-limit.hours-range`,
+  "validation.settings-learning.learn-ahead-limit.minutes-range": msg`validation.settings-learning.learn-ahead-limit.minutes-range`,
   "validation.settings-learning.day-starts-at": msg`validation.settings-learning.day-starts-at`,
   "validation.lessons.result.card-review-mismatch": msg`validation.lessons.result.card-review-mismatch`,
   "validation.settings-hotkeys.duplicate-keys": msg`validation.settings-hotkeys.duplicate-keys`,

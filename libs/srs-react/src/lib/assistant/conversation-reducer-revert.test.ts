@@ -386,9 +386,7 @@ describe("conversationReducer → commitRevert", () => {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
-      ],
+      messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] }],
       runs: {},
       revertState: { revertedToUserMessageId: "user-nonexistent", preRevertInputText: "" },
     };

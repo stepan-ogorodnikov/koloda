@@ -29,12 +29,15 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
   };
 
   const handleClick = () => {
-    mutate({ id }, {
-      onSuccess: () => {
-        setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+    mutate(
+      { id },
+      {
+        onSuccess: () => {
+          setIsOpen(false);
+          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+        },
       },
-    });
+    );
   };
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
@@ -54,17 +57,11 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
           <Dialog.Content>
             <div className="flex flex-row items-center gap-4">
               <AnimatePresence>
-                {error
-                  ? (
-                    <Fade>
-                      {typeof message === "function" ? _(message(error)) : _(message)}
-                    </Fade>
-                  )
-                  : (
-                    <Fade>
-                      {_(msg`delete-card.message`)}
-                    </Fade>
-                  )}
+                {error ? (
+                  <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+                ) : (
+                  <Fade>{_(msg`delete-card.message`)}</Fade>
+                )}
               </AnimatePresence>
               <Button variants={{ style: "primary", size: "small" }} onClick={handleClick} isDisabled={!!error}>
                 {_(msg`delete-card.confirm`)}

@@ -87,9 +87,7 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
                   </TextField>
                 )}
               </form.Field>
-              <div className="min-h-10">
-                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
-              </div>
+              <div className="min-h-10">{formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}</div>
             </Dialog.Content>
             <Dialog.Footer>
               {isLinkVisible && (
@@ -107,12 +105,8 @@ export function CloneTemplate({ id }: CloneTemplateProps) {
               <div className="grow" />
               <form.Subscribe selector={(state) => [state.canSubmit]}>
                 {([canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    type="submit"
-                    isDisabled={!canSubmit || isLinkVisible}
-                  >
-                    {isLinkVisible ? (_(msg`clone-template.success`)) : (_(msg`clone-template.submit`))}
+                  <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isLinkVisible}>
+                    {isLinkVisible ? _(msg`clone-template.success`) : _(msg`clone-template.submit`)}
                   </Button>
                 )}
               </form.Subscribe>

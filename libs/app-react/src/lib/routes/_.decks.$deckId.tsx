@@ -44,7 +44,11 @@ function DeckRoute() {
         <Layout.H1 variants={{ grow: false }}>{query.data?.title}</Layout.H1>
         {query.data && (
           <Tabs.List aria-label={_(msg`deck.tabs.label`)}>
-            {DECK_TABS.map(({ id, t }) => <Tabs.Tab id={id} key={id}>{_(t)}</Tabs.Tab>)}
+            {DECK_TABS.map(({ id, t }) => (
+              <Tabs.Tab id={id} key={id}>
+                {_(t)}
+              </Tabs.Tab>
+            ))}
           </Tabs.List>
         )}
       </Layout.Header>

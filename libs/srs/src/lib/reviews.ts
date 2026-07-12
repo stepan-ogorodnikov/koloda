@@ -52,15 +52,7 @@ export async function getCurrentLearningDayRange(dayStartsAt: string) {
 
   const now = new Date();
 
-  const todayBoundary = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    hours,
-    minutes,
-    0,
-    0,
-  );
+  const todayBoundary = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
 
   let from: Date;
   let to: Date;
@@ -99,25 +91,26 @@ export async function calculateTodaysReviewTotals(
   reviewTotals: ReviewTotals,
 ) {
   const { dailyLimits } = learningSettingsValidation.parse(learningSettings);
-  const countedTotal = LEARNING_DAILY_LIMIT_TYPES.reduce((total, type) => (
-    dailyLimits[type].counts ? total + Number(reviewTotals[type] || 0) : total
-  ), 0);
+  const countedTotal = LEARNING_DAILY_LIMIT_TYPES.reduce(
+    (total, type) => (dailyLimits[type].counts ? total + Number(reviewTotals[type] || 0) : total),
+    0,
+  );
   const normalizedReviewTotals = { ...reviewTotals, total: countedTotal };
   const { untouched, learn, review, total } = normalizedReviewTotals;
   const meta = {
-    isUntouchedOverTheLimit: (untouched > 0) && (
-      (untouched > dailyLimits.untouched.value)
-      || (dailyLimits.total > 0 && dailyLimits.untouched.counts && total >= dailyLimits.total)
-    ),
-    isLearnOverTheLimit: (learn > 0) && (
-      (learn > dailyLimits.learn.value)
-      || (dailyLimits.total > 0 && dailyLimits.learn.counts && total >= dailyLimits.total)
-    ),
-    isReviewOverTheLimit: (review > 0) && (
-      (review > dailyLimits.review.value)
-      || (dailyLimits.total > 0 && dailyLimits.review.counts && total >= dailyLimits.total)
-    ),
-    isTotalOverTheLimit: (dailyLimits.total > 0) && (total > 0) && (total >= dailyLimits.total),
+    isUntouchedOverTheLimit:
+      untouched > 0 &&
+      (untouched > dailyLimits.untouched.value ||
+        (dailyLimits.total > 0 && dailyLimits.untouched.counts && total >= dailyLimits.total)),
+    isLearnOverTheLimit:
+      learn > 0 &&
+      (learn > dailyLimits.learn.value ||
+        (dailyLimits.total > 0 && dailyLimits.learn.counts && total >= dailyLimits.total)),
+    isReviewOverTheLimit:
+      review > 0 &&
+      (review > dailyLimits.review.value ||
+        (dailyLimits.total > 0 && dailyLimits.review.counts && total >= dailyLimits.total)),
+    isTotalOverTheLimit: dailyLimits.total > 0 && total > 0 && total >= dailyLimits.total,
   };
   return { dailyLimits, reviewTotals: normalizedReviewTotals, meta };
 }

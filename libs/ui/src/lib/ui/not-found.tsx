@@ -14,7 +14,9 @@ export function NotFound() {
         <h1 className="fg-level-4">{_(msg`not-found.title`)}</h1>
         <p className="fg-level-4">{_(msg`not-found.message`)}</p>
         {canGoBack && (
-          <Button variants={{ style: "ghost" }} onClick={() => router.history.back()}>{_(msg`not-found.back`)}</Button>
+          <Button variants={{ style: "ghost" }} onClick={() => router.history.back()}>
+            {_(msg`not-found.back`)}
+          </Button>
         )}
       </div>
     </div>

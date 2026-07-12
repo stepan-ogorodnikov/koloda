@@ -32,22 +32,25 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
   };
 
   const handleClick = () => {
-    mutate({ id }, {
-      onSuccess: () => {
-        // WHY: Drop the in-memory conversation before any re-render driven
-        // by `onActiveDeleted` re-runs `useConversationPersistence` with
-        // a new id. That hook's effect cleanup unconditionally calls
-        // `flush` for the *previous* id when a debounce timer is pending,
-        // and `flush` would otherwise re-insert the row via
-        // `setConversation`'s upsert. Removing the state here makes
-        // `flush`'s `if (!state) return` short-circuit.
-        store.set(removeConversationAtom, id);
-        setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
-        queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(id) });
-        if (isActive) onActiveDeleted?.();
+    mutate(
+      { id },
+      {
+        onSuccess: () => {
+          // WHY: Drop the in-memory conversation before any re-render driven
+          // by `onActiveDeleted` re-runs `useConversationPersistence` with
+          // a new id. That hook's effect cleanup unconditionally calls
+          // `flush` for the *previous* id when a debounce timer is pending,
+          // and `flush` would otherwise re-insert the row via
+          // `setConversation`'s upsert. Removing the state here makes
+          // `flush`'s `if (!state) return` short-circuit.
+          store.set(removeConversationAtom, id);
+          setIsOpen(false);
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+          queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(id) });
+          if (isActive) onActiveDeleted?.();
+        },
       },
-    });
+    );
   };
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
@@ -64,24 +67,14 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
         <Dialog.Body>
           <Dialog.Content variants={{ class: "items-center gap-4 max-w-[90vw] pt-4 pb-2" }}>
             <AnimatePresence mode="wait">
-              {error
-                ? (
-                  <Fade key="error">
-                    {typeof message === "function" ? _(message(error)) : _(message)}
-                  </Fade>
-                )
-                : (
-                  <Fade key="message">
-                    {_(msg`ai.conversation.delete.message`)}
-                  </Fade>
-                )}
+              {error ? (
+                <Fade key="error">{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+              ) : (
+                <Fade key="message">{_(msg`ai.conversation.delete.message`)}</Fade>
+              )}
             </AnimatePresence>
             <div className="flex flex-row items-center gap-4">
-              <Button
-                variants={{ style: "primary" }}
-                onPress={handleClick}
-                isDisabled={!!error}
-              >
+              <Button variants={{ style: "primary" }} onPress={handleClick} isDisabled={!!error}>
                 {_(msg`ai.conversation.delete.confirm`)}
               </Button>
               <Button variants={{ style: "ghost" }} slot="close" autoFocus>

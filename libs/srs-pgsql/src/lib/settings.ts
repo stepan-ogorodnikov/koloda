@@ -15,11 +15,7 @@ import { settings } from "./schema";
  */
 export async function getSettings<T extends SettingsName>(db: DB, name: SettingsName) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.name, name))
-      .limit(1);
+    const result = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
 
     if (!result[0]) return null;
 
@@ -27,7 +23,7 @@ export async function getSettings<T extends SettingsName>(db: DB, name: Settings
     // e.g. after introducing a new setting default value is returned until explicitly set
     const { data, success } = allowedSettings[name].safeParse(result[0].content);
 
-    return (success ? { ...result[0], content: data } : null) as unknown as AllowedSettings<T> || null;
+    return ((success ? { ...result[0], content: data } : null) as unknown as AllowedSettings<T>) || null;
   });
 }
 
@@ -61,11 +57,7 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
  */
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
   return throwKnownError("db.update", async () => {
-    const original = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.name, name))
-      .limit(1);
+    const original = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
 
     const base = original[0].content as Record<string, unknown>;
     if (!base) throw new AppError("db.update");

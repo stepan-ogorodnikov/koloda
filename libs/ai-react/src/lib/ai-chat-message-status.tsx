@@ -14,13 +14,7 @@ export type AIChatMessageStatusProps = {
   onRetry?: () => void;
 };
 
-export function AIChatMessageStatus({
-  state,
-  elapsedSeconds,
-  modelName,
-  canRetry,
-  onRetry,
-}: AIChatMessageStatusProps) {
+export function AIChatMessageStatus({ state, elapsedSeconds, modelName, canRetry, onRetry }: AIChatMessageStatusProps) {
   const { _ } = useLingui();
 
   if (state === "pending") {
@@ -54,10 +48,7 @@ export function AIChatMessageStatus({
     <div className="flex flex-row flex-wrap items-center gap-2 px-3">
       <p className="fg-level-4">{_(msg`ai.chat.message.status.failed`)}</p>
       {canRetry && (
-        <Button
-          variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-          onPress={onRetry}
-        >
+        <Button variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }} onPress={onRetry}>
           {_(msg`ai.chat.message.retry`)}
         </Button>
       )}

@@ -32,10 +32,7 @@ export function LessonCardField({ params: { field, operation }, content, dispatc
 
   return (
     <LayoutGroup>
-      <div
-        className={lessonCardContentField({ operation })}
-        data-is-submitted={content.form.isSubmitted || undefined}
-      >
+      <div className={lessonCardContentField({ operation })} data-is-submitted={content.form.isSubmitted || undefined}>
         <FieldComponent
           value={actualValue}
           operation={operation}

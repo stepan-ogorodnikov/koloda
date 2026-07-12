@@ -34,17 +34,15 @@ export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
         {LESSON_TYPES.map((type) => (
           <tr key={type}>
             <LessonInitLabel>{_(LESSON_TYPE_LABELS[type])}</LessonInitLabel>
-            {type === "total"
-              ? (
-                <LessonInitTd>
-                  <LessonInitAmount amount={state?.amounts?.total || 0} />
-                </LessonInitTd>
-              )
-              : (
-                <LessonInitTd>
-                  <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
-                </LessonInitTd>
-              )}
+            {type === "total" ? (
+              <LessonInitTd>
+                <LessonInitAmount amount={state?.amounts?.total || 0} />
+              </LessonInitTd>
+            ) : (
+              <LessonInitTd>
+                <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
+              </LessonInitTd>
+            )}
             <LessonInitTd>
               <LessonInitAmount amount={available[type]} />
             </LessonInitTd>

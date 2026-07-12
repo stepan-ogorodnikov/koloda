@@ -76,10 +76,7 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
  * OpenAI-compatible models endpoint with full metadata + hardcoded reasoning
  * for deepseek-* / mimo-* (Opencode Go / Zen).
  */
-export async function fetchOpenAICompatibleModelsDetailed(
-  modelsUrl: string,
-  apiKey?: string,
-): Promise<AIModel[]> {
+export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, apiKey?: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
     await fetch(modelsUrl, {
       headers: {

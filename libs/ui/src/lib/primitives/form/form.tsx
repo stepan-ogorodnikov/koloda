@@ -18,11 +18,7 @@ function Timestamps(props: PropsWithChildren) {
 type FormTimestampProps = { timestamp?: Date | null };
 
 function Timestamp({ children }: PropsWithChildren) {
-  return (
-    <span className="fg-level-4">
-      {children}
-    </span>
-  );
+  return <span className="fg-level-4">{children}</span>;
 }
 
 function CreatedAt({ timestamp }: FormTimestampProps) {
@@ -61,7 +57,9 @@ export function Errors({ errors }: FormErrorsProps) {
 
   return (
     <div className="flex flex-col gap-2" role="alert">
-      {uniqueErrors.map((error) => <ErrorsItem error={error} key={error.message} />)}
+      {uniqueErrors.map((error) => (
+        <ErrorsItem error={error} key={error.message} />
+      ))}
     </div>
   );
 }
@@ -71,15 +69,9 @@ type ErrorsItemProps = { error: FormError };
 function ErrorsItem({ error }: ErrorsItemProps) {
   const { _ } = useLingui();
   const content = ERROR_MESSAGES[error.message as ErrorCode];
-  const message = content
-    ? (typeof content === "function" ? _(content(error)) : _(content))
-    : content;
+  const message = content ? (typeof content === "function" ? _(content(error)) : _(content)) : content;
 
-  return (
-    <em className="fg-error not-italic">
-      {message}
-    </em>
-  );
+  return <em className="fg-error not-italic">{message}</em>;
 }
 
 function SubmitButton(props: ButtonProps) {
@@ -89,12 +81,7 @@ function SubmitButton(props: ButtonProps) {
   return (
     <form.Subscribe selector={(state) => [state.canSubmit]}>
       {([canSubmit]) => (
-        <Button
-          variants={{ style: "primary", class: "w-full" }}
-          type="submit"
-          isDisabled={!canSubmit}
-          {...props}
-        >
+        <Button variants={{ style: "primary", class: "w-full" }} type="submit" isDisabled={!canSubmit} {...props}>
           {_(msg`form.save`)}
         </Button>
       )}
@@ -127,7 +114,9 @@ type ControlsProps = Omit<FormErrorsProps, "errors"> & {
 
 function Controls({ showErrors = true }: ControlsProps) {
   const form = useFormContext();
-  const { form: { submit, reset } } = useHotkeysSettings();
+  const {
+    form: { submit, reset },
+  } = useHotkeysSettings();
   useAppHotkey(
     submit,
     () => {

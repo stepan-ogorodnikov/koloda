@@ -48,9 +48,9 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
 
   if (!state.todayReviewTotals || !state.lessons || !state.amounts) return null;
 
-  return (
-    isMobile
-      ? <LessonInitList state={state} dispatch={dispatch} />
-      : <LessonInitTable state={state} dispatch={dispatch} />
+  return isMobile ? (
+    <LessonInitList state={state} dispatch={dispatch} />
+  ) : (
+    <LessonInitTable state={state} dispatch={dispatch} />
   );
 }

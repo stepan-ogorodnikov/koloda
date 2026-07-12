@@ -38,13 +38,19 @@ export type UseConversationPersistenceReturn = {
   retryLoad: () => Promise<unknown>;
 };
 
-export function useConversationPersistence(
-  { conversationId }: UseConversationPersistenceOptions,
-): UseConversationPersistenceReturn {
+export function useConversationPersistence({
+  conversationId,
+}: UseConversationPersistenceOptions): UseConversationPersistenceReturn {
   const queryClient = useQueryClient();
   const store = useStore();
   const { getConversationQuery, setConversationMutation } = useAtomValue(queriesAtom);
-  const { data: conversationData, error: conversationError, refetch, isLoading, isFetching } = useQuery({
+  const {
+    data: conversationData,
+    error: conversationError,
+    refetch,
+    isLoading,
+    isFetching,
+  } = useQuery({
     ...getConversationQuery(conversationId!),
     queryKey: queryKeys.conversations.detail(conversationId!),
     enabled: !!conversationId,
@@ -249,10 +255,11 @@ export function useConversationPersistence(
   // to decide whether to load from DB.
   return {
     handleDismissSave: dismissSaveStatus,
-    isRestoring: !!conversationId
-      && isLoading
-      && restoredIdRef.current !== conversationId
-      && !store.get(conversationsAtom)[conversationId],
+    isRestoring:
+      !!conversationId &&
+      isLoading &&
+      restoredIdRef.current !== conversationId &&
+      !store.get(conversationsAtom)[conversationId],
     loadError: conversationError ?? null,
     retryLoad: refetch,
   };

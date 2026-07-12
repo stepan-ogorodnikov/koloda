@@ -29,9 +29,7 @@ function AlgorithmsRoute() {
     <>
       <Layout.Sidebar>
         <Layout.Header variants={{ type: "sidebar" }}>
-          <Layout.H1>
-            {_(msg`algorithms.title`)}
-          </Layout.H1>
+          <Layout.H1>{_(msg`algorithms.title`)}</Layout.H1>
           <AddAlgorithm />
         </Layout.Header>
         <Layout.Container ref={ref} tabIndex={-1}>

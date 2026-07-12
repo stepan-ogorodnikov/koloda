@@ -42,13 +42,16 @@ export function CardsTableSelectionControls({
   };
 
   const handleDelete = () => {
-    mutate({ ids: selectedIds }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
-        setIsOpen(false);
-        onClearSelection();
+    mutate(
+      { ids: selectedIds },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+          setIsOpen(false);
+          onClearSelection();
+        },
       },
-    });
+    );
   };
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
@@ -65,25 +68,17 @@ export function CardsTableSelectionControls({
         <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
           <Button variants={{ style: "ghost" }} onClick={() => setIsOpen(true)}>
             <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
-            <span>
-              {_(msg`cards-table.selection.delete.trigger`)}
-            </span>
+            <span>{_(msg`cards-table.selection.delete.trigger`)}</span>
           </Button>
           <Dialog.Popover variants={{ class: "my-2" }} placement="top">
             <Dialog.Body>
               <Dialog.Content variants={{ class: "items-center gap-2" }}>
                 <AnimatePresence>
-                  {error
-                    ? (
-                      <Fade>
-                        {typeof message === "function" ? _(message(error)) : _(message)}
-                      </Fade>
-                    )
-                    : (
-                      <Fade>
-                        {_(msg`cards.table.selection.delete-confirm`)}
-                      </Fade>
-                    )}
+                  {error ? (
+                    <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+                  ) : (
+                    <Fade>{_(msg`cards.table.selection.delete-confirm`)}</Fade>
+                  )}
                 </AnimatePresence>
                 <div className="flex flex-row items-center gap-4">
                   <Button variants={{ style: "primary", size: "small" }} onClick={handleDelete} isDisabled={!!error}>

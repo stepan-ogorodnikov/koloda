@@ -22,9 +22,7 @@ export const appMenu = [
   { to: "/ai", t: msg`nav.ai`, icon: AiChat01Icon },
 ];
 
-export const secondaryMenu = [
-  { to: "/settings", t: msg`nav.settings`, icon: Settings01Icon },
-];
+export const secondaryMenu = [{ to: "/settings", t: msg`nav.settings`, icon: Settings01Icon }];
 
 export function App({ children }: PropsWithChildren) {
   useGlobalSync();
@@ -38,9 +36,13 @@ export function App({ children }: PropsWithChildren) {
   return (
     <>
       <Layout.Nav>
-        {appMenu.map(({ to, t, icon }) => <Layout.NavLink to={to} msg={t} icon={icon} key={to} />)}
+        {appMenu.map(({ to, t, icon }) => (
+          <Layout.NavLink to={to} msg={t} icon={icon} key={to} />
+        ))}
         <div className="grow" />
-        {secondaryMenu.map(({ to, t, icon }) => <Layout.NavLink to={to} msg={t} icon={icon} key={to} />)}
+        {secondaryMenu.map(({ to, t, icon }) => (
+          <Layout.NavLink to={to} msg={t} icon={icon} key={to} />
+        ))}
       </Layout.Nav>
       {children}
     </>

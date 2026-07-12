@@ -34,9 +34,7 @@ store.sub(schemeAtom, () => {
 
 function onPrefersColorSchemeChange(e: MediaQueryListEvent | MediaQueryList) {
   const scheme = store.get(schemeAtom);
-  const value = e.matches
-    ? (scheme === "light" ? "light" : "dark")
-    : (scheme === "dark" ? "dark" : "light");
+  const value = e.matches ? (scheme === "light" ? "light" : "dark") : scheme === "dark" ? "dark" : "light";
   document.documentElement.classList.remove("light", "dark");
   document.documentElement.classList.add(value);
 }

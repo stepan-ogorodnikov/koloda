@@ -48,45 +48,42 @@ export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(opt
     };
   }, []);
 
-  const start = useCallback(
-    async (request: TRequest, onChunk?: (chunk: TChunk) => void) => {
-      controllerRef.current?.abort();
-      const controller = new AbortController();
-      controllerRef.current = controller;
+  const start = useCallback(async (request: TRequest, onChunk?: (chunk: TChunk) => void) => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
-      setIsRunning(true);
-      setError(null);
-      setResult(null);
-      setData(optionsRef.current.initialData);
+    setIsRunning(true);
+    setError(null);
+    setResult(null);
+    setData(optionsRef.current.initialData);
 
-      try {
-        const executorResult = await optionsRef.current.executor(
-          request,
-          (chunk) => {
-            if (!controller.signal.aborted) {
-              setData((prev) => optionsRef.current.accumulate(prev, chunk));
-              onChunk?.(chunk);
-            }
-          },
-          controller.signal,
-        );
-        setResult(executorResult ?? null);
-        return { streamResult: "success" as const, result: executorResult ?? null };
-      } catch (e) {
-        if (controller.signal.aborted || isAbortError(e)) return { streamResult: "aborted" as const, result: null };
-        const error = e instanceof Error ? e : new Error(String(e));
-        optionsRef.current.onError?.(error);
-        setError(error);
-        return { streamResult: "error" as const, result: null };
-      } finally {
-        if (controllerRef.current === controller) {
-          controllerRef.current = null;
-          setIsRunning(false);
-        }
+    try {
+      const executorResult = await optionsRef.current.executor(
+        request,
+        (chunk) => {
+          if (!controller.signal.aborted) {
+            setData((prev) => optionsRef.current.accumulate(prev, chunk));
+            onChunk?.(chunk);
+          }
+        },
+        controller.signal,
+      );
+      setResult(executorResult ?? null);
+      return { streamResult: "success" as const, result: executorResult ?? null };
+    } catch (e) {
+      if (controller.signal.aborted || isAbortError(e)) return { streamResult: "aborted" as const, result: null };
+      const error = e instanceof Error ? e : new Error(String(e));
+      optionsRef.current.onError?.(error);
+      setError(error);
+      return { streamResult: "error" as const, result: null };
+    } finally {
+      if (controllerRef.current === controller) {
+        controllerRef.current = null;
+        setIsRunning(false);
       }
-    },
-    [],
-  );
+    }
+  }, []);
 
   const cancel = useCallback(() => {
     controllerRef.current?.abort();

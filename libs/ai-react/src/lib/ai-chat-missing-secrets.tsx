@@ -18,9 +18,7 @@ export function AIChatMissingSecrets({ show, missingLabels }: AIChatMissingSecre
           <em className="fg-error not-italic">
             {_(msg`ai.chat.profile-data-missing`)}: {missingLabels.join(", ")}
           </em>
-          <span className="fg-level-2 text-sm/6">
-            {_(msg`ai.chat.profile-data-missing.hint`)}
-          </span>
+          <span className="fg-level-2 text-sm/6">{_(msg`ai.chat.profile-data-missing.hint`)}</span>
         </Fade>
       )}
     </AnimatePresence>

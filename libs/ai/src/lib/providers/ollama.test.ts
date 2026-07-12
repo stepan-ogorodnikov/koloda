@@ -24,9 +24,7 @@ describe("fetchOllamaModels", () => {
 
     const models = await fetchOllamaModels("https://example.com", "secret-key");
 
-    expect(models).toEqual([
-      { id: "llama3.1", name: "Llama 3.1", context_length: 0 },
-    ]);
+    expect(models).toEqual([{ id: "llama3.1", name: "Llama 3.1", context_length: 0 }]);
     expect(OllamaMock).toHaveBeenCalledTimes(1);
     expect(OllamaMock).toHaveBeenCalledWith({
       host: "https://example.com",

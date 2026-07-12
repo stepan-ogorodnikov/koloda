@@ -28,11 +28,10 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const query = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
   const template = query.data;
   const { mutate, error, reset } = useMutation(addCardMutation());
-  const content = useMemo(() => (
-    template
-      ? template.content.fields.reduce((acc, x) => ({ ...acc, [`${x.id}`]: { text: "" } }), {})
-      : {}
-  ), [template]);
+  const content = useMemo(
+    () => (template ? template.content.fields.reduce((acc, x) => ({ ...acc, [`${x.id}`]: { text: "" } }), {}) : {}),
+    [template],
+  );
   const firstFieldRef = useRef<HTMLTextAreaElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -78,10 +77,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Tooltip content={_(msg`add-cards.trigger`)}>
-        <Button
-          variants={{ style: "dashed", size: "icon" }}
-          aria-label={_(msg`add-cards.trigger`)}
-        >
+        <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`add-cards.trigger`)}>
           <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
         </Button>
       </Tooltip>
@@ -132,11 +128,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                 <div className="grow" />
                 <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit]}>
                   {([isDirty, canSubmit]) => (
-                    <Button
-                      variants={{ style: "primary" }}
-                      type="submit"
-                      isDisabled={!canSubmit || !isDirty}
-                    >
+                    <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || !isDirty}>
                       {_(msg`add-card.submit`)}
                     </Button>
                   )}

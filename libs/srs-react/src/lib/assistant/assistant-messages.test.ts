@@ -70,8 +70,8 @@ describe("aiChatUtility", () => {
     ];
 
     expect(serializeGeneratedCards(cards, template)).toBe(
-      "## Card 1\n**Front**: Question one\n**Back**: Answer one\n\n"
-        + "## Card 2\n**Front**: Question two\n**Back**: Answer two",
+      "## Card 1\n**Front**: Question one\n**Back**: Answer one\n\n" +
+        "## Card 2\n**Front**: Question two\n**Back**: Answer two",
     );
   });
 });
@@ -111,9 +111,10 @@ function assistantErrorMessage(id: string, runId: string): UIMessage {
   } as UIMessage;
 }
 
-function createRunData(
-  overrides: Partial<{ status: string; cards: GeneratedCard[] }> = {},
-): { status: string; cards: GeneratedCard[] } {
+function createRunData(overrides: Partial<{ status: string; cards: GeneratedCard[] }> = {}): {
+  status: string;
+  cards: GeneratedCard[];
+} {
   return { status: "success", cards: [], ...overrides };
 }
 
@@ -132,20 +133,12 @@ const cardWithContent: GeneratedCard = {
 
 describe("buildConversationMessages", () => {
   it("includes user messages with text content", () => {
-    const result = buildConversationMessages(
-      [userMessage("u1", "What is 2+2?")],
-      {},
-      buildTemplate,
-    );
+    const result = buildConversationMessages([userMessage("u1", "What is 2+2?")], {}, buildTemplate);
     expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
   });
 
   it("skips user messages with empty content", () => {
-    const result = buildConversationMessages(
-      [userMessage("u1", "   ")],
-      {},
-      buildTemplate,
-    );
+    const result = buildConversationMessages([userMessage("u1", "   ")], {}, buildTemplate);
     expect(result).toEqual([]);
   });
 
@@ -159,11 +152,7 @@ describe("buildConversationMessages", () => {
   });
 
   it("skips assistant chat-text messages with empty content", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "  ")],
-      {},
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "  ")], {}, buildTemplate);
     expect(result).toEqual([]);
   });
 
@@ -209,11 +198,7 @@ describe("buildConversationMessages", () => {
   });
 
   it("skips generated-cards messages when run does not exist", () => {
-    const result = buildConversationMessages(
-      [assistantGeneratedCardsMessage("a1", "missing")],
-      {},
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantGeneratedCardsMessage("a1", "missing")], {}, buildTemplate);
     expect(result).toEqual([]);
   });
 
@@ -252,10 +237,7 @@ describe("buildConversationMessages", () => {
   });
 
   it("skips assistant error messages when building history", () => {
-    const messages = [
-      userMessage("u1", "What is 2+2?"),
-      assistantErrorMessage("a1", "r1"),
-    ];
+    const messages = [userMessage("u1", "What is 2+2?"), assistantErrorMessage("a1", "r1")];
     const result = buildConversationMessages(messages, {}, buildTemplate);
     expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
   });
@@ -267,10 +249,7 @@ describe("buildConversationMessages", () => {
       parts: [{ type: "text", text: "" }],
       metadata: { kind: "error", runId: "r1", mode: "cards" },
     } as UIMessage;
-    const messages = [
-      userMessage("u1", "Make cards"),
-      cardError,
-    ];
+    const messages = [userMessage("u1", "Make cards"), cardError];
     const result = buildConversationMessages(messages, {}, buildTemplate);
     expect(result).toEqual([{ role: "user", content: "Make cards" }]);
   });

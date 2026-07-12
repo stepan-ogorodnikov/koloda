@@ -52,9 +52,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       header: field.title,
       accessorFn: (row: CardWithStatus) => row.content[field.id]?.text || "",
       cell: (cell: CellContext<CardWithStatus, unknown>) => (
-        <Table.CellContent variants={{ class: "truncate" }}>
-          {String(cell.getValue() ?? "")}
-        </Table.CellContent>
+        <Table.CellContent variants={{ class: "truncate" }}>{String(cell.getValue() ?? "")}</Table.CellContent>
       ),
       size: 16,
       minSize: 8,

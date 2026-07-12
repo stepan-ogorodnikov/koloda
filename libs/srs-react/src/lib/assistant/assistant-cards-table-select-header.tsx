@@ -29,11 +29,7 @@ export function AssistantCardsTableSelectHeader({ table }: AssistantCardsTableSe
     <AnimatePresence>
       {selectableCount !== 0 && (
         <Fade initial={{ opacity: 1 }} key="checkbox">
-          <Checkbox
-            isSelected={isAllSelected}
-            isIndeterminate={isIndeterminate}
-            onChange={handleChange}
-          >
+          <Checkbox isSelected={isAllSelected} isIndeterminate={isIndeterminate} onChange={handleChange}>
             <Checkbox.Indicator />
           </Checkbox>
         </Fade>

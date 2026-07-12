@@ -13,7 +13,8 @@ export function AssistantSettingsVariables() {
   return (
     <div className="flex flex-col gap-2">
       <span className="fg-level-2 font-medium tracking-wide uppercase">
-        {_(msg`assistant.settings.system-prompt.variables`)}</span>
+        {_(msg`assistant.settings.system-prompt.variables`)}
+      </span>
       <div className="flex flex-col gap-2 fg-level-2">
         {VARIABLES.map(({ variable, label }) => (
           <span key={variable}>

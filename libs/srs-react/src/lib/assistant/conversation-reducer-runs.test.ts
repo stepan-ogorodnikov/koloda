@@ -325,9 +325,7 @@ describe("conversationReducer", () => {
     });
 
     it("overwrites modelName when a new value is provided", () => {
-      let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
-      ]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(
@@ -346,9 +344,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun omits it", () => {
-      let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
-      ]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(
@@ -366,9 +362,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" },
-      ]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(

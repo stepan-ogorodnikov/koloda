@@ -48,12 +48,7 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
     <AnimatePresence mode="wait">
       <Fade className={lessonStudying} key={state.content.index}>
         {state.content.template.layout.map((item, i) => (
-          <LessonCardField
-            params={item}
-            content={state.content!}
-            dispatch={dispatch}
-            key={i}
-          />
+          <LessonCardField params={item} content={state.content!} dispatch={dispatch} key={i} />
         ))}
       </Fade>
     </AnimatePresence>

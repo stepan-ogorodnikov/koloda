@@ -31,7 +31,10 @@ import { cards, decks, reviews } from "./schema";
 export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}) {
   return throwKnownError("db.get", async () => {
     const filtersSQL = filters.deckIds?.length
-      ? sql`WHERE d.id IN (${sql.join(filters.deckIds.map(id => sql`${id}`), sql`, `)})`
+      ? sql`WHERE d.id IN (${sql.join(
+          filters.deckIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})`
       : sql``;
 
     const result = await db.execute(sql`
@@ -71,12 +74,7 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
  * @param amounts - The number of cards to retrieve for each lesson type
  * @returns Array of cards for the lesson
  */
-export async function getLessonCards(
-  db: DB,
-  dueAt: Date,
-  filters: LessonFilters,
-  amounts: LessonAmounts,
-) {
+export async function getLessonCards(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
   return throwKnownError("db.get", async () => {
     const deckFilter = filters.deckIds?.length ? inArray(cards.deckId, filters.deckIds.map(Number)) : undefined;
 
@@ -119,20 +117,29 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
       SELECT DISTINCT a.id, a.content
       FROM algorithms a
       JOIN decks d ON d.algorithm_id = a.id
-      WHERE d.id IN (${sql.join(deckIds.map(id => sql`${id}`), sql`, `)})
+      WHERE d.id IN (${sql.join(
+        deckIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
     `);
 
     return result.rows as Algorithm[];
   });
 }
 
-export type LessonTemplateLayoutItem = Modify<TemplateLayoutItem, {
-  field: TemplateField | undefined;
-}>;
+export type LessonTemplateLayoutItem = Modify<
+  TemplateLayoutItem,
+  {
+    field: TemplateField | undefined;
+  }
+>;
 
-export type LessonTemplate = Modify<Template, {
-  layout: LessonTemplateLayoutItem[];
-}>;
+export type LessonTemplate = Modify<
+  Template,
+  {
+    layout: LessonTemplateLayoutItem[];
+  }
+>;
 
 /**
  * Retrieves the templates used by given decks
@@ -148,7 +155,10 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
       SELECT DISTINCT t.id, t.content
       FROM templates t
       JOIN decks d ON d.template_id = t.id
-      WHERE d.id IN (${sql.join(deckIds.map(id => sql`${id}`), sql`, `)})
+      WHERE d.id IN (${sql.join(
+        deckIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
     `);
     const templates = result.rows as Template[];
 
@@ -164,12 +174,7 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
  * @param amounts - The number of cards to retrieve for each lesson type
  * @returns Object containing lesson cards, decks, templates, and algorithms, or null if any are missing
  */
-export async function getLessonData(
-  db: DB,
-  dueAt: Date,
-  filters: LessonFilters,
-  amounts: LessonAmounts,
-) {
+export async function getLessonData(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
   const lessonCards = await getLessonCards(db, dueAt, filters, amounts);
   if (!lessonCards) return null;
 
@@ -182,7 +187,12 @@ export async function getLessonData(
   const lessonAlgorithms = await getLessonAlgorithms(db, deckIds);
 
   return lessonDecks && lessonTemplates && lessonAlgorithms
-    ? { cards: lessonCards, decks: lessonDecks, templates: lessonTemplates, algorithms: lessonAlgorithms } as LessonData
+    ? ({
+        cards: lessonCards,
+        decks: lessonDecks,
+        templates: lessonTemplates,
+        algorithms: lessonAlgorithms,
+      } as LessonData)
     : null;
 }
 
@@ -199,15 +209,9 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
   return throwKnownError("db.update", async () => {
     const { id, ...data } = card;
     return db.transaction(async (tx) => {
-      await tx
-        .update(cards)
-        .set(data)
-        .where(eq(cards.id, id));
+      await tx.update(cards).set(data).where(eq(cards.id, id));
 
-      const result = await tx
-        .insert(reviews)
-        .values(review)
-        .returning();
+      const result = await tx.insert(reviews).values(review).returning();
 
       return result[0] as Review;
     });

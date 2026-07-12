@@ -67,11 +67,7 @@ export function Lesson() {
   };
 
   return (
-    <Dialog.Overlay
-      isOpen={state.meta.isOpen}
-      onOpenChange={handleIsOpenChange}
-      isKeyboardDismissDisabled
-    >
+    <Dialog.Overlay isOpen={state.meta.isOpen} onOpenChange={handleIsOpenChange} isKeyboardDismissDisabled>
       <Dialog.Modal variants={{ size: "main" }} isKeyboardDismissDisabled>
         <Dialog.Body>
           <form

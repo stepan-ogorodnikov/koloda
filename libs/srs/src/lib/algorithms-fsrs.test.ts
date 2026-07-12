@@ -1,10 +1,6 @@
 import { createEmptyCard, Rating } from "ts-fsrs";
 import { describe, expect, it } from "vitest";
-import {
-  algorithmFSRSValidation,
-  createFSRSAlgorithm,
-  DEFAULT_FSRS_ALGORITHM,
-} from "./algorithms-fsrs";
+import { algorithmFSRSValidation, createFSRSAlgorithm, DEFAULT_FSRS_ALGORITHM } from "./algorithms-fsrs";
 
 function createReviewedCard(now: Date) {
   const card = createEmptyCard(now);
@@ -38,16 +34,15 @@ describe("createFSRSAlgorithm", () => {
     const lowGrades = lowRetention.repeat(card, now);
     const highGrades = highRetention.repeat(card, now);
 
-    expect(lowGrades[Rating.Good].card.scheduled_days).toBeGreaterThan(
-      highGrades[Rating.Good].card.scheduled_days,
-    );
+    expect(lowGrades[Rating.Good].card.scheduled_days).toBeGreaterThan(highGrades[Rating.Good].card.scheduled_days);
   });
 
   it("parses comma-separated weights string into number array", () => {
     const defaultInstance = createFSRSAlgorithm(DEFAULT_FSRS_ALGORITHM);
     const customInstance = createFSRSAlgorithm({
       ...DEFAULT_FSRS_ALGORITHM,
-      weights: "0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3",
+      weights:
+        "0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3",
     });
 
     const now = new Date();
@@ -55,9 +50,7 @@ describe("createFSRSAlgorithm", () => {
     const defaultGrades = defaultInstance.repeat(card, now);
     const customGrades = customInstance.repeat(card, now);
 
-    expect(defaultGrades[Rating.Good].card).not.toEqual(
-      customGrades[Rating.Good].card,
-    );
+    expect(defaultGrades[Rating.Good].card).not.toEqual(customGrades[Rating.Good].card);
   });
 
   it("applies maximumInterval to cap scheduled intervals", () => {

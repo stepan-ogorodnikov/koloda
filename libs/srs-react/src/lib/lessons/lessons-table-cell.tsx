@@ -9,13 +9,19 @@ type LessonTableCellProps = { cell: CellContext<Lesson, any> };
 
 export function LessonsTableCell({ cell }: LessonTableCellProps) {
   const { _ } = useLingui();
-  const { column: { id }, row: { original }, getValue } = cell;
+  const {
+    column: { id },
+    row: { original },
+    getValue,
+  } = cell;
   const value = getValue();
 
   if (id === "title") {
-    return value === null
-      ? <Table.CellContent variants={{ type: "head" }}>{_(msg`lessons.table.columns.title.all`)}</Table.CellContent>
-      : <Table.CellContent>{value}</Table.CellContent>;
+    return value === null ? (
+      <Table.CellContent variants={{ type: "head" }}>{_(msg`lessons.table.columns.title.all`)}</Table.CellContent>
+    ) : (
+      <Table.CellContent>{value}</Table.CellContent>
+    );
   }
 
   return (

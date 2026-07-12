@@ -91,15 +91,19 @@ describe("settings and review totals integration", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 0, 10, 4, 30, 0));
 
-    await seedLearningSettings(db, { algorithm: algorithm.id, template: template.id }, {
-      dailyLimits: {
-        total: 2,
-        untouched: { value: 1, counts: true },
-        learn: { value: 10, counts: false },
-        review: { value: 1, counts: true },
+    await seedLearningSettings(
+      db,
+      { algorithm: algorithm.id, template: template.id },
+      {
+        dailyLimits: {
+          total: 2,
+          untouched: { value: 1, counts: true },
+          learn: { value: 10, counts: false },
+          review: { value: 1, counts: true },
+        },
+        dayStartsAt: "05:00",
       },
-      dayStartsAt: "05:00",
-    });
+    );
 
     const cardA = await addCard(db, {
       deckId: deck.id,

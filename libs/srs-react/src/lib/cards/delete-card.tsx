@@ -24,33 +24,28 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
   };
 
   const handleConfirm = () => {
-    mutate({ id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+    mutate(
+      { id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+        },
       },
-    });
+    );
   };
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
-      <DeleteDialog.Trigger>
-        {_(msg`delete-card.trigger`)}
-      </DeleteDialog.Trigger>
+      <DeleteDialog.Trigger>{_(msg`delete-card.trigger`)}</DeleteDialog.Trigger>
       <DeleteDialog.Frame>
         <AnimatePresence>
-          {error
-            ? (
-              <Fade>
-                {typeof message === "function" ? _(message(error)) : _(message)}
-              </Fade>
-            )
-            : (
-              <Fade>
-                {_(msg`delete-card.message`)}
-              </Fade>
-            )}
+          {error ? (
+            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+          ) : (
+            <Fade>{_(msg`delete-card.message`)}</Fade>
+          )}
         </AnimatePresence>
         <DeleteDialog.Actions>
           <DeleteDialog.Cancel>{_(msg`delete-card.cancel`)}</DeleteDialog.Cancel>

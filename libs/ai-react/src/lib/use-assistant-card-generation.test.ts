@@ -52,7 +52,8 @@ describe("useAssistantCardGeneration", () => {
   });
 
   it("stores non-abort errors and clears them on the next successful run", async () => {
-    const streamGenerator = vi.fn()
+    const streamGenerator = vi
+      .fn()
       .mockImplementationOnce(async () => {
         throw new Error("boom");
       })
@@ -82,9 +83,13 @@ describe("useAssistantCardGeneration", () => {
       signalRef = signal;
 
       return new Promise<void>((_resolve, reject) => {
-        signal.addEventListener("abort", () => {
-          reject(new DOMException("Aborted", "AbortError"));
-        }, { once: true });
+        signal.addEventListener(
+          "abort",
+          () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          },
+          { once: true },
+        );
       });
     });
     const { result } = renderHook(() => useAssistantCardGeneration(streamGenerator));
@@ -109,14 +114,19 @@ describe("useAssistantCardGeneration", () => {
     let secondPromise!: Promise<StreamResult>;
     const signals: AbortSignal[] = [];
     let resolveSecond!: () => void;
-    const streamGenerator = vi.fn()
+    const streamGenerator = vi
+      .fn()
       .mockImplementationOnce((_request, _onCard, signal: AbortSignal) => {
         signals.push(signal);
 
         return new Promise<void>((_resolve, reject) => {
-          signal.addEventListener("abort", () => {
-            reject(new DOMException("Aborted", "AbortError"));
-          }, { once: true });
+          signal.addEventListener(
+            "abort",
+            () => {
+              reject(new DOMException("Aborted", "AbortError"));
+            },
+            { once: true },
+          );
         });
       })
       .mockImplementationOnce(async (_request, onCard, signal: AbortSignal) => {
@@ -137,9 +147,11 @@ describe("useAssistantCardGeneration", () => {
     await waitFor(() => expect(result.current.isGenerating).toBe(true));
 
     act(() => {
-      secondPromise = result.current.generate(createRequest({
-        input: { ...createRequest().input, prompt: "Second prompt" },
-      }));
+      secondPromise = result.current.generate(
+        createRequest({
+          input: { ...createRequest().input, prompt: "Second prompt" },
+        }),
+      );
     });
 
     await waitFor(() => expect(streamGenerator).toHaveBeenCalledTimes(2));

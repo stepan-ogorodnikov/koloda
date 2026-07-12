@@ -14,9 +14,5 @@ export function LessonCompletion({ dispatch }: LessonCompletionProps) {
 
   useAppHotkey(["Escape"], () => dispatch(["isOpenUpdated", false]), "lesson");
 
-  return (
-    <div className="text-xl font-semibold">
-      {_(msg`lesson.completion.message`)}
-    </div>
-  );
+  return <div className="text-xl font-semibold">{_(msg`lesson.completion.message`)}</div>;
 }

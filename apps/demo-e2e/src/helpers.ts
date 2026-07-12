@@ -380,13 +380,10 @@ export async function deleteAIProfile(page: Page, profileTitle: string) {
 }
 
 export function getHotkeyByLabel(page: Page, label: string) {
-  const kbd = page.locator(
-    `xpath=//div[normalize-space()='${label}']/following-sibling::div//kbd`,
-  );
+  const kbd = page.locator(`xpath=//div[normalize-space()='${label}']/following-sibling::div//kbd`);
   const container = kbd.locator("xpath=..");
-  const editButton = kbd.locator(
-    "xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]",
-  )
+  const editButton = kbd
+    .locator("xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]")
     .getByRole("button", { name: "Change hotkey" });
 
   return { kbd, container, editButton };

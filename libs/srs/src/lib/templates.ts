@@ -5,8 +5,8 @@ import { z } from "zod";
 export const TEMPLATE_FIELD_TYPES = ["text", "markdown"] as const;
 export const TEMPLATE_OPERATIONS = ["display", "reveal", "type"] as const;
 
-export type TemplateFieldType = typeof TEMPLATE_FIELD_TYPES[number];
-export type TemplateOperation = typeof TEMPLATE_OPERATIONS[number];
+export type TemplateFieldType = (typeof TEMPLATE_FIELD_TYPES)[number];
+export type TemplateOperation = (typeof TEMPLATE_OPERATIONS)[number];
 
 export const TEMPLATE_FIELD_TYPES_MESSAGES = [
   { id: "text", value: msg`templates.field-types.text` },
@@ -21,21 +21,26 @@ export const TEMPLATE_OPERATIONS_MESSAGES = [
 
 export const templateValidation = z.object({
   id: z.int(),
-  title: z
-    .string()
-    .min(1, "validation.common.title.too-short")
-    .max(255, "validation.common.title.too-long"),
+  title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
   content: z.object({
-    fields: z.array(z.object({
-      id: z.number(),
-      title: z.string(),
-      type: z.enum(TEMPLATE_FIELD_TYPES),
-      isRequired: z.boolean(),
-    })).min(1, "validation.templates.fields.too-few"),
-    layout: z.array(z.object({
-      field: z.number(),
-      operation: z.enum(TEMPLATE_OPERATIONS),
-    })).min(1, "validation.templates.layout.too-few"),
+    fields: z
+      .array(
+        z.object({
+          id: z.number(),
+          title: z.string(),
+          type: z.enum(TEMPLATE_FIELD_TYPES),
+          isRequired: z.boolean(),
+        }),
+      )
+      .min(1, "validation.templates.fields.too-few"),
+    layout: z
+      .array(
+        z.object({
+          field: z.number(),
+          operation: z.enum(TEMPLATE_OPERATIONS),
+        }),
+      )
+      .min(1, "validation.templates.layout.too-few"),
   }),
 });
 
@@ -103,10 +108,8 @@ export function validateLockedTemplateFields(original: TemplateField[], updated:
   const errors: string[] = [];
 
   // check if all fields are present
-  const updatedIds = new Set(updated.map(field => field.id));
-  const missingIds = original
-    .map(field => field.id)
-    .filter(id => !updatedIds.has(id));
+  const updatedIds = new Set(updated.map((field) => field.id));
+  const missingIds = original.map((field) => field.id).filter((id) => !updatedIds.has(id));
 
   if (missingIds.length > 0) {
     errors.push(`Missing fields: ${missingIds.join(", ")}`);
@@ -114,7 +117,7 @@ export function validateLockedTemplateFields(original: TemplateField[], updated:
 
   // check if properties (except 'title') are not changed
   for (const originalField of original) {
-    const updatedField = updated.find(f => f.id === originalField.id);
+    const updatedField = updated.find((f) => f.id === originalField.id);
     if (!updatedField) continue;
 
     const originalKeys = Object.keys(originalField) as (keyof TemplateField)[];

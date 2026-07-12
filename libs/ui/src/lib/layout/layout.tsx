@@ -21,9 +21,10 @@ const layout = tv({
   base: "flex flex-col min-w-screen min-h-screen h-screen overflow-hidden",
 });
 
-type LayoutProps = PropsWithChildren & TWVProps<typeof layout> & {
-  titlebar?: ReactNode;
-};
+type LayoutProps = PropsWithChildren &
+  TWVProps<typeof layout> & {
+    titlebar?: ReactNode;
+  };
 
 export function Layout({ variants, titlebar, children }: LayoutProps) {
   const [navPortal, setNavPortal] = useState<HTMLElement | null>(null);

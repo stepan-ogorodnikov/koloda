@@ -14,9 +14,7 @@ describe("conversationReducer", () => {
 
   describe("addAssistantMessage", () => {
     it("appends an assistant message with chat-text metadata", () => {
-      const state = reduce([
-        { type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "Hi there" },
-      ]);
+      const state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "Hi there" }]);
       expect(state.messages).toHaveLength(1);
       expect(state.messages[0].role).toBe("assistant");
       expect(state.messages[0].id).toBe("assistant-r1");
@@ -25,9 +23,7 @@ describe("conversationReducer", () => {
 
   describe("updateAssistantText", () => {
     it("updates the text of the matching assistant message in-place", () => {
-      let state = reduce([
-        { type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "..." },
-      ]);
+      let state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "..." }]);
       state = conversationReducer(
         state,
         act({
@@ -323,16 +319,11 @@ describe("getVisibleMessages", () => {
       { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "Reply 2" }] },
     ];
     const revertState = { revertedToUserMessageId: "user-r2", preRevertInputText: "" };
-    expect(getVisibleMessages(messages, revertState)).toEqual([
-      messages[0],
-      messages[1],
-    ]);
+    expect(getVisibleMessages(messages, revertState)).toEqual([messages[0], messages[1]]);
   });
 
   it("returns all messages when revert point is not found", () => {
-    const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-    ];
+    const messages = [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] }];
     const revertState = { revertedToUserMessageId: "user-missing", preRevertInputText: "" };
     expect(getVisibleMessages(messages, revertState)).toBe(messages);
   });

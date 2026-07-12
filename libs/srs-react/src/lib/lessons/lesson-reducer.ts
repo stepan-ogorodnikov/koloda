@@ -175,9 +175,10 @@ function setupInitData(draft: LessonReducerState) {
   const { dailyLimits, reviewTotals } = todayReviewTotals;
   const { type } = params;
   const available = lessons[0];
-  const countedReviewTotal = LEARNING_DAILY_LIMIT_TYPES.reduce((total, limitType) => (
-    dailyLimits[limitType].counts ? total + reviewTotals[limitType] : total
-  ), 0);
+  const countedReviewTotal = LEARNING_DAILY_LIMIT_TYPES.reduce(
+    (total, limitType) => (dailyLimits[limitType].counts ? total + reviewTotals[limitType] : total),
+    0,
+  );
   const diffs = {
     untouched: Math.max((dailyLimits.untouched.value || Infinity) - reviewTotals.untouched, 0),
     learn: Math.max((dailyLimits.learn.value || Infinity) - reviewTotals.learn, 0),
@@ -189,11 +190,7 @@ function setupInitData(draft: LessonReducerState) {
     let remainder = diffs.total;
     let amounts: LessonAmounts = { untouched: 0, learn: 0, review: 0, total: 0 };
     LEARNING_DAILY_LIMIT_TYPES.forEach((x) => {
-      const amount = getLessonCardsAmount(
-        available[x],
-        diffs[x],
-        dailyLimits[x].counts ? remainder : Infinity,
-      );
+      const amount = getLessonCardsAmount(available[x], diffs[x], dailyLimits[x].counts ? remainder : Infinity);
       amounts[x] = amount;
       if (dailyLimits[x].counts) remainder = remainder - amount;
     });
@@ -303,9 +300,7 @@ function moveToNextCard(draft: LessonReducerState) {
   if (!template) return;
 
   // if all the actions are 'display' there is nothing to submit and grades are shown right away
-  const canSubmit = template.layout.reduce((acc, x) => (
-    acc || x.operation !== "display"
-  ), false);
+  const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
   draft.content = {
     index,

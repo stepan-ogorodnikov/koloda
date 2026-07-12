@@ -24,8 +24,13 @@ export function useAIChatValidation({
   isModelsError,
 }: UseAIChatValidationOptions): UseAIChatValidationReturn {
   const canSubmit = !!(
-    profileId && modelId && !!prompt && !isLoading && hasRequiredSecrets
-    && !isModelsLoading && !isModelsError
+    profileId &&
+    modelId &&
+    !!prompt &&
+    !isLoading &&
+    hasRequiredSecrets &&
+    !isModelsLoading &&
+    !isModelsError
   );
   const canCancel = isLoading;
   const showMissingSecretsWarning = !!profileId && !hasRequiredSecrets;

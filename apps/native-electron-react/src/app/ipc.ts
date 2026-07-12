@@ -19,7 +19,10 @@ export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue
  */
 export class WireError extends Error {
   override readonly name = "WireError";
-  constructor(message: string, public readonly path: string) {
+  constructor(
+    message: string,
+    public readonly path: string,
+  ) {
     super(`${message} at ${path || "<root>"}`);
   }
 }

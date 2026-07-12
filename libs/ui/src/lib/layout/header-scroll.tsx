@@ -38,15 +38,9 @@ export function LayoutHeaderScrollProvider({ children }: { children: ReactNode }
     return false;
   }, [reporters]);
 
-  const value = useMemo(() => (
-    { isScrolled, reportScroll, unregister }
-  ), [isScrolled, reportScroll, unregister]);
+  const value = useMemo(() => ({ isScrolled, reportScroll, unregister }), [isScrolled, reportScroll, unregister]);
 
-  return (
-    <LayoutHeaderScrollContext.Provider value={value}>
-      {children}
-    </LayoutHeaderScrollContext.Provider>
-  );
+  return <LayoutHeaderScrollContext.Provider value={value}>{children}</LayoutHeaderScrollContext.Provider>;
 }
 
 export function useLayoutHeaderScroll(): LayoutHeaderScrollContextValue | null {

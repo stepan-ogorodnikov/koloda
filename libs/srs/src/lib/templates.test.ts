@@ -31,9 +31,6 @@ describe("templates", () => {
     ]);
 
     expect(result.isValid).toBe(false);
-    expect(result.errors).toEqual([
-      "Missing fields: 2",
-      "Field (id: 1): property 'type' changed",
-    ]);
+    expect(result.errors).toEqual(["Missing fields: 2", "Field (id: 1): property 'type' changed"]);
   });
 });

@@ -14,7 +14,7 @@ export function useAIModels(credentialId: string | null) {
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
   });
-  const models = useMemo(() => (query.data || []), [query.data]);
+  const models = useMemo(() => query.data || [], [query.data]);
 
   return { ...query, models };
 }

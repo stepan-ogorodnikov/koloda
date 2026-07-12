@@ -29,29 +29,32 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   };
 
   const handleConfirm = () => {
-    mutate({ id: Number(id) }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
-        queryClient.removeQueries({ queryKey: queryKeys.templates.detail(id) });
-        navigate({ to: "/templates" });
+    mutate(
+      { id: Number(id) },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
+          queryClient.removeQueries({ queryKey: queryKeys.templates.detail(id) });
+          navigate({ to: "/templates" });
+        },
       },
-    });
+    );
   };
 
   const isDefault = defaultTemplate === id;
   const isDisabled = !!(data?.length && data.length > 0) || isDefault || isLocked;
   const reason = isLocked
     ? msg`delete-template.cant-delete-locked`
-    : (isDefault ? msg`delete-template.cant-delete-default` : msg`delete-template.cant-delete-used`);
+    : isDefault
+      ? msg`delete-template.cant-delete-default`
+      : msg`delete-template.cant-delete-used`;
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
       <div className="relative">
-        <DeleteDialog.Trigger isDisabled={isDisabled}>
-          {_(msg`delete-template.trigger`)}
-        </DeleteDialog.Trigger>
+        <DeleteDialog.Trigger isDisabled={isDisabled}>{_(msg`delete-template.trigger`)}</DeleteDialog.Trigger>
         {isDisabled && (
           <Tooltip content={_(reason)}>
             <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
@@ -60,17 +63,11 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
       </div>
       <DeleteDialog.Frame>
         <AnimatePresence>
-          {error
-            ? (
-              <Fade>
-                {typeof message === "function" ? _(message(error)) : _(message)}
-              </Fade>
-            )
-            : (
-              <Fade>
-                {_(msg`delete-template.message`)}
-              </Fade>
-            )}
+          {error ? (
+            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+          ) : (
+            <Fade>{_(msg`delete-template.message`)}</Fade>
+          )}
         </AnimatePresence>
         <DeleteDialog.Actions>
           <DeleteDialog.Cancel>{_(msg`delete-template.cancel`)}</DeleteDialog.Cancel>

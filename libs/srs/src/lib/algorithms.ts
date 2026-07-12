@@ -4,10 +4,7 @@ import { algorithmFSRSValidation } from "./algorithms-fsrs";
 
 export const algorithmValidation = z.object({
   id: z.int(),
-  title: z
-    .string()
-    .min(1, "validation.common.title.too-short")
-    .max(255, "validation.common.title.too-long"),
+  title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
   content: algorithmFSRSValidation,
 });
 

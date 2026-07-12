@@ -9,15 +9,7 @@ export function CircularProgress({ percentage }: CircularProgressProps) {
 
   return (
     <svg viewBox="0 0 36 36" className="h-6 w-6">
-      <circle
-        cx="18"
-        cy="18"
-        r="15.9155"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeOpacity={0.1}
-      />
+      <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor" strokeWidth="3" strokeOpacity={0.1} />
       <circle
         cx="18"
         cy="18"

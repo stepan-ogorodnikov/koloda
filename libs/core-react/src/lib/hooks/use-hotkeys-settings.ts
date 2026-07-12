@@ -12,9 +12,11 @@ export function useHotkeysSettings(): AppHotkeys {
     queryKey: queryKeys.settings.detail("hotkeys"),
   });
 
-  return useMemo(() => (
-    data?.content
-      ? hotkeysSettingsValidation.parse(data.content) as AppHotkeys
-      : DEFAULT_HOTKEYS_SETTINGS as AppHotkeys
-  ), [data]);
+  return useMemo(
+    () =>
+      data?.content
+        ? (hotkeysSettingsValidation.parse(data.content) as AppHotkeys)
+        : (DEFAULT_HOTKEYS_SETTINGS as AppHotkeys),
+    [data],
+  );
 }

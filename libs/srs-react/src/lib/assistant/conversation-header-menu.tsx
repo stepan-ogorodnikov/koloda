@@ -26,21 +26,12 @@ export function ConversationHeaderMenu({ conversationId, onClone }: Conversation
         aria-label={_(msg`ai.conversation.menu.trigger`)}
         isDisabled={!hasContext}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={1.75}
-          icon={MoreVerticalIcon}
-          aria-hidden="true"
-        />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={MoreVerticalIcon} aria-hidden="true" />
       </Button>
       <Dialog.Popover placement="bottom end">
         <Dialog.Body>
           <Dialog.Content variants={{ class: "min-w-48 p-1" }}>
-            <CloneConversationButton
-              id={conversationId}
-              onClone={onClone}
-              onClose={() => setIsOpen(false)}
-            />
+            <CloneConversationButton id={conversationId} onClone={onClone} onClose={() => setIsOpen(false)} />
           </Dialog.Content>
         </Dialog.Body>
       </Dialog.Popover>

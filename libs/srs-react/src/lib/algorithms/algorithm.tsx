@@ -25,16 +25,19 @@ export function Algorithm({ id }: AlgorithmProps) {
     defaultValues: data as UpdateAlgorithmValues,
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
-      mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
-          queryClient.setQueryData(queryKeys.algorithms.detail(id), returning);
-          formApi.reset(returning);
+      mutate(
+        { id: Number(id), values: schema.parse(value) },
+        {
+          onSuccess: (returning) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
+            queryClient.setQueryData(queryKeys.algorithms.detail(id), returning);
+            formApi.reset(returning);
+          },
+          onError: (error) => {
+            formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
 
@@ -64,11 +67,7 @@ export function Algorithm({ id }: AlgorithmProps) {
       </FormLayout.Section>
       <form.Field name="title">
         {(field) => (
-          <TextField
-            variants={{ layout: "form" }}
-            value={field.state.value}
-            onChange={field.handleChange}
-          >
+          <TextField variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange}>
             <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.title.label`)}</Label>
             <TextField.Input variants={{ layout: "form" }} />
           </TextField>
@@ -94,10 +93,7 @@ export function Algorithm({ id }: AlgorithmProps) {
         <FormLayout.Section.Content>
           <form.Field name="content.isFuzzEnabled">
             {(field) => (
-              <Switch
-                isSelected={field.state.value}
-                onChange={field.handleChange}
-              >
+              <Switch isSelected={field.state.value} onChange={field.handleChange}>
                 <Switch.Indicator />
                 <Switch.Label>{_(msg`algorithm.inputs.is-fuzz-enabled.label`)}</Switch.Label>
               </Switch>
@@ -107,11 +103,7 @@ export function Algorithm({ id }: AlgorithmProps) {
       </FormLayout.Section>
       <form.Field name="content.weights">
         {(field) => (
-          <TextField
-            variants={{ layout: "form" }}
-            value={field.state.value}
-            onChange={field.handleChange}
-          >
+          <TextField variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange}>
             <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.weights.label`)}</Label>
             <TextField.TextArea
               variants={{ layout: "form", content: "number", class: "resize-none" }}

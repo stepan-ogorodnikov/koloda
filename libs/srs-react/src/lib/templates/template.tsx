@@ -28,16 +28,19 @@ export function Template({ id }: TemplateProps) {
     defaultValues: data as UpdateTemplateValues,
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
-      mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
-          queryClient.setQueryData(queryKeys.templates.detail(id), returning);
-          formApi.reset(returning);
+      mutate(
+        { id: Number(id), values: schema.parse(value) },
+        {
+          onSuccess: (returning) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
+            queryClient.setQueryData(queryKeys.templates.detail(id), returning);
+            formApi.reset(returning);
+          },
+          onError: (error) => {
+            formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
 
@@ -67,41 +70,33 @@ export function Template({ id }: TemplateProps) {
       </FormLayout.Section>
       <form.Field name="title">
         {(field) => (
-          <TextField
-            variants={{ layout: "form" }}
-            value={field.state.value}
-            onChange={field.handleChange}
-          >
+          <TextField variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange}>
             <Label variants={{ layout: "form" }}>{_(msg`template.inputs.title.label`)}</Label>
             <TextField.Input variants={{ layout: "form" }} />
           </TextField>
         )}
       </form.Field>
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          {_(msg`template.status.title`)}
-        </FormLayout.Section.Term>
+        <FormLayout.Section.Term>{_(msg`template.status.title`)}</FormLayout.Section.Term>
         <FormLayout.Section.Content>
           <div className="flex flex-row gap-2 fg-level-2 font-medium tracking-wide">
-            {data?.isLocked
-              ? <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareLock01Icon} />
-              : <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareUnlock01Icon} />}
+            {data?.isLocked ? (
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareLock01Icon} />
+            ) : (
+              <HugeiconsIcon className="size-5 min-w-5" strokeWidth={2} icon={SquareUnlock01Icon} />
+            )}
             {data?.isLocked ? _(msg`template.status.locked`) : _(msg`template.status.unlocked`)}
           </div>
         </FormLayout.Section.Content>
       </FormLayout.Section>
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          {_(msg`template.fields.label`)}
-        </FormLayout.Section.Term>
+        <FormLayout.Section.Term>{_(msg`template.fields.label`)}</FormLayout.Section.Term>
         <FormLayout.Section.Content variants={{ class: "w-full" }}>
           <TemplateFields form={form} isLocked={data?.isLocked || false} />
         </FormLayout.Section.Content>
       </FormLayout.Section>
       <FormLayout.Section>
-        <FormLayout.Section.Term>
-          {_(msg`template.layout.label`)}
-        </FormLayout.Section.Term>
+        <FormLayout.Section.Term>{_(msg`template.layout.label`)}</FormLayout.Section.Term>
         <FormLayout.Section.Content variants={{ class: "w-full" }}>
           <TemplateLayout form={form} />
         </FormLayout.Section.Content>

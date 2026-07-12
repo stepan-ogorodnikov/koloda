@@ -118,12 +118,8 @@ export function AddDeck() {
               <div className="grow" />
               <form.Subscribe selector={(state) => [state.canSubmit]}>
                 {([canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    type="submit"
-                    isDisabled={!canSubmit || isLinkVisible}
-                  >
-                    {isLinkVisible ? (_(msg`add-deck.success`)) : (_(msg`add-deck.submit`))}
+                  <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isLinkVisible}>
+                    {isLinkVisible ? _(msg`add-deck.success`) : _(msg`add-deck.submit`)}
                   </Button>
                 )}
               </form.Subscribe>

@@ -10,10 +10,7 @@ import { drawerOpenAtom } from "./drawer";
 export const layoutHasContentAtom = atom(false);
 
 const layoutContent = tv({
-  base: [
-    "grow flex-col h-full min-h-0 min-w-0 overflow-hidden",
-    "wd:w-full wd:grow-0 wd:basis-full wd:mx-auto",
-  ],
+  base: ["grow flex-col h-full min-h-0 min-w-0 overflow-hidden", "wd:w-full wd:grow-0 wd:basis-full wd:mx-auto"],
   variants: { hasContent: { true: "flex", false: "hidden" } },
 });
 
@@ -50,10 +47,5 @@ export function LayoutContent({ children, isAlwaysVisible }: LayoutContentProps)
 type LayoutContainerProps = ComponentProps<"div">;
 
 export function LayoutContainer(props: LayoutContainerProps) {
-  return (
-    <div
-      className="grow flex flex-col w-full min-w-0 min-h-0 overflow-y-auto no-focus-ring"
-      {...props}
-    />
-  );
+  return <div className="grow flex flex-col w-full min-w-0 min-h-0 overflow-y-auto no-focus-ring" {...props} />;
 }

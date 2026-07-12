@@ -108,20 +108,18 @@ function scopeSchema<T extends HotkeyScope>(scope: T) {
 }
 
 function scopeDefault<T extends HotkeyScope>(scope: T) {
-  return Object.fromEntries(hotkeys[scope].map((v) => [v, []])) as unknown as Record<
-    ScopeHotkey<T>,
-    string[]
-  >;
+  return Object.fromEntries(hotkeys[scope].map((v) => [v, []])) as unknown as Record<ScopeHotkey<T>, string[]>;
 }
 
-export const hotkeysSettingsValidation = z.object({
-  form: scopeSchema("form").default(scopeDefault("form")),
-  ui: scopeSchema("ui").default(scopeDefault("ui")),
-  navigation: scopeSchema("navigation").default(scopeDefault("navigation")),
-  grades: scopeSchema("grades").default(scopeDefault("grades")),
-  ai: scopeSchema("ai").default(scopeDefault("ai")),
-}).superRefine(
-  (data, ctx) => {
+export const hotkeysSettingsValidation = z
+  .object({
+    form: scopeSchema("form").default(scopeDefault("form")),
+    ui: scopeSchema("ui").default(scopeDefault("ui")),
+    navigation: scopeSchema("navigation").default(scopeDefault("navigation")),
+    grades: scopeSchema("grades").default(scopeDefault("grades")),
+    ai: scopeSchema("ai").default(scopeDefault("ai")),
+  })
+  .superRefine((data, ctx) => {
     // validate all scopes for duplicate hotkeys (within each scope)
     Object.entries(data).forEach(([scopeKey, scopeValue]) => {
       if (!areAllHotkeysUniqueInScope(scopeValue)) {
@@ -137,14 +135,14 @@ export const hotkeysSettingsValidation = z.object({
 
     // validate ui scope hotkeys are unique across all scopes
     const uiHotkeys = Object.entries(data.ui).flatMap(([field, hotkeys]) =>
-      hotkeys.map((hotkey) => [hotkey, field] as [string, string])
+      hotkeys.map((hotkey) => [hotkey, field] as [string, string]),
     );
     const otherScopesHotkeys = Object.entries(data)
       .filter(([scopeKey]) => scopeKey !== "ui")
       .flatMap(([scopeKey, scopeValue]) =>
         Object.entries(scopeValue).flatMap(([field, hotkeys]) =>
-          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string])
-        )
+          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string]),
+        ),
       );
 
     const allHotkeysMap = new Map<string, Array<{ scope: string; field: string }>>();
@@ -180,8 +178,7 @@ export const hotkeysSettingsValidation = z.object({
         });
       }
     });
-  },
-);
+  });
 
 /** Checks if all hotkeys within given scope are unique */
 const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {

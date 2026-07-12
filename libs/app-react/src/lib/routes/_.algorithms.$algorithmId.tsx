@@ -32,9 +32,7 @@ function AlgorithmRoute() {
         <Layout.H1>{query.data?.title}</Layout.H1>
       </Layout.Header>
       <Layout.Container ref={ref} tabIndex={-1}>
-        <QueryState query={query}>
-          {() => <Algorithm id={id} key={algorithmId} />}
-        </QueryState>
+        <QueryState query={query}>{() => <Algorithm id={id} key={algorithmId} />}</QueryState>
       </Layout.Container>
     </>
   );

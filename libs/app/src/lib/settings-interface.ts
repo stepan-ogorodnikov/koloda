@@ -50,6 +50,6 @@ export const DEFAULT_INTERFACE_SETTINGS = interfaceSettingsValidation.parse({});
 
 export function getLanguageCode(locale: string | null) {
   if (typeof locale !== "string") return DEFAULT_LOCALE;
-  const processed = (locale?.length === 2) ? locale : locale.split("-")[0];
+  const processed = locale?.length === 2 ? locale : locale.split("-")[0];
   return LOCALES.includes(processed) ? processed : DEFAULT_LOCALE;
 }

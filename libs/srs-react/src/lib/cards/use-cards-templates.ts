@@ -7,14 +7,11 @@ import { useMemo, useRef } from "react";
 export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Template["id"]) {
   const { getTemplateQuery } = useAtomValue(queriesAtom);
 
-  const templateIds = useMemo(
-    () => {
-      const ids = new Set(cards?.map((c) => c.templateId) ?? []);
-      if (deckTemplateId !== undefined) ids.add(deckTemplateId);
-      return [...ids].sort((a, b) => a - b);
-    },
-    [cards, deckTemplateId],
-  );
+  const templateIds = useMemo(() => {
+    const ids = new Set(cards?.map((c) => c.templateId) ?? []);
+    if (deckTemplateId !== undefined) ids.add(deckTemplateId);
+    return [...ids].sort((a, b) => a - b);
+  }, [cards, deckTemplateId]);
 
   const templateQueries = useQueries({
     queries: templateIds.map((id) => ({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) })),

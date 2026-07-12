@@ -111,9 +111,10 @@ function TooltipSurface({ arrowRef, placement, tooltipRef }: TooltipSurfaceProps
     let arrowRect = arrow.getBoundingClientRect();
 
     let nextGeometry = {
-      arrowCenter: placement === "top" || placement === "bottom"
-        ? arrowRect.left + arrowRect.width / 2 - tooltipRect.left
-        : arrowRect.top + arrowRect.height / 2 - tooltipRect.top,
+      arrowCenter:
+        placement === "top" || placement === "bottom"
+          ? arrowRect.left + arrowRect.width / 2 - tooltipRect.left
+          : arrowRect.top + arrowRect.height / 2 - tooltipRect.top,
       height: tooltipRect.height,
       placement,
       width: tooltipRect.width,
@@ -317,11 +318,11 @@ function clamp(value: number, min: number, max: number) {
 
 function isSameTooltipSurfaceGeometry(current: TooltipSurfaceGeometry | null, next: TooltipSurfaceGeometry) {
   return (
-    current != null
-    && current.placement === next.placement
-    && Math.abs(current.arrowCenter - next.arrowCenter) < 0.1
-    && Math.abs(current.height - next.height) < 0.1
-    && Math.abs(current.width - next.width) < 0.1
+    current != null &&
+    current.placement === next.placement &&
+    Math.abs(current.arrowCenter - next.arrowCenter) < 0.1 &&
+    Math.abs(current.height - next.height) < 0.1 &&
+    Math.abs(current.width - next.width) < 0.1
   );
 }
 
@@ -335,22 +336,23 @@ const tooltipTrigger = tv({
 
 type TooltipTriggerProps = ComponentProps<"div"> & TWVProps<typeof tooltipTrigger>;
 
-const TooltipTrigger = forwardRef<HTMLDivElement, TooltipTriggerProps>(
-  function TooltipTrigger({ variants, ...props }, ref) {
-    const { focusProps, isFocusVisible } = useFocusRing();
+const TooltipTrigger = forwardRef<HTMLDivElement, TooltipTriggerProps>(function TooltipTrigger(
+  { variants, ...props },
+  ref,
+) {
+  const { focusProps, isFocusVisible } = useFocusRing();
 
-    return (
-      <div
-        className={tooltipTrigger(variants)}
-        ref={ref}
-        role="button"
-        tabIndex={0}
-        data-focus-visible={isFocusVisible || undefined}
-        {...mergeProps(focusProps, props)}
-      />
-    );
-  },
-);
+  return (
+    <div
+      className={tooltipTrigger(variants)}
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      data-focus-visible={isFocusVisible || undefined}
+      {...mergeProps(focusProps, props)}
+    />
+  );
+});
 
 Tooltip.Root = TooltipTrigger;
 Tooltip.Content = TooltipContent;

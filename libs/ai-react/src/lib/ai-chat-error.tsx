@@ -23,21 +23,14 @@ export function AIChatError({ error, isDismissed, onDismiss }: AIChatErrorProps)
     <AnimatePresence>
       {error && !isDismissed && (
         <Fade className={aiChatError}>
-          <em className="grow min-w-0 fg-error not-italic break-all">
-            {error}
-          </em>
+          <em className="grow min-w-0 fg-error not-italic break-all">{error}</em>
           {onDismiss && (
             <Button
               variants={{ style: "ghost", size: "none", class: "self-start size-8 min-w-8 -mr-2" }}
               aria-label={_(msg`ai.chat.error.close`)}
               onPress={onDismiss}
             >
-              <HugeiconsIcon
-                className="size-4 min-w-4"
-                strokeWidth={1.75}
-                icon={Cancel01Icon}
-                aria-hidden="true"
-              />
+              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
             </Button>
           )}
         </Fade>

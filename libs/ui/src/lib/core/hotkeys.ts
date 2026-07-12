@@ -3,7 +3,7 @@ import type { Hotkey, ParsedHotkey, RawHotkey, RegisterableHotkey } from "@tanst
 import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from "react";
 
 export function isPrintableKey(e: ReactKeyboardEvent<HTMLElement>) {
-  return (e.altKey || e.ctrlKey || e.metaKey) ? false : e.key.length === 1;
+  return e.altKey || e.ctrlKey || e.metaKey ? false : e.key.length === 1;
 }
 
 export function matchesAnyHotkey(event: KeyboardEvent, hotkeys: RegisterableHotkey[]) {

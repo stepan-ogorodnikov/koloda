@@ -24,7 +24,7 @@ export function useAppHotkeys() {
 
   const toggleColorScheme = useCallback(() => {
     setScheme((current) => {
-      const index = SCHEME_CYCLE.indexOf(current as typeof SCHEME_CYCLE[number]);
+      const index = SCHEME_CYCLE.indexOf(current as (typeof SCHEME_CYCLE)[number]);
       const next = SCHEME_CYCLE[(index + 1) % SCHEME_CYCLE.length];
       persistScheme({ name: "interface", content: { scheme: next } });
       return next;

@@ -29,18 +29,22 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   };
 
   const handleConfirm = () => {
-    mutate({ id, successorId: successorId ?? filteredAlgorithms?.[0]?.id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
-        queryClient.removeQueries({ queryKey: queryKeys.algorithms.detail(id) });
-        navigate({ to: "/algorithms" });
+    mutate(
+      { id, successorId: successorId ?? filteredAlgorithms?.[0]?.id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
+          queryClient.removeQueries({ queryKey: queryKeys.algorithms.detail(id) });
+          navigate({ to: "/algorithms" });
+        },
       },
-    });
+    );
   };
 
-  const filteredAlgorithms = useMemo(() => (
-    algorithms?.filter((algorithm) => algorithm.id !== Number(id))
-  ), [algorithms, id]);
+  const filteredAlgorithms = useMemo(
+    () => algorithms?.filter((algorithm) => algorithm.id !== Number(id)),
+    [algorithms, id],
+  );
 
   const isDefault = defaultAlgorithm === Number(id);
   const isDisabled = (algorithms && algorithms.length < 2) || isDefault;
@@ -49,9 +53,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
       <div className="relative">
-        <DeleteDialog.Trigger isDisabled={isDisabled}>
-          {_(msg`delete-algorithm.trigger`)}
-        </DeleteDialog.Trigger>
+        <DeleteDialog.Trigger isDisabled={isDisabled}>{_(msg`delete-algorithm.trigger`)}</DeleteDialog.Trigger>
         {isDisabled && (
           <Tooltip content={_(msg`delete-algorithm.cant-delete`)}>
             <Tooltip.Trigger variants={{ isHidden: true, isDisabled: true }} />
@@ -60,42 +62,36 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
       </div>
       <DeleteDialog.Frame>
         <AnimatePresence>
-          {error
-            ? (
-              <Fade>
-                {typeof message === "function" ? _(message(error)) : _(message)}
-              </Fade>
-            )
-            : (
-              <Fade>
-                {decks && decks.length > 0
-                  ? (
-                    <>
-                      <div className="flex flex-col gap-6">
-                        <p>
-                          {_(msg`${plural(decks.length, { other: "delete-algrorithm.used-by-#-decks" })}`)}
-                        </p>
-                        <p>{_(msg`delete-algorithm.successor-message`)}</p>
-                      </div>
-                      <Select
-                        variants={{ class: "self-stretch" }}
-                        label={_(msg`delete-algorithm.successor.label`)}
-                        items={filteredAlgorithms}
-                        value={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
-                        onChange={(e) => setSuccessorId(Number(e))}
-                        autoFocus
-                      >
-                        {({ id, title }) => (
-                          <Select.ListBoxItem textValue={title} key={id}>
-                            {title}
-                          </Select.ListBoxItem>
-                        )}
-                      </Select>
-                    </>
-                  )
-                  : _(msg`delete-algorithm.message`)}
-              </Fade>
-            )}
+          {error ? (
+            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+          ) : (
+            <Fade>
+              {decks && decks.length > 0 ? (
+                <>
+                  <div className="flex flex-col gap-6">
+                    <p>{_(msg`${plural(decks.length, { other: "delete-algrorithm.used-by-#-decks" })}`)}</p>
+                    <p>{_(msg`delete-algorithm.successor-message`)}</p>
+                  </div>
+                  <Select
+                    variants={{ class: "self-stretch" }}
+                    label={_(msg`delete-algorithm.successor.label`)}
+                    items={filteredAlgorithms}
+                    value={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
+                    onChange={(e) => setSuccessorId(Number(e))}
+                    autoFocus
+                  >
+                    {({ id, title }) => (
+                      <Select.ListBoxItem textValue={title} key={id}>
+                        {title}
+                      </Select.ListBoxItem>
+                    )}
+                  </Select>
+                </>
+              ) : (
+                _(msg`delete-algorithm.message`)
+              )}
+            </Fade>
+          )}
         </AnimatePresence>
         <DeleteDialog.Actions>
           <DeleteDialog.Cancel>{_(msg`delete-algorithm.cancel`)}</DeleteDialog.Cancel>

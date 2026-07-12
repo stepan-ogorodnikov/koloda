@@ -25,16 +25,19 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
     defaultValues: initialValues,
     validators: { onSubmit: resolvedLearningSettingsValidation },
     onSubmit: async ({ formApi, value }) => {
-      mutate({ name: "learning", content: value }, {
-        onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("learning") });
-          queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
-          formApi.reset(returning?.content ? learningSettingsValidation.parse(returning.content) : undefined);
+      mutate(
+        { name: "learning", content: value },
+        {
+          onSuccess: (returning) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("learning") });
+            queryClient.setQueryData(queryKeys.settings.detail("learning"), returning);
+            formApi.reset(returning?.content ? learningSettingsValidation.parse(returning.content) : undefined);
+          },
+          onError: (error) => {
+            formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
 
@@ -70,11 +73,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
       <FormLayout.Section term={_(msg`settings.learning.limits`)}>
         <form.Field name="dailyLimits.total">
           {(field) => (
-            <NumberField
-              minValue={0}
-              value={field.state.value}
-              onChange={field.handleChange}
-            >
+            <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
               <Label>{_(msg`settings.learning.limits.total`)}</Label>
               <NumberField.Group />
             </NumberField>
@@ -83,11 +82,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.untouched.value">
             {(field) => (
-              <NumberField
-                minValue={0}
-                value={field.state.value}
-                onChange={field.handleChange}
-              >
+              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
                 <Label>{_(msg`settings.learning.limits.untouched`)}</Label>
                 <NumberField.Group />
               </NumberField>
@@ -95,10 +90,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
           </form.Field>
           <form.Field name="dailyLimits.untouched.counts">
             {(field) => (
-              <Switch
-                isSelected={field.state.value}
-                onChange={field.handleChange}
-              >
+              <Switch isSelected={field.state.value} onChange={field.handleChange}>
                 <Switch.Indicator />
                 <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
               </Switch>
@@ -108,11 +100,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.learn.value">
             {(field) => (
-              <NumberField
-                minValue={0}
-                value={field.state.value}
-                onChange={field.handleChange}
-              >
+              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
                 <Label>{_(msg`settings.learning.limits.learn`)}</Label>
                 <NumberField.Group />
               </NumberField>
@@ -120,10 +108,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
           </form.Field>
           <form.Field name="dailyLimits.learn.counts">
             {(field) => (
-              <Switch
-                isSelected={field.state.value}
-                onChange={field.handleChange}
-              >
+              <Switch isSelected={field.state.value} onChange={field.handleChange}>
                 <Switch.Indicator />
                 <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
               </Switch>
@@ -133,11 +118,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
         <div className="flex flex-row flex-wrap items-end gap-4">
           <form.Field name="dailyLimits.review.value">
             {(field) => (
-              <NumberField
-                minValue={0}
-                value={field.state.value}
-                onChange={field.handleChange}
-              >
+              <NumberField minValue={0} value={field.state.value} onChange={field.handleChange}>
                 <Label>{_(msg`settings.learning.limits.review`)}</Label>
                 <NumberField.Group />
               </NumberField>
@@ -145,10 +126,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
           </form.Field>
           <form.Field name="dailyLimits.review.counts">
             {(field) => (
-              <Switch
-                isSelected={field.state.value}
-                onChange={field.handleChange}
-              >
+              <Switch isSelected={field.state.value} onChange={field.handleChange}>
                 <Switch.Indicator />
                 <Switch.Label>{_(msg`settings.learning.limits.counts-towards-total`)}</Switch.Label>
               </Switch>

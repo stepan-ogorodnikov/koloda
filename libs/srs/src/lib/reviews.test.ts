@@ -25,11 +25,9 @@ describe("reviews", () => {
   });
 
   it("rejects invalid learning day boundaries", async () => {
-    await expect(getCurrentLearningDayRange("25:00")).rejects.toMatchObject(
-      {
-        code: "validation.settings-learning.day-starts-at",
-      } satisfies Partial<AppError>,
-    );
+    await expect(getCurrentLearningDayRange("25:00")).rejects.toMatchObject({
+      code: "validation.settings-learning.day-starts-at",
+    } satisfies Partial<AppError>);
   });
 
   it("normalizes totals using counts flags and marks over-limit states", async () => {

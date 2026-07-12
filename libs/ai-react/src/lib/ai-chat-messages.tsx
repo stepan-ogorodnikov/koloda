@@ -37,27 +37,20 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
           role="log"
           ref={scroll.messagesRef}
         >
-          {messages.length === 0
-            ? emptyState
-            : (
-              <>
-                {messages.map((message) => {
-                  const content = (
-                    <AIChatMessage
-                      role={message.role}
-                      modelName={modelName}
-                      parts={message.parts}
-                      key={message.id}
-                    />
-                  );
-                  return (
-                    <Fragment key={message.id}>
-                      {renderMessage ? renderMessage(message, content) : content}
-                    </Fragment>
-                  );
-                })}
-              </>
-            )}
+          {messages.length === 0 ? (
+            emptyState
+          ) : (
+            <>
+              {messages.map((message) => {
+                const content = (
+                  <AIChatMessage role={message.role} modelName={modelName} parts={message.parts} key={message.id} />
+                );
+                return (
+                  <Fragment key={message.id}>{renderMessage ? renderMessage(message, content) : content}</Fragment>
+                );
+              })}
+            </>
+          )}
           <div className="min-h-2 w-full" />
         </div>
       </div>

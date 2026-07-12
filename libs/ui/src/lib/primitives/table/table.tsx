@@ -25,11 +25,7 @@ export const tableRoot = tv({
 type TableRootProps = PropsWithChildren & TWVProps<typeof tableRoot>;
 
 function TableRoot({ variants, children }: TableRootProps) {
-  return (
-    <table className={tableRoot(variants)}>
-      {children}
-    </table>
-  );
+  return <table className={tableRoot(variants)}>{children}</table>;
 }
 
 Table.Root = TableRoot;

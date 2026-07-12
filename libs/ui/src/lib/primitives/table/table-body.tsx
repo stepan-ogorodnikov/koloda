@@ -9,8 +9,12 @@ export function TableBody({ table }: TableBodyProps) {
 
   return (
     <tbody>
-      {topRows.map((row) => <TableBodyRow row={row} key={row.id} />)}
-      {centerRows.map((row) => <TableBodyRow row={row} key={row.id} />)}
+      {topRows.map((row) => (
+        <TableBodyRow row={row} key={row.id} />
+      ))}
+      {centerRows.map((row) => (
+        <TableBodyRow row={row} key={row.id} />
+      ))}
     </tbody>
   );
 }
@@ -27,10 +31,7 @@ export function TableBodyRow({ row }: TableBodyRowProps) {
             style={{ width: `${cell.column.getSize()}rem` }}
             key={cell.id}
           >
-            {flexRender(
-              cell.column.columnDef.cell,
-              cell.getContext(),
-            )}
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </td>
         );
       })}

@@ -87,9 +87,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
                   </TextField>
                 )}
               </form.Field>
-              <div className="min-h-10">
-                {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}
-              </div>
+              <div className="min-h-10">{formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}</div>
             </Dialog.Content>
             <Dialog.Footer>
               {isLinkVisible && (
@@ -112,13 +110,7 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
                     type="submit"
                     isDisabled={!canSubmit || !!(isSuccess && newId)}
                   >
-                    {isSuccess && newId
-                      ? (
-                        _(msg`clone-algorithm.success`)
-                      )
-                      : (
-                        _(msg`clone-algorithm.submit`)
-                      )}
+                    {isSuccess && newId ? _(msg`clone-algorithm.success`) : _(msg`clone-algorithm.submit`)}
                   </Button>
                 )}
               </form.Subscribe>

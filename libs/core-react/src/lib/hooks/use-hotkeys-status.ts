@@ -18,17 +18,24 @@ export function useHotkeysStatus() {
     setIsDisabled(false);
   }, [setIsDisabled]);
 
-  const disableScope = useCallback((name: string) => {
-    setScopesArray((prev) => prev.filter((x) => x !== name));
-  }, [setScopesArray]);
+  const disableScope = useCallback(
+    (name: string) => {
+      setScopesArray((prev) => prev.filter((x) => x !== name));
+    },
+    [setScopesArray],
+  );
 
-  const enableScope = useCallback((name: string) => {
-    setScopesArray((prev) => prev.includes(name) ? prev : [...prev, name]);
-  }, [setScopesArray]);
+  const enableScope = useCallback(
+    (name: string) => {
+      setScopesArray((prev) => (prev.includes(name) ? prev : [...prev, name]));
+    },
+    [setScopesArray],
+  );
 
-  const scopes: Record<string, boolean> = useMemo(() => (
-    isDisabled ? {} : scopesArray.reduce((acc, x) => ({ ...acc, [x]: true }), {})
-  ), [scopesArray, isDisabled]);
+  const scopes: Record<string, boolean> = useMemo(
+    () => (isDisabled ? {} : scopesArray.reduce((acc, x) => ({ ...acc, [x]: true }), {})),
+    [scopesArray, isDisabled],
+  );
 
   return { scopes, disableHotkeys, enableHotkeys, disableScope, enableScope };
 }

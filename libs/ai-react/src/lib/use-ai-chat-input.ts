@@ -21,9 +21,13 @@ export type UseAIChatInputReturn = {
   handleNewConversation: () => void;
 };
 
-export function useAIChatInput(
-  { onSubmit, onCancel, onReset, isLoading = false, scroll }: UseAIChatInputOptions,
-): UseAIChatInputReturn {
+export function useAIChatInput({
+  onSubmit,
+  onCancel,
+  onReset,
+  isLoading = false,
+  scroll,
+}: UseAIChatInputOptions): UseAIChatInputReturn {
   const [inputValue, setInputValue] = useState("");
   const prompt = inputValue.trim();
 

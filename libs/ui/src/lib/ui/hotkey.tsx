@@ -3,10 +3,7 @@ import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { tv } from "tailwind-variants";
 
 const hotkey = tv({
-  base: [
-    "inline-flex items-center justify-center",
-    "border-2 border-main bg-input font-medium fg-level-2",
-  ],
+  base: ["inline-flex items-center justify-center", "border-2 border-main bg-input font-medium fg-level-2"],
   variants: {
     size: {
       default: "h-10 min-h-10 min-w-10 py-1 px-2 rounded-md",

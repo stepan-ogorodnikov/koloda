@@ -16,7 +16,7 @@ export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationS
 export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
 export const assistantEffectiveModeAtom = atom((get) =>
-  getEffectiveChatMode(get(assistantModeAtom), get(assistantDeckIdAtom))
+  getEffectiveChatMode(get(assistantModeAtom), get(assistantDeckIdAtom)),
 );
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);

@@ -33,25 +33,25 @@ export function useAIProfilesModels(profileIds: string[]): {
     })),
   });
 
-  const states = useMemo((): AIProfileModelsState[] => (
-    stableIds.map((profileId, index) => {
-      const query = queries[index];
-      return {
-        profileId,
-        models: query?.data ?? [],
-        isLoading: query?.isLoading ?? false,
-        isError: query?.isError ?? false,
-        error: (query?.error as Error | null) ?? null,
-        refetch: () => {
-          void query?.refetch();
-        },
-      };
-    })
-  ), [stableIds, queries]);
+  const states = useMemo(
+    (): AIProfileModelsState[] =>
+      stableIds.map((profileId, index) => {
+        const query = queries[index];
+        return {
+          profileId,
+          models: query?.data ?? [],
+          isLoading: query?.isLoading ?? false,
+          isError: query?.isError ?? false,
+          error: (query?.error as Error | null) ?? null,
+          refetch: () => {
+            void query?.refetch();
+          },
+        };
+      }),
+    [stableIds, queries],
+  );
 
-  const byProfileId = useMemo(() => (
-    Object.fromEntries(states.map((state) => [state.profileId, state]))
-  ), [states]);
+  const byProfileId = useMemo(() => Object.fromEntries(states.map((state) => [state.profileId, state])), [states]);
 
   return { byProfileId, states };
 }

@@ -30,9 +30,11 @@ export function LessonInitList({ state, dispatch }: LessonInitListProps) {
             />
           </div>
           <div className="flex flex-row items-center justify-between">
-            {type === "total"
-              ? <Number className="flex flex-row items-center numbers-text" value={state?.amounts?.total || 0} />
-              : <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />}
+            {type === "total" ? (
+              <Number className="flex flex-row items-center numbers-text" value={state?.amounts?.total || 0} />
+            ) : (
+              <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
+            )}
             <div className="flex flex-row gap-2">
               <div className="font-medium">{_(msg`lesson.init.list.labels.available`)}</div>
               <div className="numbers-text">{available[type]}</div>

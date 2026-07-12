@@ -43,9 +43,10 @@ function coerceRun(value: unknown): GenerationRun | null {
     elapsedSeconds: (v.elapsedSeconds as number | null) ?? null,
     modelName: (v.modelName as string | undefined) ?? undefined,
     usage: v.usage as StreamUsage | undefined,
-    error: v.error && typeof v.error === "object"
-      ? { message: String((v.error as Record<string, unknown>).message ?? "") }
-      : undefined,
+    error:
+      v.error && typeof v.error === "object"
+        ? { message: String((v.error as Record<string, unknown>).message ?? "") }
+        : undefined,
   };
 }
 
@@ -148,32 +149,31 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   }
 
   if (
-    !normalizedAny
-    && state.activeRunId === null
-    && state.dismissedRunErrorId === null
-    && failedRunIds.size === 0
-    && (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
+    !normalizedAny &&
+    state.activeRunId === null &&
+    state.dismissedRunErrorId === null &&
+    failedRunIds.size === 0 &&
+    (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
   ) {
     return null;
   }
 
   const filtered = dropRuns(state, droppedRunIds);
-  const messages = filtered.messages
-    .map((m) => {
-      if (m.role !== "assistant") return m;
-      const runId = getRunIdFromMessageId(m.id);
-      if (!runId || !failedRunIds.has(runId)) return m;
-      const run = state.runs[runId];
-      if (!run) return m;
-      const metadata = getAssistantMetadata(m);
-      if (!metadata) return m;
+  const messages = filtered.messages.map((m) => {
+    if (m.role !== "assistant") return m;
+    const runId = getRunIdFromMessageId(m.id);
+    if (!runId || !failedRunIds.has(runId)) return m;
+    const run = state.runs[runId];
+    if (!run) return m;
+    const metadata = getAssistantMetadata(m);
+    if (!metadata) return m;
 
-      return {
-        ...m,
-        metadata: { kind: "error" as const, runId: metadata.runId, mode: run.mode },
-        parts: [{ type: "text" as const, text: "" }],
-      };
-    });
+    return {
+      ...m,
+      metadata: { kind: "error" as const, runId: metadata.runId, mode: run.mode },
+      parts: [{ type: "text" as const, text: "" }],
+    };
+  });
 
   return {
     ...state,
@@ -182,9 +182,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // WHY: If the run the user last read is about to be dropped, the
     // pointer is stale. Clear it so the unread predicate correctly
     // evaluates against the new latest run on next read.
-    lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined
-      ? null
-      : state.lastReadRunId,
+    lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
     messages,
   };

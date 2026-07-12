@@ -21,18 +21,16 @@ export type UseAssistantChatHotkeysOptions = {
   onNextConversation?: () => void;
 };
 
-export function useAssistantChatHotkeys(
-  {
-    handleCancel,
-    handleNewConversation,
-    scroll,
-    modelProfilePickerRef,
-    deckPickerRef,
-    onClearDeck,
-    onPrevConversation,
-    onNextConversation,
-  }: UseAssistantChatHotkeysOptions,
-) {
+export function useAssistantChatHotkeys({
+  handleCancel,
+  handleNewConversation,
+  scroll,
+  modelProfilePickerRef,
+  deckPickerRef,
+  onClearDeck,
+  onPrevConversation,
+  onNextConversation,
+}: UseAssistantChatHotkeysOptions) {
   const { ai } = useHotkeysSettings();
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isLocked = useAtomValue(assistantIsLockedAtom);

@@ -13,10 +13,7 @@ export const overlay = tv({
 });
 
 export const overlayFrame = tv({
-  base: [
-    "flex flex-col overflow-auto",
-    "bg-level-1 fg-level-2 border-2 border-overlay-frame shadow-overlay-frame",
-  ],
+  base: ["flex flex-col overflow-auto", "bg-level-1 fg-level-2 border-2 border-overlay-frame shadow-overlay-frame"],
 });
 
 const overlayFrameHeader = tv({ base: "flex flex-row items-center min-h-14 p-2 wd:px-4 border-b-2 border-main" });

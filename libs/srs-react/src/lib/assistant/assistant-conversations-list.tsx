@@ -95,31 +95,17 @@ function ConversationItem({
       >
         <span className="flex items-center gap-2 min-w-0">
           <span className="flex items-center justify-center w-4">
-            {showActive
-              ? (
-                <div
-                  className="size-2 rounded-full bg-fg-level-4 animate-pulse"
-                  aria-label={runningLabel}
-                />
-              )
-              : showUnread
-              ? (
-                <div
-                  className="size-2 rounded-full bg-fg-link"
-                  aria-label={unreadLabel}
-                />
-              )
-              : null}
+            {showActive ? (
+              <div className="size-2 rounded-full bg-fg-level-4 animate-pulse" aria-label={runningLabel} />
+            ) : showUnread ? (
+              <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
+            ) : null}
           </span>
           <span className="truncate">{name}</span>
         </span>
       </Link>
       <div className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 animate-opacity">
-        <DeleteConversationButton
-          id={conversation.id}
-          isActive={isActive}
-          onActiveDeleted={onActiveDeleted}
-        />
+        <DeleteConversationButton id={conversation.id} isActive={isActive} onActiveDeleted={onActiveDeleted} />
       </div>
     </div>
   );

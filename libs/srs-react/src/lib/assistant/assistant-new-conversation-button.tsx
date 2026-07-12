@@ -30,12 +30,7 @@ export function AssistantNewConversationButton({ onConversationIdChange }: Assis
       isDisabled={!canStartNewConversation}
       onPress={() => onConversationIdChange(newConversation(globalAIProfileState))}
     >
-      <HugeiconsIcon
-        className="size-5 min-w-5"
-        strokeWidth={1.75}
-        icon={BubbleChatAddIcon}
-        aria-hidden="true"
-      />
+      <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={BubbleChatAddIcon} aria-hidden="true" />
       {_(msg`ai.chat.new-conversation.label`)}
     </Button>
   );

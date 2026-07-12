@@ -25,23 +25,24 @@ export function DemoSetup() {
   const scheme = useAtomValue(schemeAtom);
 
   const handleClick = () => {
-    mutate({ language, scheme, t: _ }, {
-      onSuccess: (result) => {
-        if (result) {
-          queryClient.resetQueries({ queryKey: ["app"] });
-          navigate({ to: "/dashboard" });
-        }
+    mutate(
+      { language, scheme, t: _ },
+      {
+        onSuccess: (result) => {
+          if (result) {
+            queryClient.resetQueries({ queryKey: ["app"] });
+            navigate({ to: "/dashboard" });
+          }
+        },
       },
-    });
+    );
   };
 
   return (
     <div className="grow flex flex-col gap-4 items-center justify-center">
       <div className={overlayFrame({ class: "flex-col rounded-xl w-84" })}>
         <OverlayFrameHeader variants={{ class: "justify-center" }}>
-          <OverlayFrameTitle>
-            {_(msg`demo.setup.header`)}
-          </OverlayFrameTitle>
+          <OverlayFrameTitle>{_(msg`demo.setup.header`)}</OverlayFrameTitle>
         </OverlayFrameHeader>
         <OverlayFrameContent variants={{ class: "justify-center gap-4 min-h-32 text-center" }}>
           <p>{_(msg`demo.setup.storage`)}</p>

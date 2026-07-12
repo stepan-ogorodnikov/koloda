@@ -42,9 +42,7 @@ export function LessonBadge({ type, value, deckId }: LessonBadgeProps) {
         if (Number(value)) setLesson({ type, deckId });
       }}
     >
-      <span className={lessonBadgeContent({ type })}>
-        {isDisabled ? "0" : value}
-      </span>
+      <span className={lessonBadgeContent({ type })}>{isDisabled ? "0" : value}</span>
     </Button>
   );
 }

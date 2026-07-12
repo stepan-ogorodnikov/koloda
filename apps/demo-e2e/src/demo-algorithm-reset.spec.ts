@@ -16,9 +16,11 @@ test("discards changes to algorithm details and resets form to persisted state",
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(algorithmTitle);
   const initialRetention = await page.getByRole("textbox", { name: "Retention" }).inputValue();
   const initialWeights = await page.getByRole("textbox", { name: "Weights" }).inputValue();
-  const initialLearningStep = await page.getByRole("textbox", { name: "Amount for learning step number 1" })
+  const initialLearningStep = await page
+    .getByRole("textbox", { name: "Amount for learning step number 1" })
     .inputValue();
-  const initialRelearningStep = await page.getByRole("textbox", { name: "Amount for relearning step number 1" })
+  const initialRelearningStep = await page
+    .getByRole("textbox", { name: "Amount for relearning step number 1" })
     .inputValue();
   const initialMaxInterval = await page.getByRole("textbox", { name: "Maximum interval" }).inputValue();
 

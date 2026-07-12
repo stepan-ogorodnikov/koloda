@@ -33,7 +33,8 @@ export function Titlebar() {
   const [overlayWidth, setOverlayWidth] = useState(defaultOverlayWidth);
 
   useEffect(() => {
-    window.electronAPI.invoke<number>("window:get-overlay-width")
+    window.electronAPI
+      .invoke<number>("window:get-overlay-width")
       .then(setOverlayWidth)
       .catch(() => {});
   }, []);
@@ -78,10 +79,12 @@ export function Titlebar() {
     function updateOverlay(el: HTMLElement) {
       const rootStyle = getComputedStyle(document.documentElement);
       // Electron titleBarOverlay only accepts rgba/hsla/hex — use dedicated hex tokens.
-      const color = toHexColor(rootStyle.getPropertyValue("--titlebar-overlay-color").trim())
-        || cssVarToHex("--titlebar-overlay-color");
-      const symbolColor = toHexColor(rootStyle.getPropertyValue("--titlebar-overlay-symbol-color").trim())
-        || cssVarToHex("--titlebar-overlay-symbol-color");
+      const color =
+        toHexColor(rootStyle.getPropertyValue("--titlebar-overlay-color").trim()) ||
+        cssVarToHex("--titlebar-overlay-color");
+      const symbolColor =
+        toHexColor(rootStyle.getPropertyValue("--titlebar-overlay-symbol-color").trim()) ||
+        cssVarToHex("--titlebar-overlay-symbol-color");
       const height = getTitlebarNativeContentHeight(el);
 
       if (!color || !symbolColor) return;
@@ -89,10 +92,10 @@ export function Titlebar() {
       const nextOverlay = { color, symbolColor, height };
       const currentOverlay = overlayRef.current;
       if (
-        currentOverlay
-        && currentOverlay.color === nextOverlay.color
-        && currentOverlay.symbolColor === nextOverlay.symbolColor
-        && currentOverlay.height === nextOverlay.height
+        currentOverlay &&
+        currentOverlay.color === nextOverlay.color &&
+        currentOverlay.symbolColor === nextOverlay.symbolColor &&
+        currentOverlay.height === nextOverlay.height
       ) {
         return;
       }
@@ -130,11 +133,7 @@ export function Titlebar() {
   };
 
   return (
-    <div
-      className={titlebar}
-      style={{ appRegion: "drag" } as React.CSSProperties}
-      ref={titlebarRef}
-    >
+    <div className={titlebar} style={{ appRegion: "drag" } as React.CSSProperties} ref={titlebarRef}>
       <div
         className="flex items-center h-full w-full"
         style={{ [platform === "macos" ? "paddingLeft" : "paddingRight"]: `${overlayWidth}px` }}

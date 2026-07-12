@@ -78,21 +78,15 @@ export async function setupFromScratch({ t, ...settings }: SetupFromScratchData)
     const template = returningTemplate?.id;
     if (!template) throw new AppError("db.add");
 
-    await setSettings(
-      db,
-      { name: "interface", content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }) },
-    );
-    await setSettings(
-      db,
-      {
-        name: "learning",
-        content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
-      },
-    );
-    await setSettings(
-      db,
-      { name: "hotkeys", content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS) },
-    );
+    await setSettings(db, {
+      name: "interface",
+      content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }),
+    });
+    await setSettings(db, {
+      name: "learning",
+      content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
+    });
+    await setSettings(db, { name: "hotkeys", content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS) });
 
     return true;
   } catch (e) {

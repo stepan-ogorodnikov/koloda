@@ -37,9 +37,8 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
       const efforts = reasoning?.supported_efforts;
       return {
         ...rest,
-        supported_reasoning_levels: efforts && efforts.length > 0
-          ? efforts.map((effort) => ({ effort, description: "" }))
-          : undefined,
+        supported_reasoning_levels:
+          efforts && efforts.length > 0 ? efforts.map((effort) => ({ effort, description: "" })) : undefined,
         default_reasoning_level: reasoning?.default_effort,
       };
     })

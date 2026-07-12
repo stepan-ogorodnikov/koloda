@@ -24,17 +24,20 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     defaultValues: data as UpdateDeckValues,
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
-      mutate({ id: Number(id), values: schema.parse(value) }, {
-        onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-          queryClient.invalidateQueries({ queryKey: queryKeys.decks.detail(id) });
-          queryClient.setQueryData(queryKeys.decks.detail(id), returning);
-          formApi.reset();
+      mutate(
+        { id: Number(id), values: schema.parse(value) },
+        {
+          onSuccess: (returning) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+            queryClient.invalidateQueries({ queryKey: queryKeys.decks.detail(id) });
+            queryClient.setQueryData(queryKeys.decks.detail(id), returning);
+            formApi.reset();
+          },
+          onError: (error) => {
+            formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
 

@@ -41,9 +41,7 @@ const router = createRouter({
   defaultNotFoundComponent: NotFound,
 });
 
-const root = createRoot(
-  document.getElementById("root") as HTMLElement,
-);
+const root = createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(<App />);
 

@@ -9,10 +9,7 @@ import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 export const OPENCODE_ZEN_MODELS_URL = `${OPENCODE_ZEN_BASE_URL}/models`;
 
 export async function fetchOpencodeZenModels(apiKey?: string): Promise<AIModel[]> {
-  return fetchOpenAICompatibleModelsDetailed(
-    `${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`,
-    apiKey,
-  );
+  return fetchOpenAICompatibleModelsDetailed(`${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`, apiKey);
 }
 
 function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "opencodeZen" }>): AIGenerationClient {

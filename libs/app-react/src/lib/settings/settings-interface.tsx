@@ -52,8 +52,11 @@ export function SettingsInterface() {
             mutate({ name: "interface", content: { motion: value.toString() } });
           }}
         >
-          {Object.entries(MOTION_SETTINGS).map(([id, t]) => <ToggleGroup.Item id={id} key={id}>{_(t)}
-          </ToggleGroup.Item>)}
+          {Object.entries(MOTION_SETTINGS).map(([id, t]) => (
+            <ToggleGroup.Item id={id} key={id}>
+              {_(t)}
+            </ToggleGroup.Item>
+          ))}
         </ToggleGroup>
       </FormLayout.Section>
     </FormLayout>

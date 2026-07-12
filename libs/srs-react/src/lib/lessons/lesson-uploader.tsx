@@ -11,21 +11,26 @@ type LessonUploaderProps = {
 };
 
 export function LessonUploader({ state, dispatch }: LessonUploaderProps) {
-  const { queue: [result] } = state.upload;
+  const {
+    queue: [result],
+  } = state.upload;
   const { index, card, review } = result || {};
   const { submitLessonResultMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation(submitLessonResultMutation());
 
   const upload = useEffectEvent((index: number | undefined) => {
     if (index !== undefined && index === result.index) {
-      mutate({ card, review }, {
-        onSuccess: () => {
-          dispatch(["resultUploaded", { index, status: "success" }]);
+      mutate(
+        { card, review },
+        {
+          onSuccess: () => {
+            dispatch(["resultUploaded", { index, status: "success" }]);
+          },
+          onError: () => {
+            dispatch(["resultUploaded", { index, status: "error" }]);
+          },
         },
-        onError: () => {
-          dispatch(["resultUploaded", { index, status: "error" }]);
-        },
-      });
+      );
     }
   });
 

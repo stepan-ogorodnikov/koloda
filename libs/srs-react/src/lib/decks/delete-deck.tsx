@@ -23,35 +23,30 @@ export function DeleteDeck({ id }: DeleteDeckProps) {
   };
 
   const handleConfirm = () => {
-    mutate({ id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
-        queryClient.removeQueries({ queryKey: queryKeys.decks.detail(id) });
-        navigate({ to: "/decks" });
+    mutate(
+      { id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
+          queryClient.removeQueries({ queryKey: queryKeys.decks.detail(id) });
+          navigate({ to: "/decks" });
+        },
       },
-    });
+    );
   };
 
   const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
-      <DeleteDialog.Trigger>
-        {_(msg`delete-deck.trigger`)}
-      </DeleteDialog.Trigger>
+      <DeleteDialog.Trigger>{_(msg`delete-deck.trigger`)}</DeleteDialog.Trigger>
       <DeleteDialog.Frame>
         <AnimatePresence>
-          {error
-            ? (
-              <Fade>
-                {typeof message === "function" ? _(message(error)) : _(message)}
-              </Fade>
-            )
-            : (
-              <Fade>
-                {_(msg`delete-deck.message`)}
-              </Fade>
-            )}
+          {error ? (
+            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+          ) : (
+            <Fade>{_(msg`delete-deck.message`)}</Fade>
+          )}
         </AnimatePresence>
         <DeleteDialog.Actions>
           <DeleteDialog.Cancel>{_(msg`delete-deck.cancel`)}</DeleteDialog.Cancel>

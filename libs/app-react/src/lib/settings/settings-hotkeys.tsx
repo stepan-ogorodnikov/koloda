@@ -21,16 +21,19 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
     defaultValues: data,
     validators: { onSubmit: schema, onChange: schema },
     onSubmit: async ({ value }) => {
-      mutate({ name: "hotkeys", content: schema.parse(value) }, {
-        onSuccess: (returning) => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("hotkeys") });
-          queryClient.setQueryData(queryKeys.settings.detail("hotkeys"), returning);
-          form.reset(returning?.content);
+      mutate(
+        { name: "hotkeys", content: schema.parse(value) },
+        {
+          onSuccess: (returning) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("hotkeys") });
+            queryClient.setQueryData(queryKeys.settings.detail("hotkeys"), returning);
+            form.reset(returning?.content);
+          },
+          onError: (error) => {
+            form.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          form.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
@@ -94,7 +97,5 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
 function hasFieldError(formErrorMap: any, fieldPath: string, index: number): boolean {
   const fullPath = `${fieldPath}[${index}]`;
   const fieldErrors = formErrorMap.onChange?.[fullPath] || formErrorMap.onSubmit?.[fullPath];
-  return Array.isArray(fieldErrors)
-    ? fieldErrors.some((error) => error.path && error.path?.[2] === index)
-    : false;
+  return Array.isArray(fieldErrors) ? fieldErrors.some((error) => error.path && error.path?.[2] === index) : false;
 }

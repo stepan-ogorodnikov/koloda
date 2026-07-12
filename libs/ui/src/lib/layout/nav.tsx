@@ -63,19 +63,8 @@ export function LayoutNavLink({ to, msg, icon }: LayoutNavLinkProps) {
       isDisabled={isTextVisible}
       placement="right"
     >
-      <Link
-        className={layoutNavLink()}
-        to={to}
-        viewTransition={isMotionOn}
-        onClick={close}
-        key={to}
-      >
-        <HugeiconsIcon
-          className="size-6 min-w-6"
-          strokeWidth={1.75}
-          icon={icon}
-          aria-hidden="true"
-        />
+      <Link className={layoutNavLink()} to={to} viewTransition={isMotionOn} onClick={close} key={to}>
+        <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.75} icon={icon} aria-hidden="true" />
         <AnimatePresence initial={false}>
           {isTextVisible && (
             <motion.span

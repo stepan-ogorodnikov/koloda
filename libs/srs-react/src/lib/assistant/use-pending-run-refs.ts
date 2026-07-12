@@ -42,13 +42,16 @@ export function usePendingRunRefs(dispatchToConversation: DispatchToConversation
     ref.current = { id: conversationId, runId };
   }, []);
 
-  const handleError = useCallback((mode: AIChatMode, error: Error) => {
-    const ref = mode === "chat" ? chatRef : cardRef;
-    const entry = ref.current;
-    if (!entry) return;
-    ref.current = null;
-    dispatchToConversation(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
-  }, [dispatchToConversation]);
+  const handleError = useCallback(
+    (mode: AIChatMode, error: Error) => {
+      const ref = mode === "chat" ? chatRef : cardRef;
+      const entry = ref.current;
+      if (!entry) return;
+      ref.current = null;
+      dispatchToConversation(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
+    },
+    [dispatchToConversation],
+  );
 
   const onComplete = useCallback((mode: AIChatMode, runId: string) => {
     const ref = mode === "chat" ? chatRef : cardRef;

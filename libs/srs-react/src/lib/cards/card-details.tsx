@@ -41,14 +41,17 @@ export function CardDetails({ card }: CardDetailsProps) {
     defaultValues: card as UpdateCardValues,
     validators: { onSubmit: template ? getUpdateCardSchema(template) : schema },
     onSubmit: async ({ formApi, value }) => {
-      mutate({ id: card.id, values: value }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
+      mutate(
+        { id: card.id, values: value },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
+          },
+          onError: (error) => {
+            formApi.setErrorMap({ onSubmit: toFormErrors(error) });
+          },
         },
-        onError: (error) => {
-          formApi.setErrorMap({ onSubmit: toFormErrors(error) });
-        },
-      });
+      );
     },
   });
 
@@ -57,12 +60,15 @@ export function CardDetails({ card }: CardDetailsProps) {
   }, [card.id, card.updatedAt, form]);
 
   const handleProgressReset = () => {
-    resetProgressMutation.mutate({ id: card.id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.reviews.card({ cardId: card.id }) });
+    resetProgressMutation.mutate(
+      { id: card.id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.reviews.card({ cardId: card.id }) });
+        },
       },
-    });
+    );
   };
 
   return (
@@ -145,12 +151,7 @@ export function CardDetails({ card }: CardDetailsProps) {
               <div className="flex flex-row flex-wrap items-center gap-2">
                 {!!card.state && (
                   <Button variants={{ style: "primary" }} onClick={handleProgressReset}>
-                    <HugeiconsIcon
-                      className="size-4 min-w-4"
-                      strokeWidth={2}
-                      icon={Undo02Icon}
-                      aria-hidden="true"
-                    />
+                    <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={Undo02Icon} aria-hidden="true" />
                     {_(msg`card.action.reset-progress`)}
                   </Button>
                 )}

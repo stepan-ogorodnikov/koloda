@@ -4,13 +4,16 @@ import type { CardGenerationFields, GeneratedCard } from "./generation";
 import { GENERATION_TEMPERATURE } from "./prompts";
 
 export function getCardContentSchema(fields: CardGenerationFields) {
-  const fieldSchema = fields.reduce((acc, field) => {
-    const textSchema = field.isRequired ? z.string().min(1) : z.string();
-    return {
-      ...acc,
-      [field.id.toString()]: z.object({ text: textSchema }),
-    };
-  }, {} as Record<string, z.ZodObject<{ text: z.ZodString }>>);
+  const fieldSchema = fields.reduce(
+    (acc, field) => {
+      const textSchema = field.isRequired ? z.string().min(1) : z.string();
+      return {
+        ...acc,
+        [field.id.toString()]: z.object({ text: textSchema }),
+      };
+    },
+    {} as Record<string, z.ZodObject<{ text: z.ZodString }>>,
+  );
 
   return z.object({ content: z.object(fieldSchema) });
 }
@@ -33,10 +36,10 @@ export function resolveGenerationTemperature(value?: number) {
 }
 
 export function parseGeneratedCardsText(text: string, fields: CardGenerationFields): GeneratedCard[] {
-  return validateExtractedCards([
-    ...extractCardsFromJsonArray(text, fields),
-    ...extractCardsFromMarkdownText(text, fields),
-  ], fields);
+  return validateExtractedCards(
+    [...extractCardsFromJsonArray(text, fields), ...extractCardsFromMarkdownText(text, fields)],
+    fields,
+  );
 }
 
 function extractCardsFromJsonArray(text: string, fields: CardGenerationFields): GeneratedCard[] {
@@ -57,9 +60,10 @@ function extractCardsFromJsonArray(text: string, fields: CardGenerationFields): 
         for (const field of fields) {
           const key = field.id.toString();
           const raw = (item.content as Record<string, unknown>)[key];
-          const textValue = raw && typeof raw === "object" && "text" in raw
-            ? String((raw as { text?: unknown }).text ?? "").trim()
-            : "";
+          const textValue =
+            raw && typeof raw === "object" && "text" in raw
+              ? String((raw as { text?: unknown }).text ?? "").trim()
+              : "";
           if (textValue) hasValue = true;
           content[key] = { text: textValue };
         }

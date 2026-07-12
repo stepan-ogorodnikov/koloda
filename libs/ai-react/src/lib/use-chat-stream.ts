@@ -18,12 +18,14 @@ export function useChatStream(
   streamGenerator: ChatStreamGenerator,
   onError?: (error: Error) => void,
 ): UseChatStreamReturn {
-  const { data: text, result: usage, isRunning: isStreaming, error, start, cancel } = useStreamingRequest<
-    string,
-    string,
-    Parameters<ChatStreamGenerator>[0],
-    StreamUsage | undefined
-  >({
+  const {
+    data: text,
+    result: usage,
+    isRunning: isStreaming,
+    error,
+    start,
+    cancel,
+  } = useStreamingRequest<string, string, Parameters<ChatStreamGenerator>[0], StreamUsage | undefined>({
     initialData: "",
     accumulate: (prev, chunk) => prev + chunk,
     executor: streamGenerator,

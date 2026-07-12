@@ -15,11 +15,7 @@ import { decks } from "./schema";
  */
 export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(decks)
-      .where(filters)
-      .orderBy(decks.createdAt);
+    const result = await db.select().from(decks).where(filters).orderBy(decks.createdAt);
 
     return result as Deck[];
   });
@@ -33,11 +29,7 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
  */
 export async function getDeck(db: DB, id: Deck["id"]) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(decks)
-      .where(eq(decks.id, id))
-      .limit(1);
+    const result = await db.select().from(decks).where(eq(decks.id, id)).limit(1);
 
     return (result[0] as Deck) || null;
   });
@@ -51,10 +43,7 @@ export async function getDeck(db: DB, id: Deck["id"]) {
  */
 export async function addDeck(db: DB, data: InsertDeckData) {
   return throwKnownError("db.add", async () => {
-    const result = await db
-      .insert(decks)
-      .values(data)
-      .returning();
+    const result = await db.insert(decks).values(data).returning();
 
     return result[0] as Deck;
   });
@@ -70,11 +59,7 @@ export async function addDeck(db: DB, data: InsertDeckData) {
 export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   return throwKnownError("db.update", async () => {
     const payload = updateDeckSchema.parse(values);
-    const result = await db
-      .update(decks)
-      .set(withUpdatedAt(payload))
-      .where(eq(decks.id, id))
-      .returning();
+    const result = await db.update(decks).set(withUpdatedAt(payload)).where(eq(decks.id, id)).returning();
 
     return result[0] as Deck;
   });
@@ -88,9 +73,7 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
  */
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
   return throwKnownError("db.delete", async () => {
-    const result = await db
-      .delete(decks)
-      .where(eq(decks.id, id));
+    const result = await db.delete(decks).where(eq(decks.id, id));
 
     return result;
   });

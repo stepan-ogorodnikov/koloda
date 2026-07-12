@@ -39,9 +39,11 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
         <Dialog.Body>
           <div className="flex flex-row items-center gap-2 p-3 min-w-84">
             <div className="grow flex flex-row justify-center gap-1">
-              {value
-                ? <HotKey value={value} />
-                : <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>}
+              {value ? (
+                <HotKey value={value} />
+              ) : (
+                <span className="fg-disabled animate-pulse">{_(msg`hotkey-recorder.input.placeholder`)}</span>
+              )}
             </div>
             <Button
               variants={{ size: "icon", style: "primary" }}

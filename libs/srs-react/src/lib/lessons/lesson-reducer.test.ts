@@ -3,11 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createCard, createLesson, createLessonData, createTodaysReviewTotals } from "../../test/test-helpers";
 import { lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 
-const {
-  getCardGradesMock,
-  createCardFromCardFSRSMock,
-  createReviewFromReviewFSRSMock,
-} = vi.hoisted(() => ({
+const { getCardGradesMock, createCardFromCardFSRSMock, createReviewFromReviewFSRSMock } = vi.hoisted(() => ({
   getCardGradesMock: vi.fn(),
   createCardFromCardFSRSMock: vi.fn(),
   createReviewFromReviewFSRSMock: vi.fn(),
@@ -27,10 +23,7 @@ vi.mock("@koloda/srs", async () => {
 type LessonAction = Parameters<typeof lessonReducer>[1];
 
 function reduceLesson(actions: LessonAction[]) {
-  return actions.reduce(
-    (state, action) => lessonReducer(state, action),
-    structuredClone(lessonReducerDefault),
-  );
+  return actions.reduce((state, action) => lessonReducer(state, action), structuredClone(lessonReducerDefault));
 }
 
 describe("lessonReducer", () => {
@@ -53,12 +46,17 @@ describe("lessonReducer", () => {
           },
         }),
       ],
-      ["lessonsReceived", [createLesson({
-        untouched: 5,
-        learn: 4,
-        review: 8,
-        total: 17,
-      })]],
+      [
+        "lessonsReceived",
+        [
+          createLesson({
+            untouched: 5,
+            learn: 4,
+            review: 8,
+            total: 17,
+          }),
+        ],
+      ],
     ]);
 
     expect(state.amounts).toEqual({
@@ -84,10 +82,15 @@ describe("lessonReducer", () => {
           },
         }),
       ],
-      ["lessonsReceived", [createLesson({
-        review: 5,
-        total: 5,
-      })]],
+      [
+        "lessonsReceived",
+        [
+          createLesson({
+            review: 5,
+            total: 5,
+          }),
+        ],
+      ],
     ]);
 
     expect(state.amounts).toEqual({
@@ -99,9 +102,7 @@ describe("lessonReducer", () => {
   });
 
   it("starts a lesson and tracks card form updates", () => {
-    let state = reduceLesson([
-      ["lessonDataReceived", createLessonData()],
-    ]);
+    let state = reduceLesson([["lessonDataReceived", createLessonData()]]);
 
     expect(state.meta.isStarted).toBe(true);
     expect(state.content?.index).toBe(0);
@@ -190,23 +191,26 @@ describe("lessonReducer", () => {
       ...state,
       upload: {
         ...state.upload,
-        queue: [...state.upload.queue, {
-          index: 0,
-          card: createCard(),
-          review: {
-            cardId: 1,
-            rating: 3,
-            state: 1,
-            dueAt: new Date("2024-01-01T00:10:00.000Z"),
-            stability: 1,
-            difficulty: 1,
-            scheduledDays: 0,
-            learningSteps: 1,
-            time: 1000,
-            isIgnored: false,
-            createdAt: new Date("2024-01-01T00:00:00.000Z"),
+        queue: [
+          ...state.upload.queue,
+          {
+            index: 0,
+            card: createCard(),
+            review: {
+              cardId: 1,
+              rating: 3,
+              state: 1,
+              dueAt: new Date("2024-01-01T00:10:00.000Z"),
+              stability: 1,
+              difficulty: 1,
+              scheduledDays: 0,
+              learningSteps: 1,
+              time: 1000,
+              isIgnored: false,
+              createdAt: new Date("2024-01-01T00:00:00.000Z"),
+            },
           },
-        }],
+        ],
       },
     };
 

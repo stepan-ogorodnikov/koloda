@@ -32,17 +32,12 @@ export function AIProfileSecretsField({ label, value, onChange, placeholder, err
   };
 
   return (
-    <TextField
-      type="password"
-      value={value}
-      onChange={onChange}
-    >
+    <TextField type="password" value={value} onChange={onChange}>
       <Label>{label}</Label>
-      {isEditing ? <TextField.Input ref={inputRef} placeholder={placeholder} /> : (
-        <Button
-          variants={{ style: "bordered", size: "default" }}
-          onClick={handleStartEditing}
-        >
+      {isEditing ? (
+        <TextField.Input ref={inputRef} placeholder={placeholder} />
+      ) : (
+        <Button variants={{ style: "bordered", size: "default" }} onClick={handleStartEditing}>
           {_(msg`settings.ai.profiles.replace`)}
         </Button>
       )}

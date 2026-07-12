@@ -25,7 +25,7 @@ export function TitlebarSidebarControls() {
   const hasNav = useAtomValue(layoutHasNavAtom);
   const hasSidebar = useAtomValue(layoutHasSidebarAtom);
   const hasContent = useAtomValue(layoutHasContentAtom);
-  const isDisabled = isWide ? !hasNav : (!hasContent || (!hasNav && !hasSidebar));
+  const isDisabled = isWide ? !hasNav : !hasContent || (!hasNav && !hasSidebar);
 
   const handleAction = useCallback(() => {
     if (isWide) {

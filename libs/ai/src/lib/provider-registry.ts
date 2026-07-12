@@ -64,9 +64,8 @@ function resolveProviderImplementation(provider: AiProvider): ProviderImplementa
 }
 
 export function createAIGenerationClient(secretsInput: AISecrets | string): AIGenerationClient {
-  const secrets: AISecrets = typeof secretsInput === "string"
-    ? ({ provider: "openrouter", apiKey: secretsInput } as const)
-    : secretsInput;
+  const secrets: AISecrets =
+    typeof secretsInput === "string" ? ({ provider: "openrouter", apiKey: secretsInput } as const) : secretsInput;
 
   return resolveProviderImplementation(secrets.provider).createClient(secrets);
 }

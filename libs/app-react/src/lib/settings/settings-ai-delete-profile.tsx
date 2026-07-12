@@ -21,21 +21,21 @@ export function SettingsAIDeleteProfile({ profile }: SettingsAIDeleteProfileProp
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDelete = () => {
-    mutate({ id: profile.id }, {
-      onSuccess: () => {
-        setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
-        queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+    mutate(
+      { id: profile.id },
+      {
+        onSuccess: () => {
+          setIsOpen(false);
+          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
+          queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+        },
       },
-    });
+    );
   };
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button
-        variants={{ style: "ghost", size: "icon" }}
-        aria-label={_(msg`settings.ai.profiles.delete.trigger`)}
-      >
+      <Button variants={{ style: "ghost", size: "icon" }} aria-label={_(msg`settings.ai.profiles.delete.trigger`)}>
         <div className="p-1 rounded-md group-focus-ring">
           <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
         </div>

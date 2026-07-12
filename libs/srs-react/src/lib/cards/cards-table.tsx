@@ -78,9 +78,8 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         accessorKey: "state",
         header: _(msg`cards.table.columns.state`),
         enableGlobalFilter: false,
-        filterFn:
-          ((row, columnId, filterValue: CardState[]) =>
-            filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<Card>,
+        filterFn: ((row, columnId, filterValue: CardState[]) =>
+          filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<Card>,
         size: 8,
         cell,
       },
@@ -90,7 +89,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         enableGlobalFilter: false,
         filterFn: ((row, columnId, filterValue: { isOverdue: boolean; isNotDue: boolean }) => {
           const value = row.getValue(columnId) as string | null;
-          const isDue = value ? (new Date(value)).getTime() <= (new Date()).getTime() : false;
+          const isDue = value ? new Date(value).getTime() <= new Date().getTime() : false;
           const isNotDue = !value || new Date(value) > new Date();
           if (filterValue.isOverdue && filterValue.isNotDue) return true;
           if (filterValue.isOverdue) return isDue;
@@ -145,11 +144,11 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     [_, templates, templateMapRef],
   );
 
-  const filteredCards = useMemo(() => (
-    filters.templateIds.length === 0
-      ? cards
-      : cards.filter((card) => filters.templateIds.includes(card.templateId))
-  ), [cards, filters.templateIds]);
+  const filteredCards = useMemo(
+    () =>
+      filters.templateIds.length === 0 ? cards : cards.filter((card) => filters.templateIds.includes(card.templateId)),
+    [cards, filters.templateIds],
+  );
 
   const table = useReactTable({
     columns,
@@ -184,39 +183,40 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
 
   return (
     <>
-      {controlsNode && createPortal(
-        <div className="grow flex flex-row items-center gap-4">
-          <CardsTableFilters filters={filters} setFilters={setFilters} templates={templates} />
-          <CardsTableColumnsVisibility
-            columns={table.getAllColumns()}
-            onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
-            onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
-          />
-          <div className="grow" />
-          <SearchField
-            aria-label={_(msg`cards-table.search.label`)}
-            value={searchValue}
-            onChange={(value) => {
-              setSearchValue(value as string);
-              table.setGlobalFilter(value as string);
-            }}
-            onKeyDown={(e) => e.continuePropagation()}
-          >
-            <SearchField.Group>
-              <SearchField.Icon />
-              <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
-              <SearchField.ClearButton
-                isHidden={!searchValue}
-                onClick={() => {
-                  setSearchValue("");
-                  table.setGlobalFilter("");
-                }}
-              />
-            </SearchField.Group>
-          </SearchField>
-        </div>,
-        controlsNode,
-      )}
+      {controlsNode &&
+        createPortal(
+          <div className="grow flex flex-row items-center gap-4">
+            <CardsTableFilters filters={filters} setFilters={setFilters} templates={templates} />
+            <CardsTableColumnsVisibility
+              columns={table.getAllColumns()}
+              onColumnVisibilityChange={(columnId, isVisible) => table.getColumn(columnId)?.toggleVisibility(isVisible)}
+              onColumnOrderChange={(newOrder) => setColumnOrder(newOrder)}
+            />
+            <div className="grow" />
+            <SearchField
+              aria-label={_(msg`cards-table.search.label`)}
+              value={searchValue}
+              onChange={(value) => {
+                setSearchValue(value as string);
+                table.setGlobalFilter(value as string);
+              }}
+              onKeyDown={(e) => e.continuePropagation()}
+            >
+              <SearchField.Group>
+                <SearchField.Icon />
+                <SearchField.Input placeholder={_(msg`cards-table.search.placeholder`)} />
+                <SearchField.ClearButton
+                  isHidden={!searchValue}
+                  onClick={() => {
+                    setSearchValue("");
+                    table.setGlobalFilter("");
+                  }}
+                />
+              </SearchField.Group>
+            </SearchField>
+          </div>,
+          controlsNode,
+        )}
       <div className="flex flex-col gap-4" ref={wrapperRef}>
         <Table.Root>
           <Table.Head table={table} />

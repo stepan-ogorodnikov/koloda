@@ -21,7 +21,7 @@ function configureUserData() {
   }
 }
 
-function loadNativeAddon(): { KolodaDb: new(dbPath: string) => any } {
+function loadNativeAddon(): { KolodaDb: new (dbPath: string) => any } {
   const req = createRequire(import.meta.url);
   const addonPath = isDev
     ? join(__dirname, "..", "dist", "koloda_electron.node")
@@ -86,8 +86,7 @@ function isWithinDisplay(state: WindowState): boolean {
   const displays = screen.getAllDisplays();
   return displays.some((display) => {
     const { x, y, width, height } = display.bounds;
-    return state.x! < x + width && state.x! + state.width > x
-      && state.y! < y + height && state.y! + state.height > y;
+    return state.x! < x + width && state.x! + state.width > x && state.y! < y + height && state.y! + state.height > y;
   });
 }
 
@@ -110,17 +109,18 @@ function createWindow() {
     },
   };
 
-  const win = process.platform === "darwin"
-    ? new BrowserWindow({
-      ...commonOptions,
-      titleBarStyle: "hidden",
-      trafficLightPosition: getWindowButtonPosition(),
-    })
-    : new BrowserWindow({
-      ...commonOptions,
-      titleBarStyle: "hidden",
-      titleBarOverlay: getInitialTitleBarOverlay(),
-    });
+  const win =
+    process.platform === "darwin"
+      ? new BrowserWindow({
+          ...commonOptions,
+          titleBarStyle: "hidden",
+          trafficLightPosition: getWindowButtonPosition(),
+        })
+      : new BrowserWindow({
+          ...commonOptions,
+          titleBarStyle: "hidden",
+          titleBarOverlay: getInitialTitleBarOverlay(),
+        });
 
   if (windowState.isMaximized) win.maximize();
 
@@ -137,10 +137,11 @@ function createWindow() {
     win.webContents.on("before-input-event", (event, input) => {
       if (input.type !== "keyDown") return;
       const mod = input.control || input.meta;
-      const isReload = input.code === "F5"
-        || (input.code === "F5" && input.control)
-        || (input.code === "KeyR" && mod && input.shift)
-        || (input.code === "KeyR" && mod && !input.shift && !input.alt);
+      const isReload =
+        input.code === "F5" ||
+        (input.code === "F5" && input.control) ||
+        (input.code === "KeyR" && mod && input.shift) ||
+        (input.code === "KeyR" && mod && !input.shift && !input.alt);
       if (isReload) event.preventDefault();
     });
   }
@@ -151,38 +152,34 @@ function createWindow() {
     win.loadFile(join(__dirname, "../native-electron-react/index.html"));
   }
 
-  win.webContents.session.webRequest.onBeforeSendHeaders(
-    (details, callback) => {
-      const { hostname } = new URL(details.url);
-      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-        const { requestHeaders } = details;
-        requestHeaders["Sec-Fetch-Mode"] = "no-cors";
-        callback({ requestHeaders });
-      } else {
-        callback({ requestHeaders: details.requestHeaders });
-      }
-    },
-  );
+  win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+    const { hostname } = new URL(details.url);
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      const { requestHeaders } = details;
+      requestHeaders["Sec-Fetch-Mode"] = "no-cors";
+      callback({ requestHeaders });
+    } else {
+      callback({ requestHeaders: details.requestHeaders });
+    }
+  });
 
-  win.webContents.session.webRequest.onHeadersReceived(
-    (details, callback) => {
-      const { hostname } = new URL(details.url);
-      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-        const { responseHeaders = {} } = details;
-        for (const key of Object.keys(responseHeaders)) {
-          if (key.toLowerCase() === "access-control-allow-origin") delete responseHeaders[key];
-          if (key.toLowerCase() === "access-control-allow-headers") delete responseHeaders[key];
-          if (key.toLowerCase() === "access-control-allow-methods") delete responseHeaders[key];
-        }
-        responseHeaders["Access-Control-Allow-Origin"] = ["*"];
-        responseHeaders["Access-Control-Allow-Headers"] = ["*"];
-        responseHeaders["Access-Control-Allow-Methods"] = ["*"];
-        callback({ responseHeaders });
-      } else {
-        callback({ responseHeaders: details.responseHeaders });
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const { hostname } = new URL(details.url);
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      const { responseHeaders = {} } = details;
+      for (const key of Object.keys(responseHeaders)) {
+        if (key.toLowerCase() === "access-control-allow-origin") delete responseHeaders[key];
+        if (key.toLowerCase() === "access-control-allow-headers") delete responseHeaders[key];
+        if (key.toLowerCase() === "access-control-allow-methods") delete responseHeaders[key];
       }
-    },
-  );
+      responseHeaders["Access-Control-Allow-Origin"] = ["*"];
+      responseHeaders["Access-Control-Allow-Headers"] = ["*"];
+      responseHeaders["Access-Control-Allow-Methods"] = ["*"];
+      callback({ responseHeaders });
+    } else {
+      callback({ responseHeaders: details.responseHeaders });
+    }
+  });
 
   win.webContents.session.protocol.handle("https", async (request) => {
     if (request.method === "OPTIONS") {

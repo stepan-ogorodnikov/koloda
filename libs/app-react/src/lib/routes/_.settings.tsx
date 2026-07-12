@@ -34,11 +34,7 @@ function SettingsRoute() {
           <div className="flex flex-col">
             {LINKS.map(({ id, t, url }) => (
               <Layout.SidebarItem key={id}>
-                <Link
-                  className={layoutSidebarItemLink}
-                  to={`/settings/${url}`}
-                  viewTransition={isMotionOn}
-                >
+                <Link className={layoutSidebarItemLink} to={`/settings/${url}`} viewTransition={isMotionOn}>
                   <Layout.SidebarItemLinkContent>{_(t)}</Layout.SidebarItemLinkContent>
                 </Link>
               </Layout.SidebarItem>

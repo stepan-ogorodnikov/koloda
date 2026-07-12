@@ -2,12 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addCard, addCards, getCards, resetCardProgress } from "./cards";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
-import {
-  createCardContent,
-  createTestDb,
-  insertReview,
-  seedDeckContext,
-} from "../test/test-helpers";
+import { createCardContent, createTestDb, insertReview, seedDeckContext } from "../test/test-helpers";
 
 describe("cards repository integration", () => {
   let testDb: TestDb;
@@ -24,14 +19,16 @@ describe("cards repository integration", () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
 
-    await expect(addCard(db, {
-      deckId: deck.id,
-      templateId: template.id,
-      content: {
-        ...createCardContent(template),
-        "1": { text: "" },
-      },
-    })).rejects.toMatchObject({
+    await expect(
+      addCard(db, {
+        deckId: deck.id,
+        templateId: template.id,
+        content: {
+          ...createCardContent(template),
+          "1": { text: "" },
+        },
+      }),
+    ).rejects.toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           message: "validation.cards.content.field-empty",

@@ -24,10 +24,7 @@ export function TextField({ variants, ...props }: TextFieldProps) {
 }
 
 export const textFieldInput = tv({
-  base: [
-    "min-w-0 h-10 p-2 border-0 scrollbar-thin",
-    "placeholder:fg-input-placeholder",
-  ],
+  base: ["min-w-0 h-10 p-2 border-0 scrollbar-thin", "placeholder:fg-input-placeholder"],
   variants: {
     style: {
       normal: "bg-input fg-level-1 border-input border-2 rounded-lg shadow-input focus-ring",
@@ -58,22 +55,34 @@ export function TextFieldInput({ variants, ...props }: TextFieldInputProps) {
 
 export const textFieldTextArea = tv({ extend: textFieldInput, base: "h-auto" });
 
-export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> & TWVProps<typeof textFieldTextArea> & {
-  autoResize?: boolean;
-  maxRows?: number;
-};
+export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> &
+  TWVProps<typeof textFieldTextArea> & {
+    autoResize?: boolean;
+    maxRows?: number;
+  };
 
-export function TextFieldTextArea({ variants, autoResize, maxRows, ref, onInput, value, ...props }: TextFieldTextAreaProps) {
+export function TextFieldTextArea({
+  variants,
+  autoResize,
+  maxRows,
+  ref,
+  onInput,
+  value,
+  ...props
+}: TextFieldTextAreaProps) {
   const internalRef = useRef<HTMLTextAreaElement>(null);
 
-  const setRef = useCallback((node: HTMLTextAreaElement | null) => {
-    internalRef.current = node;
-    if (typeof ref === "function") {
-      ref(node);
-    } else if (ref && "current" in ref) {
-      ref.current = node;
-    }
-  }, [ref]);
+  const setRef = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      internalRef.current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref && "current" in ref) {
+        ref.current = node;
+      }
+    },
+    [ref],
+  );
 
   const adjustHeight = useCallback(() => {
     const el = internalRef.current;
@@ -126,32 +135,23 @@ export function TextFieldTextArea({ variants, autoResize, maxRows, ref, onInput,
     }
   });
 
-  const handleInput = useCallback((e: FormEvent<HTMLTextAreaElement>) => {
-    adjustHeight();
-    onInput?.(e);
-  }, [adjustHeight, onInput]);
+  const handleInput = useCallback(
+    (e: FormEvent<HTMLTextAreaElement>) => {
+      adjustHeight();
+      onInput?.(e);
+    },
+    [adjustHeight, onInput],
+  );
 
   return (
-    <TextArea
-      className={textFieldTextArea(variants)}
-      ref={setRef}
-      {...props}
-      onInput={handleInput}
-      value={value}
-    />
+    <TextArea className={textFieldTextArea(variants)} ref={setRef} {...props} onInput={handleInput} value={value} />
   );
 }
 
 export function FormTextField(props: TextFieldProps) {
   const field = useFieldContext<string>();
 
-  return (
-    <TextField
-      value={field.state.value}
-      onChange={field.handleChange}
-      {...props}
-    />
-  );
+  return <TextField value={field.state.value} onChange={field.handleChange} {...props} />;
 }
 
 TextField.Content = TextFieldContent;

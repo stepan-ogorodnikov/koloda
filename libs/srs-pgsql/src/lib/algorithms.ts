@@ -20,10 +20,7 @@ import { algorithms, decks } from "./schema";
  */
 export async function getAlgorithms(db: DB) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(algorithms)
-      .orderBy(algorithms.createdAt);
+    const result = await db.select().from(algorithms).orderBy(algorithms.createdAt);
 
     return result as Algorithm[];
   });
@@ -37,11 +34,7 @@ export async function getAlgorithms(db: DB) {
  */
 export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(algorithms)
-      .where(eq(algorithms.id, id))
-      .limit(1);
+    const result = await db.select().from(algorithms).where(eq(algorithms.id, id)).limit(1);
 
     return (result[0] as Algorithm) || null;
   });
@@ -55,10 +48,7 @@ export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
  */
 export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
   return throwKnownError("db.add", async () => {
-    const result = await db
-      .insert(algorithms)
-      .values(data)
-      .returning();
+    const result = await db.insert(algorithms).values(data).returning();
 
     return result[0] as Algorithm;
   });
@@ -74,11 +64,7 @@ export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
 export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmData) {
   return throwKnownError("db.update", async () => {
     const payload = updateAlgorithmSchema.parse(values);
-    const result = await db
-      .update(algorithms)
-      .set(withUpdatedAt(payload))
-      .where(eq(algorithms.id, id))
-      .returning();
+    const result = await db.update(algorithms).set(withUpdatedAt(payload)).where(eq(algorithms.id, id)).returning();
 
     return result[0] as Algorithm;
   });
@@ -121,16 +107,12 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
           .set({ algorithmId: Number(successorId) })
           .where(eq(decks.algorithmId, id));
 
-        const result = await tx
-          .delete(algorithms)
-          .where(eq(algorithms.id, id));
+        const result = await tx.delete(algorithms).where(eq(algorithms.id, id));
 
         return result;
       });
     } else {
-      const result = await db
-        .delete(algorithms)
-        .where(eq(algorithms.id, id));
+      const result = await db.delete(algorithms).where(eq(algorithms.id, id));
 
       return result;
     }
@@ -145,10 +127,7 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
  */
 export async function getAlgorithmDecks(db: DB, id: Algorithm["id"]) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select({ id: decks.id, title: decks.title })
-      .from(decks)
-      .where(eq(decks.algorithmId, id));
+    const result = await db.select({ id: decks.id, title: decks.title }).from(decks).where(eq(decks.algorithmId, id));
 
     return result as DeckWithOnlyTitle[];
   });

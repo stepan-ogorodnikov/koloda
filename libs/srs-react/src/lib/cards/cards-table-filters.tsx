@@ -55,7 +55,8 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
                       templateIds: isSelected
                         ? [...prev.templateIds, template.id]
                         : prev.templateIds.filter((id) => id !== template.id),
-                    }))}
+                    }))
+                  }
                   key={template.id}
                 >
                   <Checkbox.Indicator />
@@ -73,7 +74,8 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
                   setFilters((prev) => ({
                     ...prev,
                     state: isSelected ? [...prev.state, i] : prev.state.filter((s) => s !== i),
-                  }))}
+                  }))
+                }
                 key={value.t.id}
               >
                 <Checkbox.Indicator />
@@ -86,7 +88,8 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
             <Checkbox
               isSelected={filters.dueAt.isOverdue}
               onChange={(isSelected) =>
-                setFilters((prev) => ({ ...prev, dueAt: { ...prev.dueAt, isOverdue: isSelected } }))}
+                setFilters((prev) => ({ ...prev, dueAt: { ...prev.dueAt, isOverdue: isSelected } }))
+              }
             >
               <Checkbox.Indicator />
               <Checkbox.Label>{_(msg`cards-table.filters.due-at.values.true`)}</Checkbox.Label>
@@ -94,7 +97,8 @@ export function CardsTableFilters({ filters, setFilters, templates }: CardsTable
             <Checkbox
               isSelected={filters.dueAt.isNotDue}
               onChange={(isSelected) =>
-                setFilters((prev) => ({ ...prev, dueAt: { ...prev.dueAt, isNotDue: isSelected } }))}
+                setFilters((prev) => ({ ...prev, dueAt: { ...prev.dueAt, isNotDue: isSelected } }))
+              }
             >
               <Checkbox.Indicator />
               <Checkbox.Label>{_(msg`cards-table.filters.due-at.values.false`)}</Checkbox.Label>

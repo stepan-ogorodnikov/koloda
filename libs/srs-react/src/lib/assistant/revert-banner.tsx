@@ -17,13 +17,8 @@ export function RevertBanner({ onRestore }: RevertBannerProps) {
   return (
     <div className="self-center flex flex-col w-full max-w-3xl px-6">
       <div className={revertBanner}>
-        <span className="fg-level-2">
-          {_(msg`ai.chat.message.revert.indicator`)}
-        </span>
-        <Button
-          variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }}
-          onPress={onRestore}
-        >
+        <span className="fg-level-2">{_(msg`ai.chat.message.revert.indicator`)}</span>
+        <Button variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }} onPress={onRestore}>
           {_(msg`ai.chat.message.restore.label`)}
         </Button>
       </div>

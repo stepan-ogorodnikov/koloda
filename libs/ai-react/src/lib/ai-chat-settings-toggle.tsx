@@ -25,12 +25,7 @@ export function AIChatSettingsToggle({ isOpen, onOpenChange }: AIChatSettingsTog
         data-is-active={isOpen || undefined}
         onPress={() => onOpenChange?.(!isOpen)}
       >
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={1.75}
-          icon={Settings01Icon}
-          aria-hidden="true"
-        />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Settings01Icon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

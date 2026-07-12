@@ -32,9 +32,7 @@ function DeleteDialogFrame({ children }: PropsWithChildren) {
     <Dialog.Overlay>
       <Dialog.Modal variants={{ class: "w-full max-w-84" }}>
         <Dialog.Body>
-          <Dialog.Content variants={{ class: "flex flex-col items-center gap-6 py-6 px-8" }}>
-            {children}
-          </Dialog.Content>
+          <Dialog.Content variants={{ class: "flex flex-col items-center gap-6 py-6 px-8" }}>{children}</Dialog.Content>
         </Dialog.Body>
       </Dialog.Modal>
     </Dialog.Overlay>

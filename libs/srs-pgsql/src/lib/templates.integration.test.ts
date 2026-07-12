@@ -65,18 +65,20 @@ describe("templates repository integration", () => {
       content: createCardContent(template),
     });
 
-    await expect(updateTemplate(db, {
-      id: template.id,
-      values: {
-        title: template.title,
-        content: {
-          ...template.content,
-          fields: template.content.fields.map((field) => (
-            field.id === 1 ? { ...field, type: "markdown" as const } : field
-          )),
+    await expect(
+      updateTemplate(db, {
+        id: template.id,
+        values: {
+          title: template.title,
+          content: {
+            ...template.content,
+            fields: template.content.fields.map((field) =>
+              field.id === 1 ? { ...field, type: "markdown" as const } : field,
+            ),
+          },
         },
-      },
-    })).rejects.toMatchObject({
+      }),
+    ).rejects.toMatchObject({
       code: "db.update",
       details: "validation.templates.update-locked",
     });

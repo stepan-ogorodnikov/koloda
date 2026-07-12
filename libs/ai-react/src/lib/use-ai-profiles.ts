@@ -29,7 +29,7 @@ export function useAIProfiles(profileId?: string | null) {
   const { _ } = useLingui();
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
   const query = useQuery({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
-  const profiles = useMemo(() => (query.data ?? []), [query.data]);
+  const profiles = useMemo(() => query.data ?? [], [query.data]);
   const defaultProfileId = useMemo(() => {
     if (profiles.length === 0) return null;
 
@@ -51,9 +51,10 @@ export function useAIProfiles(profileId?: string | null) {
   const lastUsedModel = selectedProfile?.lastUsedModel ?? null;
 
   const missingSecretFields = getMissingSecretFields(selectedProfile?.secrets);
-  const missingSecretFieldLabels = useMemo(() => (
-    missingSecretFields.map((field) => _(SECRETS_LABELS[field]))
-  ), [missingSecretFields, _]);
+  const missingSecretFieldLabels = useMemo(
+    () => missingSecretFields.map((field) => _(SECRETS_LABELS[field])),
+    [missingSecretFields, _],
+  );
 
   return {
     ...query,

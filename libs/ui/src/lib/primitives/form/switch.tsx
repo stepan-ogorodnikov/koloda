@@ -31,11 +31,7 @@ function SwitchIndicator() {
 }
 
 function SwitchLabel({ children }: PropsWithChildren) {
-  return (
-    <span className={label()}>
-      {children}
-    </span>
-  );
+  return <span className={label()}>{children}</span>;
 }
 
 Switch.Indicator = SwitchIndicator;

@@ -4,25 +4,20 @@ import type { HotkeyCallback, HotkeyOptions, HotkeyRegistrationHandle } from "@t
 import { useEffect, useEffectEvent, useRef } from "react";
 import { useHotkeysStatus } from "./use-hotkeys-status";
 
-export function useAppHotkey(
-  hotkeys: HotkeyEntry,
-  callback: HotkeyCallback,
-  scope: string,
-  options?: HotkeyOptions,
-) {
+export function useAppHotkey(hotkeys: HotkeyEntry, callback: HotkeyCallback, scope: string, options?: HotkeyOptions) {
   const hotkeyManager = getHotkeyManager();
   const { scopes } = useHotkeysStatus();
   const handles = useRef<HotkeyRegistrationHandle[]>([]);
 
   const onHotkeysChange = useEffectEvent((updated: HotkeyEntry) => {
     handles.current.forEach((handle) => handle.unregister());
-    handles.current = updated.map((hotkey) => (
-      hotkeyManager.register(hotkey, callback, getOptions(options, scope, scopes))
-    ));
+    handles.current = updated.map((hotkey) =>
+      hotkeyManager.register(hotkey, callback, getOptions(options, scope, scopes)),
+    );
   });
 
   const onCallbackChange = useEffectEvent((updated: HotkeyCallback) => {
-    handles.current.forEach((handle) => handle.callback = updated);
+    handles.current.forEach((handle) => (handle.callback = updated));
   });
 
   const onOptionsChange = useEffectEvent((updated?: HotkeyOptions) => {
@@ -79,11 +74,7 @@ function setHandlesOptions(
   handles.forEach((handle) => handle.setOptions(value));
 }
 
-function getOptions(
-  options: HotkeyOptions | undefined,
-  scope: string,
-  scopes: Record<string, boolean>,
-) {
+function getOptions(options: HotkeyOptions | undefined, scope: string, scopes: Record<string, boolean>) {
   const { enabled = true } = options || {};
   return { ...options, enabled: enabled && (!scope || !!scopes[scope]) };
 }

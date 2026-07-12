@@ -16,7 +16,7 @@ export const LESSON_TYPE_LABELS: Record<LessonType, MessageDescriptor> = {
   total: msg`lesson.init.labels.total`,
 } as const;
 
-export type LessonType = typeof LESSON_TYPES[number];
+export type LessonType = (typeof LESSON_TYPES)[number];
 
 export type Lesson = Record<LessonType, number> & {
   id: Deck["id"] | null;
@@ -27,13 +27,19 @@ export type LessonFilters = { deckIds?: Deck["id"][] };
 
 export type LessonAmounts = Record<LessonType, number>;
 
-export type LessonTemplateLayoutItem = Modify<TemplateLayoutItem, {
-  field: TemplateField | undefined;
-}>;
+export type LessonTemplateLayoutItem = Modify<
+  TemplateLayoutItem,
+  {
+    field: TemplateField | undefined;
+  }
+>;
 
-export type LessonTemplate = Modify<Template, {
-  layout: LessonTemplateLayoutItem[];
-}>;
+export type LessonTemplate = Modify<
+  Template,
+  {
+    layout: LessonTemplateLayoutItem[];
+  }
+>;
 
 export type GetLessonDataParams = {
   filters: LessonFilters;
@@ -56,8 +62,9 @@ export type LessonResultData = {
  * Converts template to a LessonTemplate format for lesson and card preview
  */
 export function convertTemplateToLessonTemplate(template: Template): LessonTemplate {
-  const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => (
-    { ...entry, field: template.content.fields.find((x) => (x.id === entry.field)) }
-  ));
+  const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => ({
+    ...entry,
+    field: template.content.fields.find((x) => x.id === entry.field),
+  }));
   return { ...template, layout };
 }

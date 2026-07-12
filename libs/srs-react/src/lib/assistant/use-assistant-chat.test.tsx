@@ -60,10 +60,7 @@ vi.mock("@koloda/ai-react", async () => {
   const actual = await vi.importActual<typeof KolodaAiReactModule>("@koloda/ai-react");
   return {
     ...actual,
-    useChatStream: (
-      _generator: ChatStreamGenerator,
-      onError?: (error: Error) => void,
-    ) => {
+    useChatStream: (_generator: ChatStreamGenerator, onError?: (error: Error) => void) => {
       wire.onChatError = onError ?? null;
       return {
         text: "",
@@ -97,10 +94,7 @@ vi.mock("@koloda/ai-react", async () => {
         cards: [],
         isGenerating: false,
         error: null,
-        generate: async (
-          _request: CardGenerationStreamRequest,
-          onCard?: (card: GeneratedCard) => void,
-        ) => {
+        generate: async (_request: CardGenerationStreamRequest, onCard?: (card: GeneratedCard) => void) => {
           wire.cardStream.started += 1;
           wire.cardStream.onCard = onCard ?? null;
           wire.cardStream.onStart?.(_request, onCard ?? (() => {}));
@@ -485,17 +479,13 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] }],
       }),
     );
     store.set(
       upsertConversationAtom,
       makeConversation("B", {
-        messages: [
-          { id: "user-r1", role: "user", parts: [{ type: "text", text: "Different" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Different" }] }],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -603,10 +593,9 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result } = renderHook(
-      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
-      { wrapper: TestWrapper },
-    );
+    const { result } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
 
     // Start a streaming run. This dispatches addUserMessage + startRun +
     // addAssistantMessage, each of which bumps the save counter and
@@ -679,10 +668,9 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result } = renderHook(
-      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
-      { wrapper: TestWrapper },
-    );
+    const { result } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
 
     // Fire and forget — the stream promise never resolves, so the
     // generation run remains in "streaming" status.
@@ -759,10 +747,9 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result, unmount } = renderHook(
-      () => useAssistantChat({ conversationId: "A", onConversationIdChange }),
-      { wrapper: TestWrapper },
-    );
+    const { result, unmount } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
 
     // Start a streaming run.
     await act(async () => {

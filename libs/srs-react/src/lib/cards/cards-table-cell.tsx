@@ -19,7 +19,11 @@ type CardsTableCellProps = { cell: CellContext<Card, any> };
 
 export function CardsTableCell({ cell }: CardsTableCellProps) {
   const { i18n } = useLingui();
-  const { row: { original: card }, column: { id }, getValue } = cell;
+  const {
+    row: { original: card },
+    column: { id },
+    getValue,
+  } = cell;
   const value = getValue();
   const isDateValue = isDate(value);
   const isTimestampColumn = ["dueAt", "createdAt", "updatedAt"].includes(id);
@@ -39,8 +43,6 @@ export function CardsTableCell({ cell }: CardsTableCellProps) {
   }
 
   return (
-    <Table.CellContent variants={isDateValue ? { class: "fg-level-4" } : undefined}>
-      {formatted}
-    </Table.CellContent>
+    <Table.CellContent variants={isDateValue ? { class: "fg-level-4" } : undefined}>{formatted}</Table.CellContent>
   );
 }

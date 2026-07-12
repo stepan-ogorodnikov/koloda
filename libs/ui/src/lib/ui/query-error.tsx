@@ -39,9 +39,7 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
           icon={BadgeAlertIcon}
           aria-hidden="true"
         />
-        <p className="fg-level-2 text-center">
-          {typeof message === "function" ? _(message(error)) : _(message)}
-        </p>
+        <p className="fg-level-2 text-center">{typeof message === "function" ? _(message(error)) : _(message)}</p>
         {onRetry && (
           <Button
             variants={{ style: "ghost", class: `fg-link ${isPending ? "pointer-events-none opacity-50" : ""}` }}

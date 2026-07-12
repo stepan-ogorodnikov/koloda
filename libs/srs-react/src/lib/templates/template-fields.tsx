@@ -49,7 +49,10 @@ export const TemplateFields = withForm({
                       form={form}
                       onDelete={() => {
                         field.removeValue(i);
-                        form.setFieldValue("content.layout", layoutValue.filter((x) => x.field !== item.id));
+                        form.setFieldValue(
+                          "content.layout",
+                          layoutValue.filter((x) => x.field !== item.id),
+                        );
                       }}
                     />
                   </div>

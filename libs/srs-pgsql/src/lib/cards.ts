@@ -24,11 +24,7 @@ import { getTemplate } from "./templates";
  */
 export async function getCards(db: DB, { deckId }: GetCardsParams) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(cards)
-      .where(eq(cards.deckId, deckId))
-      .orderBy(cards.createdAt);
+    const result = await db.select().from(cards).where(eq(cards.deckId, deckId)).orderBy(cards.createdAt);
 
     return result as Card[];
   });
@@ -42,11 +38,7 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
  */
 async function getCard(db: DB, id: Card["id"]) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(cards)
-      .where(eq(cards.id, id))
-      .limit(1);
+    const result = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
 
     return (result[0] as Card) || undefined;
   });
@@ -65,10 +57,7 @@ export async function addCard(db: DB, data: InsertCardData) {
     const schema = getInsertCardSchema(template);
     schema.parse(data);
 
-    const result = await db
-      .insert(cards)
-      .values(data)
-      .returning();
+    const result = await db.insert(cards).values(data).returning();
 
     return result[0] as Card;
   });
@@ -119,11 +108,7 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
     const schema = getUpdateCardSchema(template);
     const validated = schema.parse(values);
 
-    const result = await db
-      .update(cards)
-      .set(withUpdatedAt(validated))
-      .where(eq(cards.id, id))
-      .returning();
+    const result = await db.update(cards).set(withUpdatedAt(validated)).where(eq(cards.id, id)).returning();
 
     return result[0] as Card;
   });
@@ -165,9 +150,7 @@ export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
 export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
   return throwKnownError("db.update", async () => {
     return db.transaction(async (tx) => {
-      await tx
-        .delete(reviews)
-        .where(eq(reviews.cardId, id));
+      await tx.delete(reviews).where(eq(reviews.cardId, id));
 
       const data = {
         state: 0,
@@ -181,11 +164,7 @@ export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
         lastReviewedAt: null,
       };
 
-      const result = await tx
-        .update(cards)
-        .set(data)
-        .where(eq(cards.id, id))
-        .returning();
+      const result = await tx.update(cards).set(data).where(eq(cards.id, id)).returning();
 
       return result[0] as Card;
     });

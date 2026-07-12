@@ -9,10 +9,7 @@ import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
 
 export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]> {
-  return fetchOpenAICompatibleModelsDetailed(
-    `${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`,
-    apiKey,
-  );
+  return fetchOpenAICompatibleModelsDetailed(`${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`, apiKey);
 }
 
 function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencodeGo" }>): AIGenerationClient {

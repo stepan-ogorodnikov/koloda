@@ -37,9 +37,7 @@ export function getChatTextMetadata(
   return metadata?.kind === "chat-text" ? metadata : null;
 }
 
-export function getErrorMetadata(
-  message: UIMessage,
-): Extract<AssistantMessageMetadata, { kind: "error" }> | null {
+export function getErrorMetadata(message: UIMessage): Extract<AssistantMessageMetadata, { kind: "error" }> | null {
   const metadata = getAssistantMetadata(message);
   return metadata?.kind === "error" ? metadata : null;
 }
@@ -77,15 +75,17 @@ export function createTextMessage(
 }
 
 export function serializeGeneratedCards(cards: GeneratedCard[], template: Template) {
-  return cards.map((card, index) =>
-    [
-      `## Card ${index + 1}`,
-      ...template.content.fields.map((field) => {
-        const value = card.content[field.id]?.text?.trim() ?? "";
-        return `**${field.title}**: ${value}`;
-      }),
-    ].join("\n")
-  ).join("\n\n");
+  return cards
+    .map((card, index) =>
+      [
+        `## Card ${index + 1}`,
+        ...template.content.fields.map((field) => {
+          const value = card.content[field.id]?.text?.trim() ?? "";
+          return `**${field.title}**: ${value}`;
+        }),
+      ].join("\n"),
+    )
+    .join("\n\n");
 }
 
 export function buildConversationMessages(

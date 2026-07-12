@@ -81,14 +81,9 @@ export function LearnedToday() {
                     </div>
                     <div className="flex flex-row items-center gap-2">
                       <div className="w-full h-2.5 rounded-full bg-progress-bar shadow-progress-bar overflow-hidden">
-                        <div
-                          className={learnedTodayProgressBar({ type })}
-                          style={{ width: `${progressWidth}%` }}
-                        />
+                        <div className={learnedTodayProgressBar({ type })} style={{ width: `${progressWidth}%` }} />
                       </div>
-                      <span className={learnedTodayProgressPercentage({ isInfinity })}>
-                        {progressLabel}
-                      </span>
+                      <span className={learnedTodayProgressPercentage({ isInfinity })}>{progressLabel}</span>
                     </div>
                   </div>
                 );

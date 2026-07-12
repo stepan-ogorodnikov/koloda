@@ -14,14 +14,8 @@ const modal = tv({
   ],
   variants: {
     size: {
-      large: [
-        "max-wd:w-full wd:min-w-144",
-        "max-wd:h-full min-h-[min(36rem,100%)] max-h-screen",
-        "overflow-hidden",
-      ],
-      main: [
-        "w-full max-w-main h-full max-h-screen overflow-hidden",
-      ],
+      large: ["max-wd:w-full wd:min-w-144", "max-wd:h-full min-h-[min(36rem,100%)] max-h-screen", "overflow-hidden"],
+      main: ["w-full max-w-main h-full max-h-screen overflow-hidden"],
     },
   },
 });

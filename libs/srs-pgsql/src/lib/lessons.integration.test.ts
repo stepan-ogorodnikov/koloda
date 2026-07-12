@@ -144,26 +144,30 @@ describe("lessons repository integration", () => {
       dueAt: new Date("2026-01-10T09:00:00.000Z"),
     });
 
-    const lessonData = await getLessonData(db, dueAt, {
-      deckIds: [deckContextA.deck.id, deckContextB.deck.id],
-    }, {
-      untouched: 1,
-      learn: 1,
-      review: 1,
-      total: 3,
-    });
+    const lessonData = await getLessonData(
+      db,
+      dueAt,
+      {
+        deckIds: [deckContextA.deck.id, deckContextB.deck.id],
+      },
+      {
+        untouched: 1,
+        learn: 1,
+        review: 1,
+        total: 3,
+      },
+    );
 
     expect(lessonData).not.toBeNull();
     expect(lessonData?.cards).toHaveLength(3);
-    expect(lessonData?.decks.map((deck) => deck.id).sort((a, b) => a - b)).toEqual([
-      deckContextA.deck.id,
-      deckContextB.deck.id,
-    ].sort((a, b) => a - b));
+    expect(lessonData?.decks.map((deck) => deck.id).sort((a, b) => a - b)).toEqual(
+      [deckContextA.deck.id, deckContextB.deck.id].sort((a, b) => a - b),
+    );
     expect(lessonData?.templates).toHaveLength(2);
     expect(lessonData?.algorithms).toHaveLength(2);
-    expect(lessonData?.templates.every((template) => (
-      template.layout.every((item) => item.field !== undefined)
-    ))).toBe(true);
+    expect(lessonData?.templates.every((template) => template.layout.every((item) => item.field !== undefined))).toBe(
+      true,
+    );
   });
 
   it("stores the updated card and review when a lesson result is submitted", async () => {

@@ -41,33 +41,27 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
         )}
         {isStarted && !isFinished && (
           <AnimatePresence mode="wait">
-            {state.content?.form.isSubmitted
-              ? (
-                <Fade key="grades">
-                  <LessonCardGrades grades={state.content.grades} dispatch={dispatch} />
-                </Fade>
-              )
-              : (
-                <Fade key="submit">
-                  <Button
-                    variants={{ style: "primary" }}
-                    ref={submitRef}
-                    onClick={() => dispatch(["cardSubmitted"])}
-                    key="submit"
-                  >
-                    {_(msg`lesson.content.submit`)}
-                  </Button>
-                </Fade>
-              )}
+            {state.content?.form.isSubmitted ? (
+              <Fade key="grades">
+                <LessonCardGrades grades={state.content.grades} dispatch={dispatch} />
+              </Fade>
+            ) : (
+              <Fade key="submit">
+                <Button
+                  variants={{ style: "primary" }}
+                  ref={submitRef}
+                  onClick={() => dispatch(["cardSubmitted"])}
+                  key="submit"
+                >
+                  {_(msg`lesson.content.submit`)}
+                </Button>
+              </Fade>
+            )}
           </AnimatePresence>
         )}
         {isFinished && (
           <Fade key="close">
-            <Button
-              variants={{ style: "primary" }}
-              onClick={() => dispatch(["isOpenUpdated", false])}
-              autoFocus
-            >
+            <Button variants={{ style: "primary" }} onClick={() => dispatch(["isOpenUpdated", false])} autoFocus>
               {_(msg`lesson.completion.close`)}
             </Button>
           </Fade>
@@ -81,9 +75,5 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
 }
 
 export function LessonFooterLayout({ children }: PropsWithChildren) {
-  return (
-    <Dialog.Footer variants={{ justify: "center", class: "relative min-h-20" }}>
-      {children}
-    </Dialog.Footer>
-  );
+  return <Dialog.Footer variants={{ justify: "center", class: "relative min-h-20" }}>{children}</Dialog.Footer>;
 }

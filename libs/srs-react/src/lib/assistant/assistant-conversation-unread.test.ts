@@ -80,15 +80,21 @@ describe("unreadConversationIdsAtom", () => {
     // this, navigating away would surface the brand-new conversation
     // as unread.
     const store = createStore();
-    store.set(assistantConversationStateAtom, ["newConversation", {
-      id: "A",
-      createdAt: new Date(1),
-    }]);
-    store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "r1",
-      mode: "chat",
-      request: {},
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "newConversation",
+      {
+        id: "A",
+        createdAt: new Date(1),
+      },
+    ]);
+    store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "r1",
+        mode: "chat",
+        request: {},
+      },
+    ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r1" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
@@ -106,11 +112,14 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "r2",
-      mode: "chat",
-      request: {},
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "r2",
+        mode: "chat",
+        request: {},
+      },
+    ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r2" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
@@ -127,10 +136,7 @@ describe("unreadConversationIdsAtom", () => {
       upsertConversationAtom,
       makeConversation("A", { runs: { r1: makeRun("r1", "success") }, lastReadRunId: "r1" }),
     );
-    store.set(
-      upsertConversationAtom,
-      makeConversation("B", { runs: { r1: makeRun("r1", "success") } }),
-    );
+    store.set(upsertConversationAtom, makeConversation("B", { runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "B");
 
     dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat", request: {} }]);
@@ -168,12 +174,15 @@ describe("unreadConversationIdsAtom", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    store.set(assistantConversationStateAtom, ["restartRun", {
-      runId: "r1",
-      mode: "chat",
-      request: {},
-      templateFields: null,
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "restartRun",
+      {
+        runId: "r1",
+        mode: "chat",
+        request: {},
+        templateFields: null,
+      },
+    ]);
 
     expect(store.get(conversationsAtom)["A"].runs["r1"].status).toBe("streaming");
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");

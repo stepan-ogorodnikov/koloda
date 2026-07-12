@@ -37,10 +37,7 @@ export function TableHead({ table }: TableHeadProps) {
                     onClick: header.column.getToggleSortingHandler(),
                   }}
                 >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext(),
-                  )}
+                  {flexRender(header.column.columnDef.header, header.getContext())}
                   {header.column.getCanSort() && <TableSortIcon sorting={sorting} />}
                 </div>
               </th>

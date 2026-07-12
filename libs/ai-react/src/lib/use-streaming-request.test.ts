@@ -45,9 +45,15 @@ describe("useStreamingRequest", () => {
 
       expect(result.current.isRunning).toBe(true);
 
-      act(() => { onChunkCaptured!("Hello"); });
-      act(() => { onChunkCaptured!(" "); });
-      act(() => { onChunkCaptured!("World"); });
+      act(() => {
+        onChunkCaptured!("Hello");
+      });
+      act(() => {
+        onChunkCaptured!(" ");
+      });
+      act(() => {
+        onChunkCaptured!("World");
+      });
 
       expect(result.current.data).toBe("Hello World");
       expect(externalOnChunk).toHaveBeenCalledTimes(3);
@@ -381,7 +387,9 @@ describe("useStreamingRequest", () => {
         result.current.start("request");
       });
 
-      act(() => { onChunkCaptured!("data"); });
+      act(() => {
+        onChunkCaptured!("data");
+      });
 
       await act(async () => {
         rejectCaptured!(new Error("fail"));
@@ -454,8 +462,12 @@ describe("useStreamingRequest", () => {
         result.current.start("request");
       });
 
-      act(() => { onChunkCaptured!("A"); });
-      act(() => { onChunkCaptured!("B"); });
+      act(() => {
+        onChunkCaptured!("A");
+      });
+      act(() => {
+        onChunkCaptured!("B");
+      });
 
       expect(result.current.data).toBe("AB");
     });

@@ -133,9 +133,10 @@ export function createTodaysReviewTotals(options?: {
     total: 0,
     ...options?.reviewTotals,
   };
-  const total = (dailyLimits.untouched.counts ? rawReviewTotals.untouched : 0)
-    + (dailyLimits.learn.counts ? rawReviewTotals.learn : 0)
-    + (dailyLimits.review.counts ? rawReviewTotals.review : 0);
+  const total =
+    (dailyLimits.untouched.counts ? rawReviewTotals.untouched : 0) +
+    (dailyLimits.learn.counts ? rawReviewTotals.learn : 0) +
+    (dailyLimits.review.counts ? rawReviewTotals.review : 0);
 
   return {
     dailyLimits,

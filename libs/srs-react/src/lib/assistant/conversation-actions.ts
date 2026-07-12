@@ -88,10 +88,7 @@ export type NewConversationPayload = {
 
 export const newConversationAtom = atom(null, (_get, set, payload: NewConversationPayload = {}) => {
   const id = payload.id ?? generateUUID();
-  set(assistantConversationStateAtom, [
-    "newConversation",
-    { ...payload, id, createdAt: new Date() },
-  ]);
+  set(assistantConversationStateAtom, ["newConversation", { ...payload, id, createdAt: new Date() }]);
 
   return id;
 });

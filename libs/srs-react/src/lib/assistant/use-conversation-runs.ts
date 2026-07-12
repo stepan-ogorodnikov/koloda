@@ -20,11 +20,7 @@ export type UseConversationRunsOptions = {
 export type UseConversationRunsReturn = {
   armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
-  executeGenerateRun: (
-    conversationId: string,
-    runId: string,
-    request: CardGenerationStreamRequest,
-  ) => Promise<void>;
+  executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
@@ -49,38 +45,43 @@ export function useConversationRuns({
 }: UseConversationRunsOptions): UseConversationRunsReturn {
   const pendingRunRefs = usePendingRunRefs(dispatchToConversation);
 
-  const handleChatStreamError = useCallback((error: Error) => (
-    pendingRunRefs.handleError("chat", error)
-  ), [pendingRunRefs]);
+  const handleChatStreamError = useCallback(
+    (error: Error) => pendingRunRefs.handleError("chat", error),
+    [pendingRunRefs],
+  );
 
-  const handleCardStreamError = useCallback((error: Error) => (
-    pendingRunRefs.handleError("cards", error)
-  ), [pendingRunRefs]);
+  const handleCardStreamError = useCallback(
+    (error: Error) => pendingRunRefs.handleError("cards", error),
+    [pendingRunRefs],
+  );
 
   const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
   const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
 
-  const handleStreamResult = useCallback((conversationId: string, result: StreamResult, runId: string) => {
-    switch (result) {
-      case "success":
-        dispatchToConversation(conversationId, ["completeRun", { runId }]);
-        // WHY: Force a save with the post-completion state so a
-        // throttled save that fires during streaming cannot leave a
-        // successful run persisted as "canceled" with elapsedSeconds: 0.
-        bumpPendingSave();
-        break;
-      case "error":
-        break;
-      case "aborted":
-        dispatchToConversation(conversationId, ["cancelRun", { runId }]);
-        // WHY: Same rationale as success — the throttled save is still
-        // queued from run start and would otherwise persist a "canceled"
-        // snapshot derived from `cancelStreamingRuns` rather than the
-        // real cancelRun terminal state.
-        bumpPendingSave();
-        break;
-    }
-  }, [dispatchToConversation, bumpPendingSave]);
+  const handleStreamResult = useCallback(
+    (conversationId: string, result: StreamResult, runId: string) => {
+      switch (result) {
+        case "success":
+          dispatchToConversation(conversationId, ["completeRun", { runId }]);
+          // WHY: Force a save with the post-completion state so a
+          // throttled save that fires during streaming cannot leave a
+          // successful run persisted as "canceled" with elapsedSeconds: 0.
+          bumpPendingSave();
+          break;
+        case "error":
+          break;
+        case "aborted":
+          dispatchToConversation(conversationId, ["cancelRun", { runId }]);
+          // WHY: Same rationale as success — the throttled save is still
+          // queued from run start and would otherwise persist a "canceled"
+          // snapshot derived from `cancelStreamingRuns` rather than the
+          // real cancelRun terminal state.
+          bumpPendingSave();
+          break;
+      }
+    },
+    [dispatchToConversation, bumpPendingSave],
+  );
 
   const executeChatRun = useCallback(
     async (conversationId: string, runId: string, request: ChatStreamRequest) => {

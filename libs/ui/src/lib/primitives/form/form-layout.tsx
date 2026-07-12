@@ -15,24 +15,23 @@ export const formLayoutSection = tv({
   base: "flex flex-col wd:flex-row flex-wrap wd:items-baseline wd:gap-4 py-2",
 });
 
-type FormLayoutSectionProps =
-  & ComponentProps<"div">
-  & TWVProps<typeof formLayoutSection>
-  & { term?: ReactNode };
+type FormLayoutSectionProps = ComponentProps<"div"> & TWVProps<typeof formLayoutSection> & { term?: ReactNode };
 
 export function FormLayoutSection({ variants, term, children, ...props }: FormLayoutSectionProps) {
   if (term) {
     return (
       <div className={formLayoutSection(variants)}>
         <FormLayoutSectionTerm>{term}</FormLayoutSectionTerm>
-        <FormLayoutSectionContent>
-          {children}
-        </FormLayoutSectionContent>
+        <FormLayoutSectionContent>{children}</FormLayoutSectionContent>
       </div>
     );
   }
 
-  return <div className={formLayoutSection(variants)} {...props}>{children}</div>;
+  return (
+    <div className={formLayoutSection(variants)} {...props}>
+      {children}
+    </div>
+  );
 }
 
 export const formLayoutSectionTerm = "flex wd:basis-60 shrink-0 py-2 font-semibold fg-level-2";

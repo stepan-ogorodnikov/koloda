@@ -23,15 +23,15 @@ const wire = vi.hoisted(() => ({
   streamChat: null as
     | null
     | ((
-      request: ChatStreamRequest,
-      onChunk: (chunk: string) => void,
-    ) => Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>),
+        request: ChatStreamRequest,
+        onChunk: (chunk: string) => void,
+      ) => Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>),
   generate: null as
     | null
     | ((
-      request: CardGenerationStreamRequest,
-      onCard?: (card: { content: Record<string, { text: string }> }) => void,
-    ) => Promise<StreamResult>),
+        request: CardGenerationStreamRequest,
+        onCard?: (card: { content: Record<string, { text: string }> }) => void,
+      ) => Promise<StreamResult>),
   cancelChat: vi.fn(),
   cancelGenerate: vi.fn(),
 }));
@@ -45,10 +45,7 @@ vi.mock("@koloda/ai-react", async () => {
       isStreaming: false,
       error: null,
       usage: null,
-      stream: (
-        request: ChatStreamRequest,
-        onChunk: (chunk: string) => void,
-      ) => {
+      stream: (request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
         if (!wire.streamChat) throw new Error("streamChat mock not set");
         return wire.streamChat(request, onChunk);
       },
@@ -119,7 +116,7 @@ function renderRuns(harness: ReturnType<typeof createHarness>) {
       dispatchToConversation: harness.dispatchToConversation,
       readState: harness.getState,
       bumpPendingSave: harness.bumpPendingSave,
-    })
+    }),
   );
 }
 
@@ -136,23 +133,26 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-1",
-      mode: "chat",
-      request: {},
-    }]);
-    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
-      runId: "run-1",
-      kind: "chat-text",
-      text: "",
-    }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-1",
+        mode: "chat",
+        request: {},
+      },
+    ]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      {
+        runId: "run-1",
+        kind: "chat-text",
+        text: "",
+      },
+    ]);
 
     let streamStarted = false;
     let resolveStream!: (result: { streamResult: StreamResult; usage: StreamUsage | null }) => void;
-    wire.streamChat = vi.fn(async (
-      _request: ChatStreamRequest,
-      onChunk: (chunk: string) => void,
-    ) => {
+    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
       streamStarted = true;
       onChunk("Hello ");
       onChunk("world");
@@ -205,27 +205,35 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "cards",
-      request: {},
-    }]);
-    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
-      runId: "run-A",
-      kind: "generated-cards",
-      text: "",
-    }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "cards",
+        request: {},
+      },
+    ]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      {
+        runId: "run-A",
+        kind: "generated-cards",
+        text: "",
+      },
+    ]);
 
     harness.store.set(setCurrentConversationIdAtom, "B");
 
-    wire.generate = vi.fn(async (
-      _request: CardGenerationStreamRequest,
-      onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
-    ) => {
-      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
-      onCard({ content: { front: { text: "Q2" }, back: { text: "A2" } } });
-      return "success" as StreamResult;
-    });
+    wire.generate = vi.fn(
+      async (
+        _request: CardGenerationStreamRequest,
+        onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
+      ) => {
+        onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
+        onCard({ content: { front: { text: "Q2" }, back: { text: "A2" } } });
+        return "success" as StreamResult;
+      },
+    );
 
     const { result } = renderRuns(harness);
 
@@ -248,22 +256,25 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "chat",
-      request: {},
-    }]);
-    harness.store.set(assistantConversationStateAtom, ["addAssistantMessage", {
-      runId: "run-A",
-      kind: "chat-text",
-      text: "",
-    }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "chat",
+        request: {},
+      },
+    ]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      {
+        runId: "run-A",
+        kind: "chat-text",
+        text: "",
+      },
+    ]);
     harness.store.set(setCurrentConversationIdAtom, "B");
 
-    wire.streamChat = vi.fn(async (
-      _request: ChatStreamRequest,
-      onChunk: (chunk: string) => void,
-    ) => {
+    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
       onChunk("partial");
       return { streamResult: "aborted" as StreamResult, usage: null };
     });
@@ -290,19 +301,24 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "cards",
-      request: {},
-    }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "cards",
+        request: {},
+      },
+    ]);
 
-    wire.generate = vi.fn(async (
-      _request: CardGenerationStreamRequest,
-      onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
-    ) => {
-      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
-      return "success" as StreamResult;
-    });
+    wire.generate = vi.fn(
+      async (
+        _request: CardGenerationStreamRequest,
+        onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
+      ) => {
+        onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
+        return "success" as StreamResult;
+      },
+    );
 
     const { result } = renderRuns(harness);
 
@@ -324,11 +340,14 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "cards",
-      request: {},
-    }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "cards",
+        request: {},
+      },
+    ]);
 
     wire.generate = vi.fn(async () => "aborted" as StreamResult);
 

@@ -7,11 +7,7 @@ import { conversations } from "./schema";
 
 export async function getConversation(db: DB, id: string) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, id))
-      .limit(1);
+    const result = await db.select().from(conversations).where(eq(conversations.id, id)).limit(1);
 
     return result[0] ?? null;
   });
@@ -27,10 +23,7 @@ export async function getConversations(db: DB) {
         updatedAt: conversations.updatedAt,
       })
       .from(conversations)
-      .orderBy(
-        sql`${conversations.updatedAt} DESC NULLS LAST`,
-        sql`${conversations.createdAt} DESC NULLS LAST`,
-      );
+      .orderBy(sql`${conversations.updatedAt} DESC NULLS LAST`, sql`${conversations.createdAt} DESC NULLS LAST`);
   });
 }
 
@@ -47,9 +40,7 @@ export async function setConversation(db: DB, { id, state, title, updatedAt }: S
       .values(insertValues)
       .onConflictDoUpdate({
         target: conversations.id,
-        set: updatedAt
-          ? { state, title: title ?? null, updatedAt }
-          : withUpdatedAt({ state, title: title ?? null }),
+        set: updatedAt ? { state, title: title ?? null, updatedAt } : withUpdatedAt({ state, title: title ?? null }),
       })
       .returning();
 

@@ -52,22 +52,23 @@ type SelectOptions = {
   isVirtualized?: boolean;
 };
 
-export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & SelectOptions & {
-  labelVariants?: LabelProps["variants"];
-  buttonVariants?: SelectButtonProps["variants"];
-  popoverVariants?: SelectPopoverProps["variants"];
-  listboxVariants?: SelectListBoxProps<T>["variants"];
-  withChevron?: boolean;
-  label?: ReactNode;
-  placeholder?: string;
-  icon?: ReactNode;
-  items?: Iterable<T>;
-  searchLabel?: string;
-  searchPlaceholder?: string;
-  triggerRef?: RefObject<HTMLButtonElement | null>;
-  onChange: (key: string | number | null) => void;
-  children: ReactNode | ((item: T) => ReactNode);
-};
+export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> &
+  SelectOptions & {
+    labelVariants?: LabelProps["variants"];
+    buttonVariants?: SelectButtonProps["variants"];
+    popoverVariants?: SelectPopoverProps["variants"];
+    listboxVariants?: SelectListBoxProps<T>["variants"];
+    withChevron?: boolean;
+    label?: ReactNode;
+    placeholder?: string;
+    icon?: ReactNode;
+    items?: Iterable<T>;
+    searchLabel?: string;
+    searchPlaceholder?: string;
+    triggerRef?: RefObject<HTMLButtonElement | null>;
+    onChange: (key: string | number | null) => void;
+    children: ReactNode | ((item: T) => ReactNode);
+  };
 
 export function Select<T extends object>({
   variants,
@@ -112,14 +113,14 @@ export function Select<T extends object>({
         ref={triggerRef}
       />
       <Select.Popover variants={popoverVariants}>
-        {!hasAutocomplete
-          ? listBox
-          : (
-            <Select.Autocomplete filter={contains}>
-              <Select.SearchField label={searchLabel} placeholder={searchPlaceholder} />
-              {listBox}
-            </Select.Autocomplete>
-          )}
+        {!hasAutocomplete ? (
+          listBox
+        ) : (
+          <Select.Autocomplete filter={contains}>
+            <Select.SearchField label={searchLabel} placeholder={searchPlaceholder} />
+            {listBox}
+          </Select.Autocomplete>
+        )}
       </Select.Popover>
     </Select.Root>
   );
@@ -130,9 +131,10 @@ export const selectRoot = tv({
   variants: { layout: { form: formLayoutSection() } },
 });
 
-export type SelectRootProps<T extends object> = TWVProps<typeof selectRoot> & ReactAriaSelectProps<T> & {
-  keyboardDelegate?: KeyboardDelegate;
-};
+export type SelectRootProps<T extends object> = TWVProps<typeof selectRoot> &
+  ReactAriaSelectProps<T> & {
+    keyboardDelegate?: KeyboardDelegate;
+  };
 
 export function SelectRoot<T extends object>({ variants, ...props }: SelectRootProps<T>) {
   return <ReactAriaSelect className={selectRoot(variants)} {...props} />;
@@ -148,11 +150,12 @@ const selectButton = tv({
   defaultVariants: { style: "bordered" },
 });
 
-export type SelectButtonProps = TWVProps<typeof selectButton> & ComponentProps<typeof Button> & {
-  withChevron?: boolean;
-  icon?: ReactNode;
-  children?: ReactNode;
-};
+export type SelectButtonProps = TWVProps<typeof selectButton> &
+  ComponentProps<typeof Button> & {
+    withChevron?: boolean;
+    icon?: ReactNode;
+    children?: ReactNode;
+  };
 
 function SelectButton({ variants, withChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
   return (
@@ -237,9 +240,12 @@ const selectListBox = tv({
 
 type SelectListBoxProps<T extends object> = ListBoxProps<T> & SelectOptions & TWVProps<typeof selectListBox>;
 
-function SelectListBox<T extends object>(
-  { renderEmptyState, isVirtualized, variants, ...props }: SelectListBoxProps<T>,
-) {
+function SelectListBox<T extends object>({
+  renderEmptyState,
+  isVirtualized,
+  variants,
+  ...props
+}: SelectListBoxProps<T>) {
   const ref = useRef<HTMLDivElement>(null);
   useSelectHotkeys(ref);
 
@@ -252,7 +258,9 @@ function SelectListBox<T extends object>(
     />
   );
 
-  return !isVirtualized ? listBox : (
+  return !isVirtualized ? (
+    listBox
+  ) : (
     <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
       {listBox}
     </Virtualizer>
@@ -275,12 +283,7 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
         <>
           {typeof children === "function" ? children(state) : children}
           {state.isSelected && (
-            <HugeiconsIcon
-              className="size-4 min-w-4"
-              strokeWidth={2.5}
-              icon={Tick02Icon}
-              aria-hidden="true"
-            />
+            <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2.5} icon={Tick02Icon} aria-hidden="true" />
           )}
         </>
       )}
@@ -289,21 +292,11 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
 }
 
 function SelectListBoxSection<T extends object>(props: ListBoxSectionProps<T>) {
-  return (
-    <ListBoxSection
-      className="flex flex-col outline-none"
-      {...props}
-    />
-  );
+  return <ListBoxSection className="flex flex-col outline-none" {...props} />;
 }
 
 function SelectHeader(props: HeaderProps) {
-  return (
-    <ReactAriaHeader
-      className="mx-1 mt-1 px-2 py-1 fg-level-4 truncate select-none"
-      {...props}
-    />
-  );
+  return <ReactAriaHeader className="mx-1 mt-1 px-2 py-1 fg-level-4 truncate select-none" {...props} />;
 }
 
 function SelectCollection<T extends object>(props: CollectionProps<T>) {

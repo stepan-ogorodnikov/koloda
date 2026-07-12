@@ -41,9 +41,10 @@ export type UseAssistantChatReturn = {
 };
 
 /** Thin public/test composer over profile, persistence, and session facades. */
-export function useAssistantChat(
-  { conversationId, onConversationIdChange }: UseAssistantChatOptions,
-): UseAssistantChatReturn {
+export function useAssistantChat({
+  conversationId,
+  onConversationIdChange,
+}: UseAssistantChatOptions): UseAssistantChatReturn {
   const {
     profileId,
     modelId,

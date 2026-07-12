@@ -17,8 +17,5 @@ export function act(action: { type: string; [key: string]: unknown }): Conversat
 }
 
 export function reduce(actions: Array<{ type: string; [key: string]: unknown }>) {
-  return actions.reduce(
-    (state, action) => conversationReducer(state, act(action)),
-    initialConversationState,
-  );
+  return actions.reduce((state, action) => conversationReducer(state, act(action)), initialConversationState);
 }

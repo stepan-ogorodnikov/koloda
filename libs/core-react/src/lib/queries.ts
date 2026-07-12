@@ -70,12 +70,7 @@ export type Queries = {
   >;
   getConversationQuery: (id: string) => QueryOptions<Conversation | null>;
   getConversationsQuery: () => QueryOptions<ConversationListItem[]>;
-  setConversationMutation: () => UseMutationOptions<
-    Conversation,
-    AppError,
-    SetConversationData,
-    unknown
-  >;
+  setConversationMutation: () => UseMutationOptions<Conversation, AppError, SetConversationData, unknown>;
   deleteConversationMutation: () => UseMutationOptions<unknown, AppError, DeleteConversationData, unknown>;
   getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;
   getAlgorithmQuery: (id: Algorithm["id"]) => QueryOptions<Algorithm | null | undefined>;

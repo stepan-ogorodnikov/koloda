@@ -36,17 +36,17 @@ export function AssistantSettingsPromptEditor({
         <span>{label}</span>
         <div className="flex flex-row items-center gap-2">
           <Tooltip
-            content={mode === "edit"
-              ? _(msg`assistant.settings.prompt.preview`)
-              : _(msg`assistant.settings.prompt.edit`)}
+            content={
+              mode === "edit" ? _(msg`assistant.settings.prompt.preview`) : _(msg`assistant.settings.prompt.edit`)
+            }
             isDisabled={isDisabled}
           >
             <Button
               variants={{ style: "ghost", size: "icon" }}
-              aria-label={mode === "edit"
-                ? _(msg`assistant.settings.prompt.preview`)
-                : _(msg`assistant.settings.prompt.edit`)}
-              onPress={() => setMode((prev) => prev === "edit" ? "preview" : "edit")}
+              aria-label={
+                mode === "edit" ? _(msg`assistant.settings.prompt.preview`) : _(msg`assistant.settings.prompt.edit`)
+              }
+              onPress={() => setMode((prev) => (prev === "edit" ? "preview" : "edit"))}
               isDisabled={isDisabled}
             >
               <HugeiconsIcon
@@ -69,32 +69,20 @@ export function AssistantSettingsPromptEditor({
           </Tooltip>
         </div>
       </div>
-      {mode === "edit"
-        ? (
-          <TextField
-            value={templateValue ?? defaultTemplate}
-            aria-label={label}
-            onChange={onChange}
-          >
-            <TextField.TextArea
-              variants={{ style: "normal", class: "resize-none" }}
-              autoResize
-              rows={rows}
-              maxRows={maxRows}
-            />
-          </TextField>
-        )
-        : (
-          <TextField value={preview} aria-label={label} isDisabled={isDisabled}>
-            <TextField.TextArea
-              variants={{ style: "normal" }}
-              autoResize
-              rows={rows}
-              maxRows={maxRows}
-              readOnly
-            />
-          </TextField>
-        )}
+      {mode === "edit" ? (
+        <TextField value={templateValue ?? defaultTemplate} aria-label={label} onChange={onChange}>
+          <TextField.TextArea
+            variants={{ style: "normal", class: "resize-none" }}
+            autoResize
+            rows={rows}
+            maxRows={maxRows}
+          />
+        </TextField>
+      ) : (
+        <TextField value={preview} aria-label={label} isDisabled={isDisabled}>
+          <TextField.TextArea variants={{ style: "normal" }} autoResize rows={rows} maxRows={maxRows} readOnly />
+        </TextField>
+      )}
     </div>
   );
 }

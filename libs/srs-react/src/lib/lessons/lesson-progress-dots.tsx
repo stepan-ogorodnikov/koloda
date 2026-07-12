@@ -45,7 +45,7 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
       <motion.div
         className="absolute left-1/2 flex flex-row justify-center gap-2"
         initial={{ x: -0.5 * rem() }}
-        animate={{ x: -0.5 * rem() - (index * 1.5 * rem()) }}
+        animate={{ x: -0.5 * rem() - index * 1.5 * rem() }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {state.data?.cards.map((card, i) => {
@@ -64,28 +64,13 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
                 />
               )}
               {status === "error" && (
-                <HugeiconsIcon
-                  className="size-4 min-w-4"
-                  strokeWidth={2}
-                  icon={AlertCircleIcon}
-                  aria-hidden="true"
-                />
+                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={AlertCircleIcon} aria-hidden="true" />
               )}
               {!status && !isCurrent && (
-                <HugeiconsIcon
-                  className="size-4 min-w-4"
-                  strokeWidth={2}
-                  icon={CircleIcon}
-                  aria-hidden="true"
-                />
+                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={CircleIcon} aria-hidden="true" />
               )}
               {!status && isCurrent && (
-                <HugeiconsIcon
-                  className="size-4 min-w-4"
-                  strokeWidth={2}
-                  icon={PlayCircle02Icon}
-                  aria-hidden="true"
-                />
+                <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2} icon={PlayCircle02Icon} aria-hidden="true" />
               )}
             </div>
           );

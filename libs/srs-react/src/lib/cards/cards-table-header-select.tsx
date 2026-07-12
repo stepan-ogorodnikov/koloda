@@ -15,11 +15,7 @@ export function CardsTableHeaderSelect({ table }: { table: Table<Card> }) {
   if (allRows.length === 0) return null;
 
   return (
-    <Checkbox
-      isSelected={isAllSelected}
-      isIndeterminate={isIndeterminate}
-      onChange={handleChange}
-    >
+    <Checkbox isSelected={isAllSelected} isIndeterminate={isIndeterminate} onChange={handleChange}>
       <Checkbox.Indicator />
     </Checkbox>
   );

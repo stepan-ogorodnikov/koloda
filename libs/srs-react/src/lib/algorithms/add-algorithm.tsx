@@ -110,11 +110,7 @@ export function AddAlgorithm() {
               <div className="grow" />
               <form.Subscribe selector={(state) => [state.canSubmit]}>
                 {([canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    type="submit"
-                    isDisabled={!canSubmit}
-                  >
+                  <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit}>
                     {_(msg`add-algorithm.submit`)}
                   </Button>
                 )}

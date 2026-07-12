@@ -19,11 +19,7 @@ export function LayoutSidebar({ children }: PropsWithChildren) {
 }
 
 export function LayoutSidebarItem({ children }: PropsWithChildren) {
-  return (
-    <div className="relative flex flex-col border-b-2 border-main truncate">
-      {children}
-    </div>
-  );
+  return <div className="relative flex flex-col border-b-2 border-main truncate">{children}</div>;
 }
 
 export const layoutSidebarItemLink = [

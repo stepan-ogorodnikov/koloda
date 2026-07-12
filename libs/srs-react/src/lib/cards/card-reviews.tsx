@@ -34,16 +34,13 @@ export function CardReviews({ card }: CardReviewsProps) {
           <div className="grid grid-cols-[auto_1fr] gap-x-8">
             {reviews.map((review) => (
               <Fragment key={review.id}>
-                <span className="py-2 fg-level-3">
-                  {i18n.date(review.createdAt, TIMESTAMP_OPTIONS)}
-                </span>
-                <span className="py-2 font-semibold tracking-tight">
-                  {_(FSRS_GRADES[review.rating - 1])}
-                </span>
+                <span className="py-2 fg-level-3">{i18n.date(review.createdAt, TIMESTAMP_OPTIONS)}</span>
+                <span className="py-2 font-semibold tracking-tight">{_(FSRS_GRADES[review.rating - 1])}</span>
               </Fragment>
             ))}
           </div>
-        )}
+        )
+      }
     </QueryState>
   );
 }

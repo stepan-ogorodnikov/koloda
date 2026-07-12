@@ -27,13 +27,14 @@ function buildFieldDescriptions(fields: CardGenerationFields): string {
 }
 
 function buildCardGenerationRules(context: "structured" | "assistant"): string {
-  const noExtras = context === "assistant"
-    ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
-    : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
+  const noExtras =
+    context === "assistant"
+      ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
+      : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
 
   const rules = [
-    "- Each card must be { \"content\": { ... } } where each field key maps to { \"text\": \"...\" }.",
-    "- \"content\" keys must be ONLY the field keys listed above.",
+    '- Each card must be { "content": { ... } } where each field key maps to { "text": "..." }.',
+    '- "content" keys must be ONLY the field keys listed above.',
     noExtras,
     "- Keep text concise, educational, and accurate.",
     "- For required fields, never return empty text.",
@@ -78,9 +79,10 @@ export function buildSystemPromptForProvider(fields: CardGenerationFields, provi
 }
 
 export function buildAssistantSystemPrompt(fields: CardGenerationFields, provider?: AiProvider | null): string {
-  const formatInstructions = provider && provider !== "openrouter" && provider !== "codex"
-    ? "\n\n" + buildMarkdownFormatInstructions(fields)
-    : "";
+  const formatInstructions =
+    provider && provider !== "openrouter" && provider !== "codex"
+      ? "\n\n" + buildMarkdownFormatInstructions(fields)
+      : "";
 
   return [
     "You are a helpful AI study assistant embedded in a flashcard app.",
@@ -93,7 +95,9 @@ export function buildAssistantSystemPrompt(fields: CardGenerationFields, provide
     "Rules for card generation:",
     buildCardGenerationRules("assistant"),
     formatInstructions,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function resolveProviderFormatText(

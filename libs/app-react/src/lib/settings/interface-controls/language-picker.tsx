@@ -10,14 +10,12 @@ import { useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 
-type LanguagePicker = Partial<SelectProps<typeof LANGUAGES[number]>> & {
+type LanguagePicker = Partial<SelectProps<(typeof LANGUAGES)[number]>> & {
   withIcon?: boolean;
   isPersisted?: boolean;
 };
 
-export function LanguagePicker(
-  { label, withIcon = true, isPersisted = true, ...props }: LanguagePicker,
-) {
+export function LanguagePicker({ label, withIcon = true, isPersisted = true, ...props }: LanguagePicker) {
   const { _, i18n } = useLingui();
   const setLang = useSetAtom(langAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
@@ -28,9 +26,11 @@ export function LanguagePicker(
       popoverVariants={{ class: "min-w-48" }}
       label={label}
       aria-label={!label ? _(msg`language-picker.label`) : undefined}
-      icon={withIcon
-        ? <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={TranslationIcon} aria-hidden="true" />
-        : undefined}
+      icon={
+        withIcon ? (
+          <HugeiconsIcon className="size-5" strokeWidth={1.75} icon={TranslationIcon} aria-hidden="true" />
+        ) : undefined
+      }
       items={LANGUAGES}
       value={i18n.locale}
       onChange={(key) => {

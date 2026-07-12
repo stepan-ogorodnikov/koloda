@@ -53,12 +53,7 @@ export function CardsTableColumnsVisibility<TData>({
   return (
     <Dialog.Root>
       <Button variants={{ style: "bordered", size: "default" }}>
-        <HugeiconsIcon
-          className="size-5 min-w-5"
-          strokeWidth={1.75}
-          icon={ColumnsThreeCogIcon}
-          aria-hidden="true"
-        />
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ColumnsThreeCogIcon} aria-hidden="true" />
         <span>{_(msg`cards-table.columns-menu.trigger`)}</span>
       </Button>
       <Dialog.Popover>
@@ -73,7 +68,7 @@ export function CardsTableColumnsVisibility<TData>({
           >
             <div className="flex flex-col gap-2">
               {items.map((columnId, index) => {
-                const column = columns.find(({ id }) => (id === columnId));
+                const column = columns.find(({ id }) => id === columnId);
                 if (!column?.getCanHide()) return null;
 
                 return (

@@ -1,11 +1,7 @@
 import type { GeneratedCard } from "@koloda/ai";
 import type { InsertCardData } from "./cards";
 
-export function transformGeneratedCards(
-  cards: GeneratedCard[],
-  deckId: number,
-  templateId: number,
-): InsertCardData[] {
+export function transformGeneratedCards(cards: GeneratedCard[], deckId: number, templateId: number): InsertCardData[] {
   return cards.map((card) => ({
     deckId,
     templateId,

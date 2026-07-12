@@ -2,10 +2,7 @@ import type { Template } from "@koloda/srs";
 import { describe, expect, it } from "vitest";
 import { getCardsTableContentColumns } from "./cards-table-utility";
 
-function createTemplate(
-  id: number,
-  fields: Array<{ title: string }>,
-): Template {
+function createTemplate(id: number, fields: Array<{ title: string }>): Template {
   return {
     id,
     title: `Template ${id}`,
@@ -73,10 +70,7 @@ describe("getCardsTableContentColumns", () => {
   });
 
   it("getFieldId returns correct field id for each template", () => {
-    const templates = [
-      createTemplate(1, [{ title: "Front" }]),
-      createTemplate(2, [{ title: "Prompt" }]),
-    ];
+    const templates = [createTemplate(1, [{ title: "Front" }]), createTemplate(2, [{ title: "Prompt" }])];
     const result = getCardsTableContentColumns(templates);
 
     expect(result[0].getFieldId(templates[0])).toBe(1);
@@ -91,10 +85,7 @@ describe("getCardsTableContentColumns", () => {
   });
 
   it("getFieldId returns undefined for index beyond template fields", () => {
-    const mixed = [
-      createTemplate(1, [{ title: "A" }]),
-      createTemplate(2, [{ title: "X" }, { title: "Y" }]),
-    ];
+    const mixed = [createTemplate(1, [{ title: "A" }]), createTemplate(2, [{ title: "X" }, { title: "Y" }])];
     const cols = getCardsTableContentColumns(mixed);
     expect(cols).toHaveLength(2);
     expect(cols[1].getFieldId(mixed[0])).toBeUndefined(); // template 1 has no second field

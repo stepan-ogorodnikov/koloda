@@ -27,11 +27,7 @@ export function CloneConversationButton({ id, onClone, onClose }: CloneConversat
   }, [clone, id, onClone, onClose]);
 
   return (
-    <Button
-      variants={{ style: "ghost", class: "justify-start px-2" }}
-      onPress={handlePress}
-      isDisabled={!hasContext}
-    >
+    <Button variants={{ style: "ghost", class: "justify-start px-2" }} onPress={handlePress} isDisabled={!hasContext}>
       <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={ChangeScreenModeIcon} aria-hidden="true" />
       {_(msg`ai.conversation.clone.action`)}
     </Button>

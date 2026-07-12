@@ -15,7 +15,7 @@ export const allowedSettings = {
 
 export type SettingsName = keyof typeof allowedSettings;
 
-export type SettingsContent<T extends SettingsName> = z.input<typeof allowedSettings[T]>;
+export type SettingsContent<T extends SettingsName> = z.input<(typeof allowedSettings)[T]>;
 
 export type AllowedSettings<T extends SettingsName> = Timestamps & {
   id: number;

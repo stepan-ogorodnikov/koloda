@@ -16,9 +16,11 @@ export const timeField = tv({
   },
 });
 
-type TimeFieldProps = ReactAriaTimeFieldProps<TimeValue> & TWVProps<typeof timeField> & PropsWithChildren & {
-  label?: ReactNode;
-};
+type TimeFieldProps = ReactAriaTimeFieldProps<TimeValue> &
+  TWVProps<typeof timeField> &
+  PropsWithChildren & {
+    label?: ReactNode;
+  };
 
 export function TimeField({ variants, label, children, ...props }: TimeFieldProps) {
   return (

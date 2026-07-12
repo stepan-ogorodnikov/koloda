@@ -36,14 +36,15 @@ export type GetCardsParams = { deckId: Card["deckId"] };
  * @returns Object with content validation schema
  */
 export function getCardContentValidation(fields: TemplateFields) {
-  const validation = fields.reduce((acc, x) => (
-    {
+  const validation = fields.reduce(
+    (acc, x) => ({
       ...acc,
       [`${x.id}`]: z.object({
         text: x.isRequired ? z.string().min(1, "validation.cards.content.field-empty") : z.string(),
       }),
-    }
-  ), {});
+    }),
+    {},
+  );
 
   return { content: z.object(validation) };
 }

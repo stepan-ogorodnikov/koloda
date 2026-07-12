@@ -20,9 +20,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] }],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -132,12 +130,7 @@ describe("cloneConversationAtom", () => {
     expect(Object.keys(clone.runs).sort()).toEqual(["r1", "r3"]);
     // The user-r2 / assistant-r2 pair is dropped.
     expect(clone.messages).toHaveLength(4);
-    expect(clone.messages.map((m) => m.id)).toEqual([
-      "user-r1",
-      "assistant-r1",
-      "user-r3",
-      "assistant-r3",
-    ]);
+    expect(clone.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1", "user-r3", "assistant-r3"]);
   });
 
   it("copies AI profile state, deck selection, and mode from the source", () => {
@@ -243,9 +236,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
         runs: { r1: makeRun("r1", "success") },
         updatedAt: new Date(1000),
       }),
@@ -263,9 +254,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -286,9 +275,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -319,9 +306,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -365,9 +350,7 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
         runs: { r1: makeRun("r1", "success") },
         dismissedRunErrorId: "r1",
       }),

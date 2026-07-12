@@ -21,27 +21,25 @@ export function AiChatContextUsage({ usage, contextLength }: AiChatContextUsageP
 
   const content = (
     <div className="whitespace-nowrap">
-      {contextLength > 0
-        ? (
-          <span className="flex flex-row gap-4">
-            <span className="flex flex-row items-center gap-1">
-              <span>{formattedTotal}</span>
-              <span className="fg-level-4 text-xs">/</span>
-              <span>{formattedContext}</span>
-              <span className="fg-level-3">{_(msg`ai.chat.context-usage.tokens`)}</span>
-            </span>
-            <span className="flex flex-row gap-0.5">
-              <span>{clampedPercentage.toFixed(1)}</span>
-              <span>%</span>
-            </span>
-          </span>
-        )
-        : (
+      {contextLength > 0 ? (
+        <span className="flex flex-row gap-4">
           <span className="flex flex-row items-center gap-1">
             <span>{formattedTotal}</span>
+            <span className="fg-level-4 text-xs">/</span>
+            <span>{formattedContext}</span>
             <span className="fg-level-3">{_(msg`ai.chat.context-usage.tokens`)}</span>
           </span>
-        )}
+          <span className="flex flex-row gap-0.5">
+            <span>{clampedPercentage.toFixed(1)}</span>
+            <span>%</span>
+          </span>
+        </span>
+      ) : (
+        <span className="flex flex-row items-center gap-1">
+          <span>{formattedTotal}</span>
+          <span className="fg-level-3">{_(msg`ai.chat.context-usage.tokens`)}</span>
+        </span>
+      )}
     </div>
   );
 

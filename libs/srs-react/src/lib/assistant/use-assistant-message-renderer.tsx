@@ -22,48 +22,53 @@ export type UseAssistantMessageRendererProps = {
   handleRevert: (userMessageId: string) => void;
 };
 
-export function useAssistantMessageRenderer(
-  { templateId, handleRetry, handleRevert }: UseAssistantMessageRendererProps,
-) {
+export function useAssistantMessageRenderer({
+  templateId,
+  handleRetry,
+  handleRevert,
+}: UseAssistantMessageRendererProps) {
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
   const activeRunId = useAtomValue(assistantActiveRunIdAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
   const tailMessageId = messages.at(-1)?.id;
 
-  return useCallback((message: UIMessage, content: ReactNode) => {
-    if (message.role === "user") return renderUserMessage(message, content, handleRevert);
+  return useCallback(
+    (message: UIMessage, content: ReactNode) => {
+      if (message.role === "user") return renderUserMessage(message, content, handleRevert);
 
-    const isTail = message.id === tailMessageId;
+      const isTail = message.id === tailMessageId;
 
-    const generatedCardsMetadata = getGeneratedCardsMetadata(message);
-    if (generatedCardsMetadata) {
-      const run = runs[generatedCardsMetadata.runId];
-      if (run?.mode === "cards") {
-        const rendered = renderCardsMessage({
-          run,
-          runId: generatedCardsMetadata.runId,
-          isCurrentRun: generatedCardsMetadata.runId === activeRunId,
-          isTail,
-          deckId,
-          templateId,
-          handleRetry,
-        });
-        if (rendered) return rendered;
+      const generatedCardsMetadata = getGeneratedCardsMetadata(message);
+      if (generatedCardsMetadata) {
+        const run = runs[generatedCardsMetadata.runId];
+        if (run?.mode === "cards") {
+          const rendered = renderCardsMessage({
+            run,
+            runId: generatedCardsMetadata.runId,
+            isCurrentRun: generatedCardsMetadata.runId === activeRunId,
+            isTail,
+            deckId,
+            templateId,
+            handleRetry,
+          });
+          if (rendered) return rendered;
+        }
       }
-    }
 
-    const errorMetadata = getErrorMetadata(message);
-    if (errorMetadata) return renderErrorMessage(errorMetadata.runId, isTail, handleRetry);
+      const errorMetadata = getErrorMetadata(message);
+      if (errorMetadata) return renderErrorMessage(errorMetadata.runId, isTail, handleRetry);
 
-    const chatMetadata = getChatTextMetadata(message);
-    if (chatMetadata) {
-      const run = runs[chatMetadata.runId];
-      if (run) return renderChatMessage({ message, content, run, runId: chatMetadata.runId, isTail, handleRetry });
-    }
+      const chatMetadata = getChatTextMetadata(message);
+      if (chatMetadata) {
+        const run = runs[chatMetadata.runId];
+        if (run) return renderChatMessage({ message, content, run, runId: chatMetadata.runId, isTail, handleRetry });
+      }
 
-    return content;
-  }, [tailMessageId, runs, activeRunId, templateId, deckId, handleRetry, handleRevert]);
+      return content;
+    },
+    [tailMessageId, runs, activeRunId, templateId, deckId, handleRetry, handleRevert],
+  );
 }
 
 function renderUserMessage(message: UIMessage, content: ReactNode, handleRevert: (id: string) => void) {
@@ -114,11 +119,7 @@ function renderCardsMessage(options: {
 function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId: string) => Promise<void>) {
   return (
     <AIChatMessageLayout role="assistant">
-      <AIChatMessageStatus
-        state="failed"
-        canRetry={isTail}
-        onRetry={() => handleRetry(runId)}
-      />
+      <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} />
     </AIChatMessageLayout>
   );
 }
@@ -165,11 +166,7 @@ function renderChatMessage(options: {
     return (
       <div className="flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus
-          state="failed"
-          canRetry={isTail}
-          onRetry={() => handleRetry(runId)}
-        />
+        <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} />
       </div>
     );
   }

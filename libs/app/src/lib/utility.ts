@@ -4,15 +4,21 @@
 
 export type DeepPartial<T> = T extends string | number | bigint | boolean | null | undefined | symbol | Date
   ? T | undefined
-  : T extends Array<infer ArrayType> ? Array<DeepPartial<ArrayType>>
-  : T extends ReadonlyArray<infer ArrayType> ? ReadonlyArray<ArrayType>
-  : T extends Set<infer SetType> ? Set<DeepPartial<SetType>>
-  : T extends ReadonlySet<infer SetType> ? ReadonlySet<SetType>
-  : T extends Map<infer KeyType, infer ValueType> ? Map<DeepPartial<KeyType>, DeepPartial<ValueType>>
-  : T extends ReadonlyMap<infer KeyType, infer ValueType> ? ReadonlyMap<DeepPartial<KeyType>, DeepPartial<ValueType>>
-  : {
-    [K in keyof T]?: DeepPartial<T[K]>;
-  };
+  : T extends Array<infer ArrayType>
+    ? Array<DeepPartial<ArrayType>>
+    : T extends ReadonlyArray<infer ArrayType>
+      ? ReadonlyArray<ArrayType>
+      : T extends Set<infer SetType>
+        ? Set<DeepPartial<SetType>>
+        : T extends ReadonlySet<infer SetType>
+          ? ReadonlySet<SetType>
+          : T extends Map<infer KeyType, infer ValueType>
+            ? Map<DeepPartial<KeyType>, DeepPartial<ValueType>>
+            : T extends ReadonlyMap<infer KeyType, infer ValueType>
+              ? ReadonlyMap<DeepPartial<KeyType>, DeepPartial<ValueType>>
+              : {
+                  [K in keyof T]?: DeepPartial<T[K]>;
+                };
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
@@ -72,14 +78,14 @@ export function deepMerge<T extends Record<string, unknown>>(target: T, partial:
 
       // objects
       if (
-        typeof sourceValue === "object"
-        && sourceValue !== null
-        && !Array.isArray(sourceValue)
-        && typeof targetValue === "object"
-        && targetValue !== null
-        && !Array.isArray(targetValue)
-        && !isSpecialObject(sourceValue)
-        && !isSpecialObject(targetValue)
+        typeof sourceValue === "object" &&
+        sourceValue !== null &&
+        !Array.isArray(sourceValue) &&
+        typeof targetValue === "object" &&
+        targetValue !== null &&
+        !Array.isArray(targetValue) &&
+        !isSpecialObject(sourceValue) &&
+        !isSpecialObject(targetValue)
       ) {
         (output as any)[key] = deepMerge(
           targetValue as Record<string, unknown>,
@@ -138,9 +144,7 @@ export type ObjectPropertiesMapping<K, V> = Partial<Record<keyof K, keyof V>>;
  * ```
  */
 export function mapObjectProperties(object: object, map: Record<string, string>) {
-  return Object.fromEntries(
-    Object.entries(object).map(([k, v]) => [map[k] ?? k, v]),
-  );
+  return Object.fromEntries(Object.entries(object).map(([k, v]) => [map[k] ?? k, v]));
 }
 
 /**
@@ -157,9 +161,7 @@ export function mapObjectProperties(object: object, map: Record<string, string>)
  * ```
  */
 export function mapObjectPropertiesReverse(object: object, map: Record<string, string>) {
-  const reverseMap = Object.fromEntries(
-    Object.entries(map).map(([k, v]) => [v, k]),
-  );
+  const reverseMap = Object.fromEntries(Object.entries(map).map(([k, v]) => [v, k]));
   return mapObjectProperties(object, reverseMap);
 }
 

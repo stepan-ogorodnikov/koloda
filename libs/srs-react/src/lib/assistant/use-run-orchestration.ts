@@ -58,145 +58,154 @@ export function useRunOrchestration({
   ensureConversationId,
   armPendingRun,
 }: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
-  const handleRetry = useCallback(async (runId: string) => {
-    const cfg = configRef.current;
-    const currentState = readState();
-    const conversationId = currentState.id;
-    const mode = resolveRunMode(currentState, runId);
-    if (!mode) return;
+  const handleRetry = useCallback(
+    async (runId: string) => {
+      const cfg = configRef.current;
+      const currentState = readState();
+      const conversationId = currentState.id;
+      const mode = resolveRunMode(currentState, runId);
+      if (!mode) return;
 
-    armPendingRun(mode, conversationId, runId);
+      armPendingRun(mode, conversationId, runId);
 
-    // WHY: Retry is exposed only on the visible tail. The history sent
-    // to the AI must mirror what the user sees, so filter out anything
-    // hidden by revert before walking the message list.
-    const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
-    const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
-    const promptText = userMessage ? getTextMessageContent(userMessage) : "";
-    if (!promptText || !cfg.profileId || !cfg.modelId) return;
-    if (mode === "cards" && !cfg.template) return;
+      // WHY: Retry is exposed only on the visible tail. The history sent
+      // to the AI must mirror what the user sees, so filter out anything
+      // hidden by revert before walking the message list.
+      const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
+      const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
+      const promptText = userMessage ? getTextMessageContent(userMessage) : "";
+      if (!promptText || !cfg.profileId || !cfg.modelId) return;
+      if (mode === "cards" && !cfg.template) return;
 
-    setGlobalAIProfileState(cfg);
+      setGlobalAIProfileState(cfg);
 
-    const conversationMessages = buildConversationMessages(visibleMessages, currentState.runs, cfg.template);
-    cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      const conversationMessages = buildConversationMessages(visibleMessages, currentState.runs, cfg.template);
+      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
 
-    const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
-    await retryRun(runId, result.request, result.templateFields, mode, cfg.modelName);
-  }, [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun]);
+      const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
+      await retryRun(runId, result.request, result.templateFields, mode, cfg.modelName);
+    },
+    [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun],
+  );
 
   const handleDismissGenerate = useCallback(() => {
     const run = findLatestErroredRun(readState());
     if (run) dispatchPersisted(["dismissRunError", { runId: run.id }]);
   }, [readState, dispatchPersisted]);
 
-  const handleGenerate = useCallback(async (value?: string) => {
-    ensureConversationId();
-    const cfg = configRef.current;
-    let currentState = readState();
+  const handleGenerate = useCallback(
+    async (value?: string) => {
+      ensureConversationId();
+      const cfg = configRef.current;
+      let currentState = readState();
 
-    // WHY: Revert is visual until the user submits a new prompt. Commit
-    // it now so the hidden messages and their runs are actually
-    // removed; the prompt then becomes the latest user message and
-    // starts a fresh run. Re-read the state afterwards so the rest of
-    // this handler sees the post-commit shape.
-    if (currentState.revertState) {
-      dispatchPersisted(["commitRevert"]);
-      currentState = readState();
-    }
+      // WHY: Revert is visual until the user submits a new prompt. Commit
+      // it now so the hidden messages and their runs are actually
+      // removed; the prompt then becomes the latest user message and
+      // starts a fresh run. Re-read the state afterwards so the rest of
+      // this handler sees the post-commit shape.
+      if (currentState.revertState) {
+        dispatchPersisted(["commitRevert"]);
+        currentState = readState();
+      }
 
-    const currentMode = currentState.mode;
+      const currentMode = currentState.mode;
 
-    const promptText = (value ?? "").trim();
-    if (!promptText || !cfg.profileId || !cfg.modelId) return;
-    if (currentMode === "cards" && !cfg.template) return;
+      const promptText = (value ?? "").trim();
+      if (!promptText || !cfg.profileId || !cfg.modelId) return;
+      if (currentMode === "cards" && !cfg.template) return;
 
-    const runId = generateUUID();
-    // WHY: After ensureConversationId(), the conversation is in the store.
-    // Use the state's id rather than the prop (which may be undefined on cold start).
-    const activeConversationId = readState().id;
-    armPendingRun(currentMode, activeConversationId, runId);
+      const runId = generateUUID();
+      // WHY: After ensureConversationId(), the conversation is in the store.
+      // Use the state's id rather than the prop (which may be undefined on cold start).
+      const activeConversationId = readState().id;
+      armPendingRun(currentMode, activeConversationId, runId);
 
-    setGlobalAIProfileState(cfg);
+      setGlobalAIProfileState(cfg);
 
-    const conversationMessages = buildConversationMessages(currentState.messages, currentState.runs, cfg.template);
-    cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      const conversationMessages = buildConversationMessages(currentState.messages, currentState.runs, cfg.template);
+      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
 
-    const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
+      const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
 
-    dispatchPersisted(["addUserMessage", { runId, text: promptText }]);
+      dispatchPersisted(["addUserMessage", { runId, text: promptText }]);
 
-    if (result.kind === "chat") {
-      dispatchPersisted([
-        "startRun",
-        {
-          runId,
-          mode: "chat",
-          request: result.request,
-          templateFields: null,
-          modelName: cfg.modelName,
-        },
+      if (result.kind === "chat") {
+        dispatchPersisted([
+          "startRun",
+          {
+            runId,
+            mode: "chat",
+            request: result.request,
+            templateFields: null,
+            modelName: cfg.modelName,
+          },
+        ]);
+        dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
+        await executeChatRun(activeConversationId, runId, result.request);
+      } else {
+        dispatchPersisted([
+          "startRun",
+          {
+            runId,
+            mode: "cards",
+            request: result.request,
+            templateFields: result.templateFields,
+            modelName: cfg.modelName,
+          },
+        ]);
+        dispatchPersisted([
+          "addAssistantMessage",
+          {
+            runId,
+            kind: "generated-cards",
+            text: cfg._(msg`assistant.chat.message.status.pending`),
+          },
+        ]);
+        await executeGenerateRun(activeConversationId, runId, result.request);
+      }
+    },
+    [
+      configRef,
+      ensureConversationId,
+      dispatchPersisted,
+      executeChatRun,
+      executeGenerateRun,
+      readState,
+      setGlobalAIProfileState,
+      armPendingRun,
+    ],
+  );
+
+  const handleRevert = useCallback(
+    (userMessageId: string, currentInputText: string) => {
+      const state = readState();
+      const userMessage = state.messages.find((m) => m.id === userMessageId);
+      if (!userMessage) return null;
+      const promptText = getTextMessageContent(userMessage);
+      if (!promptText) return null;
+
+      // WHY: Revert is visual; the actual deletion happens on the next
+      // prompt submit. We just set the in-memory revert state. Any active
+      // stream is canceled because its run will be among the hidden
+      // messages and must not keep streaming.
+      cancelActiveRun();
+      dispatchEphemeral([
+        "setRevertState",
+        { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
       ]);
-      dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-      await executeChatRun(activeConversationId, runId, result.request);
-    } else {
-      dispatchPersisted([
-        "startRun",
-        {
-          runId,
-          mode: "cards",
-          request: result.request,
-          templateFields: result.templateFields,
-          modelName: cfg.modelName,
-        },
-      ]);
-      dispatchPersisted([
-        "addAssistantMessage",
-        {
-          runId,
-          kind: "generated-cards",
-          text: cfg._(msg`assistant.chat.message.status.pending`),
-        },
-      ]);
-      await executeGenerateRun(activeConversationId, runId, result.request);
-    }
-  }, [
-    configRef,
-    ensureConversationId,
-    dispatchPersisted,
-    executeChatRun,
-    executeGenerateRun,
-    readState,
-    setGlobalAIProfileState,
-    armPendingRun,
-  ]);
-
-  const handleRevert = useCallback((userMessageId: string, currentInputText: string) => {
-    const state = readState();
-    const userMessage = state.messages.find((m) => m.id === userMessageId);
-    if (!userMessage) return null;
-    const promptText = getTextMessageContent(userMessage);
-    if (!promptText) return null;
-
-    // WHY: Revert is visual; the actual deletion happens on the next
-    // prompt submit. We just set the in-memory revert state. Any active
-    // stream is canceled because its run will be among the hidden
-    // messages and must not keep streaming.
-    cancelActiveRun();
-    dispatchEphemeral([
-      "setRevertState",
-      { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
-    ]);
-    // WHY: Mirror the mode of the target message so the prompt input
-    // lines up with what the run was sent in. Use setMode (bumps save)
-    // rather than a raw setMode dispatch so the change persists.
-    const runId = getRunIdFromMessageId(userMessageId);
-    const targetMode = runId ? resolveRunMode(state, runId) : null;
-    if (targetMode && targetMode !== state.mode) {
-      setMode(targetMode);
-    }
-    return promptText;
-  }, [readState, cancelActiveRun, dispatchEphemeral, setMode]);
+      // WHY: Mirror the mode of the target message so the prompt input
+      // lines up with what the run was sent in. Use setMode (bumps save)
+      // rather than a raw setMode dispatch so the change persists.
+      const runId = getRunIdFromMessageId(userMessageId);
+      const targetMode = runId ? resolveRunMode(state, runId) : null;
+      if (targetMode && targetMode !== state.mode) {
+        setMode(targetMode);
+      }
+      return promptText;
+    },
+    [readState, cancelActiveRun, dispatchEphemeral, setMode],
+  );
 
   const handleRestore = useCallback(() => {
     const state = readState();

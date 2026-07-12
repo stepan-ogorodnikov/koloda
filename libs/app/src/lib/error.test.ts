@@ -81,13 +81,17 @@ describe("throwKnownError", () => {
   it("rethrows ZodError unchanged", async () => {
     const zodError = new ZodError([]);
     await expect(
-      throwKnownError("db.add", async () => { throw zodError; }),
+      throwKnownError("db.add", async () => {
+        throw zodError;
+      }),
     ).rejects.toBe(zodError);
   });
 
   it("wraps a plain Error in AppError with the given code", async () => {
     await expect(
-      throwKnownError("db.get", async () => { throw new Error("DB down"); }),
+      throwKnownError("db.get", async () => {
+        throw new Error("DB down");
+      }),
     ).rejects.toMatchObject({
       name: "AppError",
       code: "db.get",
@@ -97,7 +101,9 @@ describe("throwKnownError", () => {
 
   it("wraps non-Error thrown values with undefined details", async () => {
     await expect(
-      throwKnownError("db.update", async () => { throw "something else"; }),
+      throwKnownError("db.update", async () => {
+        throw "something else";
+      }),
     ).rejects.toMatchObject({
       name: "AppError",
       code: "db.update",
@@ -107,7 +113,9 @@ describe("throwKnownError", () => {
 
   it("wraps an existing AppError (losing original code)", async () => {
     await expect(
-      throwKnownError("db.get", async () => { throw new AppError("ai.http"); }),
+      throwKnownError("db.get", async () => {
+        throw new AppError("ai.http");
+      }),
     ).rejects.toMatchObject({
       name: "AppError",
       code: "db.get",

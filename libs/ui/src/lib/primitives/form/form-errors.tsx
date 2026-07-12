@@ -7,7 +7,9 @@ export function FormErrors({ errors }: FormErrorsProps) {
 
   return (
     <div className="flex flex-col" role="alert">
-      {errorsArray.map((error, i) => <em key={i}>{error.message}</em>)}
+      {errorsArray.map((error, i) => (
+        <em key={i}>{error.message}</em>
+      ))}
     </div>
   );
 }

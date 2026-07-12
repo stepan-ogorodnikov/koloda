@@ -31,9 +31,7 @@ function SettingsAiRoute() {
         <Layout.H1>{_(msg`settings.ai`)}</Layout.H1>
       </Layout.Header>
       <Layout.Container ref={ref} tabIndex={-1}>
-        <QueryState query={query}>
-          {(data) => <SettingsAi data={data || []} />}
-        </QueryState>
+        <QueryState query={query}>{(data) => <SettingsAi data={data || []} />}</QueryState>
       </Layout.Container>
     </>
   );

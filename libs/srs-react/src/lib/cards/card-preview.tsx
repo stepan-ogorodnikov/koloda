@@ -49,12 +49,7 @@ export function CardPreview({ isOpen, onOpenChange, card, templateId }: PreviewC
             <div className={lessonContent} key={card.id}>
               <div className={lessonStudying}>
                 {(state.content?.template.layout || []).map((item, i) => (
-                  <LessonCardField
-                    params={item}
-                    content={state.content!}
-                    dispatch={dispatch}
-                    key={i}
-                  />
+                  <LessonCardField params={item} content={state.content!} dispatch={dispatch} key={i} />
                 ))}
               </div>
             </div>
@@ -62,11 +57,7 @@ export function CardPreview({ isOpen, onOpenChange, card, templateId }: PreviewC
               <AnimatePresence>
                 {!state.content?.form.isSubmitted && (
                   <Fade key="submit">
-                    <Button
-                      variants={{ style: "primary" }}
-                      onClick={() => dispatch(["cardSubmitted"])}
-                      key="submit"
-                    >
+                    <Button variants={{ style: "primary" }} onClick={() => dispatch(["cardSubmitted"])} key="submit">
                       {_(msg`lesson.content.submit`)}
                     </Button>
                   </Fade>

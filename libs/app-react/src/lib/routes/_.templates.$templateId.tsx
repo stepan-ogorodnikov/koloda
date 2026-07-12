@@ -32,9 +32,7 @@ function TemplateRoute() {
         <Layout.H1>{query.data?.title}</Layout.H1>
       </Layout.Header>
       <Layout.Container ref={ref} tabIndex={-1}>
-        <QueryState query={query}>
-          {() => <Template id={id} key={templateId} />}
-        </QueryState>
+        <QueryState query={query}>{() => <Template id={id} key={templateId} />}</QueryState>
       </Layout.Container>
     </>
   );

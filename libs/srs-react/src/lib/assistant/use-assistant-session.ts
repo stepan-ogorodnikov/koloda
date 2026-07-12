@@ -76,18 +76,27 @@ export function useAssistantSession({
   // stream chunks or revert and persist mid-stream "canceled" runs or
   // in-memory revertState. `dispatchToConversation` never auto-bumps —
   // terminal success/abort bumps explicitly in useConversationRuns.
-  const dispatchPersisted = useCallback((action: ConversationReducerAction) => {
-    setConversationReducerAction(action);
-    bumpPendingSave();
-  }, [setConversationReducerAction, bumpPendingSave]);
+  const dispatchPersisted = useCallback(
+    (action: ConversationReducerAction) => {
+      setConversationReducerAction(action);
+      bumpPendingSave();
+    },
+    [setConversationReducerAction, bumpPendingSave],
+  );
 
-  const dispatchToConversation = useCallback((id: string, action: ConversationReducerAction) => {
-    dispatchToConversationOnStore(store, id, action);
-  }, [store]);
+  const dispatchToConversation = useCallback(
+    (id: string, action: ConversationReducerAction) => {
+      dispatchToConversationOnStore(store, id, action);
+    },
+    [store],
+  );
 
-  const dispatchEphemeral = useCallback((action: ConversationReducerAction) => {
-    setConversationReducerAction(action);
-  }, [setConversationReducerAction]);
+  const dispatchEphemeral = useCallback(
+    (action: ConversationReducerAction) => {
+      setConversationReducerAction(action);
+    },
+    [setConversationReducerAction],
+  );
 
   const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
     streamGenerator: configRef.current.streamGenerator,

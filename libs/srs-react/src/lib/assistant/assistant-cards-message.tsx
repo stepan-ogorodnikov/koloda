@@ -55,9 +55,7 @@ export function AssistantCardsMessage({
       )}
       {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
       {!isGenerating && !isCanceled && !isFailed && templateUnavailable && (
-        <p className="fg-level-3">
-          {_(msg`assistant.template-unavailable`)}
-        </p>
+        <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>
       )}
       {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && cards.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -77,9 +75,7 @@ export function AssistantCardsMessage({
         </div>
       )}
       {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && !cards.length && (
-        <p className="fg-level-3">
-          {_(msg`assistant.generated-no-cards`)}
-        </p>
+        <p className="fg-level-3">{_(msg`assistant.generated-no-cards`)}</p>
       )}
     </AIChatMessageLayout>
   );

@@ -112,10 +112,7 @@ export function LayoutDrawer({ setNavPortal, setSidebarPortal }: LayoutDrawerPro
           className="flex flex-col shrink-0 gap-2 h-full p-2 border-r-2 border-main empty:hidden overflow-y-auto"
           ref={setNavPortal}
         />
-        <div
-          className={layoutDrawerSidebar({ hasContent })}
-          ref={setSidebarPortal}
-        />
+        <div className={layoutDrawerSidebar({ hasContent })} ref={setSidebarPortal} />
       </div>
     </div>
   );

@@ -104,11 +104,7 @@ export function generateCardsWithOllama(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
-    return runCardGeneration(
-      (modelId) => ollama(modelId, { structuredOutputs: true }),
-      "ollama",
-      request,
-    );
+    return runCardGeneration((modelId) => ollama(modelId, { structuredOutputs: true }), "ollama", request);
   });
 }
 
@@ -143,12 +139,7 @@ export function generateCardsWithOpencodeGo(
     const providerOptions = request.input.reasoningEffort
       ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
       : undefined;
-    return runCardGeneration(
-      (modelId) => opencodeGo(modelId),
-      "opencodeGo",
-      request,
-      providerOptions,
-    );
+    return runCardGeneration((modelId) => opencodeGo(modelId), "opencodeGo", request, providerOptions);
   });
 }
 
@@ -167,11 +158,6 @@ export function generateCardsWithOpencodeZen(
     const providerOptions = request.input.reasoningEffort
       ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
       : undefined;
-    return runCardGeneration(
-      (modelId) => opencodeZen(modelId),
-      "opencodeZen",
-      request,
-      providerOptions,
-    );
+    return runCardGeneration((modelId) => opencodeZen(modelId), "opencodeZen", request, providerOptions);
   });
 }

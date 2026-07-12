@@ -226,7 +226,7 @@
 
 @theme {
   /* breakpoints */
-  --breakpoint-*: initial;
+  --breakpoint-\*: initial;
   --breakpoint-wd: 48rem; /* wide */
   /* containers */
   --container-main: 64rem;
@@ -235,7 +235,7 @@
   /* fonts */
   --font-sans: "Inter Variable", sans-serif;
   /* colors */
-  --color-*: initial;
+  --color-\*: initial;
   --color-bg-body: var(--bg-body);
   --color-bg-level-1: var(--bg-level-1);
   --color-bg-level-2: var(--bg-level-2);

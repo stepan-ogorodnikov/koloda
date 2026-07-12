@@ -46,12 +46,12 @@ async function getMigrationStatements() {
       .then((files) => files.filter((file) => file.endsWith(".sql")).sort())
       .then((files) => Promise.all(files.map((file) => readFile(resolve(migrationsDir, file), "utf8"))))
       .then((migrations) =>
-        migrations.flatMap((migration) => (
+        migrations.flatMap((migration) =>
           migration
             .split("--> statement-breakpoint")
             .map((statement) => statement.trim())
-            .filter(Boolean)
-        ))
+            .filter(Boolean),
+        ),
       );
   }
 
@@ -92,17 +92,14 @@ export async function seedTemplate(db: DB, overrides: Partial<InsertTemplateData
     ...overrides,
     content: overrides.content
       ? {
-        fields: overrides.content.fields.map((field) => ({ ...field })),
-        layout: overrides.content.layout.map((item) => ({ ...item })),
-      }
+          fields: overrides.content.fields.map((field) => ({ ...field })),
+          layout: overrides.content.layout.map((item) => ({ ...item })),
+        }
       : template.content,
   });
 }
 
-export async function seedDeck(
-  db: DB,
-  overrides: Partial<InsertDeckData> = {},
-) {
+export async function seedDeck(db: DB, overrides: Partial<InsertDeckData> = {}) {
   const algorithmId = overrides.algorithmId ?? (await seedAlgorithm(db)).id;
   const templateId = overrides.templateId ?? (await seedTemplate(db)).id;
 

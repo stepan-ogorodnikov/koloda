@@ -61,7 +61,9 @@ function buildCodexPrompt(systemPrompt: string, messages: Message[]) {
     conversation ? "</conversation>" : "",
     "",
     "Return only the final answer.",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function buildCodexGenerationInstructions(fields: CardGenerationFields) {
@@ -72,7 +74,7 @@ function buildCodexGenerationInstructions(fields: CardGenerationFields) {
     "Do not wrap the JSON in markdown or code fences.",
     "Each array item must be an object with a `content` object.",
     `The only allowed content keys are: ${fieldIds}.`,
-    "Each content value must be an object shaped like {\"text\":\"...\"}.",
+    'Each content value must be an object shaped like {"text":"..."}.',
   ].join("\n");
 }
 
@@ -108,10 +110,7 @@ async function generateCards(request: CardGenerationRequest): Promise<void> {
     ),
     buildCodexGenerationInstructions(template.content.fields),
   ].join("\n\n");
-  const prompt = buildCodexPrompt(systemPrompt, [
-    ...messages,
-    { role: "user", content: input.prompt },
-  ]);
+  const prompt = buildCodexPrompt(systemPrompt, [...messages, { role: "user", content: input.prompt }]);
   const result = await invoke<string>("cmd_generate_cards_with_codex", {
     data: {
       prompt,
@@ -129,11 +128,7 @@ async function generateCards(request: CardGenerationRequest): Promise<void> {
   }
 }
 
-async function chat(
-  request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
-  abortSignal: AbortSignal,
-) {
+async function chat(request: ChatStreamRequest, onChunk: (chunk: string) => void, abortSignal: AbortSignal) {
   const systemPrompt = compilePromptTemplate(
     request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
     request.template?.content.fields ?? [],

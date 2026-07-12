@@ -40,9 +40,7 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
             transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
             key="title"
           >
-            <Dialog.Title>
-              {_(msg`lesson.init.title`)}
-            </Dialog.Title>
+            <Dialog.Title>{_(msg`lesson.init.title`)}</Dialog.Title>
           </motion.div>
         )}
       </AnimatePresence>
@@ -56,9 +54,7 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
 export function LessonHeaderLayout({ children }: PropsWithChildren) {
   return (
     <Dialog.Header variants={{ class: "overflow-hidden" }}>
-      <div className="relative grow flex flex-col justify-center gap-4 h-16">
-        {children}
-      </div>
+      <div className="relative grow flex flex-col justify-center gap-4 h-16">{children}</div>
     </Dialog.Header>
   );
 }

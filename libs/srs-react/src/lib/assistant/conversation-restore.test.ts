@@ -26,8 +26,9 @@ describe("coerceConversationState", () => {
     expect(coerceConversationState({ ...initialConversationState, profileId: 5 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, modelId: 7 })).toBeNull();
     expect(coerceConversationState({ ...initialConversationState, modelParameters: "x" })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }))
-      .toBeNull();
+    expect(
+      coerceConversationState({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }),
+    ).toBeNull();
   });
 
   it("coerces ISO string createdAt into a Date", () => {
@@ -114,24 +115,30 @@ describe("coerceConversationState", () => {
     });
 
     it("rejects a non-string, non-null lastReadRunId", () => {
-      expect(coerceConversationState({
-        ...initialConversationState,
-        id: "conv-1",
-        createdAt: new Date(1),
-        lastReadRunId: 42,
-      })).toBeNull();
-      expect(coerceConversationState({
-        ...initialConversationState,
-        id: "conv-1",
-        createdAt: new Date(1),
-        lastReadRunId: true,
-      })).toBeNull();
-      expect(coerceConversationState({
-        ...initialConversationState,
-        id: "conv-1",
-        createdAt: new Date(1),
-        lastReadRunId: {},
-      })).toBeNull();
+      expect(
+        coerceConversationState({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          lastReadRunId: 42,
+        }),
+      ).toBeNull();
+      expect(
+        coerceConversationState({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          lastReadRunId: true,
+        }),
+      ).toBeNull();
+      expect(
+        coerceConversationState({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          lastReadRunId: {},
+        }),
+      ).toBeNull();
     });
   });
 
@@ -161,9 +168,7 @@ describe("coerceConversationState", () => {
     }
 
     it("preserves a string modelName on a run", () => {
-      const coerced = coerceConversationState(
-        makeStateWithRun(baseRun({ modelName: "GPT-4" })),
-      )!;
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ modelName: "GPT-4" })))!;
       expect(coerced.runs["r1"].modelName).toBe("GPT-4");
     });
 
@@ -173,9 +178,7 @@ describe("coerceConversationState", () => {
     });
 
     it("accepts explicit null and coerces it to undefined", () => {
-      const coerced = coerceConversationState(
-        makeStateWithRun(baseRun({ modelName: null })),
-      )!;
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ modelName: null })))!;
       expect(coerced.runs["r1"].modelName).toBeUndefined();
     });
 
@@ -535,10 +538,7 @@ describe("normalizeRestoredConversation", () => {
           id: "r1",
           mode: "cards",
           status: "success",
-          cards: [
-            { content: { "1": { text: "A" } } },
-            { content: { "1": { text: "B" } } },
-          ],
+          cards: [{ content: { "1": { text: "A" } } }, { content: { "1": { text: "B" } } }],
           cardStatuses: { 0: "pending", 1: "success" },
           templateFields: null,
           startedAt: new Date(1000),

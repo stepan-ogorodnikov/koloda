@@ -172,12 +172,15 @@ describe("conversations repository integration", () => {
             { front: "Dog", back: "A domesticated canine" },
           ],
           cardStatuses: { 0: "success", 1: "success" },
-          templateFields: [{ id: 1, title: "Front", type: "text", isRequired: true }, {
-            id: 2,
-            title: "Back",
-            type: "text",
-            isRequired: true,
-          }],
+          templateFields: [
+            { id: 1, title: "Front", type: "text", isRequired: true },
+            {
+              id: 2,
+              title: "Back",
+              type: "text",
+              isRequired: true,
+            },
+          ],
           startedAt,
           elapsedSeconds: 5,
         },

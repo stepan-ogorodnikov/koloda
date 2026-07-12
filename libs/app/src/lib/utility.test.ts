@@ -24,9 +24,7 @@ describe("utility", () => {
       meta: {
         flags: { isFavorite: true },
       },
-      fields: [
-        { title: "Prompt" },
-      ],
+      fields: [{ title: "Prompt" }],
       dueAt: new Date("2024-01-02T00:00:00.000Z"),
       untouched: undefined,
     });
@@ -36,9 +34,7 @@ describe("utility", () => {
         title: "Template",
         flags: { isLocked: false, isFavorite: true },
       },
-      fields: [
-        { id: 1, title: "Prompt", type: "text" },
-      ],
+      fields: [{ id: 1, title: "Prompt", type: "text" }],
       dueAt: new Date("2024-01-02T00:00:00.000Z"),
       untouched: 1,
     });

@@ -28,7 +28,7 @@ describe("AIChatMessageStatus", () => {
       render(<AIChatMessageStatus state="success" elapsedSeconds={5} modelName="GPT-4" />);
 
       const status = screen.getByText("GPT-4").parentElement;
-      const separator = status!.querySelector("[aria-hidden=\"true\"]");
+      const separator = status!.querySelector('[aria-hidden="true"]');
       expect(separator).not.toBeNull();
       expect(separator!.textContent).toBe("·");
     });
@@ -37,17 +37,15 @@ describe("AIChatMessageStatus", () => {
       render(<AIChatMessageStatus state="success" elapsedSeconds={5} />);
 
       const status = screen.getByText(/5/).parentElement;
-      expect(status!.querySelector("[aria-hidden=\"true\"]")).toBeNull();
+      expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
       expect(status!.textContent).not.toContain("GPT-4");
     });
 
     it("hides the modelName and separator when modelName is undefined", () => {
-      render(
-        <AIChatMessageStatus state="success" elapsedSeconds={5} modelName={undefined} />,
-      );
+      render(<AIChatMessageStatus state="success" elapsedSeconds={5} modelName={undefined} />);
 
       const status = screen.getByText(/5/).parentElement;
-      expect(status!.querySelector("[aria-hidden=\"true\"]")).toBeNull();
+      expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
     });
   });
 });

@@ -38,13 +38,16 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
   const Form = provider ? PROVIDER_FORMS[provider] : null;
 
   const handleSubmit = (data: { title?: string; secrets?: AISecrets }) => {
-    mutate({ id: profile.id, ...data }, {
-      onSuccess: () => {
-        setIsOpen(false);
-        queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
-        queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+    mutate(
+      { id: profile.id, ...data },
+      {
+        onSuccess: () => {
+          setIsOpen(false);
+          queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
+          queryClient.invalidateQueries({ queryKey: queryKeys.ai.profiles() });
+        },
       },
-    });
+    );
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -67,9 +70,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
         <Dialog.Modal variants={{ class: "w-full max-w-96" }}>
           <Dialog.Body>
             <Dialog.Header>
-              <Dialog.Title>
-                {_(msg`settings.ai.edit.title`)}
-              </Dialog.Title>
+              <Dialog.Title>{_(msg`settings.ai.edit.title`)}</Dialog.Title>
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>

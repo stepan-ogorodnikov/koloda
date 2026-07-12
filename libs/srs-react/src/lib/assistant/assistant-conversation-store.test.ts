@@ -31,10 +31,13 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // Dispatch via the writable atom (targets current conversation)
-    store.set(assistantConversationStateAtom, ["addUserMessage", {
-      runId: "r1",
-      text: "Hello from A",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "addUserMessage",
+      {
+        runId: "r1",
+        text: "Hello from A",
+      },
+    ]);
 
     // The derived atom should reflect the change
     const state = store.get(assistantConversationStateAtom);
@@ -52,17 +55,23 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Add a message to A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, ["addUserMessage", {
-      runId: "r1",
-      text: "Message in A",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "addUserMessage",
+      {
+        runId: "r1",
+        text: "Message in A",
+      },
+    ]);
 
     // Switch to B and add a message
     store.set(setCurrentConversationIdAtom, "B");
-    store.set(assistantConversationStateAtom, ["addUserMessage", {
-      runId: "r2",
-      text: "Message in B",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "addUserMessage",
+      {
+        runId: "r2",
+        text: "Message in B",
+      },
+    ]);
 
     // Switch back to A — its message should still be there
     store.set(setCurrentConversationIdAtom, "A");
@@ -79,25 +88,34 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "chat",
-      request: {},
-    }]);
-    store.set(assistantConversationStateAtom, ["addAssistantMessage", {
-      runId: "run-A",
-      kind: "chat-text",
-      text: "",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "chat",
+        request: {},
+      },
+    ]);
+    store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      {
+        runId: "run-A",
+        kind: "chat-text",
+        text: "",
+      },
+    ]);
 
     // Switch to B
     store.set(setCurrentConversationIdAtom, "B");
 
     // Dispatch a text update to A (simulating a background stream chunk)
-    dispatchTo(store, "A", ["updateAssistantText", {
-      runId: "run-A",
-      text: "Hello from background",
-    }]);
+    dispatchTo(store, "A", [
+      "updateAssistantText",
+      {
+        runId: "run-A",
+        text: "Hello from background",
+      },
+    ]);
 
     // B should be unaffected — no messages, no active run
     const stateB = store.get(assistantConversationStateAtom);
@@ -113,11 +131,14 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-A",
-      mode: "chat",
-      request: {},
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "chat",
+        request: {},
+      },
+    ]);
 
     // Switch to B
     store.set(setCurrentConversationIdAtom, "B");
@@ -138,10 +159,13 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     // Dispatch to a non-existent conversation — should be a no-op
-    dispatchTo(store, "UNKNOWN", ["addUserMessage", {
-      runId: "r1",
-      text: "This should not appear",
-    }]);
+    dispatchTo(store, "UNKNOWN", [
+      "addUserMessage",
+      {
+        runId: "r1",
+        text: "This should not appear",
+      },
+    ]);
 
     // A should be unchanged
     const stateA = store.get(assistantConversationStateAtom);
@@ -158,7 +182,7 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
         { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Streaming..." }] },
       ],
       runs: {
-        "r1": {
+        r1: {
           id: "r1",
           mode: "chat",
           status: "streaming",
@@ -204,12 +228,15 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // No conversation has been inserted or selected. The writable form
     // must accept a newConversation action and route it to the new id in
     // the map, then make that id current.
-    store.set(assistantConversationStateAtom, ["newConversation", {
-      id: "cold-start",
-      createdAt: new Date(1),
-      profileId: "p1",
-      modelId: "m1",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "newConversation",
+      {
+        id: "cold-start",
+        createdAt: new Date(1),
+        profileId: "p1",
+        modelId: "m1",
+      },
+    ]);
 
     // The store now has the new conversation.
     const state = store.get(assistantConversationStateAtom);
@@ -222,18 +249,24 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
   it("subsequent dispatches after a cold-start newConversation target the new id", () => {
     const store = createStore();
-    store.set(assistantConversationStateAtom, ["newConversation", {
-      id: "cold-start",
-      createdAt: new Date(1),
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "newConversation",
+      {
+        id: "cold-start",
+        createdAt: new Date(1),
+      },
+    ]);
 
     // The writable form should now accept regular actions targeting the
     // current (newly-created) conversation. This is the path that
     // ensureConversationId → handleGenerate relies on.
-    store.set(assistantConversationStateAtom, ["addUserMessage", {
-      runId: "r1",
-      text: "Hello",
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "addUserMessage",
+      {
+        runId: "r1",
+        text: "Hello",
+      },
+    ]);
 
     const state = store.get(assistantConversationStateAtom);
     expect(state.id).toBe("cold-start");
@@ -247,18 +280,19 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user", parts: [{ type: "text", text: "In A" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "In A" }] }],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
 
     // Start a new conversation. The old A entry must be untouched.
-    store.set(assistantConversationStateAtom, ["newConversation", {
-      id: "B",
-      createdAt: new Date(2),
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "newConversation",
+      {
+        id: "B",
+        createdAt: new Date(2),
+      },
+    ]);
 
     // The new current is B with no messages.
     const stateB = store.get(assistantConversationStateAtom);
@@ -279,17 +313,13 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user", parts: [{ type: "text", text: "Question" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Question" }] }],
       }),
     );
     store.set(
       upsertConversationAtom,
       makeConversation("B", {
-        messages: [
-          { id: "user-r2", role: "user", parts: [{ type: "text", text: "Different question" }] },
-        ],
+        messages: [{ id: "user-r2", role: "user", parts: [{ type: "text", text: "Different question" }] }],
       }),
     );
 
@@ -302,11 +332,14 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     expect(store.get(assistantActiveRunIdAtom)).toBeNull();
 
     // Start a run on B
-    store.set(assistantConversationStateAtom, ["startRun", {
-      runId: "run-B",
-      mode: "chat",
-      request: {},
-    }]);
+    store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-B",
+        mode: "chat",
+        request: {},
+      },
+    ]);
     expect(store.get(assistantActiveRunIdAtom)).toBe("run-B");
 
     // Switch back to A — activeRunId should be null for A
@@ -438,7 +471,9 @@ describe("updatedAt stamping (only on run start)", () => {
 
   function advanceClock() {
     const t = Date.now();
-    while (Date.now() === t) { /* spin */ }
+    while (Date.now() === t) {
+      /* spin */
+    }
   }
 
   it("startRun bumps updatedAt", () => {
@@ -463,12 +498,15 @@ describe("updatedAt stamping (only on run start)", () => {
     const ts = seedUpdatedAt(store, "A");
     advanceClock();
 
-    dispatchTo(store, "A", ["restartRun", {
-      runId: "r1",
-      mode: "chat",
-      request: {},
-      templateFields: null,
-    }]);
+    dispatchTo(store, "A", [
+      "restartRun",
+      {
+        runId: "r1",
+        mode: "chat",
+        request: {},
+        templateFields: null,
+      },
+    ]);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
   });
 
@@ -589,10 +627,7 @@ describe("updatedAt stamping (only on run start)", () => {
       { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
       { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hello" }] },
     ];
-    store.set(
-      upsertConversationAtom,
-      makeConversation("A", { messages, runs: { r1: makeRun("r1", "success") } }),
-    );
+    store.set(upsertConversationAtom, makeConversation("A", { messages, runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "A");
     const ts = seedUpdatedAt(store, "A");
 
@@ -610,9 +645,7 @@ describe("assistantConversationHasContextAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-        ],
+        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] }],
       }),
     );
     store.set(upsertConversationAtom, makeConversation("B"));

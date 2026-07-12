@@ -17,7 +17,7 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: Edi
   const { _ } = useLingui();
   const title = profile.title || undefined;
   const baseUrl = profile.secrets?.provider === "ollama" ? profile.secrets.baseUrl : "";
-  const apiKey = profile.secrets?.provider === "ollama" ? profile.secrets.apiKey ?? "" : "";
+  const apiKey = profile.secrets?.provider === "ollama" ? (profile.secrets.apiKey ?? "") : "";
 
   const form = useAppForm({
     defaultValues: { title, baseUrl, apiKey } as FormValues,
@@ -45,11 +45,7 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: Edi
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <form.Field name="title">
           {(field) => (
-            <TextField
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            >
+            <TextField value={field.state.value} onBlur={field.handleBlur} onChange={field.handleChange}>
               <Label>{_(msg`settings.ai.profiles.title.label`)}</Label>
               <TextField.Input placeholder={_(msg`settings.ai.profiles.title.placeholder`)} />
               {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
@@ -91,11 +87,7 @@ export function EditAIProfileOllama({ profile, onSubmit, isPending, error }: Edi
         <div className="grow" />
         <form.Subscribe selector={(state) => [state.canSubmit]}>
           {([canSubmit]) => (
-            <Button
-              variants={{ style: "primary" }}
-              type="submit"
-              isDisabled={!canSubmit || isPending}
-            >
+            <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isPending}>
               {_(msg`settings.ai.edit.submit`)}
             </Button>
           )}

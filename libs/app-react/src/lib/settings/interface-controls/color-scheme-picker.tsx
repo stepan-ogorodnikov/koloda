@@ -15,7 +15,7 @@ const ITEMS = [
   { id: "system", Icon: ComputerPhoneSyncIcon },
 ] as const;
 
-type ColorSchemePicker = Partial<SelectProps<typeof ITEMS[number]>> & {
+type ColorSchemePicker = Partial<SelectProps<(typeof ITEMS)[number]>> & {
   isPersisted?: boolean;
 };
 

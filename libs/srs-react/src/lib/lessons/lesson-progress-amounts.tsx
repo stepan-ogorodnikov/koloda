@@ -13,11 +13,7 @@ export function LessonProgressAmounts({ state }: LessonProgressAmountsProps) {
   const { done, pending } = state.progress;
 
   return (
-    <motion.div
-      className="h-8 numbers-text leading-8"
-      transition={{ duration: 0 }}
-      key="progress-amounts"
-    >
+    <motion.div className="h-8 numbers-text leading-8" transition={{ duration: 0 }} key="progress-amounts">
       <motion.div
         className="absolute right-1/2 flex flex-row items-center gap-1 mr-4"
         initial={{ opacity: 0, x: "-50%" }}

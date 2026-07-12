@@ -110,11 +110,7 @@ export function AddTemplate() {
               <div className="grow" />
               <form.Subscribe selector={(state) => [state.canSubmit]}>
                 {([canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    type="submit"
-                    isDisabled={!canSubmit || isLinkVisible}
-                  >
+                  <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isLinkVisible}>
                     {_(msg`add-template.submit`)}
                   </Button>
                 )}

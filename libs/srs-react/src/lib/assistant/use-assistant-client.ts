@@ -14,10 +14,7 @@ export type UseAssistantClientReturn = {
   chatStreamGenerator: ChatStreamGenerator;
 };
 
-export function useAssistantClient({
-  selectedProfile,
-  template,
-}: UseAssistantClientOptions): UseAssistantClientReturn {
+export function useAssistantClient({ selectedProfile, template }: UseAssistantClientOptions): UseAssistantClientReturn {
   const streamGenerator = useCallback<CardGenerationExecutor>(
     async (request, onCard, abortSignal) => {
       if (!selectedProfile) throw new Error("No AI profile selected");

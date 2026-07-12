@@ -414,9 +414,7 @@ function setRevertState(draft: ConversationReducerState, payload: RevertState | 
 function commitRevert(draft: ConversationReducerState) {
   if (!draft.revertState) return;
   const { revertedToUserMessageId } = draft.revertState;
-  const userMessageIndex = draft.messages.findIndex(
-    (m) => m.id === revertedToUserMessageId,
-  );
+  const userMessageIndex = draft.messages.findIndex((m) => m.id === revertedToUserMessageId);
   if (userMessageIndex === -1) {
     // WHY: Stale revert state (target message was removed by some
     // other path). Clear the revert state so the UI stops hiding

@@ -35,23 +35,13 @@ describe("card-generation", () => {
   it("adds provider formatting instructions only for non-openrouter providers", () => {
     const fields = createFields();
 
-    expect(buildSystemPromptForProvider(fields, "openrouter")).not.toContain(
-      "Provider-specific format instructions:",
-    );
-    expect(buildSystemPromptForProvider(fields, "codex")).not.toContain(
-      "Provider-specific format instructions:",
-    );
-    expect(buildSystemPromptForProvider(fields, "lmstudio")).toContain(
-      "Provider-specific format instructions:",
-    );
+    expect(buildSystemPromptForProvider(fields, "openrouter")).not.toContain("Provider-specific format instructions:");
+    expect(buildSystemPromptForProvider(fields, "codex")).not.toContain("Provider-specific format instructions:");
+    expect(buildSystemPromptForProvider(fields, "lmstudio")).toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "lmstudio")).toContain("**Front**: <value>");
-    expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain(
-      "Provider-specific format instructions:",
-    );
+    expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain("**Front**: <value>");
-    expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain(
-      "Provider-specific format instructions:",
-    );
+    expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain("**Front**: <value>");
   });
 
@@ -61,12 +51,14 @@ describe("card-generation", () => {
       { id: 2, title: "Back", type: "text", isRequired: false },
     ]);
 
-    expect(schema.parse({
-      content: {
-        "1": { text: "Question" },
-        "2": { text: "" },
-      },
-    })).toEqual({
+    expect(
+      schema.parse({
+        content: {
+          "1": { text: "Question" },
+          "2": { text: "" },
+        },
+      }),
+    ).toEqual({
       content: {
         "1": { text: "Question" },
         "2": { text: "" },
@@ -78,29 +70,26 @@ describe("card-generation", () => {
           "1": { text: "" },
           "2": { text: "" },
         },
-      })
+      }),
     ).toThrow();
   });
 
   it("parses fenced json card output from Ollama responses", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            message: {
-              content: [
-                "```json",
-                "[{\"content\":{\"1\":{\"text\":\"Question\"},\"2\":{\"text\":\"Answer\"}}}]",
-                "```",
-              ].join("\n"),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              message: {
+                content: ["```json", '[{"content":{"1":{"text":"Question"},"2":{"text":"Answer"}}}]', "```"].join("\n"),
+              },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
             },
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        )
+          ),
       ),
     );
     const request = createRequest();
@@ -119,28 +108,31 @@ describe("card-generation", () => {
   it("parses markdown card output from LM Studio responses", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            choices: [{
-              message: {
-                content: [
-                  "## Card 1",
-                  "**Front**: First question",
-                  "**Back**: First answer",
-                  "",
-                  "## Card 2",
-                  "**Front**: Second question",
-                  "**Back**: Second answer",
-                ].join("\n"),
-              },
-            }],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content: [
+                      "## Card 1",
+                      "**Front**: First question",
+                      "**Back**: First answer",
+                      "",
+                      "## Card 2",
+                      "**Front**: Second question",
+                      "**Back**: Second answer",
+                    ].join("\n"),
+                  },
+                },
+              ],
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
       ),
     );
     const request = createRequest();
@@ -164,62 +156,58 @@ describe("card-generation", () => {
   it("rejects Ollama cards that fail schema validation", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            message: {
-              content: [
-                "```json",
-                "[{\"content\":{\"1\":{\"text\":\"\"},\"2\":{\"text\":\"Answer\"}}}]",
-                "```",
-              ].join("\n"),
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              message: {
+                content: ["```json", '[{"content":{"1":{"text":""},"2":{"text":"Answer"}}}]', "```"].join("\n"),
+              },
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
             },
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        )
+          ),
       ),
     );
     const request = createRequest();
 
-    await expect(generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" })).rejects
-      .toMatchObject({
-        code: "ai.invalid-response",
-      });
+    await expect(
+      generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" }),
+    ).rejects.toMatchObject({
+      code: "ai.invalid-response",
+    });
     expect(request.onCard).not.toHaveBeenCalled();
   });
 
   it("rejects LM Studio cards that fail schema validation", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            choices: [{
-              message: {
-                content: [
-                  "## Card 1",
-                  "**Front**:",
-                  "**Back**: Only back",
-                ].join("\n"),
-              },
-            }],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content: ["## Card 1", "**Front**:", "**Back**: Only back"].join("\n"),
+                  },
+                },
+              ],
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
       ),
     );
     const request = createRequest();
 
-    await expect(generateCardsWithLMStudio(
-      request,
-      { provider: "lmstudio", baseUrl: "http://localhost:1234" },
-    )).rejects.toMatchObject({
+    await expect(
+      generateCardsWithLMStudio(request, { provider: "lmstudio", baseUrl: "http://localhost:1234" }),
+    ).rejects.toMatchObject({
       code: "ai.invalid-response",
     });
     expect(request.onCard).not.toHaveBeenCalled();
@@ -228,51 +216,50 @@ describe("card-generation", () => {
   it("resolves without cards when LM Studio omits message content", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () =>
-        new Response(
-          JSON.stringify({
-            choices: [{
-              message: {
-                content: null,
-              },
-            }],
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          },
-        )
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    content: null,
+                  },
+                },
+              ],
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            },
+          ),
       ),
     );
     const request = createRequest();
 
-    await generateCardsWithLMStudio(
-      request,
-      { provider: "lmstudio", baseUrl: "http://localhost:1234" },
-    );
+    await generateCardsWithLMStudio(request, { provider: "lmstudio", baseUrl: "http://localhost:1234" });
 
     expect(request.onCard).not.toHaveBeenCalled();
   });
 
   it("parses markdown card output from OpenCode Go responses", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          choices: [{
-            message: {
-              content: [
-                "## Card 1",
-                "**Front**: First question",
-                "**Back**: First answer",
-              ].join("\n"),
-            },
-          }],
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      )
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: ["## Card 1", "**Front**: First question", "**Back**: First answer"].join("\n"),
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
     );
     vi.stubGlobal("fetch", fetchMock);
     const request = createRequest();
@@ -300,24 +287,23 @@ describe("card-generation", () => {
   });
 
   it("parses markdown card output from OpenCode Zen responses", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          choices: [{
-            message: {
-              content: [
-                "## Card 1",
-                "**Front**: First question",
-                "**Back**: First answer",
-              ].join("\n"),
-            },
-          }],
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      )
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  content: ["## Card 1", "**Front**: First question", "**Back**: First answer"].join("\n"),
+                },
+              },
+            ],
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
     );
     vi.stubGlobal("fetch", fetchMock);
     const request = createRequest();

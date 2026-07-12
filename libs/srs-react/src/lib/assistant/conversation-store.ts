@@ -21,18 +21,16 @@ export const currentConversationIdAtom = atom<string | null>(null);
 // explicitly sets `updatedAt: null` for fresh conversations, and that
 // must be preserved. The writable atom handles `newConversation` as a
 // special case before reaching here.
-const RUN_START_ACTIONS = new Set<ConversationReducerAction[0]>([
-  "startRun",
-  "restartRun",
-]);
+const RUN_START_ACTIONS = new Set<ConversationReducerAction[0]>(["startRun", "restartRun"]);
 
 function applyConversationUpdate(
   prev: ConversationReducerState,
   update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ): ConversationReducerState {
-  const next = typeof update === "function"
-    ? (update as (p: ConversationReducerState) => ConversationReducerState)(prev)
-    : conversationReducer(prev, update);
+  const next =
+    typeof update === "function"
+      ? (update as (p: ConversationReducerState) => ConversationReducerState)(prev)
+      : conversationReducer(prev, update);
   if (next === prev) return prev;
 
   // Only stamp `updatedAt` when a new run starts (startRun / restartRun).
@@ -113,9 +111,10 @@ export function dispatchToConversation(
     // so the user notices it when they return.
     const currentId = get(currentConversationIdAtom);
     const finishedRunId = id === currentId ? detectRunJustFinished(prev, stamped) : null;
-    const final = finishedRunId !== null && stamped.lastReadRunId !== finishedRunId
-      ? { ...stamped, lastReadRunId: finishedRunId }
-      : stamped;
+    const final =
+      finishedRunId !== null && stamped.lastReadRunId !== finishedRunId
+        ? { ...stamped, lastReadRunId: finishedRunId }
+        : stamped;
 
     set(conversationsAtom, { ...store, [id]: final });
   };

@@ -6,7 +6,7 @@ const { catalogs, ...baseConfig } = rootConfig;
 const config: LinguiConfig = {
   ...baseConfig,
   catalogs: [
-    ...catalogs || [],
+    ...(catalogs || []),
     {
       path: "./locales/{locale}/messages",
       include: ["./src"],

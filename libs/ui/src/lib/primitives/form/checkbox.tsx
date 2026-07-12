@@ -45,11 +45,7 @@ const checkboxLabel = tv({ extend: label, base: "group-disabled:fg-disabled" });
 type CheckboxLabelProps = TWVProps<typeof checkboxLabel> & PropsWithChildren;
 
 function CheckboxLabel({ variants, children }: CheckboxLabelProps) {
-  return (
-    <span className={checkboxLabel(variants)}>
-      {children}
-    </span>
-  );
+  return <span className={checkboxLabel(variants)}>{children}</span>;
 }
 
 Checkbox.Indicator = CheckboxIndicator;

@@ -28,10 +28,7 @@ export function SettingsHotkeysHotkey({ value, onChange, hasError }: SettingsHot
         {value && <HotKey value={value} />}
       </div>
       <HotkeyRecorder onAccept={onChange}>
-        <Button
-          variants={{ size: "icon", style: "ghost" }}
-          aria-label={_(msg`hotkey-recorder.edit-button.label`)}
-        >
+        <Button variants={{ size: "icon", style: "ghost" }} aria-label={_(msg`hotkey-recorder.edit-button.label`)}>
           <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Edit03Icon} aria-hidden="true" />
         </Button>
       </HotkeyRecorder>

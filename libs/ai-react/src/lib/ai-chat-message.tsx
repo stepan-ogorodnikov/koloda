@@ -13,7 +13,9 @@ export function AIChatMessage({ role, parts }: AIChatMessageProps) {
 
   return (
     <AIChatMessageLayout role={role}>
-      {filteredParts.map((part, index) => <MessagePart key={index} part={part} />)}
+      {filteredParts.map((part, index) => (
+        <MessagePart key={index} part={part} />
+      ))}
     </AIChatMessageLayout>
   );
 }
@@ -35,9 +37,7 @@ type AIChatMessageLayoutProps = PropsWithChildren & {
 export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps) {
   return (
     <div className={aiChatMessage({ isUser: role === "user" })}>
-      <div className="flex flex-col gap-2">
-        {children}
-      </div>
+      <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
 }

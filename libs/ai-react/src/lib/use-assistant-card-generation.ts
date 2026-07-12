@@ -28,12 +28,14 @@ export function useAssistantCardGeneration(
   streamGenerator: CardGenerationExecutor,
   onError?: (error: Error) => void,
 ): UseAssistantCardGenerationReturn {
-  const { data: cards, isRunning: isGenerating, error, start, cancel, reset: clearCards } = useStreamingRequest<
-    GeneratedCard[],
-    GeneratedCard,
-    CardGenerationStreamRequest,
-    void
-  >({
+  const {
+    data: cards,
+    isRunning: isGenerating,
+    error,
+    start,
+    cancel,
+    reset: clearCards,
+  } = useStreamingRequest<GeneratedCard[], GeneratedCard, CardGenerationStreamRequest, void>({
     initialData: [],
     accumulate: (prev, card) => [...prev, card],
     executor: streamGenerator,

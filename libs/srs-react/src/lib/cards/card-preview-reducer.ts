@@ -33,9 +33,7 @@ function templateUpdated(draft: CardPreviewReducerState, payload: Template) {
 function setContent(draft: CardPreviewReducerState) {
   if (draft.template && draft.card) {
     const template = convertTemplateToLessonTemplate(draft.template);
-    const canSubmit = template.layout.reduce((acc, x) => (
-      acc || x.operation !== "display"
-    ), false);
+    const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
     draft.content = {
       index: 0,

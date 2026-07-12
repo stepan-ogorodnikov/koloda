@@ -5,37 +5,42 @@ import type { FieldComponentProps } from "./lesson-card-field-types";
 
 const lessonCardFieldValue = "break-all whitespace-pre-wrap text-center";
 
-export function LessonCardFieldText(
-  { value, operation, fieldId, fieldTitle, userValue, isSubmitted, isFirstInput, dispatch }: FieldComponentProps,
-) {
+export function LessonCardFieldText({
+  value,
+  operation,
+  fieldId,
+  fieldTitle,
+  userValue,
+  isSubmitted,
+  isFirstInput,
+  dispatch,
+}: FieldComponentProps) {
   if (operation === "type") {
     return (
       <AnimatePresence mode="wait">
-        {isSubmitted
-          ? (
-            <Fade className={lessonCardFieldValue} key="diff">
-              <LessonCardFieldTextDiff userValue={userValue} correctValue={value} />
-            </Fade>
-          )
-          : (
-            <Fade className={lessonCardFieldValue} key="input">
-              <TextField
-                aria-label={fieldTitle}
-                value={userValue}
-                onChange={(val) => dispatch(["cardFormUpdated", { key: fieldId, value: val }])}
-                autoFocus={isFirstInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                    e.preventDefault();
-                    dispatch(["cardSubmitted"]);
-                  }
-                  e.continuePropagation();
-                }}
-              >
-                <TextField.TextArea autoResize rows={1} maxRows={10} />
-              </TextField>
-            </Fade>
-          )}
+        {isSubmitted ? (
+          <Fade className={lessonCardFieldValue} key="diff">
+            <LessonCardFieldTextDiff userValue={userValue} correctValue={value} />
+          </Fade>
+        ) : (
+          <Fade className={lessonCardFieldValue} key="input">
+            <TextField
+              aria-label={fieldTitle}
+              value={userValue}
+              onChange={(val) => dispatch(["cardFormUpdated", { key: fieldId, value: val }])}
+              autoFocus={isFirstInput}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                  e.preventDefault();
+                  dispatch(["cardSubmitted"]);
+                }
+                e.continuePropagation();
+              }}
+            >
+              <TextField.TextArea autoResize rows={1} maxRows={10} />
+            </TextField>
+          </Fade>
+        )}
       </AnimatePresence>
     );
   }

@@ -90,10 +90,7 @@ function pickDefaultProfile(profiles: AIProfile[]): AIProfile | null {
   return sorted[0] ?? null;
 }
 
-export function reconcileAIProfileState(
-  stored: AIProfileState | null,
-  profiles: AIProfile[],
-): AIProfileState {
+export function reconcileAIProfileState(stored: AIProfileState | null, profiles: AIProfile[]): AIProfileState {
   if (!stored) {
     const fallback = pickDefaultProfile(profiles);
 
@@ -104,9 +101,7 @@ export function reconcileAIProfileState(
     };
   }
 
-  const profile = stored.profileId
-    ? profiles.find((p) => p.id === stored.profileId) ?? null
-    : null;
+  const profile = stored.profileId ? (profiles.find((p) => p.id === stored.profileId) ?? null) : null;
 
   if (!profile) {
     const fallback = pickDefaultProfile(profiles);

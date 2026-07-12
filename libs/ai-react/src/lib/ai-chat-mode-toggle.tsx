@@ -15,7 +15,9 @@ export function AIChatModeToggle({ mode, deckId, onModeChange }: AIChatModeToggl
   const { _ } = useLingui();
 
   const tooltip = deckId
-    ? (mode === "cards" ? _(msg`ai.chat.mode.cards.on`) : _(msg`ai.chat.mode.cards.off`))
+    ? mode === "cards"
+      ? _(msg`ai.chat.mode.cards.on`)
+      : _(msg`ai.chat.mode.cards.off`)
     : _(msg`ai.chat.mode.cards.no-deck`);
 
   return (
@@ -33,12 +35,7 @@ export function AIChatModeToggle({ mode, deckId, onModeChange }: AIChatModeToggl
         isDisabled={!deckId}
         onPress={() => onModeChange?.(mode === "chat" ? "cards" : "chat")}
       >
-        <HugeiconsIcon
-          className="size-6 min-w-6"
-          strokeWidth={1.5}
-          icon={ClipboardIcon}
-          aria-hidden="true"
-        />
+        <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.5} icon={ClipboardIcon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

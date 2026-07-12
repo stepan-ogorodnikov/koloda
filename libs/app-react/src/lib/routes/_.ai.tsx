@@ -27,9 +27,7 @@ export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
   validateSearch: (search: Record<string, unknown>) => ({
     conversationId: typeof search.conversationId === "string" ? search.conversationId : undefined,
-    deckId: typeof search.deckId === "string" || typeof search.deckId === "number"
-      ? Number(search.deckId)
-      : undefined,
+    deckId: typeof search.deckId === "string" || typeof search.deckId === "number" ? Number(search.deckId) : undefined,
   }),
   loader: ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery, getConversationsQuery } = queries;
@@ -53,9 +51,8 @@ function AIRoute() {
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
-  const { title } = useMemo(() => (
-    conversations.find((c) => c.id === conversationId)
-  ), [conversations, conversationId]) || {};
+  const { title } =
+    useMemo(() => conversations.find((c) => c.id === conversationId), [conversations, conversationId]) || {};
   const [globalAIProfileState] = useGlobalAIProfileState();
   const creatingFromDeckRef = useRef(false);
   const deckPickerRef = useRef<HTMLButtonElement>(null);
@@ -79,10 +76,13 @@ function AIRoute() {
     if (stored) navigate({ search: { conversationId: stored }, replace: true });
   }, [conversationId, deckIdFromSearch, navigate, newConversation, setDeck, globalAIProfileState]);
 
-  const handleConversationIdChange = useCallback((id: string) => {
-    setActiveConversationId(id);
-    navigate({ search: { conversationId: id }, replace: true });
-  }, [navigate]);
+  const handleConversationIdChange = useCallback(
+    (id: string) => {
+      setActiveConversationId(id);
+      navigate({ search: { conversationId: id }, replace: true });
+    },
+    [navigate],
+  );
 
   const handleActiveConversationDeleted = useCallback(() => {
     clearActiveConversationId();

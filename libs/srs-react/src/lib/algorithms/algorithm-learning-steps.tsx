@@ -49,9 +49,7 @@ export const AlgorithmLearningSteps = withForm({
                       onChange={(i) => field.handleChange(i as unknown as "s" | "m" | "h" | "d")}
                     >
                       <Select.Button variants={{ style: "ghost" }}>
-                        <Select.Value>
-                          {({ selectedText }) => selectedText}
-                        </Select.Value>
+                        <Select.Value>{({ selectedText }) => selectedText}</Select.Value>
                       </Select.Button>
                       <Select.Popover variants={{ class: "min-w-36" }}>
                         <Select.ListBox>
@@ -88,9 +86,7 @@ export const AlgorithmLearningSteps = withForm({
             <Button
               variants={{ style: "dashed", size: "icon" }}
               aria-label={_(
-                type === "learningSteps"
-                  ? msg`algorithm.learning-steps.add`
-                  : msg`algorithm.relearning-steps.add`,
+                type === "learningSteps" ? msg`algorithm.learning-steps.add` : msg`algorithm.relearning-steps.add`,
               )}
               onClick={() => {
                 field.pushValue(field.state.value[field.state.value.length - 1] || DEFAULT_FSRS_ALGORITHM[type][0]);

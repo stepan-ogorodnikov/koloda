@@ -38,11 +38,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
         <Tooltip content={_(msg`assistant.trigger`)}>
-          <Link
-            to="/ai"
-            search={{ deckId: Number(deckId) }}
-            className={button({ style: "dashed", size: "icon" })}
-          >
+          <Link className={button({ style: "dashed", size: "icon" })} to="/ai" search={{ deckId: Number(deckId) }}>
             <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
           </Link>
         </Tooltip>

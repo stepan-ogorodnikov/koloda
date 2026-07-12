@@ -20,10 +20,7 @@ import { cards, decks, templates } from "./schema";
  */
 export async function getTemplates(db: DB) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select()
-      .from(templates)
-      .orderBy(templates.createdAt);
+    const result = await db.select().from(templates).orderBy(templates.createdAt);
 
     return result as Template[];
   });
@@ -60,10 +57,7 @@ export async function getTemplate(db: DB, id: Template["id"]) {
  */
 export async function addTemplate(db: DB, data: InsertTemplateData) {
   return throwKnownError("db.add", async () => {
-    const result = await db
-      .insert(templates)
-      .values(data)
-      .returning();
+    const result = await db.insert(templates).values(data).returning();
 
     return result[0] as Template;
   });
@@ -87,11 +81,7 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
       if (!isValid) throw new AppError("validation.templates.update-locked", errors.join(", "));
     }
 
-    const result = await db
-      .update(templates)
-      .set(withUpdatedAt(payload))
-      .where(eq(templates.id, id))
-      .returning();
+    const result = await db.update(templates).set(withUpdatedAt(payload)).where(eq(templates.id, id)).returning();
 
     const returning = getTemplate(db, id);
 
@@ -129,9 +119,7 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
 
     if (template?.isLocked) throw new AppError("validation.templates.delete-locked");
 
-    const result = await db
-      .delete(templates)
-      .where(eq(templates.id, id));
+    const result = await db.delete(templates).where(eq(templates.id, id));
 
     return result;
   });
@@ -145,10 +133,7 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
  */
 export async function getTemplateDecks(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.get", async () => {
-    const result = await db
-      .select({ id: decks.id, title: decks.title })
-      .from(decks)
-      .where(eq(decks.templateId, id));
+    const result = await db.select({ id: decks.id, title: decks.title }).from(decks).where(eq(decks.templateId, id));
 
     return result as DeckWithOnlyTitle[];
   });
