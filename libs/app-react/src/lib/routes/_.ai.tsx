@@ -53,10 +53,9 @@ function AIRoute() {
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
-  const { title } = useMemo(
-    () => conversations.find((c) => c.id === conversationId),
-    [conversations, conversationId],
-  ) || {};
+  const { title } = useMemo(() => (
+    conversations.find((c) => c.id === conversationId)
+  ), [conversations, conversationId]) || {};
   const [globalAIProfileState] = useGlobalAIProfileState();
   const creatingFromDeckRef = useRef(false);
   const deckPickerRef = useRef<HTMLButtonElement>(null);
@@ -77,9 +76,7 @@ function AIRoute() {
       return;
     }
     const stored = getActiveConversationId();
-    if (stored) {
-      navigate({ search: { conversationId: stored }, replace: true });
-    }
+    if (stored) navigate({ search: { conversationId: stored }, replace: true });
   }, [conversationId, deckIdFromSearch, navigate, newConversation, setDeck, globalAIProfileState]);
 
   const handleConversationIdChange = useCallback((id: string) => {
@@ -114,10 +111,7 @@ function AIRoute() {
     <>
       <Layout.Sidebar>
         <AssistantNewConversationButton onConversationIdChange={handleConversationIdChange} />
-        <AssistantConversationsList
-          activeId={conversationId}
-          onActiveDeleted={handleActiveConversationDeleted}
-        />
+        <AssistantConversationsList activeId={conversationId} onActiveDeleted={handleActiveConversationDeleted} />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header>
@@ -147,10 +141,7 @@ function AIRoute() {
                 </Button>
               </Tooltip>
               {conversationId && (
-                <ConversationHeaderMenu
-                  conversationId={conversationId}
-                  onClone={handleConversationIdChange}
-                />
+                <ConversationHeaderMenu conversationId={conversationId} onClone={handleConversationIdChange} />
               )}
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { ColorSchemePicker, LanguageSelect } from "@koloda/app-react";
+import { ColorSchemePicker, LanguagePicker } from "@koloda/app-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
   Button,
@@ -54,7 +54,7 @@ export function DemoSetup() {
       </div>
       <div className="flex flex-row gap-2">
         <ColorSchemePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
-        <LanguageSelect buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <LanguagePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
       </div>
     </div>
   );

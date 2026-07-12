@@ -5,7 +5,7 @@ export * from "./lib/routes/__root";
 export * from "./lib/routeTree.gen";
 export * from "./lib/settings/interface-controls/color-scheme-picker";
 export * from "./lib/settings/interface-controls/color-theme-picker";
-export * from "./lib/settings/interface-controls/language-select";
+export * from "./lib/settings/interface-controls/language-picker";
 export * from "./lib/settings/settings-ai";
 export * from "./lib/settings/settings-ai-add-profile";
 export * from "./lib/settings/settings-ai-delete-profile";

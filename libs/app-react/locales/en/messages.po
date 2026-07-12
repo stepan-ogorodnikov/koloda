@@ -13,8 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:139
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:142
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:133
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:136
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -54,8 +54,8 @@ msgstr "Delete hotkey"
 msgid "hotkey-recorder.edit-button.label"
 msgstr "Change hotkey"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/language-select.tsx:30
-msgid "language-select.label"
+#: ../../libs/app-react/src/lib/settings/interface-controls/language-picker.tsx:30
+msgid "language-picker.label"
 msgstr "Language"
 
 #: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:64

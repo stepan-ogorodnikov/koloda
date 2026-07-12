@@ -9,7 +9,7 @@ import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 import { DarkThemePicker, LightThemePicker } from "./interface-controls/color-theme-picker";
-import { LanguageSelect } from "./interface-controls/language-select";
+import { LanguagePicker } from "./interface-controls/language-picker";
 
 export function SettingsInterface() {
   useTitle();
@@ -28,7 +28,7 @@ export function SettingsInterface() {
 
   return (
     <FormLayout>
-      <LanguageSelect variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} withIcon={false} />
+      <LanguagePicker variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} withIcon={false} />
       <FormLayout.Section term={_(msg`settings.interface.scheme`)}>
         <ToggleGroup
           selectedKeys={[scheme]}
