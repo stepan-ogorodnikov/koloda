@@ -1,5 +1,5 @@
-use tauri::{AppHandle, Manager, State};
 pub use koloda_core::app::db::Database;
+use tauri::{AppHandle, Manager, State};
 
 pub type DB<'a> = State<'a, Database>;
 

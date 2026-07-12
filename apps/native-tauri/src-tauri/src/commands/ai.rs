@@ -1,5 +1,5 @@
-use tauri::command;
 use serde::Deserialize;
+use tauri::command;
 
 use crate::{
     ai::codex::{list_codex_models, run_codex_prompt, CodexModel},

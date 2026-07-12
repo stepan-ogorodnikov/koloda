@@ -61,16 +61,29 @@ pub fn list_codex_models() -> Result<Vec<CodexModel>, AppError> {
     })?;
 
     let cache: ModelsCache = serde_json::from_str(&content)?;
-    let models: Vec<CodexModel> = cache.models
+    let models: Vec<CodexModel> = cache
+        .models
         .into_iter()
         .filter(|m| m.visibility == "list")
         .map(|m| {
             let levels = if m.supported_reasoning_levels.is_empty() {
                 vec![
-                    ReasoningLevel { effort: "low".to_string(), description: "Fast responses with lighter reasoning".to_string() },
-                    ReasoningLevel { effort: "medium".to_string(), description: "Balances speed and reasoning depth for everyday tasks".to_string() },
-                    ReasoningLevel { effort: "high".to_string(), description: "Greater reasoning depth for complex problems".to_string() },
-                    ReasoningLevel { effort: "xhigh".to_string(), description: "Extra high reasoning depth for complex problems".to_string() },
+                    ReasoningLevel {
+                        effort: "low".to_string(),
+                        description: "Fast responses with lighter reasoning".to_string(),
+                    },
+                    ReasoningLevel {
+                        effort: "medium".to_string(),
+                        description: "Balances speed and reasoning depth for everyday tasks".to_string(),
+                    },
+                    ReasoningLevel {
+                        effort: "high".to_string(),
+                        description: "Greater reasoning depth for complex problems".to_string(),
+                    },
+                    ReasoningLevel {
+                        effort: "xhigh".to_string(),
+                        description: "Extra high reasoning depth for complex problems".to_string(),
+                    },
                 ]
             } else {
                 m.supported_reasoning_levels
@@ -103,7 +116,11 @@ fn resolve_models_cache_path() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from(CODEX_MODELS_CACHE_FILE))
 }
 
-pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>, reasoning_effort: Option<&str>) -> Result<String, AppError> {
+pub fn run_codex_prompt(
+    prompt: &str,
+    model_id: Option<&str>,
+    reasoning_effort: Option<&str>,
+) -> Result<String, AppError> {
     let temp_dir = create_temp_dir()?;
     let output_path = temp_dir.join("output.txt");
 
@@ -149,8 +166,7 @@ pub fn run_codex_prompt(prompt: &str, model_id: Option<&str>, reasoning_effort: 
         return Ok(response);
     }
 
-    let details = extract_codex_error_details(&output)
-        .unwrap_or_else(|| "Codex returned no output.".to_string());
+    let details = extract_codex_error_details(&output).unwrap_or_else(|| "Codex returned no output.".to_string());
     Err(AppError::new("unknown", Some(details)))
 }
 

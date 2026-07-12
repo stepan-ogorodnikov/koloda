@@ -131,7 +131,10 @@ fn test_missing_navigation_defaults_to_empty_scope() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok(), "Missing navigation should default to empty scope");
+    assert!(
+        settings.validate().is_ok(),
+        "Missing navigation should default to empty scope"
+    );
 }
 
 #[test]
@@ -143,7 +146,10 @@ fn test_missing_grades_defaults_to_empty_scope() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok(), "Missing grades should default to empty scope");
+    assert!(
+        settings.validate().is_ok(),
+        "Missing grades should default to empty scope"
+    );
 }
 
 #[test]
@@ -270,10 +276,7 @@ fn test_duplicate_keys_between_ui_and_navigation_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(
-        result.is_err(),
-        "Same key in ui and navigation should fail"
-    );
+    assert!(result.is_err(), "Same key in ui and navigation should fail");
     assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }
 

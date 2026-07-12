@@ -55,11 +55,9 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
     assert_eq!(updated.reps, 1);
     assert_eq!(updated.due_at, Some(1_900_000_000_000));
 
-    let saved_reviews = koloda_core::repo::reviews::get_reviews(
-        &db,
-        koloda_core::domain::reviews::GetReviewsData { card_id },
-    )
-    .expect("reviews query should succeed");
+    let saved_reviews =
+        koloda_core::repo::reviews::get_reviews(&db, koloda_core::domain::reviews::GetReviewsData { card_id })
+            .expect("reviews query should succeed");
     assert_eq!(saved_reviews.len(), 1);
     assert_eq!(saved_reviews[0].card_id, card_id);
     assert_eq!(saved_reviews[0].rating, 3);
@@ -115,11 +113,9 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
     assert_eq!(card_after.reps, 0, "card update should be rolled back");
     assert_eq!(card_after.due_at, None, "card update should be rolled back");
 
-    let saved_reviews = koloda_core::repo::reviews::get_reviews(
-        &db,
-        koloda_core::domain::reviews::GetReviewsData { card_id },
-    )
-    .expect("reviews query should succeed");
+    let saved_reviews =
+        koloda_core::repo::reviews::get_reviews(&db, koloda_core::domain::reviews::GetReviewsData { card_id })
+            .expect("reviews query should succeed");
     assert!(saved_reviews.is_empty(), "review insert should be rolled back");
 }
 

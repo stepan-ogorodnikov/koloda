@@ -1,8 +1,8 @@
+use crate::app::db::DB;
+use koloda_core::app::db::Database;
+use koloda_core::app::error::AppError;
 use koloda_core::app::init::{self as core_init, DbStatus};
 pub use koloda_core::app::init::{SeedData, SeedSettings};
-use crate::app::db::DB;
-use koloda_core::app::error::AppError;
-use koloda_core::app::db::Database;
 
 #[tauri::command]
 pub fn get_db_status(db: DB<'_>) -> Result<DbStatus, AppError> {
