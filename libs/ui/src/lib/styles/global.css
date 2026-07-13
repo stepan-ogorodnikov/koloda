@@ -8,6 +8,8 @@
 @import "./scheme-dark.css";
 @import "./themes/atom-one-light.css";
 @import "./themes/atom-one-dark.css";
+@import "./themes/github-light.css";
+@import "./themes/github-dark.css";
 
 @theme {
   /* breakpoints */

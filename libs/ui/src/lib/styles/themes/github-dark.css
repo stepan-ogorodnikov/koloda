@@ -1,0 +1,26 @@
+:root.dark[data-dark-theme="github-dark"] {
+  --color-bg: #0d1117;
+  --color-mono-1: #f0f6fc;
+  --color-mono-2: #9198a1;
+  --color-mono-3: #656c76;
+  --color-cyan: #39c5cf;
+  --color-blue: #4493f8;
+  --color-purple: #ab7df8;
+  --color-green: #3fb950;
+  --color-red: #f85149;
+  --color-red-2: #da3633;
+  --color-orange: #db6d28;
+  --color-orange-2: #d29922;
+  --outline-focus-ring: var(--color-blue);
+  /* accent-derived fills (Primer uses accent blue for checked controls) */
+  --bg-switch-selected: oklch(from var(--color-blue) calc(l - 0.12) calc(c + 0.04) h);
+  --border-switch-selected: oklch(from var(--bg-switch-selected) calc(l + 0.04) c h);
+  --bg-checkbox-selected: oklch(from var(--color-blue) calc(l - 0.12) calc(c + 0.04) h);
+  --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l + 0.04) c h);
+  --bg-lesson-type-blue: oklch(from var(--color-blue) calc(l - 0.24) c h);
+  --bg-lesson-type-red: oklch(from var(--color-red) calc(l - 0.24) calc(c - 0.02) h);
+  --bg-lesson-type-green: oklch(from var(--color-green) calc(l - 0.2) calc(c + 0.02) h);
+  /* electron doesn't accept oklch */
+  --titlebar-overlay-color: #010409;
+  --titlebar-overlay-symbol-color: #f0f6fc;
+}

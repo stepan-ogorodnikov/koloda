@@ -21,10 +21,12 @@ export type Scheme = keyof typeof SCHEMES;
 
 export const LIGHT_THEMES: Record<string, string> = {
   "atom-one-light": "Atom One Light",
+  "github-light": "GitHub Light",
 };
 
 export const DARK_THEMES: Record<string, string> = {
   "atom-one-dark": "Atom One Dark",
+  "github-dark": "GitHub Dark",
 };
 
 export type LightTheme = keyof typeof LIGHT_THEMES;

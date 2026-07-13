@@ -4,8 +4,8 @@ use crate::app::error::{error_codes, AppError};
 
 pub const LANGUAGES: &[&str] = &["en", "ru"];
 pub const SCHEMES: &[&str] = &["light", "dark", "system"];
-pub const LIGHT_THEMES: &[&str] = &["atom-one-light"];
-pub const DARK_THEMES: &[&str] = &["atom-one-dark"];
+pub const LIGHT_THEMES: &[&str] = &["atom-one-light", "github-light"];
+pub const DARK_THEMES: &[&str] = &["atom-one-dark", "github-dark"];
 pub const MOTION_SETTINGS: &[&str] = &["on", "off", "system"];
 
 fn default_light_theme() -> String {
