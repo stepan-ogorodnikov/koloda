@@ -1,0 +1,18 @@
+:root.dark,
+:root.dark[data-dark-theme="atom-one-dark"] {
+  --color-bg: #282c34;
+  --color-mono-1: #abb2bf;
+  --color-mono-2: #828997;
+  --color-mono-3: #5c6370;
+  --color-cyan: #56b6c2;
+  --color-blue: #61afef;
+  --color-purple: #c678dd;
+  --color-green: #98c379;
+  --color-red: #e06c75;
+  --color-red-2: #be5046;
+  --color-orange: #d19a66;
+  --color-orange-2: #e5c07b;
+  /* electron doesn't accept oklch */
+  --titlebar-overlay-color: #23272f;
+  --titlebar-overlay-symbol-color: #abb2bf;
+}

@@ -1,0 +1,94 @@
+:root,
+:root.light,
+:root:not(.dark) {
+  /* semantic */
+  --bg-body: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --bg-level-1: var(--color-bg);
+  --bg-level-2: oklch(from var(--color-bg) calc(l - 0.025) c h);
+  --fg-level-1: var(--color-mono-1);
+  --fg-level-2: var(--color-mono-2);
+  --fg-level-3: var(--color-mono-3);
+  --fg-level-4: oklch(from var(--fg-level-3) calc(l + 0.08) c h);
+  --fg-inactive: var(--fg-level-2);
+  --fg-disabled: var(--fg-level-3);
+  --fg-link: var(--color-blue);
+  --fg-link-hover: oklch(from var(--color-blue) calc(l + 0.06) c h);
+  --fg-error: var(--color-red);
+  --fg-success: var(--color-green);
+  --outline-focus-ring: var(--color-orange-2);
+  --outline-error-ring: var(--color-red);
+  /* scrollbar */
+  --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l - 0.13) c h);
+  --scrollbar-track: transparent;
+  /* input */
+  --bg-input: oklch(from var(--bg-level-1) calc(l - 0.0075) c h);
+  --fg-input-placeholder: var(--fg-disabled);
+  --border-input: oklch(from var(--bg-level-1) calc(l - 0.05) c h);
+  --shadow-input: inset 0 0.125rem 0.125rem oklch(75% 0 0 / 6%);
+  /* button */
+  --shadow-button-pressed: var(--shadow-input);
+  --bg-button-hover: oklch(0% 0 0 / 4%);
+  --bg-button-pressed: oklch(0% 0 0 / 5%);
+  --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --border-button-bordered: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
+  --bg-button-primary: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
+  --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l - 0.01) c h);
+  --bg-button-primary-disabled: transparent;
+  --border-button-primary: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
+  --shadow-button-primary: inset 0 0.5rem 0.5rem oklch(100% 0 0 / 30%);
+  /* switch */
+  --bg-switch: oklch(0% 0 0 / 5%);
+  --bg-switch-selected: var(--color-green);
+  --shadow-switch: var(--shadow-input);
+  --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+  --border-switch-selected: oklch(from var(--color-green) calc(l - 0.08) c h);
+  --bg-switch-bullet: oklch(100% 0 0);
+  /* checkbox */
+  --bg-checkbox: oklch(0% 0 0 / 5%);
+  --bg-checkbox-selected: var(--color-green);
+  --shadow-checkbox: var(--shadow-input);
+  --border-checkbox: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
+  --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l - 0.08) c h);
+  --fg-checkbox-check: oklch(100% 0 0);
+  /* pickers */
+  --bg-picker-item-hover: oklch(50% 0 0 / 5%);
+  /* toggle group */
+  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
+  --bg-toggle-group-active: var(--bg-level-1);
+  --border-toggle-group-active: oklch(from var(--bg-toggle-group-active) calc(l - 0.06) c h);
+  --shadow-toggle-group-active: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 50%);
+  /* overlay */
+  --bg-overlay: radial-gradient(oklch(0% 0 0 / 35%), oklch(0% 0 0 / 30%));
+  --shadow-overlay-frame: 0 0.25rem 0.25rem oklch(25% 0 0 / 1%), 0 1rem 1rem 0.25rem oklch(50% 0 0 / 4%);
+  /* main */
+  --border-main: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
+  --bg-main-sidebar-link-active: oklch(from var(--bg-level-1) calc(l - 0.015) c h);
+  /* table */
+  --border-table: oklch(0% 0 0 / 5%);
+  --bg-table-head: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
+  --fg-table-head: var(--fg-level-2);
+  --fg-table-head-inactive: var(--fg-level-3);
+  /* tabs */
+  --fg-tabs-item: var(--fg-level-4);
+  --fg-tabs-item-active: var(--fg-level-1);
+  /* progress bar */
+  --bg-progress-bar: oklch(0% 0 0 / 6%);
+  --bg-progress-bar-fill: oklch(0% 0 0 / 25%);
+  --shadow-progress-bar: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 4%);
+  --shadow-progress-bar-fill: inset 0 0.125rem 0.125rem oklch(100% 0 0 / 30%);
+  /* lesson type */
+  --fg-lesson-type-blue: var(--color-blue);
+  --fg-lesson-type-red: var(--color-red);
+  --fg-lesson-type-green: var(--color-green);
+  --bg-lesson-type-blue: oklch(from var(--fg-lesson-type-blue) calc(l + 0.18) c h);
+  --bg-lesson-type-red: oklch(from var(--fg-lesson-type-red) calc(l + 0.16) calc(c + 0.03) h);
+  --bg-lesson-type-green: oklch(from var(--fg-lesson-type-green) calc(l + 0.08) c h);
+  /* nav */
+  --bg-nav-active: oklch(0% 0 0 / 2%);
+  --border-nav-active: oklch(from var(--bg-body) calc(l - 0.05) c h);
+  --shadow-nav-active: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 1%);
+  --fg-nav-item: var(--fg-inactive);
+  --fg-nav-active: var(--fg-level-1);
+  /* chat */
+  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l - 0.02) c h);
+}

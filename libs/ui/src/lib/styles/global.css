@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "tailwindcss-react-aria-components";
+@plugin "@tailwindcss/typography";
+@import "./utilities";
+@import "./base";
+@import "./scheme-light.css";
+@import "./scheme-dark.css";
+@import "./themes/atom-one-light.css";
+@import "./themes/atom-one-dark.css";
+
+@theme {
+  /* breakpoints */
+  --breakpoint-\*: initial;
+  --breakpoint-wd: 48rem; /* wide */
+  /* containers */
+  --container-main: 64rem;
+  /* sizes */
+  --titlebar-height: 2.5rem;
+  /* fonts */
+  --font-sans: "Inter Variable", sans-serif;
+  /* colors */
+  --color-\*: initial;
+  --color-bg-body: var(--bg-body);
+  --color-bg-level-1: var(--bg-level-1);
+  --color-bg-level-2: var(--bg-level-2);
+  --color-fg-level-1: var(--fg-level-1);
+  --color-fg-level-2: var(--fg-level-2);
+  --color-fg-level-3: var(--fg-level-3);
+  --color-fg-level-4: var(--fg-level-4);
+  --color-fg-inactive: var(--fg-inactive);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-link: var(--fg-link);
+  --color-fg-link-hover: var(--fg-link-hover);
+  --color-fg-error: var(--fg-error);
+  --color-fg-success: var(--fg-success);
+  --color-outline-focus-ring: var(--outline-focus-ring);
+  --color-outline-error-ring: var(--outline-error-ring);
+  /* input */
+  --color-bg-input: var(--bg-input);
+  --color-fg-input-placeholder: var(--fg-input-placeholder);
+  --shadow-input: var(--shadow-input);
+  --color-border-input: var(--border-input);
+  /* button */
+  --color-bg-button-hover: var(--bg-button-hover);
+  --color-bg-button-pressed: var(--bg-button-pressed);
+  --shadow-button-pressed: var(--shadow-button-pressed);
+  --color-bg-button-bordered-hover: var(--bg-button-bordered-hover);
+  --color-border-button-bordered: var(--border-button-bordered);
+  --shadow-button-bordered: var(--shadow-button-bordered);
+  --color-bg-button-primary: var(--bg-button-primary);
+  --color-bg-button-primary-hover: var(--bg-button-primary-hover);
+  --color-border-button-primary: var(--border-button-primary);
+  --shadow-button-primary: var(--shadow-button-primary);
+  /* switch */
+  --color-bg-switch: var(--bg-switch);
+  --color-bg-switch-selected: var(--bg-switch-selected);
+  --shadow-switch: var(--shadow-switch);
+  --color-border-switch: var(--border-switch);
+  --color-border-switch-selected: var(--border-switch-selected);
+  --color-bg-switch-bullet: var(--bg-switch-bullet);
+  /* checkbox */
+  --color-bg-checkbox: var(--bg-checkbox);
+  --color-bg-checkbox-selected: var(--bg-checkbox-selected);
+  --shadow-checkbox: var(--shadow-checkbox);
+  --color-border-checkbox: var(--border-checkbox);
+  --color-border-checkbox-selected: var(--border-checkbox-selected);
+  --color-fg-checkbox-check: var(--fg-checkbox-check);
+  /* pickers */
+  --color-bg-picker-item-hover: var(--bg-picker-item-hover);
+  /* toggle group */
+  --color-bg-toggle-group: var(--bg-toggle-group);
+  --color-bg-toggle-group-active: var(--bg-toggle-group-active);
+  --color-border-toggle-group-active: var(--border-toggle-group-active);
+  --shadow-toggle-group-active: var(--shadow-toggle-group-active);
+  /* overlays */
+  --color-bg-overlay: var(--bg-overlay);
+  --color-border-overlay-frame: var(--border-main);
+  --shadow-overlay-frame: var(--shadow-overlay-frame);
+  /* main */
+  --color-border-main: var(--border-main);
+  --color-bg-main-sidebar-link-active: var(--bg-main-sidebar-link-active);
+  /* table */
+  --color-border-table: var(--border-table);
+  --color-bg-table-head: var(--bg-table-head);
+  --color-fg-table-head: var(--fg-table-head);
+  --color-fg-table-head-inactive: var(--fg-table-head-inactive);
+  /* tabs */
+  --color-fg-tabs-item: var(--fg-tabs-item);
+  --color-fg-tabs-item-active: var(--fg-tabs-item-active);
+  /* progress bar */
+  --color-bg-progress-bar: var(--bg-progress-bar);
+  --color-bg-progress-bar-fill: var(--bg-progress-bar-fill);
+  --shadow-progress-bar: var(--shadow-progress-bar);
+  --shadow-progress-bar-fill: var(--shadow-progress-bar-fill);
+  /* lesson type */
+  --color-bg-lesson-type-blue: var(--bg-lesson-type-blue);
+  --color-bg-lesson-type-red: var(--bg-lesson-type-red);
+  --color-bg-lesson-type-green: var(--bg-lesson-type-green);
+  --color-fg-lesson-type-blue: var(--fg-lesson-type-blue);
+  --color-fg-lesson-type-red: var(--fg-lesson-type-red);
+  --color-fg-lesson-type-green: var(--fg-lesson-type-green);
+  /* nav */
+  --color-bg-nav-active: var(--bg-nav-active);
+  --color-border-nav-active: var(--border-nav-active);
+  --shadow-nav-active: var(--shadow-nav-active);
+  --color-fg-nav-item: var(--fg-nav-item);
+  --color-fg-nav-active: var(--fg-nav-active);
+  /* chat */
+  --color-bg-chat-message: var(--bg-level-2);
+  --color-border-chat-message: var(--border-chat-message);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant motion (&:where(.motion, .motion *));

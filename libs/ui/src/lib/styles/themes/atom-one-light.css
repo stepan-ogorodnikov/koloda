@@ -1,0 +1,19 @@
+:root,
+:root.light[data-light-theme="atom-one-light"],
+:root:not(.dark)[data-light-theme="atom-one-light"] {
+  --color-bg: #fafafa;
+  --color-mono-1: #383a42;
+  --color-mono-2: #696c77;
+  --color-mono-3: #a0a1a7;
+  --color-cyan: #0184bc;
+  --color-blue: #4078f2;
+  --color-purple: #a626a4;
+  --color-green: #50a14f;
+  --color-red: #e45649;
+  --color-red-2: #ca1243;
+  --color-orange: #986801;
+  --color-orange-2: #c18401;
+  /* electron doesn't accept oklch */
+  --titlebar-overlay-color: #f3f3f3;
+  --titlebar-overlay-symbol-color: #383a42;
+}

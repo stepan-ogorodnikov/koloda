@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../../../libs/ui/src/lib/global.css";
+@import "../../../libs/ui/src/lib/styles/global.css";
 @source "../../../libs/ui/src/lib/";
 @source "../../../libs/app-react/src/lib/";
 @source "../../../libs/srs-react/src/lib/";
