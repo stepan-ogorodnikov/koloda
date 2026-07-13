@@ -2,93 +2,86 @@
 :root.light,
 :root:not(.dark) {
   /* semantic */
-  --bg-body: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
+  --bg-body: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
   --bg-level-1: var(--color-bg);
-  --bg-level-2: oklch(from var(--color-bg) calc(l - 0.025) c h);
+  --bg-level-2: color-mix(in oklab, var(--fg-level-1) 6%, var(--bg-level-1));
   --fg-level-1: var(--color-mono-1);
   --fg-level-2: var(--color-mono-2);
   --fg-level-3: var(--color-mono-3);
-  --fg-level-4: oklch(from var(--fg-level-3) calc(l + 0.08) c h);
+  --fg-level-4: color-mix(in oklab, var(--bg-level-1) 35%, var(--fg-level-3));
   --fg-inactive: var(--fg-level-2);
   --fg-disabled: var(--fg-level-3);
   --fg-link: var(--color-blue);
-  --fg-link-hover: oklch(from var(--color-blue) calc(l + 0.06) c h);
+  --fg-link-hover: color-mix(in oklab, var(--bg-level-1) 18%, var(--color-blue));
   --fg-error: var(--color-red);
   --fg-success: var(--color-green);
   --outline-focus-ring: var(--color-orange-2);
   --outline-error-ring: var(--color-red);
   /* scrollbar */
-  --scrollbar-thumb: oklch(from var(--bg-level-1) calc(l - 0.13) c h);
+  --scrollbar-thumb: color-mix(in oklab, var(--fg-level-1) 28%, var(--bg-level-1));
   --scrollbar-track: transparent;
   /* input */
-  --bg-input: oklch(from var(--bg-level-1) calc(l - 0.0075) c h);
+  --bg-input: color-mix(in oklab, var(--fg-level-1) 2%, var(--bg-level-1));
   --fg-input-placeholder: var(--fg-disabled);
-  --border-input: oklch(from var(--bg-level-1) calc(l - 0.05) c h);
+  --border-input: color-mix(in oklab, var(--fg-level-1) 12%, var(--bg-level-1));
   --shadow-input: inset 0 0.125rem 0.125rem oklch(75% 0 0 / 6%);
   /* button */
   --shadow-button-pressed: var(--shadow-input);
-  --bg-button-hover: oklch(0% 0 0 / 4%);
-  --bg-button-pressed: oklch(0% 0 0 / 5%);
-  --bg-button-bordered-hover: oklch(from var(--bg-level-1) calc(l - 0.02) c h);
-  --border-button-bordered: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
-  --bg-button-primary: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
-  --bg-button-primary-hover: oklch(from var(--bg-button-primary) calc(l - 0.01) c h);
+  --bg-button-hover: color-mix(in oklab, var(--fg-level-1) 4%, transparent);
+  --bg-button-pressed: color-mix(in oklab, var(--fg-level-1) 5%, transparent);
+  --bg-button-bordered-hover: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
+  --border-button-bordered: color-mix(in oklab, var(--fg-level-1) 10%, var(--bg-level-1));
+  --bg-button-primary: color-mix(in oklab, var(--fg-level-1) 3%, var(--bg-level-1));
+  --bg-button-primary-hover: color-mix(in oklab, var(--fg-level-1) 3%, var(--bg-button-primary));
   --bg-button-primary-disabled: transparent;
-  --border-button-primary: oklch(from var(--bg-level-1) calc(l - 0.04) c h);
+  --border-button-primary: color-mix(in oklab, var(--fg-level-1) 10%, var(--bg-level-1));
   --shadow-button-primary: inset 0 0.5rem 0.5rem oklch(100% 0 0 / 30%);
   /* switch */
-  --bg-switch: oklch(0% 0 0 / 5%);
-  --bg-switch-selected: var(--color-green);
+  --bg-switch: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
   --shadow-switch: var(--shadow-input);
-  --border-switch: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
-  --border-switch-selected: oklch(from var(--color-green) calc(l - 0.08) c h);
+  --border-switch: color-mix(in oklab, var(--fg-level-1) 14%, var(--bg-level-1));
   --bg-switch-bullet: oklch(100% 0 0);
   /* checkbox */
-  --bg-checkbox: oklch(0% 0 0 / 5%);
-  --bg-checkbox-selected: var(--color-green);
+  --bg-checkbox: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
   --shadow-checkbox: var(--shadow-input);
-  --border-checkbox: oklch(from var(--bg-level-1) calc(l - 0.06) c h);
-  --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l - 0.08) c h);
+  --border-checkbox: color-mix(in oklab, var(--fg-level-1) 14%, var(--bg-level-1));
   --fg-checkbox-check: oklch(100% 0 0);
   /* pickers */
-  --bg-picker-item-hover: oklch(50% 0 0 / 5%);
+  --bg-picker-item-hover: color-mix(in oklab, var(--fg-level-1) 5%, transparent);
   /* toggle group */
-  --bg-toggle-group: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
+  --bg-toggle-group: color-mix(in oklab, var(--fg-level-1) 8%, var(--bg-level-1));
   --bg-toggle-group-active: var(--bg-level-1);
-  --border-toggle-group-active: oklch(from var(--bg-toggle-group-active) calc(l - 0.06) c h);
+  --border-toggle-group-active: color-mix(in oklab, var(--fg-level-1) 14%, var(--bg-toggle-group-active));
   --shadow-toggle-group-active: inset 0 0.25rem 0.25rem oklch(100% 0 0 / 50%);
   /* overlay */
   --bg-overlay: radial-gradient(oklch(0% 0 0 / 35%), oklch(0% 0 0 / 30%));
   --shadow-overlay-frame: 0 0.25rem 0.25rem oklch(25% 0 0 / 1%), 0 1rem 1rem 0.25rem oklch(50% 0 0 / 4%);
   /* main */
-  --border-main: oklch(from var(--bg-level-1) calc(l - 0.03) c h);
-  --bg-main-sidebar-link-active: oklch(from var(--bg-level-1) calc(l - 0.015) c h);
+  --border-main: color-mix(in oklab, var(--fg-level-1) 8%, var(--bg-level-1));
+  --bg-main-sidebar-link-active: color-mix(in oklab, var(--fg-level-1) 4%, var(--bg-level-1));
   /* table */
-  --border-table: oklch(0% 0 0 / 5%);
-  --bg-table-head: oklch(from var(--bg-level-1) calc(l - 0.01) c h);
+  --border-table: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-1));
+  --bg-table-head: color-mix(in oklab, var(--fg-level-1) 3%, var(--bg-level-1));
   --fg-table-head: var(--fg-level-2);
   --fg-table-head-inactive: var(--fg-level-3);
   /* tabs */
-  --fg-tabs-item: var(--fg-level-4);
+  --fg-tabs-item: var(--fg-level-2);
   --fg-tabs-item-active: var(--fg-level-1);
   /* progress bar */
-  --bg-progress-bar: oklch(0% 0 0 / 6%);
-  --bg-progress-bar-fill: oklch(0% 0 0 / 25%);
+  --bg-progress-bar: color-mix(in oklab, var(--fg-level-1) 6%, var(--bg-level-1));
+  --bg-progress-bar-fill: color-mix(in oklab, var(--fg-level-1) 25%, var(--bg-level-1));
   --shadow-progress-bar: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 4%);
   --shadow-progress-bar-fill: inset 0 0.125rem 0.125rem oklch(100% 0 0 / 30%);
-  /* lesson type */
+  /* lesson type — backgrounds come from the theme */
   --fg-lesson-type-blue: var(--color-blue);
   --fg-lesson-type-red: var(--color-red);
   --fg-lesson-type-green: var(--color-green);
-  --bg-lesson-type-blue: oklch(from var(--fg-lesson-type-blue) calc(l + 0.18) c h);
-  --bg-lesson-type-red: oklch(from var(--fg-lesson-type-red) calc(l + 0.16) calc(c + 0.03) h);
-  --bg-lesson-type-green: oklch(from var(--fg-lesson-type-green) calc(l + 0.08) c h);
   /* nav */
-  --bg-nav-active: oklch(0% 0 0 / 2%);
-  --border-nav-active: oklch(from var(--bg-body) calc(l - 0.05) c h);
+  --bg-nav-active: color-mix(in oklab, var(--fg-level-1) 2%, var(--bg-level-1));
+  --border-nav-active: color-mix(in oklab, var(--fg-level-1) 12%, var(--bg-body));
   --shadow-nav-active: inset 0 0.125rem 0.125rem oklch(0% 0 0 / 1%);
   --fg-nav-item: var(--fg-inactive);
   --fg-nav-active: var(--fg-level-1);
   /* chat */
-  --border-chat-message: oklch(from var(--color-bg-chat-message) calc(l - 0.02) c h);
+  --border-chat-message: color-mix(in oklab, var(--fg-level-1) 5%, var(--bg-level-2));
 }
