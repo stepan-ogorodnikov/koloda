@@ -17,18 +17,6 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 bun install
 ```
 
-### Dev server (desktop — Tauri)
-
-```bash
-nx serve native-tauri
-```
-
-### Build (desktop — Tauri)
-
-```bash
-nx build native-tauri
-```
-
 ### Dev server (desktop — Electron)
 
 ```bash
@@ -46,7 +34,6 @@ nx build native-electron
 - Nx monorepo with Bun as package manager
 - **Frontend**: Vite, React, TanStack Router
 - **Web**: PGLite
-- **Desktop**: Tauri + SQLite
 - **Desktop**: Electron + Rust NAPI + SQLite
 - **Testing**: Playwright (E2E)
 
@@ -58,8 +45,6 @@ apps/
   demo-e2e/               # E2E tests for web app (Playwright)
   native-electron/        # Desktop app backend (Electron / Rust NAPI)
   native-electron-react/  # Desktop app frontend (React / Electron)
-  native-tauri/           # Desktop app backend (Rust / Tauri)
-  native-tauri-react/     # Desktop app frontend (React / Tauri)
 libs/
   ai/                     # Domain lib for AI features
   ai-react/               # AI features React UI

@@ -3,7 +3,4 @@ members = [
     "crates/koloda-core",
     "apps/native-electron/src-rust",
 ]
-exclude = [
-    "apps/native-tauri/src-tauri",
-]
 resolver = "2"

@@ -365,7 +365,6 @@ Add provider to all app stores:
 
 - `apps/demo/src/app/store.ts`
 - `apps/native-electron-react/src/app/store.ts`
-- `apps/native-tauri-react/src/app/store.ts`
 
 ```typescript
 store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "myProvider"]);

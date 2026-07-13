@@ -25,9 +25,6 @@
       "path": "./libs/srs-sqlite"
     },
     {
-      "path": "./apps/native-tauri-react"
-    },
-    {
       "path": "./libs/core-react"
     },
     {

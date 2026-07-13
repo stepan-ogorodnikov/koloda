@@ -21,7 +21,7 @@ Always ask: "If another developer (or LLM) saw this, would they try to 'fix' it 
 Document these scenarios:
 
 - Counter-intuitive logic: Code that looks wrong but is correct.
-- Library workarounds: Quirks with the Vercel AI SDK, Ollama, Tauri, etc.
+- Library workarounds: Quirks with the Vercel AI SDK, Ollama, etc.
 - Invariants: State transitions or data shapes that must not change.
 - Edge cases: Handling of partial failures, aborted streams, or empty states.
 
