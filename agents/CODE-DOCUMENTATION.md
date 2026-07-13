@@ -100,6 +100,9 @@ How do you know if a decision needs a code comment or a full ADR file in `docs/a
 - Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual card generation strategies).
   A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`. ADRs bridge that gap.
 
+Index: `docs/adr/README.md`.
+Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches both TS domain and `koloda-core`.
+
 Summary Checklist for Agents
 
 - Did I write a comment explaining why I did something instead of what I did?

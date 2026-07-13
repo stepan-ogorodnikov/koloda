@@ -27,6 +27,7 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 
 ## Read next
 
+- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why this crate exists beside the TS domain
 - `agents/DB.md` — schema workflow; Rust owns the embedded desktop migrations
 - `agents/ADD-AI-PROVIDER.md` — Rust domain + repo + secrets redaction
 - `agents/ADD-HOTKEY.md` — `domain/settings_hotkeys.rs`

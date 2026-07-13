@@ -32,6 +32,7 @@ Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client fa
 
 ## Read next
 
+- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — Rust owns provider identity; this lib mirrors it
 - `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
 - `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming/generation)
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the domain behavior this lib serves
