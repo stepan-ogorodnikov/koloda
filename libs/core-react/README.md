@@ -26,6 +26,7 @@ Demo implements `Queries` with `@koloda/srs-pgsql`; desktop implements it via El
 
 ## Read next
 
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why each app injects a different `Queries` backend
 - `agents/ADD-HOTKEY.md` — `useAppHotkey` patterns
 - `docs/specs/HOTKEYS.md` — hotkey behavior
 - `agents/LAYOUT.md` — interface settings synced through atoms

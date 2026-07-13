@@ -1,5 +1,7 @@
 ### Database Migrations
 
+Why two engines and ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`.
+
 - **Dual Drizzle Config**: Separate configs for each dialect
   - `drizzle.config.pgsql.ts`: PostgreSQL/PGlite for web
   - `drizzle.config.sqlite.ts`: SQLite/libSQL for desktop

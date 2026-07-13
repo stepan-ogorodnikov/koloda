@@ -41,11 +41,11 @@ Prefer deleting and reshaping call sites over compatibility shims
 - Schema and domain edits are multi-package by default (TS libs + `koloda-core`, often both DB dialects).
 - Agents must not “dedupe” by removing Rust validation, moving FSRS into Rust, or inventing adapter layers unless that is an explicit new ADR.
 - Playbooks such as `agents/ADD-AI-PROVIDER.md` and `agents/DB.md` remain the how-to; this ADR is the why.
-- A later ADR can cover dual DB dialects and the web-vs-desktop persistence boundary in more detail.
-  This one only establishes that Rust remains part of the architecture, so mirroring is intentional.
+- Platform engines and ownership are covered in `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`.
 
 ## Related
 
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — web PGlite vs desktop SQLite / `koloda-core`
 - `agents/ADD-AI-PROVIDER.md` — keep provider enum and secrets in sync
 - `agents/DB.md` — schema + migration workflow across dialects and Refinery
 - `agents/BACKWARDS-COMPATIBILITY.md` — no deprecation shims while pre-release

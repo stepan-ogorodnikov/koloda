@@ -25,5 +25,6 @@ Depends on `@koloda/app` and `@koloda/srs`.
 
 ## Read next
 
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why web owns PGlite in-process
 - `agents/DB.md` — dual-dialect schema workflow and Rust Refinery port
 - `drizzle.config.pgsql.ts`, `drizzle/pgsql/` — generated PG migrations

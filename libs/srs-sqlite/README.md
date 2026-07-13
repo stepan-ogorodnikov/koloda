@@ -21,4 +21,5 @@ Must stay structurally equivalent to `libs/srs-pgsql/src/lib/schema.ts` (same ta
 
 ## Read next
 
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why SQLite is schema-only here and runtime is Rust
 - `agents/DB.md` — update both dialects, generate, then port to Refinery
