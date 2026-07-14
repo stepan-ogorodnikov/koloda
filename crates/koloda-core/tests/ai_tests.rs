@@ -35,13 +35,6 @@ fn test_lmstudio_validate_empty_base_url_fails() {
 }
 
 #[test]
-fn test_codex_validate_ok_without_extra_fields() {
-    let secrets = AISecrets::Codex {};
-
-    assert!(secrets.validate().is_ok());
-}
-
-#[test]
 fn test_ai_secrets_openrouter_deserialize_api_key_alias() {
     let json = r#"{
         "provider": "openrouter",
@@ -62,17 +55,6 @@ fn test_ai_secrets_ollama_deserialize_base_url_alias() {
 
     let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with base_url alias");
     assert_eq!(secrets.provider(), "ollama");
-    assert_eq!(secrets.api_key(), None);
-}
-
-#[test]
-fn test_ai_secrets_codex_deserialize() {
-    let json = r#"{
-        "provider": "codex"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize codex provider");
-    assert_eq!(secrets.provider(), "codex");
     assert_eq!(secrets.api_key(), None);
 }
 

@@ -36,7 +36,6 @@ describe("card-generation", () => {
     const fields = createFields();
 
     expect(buildSystemPromptForProvider(fields, "openrouter")).not.toContain("Provider-specific format instructions:");
-    expect(buildSystemPromptForProvider(fields, "codex")).not.toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "lmstudio")).toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "lmstudio")).toContain("**Front**: <value>");
     expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain("Provider-specific format instructions:");

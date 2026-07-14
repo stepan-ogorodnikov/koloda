@@ -9,7 +9,6 @@ export * from "./lib/prompts";
 export * from "./lib/provider-catalog";
 export * from "./lib/provider-registry";
 export * from "./lib/provider-secrets";
-export * from "./lib/providers/codex";
 export * from "./lib/providers/ollama";
 export * from "./lib/providers/openai-compatible";
 export * from "./lib/providers/opencode-go";

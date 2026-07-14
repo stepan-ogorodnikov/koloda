@@ -74,15 +74,13 @@ export function buildProviderFormatPrompt(fields: CardGenerationFields) {
 }
 
 export function buildSystemPromptForProvider(fields: CardGenerationFields, provider?: AiProvider | null) {
-  if (!provider || provider === "openrouter" || provider === "codex") return buildSystemPrompt(fields);
+  if (!provider || provider === "openrouter") return buildSystemPrompt(fields);
   return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
 }
 
 export function buildAssistantSystemPrompt(fields: CardGenerationFields, provider?: AiProvider | null): string {
   const formatInstructions =
-    provider && provider !== "openrouter" && provider !== "codex"
-      ? "\n\n" + buildMarkdownFormatInstructions(fields)
-      : "";
+    provider && provider !== "openrouter" ? "\n\n" + buildMarkdownFormatInstructions(fields) : "";
 
   return [
     "You are a helpful AI study assistant embedded in a flashcard app.",
@@ -105,7 +103,7 @@ function resolveProviderFormatText(
   provider: AiProvider | null | undefined,
   mode: "generation" | "chat",
 ): string {
-  if (!provider || provider === "openrouter" || provider === "codex") return "";
+  if (!provider || provider === "openrouter") return "";
   if (mode === "generation") {
     return buildProviderFormatPrompt(fields);
   }

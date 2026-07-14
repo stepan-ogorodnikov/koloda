@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
 
-pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "codex"];
+pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,8 +48,6 @@ pub enum AISecrets {
         #[serde(rename = "apiKey", alias = "api_key")]
         api_key: String,
     },
-    #[serde(rename = "codex")]
-    Codex {},
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,7 +91,6 @@ impl AISecrets {
             AISecrets::LmStudio { .. } => "lmstudio",
             AISecrets::OpencodeGo { .. } => "opencodeGo",
             AISecrets::OpencodeZen { .. } => "opencodeZen",
-            AISecrets::Codex { .. } => "codex",
         }
     }
 
@@ -104,7 +101,6 @@ impl AISecrets {
             AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
             AISecrets::OpencodeGo { api_key } => Some(api_key),
             AISecrets::OpencodeZen { api_key } => Some(api_key),
-            AISecrets::Codex { .. } => None,
         }
     }
 
@@ -154,7 +150,6 @@ impl AISecrets {
                     ));
                 }
             }
-            AISecrets::Codex { .. } => {}
         }
 
         Ok(())
@@ -202,7 +197,6 @@ impl AISecrets {
                     ));
                 }
             }
-            AISecrets::Codex { .. } => {}
         }
 
         Ok(())

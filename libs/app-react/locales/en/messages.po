@@ -107,7 +107,6 @@ msgstr "AI"
 msgid "settings.ai.add"
 msgstr "Add profile"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:67
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:104
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:104
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-opencode-go.tsx:83
@@ -132,7 +131,6 @@ msgstr "Delete"
 msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:63
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:99
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:99
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-opencode-go.tsx:75
@@ -189,13 +187,11 @@ msgstr "Replace with a new value"
 msgid "settings.ai.profiles.title"
 msgstr "AI Profiles"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:50
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:58
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:58
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-opencode-go.tsx:51
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-opencode-zen.tsx:51
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:51
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:46
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:57
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:53
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-opencode-go.tsx:48
@@ -204,13 +200,11 @@ msgstr "AI Profiles"
 msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-codex.tsx:51
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-lmstudio.tsx:59
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-ollama.tsx:59
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-opencode-go.tsx:52
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-opencode-zen.tsx:52
 #: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-openrouter.tsx:52
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-codex.tsx:47
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-lmstudio.tsx:58
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-ollama.tsx:54
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-opencode-go.tsx:49

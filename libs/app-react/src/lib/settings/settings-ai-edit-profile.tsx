@@ -10,7 +10,6 @@ import { useAtomValue } from "jotai";
 import type { ComponentType } from "react";
 import { useState } from "react";
 import type { EditAIProfileFormProps } from "./ai-providers/ai-profile-form-props";
-import { EditAIProfileCodex } from "./ai-providers/edit-ai-profile-codex";
 import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
 import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
 import { EditAIProfileOpencodeGo } from "./ai-providers/edit-ai-profile-opencode-go";
@@ -23,7 +22,6 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> 
   lmstudio: EditAIProfileLMStudio,
   opencodeGo: EditAIProfileOpencodeGo,
   opencodeZen: EditAIProfileOpencodeZen,
-  codex: EditAIProfileCodex,
 };
 
 export type SettingsAIEditProfileProps = { profile: AIProfile };

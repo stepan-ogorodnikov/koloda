@@ -11,7 +11,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
-import { AddAIProfileCodex } from "./ai-providers/add-ai-profile-codex";
 import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
 import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
 import { AddAIProfileOpencodeGo } from "./ai-providers/add-ai-profile-opencode-go";
@@ -25,7 +24,6 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> =
   lmstudio: AddAIProfileLMStudio,
   opencodeGo: AddAIProfileOpencodeGo,
   opencodeZen: AddAIProfileOpencodeZen,
-  codex: AddAIProfileCodex,
 };
 
 export function SettingsAIAddProfile() {
