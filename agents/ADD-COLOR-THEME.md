@@ -95,14 +95,19 @@ Start from a sibling theme’s ΔL values, then adjust visually.
 
 ### 4. Add Electron titlebar colors
 
-Electron overlay APIs need hex, not `oklch`:
+Electron overlay APIs need hex, not `oklch` or `color-mix`.
+Runtime sampling of computed `bg-body` does not work reliably — bake solid hex into the theme:
 
 ```css
 --titlebar-overlay-color: #……;
 --titlebar-overlay-symbol-color: #……;
 ```
 
-Use solid hex close to `--color-bg` and `--color-mono-1`.
+`--titlebar-overlay-color` must match **computed `bg-body`** (scheme `color-mix` from `--color-bg`), not raw `--color-bg`.
+`--titlebar-overlay-symbol-color` should match `--color-mono-1`.
+
+Dark scheme: `color-mix(in oklab, black 8%, var(--color-bg))`.
+Light scheme: `color-mix(in oklab, var(--color-mono-1) 5%, var(--color-bg))`.
 
 ### 5. Optional theme overrides
 
@@ -152,7 +157,7 @@ Zod and Rust validation both reject unknown theme ids.
 2. Pick the new light and/or dark theme.
 3. Confirm `<html data-light-theme="…">` / `data-dark-theme="…"`.
 4. Spot-check inputs, borders, switch/checkbox selected, lesson-type chips, and focus ring.
-5. In Electron, confirm titlebar overlay colors.
+5. In Electron, confirm titlebar overlay colors match the titlebar (`bg-body`).
 
 No picker code changes are needed.
 `LightThemePicker` / `DarkThemePicker` read `LIGHT_THEMES` / `DARK_THEMES`.
@@ -173,7 +178,7 @@ Do not change app `store.ts` seed values unless that is requested.
 - [ ] Correct light or dark `data-*-theme` selectors (no bare `:root` for new themes)
 - [ ] Full palette (`--color-bg`, monos, accents)
 - [ ] Accent-derived selected + lesson-type fills via `oklch(from …)`
-- [ ] Titlebar overlay hex pair
+- [ ] Titlebar overlay hex pair (matched to computed `bg-body`, not `--color-bg`)
 - [ ] `@import` in `global.css`
 - [ ] Entry in TS `LIGHT_THEMES` or `DARK_THEMES`
 - [ ] Matching entry in Rust `LIGHT_THEMES` or `DARK_THEMES`
