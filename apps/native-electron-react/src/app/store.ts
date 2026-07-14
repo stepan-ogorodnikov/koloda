@@ -1,7 +1,6 @@
-import { aiProvidersAtom, appEntryAtom, darkThemeAtom, langAtom, lightThemeAtom, schemeAtom } from "@koloda/core-react";
+import { aiProvidersAtom, appEntryAtom, langAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
-import { DEFAULT_HOTKEYS_SCOPES, hotkeysScopesAtom, queriesAtom } from "@koloda/core-react";
-import { motionSettingAtom } from "@koloda/ui";
+import { wireUiPreferences } from "@koloda/app-react";
 import { createStore } from "jotai";
 import type { WritableAtom } from "jotai";
 import { AppEntry } from "../components/app-entry";
@@ -11,62 +10,14 @@ import { queriesFn } from "./queries";
 export const store = createStore();
 export const queries = queriesFn();
 
+wireUiPreferences(store);
+
 store.sub(langAtom, () => {
   const lang = store.get(langAtom);
   activateLanguage(lang);
 });
 
 store.set(langAtom, getLanguage());
-
-store.sub(schemeAtom, () => {
-  const prefersQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  onPrefersColorSchemeChange(prefersQuery);
-  prefersQuery.addEventListener("change", onPrefersColorSchemeChange);
-
-  return () => {
-    prefersQuery.removeEventListener("change", onPrefersColorSchemeChange);
-  };
-});
-
-function onPrefersColorSchemeChange(e: MediaQueryListEvent | MediaQueryList) {
-  const scheme = store.get(schemeAtom);
-  const value = e.matches ? (scheme === "light" ? "light" : "dark") : scheme === "dark" ? "dark" : "light";
-  document.documentElement.classList.remove("light", "dark");
-  document.documentElement.classList.add(value);
-}
-
-store.set(schemeAtom, "system");
-
-store.sub(lightThemeAtom, () => {
-  document.documentElement.dataset.lightTheme = store.get(lightThemeAtom);
-});
-
-store.sub(darkThemeAtom, () => {
-  document.documentElement.dataset.darkTheme = store.get(darkThemeAtom);
-});
-
-store.set(lightThemeAtom, "atom-one-light");
-store.set(darkThemeAtom, "atom-one-dark");
-
-store.sub(motionSettingAtom, () => {
-  const prefersQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-  onReducedMotionChange(prefersQuery);
-  prefersQuery.addEventListener("change", onReducedMotionChange);
-
-  return () => {
-    prefersQuery.removeEventListener("change", onReducedMotionChange);
-  };
-});
-
-function onReducedMotionChange(e: MediaQueryListEvent | MediaQueryList) {
-  const motionSetting = store.get(motionSettingAtom);
-  const isOn = e.matches ? motionSetting === "on" : motionSetting !== "off";
-  document.documentElement.classList[isOn ? "add" : "remove"]("motion");
-}
-
-store.set(motionSettingAtom, "system");
-
-store.set(hotkeysScopesAtom, DEFAULT_HOTKEYS_SCOPES);
 
 store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 

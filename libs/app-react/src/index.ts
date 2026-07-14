@@ -1,3 +1,4 @@
+export * from "./lib/app-providers";
 export * from "./lib/components/app";
 export * from "./lib/hooks/use-app-hotkeys";
 export * from "./lib/hooks/use-global-sync";
@@ -14,3 +15,4 @@ export * from "./lib/settings/settings-hotkeys";
 export * from "./lib/settings/settings-hotkeys-hotkey";
 export * from "./lib/settings/settings-interface";
 export * from "./lib/settings/settings-learning";
+export * from "./lib/wire-ui-preferences";
