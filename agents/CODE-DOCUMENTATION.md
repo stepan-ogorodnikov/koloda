@@ -82,9 +82,13 @@ Use this for library bugs or missing features. If you don't use this, a future a
 Example:
 
 ```typescript
-// WORKAROUND: Ollama does not reliably support the AI SDK's Output.array structured streaming.
-// We intentionally use text completion and parse it manually for Ollama/LMStudio.
-async function runTextCompletionCardGeneration(...) { ... }
+// WORKAROUND: elementStream can finish with zero elements even when the model returned usable text.
+// Prefer parsing result.text before falling through to a second generateText call.
+const streamedTextCards = parseGeneratedCardsText(await result.text, fields);
+if (streamedTextCards.length > 0) {
+  for (const card of streamedTextCards) onCard(card);
+  return;
+}
 ```
 
 ### The Only Exception: Complex Logic
@@ -97,7 +101,7 @@ Even then, only comment the steps, not the obvious lines.
 How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
 
 - Use a Code Comment when the decision is localized to a single function or file.
-- Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual card generation strategies).
+- Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual-platform persistence).
   A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`. ADRs bridge that gap.
 
 Index: `docs/adr/README.md`.

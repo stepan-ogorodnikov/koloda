@@ -216,44 +216,24 @@ export async function streamChatWithMyProvider(
 
 ### 6. Card Generation (`libs/ai/src/lib/card-generation.ts`)
 
-Add generation function:
+Add a thin wrapper that supplies the AI SDK model factory to shared `runCardGeneration`
+(structured stream → parse stream text → plain `generateText` fallback):
 
 ```typescript
 export function generateCardsWithMyProvider(
   request: CardGenerationRequest,
-  secrets: Extract<AISecrets, { provider: "myProvider" }>,
+  { apiKey }: Extract<AISecrets, { provider: "myProvider" }>,
 ) {
-  return wrapAIError(() =>
-    runTextCompletionCardGeneration(async ({ template, input, messages, abortSignal, systemPromptTemplate }) => {
-      const temperature = resolveGenerationTemperature(input.temperature);
-      const response = throwForAIResponse(
-        await fetch("https://api.myprovider.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${secrets.apiKey}`,
-          },
-          body: JSON.stringify({
-            model: input.modelId,
-            temperature,
-            messages: getTextCompletionMessages({
-              fields: template.content.fields,
-              prompt: input.prompt,
-              messages,
-              provider: "myProvider",
-              systemPromptTemplate,
-            }),
-          }),
-          signal: abortSignal,
-        }),
-      );
-
-      const data = await response.json() as OpenAICompatibleChatCompletionsResponse;
-      const content = data.choices?.[0]?.message?.content;
-      if (content == null) throw new AIError("ai.invalid-response");
-      return content;
-    }, request)
-  );
+  return wrapAIError(async () => {
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const myProvider = createOpenAICompatible({
+      name: "my-provider",
+      baseURL: "https://api.myprovider.com/v1",
+      apiKey,
+      supportsStructuredOutputs: true,
+    });
+    return runCardGeneration((modelId) => myProvider(modelId), "myProvider", request);
+  });
 }
 ```
 
