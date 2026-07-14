@@ -20,7 +20,7 @@
   --bg-lesson-type-blue: oklch(from var(--color-blue) calc(l - 0.32) calc(c + 0.03) h);
   --bg-lesson-type-red: oklch(from var(--color-red) calc(l - 0.3) calc(c - 0.04) h);
   --bg-lesson-type-green: oklch(from var(--color-green) calc(l - 0.36) calc(c + 0.16) h);
-  /* electron doesn't accept oklch */
-  --titlebar-overlay-color: #23272f;
+  /* electron doesn't accept oklch — hex must match computed bg-body */
+  --titlebar-overlay-color: #23262d;
   --titlebar-overlay-symbol-color: #abb2bf;
 }
