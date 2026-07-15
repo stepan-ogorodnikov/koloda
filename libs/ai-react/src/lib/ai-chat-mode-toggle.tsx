@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIChatMode } from "@koloda/ai";
-import { ClipboardIcon } from "@koloda/ui";
+import { CardsIcon } from "@koloda/ui";
 import { Button, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -35,7 +35,7 @@ export function AIChatModeToggle({ mode, deckId, onModeChange }: AIChatModeToggl
         isDisabled={!deckId}
         onPress={() => onModeChange?.(mode === "chat" ? "cards" : "chat")}
       >
-        <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.5} icon={ClipboardIcon} aria-hidden="true" />
+        <HugeiconsIcon className="size-6 min-w-6" strokeWidth={1.5} icon={CardsIcon} aria-hidden="true" />
       </Button>
     </Tooltip>
   );

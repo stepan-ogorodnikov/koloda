@@ -1,6 +1,6 @@
 import type { IconSvgElement } from "@hugeicons/react";
 
-export const ClipboardIcon: IconSvgElement = [
+export const CardsIcon: IconSvgElement = [
   [
     "path",
     {
