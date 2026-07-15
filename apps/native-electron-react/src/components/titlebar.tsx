@@ -133,7 +133,12 @@ export function Titlebar() {
   };
 
   return (
-    <div className={titlebar} style={{ appRegion: "drag" } as React.CSSProperties} ref={titlebarRef}>
+    <div
+      className={titlebar}
+      data-react-aria-top-layer
+      style={{ appRegion: "drag" } as React.CSSProperties}
+      ref={titlebarRef}
+    >
       <div
         className="flex items-center h-full w-full"
         style={{ [platform === "macos" ? "paddingLeft" : "paddingRight"]: `${overlayWidth}px` }}

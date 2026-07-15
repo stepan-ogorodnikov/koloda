@@ -8,7 +8,7 @@ const titlebar = [
 
 export function Titlebar() {
   return (
-    <div className={titlebar}>
+    <div className={titlebar} data-react-aria-top-layer>
       <div className="flex items-center h-full w-full">
         <TitlebarContent />
       </div>
