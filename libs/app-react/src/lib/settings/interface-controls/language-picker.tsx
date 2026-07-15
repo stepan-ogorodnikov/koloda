@@ -23,7 +23,7 @@ export function LanguagePicker({ label, withIcon = true, isPersisted = true, ...
 
   return (
     <Select
-      popoverVariants={{ class: "min-w-48" }}
+      popoverVariants={{ class: "min-w-48 w-[var(--trigger-width)]" }}
       label={label}
       aria-label={!label ? _(msg`language-picker.label`) : undefined}
       icon={

@@ -27,7 +27,7 @@ export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemeP
 
   return (
     <Select
-      popoverVariants={{ class: "min-w-48" }}
+      popoverVariants={{ class: "min-w-48 w-[var(--trigger-width)]" }}
       aria-label={_(msg`color-scheme-picker.label`)}
       items={ITEMS}
       value={scheme}

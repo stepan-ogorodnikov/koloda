@@ -29,7 +29,7 @@ function ColorThemePicker({ themes, atom, field, label, ariaLabel, ...props }: C
 
   return (
     <Select
-      popoverVariants={{ class: "min-w-48" }}
+      popoverVariants={{ class: "min-w-48 w-[var(--trigger-width)]" }}
       label={label}
       aria-label={!label ? _(ariaLabel) : undefined}
       items={items}
