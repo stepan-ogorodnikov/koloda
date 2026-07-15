@@ -1,4 +1,5 @@
-import { MinusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { MinusSignIcon } from "@hugeicons/core-free-icons";
+import { CheckIcon } from "@koloda/ui";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
@@ -35,7 +36,7 @@ function CheckboxIndicator() {
   return (
     <div className={checkboxIndicator}>
       <HugeiconsIcon className={checkboxIndicatorMinus} strokeWidth={4} icon={MinusSignIcon} />
-      <HugeiconsIcon className={checkboxIndicatorCheck} strokeWidth={4} icon={Tick02Icon} />
+      <HugeiconsIcon className={checkboxIndicatorCheck} strokeWidth={4} icon={CheckIcon} />
     </div>
   );
 }

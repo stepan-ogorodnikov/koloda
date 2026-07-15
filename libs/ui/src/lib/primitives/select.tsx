@@ -1,4 +1,4 @@
-import { ChevronDoubleCloseIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { ChevronDoubleCloseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
 import {
@@ -12,7 +12,7 @@ import {
   popover,
 } from "@koloda/ui";
 import type { LabelProps, TWVProps } from "@koloda/ui";
-import { Popover } from "@koloda/ui";
+import { Popover, CheckIcon } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import type { ComponentProps, ReactNode, RefObject } from "react";
@@ -283,7 +283,7 @@ function SelectListBoxItem({ children, ...props }: ListBoxItemProps) {
         <>
           {typeof children === "function" ? children(state) : children}
           {state.isSelected && (
-            <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2.5} icon={Tick02Icon} aria-hidden="true" />
+            <HugeiconsIcon className="size-4 min-w-4" strokeWidth={2.5} icon={CheckIcon} aria-hidden="true" />
           )}
         </>
       )}

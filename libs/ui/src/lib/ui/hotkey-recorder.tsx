@@ -1,4 +1,5 @@
-import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { CheckIcon } from "@koloda/ui";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Dialog, HotKey } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -51,7 +52,7 @@ export function HotkeyRecorder({ onAccept, children }: HotkeyRecorderProps) {
               onPress={handleAccept}
               isDisabled={!value}
             >
-              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Tick02Icon} aria-hidden="true" />
+              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={CheckIcon} aria-hidden="true" />
             </Button>
             <Button
               variants={{ size: "icon", style: "ghost" }}
