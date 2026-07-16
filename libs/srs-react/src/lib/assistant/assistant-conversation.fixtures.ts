@@ -1,4 +1,4 @@
-import { createStore } from "jotai";
+import type { createStore } from "jotai";
 import { dispatchToConversationOnStore } from "./assistant-conversation-atoms";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";

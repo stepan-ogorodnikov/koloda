@@ -4,7 +4,6 @@ import {
   assistantActiveRunIdAtom,
   assistantConversationHasContextAtom,
   assistantConversationStateAtom,
-  assistantHasContextAtom,
   assistantIsLockedAtom,
   bumpPendingSaveAtom,
   conversationsAtom,
