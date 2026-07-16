@@ -18,6 +18,9 @@ jobs:
       - name: Install
         run: bun install
 
+      - name: Check
+        run: bun run check:demo-deploy
+
       - name: Setup Pages
         id: setup_pages
         uses: actions/configure-pages@v5

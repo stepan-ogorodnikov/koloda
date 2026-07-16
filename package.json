@@ -13,7 +13,9 @@
     "db:generate:pgsql": "drizzle-kit generate --config=drizzle.config.pgsql.ts",
     "db:generate:sqlite": "drizzle-kit generate --config=drizzle.config.sqlite.ts",
     "db:generate": "bun run db:generate:pgsql && bun run db:generate:sqlite",
-    "test:libs": "nx run-many --target=test --projects=tag:type:lib"
+    "test:libs": "nx run-many --target=test --projects=tag:type:lib",
+    "check:demo-deploy": "nx run-many -t lint,typecheck && bun run test:libs",
+    "check:demo-all": "bun run check:demo-deploy && nx run demo-e2e:e2e"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.41",
