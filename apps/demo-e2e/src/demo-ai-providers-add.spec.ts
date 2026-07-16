@@ -29,6 +29,12 @@ test("validates required fields and adds profiles for all providers", async ({ p
     }
 
     // --- Validation: empty required field, dialog stays open ---
+    // Ollama / LM Studio prefill Base URL; clear it so submit actually hits validation.
+    const requiredInput = page.getByRole("textbox", { name: requiredField.name });
+    await requiredInput.click();
+    await requiredInput.clear();
+    await requiredInput.blur();
+
     await submitAddAIDialog(page);
     await expect(page.getByRole("dialog", { name: "Add AI Profile" })).toBeVisible();
 
@@ -39,7 +45,7 @@ test("validates required fields and adds profiles for all providers", async ({ p
 
     // --- Success: fill required fields and submit ---
     await fillAIProfileTitle(page, title);
-    await page.getByRole("textbox", { name: requiredField.name }).fill(requiredField.value);
+    await requiredInput.fill(requiredField.value);
     await submitAddAIDialog(page);
 
     await expect(page.getByText(title)).toBeVisible();
