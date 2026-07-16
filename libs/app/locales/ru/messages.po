@@ -101,15 +101,15 @@ msgstr "Не удалось загрузить данные"
 msgid "db.update"
 msgstr "Не удалось обновить данные"
 
-#: ../../libs/app/src/lib/settings-interface.ts:35
+#: ../../libs/app/src/lib/settings-interface.ts:37
 msgid "motion.off"
 msgstr "Отключено"
 
-#: ../../libs/app/src/lib/settings-interface.ts:34
+#: ../../libs/app/src/lib/settings-interface.ts:36
 msgid "motion.on"
 msgstr "Включено"
 
-#: ../../libs/app/src/lib/settings-interface.ts:36
+#: ../../libs/app/src/lib/settings-interface.ts:38
 msgid "motion.system"
 msgstr "Как в системе"
 
@@ -309,7 +309,7 @@ msgstr "Переключить боковую панель"
 msgid "unknown"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
@@ -317,58 +317,58 @@ msgstr "Это поле не может быть пустым"
 msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:46
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:48
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:49
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Некорректный URL"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:47
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Есть конфликтующие комбинации клавиш"
 
-#: ../../libs/app/src/lib/error.ts:43
+#: ../../libs/app/src/lib/error.ts:41
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:45
+#: ../../libs/app/src/lib/error.ts:42
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Лимит карточек повтора не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:41
+#: ../../libs/app/src/lib/error.ts:40
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "Лимит новых карточек не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:45
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Неверный формат настройки начала дня"
 
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:43
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Часы должны быть от 0 до 48"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:44
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.templates.delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:50
 msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"

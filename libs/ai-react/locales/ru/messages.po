@@ -13,18 +13,18 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:18
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:21
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:17
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:20
 msgid "ai-chat.cancel.label"
 msgstr "Отменить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:34
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:37
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:27
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:30
 msgid "ai-chat.submit.label"
 msgstr "Отправить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:31
-#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:42
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:30
+#: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:40
 msgid "ai.chat.context-usage.tokens"
 msgstr "токенов"
 
@@ -40,7 +40,7 @@ msgstr "м"
 msgid "ai.chat.elapsed-time.periods.seconds"
 msgstr "с"
 
-#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:32
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:30
 msgid "ai.chat.error.close"
 msgstr "Скрыть ошибки"
 
@@ -52,19 +52,19 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:61
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:52
 msgid "ai.chat.message.retry"
 msgstr "Повторить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:47
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:41
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Прервано через"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:55
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:49
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось выполнить запрос"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:27
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:21
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
@@ -72,16 +72,16 @@ msgstr "Обработка"
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:19
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:21
 msgid "ai.chat.mode.cards.no-deck"
 msgstr "Для режима создания карточек нужно выбрать колоду"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:18
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:20
 msgid "ai.chat.mode.cards.off"
 msgstr "Включить режим создания карточек"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:18
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:30
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:19
+#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:32
 msgid "ai.chat.mode.cards.on"
 msgstr "Выключить режим создания карточек"
 
@@ -89,12 +89,12 @@ msgstr "Выключить режим создания карточек"
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:22
+#: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:21
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:67
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:70
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:60
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:63
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
@@ -107,8 +107,8 @@ msgstr "Настройки"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Интеллект"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:133
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:163
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:132
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:160
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
@@ -122,8 +122,8 @@ msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
 #: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:81
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:132
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:157
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:131
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
 msgid "ai.model-picker.loading.label"
 msgstr "Загрузка"
 

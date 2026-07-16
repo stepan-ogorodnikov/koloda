@@ -17,14 +17,14 @@ msgstr ""
 msgid "demo.setup.default-title"
 msgstr "По умолчанию"
 
-#: src/components/demo-setup.tsx:43
+#: src/components/demo-setup.tsx:45
 msgid "demo.setup.header"
 msgstr "Запуск демо-версии"
 
-#: src/components/demo-setup.tsx:47
+#: src/components/demo-setup.tsx:48
 msgid "demo.setup.storage"
 msgstr "Все данные будут храниться локально в IndexedDB браузера."
 
-#: src/components/demo-setup.tsx:51
+#: src/components/demo-setup.tsx:52
 msgid "demo.setup.submit"
 msgstr "Начать работу"

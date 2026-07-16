@@ -1,28 +1,14 @@
 import { Edit03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { AIProfile, AiProvider, AISecrets } from "@koloda/ai";
+import type { AIProfile, AISecrets } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import type { ComponentType } from "react";
 import { useState } from "react";
-import type { EditAIProfileFormProps } from "./ai-providers/ai-profile-form-props";
-import { EditAIProfileLMStudio } from "./ai-providers/edit-ai-profile-lmstudio";
-import { EditAIProfileOllama } from "./ai-providers/edit-ai-profile-ollama";
-import { EditAIProfileOpencodeGo } from "./ai-providers/edit-ai-profile-opencode-go";
-import { EditAIProfileOpencodeZen } from "./ai-providers/edit-ai-profile-opencode-zen";
-import { EditAIProfileOpenRouter } from "./ai-providers/edit-ai-profile-openrouter";
-
-const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> = {
-  openrouter: EditAIProfileOpenRouter,
-  ollama: EditAIProfileOllama,
-  lmstudio: EditAIProfileLMStudio,
-  opencodeGo: EditAIProfileOpencodeGo,
-  opencodeZen: EditAIProfileOpencodeZen,
-};
+import { EditAIProfileForm } from "./ai-providers/edit-ai-profile-form";
 
 export type SettingsAIEditProfileProps = { profile: AIProfile };
 
@@ -33,7 +19,6 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
   const { mutate, isPending, error, reset } = useMutation(updateAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
   const provider = profile.secrets?.provider;
-  const Form = provider ? PROVIDER_FORMS[provider] : null;
 
   const handleSubmit = (data: { title?: string; secrets?: AISecrets }) => {
     mutate(
@@ -53,7 +38,7 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
     if (!isOpen) reset();
   };
 
-  if (!Form) return null;
+  if (!provider) return null;
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
@@ -73,7 +58,13 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
               <Dialog.Close slot="close" />
             </Dialog.Header>
             {error && <p className="fg-error">{error.details || error.message}</p>}
-            <Form profile={profile} onSubmit={handleSubmit} isPending={isPending} error={error} />
+            <EditAIProfileForm
+              provider={provider}
+              profile={profile}
+              onSubmit={handleSubmit}
+              isPending={isPending}
+              error={error}
+            />
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>

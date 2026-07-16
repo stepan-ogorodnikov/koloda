@@ -101,15 +101,15 @@ msgstr "Failed to load data"
 msgid "db.update"
 msgstr "Failed to update data"
 
-#: ../../libs/app/src/lib/settings-interface.ts:35
+#: ../../libs/app/src/lib/settings-interface.ts:37
 msgid "motion.off"
 msgstr "Disabled"
 
-#: ../../libs/app/src/lib/settings-interface.ts:34
+#: ../../libs/app/src/lib/settings-interface.ts:36
 msgid "motion.on"
 msgstr "Enabled"
 
-#: ../../libs/app/src/lib/settings-interface.ts:36
+#: ../../libs/app/src/lib/settings-interface.ts:38
 msgid "motion.system"
 msgstr "Automatic"
 
@@ -309,7 +309,7 @@ msgstr "Toggle sidebar"
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
@@ -317,58 +317,58 @@ msgstr "This field can't be empty"
 msgid "validation.common.title.too-short"
 msgstr "Title can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:46
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "Card id and review card id don't match"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:48
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:49
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Invalid URL"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:47
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "There are conflicting hotkeys"
 
-#: ../../libs/app/src/lib/error.ts:43
+#: ../../libs/app/src/lib/error.ts:41
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Learn can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:45
+#: ../../libs/app/src/lib/error.ts:42
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Review can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:41
+#: ../../libs/app/src/lib/error.ts:40
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "New can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:45
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Start of the day is incorrect"
 
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:43
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Hours must be between 0 and 48"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:44
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:50
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"

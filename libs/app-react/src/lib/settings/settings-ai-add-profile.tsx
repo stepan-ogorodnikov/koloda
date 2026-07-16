@@ -9,22 +9,8 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
-import { AddAIProfileLMStudio } from "./ai-providers/add-ai-profile-lmstudio";
-import { AddAIProfileOllama } from "./ai-providers/add-ai-profile-ollama";
-import { AddAIProfileOpencodeGo } from "./ai-providers/add-ai-profile-opencode-go";
-import { AddAIProfileOpencodeZen } from "./ai-providers/add-ai-profile-opencode-zen";
-import { AddAIProfileOpenRouter } from "./ai-providers/add-ai-profile-openrouter";
-import type { AddAIProfileFormProps } from "./ai-providers/ai-profile-form-props";
-
-const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
-  openrouter: AddAIProfileOpenRouter,
-  ollama: AddAIProfileOllama,
-  lmstudio: AddAIProfileLMStudio,
-  opencodeGo: AddAIProfileOpencodeGo,
-  opencodeZen: AddAIProfileOpencodeZen,
-};
+import { AddAIProfileForm } from "./ai-providers/add-ai-profile-form";
 
 export function SettingsAIAddProfile() {
   const queryClient = useQueryClient();
@@ -60,8 +46,6 @@ export function SettingsAIAddProfile() {
     }
   }, [provider, providerIds]);
 
-  const Form = PROVIDER_FORMS[provider];
-
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`settings.ai.add`)}>
@@ -90,7 +74,13 @@ export function SettingsAIAddProfile() {
                 ))}
               </Select>
             </div>
-            <Form onSubmit={handleSubmit} isPending={isPending} error={error} />
+            <AddAIProfileForm
+              key={provider}
+              provider={provider}
+              onSubmit={handleSubmit}
+              isPending={isPending}
+              error={error}
+            />
           </Dialog.Body>
         </Dialog.Modal>
       </Dialog.Overlay>
