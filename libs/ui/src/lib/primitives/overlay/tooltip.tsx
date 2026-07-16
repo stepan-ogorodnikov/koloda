@@ -1,5 +1,5 @@
 import type { TWVProps } from "@koloda/ui";
-import type { ComponentProps, ReactElement, ReactNode, RefObject } from "react";
+import type { ComponentProps, DOMAttributes, KeyboardEvent, ReactElement, ReactNode, Ref, RefObject } from "react";
 import { Children, cloneElement, forwardRef, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { mergeProps, useFocusable, useFocusRing, useObjectRef } from "react-aria";
 import type { Placement, PlacementAxis } from "react-aria";
@@ -10,18 +10,31 @@ import {
 } from "react-aria-components";
 import type { TooltipProps as ReactAriaTooltipProps, TooltipTriggerComponentProps } from "react-aria-components";
 import { mergeRefs } from "react-aria/mergeRefs";
+import type { FocusableElement } from "@react-types/shared";
 import { tv } from "tailwind-variants";
 
-function TooltipFocusable({ children }: { children: ReactElement<any> }) {
-  const ref = useObjectRef<HTMLElement>(null);
-  const { focusableProps } = useFocusable<HTMLElement>({} as any, ref);
+type TooltipTriggerChildProps = DOMAttributes<FocusableElement> & {
+  ref?: Ref<FocusableElement>;
+};
+
+type AriaKeyboardEvent = KeyboardEvent<FocusableElement> & {
+  continuePropagation?: () => void;
+};
+
+function continueKeyPropagation(event: KeyboardEvent<FocusableElement>) {
+  (event as AriaKeyboardEvent).continuePropagation?.();
+}
+
+function TooltipFocusable({ children }: { children: ReactElement<TooltipTriggerChildProps> }) {
+  const ref = useObjectRef<FocusableElement>(null);
+  const { focusableProps } = useFocusable({}, ref);
   const child = Children.only(children);
 
   return cloneElement(child, {
-    ...mergeProps(focusableProps as any, child.props as any),
-    onKeyDown: (e: { continuePropagation?: () => void }) => e.continuePropagation?.(),
-    onKeyUp: (e: { continuePropagation?: () => void }) => e.continuePropagation?.(),
-    ref: mergeRefs((child as any).ref, ref),
+    ...mergeProps(focusableProps, child.props),
+    onKeyDown: continueKeyPropagation,
+    onKeyUp: continueKeyPropagation,
+    ref: mergeRefs(child.props.ref, ref),
   });
 }
 
@@ -30,7 +43,7 @@ export type TooltipProps = TooltipTriggerComponentProps & { content?: ReactNode;
 export function Tooltip({ children, content, delay = 0, closeDelay = 250, placement, ...props }: TooltipProps) {
   return (
     <ReactAriaTooltipTrigger delay={delay} closeDelay={closeDelay} {...props}>
-      <TooltipFocusable>{children as ReactElement}</TooltipFocusable>
+      <TooltipFocusable>{children as ReactElement<TooltipTriggerChildProps>}</TooltipFocusable>
       <TooltipContent placement={placement}>{content}</TooltipContent>
     </ReactAriaTooltipTrigger>
   );

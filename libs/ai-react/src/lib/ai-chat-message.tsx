@@ -2,10 +2,17 @@ import type { UIMessage, UIMessagePart } from "ai";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
+type InterruptedPart = {
+  type: "interrupted";
+  text: string;
+};
+
+type ChatMessagePart = UIMessagePart<any, any> | InterruptedPart;
+
 export type AIChatMessageProps = {
   role: UIMessage["role"];
   modelName?: string;
-  parts: UIMessagePart<any, any>[];
+  parts: ChatMessagePart[];
 };
 
 export function AIChatMessage({ role, parts }: AIChatMessageProps) {
@@ -42,14 +49,14 @@ export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps
   );
 }
 
-function MessagePart({ part }: { part: UIMessagePart<any, any> }) {
+function MessagePart({ part }: { part: ChatMessagePart }) {
   switch (part.type) {
     case "text":
       return <p className="whitespace-pre-wrap leading-6">{part.text}</p>;
     case "reasoning":
       return <p className="whitespace-pre-wrap leading-6 fg-level-3">{part.text}</p>;
-    case "interrupted" as any:
-      return <p className="fg-level-4">{(part as any).text}</p>;
+    case "interrupted":
+      return <p className="fg-level-4">{part.text}</p>;
     case "source-url":
       return <p className="fg-level-3">{part.title || part.url}</p>;
     case "source-document":
@@ -65,6 +72,6 @@ function MessagePart({ part }: { part: UIMessagePart<any, any> }) {
   }
 }
 
-function getMessageParts(parts: UIMessagePart<any, any>[]) {
+function getMessageParts(parts: ChatMessagePart[]) {
   return parts.filter((part) => part.type !== "step-start");
 }

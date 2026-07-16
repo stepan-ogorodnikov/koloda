@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 
-type TemplatePickerProps = Omit<SelectProps<Template>, "selectedKey" | "onSelectionChange" | "items" | "children"> & {
+type TemplatePickerProps = Omit<SelectProps<Template>, "value" | "onChange" | "items" | "children"> & {
   value: number;
   onChange: (key: number) => void;
 };

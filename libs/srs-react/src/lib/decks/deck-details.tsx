@@ -76,7 +76,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           <AlgorithmPicker
             variants={{ layout: "form" }}
             value={Number(field.state.value)}
-            onChange={field.handleChange as any}
+            onChange={field.handleChange}
           />
         )}
       </form.Field>
@@ -85,7 +85,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
           <TemplatePicker
             variants={{ layout: "form" }}
             value={Number(field.state.value)}
-            onChange={field.handleChange as any}
+            onChange={field.handleChange}
           />
         )}
       </form.Field>

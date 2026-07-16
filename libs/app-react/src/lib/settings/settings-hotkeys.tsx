@@ -1,15 +1,27 @@
 import { HOTKEY_SCOPE_LABELS, HOTKEYS_LABELS, hotkeysSettingsValidation as schema } from "@koloda/app";
-import type { HotkeysSettings } from "@koloda/app";
+import type { HotkeyScope, HotkeysSettings } from "@koloda/app";
 import { objectEntries, toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { AddHotkeyButton, FormLayout, formLayout, useAppForm } from "@koloda/ui";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
+import type { DeepKeys } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { SettingsHotkeysHotkey } from "./settings-hotkeys-hotkey";
 
 export type SettingsHotkeysProps = { data: HotkeysSettings };
+
+type HotkeyFieldPath = {
+  [Scope in HotkeyScope]: {
+    [Id in keyof HotkeysSettings[Scope] & string]: `${Scope}.${Id}`;
+  }[keyof HotkeysSettings[Scope] & string];
+}[HotkeyScope];
+
+type HotkeysErrorMap = {
+  onChange?: Record<string, unknown>;
+  onSubmit?: Record<string, unknown>;
+};
 
 export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
   const { _ } = useLingui();
@@ -51,10 +63,10 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
         <div key={scopeKey}>
           <FormLayout.Section term={_(scopeLabel)} />
           {Object.entries(HOTKEYS_LABELS[scopeKey]).map(([id, label]) => {
-            const fieldPath = `${scopeKey}.${id}` as any;
+            const fieldPath = `${scopeKey}.${id}` as HotkeyFieldPath;
 
             return (
-              <form.Field key={id} name={fieldPath}>
+              <form.Field key={id} name={fieldPath as DeepKeys<HotkeysSettings>}>
                 {(field) => {
                   const value = (field.state.value || []) as string[];
 
@@ -71,7 +83,7 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
                               } else {
                                 newValue.splice(index, 1);
                               }
-                              (field.handleChange as any)(newValue);
+                              field.handleChange(newValue);
                             }}
                             hasError={hasFieldError(formErrorMap, fieldPath, index)}
                             key={`${id}-${index}`}
@@ -94,8 +106,14 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
   );
 }
 
-function hasFieldError(formErrorMap: any, fieldPath: string, index: number): boolean {
+function hasFieldError(formErrorMap: HotkeysErrorMap, fieldPath: string, index: number): boolean {
   const fullPath = `${fieldPath}[${index}]`;
   const fieldErrors = formErrorMap.onChange?.[fullPath] || formErrorMap.onSubmit?.[fullPath];
-  return Array.isArray(fieldErrors) ? fieldErrors.some((error) => error.path && error.path?.[2] === index) : false;
+  if (!Array.isArray(fieldErrors)) return false;
+
+  return fieldErrors.some((error) => {
+    if (typeof error !== "object" || error == null || !("path" in error)) return false;
+    const path = error.path;
+    return Array.isArray(path) && path[2] === index;
+  });
 }

@@ -1,4 +1,5 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+import type { Modifiers } from "@dnd-kit/abstract";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { DEFAULT_TEMPLATE, getTemplateFieldTitleById, TEMPLATE_OPERATIONS_MESSAGES } from "@koloda/srs";
@@ -8,6 +9,8 @@ import { Draggable, Select, TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
+
+const verticalAxisModifiers: Modifiers = [RestrictToVerticalAxis];
 
 export const TemplateLayout = withForm({
   defaultValues: DEFAULT_TEMPLATE as UpdateTemplateValues,
@@ -20,7 +23,7 @@ export const TemplateLayout = withForm({
         {(field) => (
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
-            modifiers={[RestrictToVerticalAxis] as any[]}
+            modifiers={verticalAxisModifiers}
             onDragEnd={(event) => {
               const { operation, canceled } = event;
               const { source, target } = operation;

@@ -93,10 +93,10 @@ export function AddDeck() {
                 )}
               </form.Field>
               <form.Field name="algorithmId">
-                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
+                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange} />}
               </form.Field>
               <form.Field name="templateId">
-                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange as any} />}
+                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange} />}
               </form.Field>
               <div className="min-h-10 mt-4">
                 {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}

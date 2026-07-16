@@ -1,5 +1,7 @@
 import { RestrictToVerticalAxis } from "@dnd-kit/abstract/modifiers";
+import type { Modifiers } from "@dnd-kit/abstract";
 import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react";
+import type { DragDropEventHandlers } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { ColumnsThreeCogIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -8,6 +10,8 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Column } from "@tanstack/react-table";
 import { useState } from "react";
+
+const verticalAxisModifiers: Modifiers = [RestrictToVerticalAxis];
 
 type CardsTableColumnsVisibilityProps<TData> = {
   columns: Column<TData>[];
@@ -27,7 +31,7 @@ export function CardsTableColumnsVisibility<TData>({
     setItems(columns.map(({ id }) => id));
   }
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd: NonNullable<DragDropEventHandlers["onDragEnd"]> = (event) => {
     const { operation, canceled } = event;
     const { source, target } = operation;
 
@@ -63,7 +67,7 @@ export function CardsTableColumnsVisibility<TData>({
           </h3>
           <DragDropProvider
             sensors={[KeyboardSensor, PointerSensor]}
-            modifiers={[RestrictToVerticalAxis] as any[]}
+            modifiers={verticalAxisModifiers}
             onDragEnd={handleDragEnd}
           >
             <div className="flex flex-col gap-2">

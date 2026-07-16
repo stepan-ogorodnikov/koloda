@@ -56,7 +56,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             variants={{ layout: "form" }}
             label={_(msg`settings.learning.defaults.algorithm`)}
             value={field.state.value}
-            onChange={field.handleChange as any}
+            onChange={field.handleChange}
           />
         )}
       </form.Field>
@@ -66,7 +66,7 @@ export function SettingsLearning({ data }: SettingsLearningProps) {
             variants={{ layout: "form" }}
             label={_(msg`settings.learning.defaults.template`)}
             value={field.state.value}
-            onChange={field.handleChange as any}
+            onChange={field.handleChange}
           />
         )}
       </form.Field>
