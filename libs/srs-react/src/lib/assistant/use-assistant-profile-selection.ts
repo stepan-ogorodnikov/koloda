@@ -30,8 +30,6 @@ export type UseAssistantProfileSelectionReturn = {
   modelParameters: ModelParameter[];
   hasProfiles: boolean;
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
-  handleProfileChange: (value: string) => void;
-  handleModelChange: (value: string) => void;
   handleModelProfileChange: (next: { profileId: string; modelId: string }) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
@@ -62,24 +60,19 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
 
   useEffect(() => {
     if (defaultProfileId && !storedProfileId) {
-      const profile = profiles.find((p) => p.id === defaultProfileId);
       setAIProfile({
         profileId: defaultProfileId,
-        modelId: profile?.lastUsedModel ?? null,
+        modelId: null,
         modelParameters: {},
       });
     }
-  }, [defaultProfileId, storedProfileId, profiles, setAIProfile]);
+  }, [defaultProfileId, storedProfileId, setAIProfile]);
 
   const resolvedModelId = useMemo(() => {
     if (!storedProfileId) return "";
     if (storedModelId && models.some((m) => m.id === storedModelId)) return storedModelId;
-    const profile = profiles.find((p) => p.id === storedProfileId);
-    if (profile?.lastUsedModel && models.some((m) => m.id === profile.lastUsedModel)) {
-      return profile.lastUsedModel;
-    }
     return models[0]?.id ?? "";
-  }, [storedProfileId, storedModelId, models, profiles]);
+  }, [storedProfileId, storedModelId, models]);
 
   const modelName = models.find((m) => m.id === resolvedModelId)?.name;
 
@@ -96,24 +89,6 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
 
     return params;
   }, [resolvedModelId, models, storedModelParameters]);
-
-  const handleProfileChange = useCallback(
-    (value: string) => {
-      const profile = profiles.find((p) => p.id === value);
-      const modelId = profile?.lastUsedModel ?? null;
-      setAIProfile({ profileId: value, modelId, modelParameters: {} });
-      setGlobalAIProfileState({ profileId: value, modelId, modelParameters: {} });
-    },
-    [profiles, setAIProfile, setGlobalAIProfileState],
-  );
-
-  const handleModelChange = useCallback(
-    (value: string) => {
-      setAIModel({ modelId: value, modelParameters: {} });
-      setGlobalAIProfileState({ profileId: storedProfileId, modelId: value, modelParameters: {} });
-    },
-    [setAIModel, setGlobalAIProfileState, storedProfileId],
-  );
 
   const handleModelProfileChange = useCallback(
     (params: HandleModelProfileChangeParams) => {
@@ -162,8 +137,6 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     modelParameters,
     hasProfiles,
     setGlobalAIProfileState,
-    handleProfileChange,
-    handleModelChange,
     handleModelProfileChange,
     handleModelParameterChange,
   };

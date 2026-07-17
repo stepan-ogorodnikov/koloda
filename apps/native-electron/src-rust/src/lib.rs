@@ -406,7 +406,7 @@ impl KolodaDb {
     pub fn touch_ai_profile(&self, data: serde_json::Value) -> Result<()> {
         let data: koloda_core::domain::ai::TouchProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        repo::ai::touch_ai_profile(&self.db, &data.id, data.model_id).map_err(to_napi_error)
+        repo::ai::touch_ai_profile(&self.db, &data.id).map_err(to_napi_error)
     }
 
     #[napi]

@@ -113,7 +113,6 @@ vi.mock("@koloda/ai-react", async () => {
         isError: false,
         defaultProfileId: profile?.id ?? null,
         selectedProfile,
-        lastUsedModel: profile?.lastUsedModel ?? null,
         secrets: selectedProfile?.secrets ?? null,
         apiKey: selectedProfile?.secrets?.apiKey ?? null,
         missingSecretFieldLabels: [],
@@ -149,8 +148,6 @@ vi.mock("./use-assistant-profile-selection", () => {
         modelParameters: [] as ModelParameter[],
         hasProfiles: wire.profiles.length > 0,
         setGlobalAIProfileState: () => {},
-        handleProfileChange: () => {},
-        handleModelChange: () => {},
         handleModelProfileChange: () => {},
         handleModelParameterChange: () => {},
       };
@@ -250,7 +247,7 @@ function buildQueries(): Queries {
     addAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     updateAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     removeAIProfileMutation: () => ({ mutationFn: async () => undefined }),
-    touchAIProfileMutation: () => ({ mutationFn: async (_args: { id: string; modelId: string }) => undefined }),
+    touchAIProfileMutation: () => ({ mutationFn: async (_args: { id: string }) => undefined }),
     getAIProfileModelsQuery: (_profileId: string) => ({ queryFn: async () => wire.models }),
     getAIProfilesQuery: () => ({ queryFn: async () => wire.profiles }),
   };

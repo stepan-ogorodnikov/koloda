@@ -80,7 +80,7 @@ export function useRunOrchestration({
       setGlobalAIProfileState(cfg);
 
       const conversationMessages = buildConversationMessages(visibleMessages, currentState.runs, cfg.template);
-      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      cfg.touchProfileMutate({ id: cfg.profileId });
 
       const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
       await retryRun(runId, result.request, result.templateFields, mode, cfg.modelName);
@@ -124,7 +124,7 @@ export function useRunOrchestration({
       setGlobalAIProfileState(cfg);
 
       const conversationMessages = buildConversationMessages(currentState.messages, currentState.runs, cfg.template);
-      cfg.touchProfileMutate({ id: cfg.profileId, modelId: cfg.modelId });
+      cfg.touchProfileMutate({ id: cfg.profileId });
 
       const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
 

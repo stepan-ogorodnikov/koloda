@@ -96,7 +96,7 @@ export function reconcileAIProfileState(stored: AIProfileState | null, profiles:
 
     return {
       profileId: fallback?.id ?? null,
-      modelId: fallback?.lastUsedModel ?? null,
+      modelId: null,
       modelParameters: {},
     };
   }
@@ -108,14 +108,14 @@ export function reconcileAIProfileState(stored: AIProfileState | null, profiles:
 
     return {
       profileId: fallback?.id ?? null,
-      modelId: fallback?.lastUsedModel ?? null,
+      modelId: null,
       modelParameters: {},
     };
   }
 
   return {
     profileId: profile.id,
-    modelId: stored.modelId ?? profile.lastUsedModel ?? null,
+    modelId: stored.modelId ?? null,
     modelParameters: { ...stored.modelParameters },
   };
 }

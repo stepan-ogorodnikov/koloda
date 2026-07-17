@@ -14,7 +14,7 @@ export type AssistantConversationConfig = {
   streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
   template: Template | null | undefined;
-  touchProfileMutate: (args: { id: string; modelId: string }) => void;
+  touchProfileMutate: (args: { id: string }) => void;
   cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
   _: I18nContext["_"];

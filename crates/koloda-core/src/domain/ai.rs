@@ -11,7 +11,6 @@ pub struct AIProfile {
     pub title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<AISecrets>,
-    pub last_used_model: Option<String>,
     pub created_at: String,
     pub last_used_at: Option<String>,
 }
@@ -80,7 +79,6 @@ pub struct RemoveProfileData {
 #[serde(rename_all = "camelCase")]
 pub struct TouchProfileData {
     pub id: String,
-    pub model_id: Option<String>,
 }
 
 impl AISecrets {

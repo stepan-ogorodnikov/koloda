@@ -26,7 +26,6 @@ fn test_valid_ai_settings_with_openrouter_profile() {
                     "provider": "openrouter",
                     "apiKey": "secret-key"
                 },
-                "lastUsedModel": "openai/gpt-4o-mini",
                 "createdAt": "2026-01-01T00:00:00Z",
                 "lastUsedAt": null
             }
@@ -49,7 +48,6 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
                     "baseUrl": "http://localhost:1234",
                     "apiKey": null
                 },
-                "lastUsedModel": null,
                 "createdAt": "2026-01-01T00:00:00Z",
                 "lastUsedAt": null
             }
@@ -71,7 +69,6 @@ fn test_valid_ai_settings_with_opencode_go_profile() {
                     "provider": "opencodeGo",
                     "apiKey": "go-key"
                 },
-                "lastUsedModel": null,
                 "createdAt": "2026-01-01T00:00:00Z",
                 "lastUsedAt": null
             }
@@ -93,7 +90,6 @@ fn test_valid_ai_settings_with_opencode_zen_profile() {
                     "provider": "opencodeZen",
                     "apiKey": "zen-key"
                 },
-                "lastUsedModel": null,
                 "createdAt": "2026-01-01T00:00:00Z",
                 "lastUsedAt": null
             }
@@ -176,7 +172,6 @@ fn test_settings_name_ai_validation_valid() {
                     "provider": "ollama",
                     "baseUrl": "http://localhost:11434"
                 },
-                "lastUsedModel": null,
                 "createdAt": "2026-01-01T00:00:00Z",
                 "lastUsedAt": null
             }

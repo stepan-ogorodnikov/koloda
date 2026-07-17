@@ -169,7 +169,6 @@ export function createAIProfile(overrides: DeepPartial<AIProfile> = {}): AIProfi
       provider: "openrouter" as const,
       apiKey: "test-key",
     },
-    lastUsedModel: "openrouter/gpt-5-mini",
     createdAt: DEFAULT_DATE.toISOString(),
     lastUsedAt: DEFAULT_DATE.toISOString(),
   };

@@ -23,7 +23,6 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     id,
     title: data.title,
     secrets: data.secrets,
-    lastUsedModel: undefined,
     createdAt: now,
     lastUsedAt: null,
   };
@@ -79,7 +78,6 @@ export async function touchAIProfile(db: DB, data: TouchAIProfileData): Promise<
       const profile = draft.profiles.find((p) => p.id === data.id);
       if (profile) {
         profile.lastUsedAt = new Date().toISOString();
-        if (data.modelId) profile.lastUsedModel = data.modelId;
       }
     }),
   );

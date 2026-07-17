@@ -48,8 +48,6 @@ export function useAIProfiles(profileId?: string | null) {
     return profiles.find((p: AIProfile) => p.id === profileId) ?? null;
   }, [profiles, profileId]);
 
-  const lastUsedModel = selectedProfile?.lastUsedModel ?? null;
-
   const missingSecretFields = getMissingSecretFields(selectedProfile?.secrets);
   const missingSecretFieldLabels = useMemo(
     () => missingSecretFields.map((field) => _(SECRETS_LABELS[field])),
@@ -61,7 +59,6 @@ export function useAIProfiles(profileId?: string | null) {
     profiles,
     defaultProfileId,
     selectedProfile,
-    lastUsedModel,
     secrets: selectedProfile?.secrets ?? null,
     apiKey: selectedProfile?.secrets ? getApiKey(selectedProfile.secrets) : null,
     missingSecretFieldLabels,

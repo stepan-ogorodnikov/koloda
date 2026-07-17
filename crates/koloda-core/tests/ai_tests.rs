@@ -167,7 +167,6 @@ fn test_ai_profile_validate_ok_with_secrets() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: "key-123".to_string(),
         }),
-        last_used_model: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
         last_used_at: None,
     };
@@ -181,7 +180,6 @@ fn test_ai_profile_validate_ok_without_secrets() {
         id: "profile-2".to_string(),
         title: None,
         secrets: None,
-        last_used_model: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
         last_used_at: None,
     };
@@ -195,7 +193,6 @@ fn test_ai_profile_validate_empty_id_fails() {
         id: "".to_string(),
         title: Some("Profile".to_string()),
         secrets: None,
-        last_used_model: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
         last_used_at: None,
     };
@@ -211,7 +208,6 @@ fn test_ai_profile_validate_title_too_long_fails() {
         id: "profile-3".to_string(),
         title: Some("a".repeat(129)),
         secrets: None,
-        last_used_model: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
         last_used_at: None,
     };
@@ -229,7 +225,6 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: "".to_string(),
         }),
-        last_used_model: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
         last_used_at: None,
     };

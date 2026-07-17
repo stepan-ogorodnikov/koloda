@@ -26,8 +26,6 @@ export type UseAssistantChatReturn = {
   loadError: Error | null;
   handleDismissGenerate: () => void;
   handleDismissSave: () => void;
-  handleProfileChange: (value: string) => void;
-  handleModelChange: (value: string) => void;
   handleModelProfileChange: (next: { profileId: string; modelId: string }) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
   handleGenerate: (value?: string) => Promise<void>;
@@ -57,8 +55,6 @@ export function useAssistantChat({
     provider,
     modelParameters,
     setGlobalAIProfileState,
-    handleProfileChange,
-    handleModelChange,
     handleModelProfileChange,
     handleModelParameterChange,
   } = useAssistantProfileSelection();
@@ -106,8 +102,6 @@ export function useAssistantChat({
     loadError,
     handleDismissGenerate,
     handleDismissSave,
-    handleProfileChange,
-    handleModelChange,
     handleModelProfileChange,
     handleModelParameterChange,
     handleGenerate,
