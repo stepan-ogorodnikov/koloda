@@ -1,10 +1,4 @@
-import type {
-  AddAIProfileData,
-  AIProfile,
-  RemoveAIProfileData,
-  TouchAIProfileData,
-  UpdateAIProfileData,
-} from "@koloda/ai";
+import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import { aiSettingsValidation, fetchModels } from "@koloda/ai";
 import type { DB } from "@koloda/srs-pgsql";
 import { getSettings, setSettings } from "@koloda/srs-pgsql";
@@ -24,7 +18,6 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     title: data.title,
     secrets: data.secrets,
     createdAt: now,
-    lastUsedAt: null,
   };
 
   const currentSettings = await getSettings<"ai">(db, "ai");
@@ -63,22 +56,6 @@ export async function removeAIProfile(db: DB, data: RemoveAIProfileData): Promis
   const newContent = aiSettingsValidation.parse(
     produce(currentSettings.content, (draft) => {
       draft.profiles = draft.profiles.filter((p) => p.id !== data.id);
-    }),
-  );
-
-  await setSettings<"ai">(db, { name: "ai", content: newContent });
-}
-
-export async function touchAIProfile(db: DB, data: TouchAIProfileData): Promise<void> {
-  const currentSettings = await getSettings<"ai">(db, "ai");
-  if (!currentSettings) return;
-
-  const newContent = aiSettingsValidation.parse(
-    produce(currentSettings.content, (draft) => {
-      const profile = draft.profiles.find((p) => p.id === data.id);
-      if (profile) {
-        profile.lastUsedAt = new Date().toISOString();
-      }
     }),
   );
 

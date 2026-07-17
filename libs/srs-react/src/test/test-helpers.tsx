@@ -170,7 +170,6 @@ export function createAIProfile(overrides: DeepPartial<AIProfile> = {}): AIProfi
       apiKey: "test-key",
     },
     createdAt: DEFAULT_DATE.toISOString(),
-    lastUsedAt: DEFAULT_DATE.toISOString(),
   };
 
   return deepMerge(base, overrides) as AIProfile;

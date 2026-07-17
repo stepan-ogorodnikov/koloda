@@ -247,7 +247,6 @@ function buildQueries(): Queries {
     addAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     updateAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     removeAIProfileMutation: () => ({ mutationFn: async () => undefined }),
-    touchAIProfileMutation: () => ({ mutationFn: async (_args: { id: string }) => undefined }),
     getAIProfileModelsQuery: (_profileId: string) => ({ queryFn: async () => wire.models }),
     getAIProfilesQuery: () => ({ queryFn: async () => wire.profiles }),
   };

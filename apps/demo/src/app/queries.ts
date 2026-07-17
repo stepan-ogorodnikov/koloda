@@ -1,5 +1,5 @@
 import type { AddAIProfileData } from "@koloda/ai";
-import type { RemoveAIProfileData, TouchAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   DeleteConversationData,
   PatchSettingsData,
@@ -75,14 +75,7 @@ import {
   updateDeck,
   updateTemplate,
 } from "@koloda/srs-pgsql";
-import {
-  addAIProfile,
-  getAIProfileModels,
-  getAIProfiles,
-  removeAIProfile,
-  touchAIProfile,
-  updateAIProfile,
-} from "./ai";
+import { addAIProfile, getAIProfileModels, getAIProfiles, removeAIProfile, updateAIProfile } from "./ai";
 import { getStatus, setupFromScratch } from "./setup";
 
 export const demoAppQueryOptions = {
@@ -147,7 +140,6 @@ export const queriesFn = (db: DB): Queries => ({
   addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
   updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),
   removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
-  touchAIProfileMutation: () => ({ mutationFn: (data: TouchAIProfileData) => touchAIProfile(db, data) }),
   getAIProfileModelsQuery: (profileId: string) => ({ queryFn: () => getAIProfileModels(db, profileId) }),
   getAIProfilesQuery: () => ({ queryFn: () => getAIProfiles(db) }),
 });

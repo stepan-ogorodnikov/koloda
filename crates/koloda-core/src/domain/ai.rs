@@ -12,7 +12,6 @@ pub struct AIProfile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<AISecrets>,
     pub created_at: String,
-    pub last_used_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,12 +71,6 @@ pub struct UpdateProfileData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveProfileData {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TouchProfileData {
     pub id: String,
 }
 

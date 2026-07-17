@@ -168,7 +168,6 @@ fn test_ai_profile_validate_ok_with_secrets() {
             api_key: "key-123".to_string(),
         }),
         created_at: "2026-01-01T00:00:00Z".to_string(),
-        last_used_at: None,
     };
 
     assert!(profile.validate().is_ok());
@@ -181,7 +180,6 @@ fn test_ai_profile_validate_ok_without_secrets() {
         title: None,
         secrets: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
-        last_used_at: None,
     };
 
     assert!(profile.validate().is_ok());
@@ -194,7 +192,6 @@ fn test_ai_profile_validate_empty_id_fails() {
         title: Some("Profile".to_string()),
         secrets: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
-        last_used_at: None,
     };
 
     let result = profile.validate();
@@ -209,7 +206,6 @@ fn test_ai_profile_validate_title_too_long_fails() {
         title: Some("a".repeat(129)),
         secrets: None,
         created_at: "2026-01-01T00:00:00Z".to_string(),
-        last_used_at: None,
     };
 
     let result = profile.validate();
@@ -226,7 +222,6 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
             api_key: "".to_string(),
         }),
         created_at: "2026-01-01T00:00:00Z".to_string(),
-        last_used_at: None,
     };
 
     let result = profile.validate_for_input();

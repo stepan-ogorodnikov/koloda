@@ -1,10 +1,4 @@
-import type {
-  AddAIProfileData,
-  AIProfile,
-  RemoveAIProfileData,
-  TouchAIProfileData,
-  UpdateAIProfileData,
-} from "@koloda/ai";
+import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AllowedSettings,
   DeleteConversationData,
@@ -184,9 +178,6 @@ export const queriesFn = (): Queries => ({
   }),
   removeAIProfileMutation: () => ({
     mutationFn: (data: RemoveAIProfileData) => invoke("cmd_remove_ai_profile", { data }),
-  }),
-  touchAIProfileMutation: () => ({
-    mutationFn: (data: TouchAIProfileData) => invoke("cmd_touch_ai_profile", { data }),
   }),
   getAIProfileModelsQuery: (profileId: string) => ({
     queryFn: () => getAIProfileModels(profileId),

@@ -79,13 +79,7 @@ export const aiProfileStateAtom = atom(
 
 function pickDefaultProfile(profiles: AIProfile[]): AIProfile | null {
   if (profiles.length === 0) return null;
-  const sorted = [...profiles].sort((a, b) => {
-    if (a.lastUsedAt && b.lastUsedAt) return new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime();
-    if (a.lastUsedAt) return -1;
-    if (b.lastUsedAt) return 1;
-
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  const sorted = [...profiles].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return sorted[0] ?? null;
 }

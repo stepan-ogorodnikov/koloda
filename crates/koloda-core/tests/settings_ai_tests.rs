@@ -26,8 +26,7 @@ fn test_valid_ai_settings_with_openrouter_profile() {
                     "provider": "openrouter",
                     "apiKey": "secret-key"
                 },
-                "createdAt": "2026-01-01T00:00:00Z",
-                "lastUsedAt": null
+                "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
     }"#;
@@ -48,8 +47,7 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
                     "baseUrl": "http://localhost:1234",
                     "apiKey": null
                 },
-                "createdAt": "2026-01-01T00:00:00Z",
-                "lastUsedAt": null
+                "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
     }"#;
@@ -69,8 +67,7 @@ fn test_valid_ai_settings_with_opencode_go_profile() {
                     "provider": "opencodeGo",
                     "apiKey": "go-key"
                 },
-                "createdAt": "2026-01-01T00:00:00Z",
-                "lastUsedAt": null
+                "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
     }"#;
@@ -90,8 +87,7 @@ fn test_valid_ai_settings_with_opencode_zen_profile() {
                     "provider": "opencodeZen",
                     "apiKey": "zen-key"
                 },
-                "createdAt": "2026-01-01T00:00:00Z",
-                "lastUsedAt": null
+                "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
     }"#;
@@ -172,8 +168,7 @@ fn test_settings_name_ai_validation_valid() {
                     "provider": "ollama",
                     "baseUrl": "http://localhost:11434"
                 },
-                "createdAt": "2026-01-01T00:00:00Z",
-                "lastUsedAt": null
+                "createdAt": "2026-01-01T00:00:00Z"
             }
         ]
     });

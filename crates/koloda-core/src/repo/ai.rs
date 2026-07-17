@@ -114,7 +114,6 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
         title,
         secrets: secrets_for_db,
         created_at: now,
-        last_used_at: None,
     };
 
     settings.profiles.push(profile.clone());
@@ -188,19 +187,5 @@ pub fn remove_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
 
     let mut settings = get_ai_settings_or_default(db)?;
     settings.profiles.retain(|profile| profile.id != id);
-    set_ai_settings(db, settings)
-}
-
-pub fn touch_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
-    let mut settings = get_ai_settings_or_default(db)?;
-    let now = Utc::now().to_rfc3339();
-
-    for profile in &mut settings.profiles {
-        if profile.id == id {
-            profile.last_used_at = Some(now);
-            break;
-        }
-    }
-
     set_ai_settings(db, settings)
 }

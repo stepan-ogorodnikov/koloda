@@ -311,7 +311,6 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_add_ai_profile", async (_event, { data }: any) => j(db.addAiProfile(data)));
   ipcMain.handle("cmd_update_ai_profile", async (_event, { data }: any) => j(db.updateAiProfile(data)));
   ipcMain.handle("cmd_remove_ai_profile", async (_event, { data }: any) => db.removeAiProfile(data));
-  ipcMain.handle("cmd_touch_ai_profile", async (_event, { data }: any) => db.touchAiProfile(data));
 }
 
 configureUserData();

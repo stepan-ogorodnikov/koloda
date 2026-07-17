@@ -6,7 +6,6 @@ export const aiProfileValidation = z.object({
   title: z.string().max(128, "validation.common.title.too-long").optional(),
   secrets: aiSecretsValidation.optional(),
   createdAt: z.iso.datetime(),
-  lastUsedAt: z.iso.datetime().nullable(),
 });
 
 export type AIProfile = z.output<typeof aiProfileValidation>;
@@ -51,8 +50,4 @@ export type UpdateAIProfileData = {
   id: string;
   title?: string;
   secrets?: AISecrets;
-};
-
-export type TouchAIProfileData = {
-  id: string;
 };

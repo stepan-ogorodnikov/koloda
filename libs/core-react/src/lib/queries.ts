@@ -1,11 +1,4 @@
-import type {
-  AddAIProfileData,
-  AIModel,
-  AIProfile,
-  RemoveAIProfileData,
-  TouchAIProfileData,
-  UpdateAIProfileData,
-} from "@koloda/ai";
+import type { AddAIProfileData, AIModel, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AllowedSettings,
   AppError,
@@ -106,7 +99,6 @@ export type Queries = {
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;
-  touchAIProfileMutation: () => UseMutationOptions<void, AppError, TouchAIProfileData, unknown>;
   getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;
   getAIProfilesQuery: () => QueryOptions<AIProfile[]>;
 };

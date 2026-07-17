@@ -46,7 +46,6 @@ export const QUERIES_METHODS = [
   "addAIProfileMutation",
   "updateAIProfileMutation",
   "removeAIProfileMutation",
-  "touchAIProfileMutation",
   "getAIProfileModelsQuery",
   "getAIProfilesQuery",
 ] as const satisfies readonly (keyof Queries)[];

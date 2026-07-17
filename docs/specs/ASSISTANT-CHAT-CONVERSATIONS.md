@@ -140,8 +140,9 @@ Each conversation stores its own AI profile state so switching between conversat
 
 All three are persisted on the conversation.
 
-If the user picks a different profile, the model and parameters are reset to that profile's defaults.
-If the user picks a different model, the parameters are reset to that model's defaults.
+The model picker selects a profile and model together.
+Changing the selection sets both.
+If the model changes, model parameters are reset to that model's defaults.
 
 ### Global AI Profile State
 
@@ -154,9 +155,10 @@ When the user starts a new conversation, its profile, model, and model parameter
 From that point on, the conversation's own values take over and can diverge from the global one.
 
 **Loading** — on app load, the global record is read from storage.
-If no value is stored yet, the global is reconciled to defaults: the first available profile, that profile's default model, and default parameters.
+If no value is stored yet, the global is reconciled to defaults: the newest available profile, no model, and empty parameters.
 If a stored value is present but its profile is no longer available, the global is reconciled to defaults the same way.
 If a stored value is present and its profile is available, it is used as-is.
+When a model is missing or no longer in the provider's list, the first available model for that profile is used once the list loads.
 
 **When it is updated** — the global record is updated in two cases:
 

@@ -1,7 +1,7 @@
 import type { AIProfile, AssistantSettings } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useLingui } from "@lingui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import type { RefObject } from "react";
@@ -31,7 +31,7 @@ export function useAssistantRuntimeConfig({
   selectedProfile,
 }: UseAssistantRuntimeConfigOptions): UseAssistantRuntimeConfigReturn {
   const { _ } = useLingui();
-  const { getDeckQuery, getTemplateQuery, touchAIProfileMutation, getSettingsQuery } = useAtomValue(queriesAtom);
+  const { getDeckQuery, getTemplateQuery, getSettingsQuery } = useAtomValue(queriesAtom);
   const deckId = useAtomValue(assistantDeckIdAtom);
   const { data: aiSettings } = useQuery({ ...getSettingsQuery("ai"), queryKey: queryKeys.settings.detail("ai") });
   const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
@@ -53,7 +53,6 @@ export function useAssistantRuntimeConfig({
 
   const { streamGenerator, chatStreamGenerator } = useAssistantClient({ selectedProfile, template });
 
-  const touchProfileMutation = useMutation(touchAIProfileMutation());
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
 
@@ -68,7 +67,6 @@ export function useAssistantRuntimeConfig({
     streamGenerator,
     chatStreamGenerator,
     template,
-    touchProfileMutate: (args) => touchProfileMutation.mutate(args),
     cardsPromptTemplate,
     chatPromptTemplate,
     _,
