@@ -12,9 +12,16 @@ import {
   assistantMessagesAtom,
   assistantRunsAtom,
 } from "./assistant-conversation-atoms";
-import { getChatTextMetadata, getErrorMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
+import {
+  getChatTextMetadata,
+  getErrorMetadata,
+  getGeneratedCardsMetadata,
+  getRunIdFromMessageId,
+  getUserMessageCreatedAt,
+} from "./assistant-messages";
 import type { GenerationRun } from "./conversation-reducer";
 import { CopyMessageButton } from "./copy-message-button";
+import { MessageTimestamp } from "./message-timestamp";
 import { RevertMessageButton } from "./revert-message-button";
 
 export type UseAssistantMessageRendererProps = {
@@ -36,7 +43,11 @@ export function useAssistantMessageRenderer({
 
   return useCallback(
     (message: UIMessage, content: ReactNode) => {
-      if (message.role === "user") return renderUserMessage(message, content, handleRevert);
+      if (message.role === "user") {
+        const runId = getRunIdFromMessageId(message.id);
+        const timestamp = getUserMessageCreatedAt(message) ?? (runId ? runs[runId]?.startedAt : undefined) ?? null;
+        return renderUserMessage(message, content, handleRevert, timestamp);
+      }
 
       const isTail = message.id === tailMessageId;
 
@@ -72,13 +83,21 @@ export function useAssistantMessageRenderer({
   );
 }
 
-function renderUserMessage(message: UIMessage, content: ReactNode, handleRevert: (id: string) => void) {
+function renderUserMessage(
+  message: UIMessage,
+  content: ReactNode,
+  handleRevert: (id: string) => void,
+  timestamp: Date | null,
+) {
   return (
     <div className="group self-end flex flex-col items-end gap-1 w-full">
       {content}
-      <div className="flex flex-row items-center justify-end gap-1 mx-2">
-        <CopyMessageButton text={getTextMessageContent(message)} />
-        <RevertMessageButton onPress={() => handleRevert(message.id)} />
+      <div className="flex flex-row items-center justify-end gap-2 mx-3">
+        <div className="flex flex-row items-center justify-end gap-1">
+          <CopyMessageButton text={getTextMessageContent(message)} />
+          <RevertMessageButton onPress={() => handleRevert(message.id)} />
+        </div>
+        {timestamp ? <MessageTimestamp timestamp={timestamp} /> : null}
       </div>
     </div>
   );

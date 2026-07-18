@@ -8,6 +8,8 @@ export type AssistantMessageMetadata =
   | { kind: "chat-text"; runId: string }
   | { kind: "error"; runId: string; mode: AIChatMode };
 
+export type UserMessageMetadata = { createdAt: string };
+
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
@@ -17,6 +19,19 @@ function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata 
   if (obj.kind === "error") return obj.mode === "chat" || obj.mode === "cards";
 
   return false;
+}
+
+function isUserMessageMetadata(value: unknown): value is UserMessageMetadata {
+  if (!value || typeof value !== "object") return false;
+
+  return typeof (value as Record<string, unknown>).createdAt === "string";
+}
+
+export function getUserMessageCreatedAt(message: UIMessage): Date | null {
+  if (!isUserMessageMetadata(message.metadata)) return null;
+  const createdAt = new Date(message.metadata.createdAt);
+
+  return Number.isNaN(createdAt.getTime()) ? null : createdAt;
 }
 
 export function getAssistantMetadata(message: UIMessage) {

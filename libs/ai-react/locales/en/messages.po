@@ -52,19 +52,19 @@ msgstr "Prompt input"
 msgid "ai.chat.input.placeholder"
 msgstr "Type your prompt here"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:52
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:67
 msgid "ai.chat.message.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:41
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Interrupted after"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:49
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:64
 msgid "ai.chat.message.status.failed"
 msgstr "Failed to get a response"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:21
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:30
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 

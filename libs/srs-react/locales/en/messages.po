@@ -103,14 +103,14 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:22
-msgid "ai.chat.message.restore.label"
-msgstr "Restore"
-
 #: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:15
 #: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:22
 msgid "ai.chat.message.copy.tooltip"
 msgstr "Copy message"
+
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:22
+msgid "ai.chat.message.restore.label"
+msgstr "Restore"
 
 #: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:20
 msgid "ai.chat.message.revert.indicator"
@@ -120,6 +120,10 @@ msgstr "Messages reverted"
 #: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:22
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Revert message"
+
+#: ../../libs/srs-react/src/lib/assistant/message-timestamp.tsx:24
+msgid "ai.chat.message.timestamp.today {time}"
+msgstr ""
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:34
@@ -244,7 +248,7 @@ msgstr "Time period for relearning step number {0}"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:162
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:160
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
@@ -373,11 +377,11 @@ msgstr "Go to next card"
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:62
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:66
 msgid "cards-table.columns-menu.title"
 msgstr "Table Columns"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:57
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:61
 msgid "cards-table.columns-menu.trigger"
 msgstr "Columns"
 
@@ -699,7 +703,7 @@ msgstr "Template"
 msgid "template.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:77
+#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:80
 msgid "template.fields.add-item"
 msgstr "Add field"
 
@@ -716,7 +720,7 @@ msgid "template.fields.inputs.title.label"
 msgstr "Title"
 
 #: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:28
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:49
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:52
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Untitled"
 
@@ -732,11 +736,11 @@ msgstr "Fields"
 msgid "template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:42
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:45
 msgid "template.layout.inputs.field.label"
 msgstr "Field"
 
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:55
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:58
 msgid "template.layout.inputs.operation.label"
 msgstr "Operation"
 

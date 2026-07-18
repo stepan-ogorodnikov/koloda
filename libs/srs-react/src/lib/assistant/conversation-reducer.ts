@@ -192,7 +192,9 @@ function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
 type AddUserMessagePayload = { runId: string; text: string };
 
 function addUserMessage(draft: ConversationReducerState, payload: AddUserMessagePayload) {
-  draft.messages.push(createTextMessage(userMessageId(payload.runId), "user", payload.text));
+  draft.messages.push(
+    createTextMessage(userMessageId(payload.runId), "user", payload.text, { createdAt: new Date().toISOString() }),
+  );
 }
 
 type AddAssistantMessagePayload = { runId: string; kind: "chat-text" | "generated-cards"; text: string };

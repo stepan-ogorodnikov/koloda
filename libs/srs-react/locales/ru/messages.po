@@ -103,14 +103,14 @@ msgstr "Новый шаблон"
 msgid "add-template.trigger"
 msgstr "Новый шаблон"
 
-#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:22
-msgid "ai.chat.message.restore.label"
-msgstr "Восстановить"
-
 #: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:15
 #: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:22
 msgid "ai.chat.message.copy.tooltip"
 msgstr "Копировать сообщение"
+
+#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:22
+msgid "ai.chat.message.restore.label"
+msgstr "Восстановить"
 
 #: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:20
 msgid "ai.chat.message.revert.indicator"
@@ -120,6 +120,10 @@ msgstr "Сообщения сброшены"
 #: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:22
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Сбросить до этого сообщения"
+
+#: ../../libs/srs-react/src/lib/assistant/message-timestamp.tsx:24
+msgid "ai.chat.message.timestamp.today {time}"
+msgstr ""
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:34
@@ -244,7 +248,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:162
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:160
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 
@@ -373,11 +377,11 @@ msgstr "Перейти к следующей карточке"
 msgid "cards-stack.navigation.prev"
 msgstr "Перейти к предыдущей карточке"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:62
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:66
 msgid "cards-table.columns-menu.title"
 msgstr "Столбцы таблицы"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:57
+#: ../../libs/srs-react/src/lib/cards/cards-table-columns-visibility.tsx:61
 msgid "cards-table.columns-menu.trigger"
 msgstr "Столбцы"
 
@@ -699,7 +703,7 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:77
+#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:80
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 
@@ -716,7 +720,7 @@ msgid "template.fields.inputs.title.label"
 msgstr "Название"
 
 #: ../../libs/srs-react/src/lib/templates/template-fields-item.tsx:28
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:49
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:52
 msgid "template.fields.inputs.title.placeholder"
 msgstr "Без названия"
 
@@ -732,11 +736,11 @@ msgstr "Поля"
 msgid "template.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:42
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:45
 msgid "template.layout.inputs.field.label"
 msgstr "Поле"
 
-#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:55
+#: ../../libs/srs-react/src/lib/templates/template-layout.tsx:58
 msgid "template.layout.inputs.operation.label"
 msgstr "Действие"
 

@@ -9,6 +9,9 @@ describe("conversationReducer", () => {
       expect(state.messages).toHaveLength(1);
       expect(state.messages[0].role).toBe("user");
       expect(state.messages[0].id).toBe("user-r1");
+      expect(state.messages[0].metadata).toEqual({
+        createdAt: expect.any(String),
+      });
     });
   });
 

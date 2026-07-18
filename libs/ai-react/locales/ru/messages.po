@@ -52,19 +52,19 @@ msgstr "Поле ввода сообщения"
 msgid "ai.chat.input.placeholder"
 msgstr "Введите сообщение"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:52
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:67
 msgid "ai.chat.message.retry"
 msgstr "Повторить"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:41
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Прервано через"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:49
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:64
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось выполнить запрос"
 
-#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:21
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:30
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 

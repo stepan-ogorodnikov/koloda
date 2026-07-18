@@ -10,10 +10,20 @@ import {
   createTextMessage,
   getErrorMetadata,
   getGeneratedCardsMetadata,
+  getUserMessageCreatedAt,
   serializeGeneratedCards,
 } from "./assistant-messages";
 
 describe("aiChatUtility", () => {
+  it("reads createdAt from user message metadata", () => {
+    const message = createTextMessage("user-1", "user", "Hello", {
+      createdAt: "2026-07-18T11:00:00.000Z",
+    });
+
+    expect(getUserMessageCreatedAt(message)?.toISOString()).toBe("2026-07-18T11:00:00.000Z");
+    expect(getUserMessageCreatedAt(createTextMessage("user-2", "user", "Hello"))).toBeNull();
+  });
+
   it("reads generated-card metadata only from matching assistant messages", () => {
     const message = createTextMessage("assistant-1", "assistant", "ready", {
       kind: "generated-cards",
