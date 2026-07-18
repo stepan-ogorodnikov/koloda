@@ -14,6 +14,7 @@ import {
 } from "./assistant-conversation-atoms";
 import { getChatTextMetadata, getErrorMetadata, getGeneratedCardsMetadata } from "./assistant-messages";
 import type { GenerationRun } from "./conversation-reducer";
+import { CopyMessageButton } from "./copy-message-button";
 import { RevertMessageButton } from "./revert-message-button";
 
 export type UseAssistantMessageRendererProps = {
@@ -76,6 +77,7 @@ function renderUserMessage(message: UIMessage, content: ReactNode, handleRevert:
     <div className="group self-end flex flex-col items-end gap-1 w-full">
       {content}
       <div className="flex flex-row items-center justify-end gap-1 mx-2">
+        <CopyMessageButton text={getTextMessageContent(message)} />
         <RevertMessageButton onPress={() => handleRevert(message.id)} />
       </div>
     </div>
@@ -135,9 +137,11 @@ function renderChatMessage(options: {
   handleRetry: (runId: string) => Promise<void>;
 }) {
   const { message, content, run, runId, isTail, handleRetry } = options;
+  const text = getTextMessageContent(message);
+  const copyAction = text ? <CopyMessageButton text={text} /> : null;
 
   if (run.status === "streaming") {
-    if (getTextMessageContent(message)) return content;
+    if (text) return content;
 
     return (
       <AIChatMessageLayout role="assistant">
@@ -148,27 +152,32 @@ function renderChatMessage(options: {
 
   if (run.status === "success" && run.elapsedSeconds !== null) {
     return (
-      <div className="flex flex-col gap-2 self-start w-full">
+      <div className="group flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus state="success" elapsedSeconds={run.elapsedSeconds} modelName={run.modelName} />
+        <AIChatMessageStatus
+          state="success"
+          elapsedSeconds={run.elapsedSeconds}
+          modelName={run.modelName}
+          actions={copyAction}
+        />
       </div>
     );
   }
 
   if (run.status === "canceled" && run.elapsedSeconds !== null) {
     return (
-      <div className="flex flex-col gap-2 self-start w-full">
+      <div className="group flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} />
+        <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} actions={copyAction} />
       </div>
     );
   }
 
   if (run.status === "failed") {
     return (
-      <div className="flex flex-col gap-2 self-start w-full">
+      <div className="group flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} />
+        <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} actions={copyAction} />
       </div>
     );
   }

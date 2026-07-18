@@ -107,6 +107,11 @@ msgstr "New template"
 msgid "ai.chat.message.restore.label"
 msgstr "Restore"
 
+#: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:15
+#: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:22
+msgid "ai.chat.message.copy.tooltip"
+msgstr "Copy message"
+
 #: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:20
 msgid "ai.chat.message.revert.indicator"
 msgstr "Messages reverted"

@@ -1,6 +1,7 @@
 import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import type { ReactNode } from "react";
 import { AiChatElapsedTimeDisplay } from "./ai-chat-elapsed-time";
 import { AiChatMessageStatusPending } from "./ai-chat-message-status-pending";
 
@@ -12,9 +13,17 @@ export type AIChatMessageStatusProps = {
   modelName?: string;
   canRetry?: boolean;
   onRetry?: () => void;
+  actions?: ReactNode;
 };
 
-export function AIChatMessageStatus({ state, elapsedSeconds, modelName, canRetry, onRetry }: AIChatMessageStatusProps) {
+export function AIChatMessageStatus({
+  state,
+  elapsedSeconds,
+  modelName,
+  canRetry,
+  onRetry,
+  actions,
+}: AIChatMessageStatusProps) {
   const { _ } = useLingui();
 
   if (state === "pending") {
@@ -23,24 +32,30 @@ export function AIChatMessageStatus({ state, elapsedSeconds, modelName, canRetry
 
   if (state === "success") {
     return (
-      <p className="fg-level-4 flex flex-row items-center gap-1 px-3">
-        {modelName && (
-          <>
-            {modelName}
-            <span aria-hidden="true">·</span>
-          </>
-        )}
-        <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
-      </p>
+      <div className="flex flex-row items-center gap-2 px-3">
+        <p className="fg-level-4 flex flex-row items-center gap-1">
+          {modelName && (
+            <>
+              {modelName}
+              <span aria-hidden="true">·</span>
+            </>
+          )}
+          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
+        </p>
+        {actions}
+      </div>
     );
   }
 
   if (state === "canceled") {
     return (
-      <p className="fg-level-4 flex flex-row items-center gap-1 px-3">
-        {_(msg`ai.chat.message.status.canceled-in`)}
-        <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
-      </p>
+      <div className="flex flex-row items-center gap-1 px-3">
+        <p className="fg-level-4 flex flex-row items-center gap-1">
+          {_(msg`ai.chat.message.status.canceled-in`)}
+          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
+        </p>
+        {actions}
+      </div>
     );
   }
 
@@ -52,6 +67,7 @@ export function AIChatMessageStatus({ state, elapsedSeconds, modelName, canRetry
           {_(msg`ai.chat.message.retry`)}
         </Button>
       )}
+      {actions}
     </div>
   );
 }
