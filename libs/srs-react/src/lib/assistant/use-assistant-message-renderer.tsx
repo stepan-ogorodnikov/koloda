@@ -73,9 +73,11 @@ export function useAssistantMessageRenderer({
 
 function renderUserMessage(message: UIMessage, content: ReactNode, handleRevert: (id: string) => void) {
   return (
-    <div className="group self-end flex flex-row items-center justify-end gap-1 w-full">
-      <RevertMessageButton onPress={() => handleRevert(message.id)} />
+    <div className="group self-end flex flex-col items-end gap-1 w-full">
       {content}
+      <div className="flex flex-row items-center justify-end gap-1 mx-2">
+        <RevertMessageButton onPress={() => handleRevert(message.id)} />
+      </div>
     </div>
   );
 }

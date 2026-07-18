@@ -31,7 +31,7 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
         tabIndex={0}
       >
         <div
-          className="flex flex-col gap-4 min-h-full w-full max-w-3xl py-2"
+          className="flex flex-col min-h-full w-full max-w-3xl py-2"
           aria-label={_(msg`ai.chat.messages.label`)}
           aria-live="polite"
           role="log"
