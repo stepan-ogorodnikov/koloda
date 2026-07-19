@@ -12,7 +12,11 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { AddAIProfileForm } from "./ai-providers/add-ai-profile-form";
 
-export function SettingsAIAddProfile() {
+export type SettingsAIAddProfileProps = {
+  trigger?: "icon" | "labeled";
+};
+
+export function SettingsAIAddProfile({ trigger = "icon" }: SettingsAIAddProfileProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { addAIProfileMutation } = useAtomValue(queriesAtom);
@@ -20,6 +24,7 @@ export function SettingsAIAddProfile() {
   const { mutate, isPending, isSuccess, error, reset } = useMutation(addAIProfileMutation());
   const [isOpen, setIsOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("openrouter");
+  const label = _(msg`settings.ai.add`);
 
   const handleSubmit = (data: { title?: string; secrets: AISecrets }) => {
     mutate(data, {
@@ -48,9 +53,16 @@ export function SettingsAIAddProfile() {
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Button variants={{ style: "dashed", size: "icon" }} aria-label={_(msg`settings.ai.add`)}>
-        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
-      </Button>
+      {trigger === "labeled" ? (
+        <Button variants={{ style: "primary" }} aria-label={label}>
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Add01Icon} aria-hidden="true" />
+          {label}
+        </Button>
+      ) : (
+        <Button variants={{ style: "dashed", size: "icon" }} aria-label={label}>
+          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+        </Button>
+      )}
       <Dialog.Overlay>
         <Dialog.Modal variants={{ class: "w-full max-w-96" }}>
           <Dialog.Body>

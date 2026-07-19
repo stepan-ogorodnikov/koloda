@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { SettingsAIAddProfile } from "../settings/settings-ai-add-profile";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
@@ -154,6 +155,7 @@ function AIRoute() {
             onClearDeck={handleClearDeck}
             onPrevConversation={handlePrevConversation}
             onNextConversation={handleNextConversation}
+            addProfileButton={<SettingsAIAddProfile trigger="labeled" />}
           />
         </Layout.Container>
       </Layout.Content>

@@ -13,8 +13,8 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:133
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:136
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:134
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:137
 msgid "ai.deck-picker.clear"
 msgstr "Clear selection"
 
@@ -103,7 +103,7 @@ msgstr "System"
 msgid "settings.ai"
 msgstr "AI"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:51
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:28
 msgid "settings.ai.add"
 msgstr "Add profile"
 
@@ -111,7 +111,7 @@ msgstr "Add profile"
 msgid "settings.ai.add.submit"
 msgstr "Add"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:58
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:71
 msgid "settings.ai.add.title"
 msgstr "Add AI Profile"
 
@@ -155,7 +155,7 @@ msgstr "Delete profile"
 msgid "settings.ai.profiles.empty"
 msgstr "No profiles"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:64
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:77
 msgid "settings.ai.profiles.provider.label"
 msgstr "Provider"
 
@@ -277,7 +277,7 @@ msgstr "Settings"
 msgid "templates.title"
 msgstr "Templates"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:36
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:37
 msgid "title.ai"
 msgstr "Assistant"
 

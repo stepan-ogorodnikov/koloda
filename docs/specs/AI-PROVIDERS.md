@@ -39,7 +39,7 @@ A profile is the unit of AI configuration the user manages.
 
 ### Adding a Profile
 
-The user opens the add-profile dialog from AI settings.
+The user opens the add-profile dialog from AI settings, or from the assistant chat when there are no profiles.
 They pick a provider from a dropdown.
 The dialog shows the secret fields that provider requires.
 

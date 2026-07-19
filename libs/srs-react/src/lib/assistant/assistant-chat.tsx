@@ -20,7 +20,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { useCallback, useRef, useState } from "react";
 import {
   assistantContextUsageAtom,
@@ -32,6 +32,7 @@ import {
   assistantRevertStateAtom,
   saveStatusAtom,
 } from "./assistant-conversation-atoms";
+import { AssistantNoProfiles } from "./assistant-no-profiles";
 import { AssistantSettings } from "./assistant-settings";
 import { RevertBanner } from "./revert-banner";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
@@ -47,6 +48,7 @@ export type AssistantChatProps = {
   onClearDeck?: () => void;
   onPrevConversation?: () => void;
   onNextConversation?: () => void;
+  addProfileButton?: ReactNode;
 };
 
 export function AssistantChat({
@@ -56,6 +58,7 @@ export function AssistantChat({
   onClearDeck,
   onPrevConversation,
   onNextConversation,
+  addProfileButton,
 }: AssistantChatProps) {
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
@@ -160,6 +163,8 @@ export function AssistantChat({
 
   const generateErr = erroredRun?.error?.message ?? null;
   const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed ? saveStatus.message : null;
+  const showNoProfilesEmpty = !areProfilesLoading && profiles.length === 0 && addProfileButton != null;
+  const emptyState = showNoProfilesEmpty ? <AssistantNoProfiles addProfileButton={addProfileButton} /> : null;
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
@@ -178,7 +183,13 @@ export function AssistantChat({
           </Fade>
         ) : (
           <Fade key="chat" className="grow flex flex-col min-h-0">
-            <AIChatMessages messages={messages} renderMessage={renderMessage} modelName={modelName} scroll={scroll} />
+            <AIChatMessages
+              messages={messages}
+              renderMessage={renderMessage}
+              modelName={modelName}
+              emptyState={emptyState}
+              scroll={scroll}
+            />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
             {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
             {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}

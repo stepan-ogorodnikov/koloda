@@ -160,6 +160,11 @@ If a stored value is present but its profile is no longer available, the global 
 If a stored value is present and its profile is available, it is used as-is.
 When a model is missing or no longer in the provider's list, the first available model for that profile is used once the list loads.
 
+**Empty chat with no profiles** — when the conversation has no messages and the user has no AI profiles,
+the messages area shows an empty state with a short message and an add-profile button.
+The button opens the same add-profile dialog as AI settings.
+Once a profile exists, the empty state is no longer shown.
+
 **When it is updated** — the global record is updated in two cases:
 
 1. When the user starts a run by submitting a prompt in any conversation.

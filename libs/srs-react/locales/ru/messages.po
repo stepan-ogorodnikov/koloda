@@ -130,7 +130,11 @@ msgstr ""
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:169
+#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:14
+msgid "ai.chat.no-profiles"
+msgstr "У вас нет ни одного профиля ИИ"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:175
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
