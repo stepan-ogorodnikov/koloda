@@ -15,7 +15,7 @@ import type { LabelProps, TWVProps } from "@koloda/ui";
 import { Popover, CheckIcon } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
-import type { ComponentProps, ReactNode, RefObject } from "react";
+import type { ComponentProps, PropsWithChildren, ReactNode, RefObject } from "react";
 import { useContext, useEffect, useMemo, useRef } from "react";
 import {
   Autocomplete as ReactAriaAutocomplete,
@@ -102,7 +102,7 @@ export function Select<T extends object>({
   );
 
   const popoverContent = showEmptyContent ? (
-    <div className={selectListBox(listboxVariants)}>{renderEmptyState({ isFocused: false })}</div>
+    <SelectEmptyContent variants={listboxVariants}>{renderEmptyState({ isFocused: false })}</SelectEmptyContent>
   ) : !hasAutocomplete ? (
     listBox
   ) : (
@@ -274,6 +274,19 @@ function SelectListBox<T extends object>({
     <Virtualizer layout={ListLayout} layoutOptions={{ padding: 4 }}>
       {listBox}
     </Virtualizer>
+  );
+}
+
+type SelectEmptyContentProps = TWVProps<typeof selectListBox> & PropsWithChildren;
+
+function SelectEmptyContent({ variants, children }: SelectEmptyContentProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  useSelectHotkeys(ref);
+
+  return (
+    <div ref={ref} className={selectListBox(variants)}>
+      {children}
+    </div>
   );
 }
 
