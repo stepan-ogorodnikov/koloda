@@ -66,6 +66,7 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
     searchLabel?: string;
     searchPlaceholder?: string;
     triggerRef?: RefObject<HTMLButtonElement | null>;
+    renderEmptyState?: (props: { isFocused: boolean }) => ReactNode;
     onChange: (key: string | number | null) => void;
     children: ReactNode | ((item: T) => ReactNode);
   };
@@ -85,12 +86,14 @@ export function Select<T extends object>({
   searchPlaceholder,
   isVirtualized,
   triggerRef,
+  renderEmptyState,
   children,
   ...props
 }: SelectProps<T>) {
   const { contains } = useFilter({ sensitivity: "base" });
   const selectStateRef = useRef<SelectState>(null);
   const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
+  const showEmptyContent = isIterableEmpty(items) && renderEmptyState != null;
 
   const listBox = (
     <Select.ListBox items={items} isVirtualized={isVirtualized} variants={listboxVariants}>
@@ -98,8 +101,24 @@ export function Select<T extends object>({
     </Select.ListBox>
   );
 
+  const popoverContent = showEmptyContent ? (
+    <div className={selectListBox(listboxVariants)}>{renderEmptyState({ isFocused: false })}</div>
+  ) : !hasAutocomplete ? (
+    listBox
+  ) : (
+    <Select.Autocomplete filter={contains}>
+      <Select.SearchField label={searchLabel} placeholder={searchPlaceholder} />
+      {listBox}
+    </Select.Autocomplete>
+  );
+
   return (
-    <Select.Root variants={variants} keyboardDelegate={keyboardDelegate} {...props}>
+    <Select.Root
+      variants={variants}
+      keyboardDelegate={keyboardDelegate}
+      {...props}
+      allowsEmptyCollection={props.allowsEmptyCollection ?? showEmptyContent}
+    >
       <SelectStateBridge stateRef={selectStateRef} />
       {label && (
         <Label variants={labelVariants || (variants?.layout === "form" ? { layout: "form" } : undefined)}>
@@ -112,16 +131,7 @@ export function Select<T extends object>({
         icon={icon}
         ref={triggerRef}
       />
-      <Select.Popover variants={popoverVariants}>
-        {!hasAutocomplete ? (
-          listBox
-        ) : (
-          <Select.Autocomplete filter={contains}>
-            <Select.SearchField label={searchLabel} placeholder={searchPlaceholder} />
-            {listBox}
-          </Select.Autocomplete>
-        )}
-      </Select.Popover>
+      <Select.Popover variants={popoverVariants}>{popoverContent}</Select.Popover>
     </Select.Root>
   );
 }
@@ -392,6 +402,12 @@ function dispatchSelectNavigationKey(
   if (!state?.isOpen) return;
   state.selectionManager.setFocused(true);
   dispatchKey(ref, key);
+}
+
+function isIterableEmpty(items?: Iterable<unknown>) {
+  if (items == null) return true;
+  for (const _ of items) return false;
+  return true;
 }
 
 Select.Root = SelectRoot;
