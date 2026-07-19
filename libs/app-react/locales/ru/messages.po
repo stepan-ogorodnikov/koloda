@@ -103,7 +103,7 @@ msgstr "Системная"
 msgid "settings.ai"
 msgstr "ИИ"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:28
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:34
 msgid "settings.ai.add"
 msgstr "Добавить профиль"
 
@@ -111,7 +111,7 @@ msgstr "Добавить профиль"
 msgid "settings.ai.add.submit"
 msgstr "Добавить"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:71
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:76
 msgid "settings.ai.add.title"
 msgstr "Добавить ИИ профиль"
 
@@ -155,7 +155,7 @@ msgstr "Удалить профиль"
 msgid "settings.ai.profiles.empty"
 msgstr "Нет профилей"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:77
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:82
 msgid "settings.ai.profiles.provider.label"
 msgstr "Провайдер"
 

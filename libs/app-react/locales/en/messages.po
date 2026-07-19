@@ -103,7 +103,7 @@ msgstr "System"
 msgid "settings.ai"
 msgstr "AI"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:28
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:34
 msgid "settings.ai.add"
 msgstr "Add profile"
 
@@ -111,7 +111,7 @@ msgstr "Add profile"
 msgid "settings.ai.add.submit"
 msgstr "Add"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:71
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:76
 msgid "settings.ai.add.title"
 msgstr "Add AI Profile"
 
@@ -155,7 +155,7 @@ msgstr "Delete profile"
 msgid "settings.ai.profiles.empty"
 msgstr "No profiles"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:77
+#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:82
 msgid "settings.ai.profiles.provider.label"
 msgstr "Provider"
 

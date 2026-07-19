@@ -1,4 +1,4 @@
-import { Refresh04Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIModel, AIProfile } from "@koloda/ai";
 import { AI_PROVIDER_LABELS } from "@koloda/ai";
@@ -7,7 +7,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { decodeAIModelProfileKey, encodeAIModelProfileKey } from "./ai-model-profile-key";
 import { useAIProfilesModels } from "./use-ai-profiles-models";
 
@@ -23,6 +23,7 @@ export type AIModelProfilePickerProps = {
   modelId: string;
   onChange: (next: AIModelProfileChange) => void;
   triggerRef?: RefObject<HTMLButtonElement | null>;
+  onAddProfile?: () => void;
 };
 
 type ProfileSectionModel = AIModel & { key: string };
@@ -43,10 +44,13 @@ export function AIModelProfilePicker({
   modelId,
   onChange,
   triggerRef,
+  onAddProfile,
 }: AIModelProfilePickerProps) {
   const { _ } = useLingui();
+  const [isOpen, setIsOpen] = useState(false);
   const profileIds = useMemo(() => profiles.map((profile) => profile.id), [profiles]);
   const { byProfileId } = useAIProfilesModels(profileIds);
+  const hasProfiles = profiles.length > 0;
 
   const selectedModelsState = profileId ? byProfileId[profileId] : undefined;
   const selectedIsLoading = !!profileId && (selectedModelsState?.isLoading ?? false);
@@ -98,14 +102,26 @@ export function AIModelProfilePicker({
         triggerRef={triggerRef}
         items={sections}
         value={selectValue}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
         onChange={(key) => {
           if (!key) return;
           const decoded = decodeAIModelProfileKey(key.toString());
           if (!decoded) return;
           onChange(decoded);
         }}
-        hasAutocomplete
-        isVirtualized
+        hasAutocomplete={hasProfiles}
+        isVirtualized={hasProfiles}
+        renderEmptyState={() => (
+          <ModelPickerNoProfiles
+            message={_(msg`ai.model-picker.no-profiles.empty`)}
+            addLabel={_(msg`ai.model-picker.no-profiles.add`)}
+            onActivate={() => {
+              setIsOpen(false);
+              queueMicrotask(() => onAddProfile?.());
+            }}
+          />
+        )}
       >
         {(section) => (
           <Select.ListBoxSection id={section.id}>
@@ -169,5 +185,23 @@ export function AIModelProfilePicker({
         )}
       </Select>
     </Fade>
+  );
+}
+
+type ModelPickerNoProfilesProps = {
+  message: string;
+  addLabel: string;
+  onActivate: () => void;
+};
+
+function ModelPickerNoProfiles({ message, addLabel, onActivate }: ModelPickerNoProfilesProps) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 h-full p-4">
+      <p className="fg-level-3 text-center">{message}</p>
+      <Button variants={{ style: "primary" }} aria-label={addLabel} onPress={onActivate} autoFocus>
+        <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Add01Icon} aria-hidden="true" />
+        {addLabel}
+      </Button>
+    </div>
   );
 }

@@ -107,39 +107,47 @@ msgstr "Настройки"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Интеллект"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:132
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:160
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:148
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:176
 msgid "ai.model-picker.error.label"
 msgstr "Ошибка"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:137
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:140
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:153
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
 msgid "ai.model-picker.error.retry"
 msgstr "Обновить"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:94
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:98
 msgid "ai.model-picker.label"
 msgstr "Выбор языковой модели"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:81
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:131
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:85
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:147
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:172
 msgid "ai.model-picker.loading.label"
 msgstr "Загрузка"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:83
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:118
+msgid "ai.model-picker.no-profiles.add"
+msgstr "Добавить профиль"
+
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:117
+msgid "ai.model-picker.no-profiles.empty"
+msgstr "Нет профилей ИИ"
+
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
 msgid "ai.model-picker.not-selected"
 msgstr "Не выбрана"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:84
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:88
 msgid "ai.model-picker.placeholder"
 msgstr "Выберите модель"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:96
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:100
 msgid "ai.model-picker.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:97
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:101
 msgid "ai.model-picker.search.placeholder"
 msgstr "Поиск по моделям"
 

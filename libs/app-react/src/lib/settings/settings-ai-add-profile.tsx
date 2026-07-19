@@ -13,18 +13,31 @@ import { useEffect, useState } from "react";
 import { AddAIProfileForm } from "./ai-providers/add-ai-profile-form";
 
 export type SettingsAIAddProfileProps = {
-  trigger?: "icon" | "labeled";
+  trigger?: "icon" | "none";
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
 };
 
-export function SettingsAIAddProfile({ trigger = "icon" }: SettingsAIAddProfileProps) {
+export function SettingsAIAddProfile({
+  trigger = "icon",
+  isOpen: isOpenProp,
+  onOpenChange: onOpenChangeProp,
+}: SettingsAIAddProfileProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { addAIProfileMutation } = useAtomValue(queriesAtom);
   const providerIds = useAtomValue(aiProvidersAtom);
   const { mutate, isPending, isSuccess, error, reset } = useMutation(addAIProfileMutation());
-  const [isOpen, setIsOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("openrouter");
   const label = _(msg`settings.ai.add`);
+  const isControlled = isOpenProp !== undefined;
+  const isOpen = isControlled ? isOpenProp : uncontrolledOpen;
+
+  const setIsOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChangeProp?.(next);
+  };
 
   const handleSubmit = (data: { title?: string; secrets: AISecrets }) => {
     mutate(data, {
@@ -36,9 +49,9 @@ export function SettingsAIAddProfile({ trigger = "icon" }: SettingsAIAddProfileP
     });
   };
 
-  const handleOpenChange = (isOpen: boolean) => {
-    setIsOpen(isOpen);
-    if (!isOpen) reset();
+  const handleOpenChange = (next: boolean) => {
+    setIsOpen(next);
+    if (!next) reset();
   };
 
   useEffect(() => {
@@ -51,51 +64,53 @@ export function SettingsAIAddProfile({ trigger = "icon" }: SettingsAIAddProfileP
     }
   }, [provider, providerIds]);
 
+  const dialog = (
+    <Dialog.Overlay
+      isOpen={trigger === "none" ? isOpen : undefined}
+      onOpenChange={trigger === "none" ? handleOpenChange : undefined}
+    >
+      <Dialog.Modal variants={{ class: "w-full max-w-96" }}>
+        <Dialog.Body>
+          <Dialog.Header>
+            <Dialog.Title>{_(msg`settings.ai.add.title`)}</Dialog.Title>
+            <div className="grow" />
+            <Dialog.Close slot="close" />
+          </Dialog.Header>
+          <div className="px-4 pt-2">
+            <Select
+              label={_(msg`settings.ai.profiles.provider.label`)}
+              value={provider}
+              onChange={(key) => {
+                if (key) setProvider(key.toString() as AiProvider);
+              }}
+            >
+              {providerIds.map((id) => (
+                <Select.ListBoxItem id={id} textValue={AI_PROVIDER_LABELS[id]} key={id}>
+                  {AI_PROVIDER_LABELS[id]}
+                </Select.ListBoxItem>
+              ))}
+            </Select>
+          </div>
+          <AddAIProfileForm
+            key={provider}
+            provider={provider}
+            onSubmit={handleSubmit}
+            isPending={isPending}
+            error={error}
+          />
+        </Dialog.Body>
+      </Dialog.Modal>
+    </Dialog.Overlay>
+  );
+
+  if (trigger === "none") return dialog;
+
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
-      {trigger === "labeled" ? (
-        <Button variants={{ style: "primary" }} aria-label={label}>
-          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Add01Icon} aria-hidden="true" />
-          {label}
-        </Button>
-      ) : (
-        <Button variants={{ style: "dashed", size: "icon" }} aria-label={label}>
-          <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
-        </Button>
-      )}
-      <Dialog.Overlay>
-        <Dialog.Modal variants={{ class: "w-full max-w-96" }}>
-          <Dialog.Body>
-            <Dialog.Header>
-              <Dialog.Title>{_(msg`settings.ai.add.title`)}</Dialog.Title>
-              <div className="grow" />
-              <Dialog.Close slot="close" />
-            </Dialog.Header>
-            <div className="px-4 pt-2">
-              <Select
-                label={_(msg`settings.ai.profiles.provider.label`)}
-                value={provider}
-                onChange={(key) => {
-                  if (key) setProvider(key.toString() as AiProvider);
-                }}
-              >
-                {providerIds.map((id) => (
-                  <Select.ListBoxItem id={id} textValue={AI_PROVIDER_LABELS[id]} key={id}>
-                    {AI_PROVIDER_LABELS[id]}
-                  </Select.ListBoxItem>
-                ))}
-              </Select>
-            </div>
-            <AddAIProfileForm
-              key={provider}
-              provider={provider}
-              onSubmit={handleSubmit}
-              isPending={isPending}
-              error={error}
-            />
-          </Dialog.Body>
-        </Dialog.Modal>
-      </Dialog.Overlay>
+      <Button variants={{ style: "dashed", size: "icon" }} aria-label={label}>
+        <HugeiconsIcon className="size-4 min-w-4" strokeWidth={3} icon={Add01Icon} aria-hidden="true" />
+      </Button>
+      {dialog}
     </Dialog.Root>
   );
 }

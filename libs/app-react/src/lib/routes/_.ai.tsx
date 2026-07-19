@@ -155,7 +155,7 @@ function AIRoute() {
             onClearDeck={handleClearDeck}
             onPrevConversation={handlePrevConversation}
             onNextConversation={handleNextConversation}
-            addProfileButton={<SettingsAIAddProfile trigger="labeled" />}
+            renderAddProfileDialog={(props) => <SettingsAIAddProfile trigger="none" {...props} />}
           />
         </Layout.Container>
       </Layout.Content>

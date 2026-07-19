@@ -123,18 +123,22 @@ msgstr "Сбросить до этого сообщения"
 
 #: ../../libs/srs-react/src/lib/assistant/message-timestamp.tsx:24
 msgid "ai.chat.message.timestamp.today {time}"
-msgstr ""
+msgstr "Сегодня в {time}"
 
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
 #: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:34
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:14
+#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:17
 msgid "ai.chat.no-profiles"
 msgstr "У вас нет ни одного профиля ИИ"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:175
+#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:13
+msgid "ai.chat.no-profiles.add"
+msgstr "Добавить профиль"
+
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:189
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 

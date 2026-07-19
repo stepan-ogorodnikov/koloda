@@ -41,6 +41,11 @@ import { useAssistantProfileSelection } from "./use-assistant-profile-selection"
 import { useAssistantSession } from "./use-assistant-session";
 import { useConversationPersistence } from "./use-conversation-persistence";
 
+export type RenderAddProfileDialogProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+};
+
 export type AssistantChatProps = {
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
@@ -48,7 +53,7 @@ export type AssistantChatProps = {
   onClearDeck?: () => void;
   onPrevConversation?: () => void;
   onNextConversation?: () => void;
-  addProfileButton?: ReactNode;
+  renderAddProfileDialog?: (props: RenderAddProfileDialogProps) => ReactNode;
 };
 
 export function AssistantChat({
@@ -58,7 +63,7 @@ export function AssistantChat({
   onClearDeck,
   onPrevConversation,
   onNextConversation,
-  addProfileButton,
+  renderAddProfileDialog,
 }: AssistantChatProps) {
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
@@ -70,8 +75,11 @@ export function AssistantChat({
   const revertState = useAtomValue(assistantRevertStateAtom);
   const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
+  const [isAddProfileOpen, setIsAddProfileOpen] = useState(false);
   const modelProfilePickerRef = useRef<HTMLButtonElement>(null);
   const scroll = useAutoScroll({ messages, isLoading: isProcessing });
+
+  const openAddProfile = useCallback(() => setIsAddProfileOpen(true), []);
 
   const {
     profileId,
@@ -163,11 +171,17 @@ export function AssistantChat({
 
   const generateErr = erroredRun?.error?.message ?? null;
   const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed ? saveStatus.message : null;
-  const showNoProfilesEmpty = !areProfilesLoading && profiles.length === 0 && addProfileButton != null;
-  const emptyState = showNoProfilesEmpty ? <AssistantNoProfiles addProfileButton={addProfileButton} /> : null;
+  const hasNoProfiles = !areProfilesLoading && profiles.length === 0;
+  const showNoProfilesEmpty = hasNoProfiles && renderAddProfileDialog != null;
+  const emptyState = showNoProfilesEmpty ? <AssistantNoProfiles onAddProfile={openAddProfile} /> : null;
 
   return (
     <section className="relative grow flex flex-col min-h-0 px-4">
+      {hasNoProfiles &&
+        renderAddProfileDialog?.({
+          isOpen: isAddProfileOpen,
+          onOpenChange: setIsAddProfileOpen,
+        })}
       <AnimatePresence mode="wait">
         {isRestoring ? (
           <Fade key="restoring" className="grow flex items-center justify-center fg-level-2">
@@ -215,6 +229,7 @@ export function AssistantChat({
           modelId={modelId}
           onChange={handleModelProfileChange}
           triggerRef={modelProfilePickerRef}
+          onAddProfile={hasNoProfiles ? openAddProfile : undefined}
         />
         {modelParameters.length > 0 && (
           <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />

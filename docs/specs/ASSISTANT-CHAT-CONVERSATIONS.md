@@ -143,6 +143,7 @@ All three are persisted on the conversation.
 The model picker selects a profile and model together.
 Changing the selection sets both.
 If the model changes, model parameters are reset to that model's defaults.
+When the user has no AI profiles, the picker still opens and shows an add-profile button.
 
 ### Global AI Profile State
 
@@ -162,8 +163,9 @@ When a model is missing or no longer in the provider's list, the first available
 
 **Empty chat with no profiles** — when the conversation has no messages and the user has no AI profiles,
 the messages area shows an empty state with a short message and an add-profile button.
+The model picker in the footer still opens and shows the same add-profile action in its empty popover.
 The button opens the same add-profile dialog as AI settings.
-Once a profile exists, the empty state is no longer shown.
+Once a profile exists, these empty states are no longer shown.
 
 **When it is updated** — the global record is updated in two cases:
 
