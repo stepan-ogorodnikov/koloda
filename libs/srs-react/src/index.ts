@@ -12,7 +12,6 @@ export * from "./lib/assistant/assistant-new-conversation-button";
 export * from "./lib/assistant/assistant-settings";
 export * from "./lib/assistant/clone-conversation-button";
 export * from "./lib/assistant/conversation-header-menu";
-export * from "./lib/assistant/use-assistant-chat";
 export * from "./lib/assistant/use-assistant-message-renderer";
 export * from "./lib/assistant/use-global-ai-profile-state";
 export * from "./lib/cards/add-card";

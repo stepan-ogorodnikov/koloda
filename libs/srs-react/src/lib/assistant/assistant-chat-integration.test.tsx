@@ -17,7 +17,7 @@ import {
 } from "./assistant-conversation-atoms";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
-import { useAssistantChat } from "./use-assistant-chat";
+import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
 
 /**
  * Module-level "wire" used by the mocked stream hooks and the test code to
@@ -319,7 +319,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("useAssistantChat (hook-level integration with per-conversation state)", () => {
+describe("assistant chat integration (per-conversation state)", () => {
   it("handleStreamError: two streams in flight on different conversations, one errors, error routes to the right conversation", async () => {
     setupTestHarness();
     const store = createStore();
@@ -350,7 +350,7 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     const onConversationIdChange = vi.fn();
     const { result, rerender } = renderHook(
       ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChat({ conversationId, onConversationIdChange }),
+        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -436,7 +436,7 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     const onConversationIdChange = vi.fn();
     const { result, rerender } = renderHook(
       ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChat({ conversationId, onConversationIdChange }),
+        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -518,7 +518,7 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     const onConversationIdChange = vi.fn();
     const { result, rerender } = renderHook(
       ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChat({ conversationId, onConversationIdChange }),
+        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "A" as string | undefined },
@@ -589,7 +589,7 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
       wrapper: TestWrapper,
     });
 
@@ -664,7 +664,7 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
       wrapper: TestWrapper,
     });
 
@@ -743,9 +743,12 @@ describe("useAssistantChat (hook-level integration with per-conversation state)"
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
-    const { result, unmount } = renderHook(() => useAssistantChat({ conversationId: "A", onConversationIdChange }), {
-      wrapper: TestWrapper,
-    });
+    const { result, unmount } = renderHook(
+      () => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }),
+      {
+        wrapper: TestWrapper,
+      },
+    );
 
     // Start a streaming run.
     await act(async () => {
