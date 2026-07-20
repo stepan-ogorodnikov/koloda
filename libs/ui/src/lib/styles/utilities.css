@@ -71,10 +71,6 @@
   @apply outline-0 data-is-dragging:outline-2 outline-offset-3 outline-focus-ring;
 }
 
-@utility scrollbar-thin {
-  scrollbar-width: thin;
-}
-
 @utility numbers-text {
   @apply text-lg font-bold tracking-wide;
 }
