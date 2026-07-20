@@ -6,9 +6,9 @@ import { SelectSearchField } from "./select-search-field";
 
 export type SelectContentProps<T extends object> = {
   showEmptyContent: boolean;
-  hasAutocomplete?: boolean;
+  hasAutocomplete: boolean;
   listboxVariants?: SelectListBoxProps<T>["variants"];
-  renderEmptyState?: (props: { isFocused: boolean }) => ReactNode;
+  emptyContent?: ReactNode;
   searchLabel?: string;
   searchPlaceholder?: string;
   filter: (textValue: string, inputValue: string) => boolean;
@@ -19,23 +19,21 @@ export function SelectContent<T extends object>({
   showEmptyContent,
   hasAutocomplete,
   listboxVariants,
-  renderEmptyState,
+  emptyContent,
   searchLabel,
   searchPlaceholder,
   filter,
   listBox,
 }: SelectContentProps<T>) {
   if (showEmptyContent) {
-    return (
-      <SelectEmptyContent variants={listboxVariants}>{renderEmptyState!({ isFocused: false })}</SelectEmptyContent>
-    );
+    return <SelectEmptyContent variants={listboxVariants}>{emptyContent}</SelectEmptyContent>;
   }
 
   if (!hasAutocomplete) return listBox;
 
   return (
     <ReactAriaAutocomplete filter={filter}>
-      <SelectSearchField label={searchLabel} placeholder={searchPlaceholder} />
+      <SelectSearchField label={searchLabel ?? searchPlaceholder} placeholder={searchPlaceholder} />
       {listBox}
     </ReactAriaAutocomplete>
   );

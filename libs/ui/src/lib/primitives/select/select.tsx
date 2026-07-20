@@ -21,29 +21,24 @@ import type { SelectRootProps } from "./select-root";
 import { SelectSearchField } from "./select-search-field";
 import { SelectValue } from "./select-value";
 
-type SelectOptions = {
-  hasAutocomplete?: boolean;
+export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> & {
+  labelVariants?: LabelProps["variants"];
+  buttonVariants?: SelectButtonProps["variants"];
+  popoverVariants?: SelectPopoverProps["variants"];
+  listboxVariants?: SelectListBoxProps<T>["variants"];
+  withChevron?: boolean;
+  label?: ReactNode;
+  placeholder?: string;
+  icon?: ReactNode;
+  items?: Iterable<T>;
+  searchLabel?: string;
+  searchPlaceholder?: string;
   isVirtualized?: boolean;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
+  emptyContent?: ReactNode;
+  onChange: (key: string | number | null) => void;
+  children: ReactNode | ((item: T) => ReactNode);
 };
-
-export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children"> &
-  SelectOptions & {
-    labelVariants?: LabelProps["variants"];
-    buttonVariants?: SelectButtonProps["variants"];
-    popoverVariants?: SelectPopoverProps["variants"];
-    listboxVariants?: SelectListBoxProps<T>["variants"];
-    withChevron?: boolean;
-    label?: ReactNode;
-    placeholder?: string;
-    icon?: ReactNode;
-    items?: Iterable<T>;
-    searchLabel?: string;
-    searchPlaceholder?: string;
-    triggerRef?: RefObject<HTMLButtonElement | null>;
-    renderEmptyState?: (props: { isFocused: boolean }) => ReactNode;
-    onChange: (key: string | number | null) => void;
-    children: ReactNode | ((item: T) => ReactNode);
-  };
 
 export function Select<T extends object>({
   variants,
@@ -55,22 +50,23 @@ export function Select<T extends object>({
   label,
   icon,
   items,
-  hasAutocomplete,
   searchLabel,
   searchPlaceholder,
   isVirtualized,
   triggerRef,
-  renderEmptyState,
+  emptyContent,
   children,
   ...props
 }: SelectProps<T>) {
   const { contains } = useFilter({ sensitivity: "base" });
   const selectStateRef = useRef<SelectState>(null);
   const keyboardDelegate = useMemo(() => createSelectKeyboardDelegate(selectStateRef), []);
-  const showEmptyContent = isIterableEmpty(items) && renderEmptyState != null;
+  const hasAutocomplete = searchLabel != null || searchPlaceholder != null;
+  const shouldVirtualize = isVirtualized ?? hasAutocomplete;
+  const showEmptyContent = isIterableEmpty(items) && emptyContent != null;
 
   const listBox = (
-    <Select.ListBox items={items} isVirtualized={isVirtualized} variants={listboxVariants}>
+    <Select.ListBox items={items} isVirtualized={shouldVirtualize} variants={listboxVariants}>
       {children}
     </Select.ListBox>
   );
@@ -99,7 +95,7 @@ export function Select<T extends object>({
           showEmptyContent={showEmptyContent}
           hasAutocomplete={hasAutocomplete}
           listboxVariants={listboxVariants}
-          renderEmptyState={renderEmptyState}
+          emptyContent={emptyContent}
           searchLabel={searchLabel}
           searchPlaceholder={searchPlaceholder}
           filter={contains}

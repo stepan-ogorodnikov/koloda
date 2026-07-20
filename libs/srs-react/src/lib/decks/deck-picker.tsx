@@ -33,7 +33,6 @@ export function DeckPicker({ variants, label, isNullable, value, onChange, ...pr
       items={data}
       value={value}
       onChange={(i) => onChange(Number(i))}
-      hasAutocomplete
       searchLabel={_(msg`deck-picker.search`)}
       searchPlaceholder={_(msg`deck-picker.search`)}
       {...props}

@@ -50,7 +50,6 @@ export function AIModelProfilePicker({
   const [isOpen, setIsOpen] = useState(false);
   const profileIds = useMemo(() => profiles.map((profile) => profile.id), [profiles]);
   const { byProfileId } = useAIProfilesModels(profileIds);
-  const hasProfiles = profiles.length > 0;
 
   const selectedModelsState = profileId ? byProfileId[profileId] : undefined;
   const selectedIsLoading = !!profileId && (selectedModelsState?.isLoading ?? false);
@@ -110,9 +109,7 @@ export function AIModelProfilePicker({
           if (!decoded) return;
           onChange(decoded);
         }}
-        hasAutocomplete={hasProfiles}
-        isVirtualized={hasProfiles}
-        renderEmptyState={() => (
+        emptyContent={
           <ModelPickerNoProfiles
             message={_(msg`ai.model-picker.no-profiles.empty`)}
             addLabel={_(msg`ai.model-picker.no-profiles.add`)}
@@ -121,7 +118,7 @@ export function AIModelProfilePicker({
               queueMicrotask(() => onAddProfile?.());
             }}
           />
-        )}
+        }
       >
         {(section) => (
           <Select.ListBoxSection id={section.id}>

@@ -14,7 +14,6 @@ export const selectListBox = tv({
 
 export type SelectListBoxProps<T extends object> = ListBoxProps<T> &
   TWVProps<typeof selectListBox> & {
-    hasAutocomplete?: boolean;
     isVirtualized?: boolean;
   };
 
