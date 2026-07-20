@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "tags": [
     "type:app",
-    "platform:web"
+    "platform:desktop"
   ],
   "sourceRoot": "apps/native-electron-react/src",
   "projectType": "application",
