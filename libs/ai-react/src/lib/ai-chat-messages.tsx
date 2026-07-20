@@ -10,6 +10,12 @@ import { Fragment } from "react";
 import { AIChatMessage } from "./ai-chat-message";
 import type { UseAutoScrollReturn } from "./use-auto-scroll";
 
+const scrollViewport = [
+  "absolute inset-x-0 top-0 bottom-1.5 flex flex-col items-center",
+  "scrollbar-gutter-both overflow-y-auto no-focus-ring",
+  "mask-[linear-gradient(to_bottom,black_calc(100%-2.5rem),transparent)]",
+].join(" ");
+
 export type AIChatMessagesProps = {
   messages: UIMessage[];
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
@@ -24,12 +30,7 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
 
   return (
     <div className="relative flex-1 min-h-0 -mx-4 px-4">
-      <div
-        className="absolute inset-0 flex flex-col items-center overflow-y-auto no-focus-ring [scrollbar-gutter:stable_both-edges]"
-        ref={scroll.scrollViewportRef}
-        onScroll={scroll.handleScroll}
-        tabIndex={0}
-      >
+      <div className={scrollViewport} ref={scroll.scrollViewportRef} onScroll={scroll.handleScroll} tabIndex={0}>
         <div
           className="flex flex-col min-h-full w-full max-w-3xl py-2"
           aria-label={_(msg`ai.chat.messages.label`)}
@@ -51,7 +52,7 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
               })}
             </>
           )}
-          <div className="min-h-2 w-full" />
+          <div className="min-h-10 w-full" />
         </div>
       </div>
       <AnimatePresence>
