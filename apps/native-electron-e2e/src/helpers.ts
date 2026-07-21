@@ -84,12 +84,23 @@ export async function openNewAlgorithmDialog(page: Page) {
 
   return dialog;
 }
+
 export async function openNewTemplateDialog(page: Page) {
   await openSection(page, "Templates");
   await page.getByRole("button", { name: "New template", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(page.getByRole("heading", { name: "New template", exact: true })).toBeVisible();
+
+  return dialog;
+}
+
+export async function openNewDeckDialog(page: Page) {
+  await openSection(page, "Decks");
+  await page.getByRole("button", { name: "New deck", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New deck", exact: true })).toBeVisible();
 
   return dialog;
 }
