@@ -33,6 +33,23 @@ export function getNavigation(page: Page, name: string): Locator {
   return page.getByRole("link", { name, exact: true }).first();
 }
 
+export async function addCard(page: Page, front: string, back: string) {
+  await page.getByRole("button", { name: "Add cards" }).click();
+
+  const addCardDialog = page.getByRole("dialog");
+  await expect(addCardDialog).toBeVisible();
+
+  await addCardDialog.getByRole("textbox", { name: "Front" }).click();
+  await page.keyboard.type(front);
+  await addCardDialog.getByRole("textbox", { name: "Back" }).click();
+  await page.keyboard.type(back);
+
+  await addCardDialog.getByRole("button", { name: "Create card" }).click();
+  await expect(addCardDialog.getByRole("textbox", { name: "Front" })).toHaveValue("");
+
+  await page.keyboard.press("Escape");
+  await expect(addCardDialog).not.toBeVisible();
+}
 
 export async function createDeck(page: Page, title: string) {
   await openSection(page, "Decks");
@@ -52,6 +69,12 @@ export async function createDeck(page: Page, title: string) {
 
   await expect(page).toHaveURL(/\/decks\/\d+$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+}
+
+export async function createDeckWithCard(page: Page, deckTitle: string, cardFront: string, cardBack: string) {
+  await createDeck(page, deckTitle);
+  await page.getByRole("tab", { name: "Cards" }).click();
+  await addCard(page, cardFront, cardBack);
 }
 
 export async function createAlgorithm(page: Page, title: string) {
