@@ -2,13 +2,13 @@ import type { UseAutoScrollReturn } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { RefObject } from "react";
+import { setAssistantModeAtom } from "./conversation-actions";
 import {
   assistantDeckIdAtom,
   assistantEffectiveModeAtom,
   assistantIsLockedAtom,
   assistantIsProcessingAtom,
-  setAssistantModeAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-selectors";
 
 export type UseAssistantChatHotkeysOptions = {
   handleCancel: () => void;

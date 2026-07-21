@@ -22,6 +22,8 @@ import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode, RefObject } from "react";
 import { useCallback, useRef, useState } from "react";
+import { AssistantNoProfiles } from "./assistant-no-profiles";
+import { AssistantSettings } from "./assistant-settings";
 import {
   assistantContextUsageAtom,
   assistantDeckIdAtom,
@@ -30,10 +32,8 @@ import {
   assistantIsProcessingAtom,
   assistantMessagesAtom,
   assistantRevertStateAtom,
-  saveStatusAtom,
-} from "./assistant-conversation-atoms";
-import { AssistantNoProfiles } from "./assistant-no-profiles";
-import { AssistantSettings } from "./assistant-settings";
+} from "./conversation-selectors";
+import { saveStatusAtom } from "./conversation-store";
 import { RevertBanner } from "./revert-banner";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";

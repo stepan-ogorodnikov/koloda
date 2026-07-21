@@ -2,10 +2,10 @@ import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import {
   assistantConversationStateAtom,
-  assistantMessagesAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-store";
+import { assistantMessagesAtom } from "./conversation-selectors";
 import { dispatchTo, makeConversation } from "./assistant-conversation.fixtures";
 import type { GenerationRun } from "./conversation-reducer";
 

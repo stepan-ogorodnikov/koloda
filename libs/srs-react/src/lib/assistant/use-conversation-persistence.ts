@@ -7,6 +7,13 @@ import { useAtomCallback } from "jotai/utils";
 import { useEffect, useRef } from "react";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import {
+  cancelStreamingRuns,
+  coerceConversationState,
+  normalizeRestoredConversation,
+} from "./conversation-persistence";
+import { initialConversationState } from "./conversation-reducer";
+import type { ConversationReducerState } from "./conversation-reducer";
+import {
   assistantConversationStateAtom,
   bumpPendingSaveAtom,
   conversationsAtom,
@@ -15,14 +22,7 @@ import {
   saveStatusAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
-import {
-  cancelStreamingRuns,
-  coerceConversationState,
-  normalizeRestoredConversation,
-} from "./conversation-persistence";
-import { initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerState } from "./conversation-reducer";
+} from "./conversation-store";
 
 const STREAM_SAVE_THROTTLE_MS = 1000;
 const IDLE_SAVE_DEBOUNCE_MS = 250;

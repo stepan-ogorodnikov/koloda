@@ -5,7 +5,8 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { conversationsAtom, unreadConversationIdsAtom } from "./assistant-conversation-atoms";
+import { unreadConversationIdsAtom } from "./conversation-selectors";
+import { conversationsAtom } from "./conversation-store";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;

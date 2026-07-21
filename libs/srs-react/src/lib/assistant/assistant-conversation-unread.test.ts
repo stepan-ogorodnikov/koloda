@@ -5,9 +5,9 @@ import {
   conversationsAtom,
   pendingSaveAtom,
   setCurrentConversationIdAtom,
-  unreadConversationIdsAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-store";
+import { unreadConversationIdsAtom } from "./conversation-selectors";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 
 describe("unreadConversationIdsAtom", () => {

@@ -4,7 +4,8 @@ import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { assistantHasContextAtom, newConversationAtom } from "./assistant-conversation-atoms";
+import { newConversationAtom } from "./conversation-actions";
+import { assistantHasContextAtom } from "./conversation-selectors";
 import { useGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type AssistantNewConversationButtonProps = {

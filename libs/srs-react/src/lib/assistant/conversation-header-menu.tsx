@@ -5,7 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import { assistantConversationHasContextAtom } from "./assistant-conversation-atoms";
+import { assistantConversationHasContextAtom } from "./conversation-selectors";
 import { CloneConversationButton } from "./clone-conversation-button";
 
 export type ConversationHeaderMenuProps = {

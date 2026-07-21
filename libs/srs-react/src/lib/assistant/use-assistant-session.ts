@@ -6,14 +6,13 @@ import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import { aiProfileStateAtom } from "./ai-profile-state";
+import { newConversationAtom, setAssistantModeAtom } from "./conversation-actions";
+import type { ConversationReducerAction } from "./conversation-reducer";
 import {
   assistantConversationStateAtom,
   bumpPendingSaveAtom,
   dispatchToConversationOnStore,
-  newConversationAtom,
-  setAssistantModeAtom,
-} from "./assistant-conversation-atoms";
-import type { ConversationReducerAction } from "./conversation-reducer";
+} from "./conversation-store";
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";

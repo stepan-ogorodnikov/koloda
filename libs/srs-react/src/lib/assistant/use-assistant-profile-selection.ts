@@ -5,13 +5,15 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import {
-  assistantAIModelIdAtom,
-  assistantAIModelParametersAtom,
-  assistantProfileIdAtom,
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
   setAssistantAIProfileAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-actions";
+import {
+  assistantAIModelIdAtom,
+  assistantAIModelParametersAtom,
+  assistantProfileIdAtom,
+} from "./conversation-selectors";
 import { useSetGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type UseAssistantProfileSelectionReturn = {

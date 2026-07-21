@@ -1,18 +1,19 @@
 import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import {
-  assistantActiveRunIdAtom,
-  assistantConversationHasContextAtom,
   assistantConversationStateAtom,
-  assistantIsLockedAtom,
   bumpPendingSaveAtom,
   conversationsAtom,
   pendingSaveAtom,
-  setAssistantDeckAtom,
-  setAssistantModeAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-store";
+import {
+  assistantActiveRunIdAtom,
+  assistantConversationHasContextAtom,
+  assistantIsLockedAtom,
+} from "./conversation-selectors";
+import { setAssistantDeckAtom, setAssistantModeAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import { initialConversationState } from "./conversation-reducer";
 

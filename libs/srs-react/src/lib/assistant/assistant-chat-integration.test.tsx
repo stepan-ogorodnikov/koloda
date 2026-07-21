@@ -10,11 +10,7 @@ import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAIModel, createAIProfile, createTemplate } from "../../test/test-helpers";
-import {
-  conversationsAtom,
-  setCurrentConversationIdAtom,
-  upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+import { conversationsAtom, setCurrentConversationIdAtom, upsertConversationAtom } from "./conversation-store";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
 import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";

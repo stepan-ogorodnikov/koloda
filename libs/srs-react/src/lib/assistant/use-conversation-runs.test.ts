@@ -10,7 +10,7 @@ import {
   dispatchToConversationOnStore,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-store";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
 import { useConversationRuns } from "./use-conversation-runs";

@@ -30,3 +30,19 @@ If your task matches one of these, read the specified doc first, then target the
 - libs/ai-react: Shared AI UI primitives and streaming hooks. NO conversation store, NO DB schemas.
 - libs/srs-react/.../assistant: Conversation store/reducer, run orchestration, chat UI. NO provider HTTP, NO DB schemas.
 - crates/koloda-core: Source of truth for provider enum, secrets redaction, DB repo.
+
+### Composition
+
+`AssistantChat` wires `useAssistantProfileSelection` → `useConversationPersistence` → `useAssistantSession` directly.
+Do not reintroduce a god `useAssistantChat` hook; integration tests use `assistant-chat-test-harness.ts` only.
+
+### Public surface (`@koloda/srs-react`)
+
+App shells may import only:
+
+- UI: `AssistantChat`, `AssistantConversationsList`, `AssistantNewConversationButton`, `ConversationHeaderMenu`, `CONVERSATION_TITLE_FALLBACK`
+- State: `newConversationAtom`, `setAssistantDeckAtom`, `assistantDeckIdAtom`, `assistantIsLockedAtom`
+- Profile: `useGlobalAIProfileState`
+
+Conversation state internals live in `conversation-store.ts` / `conversation-selectors.ts` / `conversation-actions.ts` — import those directly inside the assistant folder.
+Do not re-export them (or hooks/reducer/orchestration) from the package entry.

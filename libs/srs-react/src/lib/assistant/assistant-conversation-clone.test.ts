@@ -2,15 +2,13 @@ import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import {
   assistantConversationStateAtom,
-  assistantHasContextAtom,
-  assistantIsLockedAtom,
-  cloneConversationAtom,
   conversationsAtom,
   pendingSaveAtom,
   setCurrentConversationIdAtom,
-  unreadConversationIdsAtom,
   upsertConversationAtom,
-} from "./assistant-conversation-atoms";
+} from "./conversation-store";
+import { assistantHasContextAtom, assistantIsLockedAtom, unreadConversationIdsAtom } from "./conversation-selectors";
+import { cloneConversationAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import type { ConversationReducerState } from "./conversation-reducer";
 

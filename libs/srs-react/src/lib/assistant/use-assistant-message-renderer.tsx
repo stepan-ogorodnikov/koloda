@@ -7,12 +7,6 @@ import type { ReactNode } from "react";
 import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
 import {
-  assistantActiveRunIdAtom,
-  assistantDeckIdAtom,
-  assistantMessagesAtom,
-  assistantRunsAtom,
-} from "./assistant-conversation-atoms";
-import {
   getChatTextMetadata,
   getErrorMetadata,
   getGeneratedCardsMetadata,
@@ -20,6 +14,12 @@ import {
   getUserMessageCreatedAt,
 } from "./assistant-messages";
 import type { GenerationRun } from "./conversation-reducer";
+import {
+  assistantActiveRunIdAtom,
+  assistantDeckIdAtom,
+  assistantMessagesAtom,
+  assistantRunsAtom,
+} from "./conversation-selectors";
 import { CopyMessageButton } from "./copy-message-button";
 import { MessageTimestamp } from "./message-timestamp";
 import { RevertMessageButton } from "./revert-message-button";

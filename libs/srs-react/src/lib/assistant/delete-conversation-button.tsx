@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useStore } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
-import { removeConversationAtom } from "./assistant-conversation-atoms";
+import { removeConversationAtom } from "./conversation-actions";
 
 type DeleteConversationButtonProps = {
   id: DeleteConversationData["id"];
