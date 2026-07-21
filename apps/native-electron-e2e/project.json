@@ -1,0 +1,32 @@
+{
+  "name": "native-electron-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/native-electron-e2e/src",
+  "projectType": "application",
+  "tags": ["type:e2e", "platform:desktop"],
+  "implicitDependencies": ["@koloda/native-electron", "@koloda/native-electron-react"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx tsc --project apps/native-electron-e2e/tsconfig.json --noEmit"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build-rust",
+          "projects": ["@koloda/native-electron"]
+        }
+      ],
+      "options": {
+        "commands": [
+          "bunx swc apps/native-electron/src/preload.ts -o apps/native-electron/dist/preload.js -C module.type=commonjs",
+          "bunx playwright test --config apps/native-electron-e2e/playwright.config.ts"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

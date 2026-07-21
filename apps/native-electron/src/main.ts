@@ -12,6 +12,12 @@ const MACOS_WINDOW_BUTTON_HEIGHT = 12;
 const WINDOW_STATE_FILE = "window-state.json";
 
 function configureUserData() {
+  const override = process.env.KOLODA_USER_DATA;
+  if (override) {
+    app.setPath("userData", override);
+    return;
+  }
+
   if (process.platform === "darwin") {
     app.setPath("userData", join(app.getPath("home"), "Library", "Application Support", "koloda"));
   } else if (process.platform === "linux") {
@@ -130,7 +136,7 @@ function createWindow() {
 
   win.once("ready-to-show", () => {
     win.show();
-    if (isDev) win.webContents.openDevTools();
+    if (isDev && !process.env.KOLODA_E2E) win.webContents.openDevTools();
   });
 
   if (!isDev) {
