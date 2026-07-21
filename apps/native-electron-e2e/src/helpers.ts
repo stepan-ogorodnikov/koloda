@@ -197,3 +197,40 @@ export async function createDeckWithAlgorithm(page: Page, deckTitle: string, alg
   await expect(page).toHaveURL(/\/decks\/\d+$/);
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 }
+
+export async function openLearningSettings(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "Learning", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Learning", exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Minutes" })).toBeVisible();
+}
+
+export async function openHotkeysSettings(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "Hotkeys", exact: true }).click();
+  const kbds = page.locator("form kbd");
+  await expect(kbds.first()).toBeVisible();
+}
+
+export function getHotkeyByLabel(page: Page, label: string) {
+  const kbd = page.locator(`xpath=//div[normalize-space()='${label}']/following-sibling::div//kbd`);
+  const container = kbd.locator("xpath=..");
+  const editButton = kbd
+    .locator("xpath=ancestor::div[contains(@class, 'flex-row') and contains(@class, 'items-center')]")
+    .getByRole("button", { name: "Change hotkey" });
+
+  return { kbd, container, editButton };
+}
+
+export async function editHotkey(page: Page, label: string, newKey: string) {
+  const { editButton } = getHotkeyByLabel(page, label);
+  await editButton.first().click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+
+  await page.keyboard.press(newKey);
+
+  await dialog.getByRole("button", { name: "Accept this hotkey" }).click();
+  await expect(dialog).not.toBeVisible();
+}
