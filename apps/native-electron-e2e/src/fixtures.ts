@@ -53,3 +53,4 @@ export const test = base.extend<ElectronFixtures>({
 });
 
 export { expect };
+export type { Page };

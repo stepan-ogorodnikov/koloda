@@ -33,6 +33,10 @@ export function getNavigation(page: Page, name: string): Locator {
   return page.getByRole("link", { name, exact: true }).first();
 }
 
+export function cardRows(page: Page): Locator {
+  return page.getByRole("row").filter({ has: page.getByRole("button", { name: "Delete card" }) });
+}
+
 export async function addCard(page: Page, front: string, back: string) {
   await page.getByRole("button", { name: "Add cards" }).click();
 
@@ -75,6 +79,18 @@ export async function createDeckWithCard(page: Page, deckTitle: string, cardFron
   await createDeck(page, deckTitle);
   await page.getByRole("tab", { name: "Cards" }).click();
   await addCard(page, cardFront, cardBack);
+}
+
+export async function createDeckWithCards(
+  page: Page,
+  deckTitle: string,
+  cards: Array<{ front: string; back: string }>,
+) {
+  await createDeck(page, deckTitle);
+  await page.getByRole("tab", { name: "Cards" }).click();
+  for (const card of cards) {
+    await addCard(page, card.front, card.back);
+  }
 }
 
 export async function createAlgorithm(page: Page, title: string) {
