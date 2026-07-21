@@ -3,5 +3,14 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "tags": ["type:lib"],
   "sourceRoot": "libs/ui/src",
-  "projectType": "library"
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/ui/vitest.config.mjs --configLoader runner"
+      },
+      "inputs": ["default", "^default"]
+    }
+  }
 }
