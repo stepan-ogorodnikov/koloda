@@ -53,6 +53,37 @@ export async function createDeck(page: Page, title: string) {
   await expect(page).toHaveURL(/\/decks\/\d+$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
+
+export async function createAlgorithm(page: Page, title: string) {
+  await openSection(page, "Presets");
+
+  await page.getByRole("button", { name: "New preset", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Title", { exact: true }).fill(title);
+
+  const createButton = dialog.getByRole("button", { name: "Create", exact: true });
+  await expect(createButton).toBeEnabled();
+  await createButton.click();
+
+  const redirectLink = dialog.getByRole("link", { name: "Go to the new preset", exact: true });
+  await expect(redirectLink).toBeVisible();
+  await redirectLink.click();
+
+  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+}
+
+export async function openNewAlgorithmDialog(page: Page) {
+  await openSection(page, "Presets");
+  await page.getByRole("button", { name: "New preset", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("heading", { name: "New preset", exact: true })).toBeVisible();
+
+  return dialog;
+}
 export async function openNewTemplateDialog(page: Page) {
   await openSection(page, "Templates");
   await page.getByRole("button", { name: "New template", exact: true }).click();
@@ -93,6 +124,31 @@ export async function createDeckWithTemplate(page: Page, deckTitle: string, temp
 
   await dialog.getByRole("button", { name: /Template$/ }).click();
   const option = page.getByRole("option", { name: templateTitle, exact: true });
+  await expect(option).toBeVisible();
+  await option.click();
+
+  const createButton = dialog.getByRole("button", { name: "Add deck", exact: true });
+  await expect(createButton).toBeEnabled();
+  await createButton.click();
+
+  const redirectLink = dialog.getByRole("link", { name: "Go to the new deck", exact: true });
+  await expect(redirectLink).toBeVisible();
+  await redirectLink.click();
+
+  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
+}
+
+export async function createDeckWithAlgorithm(page: Page, deckTitle: string, algorithmTitle: string) {
+  await openSection(page, "Decks");
+  await page.getByRole("button", { name: "New deck", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Title", { exact: true }).fill(deckTitle);
+
+  await dialog.getByRole("button", { name: /Preset$/ }).click();
+  const option = page.getByRole("option", { name: algorithmTitle, exact: true });
   await expect(option).toBeVisible();
   await option.click();
 
