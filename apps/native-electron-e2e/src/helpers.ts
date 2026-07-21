@@ -250,3 +250,35 @@ export async function editHotkey(page: Page, label: string, newKey: string) {
   await dialog.getByRole("button", { name: "Accept this hotkey" }).click();
   await expect(dialog).not.toBeVisible();
 }
+
+export async function dragTo(page: Page, source: Locator, target: Locator) {
+  await source.scrollIntoViewIfNeeded();
+  await target.scrollIntoViewIfNeeded();
+
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  if (!sourceBox || !targetBox) throw new Error("Could not get bounding box for drag source or target");
+
+  const sourceX = sourceBox.x + sourceBox.width / 2;
+  const sourceY = sourceBox.y + sourceBox.height / 2;
+  const targetX = targetBox.x + targetBox.width / 2;
+  const targetY = targetBox.y + targetBox.height / 2;
+
+  await page.mouse.move(sourceX, sourceY);
+  await page.mouse.down();
+  await page.mouse.move(sourceX, sourceY + 20, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.move(targetX, targetY, { steps: 10 });
+  await page.waitForTimeout(100);
+  await page.mouse.up();
+}
+
+export async function reorderWithKeyboard(handle: Locator, direction: "up" | "down", steps: number) {
+  await handle.scrollIntoViewIfNeeded();
+  await handle.focus();
+  await handle.press("Enter");
+  for (let i = 0; i < steps; i++) {
+    await handle.press(direction === "up" ? "ArrowUp" : "ArrowDown");
+  }
+  await handle.press("Enter");
+}
