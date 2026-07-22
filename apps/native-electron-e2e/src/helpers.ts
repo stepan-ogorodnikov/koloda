@@ -282,3 +282,118 @@ export async function reorderWithKeyboard(handle: Locator, direction: "up" | "do
   }
   await handle.press("Enter");
 }
+
+export async function openAddAIDialog(page: Page) {
+  await openSection(page, "Settings");
+  await page.getByRole("link", { name: "AI", exact: true }).click();
+  await expect(page.getByText("No profiles")).toBeVisible();
+
+  await page.getByRole("button", { name: "Add profile" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Add AI Profile" })).toBeVisible();
+}
+
+export async function selectAIProvider(page: Page, provider: string, currentProvider = "OpenRouter") {
+  await page.getByRole("button", { name: currentProvider }).click();
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.getByRole("option", { name: provider, exact: true }).click();
+}
+
+export async function fillAIProfileTitle(page: Page, title: string) {
+  await page.getByRole("textbox", { name: "Title" }).fill(title);
+}
+
+export async function submitAddAIDialog(page: Page) {
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+}
+
+export async function openEditAIDialog(page: Page, profileTitle: string) {
+  await page.locator("div", { hasText: profileTitle }).getByRole("button", { name: "Edit profile" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit AI profile" })).toBeVisible();
+}
+
+export async function submitEditAIDialog(page: Page) {
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+}
+
+export async function deleteAIProfile(page: Page, profileTitle: string) {
+  await page.locator("div", { hasText: profileTitle }).getByRole("button", { name: "Delete profile" }).click();
+  await expect(page.getByText("Are you sure you want to delete this profile?")).toBeVisible();
+  await page.getByRole("button", { name: "Delete", exact: true }).click();
+}
+
+export async function addLmStudioProfile(page: Page, options: { title?: string; baseUrl: string }) {
+  const title = options.title ?? "E2E LM Studio";
+  await openAddAIDialog(page);
+  await selectAIProvider(page, "LM Studio");
+  await fillAIProfileTitle(page, title);
+  const baseUrlInput = page.getByRole("textbox", { name: "Base URL" });
+  await baseUrlInput.clear();
+  await baseUrlInput.fill(options.baseUrl);
+  await submitAddAIDialog(page);
+  await expect(page.getByText(title)).toBeVisible();
+}
+
+/**
+ * Open Assistant with a real conversation. Cold start (`/ai` with no id) has no
+ * store conversation, so profile/model writes no-op and Send stays disabled.
+ * `/ai?deckId=` is the existing route path that creates a conversation.
+ */
+export async function openAssistantWithDeck(page: Page, deckId: number) {
+  const origin = new URL(page.url()).origin;
+  await page.goto(`${origin}/ai?deckId=${deckId}`);
+  await expect(page).toHaveURL(/\/ai\?conversationId=/);
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+}
+
+export async function createDeckAndOpenAssistant(page: Page, deckTitle = "E2E Assistant Deck") {
+  await createDeck(page, deckTitle);
+  const match = page.url().match(/\/decks\/(\d+)/);
+  if (!match?.[1]) throw new Error(`Could not parse deck id from ${page.url()}`);
+  const deckId = Number(match[1]);
+  await openAssistantWithDeck(page, deckId);
+  return deckId;
+}
+
+export async function waitForAssistantReady(page: Page) {
+  const sendButton = page.getByRole("button", { name: "Send" });
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+
+  await prompt.fill("ping");
+
+  // Auto-resolve may already have a model; if Send stays disabled, pick one explicitly.
+  try {
+    await expect(sendButton).toBeEnabled({ timeout: 5_000 });
+  } catch {
+    await page.getByRole("button", { name: "Select a model" }).click();
+    await page.getByRole("option", { name: "e2e-test-model" }).click();
+    await expect(sendButton).toBeEnabled({ timeout: 15_000 });
+  }
+
+  await prompt.clear();
+}
+
+export async function sendAssistantMessage(page: Page, text: string) {
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+  await prompt.fill(text);
+  await page.getByRole("button", { name: "Send" }).click();
+}
+
+/**
+ * Cards mode silently no-ops until the deck template query resolves
+ * (`handleGenerate` returns early when `!cfg.template`). Poll until a send
+ * lands a user message; do not re-send after success.
+ */
+export async function sendCardsAssistantMessage(page: Page, text: string) {
+  const log = conversationLog(page);
+  await expect(async () => {
+    if ((await log.getByText(text, { exact: true }).count()) > 0) return;
+    await sendAssistantMessage(page, text);
+    await expect(log.getByText(text, { exact: true })).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
+}
+
+export function conversationLog(page: Page) {
+  // AIChatMessages uses role="log" (aria-label "Conversation log").
+  return page.getByRole("log", { name: "Conversation log" });
+}
