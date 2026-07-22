@@ -8,7 +8,7 @@ const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
 const STATE_MIN: i32 = 0;
 const STATE_MAX: i32 = 3;
-const DIFFICULTY_MIN: f64 = 1.0;
+const DIFFICULTY_MIN: f64 = 0.0;
 const DIFFICULTY_MAX: f64 = 10.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
