@@ -6,7 +6,9 @@ const platform = process.platform;
 const ext = platform === "win32" ? ".dll" : platform === "darwin" ? ".dylib" : ".so";
 const prefix = platform === "win32" ? "" : "lib";
 
-const srcPath = join(__dirname, "..", "..", "..", "target", "release", `${prefix}koloda_electron${ext}`);
+const workspaceRoot = join(__dirname, "..", "..", "..");
+const cargoTargetDir = process.env.CARGO_TARGET_DIR || join(workspaceRoot, "target");
+const srcPath = join(cargoTargetDir, "release", `${prefix}koloda_electron${ext}`);
 const distDir = join(__dirname, "..", "dist");
 const dstPath = join(distDir, "koloda_electron.node");
 
@@ -21,3 +23,4 @@ if (!existsSync(distDir)) {
 
 copyFileSync(srcPath, dstPath);
 console.log(`Copied native addon: ${dstPath}`);
+console.log(`Source: ${srcPath}`);

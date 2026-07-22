@@ -221,6 +221,86 @@ export async function openLearningSettings(page: Page) {
   await expect(page.getByRole("textbox", { name: "Minutes" })).toBeVisible();
 }
 
+export async function saveLearningSettings(page: Page) {
+  const saveButton = page.getByRole("button", { name: "Save", exact: true });
+  await expect(saveButton).toBeEnabled();
+  await saveButton.scrollIntoViewIfNeeded();
+  await saveButton.click();
+  await expect(page.getByText("Learn ahead limit")).toBeVisible();
+}
+
+export async function setLearnAheadLimit(page: Page, hours: number, minutes: number) {
+  await openLearningSettings(page);
+
+  const hoursField = page.getByRole("textbox", { name: "Hours" });
+  await hoursField.click();
+  await hoursField.clear();
+  await hoursField.fill(String(hours));
+  await hoursField.blur();
+
+  const minutesField = page.getByRole("textbox", { name: "Minutes" });
+  await minutesField.click();
+  await minutesField.clear();
+  await minutesField.fill(String(minutes));
+  await minutesField.blur();
+
+  await saveLearningSettings(page);
+  await expect(hoursField).toHaveValue(String(hours));
+  await expect(minutesField).toHaveValue(String(minutes));
+}
+
+export async function expectDeckCardCount(page: Page, count: number) {
+  const rows = page.getByRole("row").filter({ has: page.getByRole("button", { name: "Delete card" }) });
+  await expect(rows).toHaveCount(count, { timeout: 15_000 });
+}
+
+export async function openLessonDialog(page: Page, deckTitle: string, newCardCount: number) {
+  await openSection(page, "Dashboard");
+
+  const deckRow = page.getByRole("row").filter({ has: page.getByText(deckTitle, { exact: true }) });
+  await expect(deckRow).toBeVisible({ timeout: 15_000 });
+
+  const lessonBadge = deckRow.getByRole("button", { name: String(newCardCount), exact: true }).first();
+  await expect(lessonBadge).toBeEnabled({ timeout: 15_000 });
+  await lessonBadge.click();
+
+  const lessonDialog = page.getByRole("dialog");
+  await expect(lessonDialog).toBeVisible();
+  await expect(lessonDialog.getByRole("heading", { name: "Study cards" })).toBeVisible();
+
+  return lessonDialog;
+}
+
+export async function gradeLessonCards(page: Page, lessonDialog: Locator, grades: string[]) {
+  const backTextbox = page.getByRole("textbox", { name: "Back" });
+  const doneMessage = lessonDialog.getByText("Done");
+
+  for (let i = 0; i < 10; i++) {
+    await backTextbox.or(doneMessage).waitFor({ timeout: 15_000 });
+
+    if (await doneMessage.isVisible().catch(() => false)) break;
+
+    const grade = grades[i];
+    if (!grade) break;
+
+    await backTextbox.fill("test");
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    const gradeButton = page.getByRole("button", { name: grade, exact: true });
+    await expect(gradeButton).toBeVisible();
+    await gradeButton.click();
+  }
+
+  await expect(doneMessage).toBeVisible({ timeout: 15_000 });
+}
+
+export async function startDeckLesson(page: Page, deckTitle: string, newCardCount: number) {
+  const lessonDialog = await openLessonDialog(page, deckTitle, newCardCount);
+  await lessonDialog.getByRole("button", { name: "Start" }).click();
+
+  return lessonDialog;
+}
+
 export async function openHotkeysSettings(page: Page) {
   await openSection(page, "Settings");
   await page.getByRole("link", { name: "Hotkeys", exact: true }).click();
