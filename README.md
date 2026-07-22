@@ -44,6 +44,7 @@ apps/
   demo/                   # Web app (Live demo)
   demo-e2e/               # E2E tests for web app (Playwright)
   native-electron/        # Desktop app backend (Electron / Rust NAPI)
+  native-electron-e2e/    # E2E tests for desktop app (Playwright)
   native-electron-react/  # Desktop app frontend (React / Electron)
 libs/
   ai/                     # Domain lib for AI features
