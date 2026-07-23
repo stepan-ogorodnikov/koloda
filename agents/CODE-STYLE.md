@@ -136,3 +136,34 @@ export * from "./lib/primitives/select/select";
 
 Import the defining symbols from the package: `SelectRoot`, `SelectButton`, `Select`.
 Do not import them via a parent namespace or local barrel.
+
+## Change Discipline
+
+Produce the smallest diff that fully satisfies the task.
+This is what the human reviewer reads first.
+A noisy diff hides the real change and invites unrelated breakage.
+
+Edit only what the task requires.
+Do not rename, reformat, or reorder adjacent code the task does not touch.
+"Cleaning up while you're here" is not allowed unless the cleanup is the task.
+
+Do not invent helpers for a single caller.
+Do not introduce abstractions the surrounding code does not already use.
+Match the abstraction level of the file you are editing.
+
+Do not add optional parameters or branches "for future use."
+Do not add defensive `?.`, `try/catch`, or swallowed errors where the surrounding code does not.
+Surface failures the way neighbors do.
+
+Keep changes one concern.
+If a task needs both a behavior change and a refactor, do the refactor as a separately described step so the human can review them apart.
+
+Prefer extending the file named in the playbook over creating a new file.
+Match the import style of that exact file, including type import flavor.
+
+Thoroughness is not license to widen scope.
+When you do change a symbol, update every call site in one change (see `agents/BACKWARDS-COMPATIBILITY.md`).
+That is about how completely a change is executed, not about how much you change.
+
+If pre-existing code outside the diff breaks the rules in this guide, do not fix it in this change.
+Mention it to the user instead.
