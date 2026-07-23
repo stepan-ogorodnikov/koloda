@@ -8,9 +8,9 @@ import { useEffect, useRef } from "react";
 import { aiProfileStateAtom, type AIProfileState } from "./ai-profile-state";
 import {
   cancelStreamingRuns,
-  coerceConversationState,
   normalizeRestoredConversation,
 } from "./conversation-persistence";
+import { coerceConversationState } from "./conversation-persistence-schema";
 import { initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import {

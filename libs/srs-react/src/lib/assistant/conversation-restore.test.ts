@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { coerceConversationState, normalizeRestoredConversation } from "./conversation-persistence";
+import { normalizeRestoredConversation } from "./conversation-persistence";
+import { coerceConversationState } from "./conversation-persistence-schema";
 import { findLatestErroredRun, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 
@@ -186,6 +187,100 @@ describe("coerceConversationState", () => {
       expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: 5 })))).toBeNull();
       expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: true })))).toBeNull();
       expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: {} })))).toBeNull();
+    });
+  });
+
+  // WHY: `TemplateFields` is an *array* of field objects
+  // (`Template["content"]["fields"]`), not a record. A prior Zod port used
+  // `z.record(...)` here, which rejects arrays — so any cards-mode run that
+  // persisted its non-null `templateFields` failed the whole row on restore
+  // and the conversation fell back to a fresh empty state (empty feed after
+  // reload, while chat-only rows survived because they store `null`). These
+  // pin the array-or-null acceptance that the pre-refactor hand-rolled gate
+  // provided.
+  describe("run templateFields coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "cards",
+        status: "success",
+        cards: [{ content: { "1": { text: "A" } } }],
+        cardStatuses: { 0: "success" },
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    it("accepts a TemplateFields array (cards-mode run survives restore)", () => {
+      const fields = [{ id: 1, title: "Front", type: "text", isRequired: true }];
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ templateFields: fields })))!;
+      expect(coerced).not.toBeNull();
+      expect(coerced.runs["r1"].templateFields).toEqual(fields);
+    });
+
+    it("accepts null templateFields (chat-mode runs store null)", () => {
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ templateFields: null })))!;
+      expect(coerced.runs["r1"].templateFields).toBeNull();
+    });
+
+    it("rejects a record-shaped templateFields (not a TemplateFields array)", () => {
+      expect(coerceConversationState(makeStateWithRun(baseRun({ templateFields: { "1": { text: "A" } } })))).toBeNull();
+    });
+
+    it("rejects a missing templateFields (a bad field fails the whole row)", () => {
+      const { templateFields: _omit, ...withoutTemplateFields } = baseRun();
+      expect(coerceConversationState(makeStateWithRun(withoutTemplateFields))).toBeNull();
+    });
+  });
+
+  // WHY (ASSISTANT-CHAT-REFACTOR.md §C): persisted rows are a compat boundary.
+  // These pin the three behaviors a naive Zod port loses: `revertState` is
+  // ignored even when present, an unparseable *present* `updatedAt` fails the
+  // row, and `dismissedRunErrorId` (which had no pre-refactor validation gate)
+  // is tolerated untyped rather than rejected.
+  describe("compatibility boundary (C port)", () => {
+    it("ignores a persisted revertState and rebuilds it as null", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        revertState: { revertedToUserMessageId: "u-r1", preRevertInputText: "hi" },
+      })!;
+      expect(coerced.revertState).toBeNull();
+    });
+
+    it("fails the row when updatedAt is present but unparseable (not coerced to null)", () => {
+      expect(
+        coerceConversationState({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          updatedAt: "not-a-date",
+        }),
+      ).toBeNull();
+    });
+
+    it("tolerates an untyped dismissedRunErrorId (no validation gate, pre-refactor behavior)", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        dismissedRunErrorId: 7,
+      })!;
+      // `?? null` defaulting: a present non-null value is kept as-is.
+      expect(coerced.dismissedRunErrorId).toBe(7);
     });
   });
 });
