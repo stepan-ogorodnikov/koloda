@@ -363,4 +363,71 @@ describe("useConversationRuns", () => {
 
     expect(harness.bumpPendingSave).toHaveBeenCalledTimes(1);
   });
+
+  it("an aborted chat run re-dispatches the final accumulated text via finalize (A)", async () => {
+    // WHY: the chat finalize hook must re-dispatch `updateAssistantText`
+    // with the full accumulated text on abort so the persisted assistant
+    // message reflects everything received before the stream was torn
+    // down. This pins behavior that the shared executor inherits from the
+    // pre-refactor `executeChatRun`.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat", request: {} }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      { runId: "run-A", kind: "chat-text", text: "" },
+    ]);
+
+    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+      onChunk("partial ");
+      onChunk("text");
+      return { streamResult: "aborted" as StreamResult, usage: null };
+    });
+
+    const { result } = renderRuns(harness);
+
+    await act(async () => {
+      await result.current.executeChatRun("A", "run-A", {} as ChatStreamRequest);
+    });
+
+    const textActions = harness.dispatchToMap
+      .filter((e) => e.action[0] === "updateAssistantText")
+      .map((e) => e.action[1] as { runId: string; text: string });
+    const finalText = textActions.at(-1);
+    expect(finalText?.text).toBe("partial text");
+    // The finalize re-dispatch is additional to the per-chunk dispatches.
+    expect(textActions.filter((a) => a.text === "partial text").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("dispatches setUsage with the transport-reported usage on a successful chat run", async () => {
+    // WHY: chat's finalize dispatches `setUsage` when the transport
+    // reports usage; cards have no equivalent. Pinning this guards the
+    // kind-specific finalize hook against the unified executor.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat", request: {} }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      { runId: "run-A", kind: "chat-text", text: "" },
+    ]);
+
+    const usage: StreamUsage = { input: 10, output: 5 } as unknown as StreamUsage;
+    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+      onChunk("hi");
+      return { streamResult: "success" as StreamResult, usage };
+    });
+
+    const { result } = renderRuns(harness);
+
+    await act(async () => {
+      await result.current.executeChatRun("A", "run-A", {} as ChatStreamRequest);
+    });
+
+    const setUsageActions = harness.dispatchToMap.filter((e) => e.action[0] === "setUsage");
+    expect(setUsageActions).toHaveLength(1);
+    expect(setUsageActions[0].id).toBe("A");
+    expect((setUsageActions[0].action[1] as { runId: string; usage: StreamUsage }).usage).toBe(usage);
+  });
 });

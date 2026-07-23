@@ -1,10 +1,61 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard } from "@koloda/ai";
 import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
 import { useAssistantCardGeneration, useChatStream } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { usePendingRunRefs } from "./use-pending-run-refs";
+
+/**
+ * Per-kind spec for {@link runStream}. The two stream transports diverge in
+ * three places, not one:
+ *   - `onValue` — the per-chunk callback (chat accumulates text + dispatches
+ *     `updateAssistantText`; cards dispatch `addCard`), returning the updated
+ *     accumulator.
+ *   - the transport's *result shape* (chat returns `{ streamResult, usage }`;
+ *     cards return `StreamResult`), which `finalize` adapts into the
+ *     `StreamResult` consumed by `handleStreamResult`.
+ *   - `finalize` — kind-specific post-stream dispatches *before* the terminal
+ *     status: chat re-dispatches the final accumulated text on abort and
+ *     dispatches `setUsage`; cards have nothing to do and just return the
+ *     result. Returning `StreamResult` here is what lets the shared funnel
+ *     feed the already-shared `handleStreamResult`.
+ */
+type RunExecution<TRequest, TValue, TResult, TAcc> = {
+  mode: AIChatMode;
+  transport: (request: TRequest, onValue: (v: TValue) => void) => Promise<TResult>;
+  initial: TAcc;
+  onValue: (acc: TAcc, value: TValue) => TAcc;
+  finalize: (result: TResult, acc: TAcc) => StreamResult;
+};
+
+/**
+ * Shared run funnel: transport → finalize → `handleStreamResult`, with
+ * `pendingRunRefs.onComplete` always cleared in `finally`. Replacing the two
+ * symmetric try/finally bodies removes the "keep both in sync" maintenance
+ * burden without hiding the kind-specific finalize dispatches.
+ */
+async function runStream<TRequest, TValue, TResult, TAcc>(
+  exec: RunExecution<TRequest, TValue, TResult, TAcc>,
+  conversationId: string,
+  runId: string,
+  request: TRequest,
+  handleStreamResult: (conversationId: string, result: StreamResult, runId: string) => void,
+  onComplete: (mode: AIChatMode, runId: string) => void,
+): Promise<void> {
+  let acc = exec.initial;
+  try {
+    const result = await exec.transport(request, (v) => {
+      acc = exec.onValue(acc, v);
+    });
+    const streamResult = exec.finalize(result, acc);
+    handleStreamResult(conversationId, streamResult, runId);
+  } finally {
+    // WHY: Must clear even on abort/error. A stream aborted by a newer
+    // start still fires this — pending refs guard against stale runIds.
+    onComplete(exec.mode, runId);
+  }
+}
 
 export type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 
@@ -85,40 +136,56 @@ export function useConversationRuns({
 
   const executeChatRun = useCallback(
     async (conversationId: string, runId: string, request: ChatStreamRequest) => {
-      try {
-        let currentText = "";
-        const { streamResult, usage } = await streamChat(request, (chunk) => {
-          currentText += chunk;
-          dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
-        });
-
-        if (streamResult === "aborted") {
-          dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
-        }
-
-        if (usage) dispatchToConversation(conversationId, ["setUsage", { runId, usage }]);
-
-        handleStreamResult(conversationId, streamResult, runId);
-      } finally {
-        // WHY: Must clear even on abort/error. A stream aborted by a newer
-        // start still fires this — pending refs guard against stale runIds.
-        pendingRunRefs.onComplete("chat", runId);
-      }
+      await runStream(
+        {
+          mode: "chat",
+          transport: streamChat,
+          initial: "",
+          onValue: (text, chunk) => {
+            const currentText = text + chunk;
+            dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
+            return currentText;
+          },
+          finalize: ({ streamResult, usage }, currentText) => {
+            // WHY: On abort the stream hook stops calling onChunk mid-text;
+            // re-dispatch the final accumulated value so the persisted
+            // assistant message reflects everything received.
+            if (streamResult === "aborted") {
+              dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
+            }
+            if (usage) dispatchToConversation(conversationId, ["setUsage", { runId, usage }]);
+            return streamResult;
+          },
+        },
+        conversationId,
+        runId,
+        request,
+        handleStreamResult,
+        pendingRunRefs.onComplete,
+      );
     },
     [dispatchToConversation, streamChat, handleStreamResult, pendingRunRefs],
   );
 
   const executeGenerateRun = useCallback(
     async (conversationId: string, runId: string, request: CardGenerationStreamRequest) => {
-      try {
-        const result = await generate(request, (card) => {
-          dispatchToConversation(conversationId, ["addCard", { runId, card }]);
-        });
-
-        handleStreamResult(conversationId, result, runId);
-      } finally {
-        pendingRunRefs.onComplete("cards", runId);
-      }
+      await runStream<CardGenerationStreamRequest, GeneratedCard, StreamResult, null>(
+        {
+          mode: "cards",
+          transport: generate,
+          initial: null,
+          onValue: (_acc, card) => {
+            dispatchToConversation(conversationId, ["addCard", { runId, card }]);
+            return null;
+          },
+          finalize: (result) => result,
+        },
+        conversationId,
+        runId,
+        request,
+        handleStreamResult,
+        pendingRunRefs.onComplete,
+      );
     },
     [dispatchToConversation, generate, handleStreamResult, pendingRunRefs],
   );
