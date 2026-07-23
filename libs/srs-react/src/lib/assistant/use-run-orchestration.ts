@@ -9,9 +9,9 @@ import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
 import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
-import { buildStreamRequest } from "./build-stream-request";
+import { type StreamRequestResult, buildStreamRequest } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
@@ -44,6 +44,61 @@ export type UseRunOrchestrationReturn = {
   handleRestore: () => string | null;
 };
 
+type PreparedRun = StreamRequestResult & { modelName: string | undefined };
+
+/**
+ * Shared guard + request builder for a new run. Returns `null` when the
+ * prompt/config is invalid, so callers early-return *before* arming a
+ * pending-run ref or starting a stream. Centralizing the guard stack here
+ * is what lets `handleRetry` arm only after validation (see comment there).
+ */
+function prepareRunRequest(
+  cfg: AssistantConversationConfig,
+  mode: AIChatMode,
+  promptText: string,
+  messages: ConversationReducerState["messages"],
+  runs: Record<string, GenerationRun>,
+): PreparedRun | null {
+  if (!promptText || !cfg.profileId || !cfg.modelId) return null;
+  if (mode === "cards" && !cfg.template) return null;
+
+  const conversationMessages = buildConversationMessages(messages, runs, cfg.template);
+  const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
+  return { ...result, modelName: cfg.modelName };
+}
+
+/**
+ * Dispatches the `startRun` + `addAssistantMessage` pair that opens a
+ * freshly-generated run. The only chat-vs-cards difference is the
+ * assistant placeholder text: "" for chat, the cards "pending" status
+ * message otherwise.
+ */
+function dispatchStartRun(
+  dispatch: (action: ConversationReducerAction) => void,
+  cfg: AssistantConversationConfig,
+  runId: string,
+  prepared: PreparedRun,
+) {
+  dispatch([
+    "startRun",
+    {
+      runId,
+      mode: prepared.kind,
+      request: prepared.request,
+      templateFields: prepared.templateFields,
+      modelName: prepared.modelName,
+    },
+  ]);
+  dispatch([
+    "addAssistantMessage",
+    {
+      runId,
+      kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
+      text: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
+    },
+  ]);
+}
+
 export function useRunOrchestration({
   configRef,
   readState,
@@ -66,23 +121,26 @@ export function useRunOrchestration({
       const mode = resolveRunMode(currentState, runId);
       if (!mode) return;
 
-      armPendingRun(mode, conversationId, runId);
-
       // WHY: Retry is exposed only on the visible tail. The history sent
       // to the AI must mirror what the user sees, so filter out anything
       // hidden by revert before walking the message list.
       const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
       const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
       const promptText = userMessage ? getTextMessageContent(userMessage) : "";
-      if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (mode === "cards" && !cfg.template) return;
+
+      const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs);
+      if (!prepared) return;
+
+      // WHY: Arm the pending-run ref only after validation. The ref routes
+      // a stream failure back to this runId; arming before the guards left
+      // a dangling error route armed whenever a retry was invalid (no
+      // prompt/profile/model/template), since no stream would ever start to
+      // clear the ref via `onComplete`. Prepare → arm → dispatch/execute.
+      armPendingRun(mode, conversationId, runId);
 
       setGlobalAIProfileState(cfg);
 
-      const conversationMessages = buildConversationMessages(visibleMessages, currentState.runs, cfg.template);
-
-      const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
-      await retryRun(runId, result.request, result.templateFields, mode, cfg.modelName);
+      await retryRun(runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
     },
     [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun],
   );
@@ -111,8 +169,9 @@ export function useRunOrchestration({
       const currentMode = currentState.mode;
 
       const promptText = (value ?? "").trim();
-      if (!promptText || !cfg.profileId || !cfg.modelId) return;
-      if (currentMode === "cards" && !cfg.template) return;
+
+      const prepared = prepareRunRequest(cfg, currentMode, promptText, currentState.messages, currentState.runs);
+      if (!prepared) return;
 
       const runId = generateUUID();
       // WHY: After ensureConversationId(), the conversation is in the store.
@@ -122,45 +181,13 @@ export function useRunOrchestration({
 
       setGlobalAIProfileState(cfg);
 
-      const conversationMessages = buildConversationMessages(currentState.messages, currentState.runs, cfg.template);
-
-      const result = buildStreamRequest(cfg, currentMode, promptText, conversationMessages);
-
       dispatchPersisted(["addUserMessage", { runId, text: promptText }]);
+      dispatchStartRun(dispatchPersisted, cfg, runId, prepared);
 
-      if (result.kind === "chat") {
-        dispatchPersisted([
-          "startRun",
-          {
-            runId,
-            mode: "chat",
-            request: result.request,
-            templateFields: null,
-            modelName: cfg.modelName,
-          },
-        ]);
-        dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-        await executeChatRun(activeConversationId, runId, result.request);
+      if (prepared.kind === "chat") {
+        await executeChatRun(activeConversationId, runId, prepared.request);
       } else {
-        dispatchPersisted([
-          "startRun",
-          {
-            runId,
-            mode: "cards",
-            request: result.request,
-            templateFields: result.templateFields,
-            modelName: cfg.modelName,
-          },
-        ]);
-        dispatchPersisted([
-          "addAssistantMessage",
-          {
-            runId,
-            kind: "generated-cards",
-            text: cfg._(msg`assistant.chat.message.status.pending`),
-          },
-        ]);
-        await executeGenerateRun(activeConversationId, runId, result.request);
+        await executeGenerateRun(activeConversationId, runId, prepared.request);
       }
     },
     [
