@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useEffect, useRef } from "react";
-import { aiProfileStateAtom } from "./ai-profile-state";
+import { aiProfileStateAtom, type AIProfileState } from "./ai-profile-state";
 import {
   cancelStreamingRuns,
   coerceConversationState,
@@ -26,6 +26,18 @@ import {
 
 const STREAM_SAVE_THROTTLE_MS = 1000;
 const IDLE_SAVE_DEBOUNCE_MS = 250;
+
+function restoreFromData(loaded: unknown): ConversationReducerState | null {
+  const coerced = coerceConversationState(loaded);
+  if (!coerced) return null;
+  // WHY: fall back to the coerced state when normalize makes no changes so a row
+  // that is already clean round-trips verbatim.
+  return normalizeRestoredConversation(coerced) ?? coerced;
+}
+
+function freshConversation(id: string, stored: AIProfileState | null): ConversationReducerState {
+  return { ...initialConversationState, id, createdAt: new Date(), ...stored };
+}
 
 export type UseConversationPersistenceOptions = {
   conversationId: string | undefined;
@@ -123,24 +135,25 @@ export function useConversationPersistence({
       if (!state) return;
       if (state.messages.length === 0 && state.activeRunId === null) return;
 
-      // WHY: Persisting a "streaming" run would cause normalizeRestoredConversation
-      // to drop its messages on next mount, leaving an empty row with a stale
-      // title. Rewriting to "canceled" keeps messages visible and title correct.
-      // The live in-memory state keeps "streaming" until the stream actually ends.
-      const cancelApplied = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
-      // WHY: Revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
-      // §Revert). Strip the revert state from the persisted payload so
-      // reload never resurrects a hidden prefix.
-      const persistState = { ...cancelApplied, revertState: null };
+      const persistState = {
+        // WHY: rewriting "streaming" runs to "canceled" prevents
+        // `normalizeRestoredConversation` from dropping a run's messages on
+        // next mount (leaving an empty row with a stale title). The live
+        // in-memory state keeps "streaming" until the stream actually ends.
+        ...(options.cancelStreamingRuns ? cancelStreamingRuns(state) : state),
+        // WHY: revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
+        // §Revert); stripping it means reload never resurrects a hidden prefix.
+        revertState: null,
+      };
 
       const title = computeConversationTitle(persistState);
-      // WHY: structuredClone detaches persistState from the Jotai store so the
-      // async mutation below doesn't capture a reference the reducer will
-      // keep mutating. Unlike JSON.parse(JSON.stringify(...)) it preserves
-      // Date instances; serialization to the jsonb column happens at the DB
-      // layer.
       const data: SetConversationData = {
         id: persistState.id,
+        // WHY: structuredClone detaches persistState from the Jotai store so
+        // the async mutation below doesn't capture a reference the reducer
+        // will keep mutating. Unlike JSON.parse(JSON.stringify(...)) it
+        // preserves Date instances; serialization to the jsonb column happens
+        // at the DB layer.
         state: structuredClone(persistState),
         title,
         updatedAt: persistState.updatedAt,
@@ -148,23 +161,6 @@ export function useConversationPersistence({
       tokenAtSaveRef.current = saveTokenRef.current;
       setConversation.mutate(data);
     };
-
-    const handler = () => {
-      if (restoredIdRef.current !== conversationId) return;
-      if (lastSavedIdRef.current !== conversationId) return;
-      const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
-      const now = Date.now();
-      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
-      const sinceLast = now - lastFiredAt;
-      const delay = Math.max(0, wait - sinceLast);
-
-      if (timer) clearTimeout(timer);
-      // WHY: See the handlePageHide comment for full rationale.
-      timer = setTimeout(() => flush({ cancelStreamingRuns: true }), delay);
-      lastFiredAt = now + delay;
-    };
-
-    const unsub = store.sub(pendingSaveAtom, handler);
 
     const flushNow = (options: { cancelStreamingRuns?: boolean } = {}) => {
       if (timer) {
@@ -174,13 +170,33 @@ export function useConversationPersistence({
       flush(options);
     };
 
-    // WHY: Same cancelStreamingRuns rationale as above. The cleanup only flushes
-    // when there is a pending throttled save timer. Unconditionally flushing would
-    // cause re-renders because the mutation ref changes every render.
+    const scheduleFlush = () => {
+      const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
+      const now = Date.now();
+      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
+      const delay = Math.max(0, wait - (now - lastFiredAt));
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => flush({ cancelStreamingRuns: true }), delay);
+      // WHY: track the scheduled fire time, not `now`, so back-to-back bumps
+      // measure relative to the next fire and coalesce instead of cascading.
+      lastFiredAt = now + delay;
+    };
+
+    const handler = () => {
+      if (restoredIdRef.current !== conversationId) return;
+      if (lastSavedIdRef.current !== conversationId) return;
+      scheduleFlush();
+    };
+
+    const unsub = store.sub(pendingSaveAtom, handler);
+
     const handlePageHide = () => flushNow({ cancelStreamingRuns: true });
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
 
+    // WHY: the cleanup only flushes when there is a pending throttled save
+    // timer. Unconditionally flushing would cause re-renders because the
+    // mutation ref changes every render.
     return () => {
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("beforeunload", handlePageHide);
@@ -204,25 +220,8 @@ export function useConversationPersistence({
     // run), keep it — overwriting from DB would kill in-flight streams.
     const storeState = store.get(conversationsAtom);
     if (!storeState[conversationId]) {
-      const loaded = conversationData?.state;
-      const coerced = coerceConversationState(loaded);
-      if (coerced) {
-        const clean = normalizeRestoredConversation(coerced);
-        if (clean) {
-          upsertConversation(clean);
-        } else {
-          upsertConversation(coerced);
-        }
-      } else {
-        const stored = readLastUsed();
-        const fresh: ConversationReducerState = {
-          ...initialConversationState,
-          id: conversationId,
-          createdAt: new Date(),
-          ...stored,
-        };
-        upsertConversation(fresh);
-      }
+      const restored = restoreFromData(conversationData?.state);
+      upsertConversation(restored ?? freshConversation(conversationId, readLastUsed()));
     }
     restoredIdRef.current = conversationId;
     lastSavedIdRef.current = conversationId;
