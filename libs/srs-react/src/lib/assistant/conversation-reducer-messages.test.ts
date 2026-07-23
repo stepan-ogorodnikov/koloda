@@ -225,6 +225,19 @@ describe("conversationReducer", () => {
       expect(state.modelParameters).toEqual({});
     });
 
+    // WHY: the preserve-vs-reset distinction between the two actions is
+    // load-bearing for the profile→model dependency (see
+    // ASSISTANT-CHAT-REFACTOR.md §E). `setAIModel` must NOT touch
+    // profileId; `setAIProfile` resets it. Pins the shared `applyAIConfig`
+    // helper against accidentally zeroing profile on a model change.
+    it("preserves the existing profileId (does not reset profile)", () => {
+      let state = reduce([
+        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+      ]);
+      state = conversationReducer(state, act({ type: "setAIModel", modelId: "m2" }));
+      expect(state.profileId).toBe("p1");
+    });
+
     it("preserves provided parameters", () => {
       const state = conversationReducer(
         initialConversationState,

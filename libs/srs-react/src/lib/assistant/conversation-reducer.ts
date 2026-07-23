@@ -344,10 +344,25 @@ type SetAIProfilePayload = {
   modelParameters?: Partial<Record<ModelParameter["type"], string>>;
 };
 
+// WHY: `setAIProfile` resets profileId + model + params; `setAIModel` writes
+// model + params while preserving the existing profileId. The two action
+// names/payloads stay separate (the preserve-vs-reset distinction is
+// load-bearing for the profile→model dependency) but share this assignment
+// helper so the `modelParameters ?? {}` defaulting logic lives in one place.
+type ApplyAIConfigOptions = {
+  profileId?: string | null;
+  modelId: string | null;
+  modelParameters?: Partial<Record<ModelParameter["type"], string>>;
+};
+
+function applyAIConfig(draft: ConversationReducerState, config: ApplyAIConfigOptions) {
+  if (config.profileId !== undefined) draft.profileId = config.profileId;
+  draft.modelId = config.modelId;
+  draft.modelParameters = config.modelParameters ?? {};
+}
+
 function setAIProfile(draft: ConversationReducerState, payload: SetAIProfilePayload) {
-  draft.profileId = payload.profileId;
-  draft.modelId = payload.modelId;
-  draft.modelParameters = payload.modelParameters ?? {};
+  applyAIConfig(draft, payload);
 }
 
 type SetAIModelPayload = {
@@ -356,8 +371,7 @@ type SetAIModelPayload = {
 };
 
 function setAIModel(draft: ConversationReducerState, payload: SetAIModelPayload) {
-  draft.modelId = payload.modelId;
-  draft.modelParameters = payload.modelParameters ?? {};
+  applyAIConfig(draft, payload);
 }
 
 type SetAIModelParameterPayload = { paramType: ModelParameter["type"]; value: string | null };
