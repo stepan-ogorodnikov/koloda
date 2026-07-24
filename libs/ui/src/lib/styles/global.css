@@ -61,6 +61,12 @@
   --color-border-switch: var(--border-switch);
   --color-border-switch-selected: var(--border-switch-selected);
   --color-bg-switch-bullet: var(--bg-switch-bullet);
+  /* slider */
+  --color-bg-slider-track: var(--bg-slider-track);
+  --color-bg-slider-track-fill: var(--bg-slider-track-fill);
+  --color-bg-slider-thumb: var(--bg-slider-thumb);
+  --color-border-slider-thumb: var(--border-slider-thumb);
+  --shadow-slider-thumb: var(--shadow-slider-thumb);
   /* checkbox */
   --color-bg-checkbox: var(--bg-checkbox);
   --color-bg-checkbox-selected: var(--bg-checkbox-selected);

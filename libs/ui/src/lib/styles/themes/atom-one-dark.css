@@ -17,6 +17,7 @@
   --border-switch-selected: oklch(from var(--bg-switch-selected) calc(l + 0.03) c h);
   --bg-checkbox-selected: oklch(from var(--color-green) calc(l - 0.34) calc(c + 0.08) h);
   --border-checkbox-selected: oklch(from var(--bg-checkbox-selected) calc(l + 0.04) c h);
+  --bg-slider-track-fill: oklch(from var(--color-green) calc(l - 0.3) calc(c + 0.1) h);
   --bg-lesson-type-blue: oklch(from var(--color-blue) calc(l - 0.32) calc(c + 0.03) h);
   --bg-lesson-type-red: oklch(from var(--color-red) calc(l - 0.3) calc(c - 0.04) h);
   --bg-lesson-type-green: oklch(from var(--color-green) calc(l - 0.36) calc(c + 0.16) h);

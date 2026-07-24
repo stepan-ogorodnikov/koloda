@@ -24,6 +24,7 @@ export * from "./lib/primitives/form/form-errors";
 export * from "./lib/primitives/form/form-layout";
 export * from "./lib/primitives/form/label";
 export * from "./lib/primitives/form/number-field";
+export * from "./lib/primitives/form/slider";
 export * from "./lib/primitives/form/switch";
 export * from "./lib/primitives/form/text-field";
 export * from "./lib/primitives/form/time-field";

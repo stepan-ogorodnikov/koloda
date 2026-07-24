@@ -46,6 +46,12 @@
   --shadow-checkbox: var(--shadow-input);
   --border-checkbox: color-mix(in oklab, var(--fg-level-1) 14%, var(--bg-level-1));
   --fg-checkbox-check: oklch(100% 0 0);
+  /* slider */
+  --bg-slider-track: color-mix(in oklab, var(--fg-level-1) 8%, var(--bg-level-1));
+  --bg-slider-track-fill: color-mix(in oklab, var(--fg-level-1) 50%, var(--bg-level-1));
+  --bg-slider-thumb: oklch(100% 0 0);
+  --border-slider-thumb: color-mix(in oklab, var(--fg-level-1) 14%, var(--bg-level-1));
+  --shadow-slider-thumb: var(--shadow-input);
   /* pickers */
   --bg-picker-item-hover: color-mix(in oklab, var(--fg-level-1) 5%, transparent);
   /* toggle group */
