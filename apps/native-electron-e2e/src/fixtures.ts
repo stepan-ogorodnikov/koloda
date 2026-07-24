@@ -19,7 +19,8 @@ type ElectronFixtures = {
 };
 
 export const test = base.extend<ElectronFixtures>({
-  userDataDir: async ({}, use) => {
+  // WHY: Playwright's fixture signature is `(parentFixtures, use) => …`, so root fixtures must destructure an empty object.
+  userDataDir: async ({}, use) => { // oxlint-disable-line no-empty-pattern
     const dir = await mkdtemp(resolve(tmpdir(), "koloda-e2e-"));
     await use(dir);
     await rm(dir, { recursive: true, force: true });
