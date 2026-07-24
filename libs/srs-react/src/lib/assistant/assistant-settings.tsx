@@ -10,7 +10,7 @@ import type { AISecrets } from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
-import { Label, NumberField, useAppForm } from "@koloda/ui";
+import { Label, Slider, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -116,10 +116,14 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
       <AssistantSettingsVariables />
       <form.Field name="temperature">
         {(field) => (
-          <NumberField minValue={0} maxValue={2} step={0.1} value={field.state.value} onChange={field.handleChange}>
+          <Slider minValue={0} maxValue={2} step={0.1} value={field.state.value} onChange={field.handleChange}>
             <Label>{_(msg`assistant.settings.temperature.label`)}</Label>
-            <NumberField.Group />
-          </NumberField>
+            <Slider.Container>
+              <Slider.Track>
+                <Slider.Thumb />
+              </Slider.Track>
+            </Slider.Container>
+          </Slider>
         )}
       </form.Field>
       <form.AppForm>
