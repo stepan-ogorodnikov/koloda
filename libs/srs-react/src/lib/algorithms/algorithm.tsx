@@ -3,7 +3,7 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm as AlgorithmType, UpdateAlgorithmValues } from "@koloda/srs";
 import { updateAlgorithmSchema as schema } from "@koloda/srs";
 import { NotFound } from "@koloda/ui";
-import { FormLayout, formLayout, Label, NumberField, Switch, TextField, useAppForm } from "@koloda/ui";
+import { FormLayout, formLayout, Label, NumberField, Slider, Switch, TextField, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -75,7 +75,7 @@ export function Algorithm({ id }: AlgorithmProps) {
       </form.Field>
       <form.Field name="content.retention">
         {(field) => (
-          <NumberField
+          <Slider
             variants={{ layout: "form" }}
             minValue={70}
             maxValue={99}
@@ -84,8 +84,12 @@ export function Algorithm({ id }: AlgorithmProps) {
             onChange={field.handleChange}
           >
             <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.retention.label`)}</Label>
-            <NumberField.Group />
-          </NumberField>
+            <Slider.Container>
+              <Slider.Track>
+                <Slider.Thumb />
+              </Slider.Track>
+            </Slider.Container>
+          </Slider>
         )}
       </form.Field>
       <FormLayout.Section>
