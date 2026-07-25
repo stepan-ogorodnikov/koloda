@@ -141,7 +141,7 @@ impl LearnAheadLimit {
         if self.1 > 59 {
             return Err(AppError::new(
                 error_codes::VALIDATION_SETTINGS_LEARNING_LEARN_AHEAD_LIMIT_MINUTES_RANGE,
-                Some(format!("Minutes out of range: {}", self.0)),
+                Some(format!("Minutes out of range: {}", self.1)),
             ));
         }
         Ok(())

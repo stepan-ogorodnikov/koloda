@@ -155,7 +155,7 @@ fn validate_scheduled_days(days: i32) -> Result<(), AppError> {
     if days < 0 {
         return Err(AppError::new(
             error_codes::VALIDATION_REVIEWS_SCHEDULED_DAYS,
-            Some(format!("Invalied scheduled days: {}", days)),
+            Some(format!("Invalid scheduled days: {}", days)),
         ));
     }
     Ok(())
