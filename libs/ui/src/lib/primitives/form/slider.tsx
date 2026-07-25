@@ -49,21 +49,7 @@ export function SliderTrack({ children, ...props }: SliderTrackProps) {
       className="relative flex flex-row items-center h-1.5 w-full rounded-full bg-slider-track"
       {...props}
     >
-      {({ state }: SliderTrackRenderProps) => {
-        const thumbPercent = state.getThumbPercent(0);
-        const span = `${thumbPercent * 100}%`;
-        const fillStyle =
-          state.orientation === "vertical"
-            ? { bottom: "0", height: span }
-            : { left: "0", width: span };
-
-        return (
-          <>
-            <div className="absolute inset-y-0 rounded-full bg-slider-track-fill" style={fillStyle} />
-            {children}
-          </>
-        );
-      }}
+      {children}
     </ReactAriaSliderTrack>
   );
 }
@@ -134,10 +120,8 @@ function SliderThumbValue({ state, index }: SliderThumbValueProps) {
   );
 }
 
-const sliderLabel = "group-disabled:fg-disabled";
-
 function SliderLabel({ children }: PropsWithChildren) {
-  return <span className={[label(), sliderLabel].join(" ")}>{children}</span>;
+  return <span className={label({ class: "group-disabled:fg-disabled" })}>{children}</span>;
 }
 
 Slider.Container = SliderContainer;

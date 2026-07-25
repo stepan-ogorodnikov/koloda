@@ -46,7 +46,6 @@
   --fg-checkbox-check: var(--color-bg);
   /* slider */
   --bg-slider-track: color-mix(in oklab, var(--fg-level-1) 12%, var(--bg-level-1));
-  --bg-slider-track-fill: color-mix(in oklab, var(--fg-level-1) 60%, var(--bg-level-1));
   --bg-slider-thumb: var(--fg-level-1);
   --border-slider-thumb: var(--border-input);
   --shadow-slider-thumb: var(--shadow-input);
