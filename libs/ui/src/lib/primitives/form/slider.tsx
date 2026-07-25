@@ -10,13 +10,27 @@ import type {
   SliderThumbProps as ReactAriaSliderThumbProps,
   SliderThumbRenderProps,
   SliderTrackProps as ReactAriaSliderTrackProps,
-  SliderTrackRenderProps,
 } from "react-aria-components";
-import { formLayoutSection, type TWVProps } from "@koloda/ui";
+import { formLayoutSection, Number, useMotionSetting } from "@koloda/ui";
+import type { TWVProps } from "@koloda/ui";
 import { tv } from "tailwind-variants";
 import type { TooltipArrowPlacement } from "../overlay/tooltip/tooltip-geometry";
 import { TooltipSurface } from "../overlay/tooltip/tooltip-surface";
 import { label } from "./label";
+
+const SLIDER_VALUE_EASING_STOPS = [
+  0, 0.005, 0.019, 0.039, 0.066, 0.096, 0.129, 0.165, 0.202, 0.24, 0.278, 0.316, 0.354, 0.39, 0.426, 0.461, 0.494,
+  0.526, 0.557, 0.586, 0.614, 0.64, 0.665, 0.689, 0.711, 0.731, 0.751, 0.769, 0.786, 0.802, 0.817, 0.831, 0.844, 0.856,
+  0.867, 0.877, 0.887, 0.896, 0.904, 0.912, 0.919, 0.925, 0.931, 0.937, 0.942, 0.947, 0.951, 0.955, 0.959, 0.962, 0.965,
+  0.968, 0.971, 0.973, 0.976, 0.978, 0.98, 0.981, 0.983, 0.984, 0.986, 0.987, 0.988, 0.989, 0.99, 0.991, 0.992, 0.992,
+  0.993, 0.994, 0.994, 0.995, 0.995, 0.996, 0.996, 0.9963, 0.9967, 0.9969, 0.9972, 0.9975, 0.9977, 0.9979, 0.9981,
+  0.9982, 0.9984, 0.9985, 0.9987, 0.9988, 0.9989, 1,
+] as const;
+
+const SLIDER_VALUE_TIMING: { duration: number; easing: string } = {
+  duration: 900,
+  easing: `linear(${SLIDER_VALUE_EASING_STOPS.join(",")})`,
+};
 
 type SliderState = SliderThumbRenderProps["state"];
 
@@ -61,10 +75,19 @@ const sliderThumbVisual = [
 
 export type SliderThumbProps = ReactAriaSliderThumbProps;
 
-export function SliderThumb({ index = 0, children, ...props }: SliderThumbProps) {
+export function SliderThumb({ index = 0, children, style, ...props }: SliderThumbProps) {
+  const canAnimate = useMotionSetting();
+  // Ease the thumb into place over the same duration/easing NumberFlow uses for the
+  // digits, so the thumb, its value bubble, and the animated number share one motion
+  // and a discrete value change lands them all on the same frame.
+  const transitionValue = canAnimate
+    ? `left ${SLIDER_VALUE_TIMING.duration}ms ${SLIDER_VALUE_TIMING.easing}, top ${SLIDER_VALUE_TIMING.duration}ms ${SLIDER_VALUE_TIMING.easing}`
+    : "none";
+
   return (
     <ReactAriaSliderThumb
       className="group absolute top-1/2 left-1/2 size-4 rounded-full focus-ring"
+      style={{ transition: transitionValue, ...style }}
       index={index}
       {...props}
     >
@@ -115,7 +138,7 @@ function SliderThumbValue({ state, index }: SliderThumbValueProps) {
         className="absolute bottom-0 left-1/2 -translate-x-1/2 size-5 opacity-0 pointer-events-none"
         ref={arrowRef}
       />
-      <span>{state.getThumbValueLabel(index)}</span>
+      <Number className="numbers-text" transformTiming={SLIDER_VALUE_TIMING} value={state.getThumbValue(index)} />
     </div>
   );
 }
