@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactNode } from "react";
-import { useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 import {
   Slider as ReactAriaSlider,
   SliderThumb as ReactAriaSliderThumb,
@@ -13,6 +13,7 @@ import type {
 } from "react-aria-components";
 import { formLayoutSection, Number, useMotionSetting } from "@koloda/ui";
 import type { TWVProps } from "@koloda/ui";
+import type { Format } from "@number-flow/react";
 import { tv } from "tailwind-variants";
 import type { TooltipArrowPlacement } from "../overlay/tooltip/tooltip-geometry";
 import { TooltipSurface } from "../overlay/tooltip/tooltip-surface";
@@ -34,6 +35,12 @@ const SLIDER_VALUE_TIMING: { duration: number; easing: string } = {
 
 type SliderState = SliderThumbRenderProps["state"];
 
+// WHY: React Aria exposes `formatOptions` only on `Slider`, not on `SliderThumb`, so
+// the thumb's value bubble would lose formatting (percent, units, decimals) when it
+// renders a NumberFlow digit instead of the formatted label. Thread it down here so
+// the bubble formats identically to the previous `getThumbValueLabel` rendering.
+const SliderFormatContext = createContext<Intl.NumberFormatOptions | undefined>(undefined);
+
 export const sliderRoot = tv({
   base: "group flex flex-col gap-2",
   variants: {
@@ -47,8 +54,12 @@ export type SliderProps<T extends number | number[]> = ReactAriaSliderProps<T> &
   PropsWithChildren &
   TWVProps<typeof sliderRoot>;
 
-export function Slider<T extends number | number[]>({ variants, ...props }: SliderProps<T>) {
-  return <ReactAriaSlider className={sliderRoot(variants)} {...props} />;
+export function Slider<T extends number | number[]>({ variants, formatOptions, ...props }: SliderProps<T>) {
+  return (
+    <SliderFormatContext.Provider value={formatOptions}>
+      <ReactAriaSlider className={sliderRoot(variants)} formatOptions={formatOptions} {...props} />
+    </SliderFormatContext.Provider>
+  );
 }
 
 export function SliderContainer({ children }: PropsWithChildren) {
@@ -130,6 +141,7 @@ function SliderThumbValue({ state, index }: SliderThumbValueProps) {
   const arrowRef = useRef<HTMLDivElement>(null);
   const orientation = state.orientation === "vertical" ? "vertical" : "horizontal";
   const placement: TooltipArrowPlacement = orientation === "vertical" ? "right" : "top";
+  const formatOptions = useContext(SliderFormatContext);
 
   return (
     <div className={sliderThumbValue} ref={tooltipRef}>
@@ -138,7 +150,15 @@ function SliderThumbValue({ state, index }: SliderThumbValueProps) {
         className="absolute bottom-0 left-1/2 -translate-x-1/2 size-5 opacity-0 pointer-events-none"
         ref={arrowRef}
       />
-      <Number className="numbers-text" transformTiming={SLIDER_VALUE_TIMING} value={state.getThumbValue(index)} />
+      <Number
+        className="numbers-text"
+        transformTiming={SLIDER_VALUE_TIMING}
+        // WHY: react-aria's `formatOptions` allows `notation: 'scientific'|'engineering'`,
+        // which NumberFlow rejects; both render identically for slider value bubbles, so the
+        // cast just satisfies the narrower `Format` type at the react-aria → NumberFlow edge.
+        format={formatOptions as Format | undefined}
+        value={state.getThumbValue(index)}
+      />
     </div>
   );
 }
