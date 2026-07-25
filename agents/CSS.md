@@ -133,6 +133,22 @@ export const tableHeadCellContent = tv({
 - **Always set `defaultVariants`.**
   Do this for any variant that has a non-empty default.
   Callers can then omit optional props without ending up with `undefined` slots in the class string.
+- **Pass extra classes via `class`, never `join`.**
+  A `tv()` recipe accepts a `class` option that merges the caller's classes with the recipe's own (respecting variant composition), instead of just appending them as a sibling. This should be the default way to add one-off classes to a recipe call. Do not concatenate with `Array.prototype.join`, and do not extract a single class string into a variable just to combine it with a recipe result.
+
+  ```tsx
+  // ❌ BAD — joined alongside the recipe
+
+  function SliderLabel({ children }: PropsWithChildren) {
+    return <span className={[label(), "group-disabled:fg-disabled"].join(" ")}>{children}</span>;
+  }
+
+  // ✅ GOOD — passed through `class`, merged by tailwind-variants
+  function SliderLabel({ children }: PropsWithChildren) {
+    return <span className={label({ class: "group-disabled:fg-disabled" })}>{children}</span>;
+  }
+  ```
+
 - **Type the props with `TWVProps`.**
   Use the `TWVProps<typeof recipe>` helper from `@koloda/ui`.
   You get fully-typed variant props without redeclaring them by hand.
