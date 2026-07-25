@@ -38,8 +38,8 @@ mod test_store {
             Self::default()
         }
 
-        pub fn into_box(self) -> Box<dyn SecretStore> {
-            Box::new(self)
+        pub fn into_arc(self) -> Arc<dyn SecretStore> {
+            Arc::new(self)
         }
     }
 
@@ -47,7 +47,7 @@ mod test_store {
 
     pub fn setup() -> Guard {
         let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let store = MockSecretStore::new().into_box();
+        let store = MockSecretStore::new().into_arc();
         set_test_secret_store(Some(store));
         Guard(guard)
     }

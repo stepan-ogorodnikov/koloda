@@ -67,7 +67,7 @@ fn runtime_store_is_isolated_by_service() {
 #[test]
 fn runtime_store_concurrent_set_and_get() {
     let service = unique_service_name("runtime-secrets-concurrent");
-    let store = Arc::new(create_secret_store(Box::leak(service.into_boxed_str())));
+    let store = create_secret_store(Box::leak(service.into_boxed_str()));
     let workers = 10;
     let start = Arc::new(Barrier::new(workers));
     let mut handles = Vec::new();

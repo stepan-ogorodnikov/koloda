@@ -1,5 +1,5 @@
 use crate::app::error::AppError;
-use std::sync::{LazyLock, RwLock};
+use std::sync::{Arc, LazyLock, RwLock};
 
 #[cfg(not(target_os = "windows"))]
 use std::collections::HashMap;
@@ -9,16 +9,11 @@ use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 const STORE_ID: &str = "koloda";
 
-struct TestStore(std::ptr::NonNull<dyn SecretStore>);
+static TEST_SECRET_STORE: LazyLock<RwLock<Option<Arc<dyn SecretStore>>>> = LazyLock::new(|| RwLock::new(None));
 
-unsafe impl Send for TestStore {}
-unsafe impl Sync for TestStore {}
-
-static TEST_SECRET_STORE: LazyLock<RwLock<Option<TestStore>>> = LazyLock::new(|| RwLock::new(None));
-
-pub fn set_test_secret_store(store: Option<Box<dyn SecretStore>>) {
+pub fn set_test_secret_store(store: Option<Arc<dyn SecretStore>>) {
     let mut guard = TEST_SECRET_STORE.write().unwrap();
-    *guard = store.map(|b| TestStore(std::ptr::NonNull::new(Box::into_raw(b)).unwrap()));
+    *guard = store;
 }
 
 pub fn clear_test_secret_store() {
@@ -26,13 +21,13 @@ pub fn clear_test_secret_store() {
     *guard = None;
 }
 
-pub fn get_secret_store() -> &'static dyn SecretStore {
+pub fn get_secret_store() -> Arc<dyn SecretStore> {
     let guard = TEST_SECRET_STORE.read().unwrap();
-    if let Some(ref ptr) = *guard {
-        return unsafe { ptr.0.as_ref() };
+    if let Some(store) = guard.as_ref() {
+        return Arc::clone(store);
     }
-    let real_store: &dyn SecretStore = &**REAL_SECRET_STORE;
-    real_store
+    drop(guard);
+    Arc::clone(&*REAL_SECRET_STORE)
 }
 
 pub trait SecretStore: Send + Sync {
@@ -329,14 +324,14 @@ mod windows_store {
 #[cfg(target_os = "windows")]
 pub use windows_store::WindowsCredentialStore;
 
-static REAL_SECRET_STORE: LazyLock<Box<dyn SecretStore>> = LazyLock::new(|| create_secret_store(STORE_ID));
+static REAL_SECRET_STORE: LazyLock<Arc<dyn SecretStore>> = LazyLock::new(|| create_secret_store(STORE_ID));
 
 #[cfg(target_os = "windows")]
-pub fn create_secret_store(service: &'static str) -> Box<dyn SecretStore> {
-    Box::new(WindowsCredentialStore::new(service))
+pub fn create_secret_store(service: &'static str) -> Arc<dyn SecretStore> {
+    Arc::new(WindowsCredentialStore::new(service))
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn create_secret_store(service: &'static str) -> Box<dyn SecretStore> {
-    Box::new(KeyringSecretStore::new(service))
+pub fn create_secret_store(service: &'static str) -> Arc<dyn SecretStore> {
+    Arc::new(KeyringSecretStore::new(service))
 }
