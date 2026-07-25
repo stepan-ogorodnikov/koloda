@@ -1,6 +1,11 @@
 use crate::app::error::AppError;
+use std::sync::{LazyLock, RwLock};
+
+#[cfg(not(target_os = "windows"))]
 use std::collections::HashMap;
-use std::sync::{LazyLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
+
+#[cfg(not(target_os = "windows"))]
+use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 const STORE_ID: &str = "koloda";
 
@@ -36,11 +41,13 @@ pub trait SecretStore: Send + Sync {
     fn remove(&self, key: &str) -> Result<(), AppError>;
 }
 
+#[cfg(not(target_os = "windows"))]
 pub struct KeyringSecretStore {
     service: &'static str,
     cache: RwLock<HashMap<String, String>>,
 }
 
+#[cfg(not(target_os = "windows"))]
 impl KeyringSecretStore {
     pub fn new(service: &'static str) -> Self {
         Self {
@@ -98,6 +105,7 @@ impl KeyringSecretStore {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
 impl SecretStore for KeyringSecretStore {
     fn get(&self, key: &str) -> Result<Option<String>, AppError> {
         {

@@ -14,7 +14,10 @@ json-patch = "4.0"
 strum = "0.27"
 strum_macros = "0.27"
 chrono = { version = "0.4", features = ["serde"] }
-keyring = "3"
 uuid = { version = "1.0", features = ["v4"] }
-dirs = "6.0.0"
+
+[target.'cfg(not(windows))'.dependencies]
+keyring = "3"
+
+[target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_Security_Credentials"] }
