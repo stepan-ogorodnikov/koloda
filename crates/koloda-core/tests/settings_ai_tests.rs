@@ -178,6 +178,54 @@ fn test_settings_name_ai_validation_valid() {
 }
 
 // ============================================================================
+// DUPLICATE PROFILE IDS
+// ============================================================================
+
+#[test]
+fn test_duplicate_profile_ids_fail() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "dup-id",
+                "title": "First",
+                "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11434" },
+                "createdAt": "2026-01-01T00:00:00Z"
+            },
+            {
+                "id": "dup-id",
+                "title": "Second",
+                "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11435" },
+                "createdAt": "2026-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Duplicate profile ids should fail validation");
+    let err = result.unwrap_err();
+    assert_eq!(
+        err.code, "validation.ai-providers.profile-id.duplicate",
+        "Wrong error code for duplicate profile id: {}",
+        err.code
+    );
+}
+
+#[test]
+fn test_duplicate_profile_ids_fail_for_input_too() {
+    let json = r#"{
+        "profiles": [
+            { "id": "x", "title": null, "createdAt": "2026-01-01T00:00:00Z" },
+            { "id": "x", "title": null, "createdAt": "2026-01-01T00:00:00Z" }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate_for_input();
+    assert!(result.is_err(), "Duplicate profile ids should fail validate_for_input");
+}
+
+// ============================================================================
 // ASSISTANT TEMPERATURE
 // ============================================================================
 
@@ -199,7 +247,11 @@ fn test_assistant_temperature_defaults_when_omitted() {
         .as_ref()
         .expect("assistant should be present")
         .temperature;
-    assert!((temp - 0.2).abs() < f64::EPSILON, "omitted temperature should default to 0.2, got {}", temp);
+    assert!(
+        (temp - 0.2).abs() < f64::EPSILON,
+        "omitted temperature should default to 0.2, got {}",
+        temp
+    );
     assert!(settings.validate().is_ok(), "defaulted temperature should validate");
 }
 
@@ -221,7 +273,11 @@ fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
         .and_then(|a| a.get("temperature"))
         .and_then(|t| t.as_f64())
         .expect("normalized assistant.temperature should be present");
-    assert!((temp - 0.2).abs() < f64::EPSILON, "normalized temperature should be explicit 0.2, got {}", temp);
+    assert!(
+        (temp - 0.2).abs() < f64::EPSILON,
+        "normalized temperature should be explicit 0.2, got {}",
+        temp
+    );
 }
 
 #[test]
@@ -245,7 +301,10 @@ fn test_assistant_temperature_below_range_fails() {
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
     assert!(result.is_err(), "Negative temperature should fail");
-    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+    assert_eq!(
+        result.unwrap_err().code,
+        "validation.assistant-settings.temperature-range"
+    );
 }
 
 #[test]
@@ -258,7 +317,10 @@ fn test_assistant_temperature_above_range_fails() {
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
     assert!(result.is_err(), "Out-of-range temperature should fail");
-    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+    assert_eq!(
+        result.unwrap_err().code,
+        "validation.assistant-settings.temperature-range"
+    );
 }
 
 #[test]
@@ -273,7 +335,10 @@ fn test_assistant_temperature_nan_value_fails_validation() {
 
     let result = settings.validate();
     assert!(result.is_err(), "NaN temperature should fail validation");
-    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+    assert_eq!(
+        result.unwrap_err().code,
+        "validation.assistant-settings.temperature-range"
+    );
 }
 
 #[test]

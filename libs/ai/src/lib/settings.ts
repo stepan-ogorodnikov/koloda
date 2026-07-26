@@ -33,6 +33,19 @@ export const aiSettingsValidation = z.object({
 
 export type AISettings = z.input<typeof aiSettingsValidation>;
 
+// WHY: Kept out of the shared zod schema so it doesn't run on every `.parse` in
+// hot paths or shift the inferred `AISettings` type, and to mirror the Rust
+// `AISettings::validate_invariants` uniqueness pass — folding it into the
+// schema via `.refine()` would regress both.
+export function findDuplicateProfileId(settings: { profiles: ReadonlyArray<{ id: string }> }): string | null {
+  const seen = new Set<string>();
+  for (const profile of settings.profiles) {
+    if (seen.has(profile.id)) return profile.id;
+    seen.add(profile.id);
+  }
+  return null;
+}
+
 export const DEFAULT_AI_SETTINGS: AISettings = aiSettingsValidation.parse({
   profiles: [],
 });

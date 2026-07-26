@@ -76,6 +76,7 @@ pub mod error_codes {
 
     pub const VALIDATION_AI_PROVIDERS_PROVIDER: &str = "validation.ai-providers.provider";
     pub const VALIDATION_AI_PROVIDERS_TITLE: &str = "validation.ai-providers.title";
+    pub const VALIDATION_AI_PROVIDERS_PROFILE_ID_DUPLICATE: &str = "validation.ai-providers.profile-id.duplicate";
     pub const VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE: &str = "validation.assistant-settings.temperature-range";
 
     pub const VALIDATION_LESSONS_RESULT_CARD_REVIEW_MISMATCH: &str = "validation.lessons.result.card-review-mismatch";

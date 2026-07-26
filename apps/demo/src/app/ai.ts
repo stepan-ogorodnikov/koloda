@@ -1,5 +1,6 @@
 import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import { aiSettingsValidation, fetchModels } from "@koloda/ai";
+import { aiSettingsValidation, fetchModels, findDuplicateProfileId } from "@koloda/ai";
+import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/srs-pgsql";
 import { getSettings, setSettings } from "@koloda/srs-pgsql";
 import { produce } from "immer";
@@ -29,6 +30,11 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     }),
   );
 
+  const duplicateId = findDuplicateProfileId(newContent);
+  if (duplicateId) {
+    throw new AppError("validation.ai-providers.profile-id.duplicate", duplicateId);
+  }
+
   await setSettings<"ai">(db, { name: "ai", content: newContent });
 }
 
@@ -45,6 +51,11 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       }
     }),
   );
+
+  const duplicateId = findDuplicateProfileId(newContent);
+  if (duplicateId) {
+    throw new AppError("validation.ai-providers.profile-id.duplicate", duplicateId);
+  }
 
   await setSettings<"ai">(db, { name: "ai", content: newContent });
 }

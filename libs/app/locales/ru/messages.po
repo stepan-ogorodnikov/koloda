@@ -310,6 +310,10 @@ msgid "unknown"
 msgstr "Произошла ошибка"
 
 #: ../../libs/app/src/lib/error.ts:50
+msgid "validation.ai-providers.profile-id.duplicate"
+msgstr "Не удалось создать уникальный идентификатор профиля"
+
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Температура должна быть от 0 до 2"
 
