@@ -9,7 +9,7 @@ fn test_ollama_validate_empty_base_url_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn test_lmstudio_validate_empty_base_url_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn test_opencode_go_validate_empty_api_key_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn test_opencode_go_validate_whitespace_api_key_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]
@@ -122,7 +122,7 @@ fn test_opencode_zen_validate_empty_api_key_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn test_opencode_zen_validate_whitespace_api_key_fails() {
 
     let result = secrets.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn test_ai_profile_validate_empty_id_fails() {
 
     let result = profile.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
 }
 
 #[test]
@@ -210,7 +210,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
 
     let result = profile.validate();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.title");
+    assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
 }
 
 #[test]
@@ -226,5 +226,5 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
 
     let result = profile.validate_for_input();
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().code, "validation.ai-providers.provider");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }

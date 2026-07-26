@@ -337,6 +337,10 @@ msgstr "API key can't be empty"
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Invalid URL"
 
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.settings-ai.providers.id"
+msgstr "Profile id is required"
+
 #: ../../libs/app/src/lib/error.ts:47
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "There are conflicting hotkeys"

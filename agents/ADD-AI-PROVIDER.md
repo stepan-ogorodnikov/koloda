@@ -67,7 +67,7 @@ AISecrets::MyProvider { api_key } => Some(api_key),
 AISecrets::MyProvider { api_key } => {
     if api_key.trim().is_empty() {
         return Err(AppError::new(
-            error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+            error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
             Some("myProvider.apiKey is required".to_string()),
         ));
     }
@@ -77,7 +77,7 @@ AISecrets::MyProvider { api_key } => {
 AISecrets::MyProvider { api_key } => {
     if !api_key.is_empty() && api_key.trim().is_empty() {
         return Err(AppError::new(
-            error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+            error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
             Some("myProvider.apiKey cannot be whitespace only".to_string()),
         ));
     }

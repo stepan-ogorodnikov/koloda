@@ -104,7 +104,7 @@ impl AISecrets {
             AISecrets::OpenRouter { api_key } => {
                 if api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("openrouter.apiKey is required".to_string()),
                     ));
                 }
@@ -112,7 +112,7 @@ impl AISecrets {
             AISecrets::Ollama { base_url, .. } => {
                 if base_url.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("ollama.baseUrl is required".to_string()),
                     ));
                 }
@@ -120,7 +120,7 @@ impl AISecrets {
             AISecrets::LmStudio { base_url, .. } => {
                 if base_url.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("lmstudio.baseUrl is required".to_string()),
                     ));
                 }
@@ -128,7 +128,7 @@ impl AISecrets {
             AISecrets::OpencodeGo { api_key } => {
                 if api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("opencodeGo.apiKey is required".to_string()),
                     ));
                 }
@@ -136,7 +136,7 @@ impl AISecrets {
             AISecrets::OpencodeZen { api_key } => {
                 if api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("opencodeZen.apiKey is required".to_string()),
                     ));
                 }
@@ -151,7 +151,7 @@ impl AISecrets {
             AISecrets::OpenRouter { api_key } => {
                 if !api_key.is_empty() && api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("openrouter.apiKey cannot be whitespace only".to_string()),
                     ));
                 }
@@ -159,7 +159,7 @@ impl AISecrets {
             AISecrets::Ollama { base_url, .. } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("ollama.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
@@ -167,7 +167,7 @@ impl AISecrets {
             AISecrets::LmStudio { base_url, .. } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("lmstudio.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
@@ -175,7 +175,7 @@ impl AISecrets {
             AISecrets::OpencodeGo { api_key } => {
                 if !api_key.is_empty() && api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("opencodeGo.apiKey cannot be whitespace only".to_string()),
                     ));
                 }
@@ -183,7 +183,7 @@ impl AISecrets {
             AISecrets::OpencodeZen { api_key } => {
                 if !api_key.is_empty() && api_key.trim().is_empty() {
                     return Err(AppError::new(
-                        error_codes::VALIDATION_AI_PROVIDERS_PROVIDER,
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
                         Some("opencodeZen.apiKey cannot be whitespace only".to_string()),
                     ));
                 }
@@ -201,12 +201,12 @@ impl AIProfile {
 
     pub fn validate_for_input(&self) -> Result<(), AppError> {
         if self.id.is_empty() {
-            return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_PROVIDER, None));
+            return Err(AppError::new(error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID, None));
         }
 
         if let Some(title) = &self.title {
             if title.len() > 128 {
-                return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_TITLE, None));
+                return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }
 
@@ -219,12 +219,12 @@ impl AIProfile {
 
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         if self.id.is_empty() {
-            return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_PROVIDER, None));
+            return Err(AppError::new(error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID, None));
         }
 
         if let Some(title) = &self.title {
             if title.len() > 128 {
-                return Err(AppError::new(error_codes::VALIDATION_AI_PROVIDERS_TITLE, None));
+                return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }
 

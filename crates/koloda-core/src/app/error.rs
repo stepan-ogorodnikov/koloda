@@ -74,8 +74,9 @@ pub mod error_codes {
     pub const VALIDATION_CARDS_PROGRESS_REPS: &str = "validation.cards-progress.reps";
     pub const VALIDATION_CARDS_PROGRESS_LAPSES: &str = "validation.cards-progress.lapses";
 
-    pub const VALIDATION_AI_PROVIDERS_PROVIDER: &str = "validation.ai-providers.provider";
-    pub const VALIDATION_AI_PROVIDERS_TITLE: &str = "validation.ai-providers.title";
+    pub const VALIDATION_SETTINGS_AI_PROVIDERS_ID: &str = "validation.settings-ai.providers.id";
+    pub const VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY: &str = "validation.settings-ai.providers.apiKey";
+    pub const VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL: &str = "validation.settings-ai.providers.baseUrl";
     pub const VALIDATION_AI_PROVIDERS_PROFILE_ID_DUPLICATE: &str = "validation.ai-providers.profile-id.duplicate";
     pub const VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE: &str = "validation.assistant-settings.temperature-range";
 

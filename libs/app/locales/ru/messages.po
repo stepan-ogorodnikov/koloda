@@ -337,6 +337,10 @@ msgstr "API key не может быть пустым"
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Некорректный URL"
 
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.settings-ai.providers.id"
+msgstr "Идентификатор профиля обязателен"
+
 #: ../../libs/app/src/lib/error.ts:47
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Есть конфликтующие комбинации клавиш"
