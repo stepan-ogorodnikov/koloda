@@ -47,6 +47,7 @@ export const ERROR_MESSAGES = {
   "validation.settings-hotkeys.duplicate-keys": msg`validation.settings-hotkeys.duplicate-keys`,
   "validation.settings-ai.providers.apiKey": msg`validation.settings-ai.providers.apiKey`,
   "validation.settings-ai.providers.baseUrl": msg`validation.settings-ai.providers.baseUrl`,
+  "validation.assistant-settings.temperature-range": msg`validation.assistant-settings.temperature-range`,
   "validation.templates.fields.too-few": msg`validation.templates.fields.too-few`,
   "validation.templates.layout.too-few": msg`validation.templates.layout.too-few`,
   "validation.templates.update-locked": msg`validation.templates.update-locked`,

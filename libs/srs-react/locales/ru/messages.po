@@ -125,8 +125,8 @@ msgstr "Сбросить до этого сообщения"
 msgid "ai.chat.message.timestamp.today {time}"
 msgstr "Сегодня в {time}"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:29
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:34
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:30
+#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:35
 msgid "ai.chat.new-conversation.label"
 msgstr "Новый диалог"
 
@@ -138,11 +138,11 @@ msgstr "У вас нет ни одного профиля ИИ"
 msgid "ai.chat.no-profiles.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:189
+#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:188
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
-#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:32
+#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:33
 msgid "ai.conversation.clone.action"
 msgstr "Клонировать"
 
@@ -166,15 +166,15 @@ msgstr "Удалить диалог"
 msgid "ai.conversation.menu.trigger"
 msgstr "Действия с диалогом"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:13
 msgid "ai.conversation.running"
 msgstr "Выполняется"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:13
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:14
 msgid "ai.conversation.unread"
 msgstr "Не прочитано"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:11
+#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
 
@@ -182,23 +182,23 @@ msgstr "Диалог без названия"
 msgid "algorithm-picker.label"
 msgstr "Алгоритм"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:135
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:139
 msgid "algorithm.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:98
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:102
 msgid "algorithm.inputs.is-fuzz-enabled.label"
 msgstr "Добавить случайный разброс"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:116
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:120
 msgid "algorithm.inputs.learning-steps.label"
 msgstr "Интервалы заучивания"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:130
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:134
 msgid "algorithm.inputs.maximum-interval.label"
 msgstr "Максимальный интервал"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:119
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:123
 msgid "algorithm.inputs.relearning-steps.label"
 msgstr "Интервалы переучивания"
 
@@ -210,7 +210,7 @@ msgstr "Коэфициент"
 msgid "algorithm.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:107
+#: ../../libs/srs-react/src/lib/algorithms/algorithm.tsx:111
 msgid "algorithm.inputs.weights.label"
 msgstr "Веса"
 
@@ -256,7 +256,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:160
+#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:97
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 
@@ -515,8 +515,8 @@ msgstr "Колода:"
 msgid "deck-picker.placeholder"
 msgstr "Не выбрана"
 
+#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:36
 #: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:37
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:38
 msgid "deck-picker.search"
 msgstr "Поиск по названию"
 

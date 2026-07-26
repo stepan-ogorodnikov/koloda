@@ -176,3 +176,111 @@ fn test_settings_name_ai_validation_valid() {
     let result = SettingsName::Ai.validate(&content);
     assert!(result.is_ok());
 }
+
+// ============================================================================
+// ASSISTANT TEMPERATURE
+// ============================================================================
+
+#[test]
+fn test_assistant_temperature_defaults_when_omitted() {
+    // Mirrors the TS schema's `.default(0.2)`: omitting `temperature` fills in
+    // 0.2 (and validates) rather than failing deserialization.
+    let json = r#"{
+        "profiles": [],
+        "assistant": {
+            "cardsPromptTemplate": null,
+            "chatPromptTemplate": null
+        }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let temp = settings
+        .assistant
+        .as_ref()
+        .expect("assistant should be present")
+        .temperature;
+    assert!((temp - 0.2).abs() < f64::EPSILON, "omitted temperature should default to 0.2, got {}", temp);
+    assert!(settings.validate().is_ok(), "defaulted temperature should validate");
+}
+
+#[test]
+fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
+    // The settings normalize path re-serializes the parsed value, so an omitted
+    // temperature should be written back as an explicit 0.2 in the store.
+    let content = serde_json::json!({
+        "profiles": [],
+        "assistant": {
+            "cardsPromptTemplate": null,
+            "chatPromptTemplate": null
+        }
+    });
+
+    let normalized = SettingsName::Ai.normalize(content).expect("normalize should succeed");
+    let temp = normalized
+        .get("assistant")
+        .and_then(|a| a.get("temperature"))
+        .and_then(|t| t.as_f64())
+        .expect("normalized assistant.temperature should be present");
+    assert!((temp - 0.2).abs() < f64::EPSILON, "normalized temperature should be explicit 0.2, got {}", temp);
+}
+
+#[test]
+fn test_assistant_temperature_within_range_ok() {
+    let json = r#"{
+        "profiles": [],
+        "assistant": { "temperature": 1.5 }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    assert!(settings.validate().is_ok(), "Temperature within range should validate");
+}
+
+#[test]
+fn test_assistant_temperature_below_range_fails() {
+    let json = r#"{
+        "profiles": [],
+        "assistant": { "temperature": -0.1 }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Negative temperature should fail");
+    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+}
+
+#[test]
+fn test_assistant_temperature_above_range_fails() {
+    let json = r#"{
+        "profiles": [],
+        "assistant": { "temperature": 5.0 }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Out-of-range temperature should fail");
+    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+}
+
+#[test]
+fn test_assistant_temperature_nan_value_fails_validation() {
+    // f64::NaN deserializes from JSON, so the validator must catch it explicitly.
+    let mut settings: AISettings = serde_json::from_str(r#"{ "profiles": [] }"#).unwrap();
+    settings.assistant = Some(koloda_core::domain::settings_ai::AssistantSettings {
+        temperature: f64::NAN,
+        cards_prompt_template: None,
+        chat_prompt_template: None,
+    });
+
+    let result = settings.validate();
+    assert!(result.is_err(), "NaN temperature should fail validation");
+    assert_eq!(result.unwrap_err().code, "validation.assistant-settings.temperature-range");
+}
+
+#[test]
+fn test_assistant_temperature_null_fails_deserialization() {
+    // Matches the TS side: `{ temperature: null }` is rejected (number expected,
+    // the default only applies when the field is omitted, not null).
+    let json = r#"{ "profiles": [], "assistant": { "temperature": null } }"#;
+    let result: Result<AISettings, _> = serde_json::from_str(json);
+    assert!(result.is_err(), "null temperature should fail to deserialize");
+}

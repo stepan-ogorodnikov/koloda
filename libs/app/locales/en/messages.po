@@ -309,7 +309,11 @@ msgstr "Toggle sidebar"
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.assistant-settings.temperature-range"
+msgstr "Temperature must be between 0 and 2"
+
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
@@ -357,18 +361,18 @@ msgstr "Hours must be between 0 and 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"

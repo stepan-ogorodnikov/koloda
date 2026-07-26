@@ -1,10 +1,24 @@
 use serde::{Deserialize, Serialize};
 
+use crate::app::error::{error_codes, AppError};
+
 pub use crate::domain::ai::{AIProfile, AISecrets};
+
+/// Accepted `assistant.temperature` range. Covers the common bounds of the
+/// supported providers (openrouter, ollama, lmstudio, opencodeGo/Zen); adjust
+/// here if a provider legitimately needs a wider range.
+const ASSISTANT_TEMPERATURE_RANGE: std::ops::RangeInclusive<f64> = 0.0..=2.0;
+
+/// Default value for `assistant.temperature`, applied by serde when the field is
+/// omitted (mirrors the TS schema's `.default(0.2)` so the two backends accept
+/// identical input). Note: an explicit `null` still fails deserialization, same
+/// as zod's `z.number()`.
+fn default_assistant_temperature() -> f64 { 0.2 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssistantSettings {
+    #[serde(default = "default_assistant_temperature")]
     pub temperature: f64,
     pub cards_prompt_template: Option<String>,
     pub chat_prompt_template: Option<String>,
@@ -29,21 +43,48 @@ pub struct AISettings {
 }
 
 impl AISettings {
-    pub fn validate(&self) -> Result<(), crate::app::error::AppError> {
+    pub fn validate(&self) -> Result<(), AppError> {
         self.validate_for_storage()
     }
 
-    pub fn validate_for_input(&self) -> Result<(), crate::app::error::AppError> {
+    pub fn validate_for_input(&self) -> Result<(), AppError> {
         for profile in &self.profiles {
             profile.validate_for_input()?;
         }
 
-        Ok(())
+        self.validate_assistant()
     }
 
-    pub fn validate_for_storage(&self) -> Result<(), crate::app::error::AppError> {
+    pub fn validate_for_storage(&self) -> Result<(), AppError> {
         for profile in &self.profiles {
             profile.validate_for_storage()?;
+        }
+
+        self.validate_assistant()
+    }
+
+    /// Validates `assistant.temperature`: must be finite and within the accepted
+    /// range. Applied in both input and storage contexts.
+    fn validate_assistant(&self) -> Result<(), AppError> {
+        if let Some(assistant) = &self.assistant {
+            let temp = assistant.temperature;
+            if !temp.is_finite() {
+                return Err(AppError::new(
+                    error_codes::VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE,
+                    Some(format!("Assistant temperature must be finite: {}", temp)),
+                ));
+            }
+            if !ASSISTANT_TEMPERATURE_RANGE.contains(&temp) {
+                return Err(AppError::new(
+                    error_codes::VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE,
+                    Some(format!(
+                        "Assistant temperature out of range ({}..={}): {}",
+                        ASSISTANT_TEMPERATURE_RANGE.start(),
+                        ASSISTANT_TEMPERATURE_RANGE.end(),
+                        temp
+                    )),
+                ));
+            }
         }
 
         Ok(())

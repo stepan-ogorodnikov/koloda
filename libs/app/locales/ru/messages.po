@@ -309,7 +309,11 @@ msgstr "Переключить боковую панель"
 msgid "unknown"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:50
+msgid "validation.assistant-settings.temperature-range"
+msgstr "Температура должна быть от 0 до 2"
+
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
@@ -357,18 +361,18 @@ msgstr "Часы должны быть от 0 до 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.templates.delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"

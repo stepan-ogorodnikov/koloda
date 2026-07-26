@@ -97,8 +97,9 @@ impl SettingsName {
                 Ok(serde_json::to_value(settings)?)
             }
             SettingsName::Ai => {
-                self.validate(&content)?;
-                Ok(content)
+                let settings: AISettings = serde_json::from_value(content)?;
+                settings.validate()?;
+                Ok(serde_json::to_value(settings)?)
             }
         }
     }

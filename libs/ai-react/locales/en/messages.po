@@ -68,7 +68,7 @@ msgstr "Failed to get a response"
 msgid "ai.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:35
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:36
 msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
@@ -93,8 +93,8 @@ msgstr "Selected AI profile is missing required data"
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Go to settings to edit the profile and add the missing data"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:60
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:63
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:61
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:64
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "Jump to latest"
 
@@ -107,47 +107,47 @@ msgstr "Settings"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:148
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:176
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:145
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:173
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:150
 #: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:153
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:156
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:98
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:97
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:85
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:147
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:172
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:84
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:144
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:169
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:118
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:115
 msgid "ai.model-picker.no-profiles.add"
 msgstr "Add profile"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:117
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:114
 msgid "ai.model-picker.no-profiles.empty"
 msgstr "No AI profiles"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:86
 msgid "ai.model-picker.not-selected"
 msgstr "Not selected"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:88
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:100
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:99
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:101
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:100
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 
