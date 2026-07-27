@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
+use crate::app::utility::{deserialize_timestamp, serialize_timestamp};
 
 pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"];
 
@@ -11,7 +12,8 @@ pub struct AIProfile {
     pub title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<AISecrets>,
-    pub created_at: String,
+    #[serde(serialize_with = "serialize_timestamp", deserialize_with = "deserialize_timestamp")]
+    pub created_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

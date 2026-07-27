@@ -1,5 +1,8 @@
 use koloda_core::domain::ai::{AIProfile, AISecrets};
 
+/// `2026-01-01T00:00:00Z` as epoch millis.
+const TEST_CREATED_AT: i64 = 1_767_225_600_000;
+
 #[test]
 fn test_ollama_validate_empty_base_url_fails() {
     let secrets = AISecrets::Ollama {
@@ -167,7 +170,7 @@ fn test_ai_profile_validate_ok_with_secrets() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: "key-123".to_string(),
         }),
-        created_at: "2026-01-01T00:00:00Z".to_string(),
+        created_at: TEST_CREATED_AT,
     };
 
     assert!(profile.validate().is_ok());
@@ -179,7 +182,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
         id: "profile-2".to_string(),
         title: None,
         secrets: None,
-        created_at: "2026-01-01T00:00:00Z".to_string(),
+        created_at: TEST_CREATED_AT,
     };
 
     assert!(profile.validate().is_ok());
@@ -191,7 +194,7 @@ fn test_ai_profile_validate_empty_id_fails() {
         id: "".to_string(),
         title: Some("Profile".to_string()),
         secrets: None,
-        created_at: "2026-01-01T00:00:00Z".to_string(),
+        created_at: TEST_CREATED_AT,
     };
 
     let result = profile.validate();
@@ -205,7 +208,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
         id: "profile-3".to_string(),
         title: Some("a".repeat(129)),
         secrets: None,
-        created_at: "2026-01-01T00:00:00Z".to_string(),
+        created_at: TEST_CREATED_AT,
     };
 
     let result = profile.validate();
@@ -221,10 +224,43 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: "".to_string(),
         }),
-        created_at: "2026-01-01T00:00:00Z".to_string(),
+        created_at: TEST_CREATED_AT,
     };
 
     let result = profile.validate_for_input();
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
+fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: None,
+        secrets: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let serialized = serde_json::to_value(&profile).expect("profile should serialize");
+    let created_at = serialized
+        .get("createdAt")
+        .and_then(|v| v.as_str())
+        .expect("createdAt should be a string");
+
+    assert!(
+        chrono::DateTime::parse_from_rfc3339(created_at).is_ok(),
+        "createdAt is not a valid RFC3339 string: {created_at}"
+    );
+}
+
+#[test]
+fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
+    let data = serde_json::json!({
+        "id": "profile-1",
+        "createdAt": "2026-01-01T00:00:00Z"
+    });
+
+    let profile: AIProfile =
+        serde_json::from_value(data).expect("ISO string for createdAt should deserialize");
+    assert_eq!(profile.created_at, TEST_CREATED_AT);
 }

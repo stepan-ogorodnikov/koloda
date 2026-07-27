@@ -1,10 +1,9 @@
-use chrono::Utc;
 use serde_json::Value;
 
 use crate::app::db::Database;
 use crate::app::error::AppError;
 use crate::app::secrets::get_secret_store;
-use crate::app::utility::generate_uuid;
+use crate::app::utility::{generate_uuid, get_current_timestamp};
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_ai::{AIProfile, AISecrets, AISettings};
 
@@ -102,7 +101,7 @@ pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
 
 pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISecrets>) -> Result<AIProfile, AppError> {
     let mut settings = get_ai_settings_or_default(db)?;
-    let now = Utc::now().to_rfc3339();
+    let now = get_current_timestamp()?;
     let profile_id = generate_uuid();
 
     if let Some(ref secrets) = secrets {
