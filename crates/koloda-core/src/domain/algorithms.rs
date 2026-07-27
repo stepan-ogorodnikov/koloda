@@ -4,9 +4,7 @@ use serde_json::Value;
 use crate::app::error::{error_codes, AppError};
 use crate::app::utility::{serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
-
-const TITLE_MIN_LENGTH: usize = 1;
-const TITLE_MAX_LENGTH: usize = 255;
+use crate::domain::common::validate_title;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -74,24 +72,6 @@ impl UpdateAlgorithmValues {
         validate_title(&self.title)?;
         validate_algorithm_content(&self.content)
     }
-}
-
-fn validate_title(title: &str) -> Result<(), AppError> {
-    if title.len() < TITLE_MIN_LENGTH {
-        return Err(AppError::new(
-            error_codes::VALIDATION_COMMON_TITLE_TOO_SHORT,
-            Some(format!("Min length: {}", TITLE_MIN_LENGTH)),
-        ));
-    }
-
-    if title.len() > TITLE_MAX_LENGTH {
-        return Err(AppError::new(
-            error_codes::VALIDATION_COMMON_TITLE_TOO_LONG,
-            Some(format!("Max length: {}", TITLE_MAX_LENGTH)),
-        ));
-    }
-
-    Ok(())
 }
 
 fn validate_algorithm_content(content: &Value) -> Result<(), AppError> {

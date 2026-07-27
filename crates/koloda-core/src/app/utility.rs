@@ -1,9 +1,12 @@
 use serde::{de::Visitor, Deserializer, Serializer};
 
-pub fn get_current_timestamp() -> anyhow::Result<i64> {
-    Ok(std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)?
-        .as_millis() as i64)
+use crate::app::error::{error_codes, AppError};
+
+pub fn get_current_timestamp() -> Result<i64, AppError> {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis() as i64)
+        .map_err(|e| AppError::new(error_codes::UNKNOWN, Some(format!("System clock error: {}", e))))
 }
 
 pub fn generate_uuid() -> String {
@@ -37,24 +40,22 @@ where
     serializer.serialize_str(&datetime.to_rfc3339())
 }
 
-fn parse_timestamp<E: serde::de::Error>(value: &str) -> Result<i64, E> {
+fn parse_iso_timestamp(value: &str) -> Result<i64, String> {
     if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(value) {
         return Ok(dt.timestamp_millis());
     }
     if let Ok(dt) = chrono::DateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.fZ") {
         return Ok(dt.timestamp_millis());
     }
-    Err(serde::de::Error::custom(format!("Invalid date string: {}", value)))
+    Err(format!("Invalid date string: {}", value))
 }
 
-pub fn parse_iso_to_millis(value: &str) -> anyhow::Result<i64> {
-    if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(value) {
-        return Ok(dt.timestamp_millis());
-    }
-    if let Ok(dt) = chrono::DateTime::parse_from_str(value, "%Y-%m-%dT%H:%M:%S%.fZ") {
-        return Ok(dt.timestamp_millis());
-    }
-    anyhow::bail!("Invalid date string: {}", value)
+fn parse_timestamp<E: serde::de::Error>(value: &str) -> Result<i64, E> {
+    parse_iso_timestamp(value).map_err(serde::de::Error::custom)
+}
+
+pub fn parse_iso_to_millis(value: &str) -> Result<i64, AppError> {
+    parse_iso_timestamp(value).map_err(|msg| AppError::new(error_codes::UNKNOWN, Some(msg)))
 }
 
 fn visit_map_timestamp<'de, M>(mut map: M) -> Result<i64, M::Error>
