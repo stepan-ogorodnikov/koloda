@@ -67,6 +67,63 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
 }
 
 #[test]
+fn add_cards_supports_mixed_templates_in_one_batch() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id_a = add_template(&db, "Basic");
+    let template_id_b = add_template(&db, "Cloze");
+    let deck_id_a = add_deck(&db, algorithm_id, template_id_a, "Deck A");
+    let deck_id_b = add_deck(&db, algorithm_id, template_id_b, "Deck B");
+
+    let result = cards::add_cards(
+        &db,
+        vec![
+            InsertCardData {
+                deck_id: deck_id_a,
+                template_id: template_id_a,
+                content: common::card_content("first", "answer"),
+                state: None,
+                due_at: None,
+                stability: None,
+                difficulty: None,
+                scheduled_days: None,
+                learning_steps: None,
+                reps: None,
+                lapses: None,
+                last_reviewed_at: None,
+            },
+            InsertCardData {
+                deck_id: deck_id_b,
+                template_id: template_id_b,
+                content: common::card_content("second", "answer"),
+                state: None,
+                due_at: None,
+                stability: None,
+                difficulty: None,
+                scheduled_days: None,
+                learning_steps: None,
+                reps: None,
+                lapses: None,
+                last_reviewed_at: None,
+            },
+        ],
+    );
+
+    assert!(result.is_ok());
+    let results = result.unwrap();
+    assert_eq!(results.len(), 2);
+    assert!(results[0].error.is_none(), "first card (template A) should succeed");
+    assert!(results[1].error.is_none(), "second card (template B) should succeed");
+
+    let cards_a = cards::get_cards(&db, deck_id_a).expect("cards query should succeed");
+    let cards_b = cards::get_cards(&db, deck_id_b).expect("cards query should succeed");
+    assert_eq!(cards_a.len(), 1);
+    assert_eq!(cards_b.len(), 1);
+    assert_eq!(cards_a[0].template_id, template_id_a);
+    assert_eq!(cards_b[0].template_id, template_id_b);
+}
+
+#[test]
 fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

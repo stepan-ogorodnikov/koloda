@@ -2,7 +2,15 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addCard, addCards, getCards, resetCardProgress } from "./cards";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
-import { createCardContent, createTestDb, insertReview, seedDeckContext } from "../test/test-helpers";
+import {
+  createCardContent,
+  createTestDb,
+  insertReview,
+  seedAlgorithm,
+  seedDeck,
+  seedDeckContext,
+  seedTemplate,
+} from "../test/test-helpers";
 
 describe("cards repository integration", () => {
   let testDb: TestDb;
@@ -63,6 +71,30 @@ describe("cards repository integration", () => {
     expect(result[1]?.error).toContain("validation.cards.content.field-empty");
     expect(storedCards).toHaveLength(1);
     expect(storedCards[0]?.content["1"]?.text).toBe("Front value");
+  });
+
+  it("supports mixed templates in one batch, each validated against its own template", async () => {
+    const { db } = testDb;
+    const algorithm = await seedAlgorithm(db);
+    const templateA = await seedTemplate(db);
+    const templateB = await seedTemplate(db, { title: "Cloze" });
+    const deckA = await seedDeck(db, { algorithmId: algorithm.id, templateId: templateA.id });
+    const deckB = await seedDeck(db, { algorithmId: algorithm.id, templateId: templateB.id });
+
+    const result = await addCards(db, [
+      { deckId: deckA.id, templateId: templateA.id, content: createCardContent(templateA) },
+      { deckId: deckB.id, templateId: templateB.id, content: createCardContent(templateB) },
+    ]);
+    const cardsA = await getCards(db, { deckId: deckA.id });
+    const cardsB = await getCards(db, { deckId: deckB.id });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({});
+    expect(result[1]).toEqual({});
+    expect(cardsA).toHaveLength(1);
+    expect(cardsB).toHaveLength(1);
+    expect(cardsA[0]?.templateId).toBe(templateA.id);
+    expect(cardsB[0]?.templateId).toBe(templateB.id);
   });
 
   it("clears reviews and resets scheduling fields when card progress is reset", async () => {

@@ -8,7 +8,7 @@ import type {
   UpdateTemplateData,
 } from "@koloda/srs";
 import { insertTemplateSchema, updateTemplateSchema, validateLockedTemplateFields } from "@koloda/srs";
-import { count, eq, getTableColumns, gt } from "drizzle-orm";
+import { count, eq, getTableColumns, gt, inArray } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
 import { cards, decks, templates } from "./schema";
@@ -47,6 +47,30 @@ export async function getTemplate(db: DB, id: Template["id"]) {
 
     return (result[0] as Template) || null;
   });
+}
+
+/**
+ * Fetches multiple templates by id in a single query (per-call cache)
+ * @param db - The database instance
+ * @param ids - The template ids to fetch
+ * @returns Map of template id → Template
+ */
+export async function getTemplatesByIds(db: DB, ids: Template["id"][]): Promise<Map<Template["id"], Template>> {
+  if (ids.length === 0) return new Map();
+
+  const result = await throwKnownError("db.get", async () => {
+    return db
+      .select({
+        ...getTableColumns(templates),
+        isLocked: gt(count(cards.id), 0),
+      })
+      .from(templates)
+      .leftJoin(cards, eq(templates.id, cards.templateId))
+      .where(inArray(templates.id, ids))
+      .groupBy(...Object.values(getTableColumns(templates)));
+  });
+
+  return new Map(result.map((t) => [(t as Template).id, t as Template]));
 }
 
 /**

@@ -9,7 +9,9 @@ use crate::domain::cards::{
     Card, CardContent, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData,
 };
 use crate::domain::templates::Template;
-use crate::repo::templates::get_template;
+use std::collections::HashMap;
+
+use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
     let content_str: String = row.get(3)?;
@@ -122,21 +124,32 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
         return Ok(Vec::new());
     }
 
-    let template_id = data[0].template_id;
-    let template = get_template(db, template_id)?.ok_or_else(|| {
-        AppError::new(
-            error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
-            Some(format!("Template id: {}", template_id)),
-        )
-    })?;
+    let distinct_ids: Vec<i64> = {
+        let mut ids: Vec<i64> = data.iter().map(|c| c.template_id).collect();
+        ids.sort_unstable();
+        ids.dedup();
+        ids
+    };
+    let templates: HashMap<i64, Template> = get_templates_by_ids(db, &distinct_ids)?;
 
     let mut results = Vec::with_capacity(data.len());
 
     for card_data in data.into_iter() {
-        match insert_card_data(db, &card_data, &template) {
-            Ok(_) => results.push(AddCardsItemResult { error: None }),
-            Err(e) => results.push(AddCardsItemResult {
-                error: Some(format!("{}", e)),
+        match templates.get(&card_data.template_id) {
+            Some(template) => match insert_card_data(db, &card_data, template) {
+                Ok(_) => results.push(AddCardsItemResult { error: None }),
+                Err(e) => results.push(AddCardsItemResult {
+                    error: Some(format!("{}", e)),
+                }),
+            },
+            None => results.push(AddCardsItemResult {
+                error: Some(format!(
+                    "{}",
+                    AppError::new(
+                        error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
+                        Some(format!("Template id: {}", card_data.template_id)),
+                    )
+                )),
             }),
         }
     }

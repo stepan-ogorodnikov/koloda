@@ -14,7 +14,7 @@ import { eq, inArray } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { cards, reviews } from "./schema";
-import { getTemplate } from "./templates";
+import { getTemplate, getTemplatesByIds } from "./templates";
 
 /**
  * Retrieves all cards from a specific deck
@@ -66,22 +66,27 @@ export async function addCard(db: DB, data: InsertCardData) {
 /**
  * Adds multiple cards to the database in a batch
  * @param db - The database instance
- * @param dataArray - Array of card data to insert
- * @returns Array of created card objects
+ * @param data - Array of card data to insert
+ * @returns One result entry per input card (`{}` on success, `{ error }` on failure)
  */
 export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCardsResponse> {
   if (data.length === 0) return [];
 
-  const templateId = data[0].templateId;
-  const template = await getTemplate(db, templateId);
-  if (!template) throw new AppError("not-found.cards.add.template");
-  const schema = getInsertCardSchema(template);
+  const distinctIds = [...new Set(data.map((c) => c.templateId))];
+  const templates = await getTemplatesByIds(db, distinctIds);
 
   const results: InsertCardsResponse = [];
 
   for (let i = 0; i < data.length; i++) {
+    const card = data[i];
+    const template = templates.get(card.templateId);
+    if (!template) {
+      results.push({ error: new AppError("not-found.cards.add.template", `Template id: ${card.templateId}`).message });
+      continue;
+    }
     try {
-      const validated = schema.parse(data[i]);
+      const schema = getInsertCardSchema(template);
+      const validated = schema.parse(card);
       await db.insert(cards).values(validated).returning();
       results.push({});
     } catch (e) {

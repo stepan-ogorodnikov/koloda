@@ -84,6 +84,42 @@ pub fn get_template(db: &Database, id: i64) -> Result<Option<Template>, AppError
     })
 }
 
+pub fn get_templates_by_ids(db: &Database, ids: &[i64]) -> Result<std::collections::HashMap<i64, Template>, AppError> {
+    if ids.is_empty() {
+        return Ok(std::collections::HashMap::new());
+    }
+
+    let placeholders: Vec<String> = ids.iter().enumerate().map(|(i, _)| format!("?{}", i + 1)).collect();
+    let sql = format!(
+        r#"
+        SELECT
+            t.id,
+            t.title,
+            t.content,
+            t.created_at,
+            t.updated_at,
+            EXISTS(
+                SELECT 1 FROM cards c
+                WHERE c.template_id = t.id
+                LIMIT 1
+            ) as is_locked
+        FROM templates t
+        WHERE t.id IN ({})
+        "#,
+        placeholders.join(", ")
+    );
+
+    db.with_conn(|conn| {
+        let params: Vec<&dyn rusqlite::ToSql> = ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+        let mut stmt = conn.prepare(&sql)?;
+        let templates = stmt
+            .query_map(params.as_slice(), get_template_row)?
+            .collect::<Result<Vec<_>, _>>()?;
+        let map = templates.into_iter().map(|t| (t.id, t)).collect();
+        Ok(map)
+    })
+}
+
 pub fn add_template(db: &Database, data: InsertTemplateData) -> Result<Template, AppError> {
     data.validate()?;
     let now = get_current_timestamp()?;
