@@ -4,9 +4,8 @@ use crate::app::db::Database;
 use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::Card;
-use crate::domain::decks::Deck;
 use crate::domain::lessons::{
-    GetLessonDataParams, GetLessonsParams, Lesson, LessonData, LessonFilters, LessonResultData, LessonTemplate,
+    GetLessonDataParams, GetLessonsParams, Lesson, LessonData, LessonResultData, LessonTemplate,
     LessonTemplateLayoutItem,
 };
 use crate::repo::cards::get_card_row;
@@ -24,7 +23,13 @@ fn get_lesson_row(row: &Row) -> Result<Lesson, rusqlite::Error> {
 
 pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson>, AppError> {
     db.with_conn(|conn| {
-        let filters = get_lesson_filters_sql("d.id", params.filters.as_ref());
+        let deck_ids = params
+            .filters
+            .as_ref()
+            .and_then(|f| f.deck_ids.as_deref())
+            .filter(|ids| !ids.is_empty());
+        let mut next_param = 1;
+        let (filters, filter_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param);
         let due_at = params.due_at;
 
         let query = format!(
@@ -54,8 +59,14 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson
             due_at, due_at, filters
         );
 
+        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params
+            .iter()
+            .map(|id| id as &dyn rusqlite::ToSql)
+            .collect();
         let mut stmt = conn.prepare(&query)?;
-        let lessons = stmt.query_map([], get_lesson_row)?.collect::<Result<Vec<_>, _>>()?;
+        let lessons = stmt
+            .query_map(sql_params.as_slice(), get_lesson_row)?
+            .collect::<Result<Vec<_>, _>>()?;
 
         Ok(lessons)
     })
@@ -63,7 +74,14 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson
 
 pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<Vec<Card>, AppError> {
     db.with_conn(|conn| {
-        let filters = get_lesson_filters_sql("deck_id", Some(&params.filters));
+        let deck_ids = params.filters.deck_ids.as_deref().filter(|ids| !ids.is_empty());
+        let mut next_param = 1;
+        let (filters_untouched, mut filter_params) =
+            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
+        let (filters_learn, learn_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
+        let (filters_review, review_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
+        filter_params.extend(learn_params);
+        filter_params.extend(review_params);
 
         let query = format!(
             r#"
@@ -101,22 +119,57 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                 LIMIT {}
             )
             "#,
-            filters,
+            filters_untouched,
             params.amounts.untouched,
             params.due_at,
-            filters,
+            filters_learn,
             params.amounts.learn,
             params.due_at,
-            filters,
+            filters_review,
             params.amounts.review
         );
 
+        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params
+            .iter()
+            .map(|id| id as &dyn rusqlite::ToSql)
+            .collect();
         let mut stmt = conn.prepare(&query)?;
 
-        let cards = stmt.query_map([], get_card_row)?.collect::<Result<Vec<_>, _>>()?;
+        let cards = stmt
+            .query_map(sql_params.as_slice(), get_card_row)?
+            .collect::<Result<Vec<_>, _>>()?;
 
         Ok(cards)
     })
+}
+
+fn unique_ids_in_order(ids: impl IntoIterator<Item = i64>) -> Vec<i64> {
+    let mut seen = std::collections::HashSet::new();
+    ids.into_iter().filter(|id| seen.insert(*id)).collect()
+}
+
+fn template_to_lesson_template(t: crate::domain::templates::Template) -> LessonTemplate {
+    let layout: Vec<LessonTemplateLayoutItem> = t
+        .content
+        .layout
+        .iter()
+        .map(|item| {
+            let field = t.content.fields.iter().find(|f| f.id == item.field).cloned();
+            LessonTemplateLayoutItem {
+                field,
+                operation: item.operation.clone(),
+                field_id: item.field,
+            }
+        })
+        .collect();
+    LessonTemplate {
+        id: t.id,
+        title: t.title,
+        fields: t.content.fields,
+        layout,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+    }
 }
 
 pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Option<LessonData>, AppError> {
@@ -126,49 +179,29 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
         return Ok(None);
     }
 
-    let deck_ids: Vec<i64> = cards.iter().map(|c| c.deck_id).collect();
-    let unique_deck_ids: Vec<i64> = deck_ids
-        .into_iter()
-        .collect::<std::collections::HashSet<_>>()
-        .into_iter()
+    let unique_deck_ids: Vec<i64> = unique_ids_in_order(cards.iter().map(|c| c.deck_id));
+
+    let lesson_decks = crate::repo::decks::get_decks_by_ids(db, &unique_deck_ids)?;
+
+    let template_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.template_id));
+    let templates_by_id = crate::repo::templates::get_templates_by_ids(db, &template_ids)?;
+    let lesson_templates: Vec<LessonTemplate> = template_ids
+        .iter()
+        .filter_map(|id| templates_by_id.get(id).cloned())
+        .map(template_to_lesson_template)
         .collect();
 
-    let decks = crate::repo::decks::get_decks(db)?;
-    let lesson_decks: Vec<Deck> = decks.into_iter().filter(|d| unique_deck_ids.contains(&d.id)).collect();
-
-    let templates = crate::repo::templates::get_templates(db)?;
-    let lesson_templates: Vec<LessonTemplate> = templates
-        .into_iter()
-        .filter(|t| lesson_decks.iter().any(|d| d.template_id == t.id))
-        .map(|t| {
-            let layout: Vec<LessonTemplateLayoutItem> = t
-                .content
-                .layout
-                .iter()
-                .map(|item| {
-                    let field = t.content.fields.iter().find(|f| f.id == item.field).cloned();
-                    LessonTemplateLayoutItem {
-                        field,
-                        operation: item.operation.clone(),
-                        field_id: item.field,
-                    }
-                })
-                .collect();
-            LessonTemplate {
-                id: t.id,
-                title: t.title,
-                fields: t.content.fields,
-                layout,
-                created_at: t.created_at,
-                updated_at: t.updated_at,
-            }
-        })
-        .collect();
-
-    let algorithms = crate::repo::algorithms::get_algorithms(db)?;
-    let lesson_algorithms = algorithms
-        .into_iter()
-        .filter(|a| lesson_decks.iter().any(|d| d.algorithm_id == a.id))
+    let algorithm_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.algorithm_id));
+    let algorithms_by_id: std::collections::HashMap<i64, _> = crate::repo::algorithms::get_algorithms_by_ids(
+        db,
+        &algorithm_ids,
+    )?
+    .into_iter()
+    .map(|a| (a.id, a))
+    .collect();
+    let lesson_algorithms: Vec<_> = algorithm_ids
+        .iter()
+        .filter_map(|id| algorithms_by_id.get(id).cloned())
         .collect();
 
     Ok(Some(LessonData {
@@ -232,11 +265,22 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
     })
 }
 
-fn get_lesson_filters_sql(column: &str, filters: Option<&LessonFilters>) -> String {
-    if let Some(deck_ids) = filters.and_then(|f| f.deck_ids.as_ref()).filter(|ids| !ids.is_empty()) {
-        let ids_str: Vec<String> = deck_ids.iter().map(|id| id.to_string()).collect();
-        format!(" AND {} IN ({})", column, ids_str.join(", "))
-    } else {
-        String::new()
-    }
+fn lesson_deck_filter_sql(column: &str, deck_ids: Option<&[i64]>, next_param: &mut i32) -> (String, Vec<i64>) {
+    let Some(ids) = deck_ids.filter(|ids| !ids.is_empty()) else {
+        return (String::new(), Vec::new());
+    };
+
+    let placeholders: Vec<String> = ids
+        .iter()
+        .map(|_| {
+            let placeholder = format!("?{}", *next_param);
+            *next_param += 1;
+            placeholder
+        })
+        .collect();
+
+    (
+        format!(" AND {} IN ({})", column, placeholders.join(", ")),
+        ids.to_vec(),
+    )
 }

@@ -46,6 +46,33 @@ pub fn get_algorithms(db: &Database) -> Result<Vec<Algorithm>, AppError> {
     })
 }
 
+pub fn get_algorithms_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Algorithm>, AppError> {
+    if ids.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let placeholders: Vec<String> = ids.iter().enumerate().map(|(i, _)| format!("?{}", i + 1)).collect();
+    let sql = format!(
+        r#"
+        SELECT id, title, content, created_at, updated_at
+        FROM algorithms
+        WHERE id IN ({})
+        ORDER BY created_at
+        "#,
+        placeholders.join(", ")
+    );
+
+    db.with_conn(|conn| {
+        let params: Vec<&dyn rusqlite::ToSql> = ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+        let mut stmt = conn.prepare(&sql)?;
+        let algorithms = stmt
+            .query_map(params.as_slice(), get_algorithm_row)?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(algorithms)
+    })
+}
+
 pub fn get_algorithm(db: &Database, id: i64) -> Result<Option<Algorithm>, AppError> {
     db.with_conn(|conn| {
         conn.query_row(

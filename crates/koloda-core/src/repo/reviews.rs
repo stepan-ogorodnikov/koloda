@@ -49,6 +49,10 @@ pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, A
 
 pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result<ReviewTotals, AppError> {
     db.with_conn(|conn| {
+        // WHY: The outer WHERE already restricts rows to the learning-day window `[from, to)`.
+        // `untouched` only needs `state = 0` inside its FILTER because that window applies
+        // to every bucket. The extra `created_at < ?2` on learn/review/total is redundant
+        // with the outer bound but documents per-bucket intent.
         let result = conn.query_row(
             r#"
             SELECT

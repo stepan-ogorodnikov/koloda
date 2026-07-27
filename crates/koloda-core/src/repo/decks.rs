@@ -32,6 +32,33 @@ pub fn get_decks(db: &Database) -> Result<Vec<Deck>, AppError> {
     })
 }
 
+pub fn get_decks_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Deck>, AppError> {
+    if ids.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let placeholders: Vec<String> = ids.iter().enumerate().map(|(i, _)| format!("?{}", i + 1)).collect();
+    let sql = format!(
+        r#"
+        SELECT id, title, algorithm_id, template_id, created_at, updated_at
+        FROM decks
+        WHERE id IN ({})
+        ORDER BY created_at
+        "#,
+        placeholders.join(", ")
+    );
+
+    db.with_conn(|conn| {
+        let params: Vec<&dyn rusqlite::ToSql> = ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+        let mut stmt = conn.prepare(&sql)?;
+        let decks = stmt
+            .query_map(params.as_slice(), get_deck_row)?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(decks)
+    })
+}
+
 pub fn get_deck(db: &Database, id: i64) -> Result<Option<Deck>, AppError> {
     db.with_conn(|conn| {
         conn.query_row(
