@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::app::error::{error_codes, AppError};
 
 pub const LEARNING_STEP_UNITS: &[&str] = &["s", "m", "h", "d"];
+pub const FSRS6_WEIGHT_COUNT: usize = 21;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,9 +65,8 @@ impl AlgorithmFSRS {
             ));
         }
 
-        // Weights: FSRS-6 format (21 items)
         let weight_parts: Vec<&str> = self.weights.split(',').collect();
-        if weight_parts.len() != 21 {
+        if weight_parts.len() != FSRS6_WEIGHT_COUNT {
             return Err(AppError::new(error_codes::VALIDATION_ALGORITHM_FSRS_WEIGHTS, None));
         }
 

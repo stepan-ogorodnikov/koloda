@@ -97,6 +97,7 @@ impl AISecrets {
         }
     }
 
+    // WHY: `validate` on secrets is input-strict (full values). Do not retarget to storage rules.
     pub fn validate(&self) -> Result<(), AppError> {
         self.validate_for_input()
     }
@@ -197,6 +198,7 @@ impl AISecrets {
 }
 
 impl AIProfile {
+    // WHY: `validate` on profiles is storage-lenient (redacted OK). Do not retarget to input rules.
     pub fn validate(&self) -> Result<(), AppError> {
         self.validate_for_storage()
     }

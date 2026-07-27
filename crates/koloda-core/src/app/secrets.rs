@@ -37,6 +37,8 @@ pub trait SecretStore: Send + Sync {
 }
 
 #[cfg(not(target_os = "windows"))]
+// INVARIANT: per-process read-through cache; populated on first `get` and updated on
+// `set`/`remove` only. External keyring changes are not observed until process restart.
 pub struct KeyringSecretStore {
     service: &'static str,
     cache: RwLock<HashMap<String, String>>,
@@ -149,6 +151,8 @@ mod windows_store {
 
     const ERROR_NOT_FOUND: i32 = 1168;
 
+    // INVARIANT: per-process read-through cache; populated on first `get` and updated on
+    // `set`/`remove` only. External credential changes are not observed until process restart.
     pub struct WindowsCredentialStore {
         service: &'static str,
         cache: RwLock<HashMap<String, String>>,

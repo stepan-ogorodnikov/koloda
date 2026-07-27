@@ -60,13 +60,22 @@ fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
     };
 
     let mut learning_settings = data.settings.learning;
-    if let Some(obj) = learning_settings.as_object_mut() {
-        let defaults = obj.entry("defaults").or_insert_with(|| serde_json::json!({}));
-        if let Some(defaults_obj) = defaults.as_object_mut() {
-            defaults_obj.insert("algorithm".to_string(), serde_json::json!(algorithm_id));
-            defaults_obj.insert("template".to_string(), serde_json::json!(template_id));
-        }
-    }
+    let Some(learning_obj) = learning_settings.as_object_mut() else {
+        return Err(AppError::new(
+            error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
+            Some("learning settings must be a JSON object".to_string()),
+        ));
+    };
+
+    let defaults = learning_obj.entry("defaults").or_insert_with(|| serde_json::json!({}));
+    let Some(defaults_obj) = defaults.as_object_mut() else {
+        return Err(AppError::new(
+            error_codes::VALIDATION_SEED_LEARNING_DEFAULTS,
+            Some("learning.defaults must be a JSON object".to_string()),
+        ));
+    };
+    defaults_obj.insert("algorithm".to_string(), serde_json::json!(algorithm_id));
+    defaults_obj.insert("template".to_string(), serde_json::json!(template_id));
 
     set_settings(db, SettingsName::Interface, data.settings.interface)?;
     set_settings(db, SettingsName::Learning, learning_settings)?;

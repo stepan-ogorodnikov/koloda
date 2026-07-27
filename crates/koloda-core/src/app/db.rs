@@ -10,6 +10,8 @@ use crate::migrations;
 pub const MIGRATIONS_TABLE: &str = "_migrations";
 
 #[derive(Clone)]
+// INVARIANT: single SQLite connection — acceptable for a single-user desktop app.
+// `with_conn` / `with_transaction` serialize all access; long reads block writes.
 pub struct Database {
     conn: Arc<Mutex<Connection>>,
 }

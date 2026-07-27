@@ -81,6 +81,9 @@ pub mod error_codes {
     pub const VALIDATION_ASSISTANT_SETTINGS_TEMPERATURE_RANGE: &str = "validation.assistant-settings.temperature-range";
 
     pub const VALIDATION_LESSONS_RESULT_CARD_REVIEW_MISMATCH: &str = "validation.lessons.result.card-review-mismatch";
+
+    pub const VALIDATION_SEED_LEARNING_SETTINGS: &str = "validation.seed.learning-settings";
+    pub const VALIDATION_SEED_LEARNING_DEFAULTS: &str = "validation.seed.learning-defaults";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,15 +114,6 @@ impl From<std::io::Error> for AppError {
         Self {
             code: error_codes::UNKNOWN.to_string(),
             details: Some(format!("IO error: {:?}", err)),
-        }
-    }
-}
-
-impl From<anyhow::Error> for AppError {
-    fn from(err: anyhow::Error) -> Self {
-        Self {
-            code: error_codes::UNKNOWN.to_string(),
-            details: Some(err.to_string()),
         }
     }
 }
