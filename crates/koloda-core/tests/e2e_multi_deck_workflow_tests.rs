@@ -98,8 +98,7 @@ fn e2e_multi_deck_workflow() {
     )
     .expect("should get all lessons");
 
-    let total = all_lessons.iter().find(|l| l.id.is_none()).expect("total should exist");
-    assert_eq!(total.total, 2, "should have 2 total cards");
+    assert_eq!(all_lessons.total.total, 2, "should have 2 total cards");
 
     let deck1_lessons = lessons::get_lessons(
         &db,
@@ -113,8 +112,9 @@ fn e2e_multi_deck_workflow() {
     .expect("should get filtered lessons");
 
     let deck1_row = deck1_lessons
+        .decks
         .iter()
-        .find(|l| l.id == Some(deck1.id))
+        .find(|l| l.id == deck1.id)
         .expect("deck1 row should exist");
     assert_eq!(deck1_row.total, 1);
 }

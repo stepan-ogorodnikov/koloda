@@ -4,11 +4,12 @@ import type {
   Algorithm,
   Card,
   Deck,
-  Lesson,
   LessonAmounts,
   LessonData,
+  LessonDeck,
   LessonFilters,
   LessonResultData,
+  LessonsResult,
   Review,
   Template,
   TemplateField,
@@ -21,14 +22,26 @@ import type { DB } from "./db";
 import { getDecks } from "./decks";
 import { cards, decks, reviews } from "./schema";
 
+function sumLessonAmounts(decks: LessonDeck[]): LessonAmounts {
+  return decks.reduce<LessonAmounts>(
+    (total, deck) => ({
+      untouched: total.untouched + Number(deck.untouched),
+      learn: total.learn + Number(deck.learn),
+      review: total.review + Number(deck.review),
+      total: total.total + Number(deck.total),
+    }),
+    { untouched: 0, learn: 0, review: 0, total: 0 },
+  );
+}
+
 /**
  * Retrieves lesson card counts ready to learn by type (untouched, learn, review, total) for decks
  * @param db - The database instance
  * @param dueAt - The timestamp to check card due status against
  * @param filters - Optional filters to apply to the query
- * @returns Array of objects with counts per deck where the first row is sum of the rest of the rows
+ * @returns Totals across all decks plus per-deck counts
  */
-export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}) {
+export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}): Promise<LessonsResult> {
   return throwKnownError("db.get", async () => {
     const filtersSQL = filters.deckIds?.length
       ? sql`WHERE d.id IN (${sql.join(
@@ -53,16 +66,15 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
       SELECT id, title, untouched, learn, review,
              untouched + learn + review AS total
       FROM per_deck
-
-      UNION ALL
-
-      SELECT NULL, NULL, SUM(untouched), SUM(learn), SUM(review),
-             SUM(untouched) + SUM(learn) + SUM(review)
-      FROM per_deck
-      ORDER BY id NULLS FIRST
+      ORDER BY id
     `);
 
-    return result.rows as Lesson[];
+    const decks = result.rows as LessonDeck[];
+
+    return {
+      total: sumLessonAmounts(decks),
+      decks,
+    };
   });
 }
 

@@ -8,15 +8,22 @@ use crate::domain::cards::{Card, UpdateCardProgress};
 use crate::domain::decks::Deck;
 use crate::domain::reviews::InsertReviewData;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct Lesson {
-    pub id: Option<i64>,
-    pub title: Option<String>,
+pub struct LessonDeck {
+    pub id: i64,
+    pub title: String,
     pub untouched: i64,
     pub learn: i64,
     pub review: i64,
     pub total: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonsResult {
+    pub total: LessonAmounts,
+    pub decks: Vec<LessonDeck>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -25,7 +32,7 @@ pub struct LessonFilters {
     pub deck_ids: Option<Vec<i64>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonAmounts {
     pub untouched: i64,

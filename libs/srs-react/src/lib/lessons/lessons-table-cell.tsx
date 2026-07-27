@@ -1,11 +1,11 @@
-import type { Lesson, LessonType } from "@koloda/srs";
+import type { LessonTableRow, LessonType } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { CellContext } from "@tanstack/react-table";
 import { LessonBadge } from "./lesson-badge";
 
-type LessonTableCellProps = { cell: CellContext<Lesson, any> };
+type LessonTableCellProps = { cell: CellContext<LessonTableRow, any> };
 
 export function LessonsTableCell({ cell }: LessonTableCellProps) {
   const { _ } = useLingui();

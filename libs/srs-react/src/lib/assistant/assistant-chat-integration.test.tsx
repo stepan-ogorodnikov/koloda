@@ -235,7 +235,9 @@ function buildQueries(): Queries {
     deleteCardMutation: () => ({ mutationFn: async () => undefined }),
     deleteCardsMutation: () => ({ mutationFn: async () => undefined }),
     resetCardProgressMutation: () => ({ mutationFn: async () => undefined }),
-    getLessonsQuery: () => ({ queryFn: async () => [] }),
+    getLessonsQuery: () => ({
+      queryFn: async () => ({ total: { untouched: 0, learn: 0, review: 0, total: 0 }, decks: [] }),
+    }),
     getTodayReviewTotalsQuery: () => ({ queryFn: async () => undefined }),
     getLessonDataQuery: () => ({ queryFn: async () => null }),
     submitLessonResultMutation: () => ({ mutationFn: async () => undefined }),

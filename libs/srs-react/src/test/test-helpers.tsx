@@ -3,7 +3,16 @@ import { deepMerge } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import type { DeepPartial } from "@koloda/app";
 import { convertTemplateToLessonTemplate, DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
-import type { Algorithm, Card, Deck, Lesson, LessonData, LessonType, Template, TodaysReviewTotals } from "@koloda/srs";
+import type {
+  Algorithm,
+  Card,
+  Deck,
+  LessonData,
+  LessonsResult,
+  LessonType,
+  Template,
+  TodaysReviewTotals,
+} from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 
@@ -89,17 +98,13 @@ export function createCard(overrides: DeepPartial<Card> = {}): Card {
   return deepMerge(base, overrides) as Card;
 }
 
-export function createLesson(overrides: DeepPartial<Lesson> = {}): Lesson {
-  const base: Lesson = {
-    id: null,
-    title: "All Decks",
-    untouched: 0,
-    learn: 0,
-    review: 0,
-    total: 0,
+export function createLessonsResult(overrides: DeepPartial<LessonsResult> = {}): LessonsResult {
+  const base: LessonsResult = {
+    total: { untouched: 0, learn: 0, review: 0, total: 0 },
+    decks: [],
   };
 
-  return deepMerge(base, overrides) as Lesson;
+  return deepMerge(base, overrides) as LessonsResult;
 }
 
 export function createLessonData(overrides: DeepPartial<LessonData> = {}): LessonData {

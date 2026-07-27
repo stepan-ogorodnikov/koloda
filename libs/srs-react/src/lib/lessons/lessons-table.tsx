@@ -1,5 +1,5 @@
-import { LESSON_TYPE_LABELS } from "@koloda/srs";
-import type { Lesson } from "@koloda/srs";
+import type { LessonTableRow, LessonsResult } from "@koloda/srs";
+import { LESSON_TYPE_LABELS, toLessonTableRows } from "@koloda/srs";
 import { Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -8,15 +8,16 @@ import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { LessonsTableCell } from "./lessons-table-cell";
 
-const cell = (cell: CellContext<Lesson, unknown>) => <LessonsTableCell cell={cell} />;
+const cell = (cell: CellContext<LessonTableRow, unknown>) => <LessonsTableCell cell={cell} />;
 const AMOUNT_WIDTH = 6;
 const TITLE_WIDTH = 180 / 4 - AMOUNT_WIDTH * 4;
 
-type LessonsTableProps = { data: Lesson[] };
+type LessonsTableProps = { data: LessonsResult };
 
 export function LessonsTable({ data }: LessonsTableProps) {
   const { _ } = useLingui();
-  const columns = useMemo<ColumnDef<Lesson>[]>(
+  const rows = toLessonTableRows(data);
+  const columns = useMemo<ColumnDef<LessonTableRow>[]>(
     () => [
       {
         accessorKey: "title",
@@ -58,7 +59,7 @@ export function LessonsTable({ data }: LessonsTableProps) {
 
   const table = useReactTable({
     columns,
-    data: data || [],
+    data: rows,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     enableColumnResizing: true,
@@ -66,8 +67,6 @@ export function LessonsTable({ data }: LessonsTableProps) {
     state: { rowPinning: { top: ["0"], bottom: [] } },
     keepPinnedRows: true,
   });
-
-  if (!data) return null;
 
   return (
     <Table.Root>

@@ -31,7 +31,7 @@ export function LessonInitAmountInput({ state, dispatch, type }: LessonInitAmoun
       aria-label={_(LABELS[type])}
       value={state.amounts?.[type]}
       minValue={0}
-      maxValue={state.lessons[0][type]}
+      maxValue={state.lessons.total[type]}
       onChange={(e) => {
         dispatch(["amountUpdated", { type, value: e }]);
       }}

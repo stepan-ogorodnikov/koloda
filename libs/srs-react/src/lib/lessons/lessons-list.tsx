@@ -1,13 +1,14 @@
-import type { Lesson, LessonType } from "@koloda/srs";
-import { LESSON_TYPE_LABELS } from "@koloda/srs";
+import type { LessonType, LessonsResult } from "@koloda/srs";
+import { LESSON_TYPE_LABELS, toLessonTableRows } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { LessonBadge } from "./lesson-badge";
 
-type LessonsTableProps = { data: Lesson[] };
+type LessonsListProps = { data: LessonsResult };
 
-export function LessonsList({ data }: LessonsTableProps) {
+export function LessonsList({ data }: LessonsListProps) {
   const { _ } = useLingui();
+  const rows = toLessonTableRows(data);
 
   return (
     <div className="my-2">
@@ -18,7 +19,7 @@ export function LessonsList({ data }: LessonsTableProps) {
           </div>
         ))}
       </div>
-      {data.map((deck, i) => (
+      {rows.map((deck, i) => (
         <div className="flex flex-col pt-3 border-b-2 border-main" key={i}>
           {deck.title ? (
             <div className="px-2 text-center break-all">{deck.title}</div>

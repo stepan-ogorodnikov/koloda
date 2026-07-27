@@ -18,10 +18,26 @@ export const LESSON_TYPE_LABELS: Record<LessonType, MessageDescriptor> = {
 
 export type LessonType = (typeof LESSON_TYPES)[number];
 
-export type Lesson = Record<LessonType, number> & {
-  id: Deck["id"] | null;
+export type LessonDeck = Record<LessonType, number> & {
+  id: Deck["id"];
   title: Deck["title"];
 };
+
+export type LessonsResult = {
+  total: LessonAmounts;
+  decks: LessonDeck[];
+};
+
+export type LessonTableRow = LessonAmounts & {
+  id: Deck["id"] | null;
+  title: string | null;
+};
+
+export function toLessonTableRows({ total, decks }: LessonsResult): LessonTableRow[] {
+  // WHY: Aggregate stays first to match the old UNION ALL … ORDER BY id NULLS FIRST shape.
+  // LessonsTable pins row "0"; do not move the total row to the end.
+  return [{ id: null, title: null, ...total }, ...decks];
+}
 
 export type LessonFilters = { deckIds?: Deck["id"][] };
 

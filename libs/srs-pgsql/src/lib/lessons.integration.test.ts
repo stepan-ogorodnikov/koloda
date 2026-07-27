@@ -81,16 +81,15 @@ describe("lessons repository integration", () => {
     const lessons = await getLessons(db, dueAt);
     const filteredLessons = await getLessons(db, dueAt, { deckIds: [deckContextA.deck.id] });
 
-    expect({ id: lessons[0]?.id, ...getLessonCounts(lessons[0]!) }).toMatchObject({
-      id: null,
+    expect(getLessonCounts(lessons.total)).toMatchObject({
       untouched: 1,
       learn: 1,
       review: 2,
       total: 4,
     });
     expect({
-      title: lessons.find((lesson) => lesson.id === deckContextA.deck.id)?.title,
-      ...getLessonCounts(lessons.find((lesson) => lesson.id === deckContextA.deck.id)!),
+      title: lessons.decks.find((lesson) => lesson.id === deckContextA.deck.id)?.title,
+      ...getLessonCounts(lessons.decks.find((lesson) => lesson.id === deckContextA.deck.id)!),
     }).toMatchObject({
       title: "Deck A",
       untouched: 1,
@@ -99,8 +98,8 @@ describe("lessons repository integration", () => {
       total: 3,
     });
     expect({
-      title: lessons.find((lesson) => lesson.id === deckContextB.deck.id)?.title,
-      ...getLessonCounts(lessons.find((lesson) => lesson.id === deckContextB.deck.id)!),
+      title: lessons.decks.find((lesson) => lesson.id === deckContextB.deck.id)?.title,
+      ...getLessonCounts(lessons.decks.find((lesson) => lesson.id === deckContextB.deck.id)!),
     }).toMatchObject({
       title: "Deck B",
       untouched: 0,
@@ -108,8 +107,7 @@ describe("lessons repository integration", () => {
       review: 1,
       total: 1,
     });
-    expect({ id: filteredLessons[0]?.id, ...getLessonCounts(filteredLessons[0]!) }).toMatchObject({
-      id: null,
+    expect(getLessonCounts(filteredLessons.total)).toMatchObject({
       untouched: 1,
       learn: 1,
       review: 1,

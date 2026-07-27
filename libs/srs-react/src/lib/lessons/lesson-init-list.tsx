@@ -15,7 +15,7 @@ type LessonInitListProps = {
 export function LessonInitList({ state, dispatch }: LessonInitListProps) {
   const { _ } = useLingui();
   if (!state.lessons || !state.todayReviewTotals) return null;
-  const available = state.lessons[0];
+  const available = state.lessons.total;
   const { reviewTotals, dailyLimits } = state.todayReviewTotals;
 
   return (

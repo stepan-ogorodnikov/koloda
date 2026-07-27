@@ -5,13 +5,13 @@ use crate::app::error::AppError;
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::Card;
 use crate::domain::lessons::{
-    GetLessonDataParams, GetLessonsParams, Lesson, LessonData, LessonResultData, LessonTemplate,
-    LessonTemplateLayoutItem,
+    GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonData, LessonDeck, LessonResultData, LessonTemplate,
+    LessonTemplateLayoutItem, LessonsResult,
 };
 use crate::repo::cards::get_card_row;
 
-fn get_lesson_row(row: &Row) -> Result<Lesson, rusqlite::Error> {
-    Ok(Lesson {
+fn get_lesson_deck_row(row: &Row) -> Result<LessonDeck, rusqlite::Error> {
+    Ok(LessonDeck {
         id: row.get(0)?,
         title: row.get(1)?,
         untouched: row.get::<_, Option<i64>>(2)?.unwrap_or(0),
@@ -21,7 +21,18 @@ fn get_lesson_row(row: &Row) -> Result<Lesson, rusqlite::Error> {
     })
 }
 
-pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson>, AppError> {
+fn sum_lesson_amounts(decks: &[LessonDeck]) -> LessonAmounts {
+    let mut total = LessonAmounts::default();
+    for deck in decks {
+        total.untouched += deck.untouched;
+        total.learn += deck.learn;
+        total.review += deck.review;
+        total.total += deck.total;
+    }
+    total
+}
+
+pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsResult, AppError> {
     db.with_conn(|conn| {
         let deck_ids = params
             .filters
@@ -29,7 +40,7 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson
             .and_then(|f| f.deck_ids.as_deref())
             .filter(|ids| !ids.is_empty());
         let mut next_param = 1;
-        let (filters, filter_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param);
+        let (filters, filter_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param, "WHERE");
         let due_at = params.due_at;
 
         let query = format!(
@@ -48,27 +59,21 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<Vec<Lesson
             )
             SELECT id, title, untouched, learn, review, untouched + learn + review AS total
             FROM per_deck
-
-            UNION ALL
-
-            SELECT NULL, NULL, COALESCE(SUM(untouched), 0), COALESCE(SUM(learn), 0), COALESCE(SUM(review), 0),
-                   COALESCE(SUM(untouched), 0) + COALESCE(SUM(learn), 0) + COALESCE(SUM(review), 0)
-            FROM per_deck
             ORDER BY id
             "#,
             due_at, due_at, filters
         );
 
-        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params
-            .iter()
-            .map(|id| id as &dyn rusqlite::ToSql)
-            .collect();
+        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
         let mut stmt = conn.prepare(&query)?;
-        let lessons = stmt
-            .query_map(sql_params.as_slice(), get_lesson_row)?
+        let decks = stmt
+            .query_map(sql_params.as_slice(), get_lesson_deck_row)?
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(lessons)
+        Ok(LessonsResult {
+            total: sum_lesson_amounts(&decks),
+            decks,
+        })
     })
 }
 
@@ -77,9 +82,9 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
         let deck_ids = params.filters.deck_ids.as_deref().filter(|ids| !ids.is_empty());
         let mut next_param = 1;
         let (filters_untouched, mut filter_params) =
-            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
-        let (filters_learn, learn_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
-        let (filters_review, review_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param);
+            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        let (filters_learn, learn_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        let (filters_review, review_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
         filter_params.extend(learn_params);
         filter_params.extend(review_params);
 
@@ -129,10 +134,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
             params.amounts.review
         );
 
-        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params
-            .iter()
-            .map(|id| id as &dyn rusqlite::ToSql)
-            .collect();
+        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
         let mut stmt = conn.prepare(&query)?;
 
         let cards = stmt
@@ -192,13 +194,11 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
         .collect();
 
     let algorithm_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.algorithm_id));
-    let algorithms_by_id: std::collections::HashMap<i64, _> = crate::repo::algorithms::get_algorithms_by_ids(
-        db,
-        &algorithm_ids,
-    )?
-    .into_iter()
-    .map(|a| (a.id, a))
-    .collect();
+    let algorithms_by_id: std::collections::HashMap<i64, _> =
+        crate::repo::algorithms::get_algorithms_by_ids(db, &algorithm_ids)?
+            .into_iter()
+            .map(|a| (a.id, a))
+            .collect();
     let lesson_algorithms: Vec<_> = algorithm_ids
         .iter()
         .filter_map(|id| algorithms_by_id.get(id).cloned())
@@ -265,7 +265,12 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
     })
 }
 
-fn lesson_deck_filter_sql(column: &str, deck_ids: Option<&[i64]>, next_param: &mut i32) -> (String, Vec<i64>) {
+fn lesson_deck_filter_sql(
+    column: &str,
+    deck_ids: Option<&[i64]>,
+    next_param: &mut i32,
+    prefix: &str,
+) -> (String, Vec<i64>) {
     let Some(ids) = deck_ids.filter(|ids| !ids.is_empty()) else {
         return (String::new(), Vec::new());
     };
@@ -280,7 +285,7 @@ fn lesson_deck_filter_sql(column: &str, deck_ids: Option<&[i64]>, next_param: &m
         .collect();
 
     (
-        format!(" AND {} IN ({})", column, placeholders.join(", ")),
+        format!(" {prefix} {column} IN ({})", placeholders.join(", ")),
         ids.to_vec(),
     )
 }

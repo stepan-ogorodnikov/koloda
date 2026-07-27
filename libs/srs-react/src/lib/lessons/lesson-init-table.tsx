@@ -17,7 +17,7 @@ type LessonInitTableProps = {
 export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
   const { _ } = useLingui();
   if (!state.lessons || !state.todayReviewTotals) return null;
-  const available = state.lessons[0];
+  const available = state.lessons.total;
   const { reviewTotals, dailyLimits } = state.todayReviewTotals;
 
   return (

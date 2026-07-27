@@ -7,9 +7,9 @@ import type {
   Card,
   CardGrade,
   InsertReviewData,
-  Lesson,
   LessonData,
   LessonFilters,
+  LessonsResult,
   LessonTemplate,
   LessonType,
   TodaysReviewTotals,
@@ -48,7 +48,7 @@ export type LessonReducerState = {
   // object to pass to lesson query based on params above
   filters?: LessonFilters;
   // available amounts of cards to study of each type for each deck and all decks in total
-  lessons?: Lesson[];
+  lessons?: LessonsResult;
   // daily limits and review counts for current learning day
   todayReviewTotals?: TodaysReviewTotals;
   // counts of cards for each type to study for this lesson
@@ -174,7 +174,7 @@ function setupInitData(draft: LessonReducerState) {
   if (!params || !lessons || !todayReviewTotals || amounts) return;
   const { dailyLimits, reviewTotals } = todayReviewTotals;
   const { type } = params;
-  const available = lessons[0];
+  const available = lessons.total;
   const countedReviewTotal = LEARNING_DAILY_LIMIT_TYPES.reduce(
     (total, limitType) => (dailyLimits[limitType].counts ? total + reviewTotals[limitType] : total),
     0,
@@ -229,7 +229,7 @@ function todayReviewTotalsReceived(draft: LessonReducerState, payload: TodaysRev
 /**
  * Sets lessons data received from storage
  */
-function lessonsReceived(draft: LessonReducerState, payload: Lesson[]) {
+function lessonsReceived(draft: LessonReducerState, payload: LessonsResult) {
   draft.lessons = payload;
   setupInitData(draft);
 }

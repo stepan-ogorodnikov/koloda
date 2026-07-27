@@ -67,8 +67,7 @@ fn e2e_full_learning_workflow() {
         },
     )
     .expect("should get lessons");
-    let total_row = lessons.iter().find(|l| l.id.is_none()).expect("total row should exist");
-    assert_eq!(total_row.total, 5, "should have 5 cards to review");
+    assert_eq!(lessons.total.total, 5, "should have 5 cards to review");
 
     let lesson_data = lessons::get_lesson_data(
         &db,
@@ -143,9 +142,5 @@ fn e2e_full_learning_workflow() {
         },
     )
     .expect("should get lessons after");
-    let total_after = lessons_after
-        .iter()
-        .find(|l| l.id.is_none())
-        .expect("total row should exist");
-    assert_eq!(total_after.total, 0, "no cards should be due");
+    assert_eq!(lessons_after.total.total, 0, "no cards should be due");
 }

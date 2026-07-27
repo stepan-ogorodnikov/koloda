@@ -141,8 +141,9 @@ fn get_lessons_counts_cards_per_deck_and_total_row() {
         lessons::get_lessons(&db, GetLessonsParams { due_at, filters: None }).expect("lessons query should succeed");
 
     let deck_1_row = lessons_all
+        .decks
         .iter()
-        .find(|row| row.id == Some(deck_1))
+        .find(|row| row.id == deck_1)
         .expect("deck 1 row should exist");
     assert_eq!(deck_1_row.untouched, 1);
     assert_eq!(deck_1_row.learn, 2);
@@ -150,22 +151,19 @@ fn get_lessons_counts_cards_per_deck_and_total_row() {
     assert_eq!(deck_1_row.total, 4);
 
     let deck_2_row = lessons_all
+        .decks
         .iter()
-        .find(|row| row.id == Some(deck_2))
+        .find(|row| row.id == deck_2)
         .expect("deck 2 row should exist");
     assert_eq!(deck_2_row.untouched, 1);
     assert_eq!(deck_2_row.learn, 0);
     assert_eq!(deck_2_row.review, 0);
     assert_eq!(deck_2_row.total, 1);
 
-    let total_row = lessons_all
-        .iter()
-        .find(|row| row.id.is_none())
-        .expect("summary row should exist");
-    assert_eq!(total_row.untouched, 2);
-    assert_eq!(total_row.learn, 2);
-    assert_eq!(total_row.review, 1);
-    assert_eq!(total_row.total, 5);
+    assert_eq!(lessons_all.total.untouched, 2);
+    assert_eq!(lessons_all.total.learn, 2);
+    assert_eq!(lessons_all.total.review, 1);
+    assert_eq!(lessons_all.total.total, 5);
 
     let lessons_filtered = lessons::get_lessons(
         &db,
@@ -179,22 +177,19 @@ fn get_lessons_counts_cards_per_deck_and_total_row() {
     .expect("filtered lessons query should succeed");
 
     let filtered_deck_1 = lessons_filtered
+        .decks
         .iter()
-        .find(|row| row.id == Some(deck_1))
+        .find(|row| row.id == deck_1)
         .expect("filtered deck 1 row should exist");
     assert_eq!(filtered_deck_1.total, 4);
 
-    let filtered_deck_2 = lessons_filtered
-        .iter()
-        .find(|row| row.id == Some(deck_2))
-        .expect("deck 2 row still exists under current query behavior");
-    assert_eq!(filtered_deck_2.total, 0);
+    let filtered_deck_2 = lessons_filtered.decks.iter().find(|row| row.id == deck_2);
+    assert!(
+        filtered_deck_2.is_none(),
+        "filtered query should only include matching decks"
+    );
 
-    let filtered_total = lessons_filtered
-        .iter()
-        .find(|row| row.id.is_none())
-        .expect("filtered summary row should exist");
-    assert_eq!(filtered_total.total, 4);
+    assert_eq!(lessons_filtered.total.total, 4);
 }
 
 #[test]
@@ -332,10 +327,12 @@ fn get_lessons_with_empty_deck_filter_matches_unfiltered_results() {
     )
     .expect("empty-filter lessons query should succeed");
 
-    assert_eq!(unfiltered.len(), empty_filter.len());
-    assert_eq!(unfiltered[0].total, empty_filter[0].total);
-    assert_eq!(unfiltered[1].total, empty_filter[1].total);
-    assert_eq!(unfiltered[2].total, empty_filter[2].total);
+    assert_eq!(unfiltered.total, empty_filter.total);
+    assert_eq!(unfiltered.decks.len(), empty_filter.decks.len());
+    for (left, right) in unfiltered.decks.iter().zip(empty_filter.decks.iter()) {
+        assert_eq!(left.id, right.id);
+        assert_eq!(left.total, right.total);
+    }
 }
 
 #[test]

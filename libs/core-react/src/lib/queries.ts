@@ -30,7 +30,7 @@ import type {
   InsertCardsResponse,
   InsertDeckData,
   InsertTemplateData,
-  Lesson,
+  LessonsResult,
   LessonData,
   LessonFilters,
   LessonResultData,
@@ -91,7 +91,7 @@ export type Queries = {
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
   deleteCardsMutation: () => UseMutationOptions<unknown, AppError, DeleteCardsData, unknown>;
   resetCardProgressMutation: () => UseMutationOptions<unknown, AppError, ResetCardProgressData, unknown>;
-  getLessonsQuery: (filters?: LessonFilters) => QueryOptions<Lesson[] | undefined>;
+  getLessonsQuery: (filters?: LessonFilters) => QueryOptions<LessonsResult | undefined>;
   getTodayReviewTotalsQuery: () => QueryOptions<TodaysReviewTotals | undefined>;
   getLessonDataQuery: (params: GetLessonDataParams) => QueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;

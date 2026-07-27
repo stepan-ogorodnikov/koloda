@@ -1,6 +1,6 @@
 import type * as KolodaSrsModule from "@koloda/srs";
 import { describe, expect, it, vi } from "vitest";
-import { createCard, createLesson, createLessonData, createTodaysReviewTotals } from "../../test/test-helpers";
+import { createCard, createLessonData, createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
 import { lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 
 const { getCardGradesMock, createCardFromCardFSRSMock, createReviewFromReviewFSRSMock } = vi.hoisted(() => ({
@@ -48,14 +48,14 @@ describe("lessonReducer", () => {
       ],
       [
         "lessonsReceived",
-        [
-          createLesson({
+        createLessonsResult({
+          total: {
             untouched: 5,
             learn: 4,
             review: 8,
             total: 17,
-          }),
-        ],
+          },
+        }),
       ],
     ]);
 
@@ -84,12 +84,12 @@ describe("lessonReducer", () => {
       ],
       [
         "lessonsReceived",
-        [
-          createLesson({
+        createLessonsResult({
+          total: {
             review: 5,
             total: 5,
-          }),
-        ],
+          },
+        }),
       ],
     ]);
 
@@ -182,7 +182,7 @@ describe("lessonReducer", () => {
     let state = reduceLesson([
       ["paramsSet", { type: "untouched" }],
       ["todayReviewTotalsReceived", createTodaysReviewTotals()],
-      ["lessonsReceived", [createLesson({ untouched: 1, total: 1 })]],
+      ["lessonsReceived", createLessonsResult({ total: { untouched: 1, total: 1 } })],
       ["lessonSubmitted"],
       ["lessonDataReceived", createLessonData()],
     ]);

@@ -25,7 +25,7 @@ import type {
   InsertCardData,
   InsertDeckData,
   InsertTemplateData,
-  Lesson,
+  LessonsResult,
   LessonData,
   LessonFilters,
   LessonResultData,
@@ -153,7 +153,7 @@ export const queriesFn = (): Queries => ({
     mutationFn: (data: ResetCardProgressData) => invoke("cmd_reset_card_progress", { data }),
   }),
   getLessonsQuery: (filters?: LessonFilters) => ({
-    queryFn: () => invoke<Lesson[]>("cmd_get_lessons", { params: { dueAt: Date.now(), filters } }),
+    queryFn: () => invoke<LessonsResult>("cmd_get_lessons", { params: { dueAt: Date.now(), filters } }),
   }),
   getTodayReviewTotalsQuery: () => ({
     queryFn: () => invoke<TodaysReviewTotals>("cmd_get_todays_review_totals"),
