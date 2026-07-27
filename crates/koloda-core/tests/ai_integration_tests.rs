@@ -1,3 +1,4 @@
+use koloda_core::app::secrets::get_secret_store;
 use koloda_core::domain::ai::AISecrets;
 use koloda_core::repo::ai;
 
@@ -154,6 +155,63 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
     match retrieved.secrets.as_ref() {
         Some(AISecrets::OpencodeZen { api_key }) => assert_eq!(api_key, "zen-secret-key"),
         other => panic!("expected OpencodeZen secrets, got {:?}", other),
+    }
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: "sk-original-key".to_string(),
+        }),
+    )
+    .expect("profile should be added");
+    let store_key = format!("ai-profile-{}", added.id);
+
+    assert_eq!(
+        get_secret_store().get(&store_key).expect("read keyring"),
+        Some("sk-original-key".to_string()),
+        "key should be stored after add"
+    );
+
+    let updated = ai::update_ai_profile(
+        &db,
+        &added.id,
+        Some("Local model".to_string()),
+        Some(AISecrets::Ollama {
+            base_url: "http://localhost:11434".to_string(),
+            api_key: None,
+        }),
+    )
+    .expect("profile should be updated");
+
+    assert_eq!(
+        get_secret_store().get(&store_key).expect("read keyring"),
+        None,
+        "old key must be cleared after updating to a no-key variant"
+    );
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+    match retrieved.secrets.as_ref() {
+        Some(AISecrets::Ollama { api_key, .. }) => {
+            assert!(api_key.is_none(), "no old key should leak back into the profile");
+        }
+        other => panic!("expected Ollama secrets after update, got {:?}", other),
+    }
+
+    match updated.secrets.as_ref() {
+        Some(AISecrets::Ollama { api_key, .. }) => {
+            assert!(api_key.is_none(), "returned updated profile should not carry the old key");
+        }
+        other => panic!("expected Ollama secrets in update return, got {:?}", other),
     }
 
     test_store::teardown(_guard);

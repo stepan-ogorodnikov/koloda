@@ -158,6 +158,10 @@ pub fn update_ai_profile(
     if let Some(new_secrets) = secrets {
         if let Some(api_key) = new_secrets.api_key() {
             set_api_key(id, api_key)?;
+        } else {
+            // WHY: otherwise get_ai_profiles reconstructs the redacted profile
+            // from the orphaned keyring entry, re-attaching the old secret.
+            remove_api_key(id)?;
         }
         existing_profile.secrets = Some(redact_secrets(&new_secrets));
     }
