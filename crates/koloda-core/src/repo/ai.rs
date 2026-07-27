@@ -76,22 +76,26 @@ fn set_ai_settings(db: &Database, settings: AISettings) -> Result<(), AppError> 
 pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
     let settings = get_ai_settings_or_default(db)?;
 
+    // WHY: Propagate keyring errors instead of swallowing them as `None`. A
+    // real keyring failure (lock poisoned / I/O error) used to be
+    // indistinguishable from `Ok(None)` (no key stored) under `.ok().flatten()`,
+    // so a broken keyring silently masqueraded as "no api keys configured".
     let profiles_with_secrets: Vec<AIProfile> = settings
         .profiles
         .into_iter()
-        .map(|profile| {
-            let api_key = get_api_key(&profile.id).ok().flatten();
+        .map(|profile| -> Result<AIProfile, AppError> {
+            let api_key = get_api_key(&profile.id)?;
             let secrets_with_key = match (&profile.secrets, api_key) {
                 (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
                 (Some(s), None) => Some(s.clone()),
                 _ => None,
             };
-            AIProfile {
+            Ok(AIProfile {
                 secrets: secrets_with_key,
                 ..profile
-            }
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>, _>>()?;
 
     Ok(profiles_with_secrets)
 }

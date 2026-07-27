@@ -44,6 +44,27 @@ mod test_store {
         }
     }
 
+    pub struct FailingGetSecretStore;
+
+    impl SecretStore for FailingGetSecretStore {
+        fn get(&self, _key: &str) -> Result<Option<String>, AppError> {
+            Err(AppError::new("keyring", Some("simulated keyring failure".to_string())))
+        }
+        fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
+            Ok(())
+        }
+        fn remove(&self, _key: &str) -> Result<(), AppError> {
+            Ok(())
+        }
+    }
+
+    pub fn setup_failing_store() -> Guard {
+        let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let store: Arc<dyn SecretStore> = Arc::new(FailingGetSecretStore);
+        set_test_secret_store(Some(store));
+        Guard(guard)
+    }
+
     pub struct Guard(#[allow(dead_code)] std::sync::MutexGuard<'static, ()>);
 
     pub fn setup() -> Guard {
@@ -215,4 +236,30 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
     }
 
     test_store::teardown(_guard);
+}
+
+#[test]
+fn get_ai_profiles_propagates_keyring_error_instead_of_swallowing_it() {
+    // WHY: stage a profile under a working store first; otherwise the failing
+    // get_api_key in get_ai_profiles is never reached and the test passes
+    // vacuously.
+    let guard = test_store::setup();
+    let db = test_db();
+    ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: "sk-secret-key".to_string(),
+        }),
+    )
+    .expect("profile should be added under working store");
+    test_store::teardown(guard);
+
+    let guard = test_store::setup_failing_store();
+    let result = ai::get_ai_profiles(&db);
+
+    let err = result.expect_err("get_ai_profiles must propagate keyring errors, not swallow as None");
+    assert_eq!(err.code, "keyring", "the keyring error code must be preserved");
+
+    test_store::teardown(guard);
 }
