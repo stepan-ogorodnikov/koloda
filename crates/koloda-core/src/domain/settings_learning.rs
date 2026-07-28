@@ -16,33 +16,29 @@ impl LearningSettings {
     pub fn validate(&self) -> Result<(), AppError> {
         self.daily_limits.validate()?;
         self.learn_ahead_limit.validate()?;
-        validate_day_starts_at(&self.day_starts_at)?;
+        parse_day_starts_at(&self.day_starts_at)?;
         Ok(())
     }
 }
 
-fn validate_day_starts_at(value: &str) -> Result<(), AppError> {
-    let parts: Vec<&str> = value.split(':').collect();
-    if parts.len() != 2 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT,
-            Some(format!("Invalid time format: {}", value)),
-        ));
+// INVARIANT: on `Ok`, returns `(hours, minutes)` with `0 <= hours <= 23` and `0 <= minutes <= 59`.
+// Callers (`learning_day_range_at`) rely on this to construct a `NaiveTime` without re-validating.
+pub fn parse_day_starts_at(value: &str) -> Result<(u32, u32), AppError> {
+    let bytes = value.as_bytes();
+    if value.len() != 5 || bytes[2] != b':' {
+        return Err(day_starts_at_error(value));
     }
 
-    let hours: u32 = parts[0].parse().map_err(|_| {
-        AppError::new(
-            error_codes::VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT,
-            Some(format!("Invalid hours: {}", value)),
-        )
-    })?;
+    if !bytes[0].is_ascii_digit()
+        || !bytes[1].is_ascii_digit()
+        || !bytes[3].is_ascii_digit()
+        || !bytes[4].is_ascii_digit()
+    {
+        return Err(day_starts_at_error(value));
+    }
 
-    let minutes: u32 = parts[1].parse().map_err(|_| {
-        AppError::new(
-            error_codes::VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT,
-            Some(format!("Invalid minutes: {}", value)),
-        )
-    })?;
+    let hours: u32 = value[0..2].parse().map_err(|_| day_starts_at_error(value))?;
+    let minutes: u32 = value[3..5].parse().map_err(|_| day_starts_at_error(value))?;
 
     if hours > 23 {
         return Err(AppError::new(
@@ -58,7 +54,14 @@ fn validate_day_starts_at(value: &str) -> Result<(), AppError> {
         ));
     }
 
-    Ok(())
+    Ok((hours, minutes))
+}
+
+fn day_starts_at_error(value: &str) -> AppError {
+    AppError::new(
+        error_codes::VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT,
+        Some(format!("Invalid time format: {}", value)),
+    )
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

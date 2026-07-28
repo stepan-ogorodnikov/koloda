@@ -2,7 +2,7 @@ use rusqlite::{params, Row};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::get_current_timestamp;
+use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
     DailyLimits, GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals,
     TodaysReviewTotalsMeta,
@@ -80,42 +80,6 @@ pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result
     })
 }
 
-fn parse_day_starts_at(day_starts_at: &str) -> (u32, u32) {
-    let parts: Vec<&str> = day_starts_at.split(':').collect();
-    if parts.len() != 2 {
-        return (0, 0);
-    }
-
-    let hours: u32 = parts[0].parse().unwrap_or(0);
-    let minutes: u32 = parts[1].parse().unwrap_or(0);
-
-    (hours, minutes)
-}
-
-const MILLIS_PER_SECOND: i64 = 1000;
-const SECONDS_PER_MINUTE: i64 = 60;
-const SECONDS_PER_HOUR: i64 = 3600;
-const SECONDS_PER_DAY: i64 = 86400;
-
-fn get_current_learning_day_range(day_starts_at: &str) -> Result<(i64, i64), AppError> {
-    let (hours, minutes) = parse_day_starts_at(day_starts_at);
-    let now = get_current_timestamp()?;
-
-    let now_seconds = now / MILLIS_PER_SECOND;
-    let seconds_since_midnight = now_seconds % SECONDS_PER_DAY;
-    let boundary_seconds_from_midnight = i64::from(hours) * SECONDS_PER_HOUR + i64::from(minutes) * SECONDS_PER_MINUTE;
-    let today_boundary_seconds = now_seconds - seconds_since_midnight + boundary_seconds_from_midnight;
-    let (from_seconds, to_seconds) = if seconds_since_midnight < boundary_seconds_from_midnight {
-        (today_boundary_seconds - SECONDS_PER_DAY, today_boundary_seconds)
-    } else {
-        (today_boundary_seconds, today_boundary_seconds + SECONDS_PER_DAY)
-    };
-    let from = from_seconds * MILLIS_PER_SECOND;
-    let to = to_seconds * MILLIS_PER_SECOND;
-
-    Ok((from, to))
-}
-
 pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, AppError> {
     let learning_settings: LearningSettings = settings_repo::get_settings(db, SettingsName::Learning)?
         .ok_or_else(|| AppError::new(error_codes::DB_GET, None))
@@ -123,7 +87,7 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
             serde_json::from_value(s.content).map_err(|e| AppError::new(error_codes::UNKNOWN, Some(e.to_string())))
         })?;
 
-    let (from, to) = get_current_learning_day_range(&learning_settings.day_starts_at)?;
+    let (from, to) = current_learning_day_range(&learning_settings.day_starts_at)?;
     let review_totals = get_review_totals(db, GetReviewTotalsParams { from, to })?;
 
     let daily_limits = DailyLimits {

@@ -5,6 +5,7 @@ pub mod cards;
 pub mod common;
 pub mod conversations;
 pub mod decks;
+pub mod learning_day;
 pub mod lessons;
 pub mod reviews;
 pub mod settings;
