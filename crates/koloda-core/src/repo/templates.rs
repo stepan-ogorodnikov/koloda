@@ -1,4 +1,4 @@
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
@@ -124,19 +124,27 @@ pub fn add_template(db: &Database, data: InsertTemplateData) -> Result<Template,
     data.validate()?;
     let now = get_current_timestamp()?;
 
-    let id = db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO templates (title, content, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL)
-            "#,
-            params![data.title, serde_json::to_string(&data.content)?, now],
-        )?;
-
-        Ok(conn.last_insert_rowid())
-    })?;
+    let id = db.with_conn(|conn| insert_template(conn, &data, now))?;
 
     get_template(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+}
+
+pub(crate) fn oldest_template_id(conn: &Connection) -> Result<Option<i64>, AppError> {
+    conn.query_row("SELECT id FROM templates ORDER BY created_at ASC LIMIT 1", [], |row| row.get(0))
+        .optional()
+        .map_err(AppError::from)
+}
+
+pub(crate) fn insert_template(conn: &Connection, data: &InsertTemplateData, now: i64) -> Result<i64, AppError> {
+    conn.execute(
+        r#"
+        INSERT INTO templates (title, content, created_at, updated_at)
+        VALUES (?1, ?2, ?3, NULL)
+        "#,
+        params![data.title, serde_json::to_string(&data.content)?, now],
+    )?;
+
+    Ok(conn.last_insert_rowid())
 }
 
 pub fn is_template_locked(db: &Database, id: i64) -> Result<bool, AppError> {

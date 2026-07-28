@@ -1,4 +1,4 @@
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::app::db::Database;
@@ -94,19 +94,27 @@ pub fn add_algorithm(db: &Database, data: InsertAlgorithmData) -> Result<Algorit
     data.validate()?;
     let now = get_current_timestamp()?;
 
-    let id = db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO algorithms (title, content, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL)
-            "#,
-            params![data.title, data.content.to_string(), now],
-        )?;
-
-        Ok(conn.last_insert_rowid())
-    })?;
+    let id = db.with_conn(|conn| insert_algorithm(conn, &data, now))?;
 
     get_algorithm(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+}
+
+pub(crate) fn oldest_algorithm_id(conn: &Connection) -> Result<Option<i64>, AppError> {
+    conn.query_row("SELECT id FROM algorithms ORDER BY created_at ASC LIMIT 1", [], |row| row.get(0))
+        .optional()
+        .map_err(AppError::from)
+}
+
+pub(crate) fn insert_algorithm(conn: &Connection, data: &InsertAlgorithmData, now: i64) -> Result<i64, AppError> {
+    conn.execute(
+        r#"
+        INSERT INTO algorithms (title, content, created_at, updated_at)
+        VALUES (?1, ?2, ?3, NULL)
+        "#,
+        params![data.title, data.content.to_string(), now],
+    )?;
+
+    Ok(conn.last_insert_rowid())
 }
 
 pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algorithm, AppError> {

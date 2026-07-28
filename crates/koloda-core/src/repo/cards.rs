@@ -261,10 +261,10 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
 pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result<Card, AppError> {
     let now = get_current_timestamp()?;
 
-    db.with_conn(|conn| {
-        conn.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
+    db.with_transaction(|tx| {
+        tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
 
-        conn.execute(
+        tx.execute(
             r#"
             UPDATE cards
             SET state = 0, due_at = NULL, stability = 0, difficulty = 0,

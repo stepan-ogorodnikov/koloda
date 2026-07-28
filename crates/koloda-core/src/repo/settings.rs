@@ -1,4 +1,4 @@
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::app::db::Database;
@@ -48,21 +48,29 @@ pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result
     let content = name.normalize(content)?;
     let now = get_current_timestamp()?;
 
-    db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO settings (name, content, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL)
-            ON CONFLICT(name) DO UPDATE SET
-                content = excluded.content,
-                updated_at = ?4
-            "#,
-            params![name.to_string(), content.to_string(), now, now],
-        )?;
-        Ok(())
-    })?;
+    db.with_conn(|conn| upsert_settings(conn, name, &content, now))?;
 
     get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+}
+
+pub(crate) fn upsert_settings(
+    conn: &Connection,
+    name: SettingsName,
+    content: &Value,
+    now: i64,
+) -> Result<(), AppError> {
+    conn.execute(
+        r#"
+        INSERT INTO settings (name, content, created_at, updated_at)
+        VALUES (?1, ?2, ?3, NULL)
+        ON CONFLICT(name) DO UPDATE SET
+            content = excluded.content,
+            updated_at = ?4
+        "#,
+        params![name.to_string(), content.to_string(), now, now],
+    )?;
+
+    Ok(())
 }
 
 pub fn patch_settings(db: &Database, name: SettingsName, patch: Value) -> Result<Settings, AppError> {

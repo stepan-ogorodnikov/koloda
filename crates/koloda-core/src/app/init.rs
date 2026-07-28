@@ -1,15 +1,13 @@
-use rusqlite::OptionalExtension;
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
+use crate::app::utility::get_current_timestamp;
 use crate::domain::algorithms::InsertAlgorithmData;
 use crate::domain::settings::SettingsName;
 use crate::domain::templates::InsertTemplateData;
-use crate::repo::algorithms::add_algorithm;
-use crate::repo::settings::set_settings;
-use crate::repo::templates::add_template;
+use crate::repo::{algorithms, settings, templates};
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -49,39 +47,50 @@ pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
 }
 
 fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
-    let algorithm_id = match get_oldest_algorithm_id(db)? {
-        Some(id) => id,
-        None => add_algorithm(db, data.algorithm)?.id,
-    };
+    data.algorithm.validate()?;
+    data.template.validate()?;
 
-    let template_id = match get_oldest_template_id(db)? {
-        Some(id) => id,
-        None => add_template(db, data.template)?.id,
-    };
-
+    let interface = SettingsName::Interface.normalize(data.settings.interface)?;
+    let hotkeys = SettingsName::Hotkeys.normalize(data.settings.hotkeys)?;
+    let now = get_current_timestamp()?;
     let mut learning_settings = data.settings.learning;
-    let Some(learning_obj) = learning_settings.as_object_mut() else {
-        return Err(AppError::new(
-            error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
-            Some("learning settings must be a JSON object".to_string()),
-        ));
-    };
 
-    let defaults = learning_obj.entry("defaults").or_insert_with(|| serde_json::json!({}));
-    let Some(defaults_obj) = defaults.as_object_mut() else {
-        return Err(AppError::new(
-            error_codes::VALIDATION_SEED_LEARNING_DEFAULTS,
-            Some("learning.defaults must be a JSON object".to_string()),
-        ));
-    };
-    defaults_obj.insert("algorithm".to_string(), serde_json::json!(algorithm_id));
-    defaults_obj.insert("template".to_string(), serde_json::json!(template_id));
+    db.with_transaction(|tx| {
+        let algorithm_id = match algorithms::oldest_algorithm_id(tx)? {
+            Some(id) => id,
+            None => algorithms::insert_algorithm(tx, &data.algorithm, now)?,
+        };
 
-    set_settings(db, SettingsName::Interface, data.settings.interface)?;
-    set_settings(db, SettingsName::Learning, learning_settings)?;
-    set_settings(db, SettingsName::Hotkeys, data.settings.hotkeys)?;
+        let template_id = match templates::oldest_template_id(tx)? {
+            Some(id) => id,
+            None => templates::insert_template(tx, &data.template, now)?,
+        };
 
-    Ok(())
+        let Some(learning_obj) = learning_settings.as_object_mut() else {
+            return Err(AppError::new(
+                error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
+                Some("learning settings must be a JSON object".to_string()),
+            ));
+        };
+
+        let defaults = learning_obj.entry("defaults").or_insert_with(|| serde_json::json!({}));
+        let Some(defaults_obj) = defaults.as_object_mut() else {
+            return Err(AppError::new(
+                error_codes::VALIDATION_SEED_LEARNING_DEFAULTS,
+                Some("learning.defaults must be a JSON object".to_string()),
+            ));
+        };
+        defaults_obj.insert("algorithm".to_string(), serde_json::json!(algorithm_id));
+        defaults_obj.insert("template".to_string(), serde_json::json!(template_id));
+
+        let learning = SettingsName::Learning.normalize(learning_settings)?;
+
+        settings::upsert_settings(tx, SettingsName::Interface, &interface, now)?;
+        settings::upsert_settings(tx, SettingsName::Learning, &learning, now)?;
+        settings::upsert_settings(tx, SettingsName::Hotkeys, &hotkeys, now)?;
+
+        Ok(())
+    })
 }
 
 fn get_settings_names(db: &Database) -> Result<Vec<String>, AppError> {
@@ -97,27 +106,5 @@ fn get_settings_names(db: &Database) -> Result<Vec<String>, AppError> {
             .map_err(|e| AppError::new(error_codes::DB_GET, Some(e.to_string())))?;
 
         Ok(names)
-    })
-}
-
-fn get_oldest_algorithm_id(db: &Database) -> Result<Option<i64>, AppError> {
-    db.with_conn(|conn| {
-        let id: Option<i64> = conn
-            .query_row("SELECT id FROM algorithms ORDER BY created_at ASC LIMIT 1", [], |row| {
-                row.get(0)
-            })
-            .optional()?;
-        Ok(id)
-    })
-}
-
-fn get_oldest_template_id(db: &Database) -> Result<Option<i64>, AppError> {
-    db.with_conn(|conn| {
-        let id: Option<i64> = conn
-            .query_row("SELECT id FROM templates ORDER BY created_at ASC LIMIT 1", [], |row| {
-                row.get(0)
-            })
-            .optional()?;
-        Ok(id)
     })
 }
