@@ -4,6 +4,27 @@ use koloda_core::domain::ai::{AIProfile, AISecrets};
 const TEST_CREATED_AT: i64 = 1_767_225_600_000;
 
 #[test]
+fn test_ai_secrets_validate_for_storage_rejects_optional_api_key() {
+    let secrets = AISecrets::Ollama {
+        base_url: "http://localhost:11434".to_string(),
+        api_key: Some("local-key".to_string()),
+    };
+
+    let result = secrets.validate_for_storage();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
+fn test_ai_secrets_validate_for_storage_accepts_redacted_openrouter() {
+    let secrets = AISecrets::OpenRouter {
+        api_key: String::new(),
+    };
+
+    assert!(secrets.validate_for_storage().is_ok());
+}
+
+#[test]
 fn test_ollama_validate_empty_base_url_fails() {
     let secrets = AISecrets::Ollama {
         base_url: "".to_string(),
@@ -163,7 +184,7 @@ fn test_ai_secrets_invalid_provider_fails() {
 }
 
 #[test]
-fn test_ai_profile_validate_ok_with_secrets() {
+fn test_ai_profile_validate_for_input_ok_with_secrets() {
     let profile = AIProfile {
         id: "profile-1".to_string(),
         title: Some("Main profile".to_string()),
@@ -173,7 +194,23 @@ fn test_ai_profile_validate_ok_with_secrets() {
         created_at: TEST_CREATED_AT,
     };
 
-    assert!(profile.validate().is_ok());
+    assert!(profile.validate_for_input().is_ok());
+}
+
+#[test]
+fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: Some("Main profile".to_string()),
+        secrets: Some(AISecrets::OpenRouter {
+            api_key: "key-123".to_string(),
+        }),
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate_for_storage();
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]

@@ -134,3 +134,80 @@ fn patch_settings_fails_when_target_setting_does_not_exist() {
     assert!(result.is_err());
     assert_eq!(result.expect_err("patch should fail").code, error_codes::DB_UPDATE);
 }
+
+#[test]
+fn set_settings_rejects_plaintext_ai_api_key() {
+    let db = test_db();
+
+    let result = settings::set_settings(
+        &db,
+        SettingsName::Ai,
+        json!({
+            "profiles": [
+                {
+                    "id": "profile-1",
+                    "title": "OpenRouter",
+                    "secrets": {
+                        "provider": "openrouter",
+                        "apiKey": "sk-live-secret-key"
+                    },
+                    "createdAt": "2026-01-01T00:00:00Z"
+                }
+            ]
+        }),
+    );
+
+    assert!(result.is_err(), "plaintext apiKey must not be persisted via set_settings");
+    assert_eq!(
+        result.expect_err("set_settings should fail").code,
+        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY
+    );
+}
+
+#[test]
+fn patch_settings_rejects_plaintext_ai_api_key() {
+    let db = test_db();
+
+    settings::set_settings(
+        &db,
+        SettingsName::Ai,
+        json!({
+            "profiles": [
+                {
+                    "id": "profile-1",
+                    "title": "OpenRouter",
+                    "secrets": {
+                        "provider": "openrouter",
+                        "apiKey": ""
+                    },
+                    "createdAt": "2026-01-01T00:00:00Z"
+                }
+            ]
+        }),
+    )
+    .expect("redacted AI settings should be storable");
+
+    let result = settings::patch_settings(
+        &db,
+        SettingsName::Ai,
+        json!({
+            "profiles": [
+                {
+                    "id": "profile-1",
+                    "title": "OpenRouter",
+                    "secrets": {
+                        "provider": "openrouter",
+                        "apiKey": "sk-live-secret-key"
+                    },
+                    "createdAt": "2026-01-01T00:00:00Z"
+                }
+            ]
+        }),
+    );
+
+    assert!(result.is_err(), "patch must not smuggle plaintext apiKey into settings");
+    assert_eq!(
+        result.expect_err("patch_settings should fail").code,
+        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY
+    );
+}

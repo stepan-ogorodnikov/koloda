@@ -16,7 +16,7 @@ fn test_valid_ai_settings_empty_profiles() {
 }
 
 #[test]
-fn test_valid_ai_settings_with_openrouter_profile() {
+fn test_valid_ai_settings_with_openrouter_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
@@ -24,7 +24,7 @@ fn test_valid_ai_settings_with_openrouter_profile() {
                 "title": "OpenRouter",
                 "secrets": {
                     "provider": "openrouter",
-                    "apiKey": "secret-key"
+                    "apiKey": ""
                 },
                 "createdAt": "2026-01-01T00:00:00Z"
             }
@@ -33,6 +33,31 @@ fn test_valid_ai_settings_with_openrouter_profile() {
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     assert!(settings.validate().is_ok());
+}
+
+#[test]
+fn test_ai_settings_with_plaintext_api_key_fails_storage_validation() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-1",
+                "title": "OpenRouter",
+                "secrets": {
+                    "provider": "openrouter",
+                    "apiKey": "sk-live-secret-key"
+                },
+                "createdAt": "2026-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert!(result.is_err(), "Plaintext apiKey must not pass storage validation");
+    assert_eq!(
+        result.unwrap_err().code,
+        "validation.settings-ai.providers.apiKey"
+    );
 }
 
 #[test]
@@ -57,7 +82,7 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
 }
 
 #[test]
-fn test_valid_ai_settings_with_opencode_go_profile() {
+fn test_valid_ai_settings_with_opencode_go_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
@@ -65,7 +90,7 @@ fn test_valid_ai_settings_with_opencode_go_profile() {
                 "title": "OpenCode Go",
                 "secrets": {
                     "provider": "opencodeGo",
-                    "apiKey": "go-key"
+                    "apiKey": ""
                 },
                 "createdAt": "2026-01-01T00:00:00Z"
             }
@@ -77,7 +102,7 @@ fn test_valid_ai_settings_with_opencode_go_profile() {
 }
 
 #[test]
-fn test_valid_ai_settings_with_opencode_zen_profile() {
+fn test_valid_ai_settings_with_opencode_zen_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
@@ -85,7 +110,7 @@ fn test_valid_ai_settings_with_opencode_zen_profile() {
                 "title": "OpenCode Zen",
                 "secrets": {
                     "provider": "opencodeZen",
-                    "apiKey": "zen-key"
+                    "apiKey": ""
                 },
                 "createdAt": "2026-01-01T00:00:00Z"
             }

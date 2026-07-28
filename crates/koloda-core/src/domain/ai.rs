@@ -149,45 +149,60 @@ impl AISecrets {
         Ok(())
     }
 
+    // INVARIANT: The settings JSON must hold only the redacted form. Real API
+    // keys are persisted through the OS keyring, so a non-empty `api_key` here
+    // means plaintext is about to leak into the `settings` table — reject it.
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         match self {
             AISecrets::OpenRouter { api_key } => {
-                if !api_key.is_empty() && api_key.trim().is_empty() {
+                if !api_key.is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("openrouter.apiKey cannot be whitespace only".to_string()),
+                        Some("openrouter.apiKey must not be stored in settings".to_string()),
                     ));
                 }
             }
-            AISecrets::Ollama { base_url, .. } => {
+            AISecrets::Ollama { base_url, api_key } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("ollama.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
+                if api_key.as_ref().is_some_and(|key| !key.is_empty()) {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
+                        Some("ollama.apiKey must not be stored in settings".to_string()),
+                    ));
+                }
             }
-            AISecrets::LmStudio { base_url, .. } => {
+            AISecrets::LmStudio { base_url, api_key } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
                         Some("lmstudio.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
-            }
-            AISecrets::OpencodeGo { api_key } => {
-                if !api_key.is_empty() && api_key.trim().is_empty() {
+                if api_key.as_ref().is_some_and(|key| !key.is_empty()) {
                     return Err(AppError::new(
                         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeGo.apiKey cannot be whitespace only".to_string()),
+                        Some("lmstudio.apiKey must not be stored in settings".to_string()),
+                    ));
+                }
+            }
+            AISecrets::OpencodeGo { api_key } => {
+                if !api_key.is_empty() {
+                    return Err(AppError::new(
+                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
+                        Some("opencodeGo.apiKey must not be stored in settings".to_string()),
                     ));
                 }
             }
             AISecrets::OpencodeZen { api_key } => {
-                if !api_key.is_empty() && api_key.trim().is_empty() {
+                if !api_key.is_empty() {
                     return Err(AppError::new(
                         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeZen.apiKey cannot be whitespace only".to_string()),
+                        Some("opencodeZen.apiKey must not be stored in settings".to_string()),
                     ));
                 }
             }
