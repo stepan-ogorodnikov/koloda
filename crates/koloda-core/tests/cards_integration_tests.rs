@@ -1,3 +1,4 @@
+use koloda_core::app::error::error_codes;
 use koloda_core::domain::cards::{
     DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardProgress,
 };
@@ -8,6 +9,68 @@ use koloda_core::repo::{cards, lessons, reviews};
 mod common;
 use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use common::test_db;
+
+#[test]
+fn add_card_rejects_missing_deck() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let _deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+
+    let result = cards::add_card(
+        &db,
+        InsertCardData {
+            deck_id: 999_999,
+            template_id,
+            content: common::card_content("question", "answer"),
+            state: None,
+            due_at: None,
+            stability: None,
+            difficulty: None,
+            scheduled_days: None,
+            learning_steps: None,
+            reps: None,
+            lapses: None,
+            last_reviewed_at: None,
+        },
+    );
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, error_codes::NOT_FOUND_CARDS_ADD_DECK);
+}
+
+#[test]
+fn add_cards_rejects_missing_deck_per_item() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+
+    let result = cards::add_cards(
+        &db,
+        vec![InsertCardData {
+            deck_id: 999_999,
+            template_id,
+            content: common::card_content("question", "answer"),
+            state: None,
+            due_at: None,
+            stability: None,
+            difficulty: None,
+            scheduled_days: None,
+            learning_steps: None,
+            reps: None,
+            lapses: None,
+            last_reviewed_at: None,
+        }],
+    )
+    .expect("batch add should return per-item results");
+
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].error.as_deref(), Some(error_codes::NOT_FOUND_CARDS_ADD_DECK));
+
+    let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    assert!(cards_after.is_empty(), "no card should be inserted for a missing deck");
+}
 
 #[test]
 fn add_cards_keeps_previously_inserted_cards_on_failure() {

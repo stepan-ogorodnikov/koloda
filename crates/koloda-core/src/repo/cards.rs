@@ -11,6 +11,7 @@ use crate::domain::cards::{
 use crate::domain::templates::Template;
 use std::collections::HashMap;
 
+use crate::repo::decks::{get_deck, get_decks_by_ids};
 use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
@@ -77,6 +78,13 @@ pub fn get_card(db: &Database, id: i64) -> Result<Option<Card>, AppError> {
 }
 
 pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
+    get_deck(db, data.deck_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_CARDS_ADD_DECK,
+            Some(format!("Deck id: {}", data.deck_id)),
+        )
+    })?;
+
     let template = get_template(db, data.template_id)?.ok_or_else(|| {
         AppError::new(
             error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
@@ -124,17 +132,41 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
         return Ok(Vec::new());
     }
 
-    let distinct_ids: Vec<i64> = {
+    let distinct_deck_ids: Vec<i64> = {
+        let mut ids: Vec<i64> = data.iter().map(|c| c.deck_id).collect();
+        ids.sort_unstable();
+        ids.dedup();
+        ids
+    };
+    let decks: HashMap<i64, _> = get_decks_by_ids(db, &distinct_deck_ids)?
+        .into_iter()
+        .map(|deck| (deck.id, deck))
+        .collect();
+
+    let distinct_template_ids: Vec<i64> = {
         let mut ids: Vec<i64> = data.iter().map(|c| c.template_id).collect();
         ids.sort_unstable();
         ids.dedup();
         ids
     };
-    let templates: HashMap<i64, Template> = get_templates_by_ids(db, &distinct_ids)?;
+    let templates: HashMap<i64, Template> = get_templates_by_ids(db, &distinct_template_ids)?;
 
     let mut results = Vec::with_capacity(data.len());
 
     for card_data in data.into_iter() {
+        if !decks.contains_key(&card_data.deck_id) {
+            results.push(AddCardsItemResult {
+                error: Some(format!(
+                    "{}",
+                    AppError::new(
+                        error_codes::NOT_FOUND_CARDS_ADD_DECK,
+                        Some(format!("Deck id: {}", card_data.deck_id)),
+                    )
+                )),
+            });
+            continue;
+        }
+
         match templates.get(&card_data.template_id) {
             Some(template) => match insert_card_data(db, &card_data, template) {
                 Ok(_) => results.push(AddCardsItemResult { error: None }),

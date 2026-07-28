@@ -122,6 +122,10 @@ msgid "not-found.algorithms.delete.successor"
 msgstr "Алгоритм-наследник не найден"
 
 #: ../../libs/app/src/lib/error.ts:34
+msgid "not-found.cards.add.deck"
+msgstr "Колода не найдена"
+
+#: ../../libs/app/src/lib/error.ts:35
 msgid "not-found.cards.add.template"
 msgstr "Шаблон не найден"
 

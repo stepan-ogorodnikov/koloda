@@ -122,6 +122,10 @@ msgid "not-found.algorithms.delete.successor"
 msgstr "Successor preset not found"
 
 #: ../../libs/app/src/lib/error.ts:34
+msgid "not-found.cards.add.deck"
+msgstr "Deck not found"
+
+#: ../../libs/app/src/lib/error.ts:35
 msgid "not-found.cards.add.template"
 msgstr "Template not found"
 
