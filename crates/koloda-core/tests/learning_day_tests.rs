@@ -45,6 +45,19 @@ fn learning_day_range_at_exact_boundary_is_inclusive_lower_bound() {
     assert_eq!(to, expected_to);
 }
 
+#[test]
+fn learning_day_range_rejects_unpadded_hours() {
+    let now = local_datetime(2024, 1, 2, 6, 30);
+    let result = learning_day_range_at(now, "5:00");
+
+    assert!(result.is_err());
+    assert_eq!(
+        result.expect_err("unpadded hours should fail").code,
+        error_codes::VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT
+    );
+}
+
+#[test]
 fn learning_day_range_rejects_invalid_boundary() {
     let now = local_datetime(2024, 1, 2, 6, 30);
     let result = learning_day_range_at(now, "25:00");

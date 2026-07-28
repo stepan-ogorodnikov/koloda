@@ -252,6 +252,15 @@ describe("learn ahead limit validation", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects unpadded dayStartsAt hours", () => {
+    const result = learningSettingsValidation.safeParse({
+      defaults,
+      dailyLimits: {},
+      dayStartsAt: "5:00",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("resolvedLearningSettingsValidation", () => {

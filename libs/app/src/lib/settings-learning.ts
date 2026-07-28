@@ -1,4 +1,37 @@
 import { z } from "zod";
+import { AppError } from "./error";
+
+// WHY: regex enforces zero-padded "hh:mm". `z.iso.time({ precision: -1 })`
+// accepted "5:00" and broke the TS↔Rust mirror — Rust's `parse_day_starts_at`
+// rejects it. Do not loosen to `\d{1,2}`.
+const DAY_STARTS_AT_PATTERN = /^(\d{2}):(\d{2})$/;
+
+// INVARIANT: on success, returns `{ hours, minutes }` with `0 <= hours <= 23`
+// and `0 <= minutes <= 59`. Callers (e.g. `getCurrentLearningDayRange`) rely
+// on this without re-validating. Mirrors Rust `parse_day_starts_at`.
+export function parseDayStartsAt(dayStartsAt: string) {
+  const match = dayStartsAt.match(DAY_STARTS_AT_PATTERN);
+  if (!match) throw new AppError("validation.settings-learning.day-starts-at");
+
+  const hours = Number.parseInt(match[1], 10);
+  const minutes = Number.parseInt(match[2], 10);
+
+  if (hours > 23 || minutes > 59) throw new AppError("validation.settings-learning.day-starts-at");
+
+  return { hours, minutes };
+}
+
+export const dayStartsAtValidation = z.string().refine(
+  (value) => {
+    try {
+      parseDayStartsAt(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: "validation.settings-learning.day-starts-at" },
+);
 
 export const LEARNING_DAILY_LIMIT_TYPES = ["untouched", "learn", "review"] as const;
 
@@ -62,7 +95,7 @@ export const learningSettingsValidation = z.object({
     template: z.int(),
   }),
   dailyLimits: dailyLimitsValidation,
-  dayStartsAt: z.iso.time({ precision: -1 }).default("05:00"),
+  dayStartsAt: dayStartsAtValidation.default("05:00"),
   learnAheadLimit: z.tuple([z.number().min(0).max(48), z.number().min(0).max(59)]).default([0, 30]),
 });
 
@@ -72,7 +105,7 @@ export const resolvedLearningSettingsValidation = z.object({
     template: z.int(),
   }),
   dailyLimits: resolvedDailyLimitsValidation,
-  dayStartsAt: z.iso.time({ precision: -1 }),
+  dayStartsAt: dayStartsAtValidation,
   learnAheadLimit: z.tuple([z.number().min(0).max(48), z.number().min(0).max(59)]),
 });
 

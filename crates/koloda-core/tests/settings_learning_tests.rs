@@ -248,6 +248,14 @@ fn test_day_starts_at_minutes_too_high_fails() {
 }
 
 #[test]
+fn test_day_starts_at_single_digit_hours_fails() {
+    let json = build_learning_settings_json(standard_daily_limits(), r#""5:00""#, "[4, 0]");
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    assert!(settings.validate().is_err(), "Should fail without zero-padded hours");
+}
+
+#[test]
 fn test_day_starts_at_invalid_format_fails() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""invalid""#, "[4, 0]");
 

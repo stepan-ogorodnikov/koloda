@@ -1,5 +1,5 @@
 import type { ObjectPropertiesMapping } from "@koloda/app";
-import { AppError, mapObjectPropertiesReverse } from "@koloda/app";
+import { mapObjectPropertiesReverse, parseDayStartsAt } from "@koloda/app";
 import type { AllowedSettings } from "@koloda/app";
 import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "@koloda/app";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
@@ -39,16 +39,7 @@ export type InsertReviewData = z.infer<typeof insertReviewSchema>;
  * @throws {AppError} If dayStartsAt is not in 'hh:mm' format or out of range
  */
 export async function getCurrentLearningDayRange(dayStartsAt: string) {
-  const match = dayStartsAt.match(/^(\d{2}):(\d{2})$/);
-  if (!match) throw new AppError("validation.settings-learning.day-starts-at");
-
-  const [_, hhStr, mmStr] = match;
-  const hours = parseInt(hhStr);
-  const minutes = parseInt(mmStr);
-
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    throw new AppError("validation.settings-learning.day-starts-at");
-  }
+  const { hours, minutes } = parseDayStartsAt(dayStartsAt);
 
   const now = new Date();
 

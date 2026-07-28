@@ -30,6 +30,12 @@ describe("reviews", () => {
     } satisfies Partial<AppError>);
   });
 
+  it("rejects unpadded learning day boundaries", async () => {
+    await expect(getCurrentLearningDayRange("5:00")).rejects.toMatchObject({
+      code: "validation.settings-learning.day-starts-at",
+    } satisfies Partial<AppError>);
+  });
+
   it("normalizes totals using counts flags and marks over-limit states", async () => {
     const result = await calculateTodaysReviewTotals(
       {
