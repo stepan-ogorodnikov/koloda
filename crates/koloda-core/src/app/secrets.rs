@@ -1,5 +1,8 @@
 use crate::app::error::AppError;
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::{Arc, LazyLock};
+
+#[cfg(debug_assertions)]
+use std::sync::RwLock;
 
 #[cfg(not(target_os = "windows"))]
 use std::collections::HashMap;
@@ -9,24 +12,33 @@ use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 const STORE_ID: &str = "koloda";
 
+#[cfg(debug_assertions)]
 static TEST_SECRET_STORE: LazyLock<RwLock<Option<Arc<dyn SecretStore>>>> = LazyLock::new(|| RwLock::new(None));
 
+#[cfg(debug_assertions)]
 pub fn set_test_secret_store(store: Option<Arc<dyn SecretStore>>) {
     let mut guard = TEST_SECRET_STORE.write().unwrap();
     *guard = store;
 }
 
+#[cfg(debug_assertions)]
 pub fn clear_test_secret_store() {
     let mut guard = TEST_SECRET_STORE.write().unwrap();
     *guard = None;
 }
 
+#[cfg(debug_assertions)]
 pub fn get_secret_store() -> Arc<dyn SecretStore> {
     let guard = TEST_SECRET_STORE.read().unwrap();
     if let Some(store) = guard.as_ref() {
         return Arc::clone(store);
     }
     drop(guard);
+    Arc::clone(&*REAL_SECRET_STORE)
+}
+
+#[cfg(not(debug_assertions))]
+pub fn get_secret_store() -> Arc<dyn SecretStore> {
     Arc::clone(&*REAL_SECRET_STORE)
 }
 
