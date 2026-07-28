@@ -40,8 +40,9 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
             .and_then(|f| f.deck_ids.as_deref())
             .filter(|ids| !ids.is_empty());
         let mut next_param = 1;
-        let (filters, filter_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param, "WHERE");
-        let due_at = params.due_at;
+        let (filters, mut query_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param, "WHERE");
+        let due_at_param = format!("?{}", next_param);
+        query_params.push(params.due_at);
 
         let query = format!(
             r#"
@@ -50,21 +51,21 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
                     d.id,
                     d.title,
                     COALESCE(SUM(CASE WHEN c.state = 0 THEN 1 END), 0) AS untouched,
-                    COALESCE(SUM(CASE WHEN c.state IN (1, 3) AND c.due_at < {} THEN 1 END), 0) AS learn,
-                    COALESCE(SUM(CASE WHEN c.state = 2 AND c.due_at < {} THEN 1 END), 0) AS review
+                    COALESCE(SUM(CASE WHEN c.state IN (1, 3) AND c.due_at < {due_at_param} THEN 1 END), 0) AS learn,
+                    COALESCE(SUM(CASE WHEN c.state = 2 AND c.due_at < {due_at_param} THEN 1 END), 0) AS review
                 FROM decks d
                 LEFT JOIN cards c ON c.deck_id = d.id
-                {}
+                {filters}
                 GROUP BY d.id, d.title
             )
             SELECT id, title, untouched, learn, review, untouched + learn + review AS total
             FROM per_deck
             ORDER BY id
             "#,
-            due_at, due_at, filters
         );
 
-        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+        let sql_params: Vec<&dyn rusqlite::ToSql> =
+            query_params.iter().map(|value| value as &dyn rusqlite::ToSql).collect();
         let mut stmt = conn.prepare(&query)?;
         let decks = stmt
             .query_map(sql_params.as_slice(), get_lesson_deck_row)?
@@ -81,12 +82,40 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
     db.with_conn(|conn| {
         let deck_ids = params.filters.deck_ids.as_deref().filter(|ids| !ids.is_empty());
         let mut next_param = 1;
-        let (filters_untouched, mut filter_params) =
+        let mut query_params: Vec<i64> = Vec::new();
+
+        let (filters_untouched, untouched_deck_params) =
             lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
-        let (filters_learn, learn_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
-        let (filters_review, review_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
-        filter_params.extend(learn_params);
-        filter_params.extend(review_params);
+        query_params.extend(untouched_deck_params);
+        let limit_untouched_param = {
+            let placeholder = format!("?{}", next_param);
+            next_param += 1;
+            placeholder
+        };
+        query_params.push(params.amounts.untouched);
+
+        let due_at_param = {
+            let placeholder = format!("?{}", next_param);
+            next_param += 1;
+            placeholder
+        };
+        query_params.push(params.due_at);
+
+        let (filters_learn, learn_deck_params) =
+            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        query_params.extend(learn_deck_params);
+        let limit_learn_param = {
+            let placeholder = format!("?{}", next_param);
+            next_param += 1;
+            placeholder
+        };
+        query_params.push(params.amounts.learn);
+
+        let (filters_review, review_deck_params) =
+            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        query_params.extend(review_deck_params);
+        let limit_review_param = format!("?{}", next_param);
+        query_params.push(params.amounts.review);
 
         let query = format!(
             r#"
@@ -95,9 +124,9 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = 0{}
+                WHERE state = 0{filters_untouched}
                 ORDER BY created_at
-                LIMIT {}
+                LIMIT {limit_untouched_param}
             )
 
             UNION ALL
@@ -107,9 +136,9 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state IN (1, 3) AND due_at < {} {}
+                WHERE state IN (1, 3) AND due_at < {due_at_param} {filters_learn}
                 ORDER BY due_at
-                LIMIT {}
+                LIMIT {limit_learn_param}
             )
 
             UNION ALL
@@ -119,22 +148,15 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = 2 AND due_at < {} {}
+                WHERE state = 2 AND due_at < {due_at_param} {filters_review}
                 ORDER BY due_at
-                LIMIT {}
+                LIMIT {limit_review_param}
             )
             "#,
-            filters_untouched,
-            params.amounts.untouched,
-            params.due_at,
-            filters_learn,
-            params.amounts.learn,
-            params.due_at,
-            filters_review,
-            params.amounts.review
         );
 
-        let sql_params: Vec<&dyn rusqlite::ToSql> = filter_params.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+        let sql_params: Vec<&dyn rusqlite::ToSql> =
+            query_params.iter().map(|value| value as &dyn rusqlite::ToSql).collect();
         let mut stmt = conn.prepare(&query)?;
 
         let cards = stmt
