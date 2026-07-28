@@ -40,6 +40,35 @@ fn add_card_rejects_missing_deck() {
 }
 
 #[test]
+fn add_card_rejects_invalid_progress_state() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+
+    let result = cards::add_card(
+        &db,
+        InsertCardData {
+            deck_id,
+            template_id,
+            content: common::card_content("question", "answer"),
+            state: Some(999),
+            due_at: None,
+            stability: None,
+            difficulty: None,
+            scheduled_days: None,
+            learning_steps: None,
+            reps: None,
+            lapses: None,
+            last_reviewed_at: None,
+        },
+    );
+
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().code, error_codes::VALIDATION_CARDS_PROGRESS_STATE);
+}
+
+#[test]
 fn add_cards_rejects_missing_deck_per_item() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

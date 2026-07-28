@@ -128,7 +128,19 @@ pub struct GetCardsParams {
 
 impl InsertCardData {
     pub fn validate(&self, template_fields: &[TemplateField]) -> Result<(), AppError> {
-        validate_content(&self.content, template_fields)
+        validate_content(&self.content, template_fields)?;
+        validate_state(self.state.unwrap_or(0))?;
+        if let Some(stability) = self.stability {
+            validate_stability(stability)?;
+        }
+        if let Some(difficulty) = self.difficulty {
+            validate_difficulty(difficulty)?;
+        }
+        validate_scheduled_days(self.scheduled_days.unwrap_or(0))?;
+        validate_learning_steps(self.learning_steps.unwrap_or(0))?;
+        validate_reps(self.reps.unwrap_or(0))?;
+        validate_lapses(self.lapses.unwrap_or(0))?;
+        Ok(())
     }
 }
 
@@ -140,15 +152,35 @@ impl UpdateCardValues {
 
 impl UpdateCardProgress {
     pub fn validate(&self) -> Result<(), AppError> {
-        validate_state(self.state)?;
-        validate_stability(self.stability)?;
-        validate_difficulty(self.difficulty)?;
-        validate_scheduled_days(self.scheduled_days)?;
-        validate_learning_steps(self.learning_steps)?;
-        validate_reps(self.reps)?;
-        validate_lapses(self.lapses)?;
-        Ok(())
+        validate_progress_fields(
+            self.state,
+            self.stability,
+            self.difficulty,
+            self.scheduled_days,
+            self.learning_steps,
+            self.reps,
+            self.lapses,
+        )
     }
+}
+
+fn validate_progress_fields(
+    state: i32,
+    stability: f64,
+    difficulty: f64,
+    scheduled_days: i32,
+    learning_steps: i32,
+    reps: i32,
+    lapses: i32,
+) -> Result<(), AppError> {
+    validate_state(state)?;
+    validate_stability(stability)?;
+    validate_difficulty(difficulty)?;
+    validate_scheduled_days(scheduled_days)?;
+    validate_learning_steps(learning_steps)?;
+    validate_reps(reps)?;
+    validate_lapses(lapses)?;
+    Ok(())
 }
 
 fn validate_content(content: &CardContent, template_fields: &[TemplateField]) -> Result<(), AppError> {

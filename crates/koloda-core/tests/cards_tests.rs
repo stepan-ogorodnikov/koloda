@@ -359,6 +359,70 @@ fn test_insert_card_content_unicode_ok() {
 }
 
 // ============================================================================
+// INSERT CARD DATA - PROGRESS VALIDATION
+// ============================================================================
+
+fn minimal_insert_card_data() -> serde_json::Value {
+    json!({
+        "deckId": 1,
+        "templateId": 1,
+        "content": valid_card_content()
+    })
+}
+
+#[test]
+fn test_insert_card_progress_defaults_valid() {
+    let card_data = serde_json::from_value::<InsertCardData>(minimal_insert_card_data()).unwrap();
+    assert!(card_data.validate(&valid_template_fields()).is_ok());
+}
+
+#[test]
+fn test_insert_card_progress_state_above_max_fails() {
+    let mut data = minimal_insert_card_data();
+    data["state"] = json!(4);
+    let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
+    let validation_result = card_data.validate(&valid_template_fields());
+    assert!(validation_result.is_err());
+    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
+}
+
+#[test]
+fn test_insert_card_progress_reps_negative_fails() {
+    let mut data = minimal_insert_card_data();
+    data["reps"] = json!(-1);
+    let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
+    let validation_result = card_data.validate(&valid_template_fields());
+    assert!(validation_result.is_err());
+    assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
+}
+
+#[test]
+fn test_insert_card_progress_stability_negative_fails() {
+    let mut data = minimal_insert_card_data();
+    data["stability"] = json!(-1.0);
+    let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
+    let validation_result = card_data.validate(&valid_template_fields());
+    assert!(validation_result.is_err());
+    assert_eq!(
+        validation_result.unwrap_err().code,
+        "validation.cards-progress.stability"
+    );
+}
+
+#[test]
+fn test_insert_card_progress_difficulty_above_max_fails() {
+    let mut data = minimal_insert_card_data();
+    data["difficulty"] = json!(10.1);
+    let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
+    let validation_result = card_data.validate(&valid_template_fields());
+    assert!(validation_result.is_err());
+    assert_eq!(
+        validation_result.unwrap_err().code,
+        "validation.cards-progress.difficulty"
+    );
+}
+
+// ============================================================================
 // UPDATE CARD VALUES - MISSING FIELDS
 // ============================================================================
 
