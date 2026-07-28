@@ -25,8 +25,8 @@ impl Database {
 
         let mut conn = Connection::open(&db_path).map_err(AppError::from)?;
 
-        conn.pragma_update(None, "journal_mode", "WAL").ok();
-        conn.pragma_update(None, "foreign_keys", "ON").ok();
+        conn.pragma_update(None, "journal_mode", "WAL")?;
+        conn.pragma_update(None, "foreign_keys", "ON")?;
 
         migrations::runner().run(&mut conn).map_err(AppError::from)?;
 
@@ -65,7 +65,7 @@ impl Database {
 
     pub fn in_memory() -> Result<Self, AppError> {
         let mut conn = Connection::open_in_memory().map_err(AppError::from)?;
-        conn.pragma_update(None, "foreign_keys", "ON").ok();
+        conn.pragma_update(None, "foreign_keys", "ON")?;
         migrations::runner().run(&mut conn).map_err(AppError::from)?;
         Ok(Self::new(conn))
     }
