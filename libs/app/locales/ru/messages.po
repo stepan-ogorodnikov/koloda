@@ -333,6 +333,10 @@ msgstr "Название не может быть пустым"
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
+#: ../../libs/app/src/lib/error.ts:47
+msgid "validation.lessons.amounts.negative"
+msgstr "Количество не может быть отрицательным"
+
 #: ../../libs/app/src/lib/error.ts:48
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key не может быть пустым"

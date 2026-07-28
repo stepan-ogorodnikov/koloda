@@ -41,6 +41,15 @@ pub struct LessonAmounts {
     pub total: i64,
 }
 
+impl LessonAmounts {
+    pub fn validate(&self) -> Result<(), AppError> {
+        validate_lesson_amount(self.untouched)?;
+        validate_lesson_amount(self.learn)?;
+        validate_lesson_amount(self.review)?;
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonTemplateLayoutItem {
@@ -80,6 +89,12 @@ pub struct GetLessonDataParams {
     pub amounts: LessonAmounts,
 }
 
+impl GetLessonDataParams {
+    pub fn validate(&self) -> Result<(), AppError> {
+        self.amounts.validate()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonResultData {
@@ -101,6 +116,14 @@ impl LessonResultData {
 
         Ok(())
     }
+}
+
+fn validate_lesson_amount(value: i64) -> Result<(), AppError> {
+    if value < 0 {
+        return Err(AppError::new(error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE, None));
+    }
+
+    Ok(())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

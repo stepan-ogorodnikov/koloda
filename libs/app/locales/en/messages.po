@@ -333,6 +333,10 @@ msgstr "Title can't be empty"
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "Card id and review card id don't match"
 
+#: ../../libs/app/src/lib/error.ts:47
+msgid "validation.lessons.amounts.negative"
+msgstr "Amount can't be negative"
+
 #: ../../libs/app/src/lib/error.ts:48
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key can't be empty"

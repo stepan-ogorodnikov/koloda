@@ -79,6 +79,8 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
 }
 
 pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<Vec<Card>, AppError> {
+    params.validate()?;
+
     db.with_conn(|conn| {
         let deck_ids = params.filters.deck_ids.as_deref().filter(|ids| !ids.is_empty());
         let mut next_param = 1;
@@ -101,8 +103,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
         };
         query_params.push(params.due_at);
 
-        let (filters_learn, learn_deck_params) =
-            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        let (filters_learn, learn_deck_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
         query_params.extend(learn_deck_params);
         let limit_learn_param = {
             let placeholder = format!("?{}", next_param);
@@ -111,8 +112,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
         };
         query_params.push(params.amounts.learn);
 
-        let (filters_review, review_deck_params) =
-            lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
+        let (filters_review, review_deck_params) = lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
         query_params.extend(review_deck_params);
         let limit_review_param = format!("?{}", next_param);
         query_params.push(params.amounts.review);

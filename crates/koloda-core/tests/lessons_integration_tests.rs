@@ -1,3 +1,4 @@
+use koloda_core::app::error::error_codes;
 use koloda_core::domain::cards::UpdateCardProgress;
 use koloda_core::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonFilters, LessonResultData,
@@ -402,4 +403,35 @@ fn get_lesson_data_includes_unique_related_entities_for_multiple_decks() {
     assert_eq!(lesson_data.decks.len(), 2);
     assert_eq!(lesson_data.templates.len(), 2);
     assert_eq!(lesson_data.algorithms.len(), 2);
+}
+
+#[test]
+fn get_lesson_cards_rejects_negative_amounts() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let _ = add_card(&db, deck_id, template_id, "question");
+
+    let result = lessons::get_lesson_cards(
+        &db,
+        &GetLessonDataParams {
+            due_at: 1_000,
+            filters: LessonFilters {
+                deck_ids: Some(vec![deck_id]),
+            },
+            amounts: LessonAmounts {
+                untouched: -1,
+                learn: 0,
+                review: 0,
+                total: 0,
+            },
+        },
+    );
+
+    assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err().code,
+        error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE
+    );
 }
