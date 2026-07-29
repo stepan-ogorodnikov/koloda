@@ -32,14 +32,6 @@ fn valid_review_json() -> serde_json::Value {
     })
 }
 
-#[allow(dead_code)]
-fn create_valid_lesson_result() -> LessonResultData {
-    LessonResultData {
-        card: serde_json::from_value(valid_card_progress_json()).unwrap(),
-        review: serde_json::from_value(valid_review_json()).unwrap(),
-    }
-}
-
 // ============================================================================
 // LESSON RESULT DATA - MISSING FIELDS
 // ============================================================================

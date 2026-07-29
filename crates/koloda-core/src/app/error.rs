@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-#[allow(dead_code)]
 pub mod error_codes {
     pub const UNKNOWN: &str = "unknown";
 
@@ -40,7 +39,6 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT: &str = "validation.settings-learning.day-starts-at";
 
     pub const VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS: &str = "validation.settings-hotkeys.duplicate-keys";
-    pub const VALIDATION_SETTINGS_HOTKEYS_INVALID_KEY: &str = "validation.settings-hotkeys.invalid-key";
 
     pub const VALIDATION_SETTINGS_INTERFACE_LANGUAGE: &str = "validation.settings-interface.language";
     pub const VALIDATION_SETTINGS_INTERFACE_SCHEME: &str = "validation.settings-interface.scheme";
