@@ -2,11 +2,13 @@
 
 This guide defines how code should be documented in this repository.
 
-Core Principle: Proximity equals accuracy. Critical implementation details must live in the code file, as close to the logic as possible.
+Core Principle: Proximity equals accuracy.
+Critical implementation details must live in the code file, as close to the logic as possible.
 
 ## What NOT to Document
 
-Do not write comments that explain what the code does. Developers and LLMs can read code.
+Do not write comments that explain what the code does.
+Developers and LLMs can read code.
 
 - Bad: `// Loops through the text stream and calls onChunk`
 - Bad: `// Returns the conversation name truncated to 48 characters`
@@ -16,7 +18,8 @@ Do not write JSDoc or block comments for simple functions, getters, or standard 
 ## What TO Document (The "Traps")
 
 You must document code that is non-obvious, fragile, or intentionally divergent.
-Always ask: "If another developer (or LLM) saw this, would they try to 'fix' it and break something?" If yes, document it.
+Always ask: "If another developer (or LLM) saw this, would they try to 'fix' it and break something?"
+If yes, document it.
 
 Document these scenarios:
 
@@ -27,16 +30,19 @@ Document these scenarios:
 
 ## Strict Commenting Rules
 
-RULE: Do not write comments unless they strictly match one of the following tags. 
+RULE: Inline comments must use one of the following tags (or match an exception below).
 
-If a piece of code does not require a tag, it must not have a comment. Do not write JSDoc, do not explain "what" the code does, and do not leave notes.
-LLMs are excellent at reading code; only document the traps.
+If a piece of code does not require a tag and is not an allowed exception, it must not have a comment.
+Do not write JSDoc that narrates APIs, do not explain "what" the code does, and do not leave notes.
+LLMs are excellent at reading code; document traps inline.
+Use the orientation exception only at file/type entry points.
 
 ### Allowed Tags:
 
 1. `// WHY`:
 
-Use this when the code looks weird, redundant, or backwards. It stops future agents from "cleaning up" the code and breaking it.
+Use this when the code looks weird, redundant, or backwards.
+It stops future agents from "cleaning up" the code and breaking it.
 
 Example:
 
@@ -62,7 +68,8 @@ try {
 
 2. `// INVARIANT`:
 
-Use this to enforce architectural boundaries or state rules. This tells future agents "do not change this return value or state transition."
+Use this to enforce architectural boundaries or state rules.
+This tells future agents "do not change this return value or state transition."
 
 Example:
 
@@ -77,7 +84,8 @@ const handleCancel = useCallback(() => {
 
 3. `// WORKAROUND`:
 
-Use this for library bugs or missing features. If you don't use this, a future agent will try to "fix" your hack when the library updates.
+Use this for library bugs or missing features.
+If you don't use this, a future agent will try to "fix" your hack when the library updates.
 
 Example:
 
@@ -91,18 +99,58 @@ if (streamedTextCards.length > 0) {
 }
 ```
 
-### The Only Exception: Complex Logic
+### Exceptions
 
-The only time you may write a comment without a tag is inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline).
+#### 1. Complex Logic
+
+You may write a comment without a tag inside a function body to explain highly complex, non-obvious algorithm steps (e.g., a complex regex or data transformation pipeline).
 Even then, only comment the steps, not the obvious lines.
+
+#### 2. Module / Type Orientation (LLM Observability)
+
+Short crate/module rustdoc (`//!`) and rare type-level docs (`///` / block docs) may state **ownership boundaries**, **cross-system mappings**, or **do-not-interpret** rules.
+That way an agent that opened the file without the README still lands correctly.
+
+Allowed:
+
+- Thin module maps that point at README / ADR ownership (do not rehash the README).
+- Type docs that encode mappings agents would otherwise "fix" (e.g. FSRS state ints ↔ SQL lesson/review buckets).
+- Prefer `// INVARIANT:` / `// WHY:` on the field or call site when the rule is localized.
+- Use type/module docs when the rule is the type's reason to exist.
+
+Forbidden under this exception:
+
+- API narration ("returns X", "loops over Y", documenting every public fn).
+- Layer essays that belong in an ADR.
+- Duplicating README paragraphs at the top of every file.
+
+Example (module):
+
+```rust
+//! Domain DTOs, validation, and serde — mirrors `@koloda/srs` / `@koloda/app`.
+//!
+//! Must not import `rusqlite`. Shared errors via `crate::app::error::AppError` are intentional.
+//! Layer map: crate `README.md`. Mirroring: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
+```
+
+Example (type):
+
+```rust
+/// FSRS card/review state integers stored in SQLite (mirrors `ts-fsrs` `State`).
+///
+/// Lesson/review SQL buckets: New → untouched; Learning+Relearning → learn; Review → review.
+pub enum CardState { /* ... */ }
+```
 
 ## Comments vs. Architecture Decision Records (ADRs)
 
 How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
 
 - Use a Code Comment when the decision is localized to a single function or file.
+- Use module/type orientation docs when an agent opening that module needs ownership or mapping context immediately.
 - Use an ADR when the decision affects multiple files or layers (e.g., TS and Rust duplication, dual-platform persistence).
-  A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`. ADRs bridge that gap.
+  A comment in `provider-catalog.ts` won't be seen by an agent editing `domain/ai.rs`.
+  ADRs bridge that gap.
 
 Index: `docs/adr/README.md`.
 Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches both TS domain and `koloda-core`.
@@ -110,6 +158,7 @@ Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches bot
 Summary Checklist for Agents
 
 - Did I write a comment explaining why I did something instead of what I did?
-- Did I use `// WHY`:, `// INVARIANT`:, or `// WORKAROUND`: for any non-obvious code?
+- Did I use `// WHY`:, `// INVARIANT:`, or `// WORKAROUND`: for any non-obvious inline code?
+- If I added module/type docs, do they state ownership, mappings, or do-not-interpret rules — not API narration?
 - Did I avoid adding redundant JSDoc or noise?
 - If my change spans multiple layers, did I check if it needs an ADR?

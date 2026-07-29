@@ -51,7 +51,8 @@ Raise Blocking for:
 - Correctness errors, broken invariants, or behavior that contradicts a spec.
 - Layer boundary violations: cite a row from `agents/ASSISTANT-CHAT-MAP.md` or a README "Does NOT own" line.
 - TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field that `docs/adr/0001` says both sides must agree on.
-- Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code (see `agents/CODE-DOCUMENTATION.md`).
+- Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
+  Module/type orientation docs that state ownership, mappings, or do-not-interpret rules are allowed; do not demand tags on those.
 - Rules named in `agents/CODE-STYLE.md` or `agents/CSS.md` that are not lint-enforced. For example:
   - Boolean names missing a verb prefix.
   - Props type inlined in the function signature instead of a named `*Props` type.
@@ -78,7 +79,9 @@ List them at the end as a short heads-up, not as action items.
 These look like generic best-practice findings but are explicitly wrong for this repo.
 Raising them wastes the human reviewer's time and signals the reviewer did not read the project guides.
 
-- Do not request JSDoc or "document this function." See `agents/CODE-DOCUMENTATION.md`.
+- Do not request JSDoc or "document this function" for ordinary APIs.
+  Module/type orientation docs (ownership, mappings, do-not-interpret) are allowed per `agents/CODE-DOCUMENTATION.md`.
+  Do not flag them as noise.
 - Do not suggest deprecation shims, adapter layers, or compatibility wrappers. See `agents/BACKWARDS-COMPATIBILITY.md`.
 - Do not propose collapsing the TS ↔ Rust duplication or unifying the two DB dialects. See `docs/adr/0001`, `docs/adr/0002`.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust. The source of truth is TS. See `docs/adr/0001`.
