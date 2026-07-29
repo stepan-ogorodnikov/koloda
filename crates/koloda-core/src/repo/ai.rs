@@ -72,6 +72,34 @@ fn set_ai_settings(db: &Database, settings: AISettings) -> Result<(), AppError> 
     Ok(())
 }
 
+fn drop_ai_profile_from_settings(db: &Database, profile_id: &str) -> Result<(), AppError> {
+    let mut settings = get_ai_settings_or_default(db)?;
+    settings.profiles.retain(|profile| profile.id != profile_id);
+    set_ai_settings(db, settings)
+}
+
+fn restore_ai_profile_in_settings(db: &Database, previous: AIProfile) -> Result<(), AppError> {
+    let mut settings = get_ai_settings_or_default(db)?;
+    if let Some(slot) = settings.profiles.iter_mut().find(|p| p.id == previous.id) {
+        *slot = previous;
+    } else {
+        settings.profiles.push(previous);
+    }
+    set_ai_settings(db, settings)
+}
+
+fn attach_api_key(profile: AIProfile, api_key: Option<String>) -> AIProfile {
+    let secrets_with_key = match (&profile.secrets, api_key) {
+        (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
+        (Some(s), None) => Some(s.clone()),
+        _ => None,
+    };
+    AIProfile {
+        secrets: secrets_with_key,
+        ..profile
+    }
+}
+
 pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
     let settings = get_ai_settings_or_default(db)?;
 
@@ -84,15 +112,7 @@ pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
         .into_iter()
         .map(|profile| -> Result<AIProfile, AppError> {
             let api_key = get_api_key(&profile.id)?;
-            let secrets_with_key = match (&profile.secrets, api_key) {
-                (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
-                (Some(s), None) => Some(s.clone()),
-                _ => None,
-            };
-            Ok(AIProfile {
-                secrets: secrets_with_key,
-                ..profile
-            })
+            Ok(attach_api_key(profile, api_key))
         })
         .collect::<Result<Vec<_>, _>>()?;
 
@@ -106,9 +126,6 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
 
     if let Some(ref secrets) = secrets {
         secrets.validate_for_input()?;
-        if let Some(api_key) = secrets.api_key() {
-            set_api_key(&profile_id, api_key)?;
-        }
     }
 
     let secrets_for_db = secrets.as_ref().map(redact_secrets);
@@ -119,21 +136,25 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
         created_at: now,
     };
 
+    // WHY: Persist settings before the keyring write. Keyring-first left orphaned
+    // secrets under ids that never landed in settings (remove_ai_profile cannot
+    // find them). On keyring failure after DB success, roll the profile back.
     settings.profiles.push(profile.clone());
     set_ai_settings(db, settings)?;
 
+    if let Some(ref secrets) = secrets {
+        if let Some(api_key) = secrets.api_key() {
+            if let Err(err) = set_api_key(&profile_id, api_key) {
+                // WHY: Best-effort rollback; prefer the original keyring error over a
+                // secondary settings failure. `?` here would replace the cause.
+                let _ = drop_ai_profile_from_settings(db, &profile_id);
+                return Err(err);
+            }
+        }
+    }
+
     let api_key = get_api_key(&profile_id)?;
-
-    let secrets_with_key = match (&secrets, api_key) {
-        (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
-        (Some(s), None) => Some(s.clone()),
-        _ => None,
-    };
-
-    Ok(AIProfile {
-        secrets: secrets_with_key,
-        ..profile
-    })
+    Ok(attach_api_key(profile, api_key))
 }
 
 pub fn update_ai_profile(
@@ -156,17 +177,11 @@ pub fn update_ai_profile(
         secrets.validate_for_input()?;
     }
 
+    let previous_profile = settings.profiles[profile_idx].clone();
     let existing_profile = &mut settings.profiles[profile_idx];
 
-    if let Some(new_secrets) = secrets {
-        if let Some(api_key) = new_secrets.api_key() {
-            set_api_key(id, api_key)?;
-        } else {
-            // WHY: otherwise get_ai_profiles reconstructs the redacted profile
-            // from the orphaned keyring entry, re-attaching the old secret.
-            remove_api_key(id)?;
-        }
-        existing_profile.secrets = Some(redact_secrets(&new_secrets));
+    if let Some(ref new_secrets) = secrets {
+        existing_profile.secrets = Some(redact_secrets(new_secrets));
     }
 
     if title.is_some() {
@@ -176,17 +191,26 @@ pub fn update_ai_profile(
     let updated_profile = existing_profile.clone();
     set_ai_settings(db, settings)?;
 
-    let api_key = get_api_key(id)?;
-    let secrets_with_key = match (&updated_profile.secrets, api_key) {
-        (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
-        (Some(s), None) => Some(s.clone()),
-        _ => None,
-    };
+    // WHY: Same DB-then-keyring ordering as add. Clear stale keys after the DB
+    // write so a failed remove can restore settings and avoid re-attaching an
+    // orphaned keyring entry on the next get. On any keyring failure, roll back.
+    if let Some(ref new_secrets) = secrets {
+        let keyring_result = match new_secrets.api_key() {
+            Some(api_key) => set_api_key(id, api_key),
+            // WHY: otherwise get_ai_profiles reconstructs the redacted profile
+            // from the orphaned keyring entry, re-attaching the old secret.
+            None => remove_api_key(id),
+        };
+        if let Err(err) = keyring_result {
+            // WHY: Best-effort rollback; prefer the original keyring error over a
+            // secondary settings failure. `?` here would replace the cause.
+            let _ = restore_ai_profile_in_settings(db, previous_profile);
+            return Err(err);
+        }
+    }
 
-    Ok(AIProfile {
-        secrets: secrets_with_key,
-        ..updated_profile
-    })
+    let api_key = get_api_key(id)?;
+    Ok(attach_api_key(updated_profile, api_key))
 }
 
 pub fn remove_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
