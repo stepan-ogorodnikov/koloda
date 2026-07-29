@@ -111,16 +111,13 @@ describe("throwKnownError", () => {
     });
   });
 
-  it("wraps an existing AppError (losing original code)", async () => {
+  it("rethrows an existing AppError unchanged", async () => {
+    const original = new AppError("not-found.cards.add.template", "Template id: 1");
     await expect(
       throwKnownError("db.get", async () => {
-        throw new AppError("ai.http");
+        throw original;
       }),
-    ).rejects.toMatchObject({
-      name: "AppError",
-      code: "db.get",
-      details: "ai.http",
-    });
+    ).rejects.toBe(original);
   });
 });
 

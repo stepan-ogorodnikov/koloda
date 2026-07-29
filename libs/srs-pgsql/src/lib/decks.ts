@@ -1,11 +1,13 @@
-import { throwKnownError } from "@koloda/app";
+import { AppError, throwKnownError } from "@koloda/app";
 import { updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
+import { getAlgorithm } from "./algorithms";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { decks } from "./schema";
+import { getTemplate } from "./templates";
 
 /**
  * Retrieves all decks from the database with optional filters
@@ -43,6 +45,11 @@ export async function getDeck(db: DB, id: Deck["id"]) {
  */
 export async function addDeck(db: DB, data: InsertDeckData) {
   return throwKnownError("db.add", async () => {
+    const algorithm = await getAlgorithm(db, data.algorithmId);
+    if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${data.algorithmId}`);
+    const template = await getTemplate(db, data.templateId);
+    if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${data.templateId}`);
+
     const result = await db.insert(decks).values(data).returning();
 
     return result[0] as Deck;
@@ -59,6 +66,14 @@ export async function addDeck(db: DB, data: InsertDeckData) {
 export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   return throwKnownError("db.update", async () => {
     const payload = updateDeckSchema.parse(values);
+
+    const existing = await getDeck(db, id);
+    if (!existing) throw new AppError("not-found.decks.update.deck", `Deck id: ${id}`);
+    const algorithm = await getAlgorithm(db, payload.algorithmId);
+    if (!algorithm) throw new AppError("not-found.decks.update.algorithm", `Algorithm id: ${payload.algorithmId}`);
+    const template = await getTemplate(db, payload.templateId);
+    if (!template) throw new AppError("not-found.decks.update.template", `Template id: ${payload.templateId}`);
+
     const result = await db.update(decks).set(withUpdatedAt(payload)).where(eq(decks.id, id)).returning();
 
     return result[0] as Deck;

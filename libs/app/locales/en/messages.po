@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app/src/lib/error.ts:39
+#: ../../libs/app/src/lib/error.ts:45
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Title can't be longer than {maximum, plural, other {# characters}}"
 
@@ -129,12 +129,32 @@ msgstr "Deck not found"
 msgid "not-found.cards.add.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:35
+#: ../../libs/app/src/lib/error.ts:36
 msgid "not-found.cards.update.card"
 msgstr "Card not found"
 
-#: ../../libs/app/src/lib/error.ts:36
+#: ../../libs/app/src/lib/error.ts:37
 msgid "not-found.cards.update.template"
+msgstr "Template not found"
+
+#: ../../libs/app/src/lib/error.ts:38
+msgid "not-found.decks.add.algorithm"
+msgstr "Preset not found"
+
+#: ../../libs/app/src/lib/error.ts:39
+msgid "not-found.decks.add.template"
+msgstr "Template not found"
+
+#: ../../libs/app/src/lib/error.ts:41
+msgid "not-found.decks.update.algorithm"
+msgstr "Preset not found"
+
+#: ../../libs/app/src/lib/error.ts:40
+msgid "not-found.decks.update.deck"
+msgstr "Deck not found"
+
+#: ../../libs/app/src/lib/error.ts:42
+msgid "not-found.decks.update.template"
 msgstr "Template not found"
 
 #: ../../libs/app/src/lib/error.ts:33
@@ -313,82 +333,82 @@ msgstr "Toggle sidebar"
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:58
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Failed to generate unique profile id"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:59
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Temperature must be between 0 and 2"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:64
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:37
+#: ../../libs/app/src/lib/error.ts:43
 msgid "validation.common.title.too-short"
 msgstr "Title can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:46
-msgid "validation.lessons.result.card-review-mismatch"
-msgstr "Card id and review card id don't match"
-
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.lessons.amounts.negative"
 msgstr "Amount can't be negative"
 
-#: ../../libs/app/src/lib/error.ts:48
+#: ../../libs/app/src/lib/error.ts:52
+msgid "validation.lessons.result.card-review-mismatch"
+msgstr "Card id and review card id don't match"
+
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:56
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Invalid URL"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:57
 msgid "validation.settings-ai.providers.id"
 msgstr "Profile id is required"
 
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "There are conflicting hotkeys"
 
-#: ../../libs/app/src/lib/error.ts:41
+#: ../../libs/app/src/lib/error.ts:47
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Learn can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:42
+#: ../../libs/app/src/lib/error.ts:48
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Review can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:40
+#: ../../libs/app/src/lib/error.ts:46
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "New can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:45
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Start of the day is incorrect"
 
-#: ../../libs/app/src/lib/error.ts:43
+#: ../../libs/app/src/lib/error.ts:49
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Hours must be between 0 and 48"
 
-#: ../../libs/app/src/lib/error.ts:44
+#: ../../libs/app/src/lib/error.ts:50
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:63
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:60
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:61
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:62
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"

@@ -35,6 +35,11 @@ export const ERROR_MESSAGES = {
   "not-found.cards.add.template": msg`not-found.cards.add.template`,
   "not-found.cards.update.card": msg`not-found.cards.update.card`,
   "not-found.cards.update.template": msg`not-found.cards.update.template`,
+  "not-found.decks.add.algorithm": msg`not-found.decks.add.algorithm`,
+  "not-found.decks.add.template": msg`not-found.decks.add.template`,
+  "not-found.decks.update.deck": msg`not-found.decks.update.deck`,
+  "not-found.decks.update.algorithm": msg`not-found.decks.update.algorithm`,
+  "not-found.decks.update.template": msg`not-found.decks.update.template`,
   "validation.common.title.too-short": msg`validation.common.title.too-short`,
   "validation.common.title.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.common.title.too-long" })}`,
@@ -85,17 +90,19 @@ export function isAbortError(error: unknown) {
 
 /**
  * Wraps an async function to ensure that ui gets known translated error message if any
- * @param code - The error code to use if the function throws
+ * @param code - Fallback error code for unexpected failures
  * @param fn - The async function to execute
  * @returns The result of the function
  * @throws {ZodError} Validation errors go through
- * @throws {AppError} Other errors are converted to AppError with error code provided
+ * @throws {AppError} Existing AppErrors (e.g. not-found.*) go through unchanged
+ * @throws {AppError} Other errors are converted to AppError with the fallback code
  */
 export async function throwKnownError<T>(code: ErrorCode, fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (e) {
     if (e instanceof ZodError) throw e;
+    if (isAppError(e)) throw e;
     throw new AppError(code, e instanceof Error ? e.message : undefined);
   }
 }

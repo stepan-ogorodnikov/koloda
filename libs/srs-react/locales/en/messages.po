@@ -690,11 +690,11 @@ msgstr "Study cards"
 msgid "lesson.progress.label {0} {total}"
 msgstr "Progress: card № {0} of {total} total"
 
-#: ../../libs/srs-react/src/lib/lessons/lessons-table.tsx:23
+#: ../../libs/srs-react/src/lib/lessons/lessons-table.tsx:24
 msgid "lessons.table.columns.title"
 msgstr "Deck"
 
-#: ../../libs/srs-react/src/lib/lessons/lessons-list.tsx:26
+#: ../../libs/srs-react/src/lib/lessons/lessons-list.tsx:27
 #: ../../libs/srs-react/src/lib/lessons/lessons-table-cell.tsx:21
 msgid "lessons.table.columns.title.all"
 msgstr "All"

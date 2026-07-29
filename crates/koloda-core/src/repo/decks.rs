@@ -4,6 +4,8 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData};
+use crate::repo::algorithms::get_algorithm;
+use crate::repo::templates::get_template;
 
 fn get_deck_row(row: &rusqlite::Row<'_>) -> Result<Deck, rusqlite::Error> {
     Ok(Deck {
@@ -79,6 +81,19 @@ pub fn get_deck(db: &Database, id: i64) -> Result<Option<Deck>, AppError> {
 pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
     data.validate()?;
 
+    get_algorithm(db, data.algorithm_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_DECKS_ADD_ALGORITHM,
+            Some(format!("Algorithm id: {}", data.algorithm_id)),
+        )
+    })?;
+    get_template(db, data.template_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_DECKS_ADD_TEMPLATE,
+            Some(format!("Template id: {}", data.template_id)),
+        )
+    })?;
+
     let now = get_current_timestamp()?;
 
     let id = db.with_conn(|conn| {
@@ -98,6 +113,25 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
 
 pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError> {
     data.values.validate()?;
+
+    get_deck(db, data.id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_DECKS_UPDATE_DECK,
+            Some(format!("Deck id: {}", data.id)),
+        )
+    })?;
+    get_algorithm(db, data.values.algorithm_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_DECKS_UPDATE_ALGORITHM,
+            Some(format!("Algorithm id: {}", data.values.algorithm_id)),
+        )
+    })?;
+    get_template(db, data.values.template_id)?.ok_or_else(|| {
+        AppError::new(
+            error_codes::NOT_FOUND_DECKS_UPDATE_TEMPLATE,
+            Some(format!("Template id: {}", data.values.template_id)),
+        )
+    })?;
 
     let now = get_current_timestamp()?;
 

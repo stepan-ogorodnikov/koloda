@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
 import { createTestDb, seedDeckContext } from "../test/test-helpers";
-import { deleteDeck, getDeck, getDecks, updateDeck } from "./decks";
+import { addDeck, deleteDeck, getDeck, getDecks, updateDeck } from "./decks";
 
 describe("decks repository integration", () => {
   let testDb: TestDb;
@@ -67,5 +67,65 @@ describe("decks repository integration", () => {
     });
 
     expect(await getDeck(db, deck.id)).toMatchObject({ title: deck.title });
+  });
+
+  it("rejects add/update when algorithm or template is missing", async () => {
+    const { db } = testDb;
+    const { deck, algorithm, template } = await seedDeckContext(db);
+
+    await expect(
+      addDeck(db, {
+        title: "Bad algorithm",
+        algorithmId: 999_999,
+        templateId: template.id,
+      }),
+    ).rejects.toMatchObject({ code: "not-found.decks.add.algorithm" });
+
+    await expect(
+      addDeck(db, {
+        title: "Bad template",
+        algorithmId: algorithm.id,
+        templateId: 999_999,
+      }),
+    ).rejects.toMatchObject({ code: "not-found.decks.add.template" });
+
+    await expect(
+      updateDeck(db, {
+        id: 999_999,
+        values: {
+          title: "Missing deck",
+          algorithmId: algorithm.id,
+          templateId: template.id,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "not-found.decks.update.deck" });
+
+    await expect(
+      updateDeck(db, {
+        id: deck.id,
+        values: {
+          title: "Bad algorithm",
+          algorithmId: 999_999,
+          templateId: template.id,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "not-found.decks.update.algorithm" });
+
+    await expect(
+      updateDeck(db, {
+        id: deck.id,
+        values: {
+          title: "Bad template",
+          algorithmId: algorithm.id,
+          templateId: 999_999,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "not-found.decks.update.template" });
+
+    expect(await getDeck(db, deck.id)).toMatchObject({
+      title: deck.title,
+      algorithmId: algorithm.id,
+      templateId: template.id,
+    });
   });
 });
