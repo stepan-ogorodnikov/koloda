@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::{deserialize_timestamp, serialize_timestamp};
+use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
 pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"];
 

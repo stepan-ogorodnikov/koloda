@@ -4,8 +4,9 @@ use serde_json::Value;
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::app::utility::{deserialize_optional_timestamp, get_current_timestamp};
+use crate::app::utility::get_current_timestamp;
 use crate::domain::conversations::Conversation;
+use crate::domain::time::deserialize_optional_timestamp;
 
 fn get_conversation_row(row: &rusqlite::Row<'_>) -> Result<Conversation, rusqlite::Error> {
     let state_str: String = row.get(2)?;

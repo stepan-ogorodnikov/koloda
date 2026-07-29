@@ -12,9 +12,10 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 
 ## Architectural Map
 
-- Domain: `domain/` — cards, decks, templates, algorithms/FSRS, lessons, reviews, conversations, settings slices, `ai`.
-- Repos: `repo/` — SQLite repos parallel to `@koloda/srs-pgsql` (plus AI secrets redaction/reconstruction).
-- App runtime: `app/` — DB connection, errors, init/seed, keyring secrets, utilities.
+- Domain: `domain/` — cards, decks, templates, algorithms/FSRS, lessons, reviews, conversations, settings slices, `ai`, timestamp serde helpers (`time`).
+- Repos: `repo/` — SQLite repos parallel to `@koloda/srs-pgsql` (plus AI secrets redaction/reconstruction). Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
+- App runtime: `app/` — DB connection, init/seed, keyring secrets, clock/UUID helpers.
+- Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
 - Migrations: `migrations/` — Refinery SQL embedded via `embed_migrations!`; hand-ported from `drizzle/sqlite/`.
 
 ### Does NOT own (prevent scope creep)

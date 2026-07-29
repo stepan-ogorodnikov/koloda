@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::{serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::common::validate_title;
+use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
 
 const FIELD_TYPES: &[&str] = &["text", "markdown"];
 const LAYOUT_OPERATIONS: &[&str] = &["display", "reveal", "type"];

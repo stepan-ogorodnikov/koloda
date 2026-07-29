@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::settings_learning::CountedDailyLimit;
+use crate::domain::time::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;

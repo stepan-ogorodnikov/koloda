@@ -1,3 +1,6 @@
+use std::str::FromStr;
+
+use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
@@ -5,6 +8,18 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
+
+impl FromSql for SettingsName {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        match value {
+            ValueRef::Text(text) => Self::from_str(
+                std::str::from_utf8(text).map_err(|e| rusqlite::types::FromSqlError::Other(Box::new(e)))?,
+            )
+            .map_err(|_| rusqlite::types::FromSqlError::InvalidType),
+            _ => Err(rusqlite::types::FromSqlError::InvalidType),
+        }
+    }
+}
 
 fn get_settings_row(row: &rusqlite::Row<'_>) -> Result<Settings, rusqlite::Error> {
     let content_str: String = row.get(2)?;

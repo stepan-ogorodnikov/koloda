@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::{serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::validate_title;
+use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

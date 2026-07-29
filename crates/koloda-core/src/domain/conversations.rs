@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::app::utility::{
+use crate::domain::time::{
     default_now, deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp,
     serialize_timestamp,
 };

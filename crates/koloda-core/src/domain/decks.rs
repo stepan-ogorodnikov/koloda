@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::AppError;
-use crate::app::utility::{serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::common::validate_title;
+use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

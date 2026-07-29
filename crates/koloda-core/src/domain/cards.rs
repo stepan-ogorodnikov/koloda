@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::app::error::{error_codes, AppError};
-use crate::app::utility::{
+use crate::domain::templates::TemplateField;
+use crate::domain::time::{
     default_now, deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp,
     serialize_timestamp,
 };
-use crate::domain::templates::TemplateField;
 
 pub type CardContent = HashMap<String, CardContentField>;
 

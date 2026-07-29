@@ -14,3 +14,4 @@ pub mod settings_hotkeys;
 pub mod settings_interface;
 pub mod settings_learning;
 pub mod templates;
+pub mod time;

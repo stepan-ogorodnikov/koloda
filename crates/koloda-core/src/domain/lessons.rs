@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use super::templates::TemplateField;
 use crate::app::error::error_codes;
 use crate::app::error::AppError;
-use crate::app::utility::{default_now, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp};
 use crate::domain::cards::{Card, UpdateCardProgress};
 use crate::domain::decks::Deck;
 use crate::domain::reviews::InsertReviewData;
+use crate::domain::time::{default_now, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
