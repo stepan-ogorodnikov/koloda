@@ -16,14 +16,8 @@ fn delete_template_fails_when_template_is_locked_by_cards() {
     let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
     let _ = add_card(&db, deck_id, template_id, "question");
 
-    let err = templates::delete_template(
-        &db,
-        DeleteTemplateData {
-            id: template_id,
-            successor_id: None,
-        },
-    )
-    .expect_err("locked template delete should fail");
+    let err = templates::delete_template(&db, DeleteTemplateData { id: template_id })
+        .expect_err("locked template delete should fail");
 
     assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED);
 }

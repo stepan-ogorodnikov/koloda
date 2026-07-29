@@ -76,7 +76,6 @@ pub struct CloneTemplateData {
 #[serde(rename_all = "camelCase")]
 pub struct DeleteTemplateData {
     pub id: i64,
-    pub successor_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
