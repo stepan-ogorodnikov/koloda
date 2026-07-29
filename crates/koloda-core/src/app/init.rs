@@ -2,10 +2,11 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::app::db::Database;
-use crate::app::error::{error_codes, AppError};
+use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::algorithms::InsertAlgorithmData;
 use crate::domain::settings::SettingsName;
+use crate::domain::settings_learning::LearningSettings;
 use crate::domain::templates::InsertTemplateData;
 use crate::repo::{algorithms, settings, templates};
 
@@ -53,7 +54,12 @@ fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
     let interface = SettingsName::Interface.normalize(data.settings.interface)?;
     let hotkeys = SettingsName::Hotkeys.normalize(data.settings.hotkeys)?;
     let now = get_current_timestamp()?;
-    let mut learning_settings = data.settings.learning;
+    let mut learning_settings: LearningSettings = serde_json::from_value(data.settings.learning).map_err(|e| {
+        AppError::new(
+            error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
+            Some(format!("learning settings must be valid LearningSettings JSON: {e}")),
+        )
+    })?;
 
     db.with_transaction(|tx| {
         let algorithm_id = match algorithms::oldest_algorithm_id(tx)? {
@@ -66,24 +72,10 @@ fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
             None => templates::insert_template(tx, &data.template, now)?,
         };
 
-        let Some(learning_obj) = learning_settings.as_object_mut() else {
-            return Err(AppError::new(
-                error_codes::VALIDATION_SEED_LEARNING_SETTINGS,
-                Some("learning settings must be a JSON object".to_string()),
-            ));
-        };
+        learning_settings.defaults.algorithm = algorithm_id;
+        learning_settings.defaults.template = template_id;
 
-        let defaults = learning_obj.entry("defaults").or_insert_with(|| serde_json::json!({}));
-        let Some(defaults_obj) = defaults.as_object_mut() else {
-            return Err(AppError::new(
-                error_codes::VALIDATION_SEED_LEARNING_DEFAULTS,
-                Some("learning.defaults must be a JSON object".to_string()),
-            ));
-        };
-        defaults_obj.insert("algorithm".to_string(), serde_json::json!(algorithm_id));
-        defaults_obj.insert("template".to_string(), serde_json::json!(template_id));
-
-        let learning = SettingsName::Learning.normalize(learning_settings)?;
+        let learning = SettingsName::Learning.normalize(serde_json::to_value(&learning_settings)?)?;
 
         settings::upsert_settings(tx, SettingsName::Interface, &interface, now)?;
         settings::upsert_settings(tx, SettingsName::Learning, &learning, now)?;
@@ -94,17 +86,13 @@ fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
 }
 
 fn get_settings_names(db: &Database) -> Result<Vec<String>, AppError> {
-    db.with_conn(|conn| {
-        let mut stmt = conn
-            .prepare("SELECT name FROM settings")
-            .map_err(|e| AppError::new(error_codes::DB_GET, Some(e.to_string())))?;
-
-        let names = stmt
-            .query_map([], |row| row.get(0))
-            .map_err(|e| AppError::new(error_codes::DB_GET, Some(e.to_string())))?
-            .collect::<Result<Vec<String>, rusqlite::Error>>()
-            .map_err(|e| AppError::new(error_codes::DB_GET, Some(e.to_string())))?;
-
-        Ok(names)
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let mut stmt = conn.prepare("SELECT name FROM settings")?;
+            let names = stmt
+                .query_map([], |row| row.get(0))?
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(names)
+        })
     })
 }

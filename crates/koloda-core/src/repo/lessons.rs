@@ -3,7 +3,7 @@ use rusqlite::Row;
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
-use crate::domain::cards::Card;
+use crate::domain::cards::{Card, CardState};
 use crate::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonData, LessonDeck, LessonResultData, LessonTemplate,
     LessonTemplateLayoutItem, LessonsResult,
@@ -51,9 +51,9 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
                 SELECT
                     d.id,
                     d.title,
-                    COALESCE(SUM(CASE WHEN c.state = 0 THEN 1 END), 0) AS untouched,
-                    COALESCE(SUM(CASE WHEN c.state IN (1, 3) AND c.due_at < {due_at_param} THEN 1 END), 0) AS learn,
-                    COALESCE(SUM(CASE WHEN c.state = 2 AND c.due_at < {due_at_param} THEN 1 END), 0) AS review
+                    COALESCE(SUM(CASE WHEN c.state = {new} THEN 1 END), 0) AS untouched,
+                    COALESCE(SUM(CASE WHEN c.state IN ({learning}, {relearning}) AND c.due_at < {due_at_param} THEN 1 END), 0) AS learn,
+                    COALESCE(SUM(CASE WHEN c.state = {review} AND c.due_at < {due_at_param} THEN 1 END), 0) AS review
                 FROM decks d
                 LEFT JOIN cards c ON c.deck_id = d.id
                 {filters}
@@ -63,6 +63,10 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
             FROM per_deck
             ORDER BY id
             "#,
+                new = CardState::New.as_i32(),
+                learning = CardState::Learning.as_i32(),
+                relearning = CardState::Relearning.as_i32(),
+                review = CardState::Review.as_i32(),
             );
 
             let sql_params: Vec<&dyn rusqlite::ToSql> =
@@ -129,7 +133,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = 0{filters_untouched}
+                WHERE state = {new}{filters_untouched}
                 ORDER BY created_at
                 LIMIT {limit_untouched_param}
             )
@@ -141,7 +145,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state IN (1, 3) AND due_at < {due_at_param} {filters_learn}
+                WHERE state IN ({learning}, {relearning}) AND due_at < {due_at_param} {filters_learn}
                 ORDER BY due_at
                 LIMIT {limit_learn_param}
             )
@@ -153,11 +157,15 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = 2 AND due_at < {due_at_param} {filters_review}
+                WHERE state = {review} AND due_at < {due_at_param} {filters_review}
                 ORDER BY due_at
                 LIMIT {limit_review_param}
             )
             "#,
+                new = CardState::New.as_i32(),
+                learning = CardState::Learning.as_i32(),
+                relearning = CardState::Relearning.as_i32(),
+                review = CardState::Review.as_i32(),
             );
 
             let sql_params: Vec<&dyn rusqlite::ToSql> =

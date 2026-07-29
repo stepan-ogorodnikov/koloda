@@ -6,7 +6,8 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::{
-    Card, CardContent, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData, UpdateCardData,
+    Card, CardContent, CardState, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
+    UpdateCardData,
 };
 use crate::domain::templates::Template;
 use std::collections::HashMap;
@@ -312,13 +313,16 @@ pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result
             tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
 
             tx.execute(
-                r#"
+                &format!(
+                    r#"
                 UPDATE cards
-                SET state = 0, due_at = NULL, stability = 0, difficulty = 0,
+                SET state = {new}, due_at = NULL, stability = 0, difficulty = 0,
                     scheduled_days = 0, learning_steps = 0, reps = 0, lapses = 0,
                     last_reviewed_at = NULL, updated_at = ?1
                 WHERE id = ?2
                 "#,
+                    new = CardState::New.as_i32(),
+                ),
                 params![now, data.id],
             )?;
 

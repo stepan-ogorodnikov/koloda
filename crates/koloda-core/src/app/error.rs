@@ -88,7 +88,6 @@ pub mod error_codes {
     pub const VALIDATION_LESSONS_AMOUNTS_NEGATIVE: &str = "validation.lessons.amounts.negative";
 
     pub const VALIDATION_SEED_LEARNING_SETTINGS: &str = "validation.seed.learning-settings";
-    pub const VALIDATION_SEED_LEARNING_DEFAULTS: &str = "validation.seed.learning-defaults";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

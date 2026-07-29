@@ -1,5 +1,4 @@
 use rusqlite::{params, Connection, OptionalExtension};
-use serde_json::Value;
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
@@ -7,10 +6,11 @@ use crate::app::utility::get_current_timestamp;
 use crate::domain::algorithms::{
     Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
 };
+use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
     let content_str: String = row.get(2)?;
-    let content: Value = serde_json::from_str(&content_str).map_err(|e| {
+    let content: AlgorithmFSRS = serde_json::from_str(&content_str).map_err(|e| {
         rusqlite::Error::FromSqlConversionFailure(content_str.len(), rusqlite::types::Type::Text, Box::new(e))
     })?;
 
@@ -116,12 +116,13 @@ pub(crate) fn oldest_algorithm_id(conn: &Connection) -> Result<Option<i64>, AppE
 }
 
 pub(crate) fn insert_algorithm(conn: &Connection, data: &InsertAlgorithmData, now: i64) -> Result<i64, AppError> {
+    let content = serde_json::to_string(&data.content)?;
     conn.execute(
         r#"
         INSERT INTO algorithms (title, content, created_at, updated_at)
         VALUES (?1, ?2, ?3, NULL)
         "#,
-        params![data.title, data.content.to_string(), now],
+        params![data.title, content, now],
     )?;
 
     Ok(conn.last_insert_rowid())
@@ -134,6 +135,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
         let now = get_current_timestamp()?;
 
         db.with_conn(|conn| {
+            let content = serde_json::to_string(&data.values.content)?;
             conn.execute(
                 r#"
                 UPDATE algorithms
@@ -143,7 +145,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                     updated_at = ?3
                 WHERE id = ?4
                 "#,
-                params![data.values.title, data.values.content.to_string(), now, data.id],
+                params![data.values.title, content, now, data.id],
             )?;
 
             Ok(())

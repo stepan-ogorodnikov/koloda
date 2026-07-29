@@ -2,6 +2,7 @@ use rusqlite::{params, Row};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
+use crate::domain::cards::CardState;
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
     DailyLimits, GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals,
@@ -53,21 +54,27 @@ pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             // WHY: The outer WHERE already restricts rows to the learning-day window `[from, to)`.
-            // `untouched` only needs `state = 0` inside its FILTER because that window applies
+            // `untouched` only needs `state = New` inside its FILTER because that window applies
             // to every bucket. The extra `created_at < ?2` on learn/review/total is redundant
             // with the outer bound but documents per-bucket intent.
             let result = conn.query_row(
-                r#"
+                &format!(
+                    r#"
                 SELECT
-                    COUNT(*) FILTER (WHERE state = 0) AS untouched,
-                    COUNT(*) FILTER (WHERE state IN (1, 3) AND created_at < ?2) AS learn,
-                    COUNT(*) FILTER (WHERE state = 2 AND created_at < ?2) AS review,
-                    COUNT(*) FILTER (WHERE state IN (0, 1, 2, 3) AND created_at < ?2) AS total
+                    COUNT(*) FILTER (WHERE state = {new}) AS untouched,
+                    COUNT(*) FILTER (WHERE state IN ({learning}, {relearning}) AND created_at < ?2) AS learn,
+                    COUNT(*) FILTER (WHERE state = {review} AND created_at < ?2) AS review,
+                    COUNT(*) FILTER (WHERE state IN ({new}, {learning}, {review}, {relearning}) AND created_at < ?2) AS total
                 FROM reviews
                 WHERE is_ignored = 0
                   AND created_at >= ?1
                   AND created_at < ?2
                 "#,
+                    new = CardState::New.as_i32(),
+                    learning = CardState::Learning.as_i32(),
+                    relearning = CardState::Relearning.as_i32(),
+                    review = CardState::Review.as_i32(),
+                ),
                 params![params.from, params.to],
                 |row| {
                     Ok(ReviewTotals {

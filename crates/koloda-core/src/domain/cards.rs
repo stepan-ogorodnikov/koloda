@@ -10,10 +10,33 @@ use crate::domain::time::{
 
 pub type CardContent = HashMap<String, CardContentField>;
 
-const STATE_MIN: i32 = 0;
-const STATE_MAX: i32 = 3;
 const DIFFICULTY_MIN: f64 = 0.0;
 const DIFFICULTY_MAX: f64 = 10.0;
+
+/// FSRS card/review state integers stored in SQLite (mirrors `ts-fsrs` `State`).
+///
+/// Lesson/review SQL buckets: New → untouched; Learning+Relearning → learn; Review → review.
+#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CardState {
+    New = 0,
+    Learning = 1,
+    Review = 2,
+    Relearning = 3,
+}
+
+impl CardState {
+    pub const MIN: i32 = Self::New as i32;
+    pub const MAX: i32 = Self::Relearning as i32;
+
+    pub const fn as_i32(self) -> i32 {
+        self as i32
+    }
+
+    pub fn is_valid(state: i32) -> bool {
+        (Self::MIN..=Self::MAX).contains(&state)
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -207,12 +230,14 @@ fn validate_content(content: &CardContent, template_fields: &[TemplateField]) ->
 }
 
 fn validate_state(state: i32) -> Result<(), AppError> {
-    if !(STATE_MIN..=STATE_MAX).contains(&state) {
+    if !CardState::is_valid(state) {
         return Err(AppError::new(
             error_codes::VALIDATION_CARDS_PROGRESS_STATE,
             Some(format!(
                 "State must be between {} and {}, got {}",
-                STATE_MIN, STATE_MAX, state
+                CardState::MIN,
+                CardState::MAX,
+                state
             )),
         ));
     }

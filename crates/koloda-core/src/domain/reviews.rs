@@ -1,13 +1,12 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
+use crate::domain::cards::CardState;
 use crate::domain::settings_learning::CountedDailyLimit;
 use crate::domain::time::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
-const STATE_MIN: i32 = 0;
-const STATE_MAX: i32 = 3;
 const DIFFICULTY_MIN: f64 = 0.0;
 const DIFFICULTY_MAX: f64 = 10.0;
 
@@ -122,7 +121,7 @@ fn validate_rating(rating: i32) -> Result<(), AppError> {
 }
 
 fn validate_state(state: i32) -> Result<(), AppError> {
-    if !(STATE_MIN..=STATE_MAX).contains(&state) {
+    if !CardState::is_valid(state) {
         return Err(AppError::new(
             error_codes::VALIDATION_REVIEWS_STATE,
             Some(format!("Invalid review state: {}", state)),

@@ -9,8 +9,8 @@ pub fn test_db() -> Database {
     Database::in_memory().expect("in-memory database should initialize")
 }
 
-pub fn fsrs_algorithm_content() -> serde_json::Value {
-    json!({
+pub fn fsrs_algorithm_content() -> koloda_core::domain::algorithms_fsrs::AlgorithmFSRS {
+    serde_json::from_value(json!({
         "type": "fsrs",
         "retention": 90.0,
         "weights": "0.4197,1.1869,3.0412,15.2441,7.1434,0.6477,1.0007,0.0754,1.6598,0.1719,1.1178,1.4699,0.134,0.016,1.7101,0.1543,0.9369,2.9664,0.714,0.201,0.0059",
@@ -18,10 +18,11 @@ pub fn fsrs_algorithm_content() -> serde_json::Value {
         "learningSteps": [[10, "m"], [1, "d"]],
         "relearningSteps": [[10, "m"]],
         "maximumInterval": 36500,
-    })
+    }))
+    .expect("valid FSRS fixture")
 }
 
-pub fn fsrs_content() -> serde_json::Value {
+pub fn fsrs_content() -> koloda_core::domain::algorithms_fsrs::AlgorithmFSRS {
     fsrs_algorithm_content()
 }
 

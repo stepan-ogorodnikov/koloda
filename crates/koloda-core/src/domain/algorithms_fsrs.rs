@@ -20,6 +20,13 @@ pub struct AlgorithmFSRS {
 
 impl AlgorithmFSRS {
     pub fn validate(&self) -> Result<(), AppError> {
+        if self.algorithm_type != "fsrs" {
+            return Err(AppError::new(
+                error_codes::UNKNOWN,
+                Some(format!("Unknown algorithm type: {}", self.algorithm_type)),
+            ));
+        }
+
         // Retention
         if self.retention < 70.0 || self.retention > 99.0 {
             return Err(AppError::new(error_codes::VALIDATION_ALGORITHM_FSRS_RETENTION, None));

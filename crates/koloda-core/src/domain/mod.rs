@@ -1,3 +1,11 @@
+//! Domain DTOs, validation, and serde — mirrors `@koloda/srs` / `@koloda/app`.
+//!
+//! Must not import `rusqlite`. Shared errors via `crate::app::error::AppError` are intentional
+//! so validation codes stay aligned with the TS app layer.
+//!
+//! Key shapes: `cards::CardState` (FSRS ints in SQL), `settings_*` slices,
+//! `algorithms` content as `AlgorithmFSRS`, `conversations::Conversation.state` (opaque TS blob).
+
 pub mod ai;
 pub mod algorithms;
 pub mod algorithms_fsrs;

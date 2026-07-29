@@ -1,12 +1,20 @@
 use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
 
 use crate::app::error::{error_codes, AppError};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LearningDefaults {
+    #[serde(default)]
+    pub algorithm: i64,
+    #[serde(default)]
+    pub template: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LearningSettings {
-    pub defaults: Value,
+    pub defaults: LearningDefaults,
     pub daily_limits: DailyLimits,
     pub day_starts_at: String,
     pub learn_ahead_limit: LearnAheadLimit,

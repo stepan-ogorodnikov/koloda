@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use crate::app::error::{error_codes, AppError};
+use crate::app::error::AppError;
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::validate_title;
 use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
@@ -11,7 +10,7 @@ use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
 pub struct Algorithm {
     pub id: i64,
     pub title: String,
-    pub content: Value,
+    pub content: AlgorithmFSRS,
     #[serde(serialize_with = "serialize_timestamp")]
     pub created_at: i64,
     #[serde(default, serialize_with = "serialize_optional_timestamp")]
@@ -22,14 +21,14 @@ pub struct Algorithm {
 #[serde(rename_all = "camelCase")]
 pub struct InsertAlgorithmData {
     pub title: String,
-    pub content: Value,
+    pub content: AlgorithmFSRS,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateAlgorithmValues {
     pub title: String,
-    pub content: Value,
+    pub content: AlgorithmFSRS,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,31 +62,13 @@ pub struct AlgorithmDeck {
 impl InsertAlgorithmData {
     pub fn validate(&self) -> Result<(), AppError> {
         validate_title(&self.title)?;
-        validate_algorithm_content(&self.content)
+        self.content.validate()
     }
 }
 
 impl UpdateAlgorithmValues {
     pub fn validate(&self) -> Result<(), AppError> {
         validate_title(&self.title)?;
-        validate_algorithm_content(&self.content)
-    }
-}
-
-fn validate_algorithm_content(content: &Value) -> Result<(), AppError> {
-    let algorithm_type = content
-        .get("type")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| AppError::new(error_codes::UNKNOWN, Some("Missing field: type".to_string())))?;
-
-    match algorithm_type {
-        "fsrs" => {
-            let fsrs: AlgorithmFSRS = serde_json::from_value(content.clone())?;
-            fsrs.validate()
-        }
-        _ => Err(AppError::new(
-            error_codes::UNKNOWN,
-            Some(format!("Unknown algorithm type: {}", algorithm_type)),
-        )),
+        self.content.validate()
     }
 }

@@ -34,11 +34,11 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
     db.with_conn(|conn| {
         conn.execute(
             "INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
-            rusqlite::params![10_i64, "Algo older", fsrs_algorithm_content().to_string(), 100_i64],
+            rusqlite::params![10_i64, "Algo older", serde_json::to_string(&fsrs_algorithm_content()).unwrap(), 100_i64],
         )?;
         conn.execute(
             "INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
-            rusqlite::params![11_i64, "Algo newer", fsrs_algorithm_content().to_string(), 200_i64],
+            rusqlite::params![11_i64, "Algo newer", serde_json::to_string(&fsrs_algorithm_content()).unwrap(), 200_i64],
         )?;
 
         conn.execute(
