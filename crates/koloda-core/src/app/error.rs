@@ -108,6 +108,21 @@ impl AppError {
     }
 }
 
+// WHY: Mirrors TS `throwKnownError`, but remaps only `unknown`. TS rethrows every AppError and
+// wraps plain throws; Rust `From` already turns rusqlite/IO/JSON into AppError{unknown}, so a
+// literal `isAppError` port would leave raw DB failures as `unknown` and make this a no-op.
+// Keep validation / not-found / explicit `db.*` / keyring codes unchanged.
+pub fn throw_known_error<T>(code: &str, f: impl FnOnce() -> Result<T, AppError>) -> Result<T, AppError> {
+    match f() {
+        Ok(value) => Ok(value),
+        Err(err) if err.code == error_codes::UNKNOWN => Err(AppError {
+            code: code.to_string(),
+            details: err.details,
+        }),
+        Err(err) => Err(err),
+    }
+}
+
 impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.code)

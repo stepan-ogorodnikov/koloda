@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
 use crate::app::db::Database;
-use crate::app::error::{error_codes, AppError};
+use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
 
@@ -21,36 +21,40 @@ fn get_settings_row(row: &rusqlite::Row<'_>) -> Result<Settings, rusqlite::Error
 }
 
 pub fn get_settings(db: &Database, name: SettingsName) -> Result<Option<Settings>, AppError> {
-    db.with_conn(|conn| {
-        conn.query_row(
-            r#"
-            SELECT id, name, content, created_at, updated_at
-            FROM settings
-            WHERE name = ?1
-            LIMIT 1
-            "#,
-            params![name.to_string()],
-            get_settings_row,
-        )
-        .optional()
-        .map_err(AppError::from)
-        .and_then(|settings| match settings {
-            Some(mut settings) => {
-                settings.content = name.normalize(settings.content)?;
-                Ok(Some(settings))
-            }
-            None => Ok(None),
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            conn.query_row(
+                r#"
+                SELECT id, name, content, created_at, updated_at
+                FROM settings
+                WHERE name = ?1
+                LIMIT 1
+                "#,
+                params![name.to_string()],
+                get_settings_row,
+            )
+            .optional()
+            .map_err(AppError::from)
+            .and_then(|settings| match settings {
+                Some(mut settings) => {
+                    settings.content = name.normalize(settings.content)?;
+                    Ok(Some(settings))
+                }
+                None => Ok(None),
+            })
         })
     })
 }
 
 pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result<Settings, AppError> {
-    let content = name.normalize(content)?;
-    let now = get_current_timestamp()?;
+    throw_known_error(error_codes::DB_UPDATE, || {
+        let content = name.normalize(content)?;
+        let now = get_current_timestamp()?;
 
-    db.with_conn(|conn| upsert_settings(conn, name, &content, now))?;
+        db.with_conn(|conn| upsert_settings(conn, name, &content, now))?;
 
-    get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+    })
 }
 
 pub(crate) fn upsert_settings(
@@ -74,10 +78,12 @@ pub(crate) fn upsert_settings(
 }
 
 pub fn patch_settings(db: &Database, name: SettingsName, patch: Value) -> Result<Settings, AppError> {
-    let existing = get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))?;
-    let mut merged = existing.content.clone();
-    json_patch::merge(&mut merged, &patch);
-    let merged = name.normalize(merged)?;
+    throw_known_error(error_codes::DB_UPDATE, || {
+        let existing = get_settings(db, name)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))?;
+        let mut merged = existing.content.clone();
+        json_patch::merge(&mut merged, &patch);
+        let merged = name.normalize(merged)?;
 
-    set_settings(db, name, merged)
+        set_settings(db, name, merged)
+    })
 }
