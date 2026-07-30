@@ -4,7 +4,7 @@ Shared React UI primitives and streaming transport hooks for assistant chat. Pre
 
 ## Where it sits
 
-Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces). Calls into `@koloda/ai` for provider types, profile/model queries, and stream executors. Conversation state, orchestration, and persistence live in `libs/srs-react/src/lib/assistant/`.
+Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces). Depends on `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`. Conversation state, orchestration, and persistence live in `libs/srs-react/src/lib/assistant/`.
 
 **Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing edits.
 

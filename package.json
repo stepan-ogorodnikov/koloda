@@ -13,7 +13,8 @@
     "db:generate:sqlite": "drizzle-kit generate --config=drizzle.config.sqlite.ts",
     "db:generate": "bun run db:generate:pgsql && bun run db:generate:sqlite",
     "test:libs": "nx run-many --target=test --projects=tag:type:lib",
-    "check:demo-deploy": "nx run-many -t lint,typecheck && bun run test:libs",
+    "check:workspace-deps": "bunx vitest run --config tools/vitest.config.mjs --configLoader runner && bun run tools/check-workspace-deps.ts",
+    "check:demo-deploy": "nx run-many -t lint,typecheck && bun run test:libs && bun run check:workspace-deps",
     "check:demo-all": "bun run check:demo-deploy && nx run demo-e2e:e2e"
   },
   "dependencies": {

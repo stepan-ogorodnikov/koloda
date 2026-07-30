@@ -12,6 +12,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@koloda/app": "workspace:*"
+    "@koloda/app": "workspace:*",
+    "@koloda/core-react": "workspace:*"
   }
 }

@@ -6,7 +6,7 @@ Presentational only — no business logic, routing, or data fetching.
 ## Where it sits
 
 Consumed by `@koloda/app-react`, `@koloda/srs-react`, and app entry components.
-Depends lightly on `@koloda/app` for shared types.
+Depends on `@koloda/app` for shared types and `@koloda/core-react` for hotkey hooks used by form/overlay chrome.
 
 ## Architectural Map
 

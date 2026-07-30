@@ -11,5 +11,10 @@
       "default": "./src/index.ts"
     },
     "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@koloda/ai": "workspace:*",
+    "@koloda/core-react": "workspace:*",
+    "@koloda/ui": "workspace:*"
   }
 }
