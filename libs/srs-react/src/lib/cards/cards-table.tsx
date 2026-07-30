@@ -14,7 +14,7 @@ import {
 import type { CellContext, ColumnDef, FilterFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CardsTableCell } from "./cards-table-cell";
 import { CardsTableColumnsVisibility } from "./cards-table-columns-visibility";
@@ -51,7 +51,6 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { data: cards = [] } = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
   const { data: deck } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
   const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const columns = useMemo<ColumnDef<Card>[]>(
     () => [
@@ -217,7 +216,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
           </div>,
           controlsNode,
         )}
-      <div className="flex flex-col gap-4" ref={wrapperRef}>
+      <div className="flex flex-col gap-4">
         <Table.Root>
           <Table.Head table={table} />
           <Table.Body table={table} />
