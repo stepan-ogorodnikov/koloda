@@ -4,12 +4,9 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { aiProfileStateAtom, type AIProfileState } from "./ai-profile-state";
-import {
-  cancelStreamingRuns,
-  normalizeRestoredConversation,
-} from "./conversation-persistence";
+import { cancelStreamingRuns, normalizeRestoredConversation } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
 import { initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
@@ -77,17 +74,32 @@ export function useConversationPersistence({
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
 
   const saveTokenRef = useRef(0);
-  const tokenAtSaveRef = useRef(0);
+  const restoredIdRef = useRef<string | null>(null);
+  // WHY: Gate the pending-save handler until restore marks this id ready.
+  // Written only by the restore effect — never by mutation callbacks — so a
+  // late onSuccess/onError for a previous conversation cannot disable autosave
+  // for the active one (and onError must not null it either). It is also never
+  // reset on a `conversationId` switch: the restore effect overwrites it with
+  // the new id, so nulling on switch would race the restore effect and re-gate
+  // the active conversation's first autosave. Do not add a clear-on-change path.
+  const lastSavedIdRef = useRef<string | null>(null);
   const conversationIdRef = useRef(conversationId);
   conversationIdRef.current = conversationId;
-  const restoredIdRef = useRef<string | null>(null);
-  const lastSavedIdRef = useRef<string | null>(null);
 
-  const setConversation = useMutation({
+  const { mutate: mutateConversation } = useMutation({
     mutationFn: setConversationFn,
-    onSuccess: (row) => {
-      lastSavedIdRef.current = row.id;
-      setSaveStatus({ conversationId: conversationIdRef.current ?? null, message: null, isDismissed: false });
+    // WHY: capture the generation token per mutate. A shared ref would be
+    // overwritten when B flushes, letting a late A callback pass the gate.
+    onMutate: () => ({ saveToken: saveTokenRef.current }),
+    onSuccess: (row, variables, context) => {
+      // WHY: only update save UI for the active conversation's in-flight save.
+      // Cache updates still apply to `row.id` either way.
+      if (
+        context?.saveToken === saveTokenRef.current &&
+        variables.id === conversationIdRef.current
+      ) {
+        setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
+      }
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
       queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
@@ -100,12 +112,14 @@ export function useConversationPersistence({
         });
       }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error("Failed to save conversation", error);
-      lastSavedIdRef.current = null;
-      if (tokenAtSaveRef.current === saveTokenRef.current) {
+      if (
+        context?.saveToken === saveTokenRef.current &&
+        variables.id === conversationIdRef.current
+      ) {
         setSaveStatus({
-          conversationId: conversationIdRef.current ?? null,
+          conversationId: variables.id,
           message: (error as Error).message,
           isDismissed: false,
         });
@@ -117,7 +131,41 @@ export function useConversationPersistence({
     saveTokenRef.current += 1;
   }, [conversationId]);
 
-  const readStateForSave = useAtomCallback((get) => get(assistantConversationStateAtom));
+  // WHY: `useMutation`'s result object is not referentially stable. Keep flush
+  // out of the subscription effect deps via useEffectEvent so pagehide /
+  // beforeunload listeners and the pendingSave subscription are not torn down
+  // on every render (same pattern as lesson-uploader).
+  const flush = useEffectEvent((id: string, options: { cancelStreamingRuns?: boolean } = {}) => {
+    const storeState = store.get(conversationsAtom);
+    const state = storeState[id];
+    if (!state) return;
+    if (state.messages.length === 0 && state.activeRunId === null) return;
+
+    const persistState = {
+      // WHY: rewriting "streaming" runs to "canceled" prevents
+      // `normalizeRestoredConversation` from dropping a run's messages on
+      // next mount (leaving an empty row with a stale title). The live
+      // in-memory state keeps "streaming" until the stream actually ends.
+      ...(options.cancelStreamingRuns ? cancelStreamingRuns(state) : state),
+      // WHY: revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
+      // §Revert); stripping it means reload never resurrects a hidden prefix.
+      revertState: null,
+    };
+
+    const title = computeConversationTitle(persistState);
+    const data: SetConversationData = {
+      id: persistState.id,
+      // WHY: structuredClone detaches persistState from the Jotai store so
+      // the async mutation below doesn't capture a reference the reducer
+      // will keep mutating. Unlike JSON.parse(JSON.stringify(...)) it
+      // preserves Date instances; serialization to the jsonb column happens
+      // at the DB layer.
+      state: structuredClone(persistState),
+      title,
+      updatedAt: persistState.updatedAt,
+    };
+    mutateConversation(data);
+  });
 
   // WHY: Subscribe to the save trigger before the restore effect runs so that any
   // pendingSave bump emitted by restore (e.g. after creating a conversation
@@ -128,55 +176,28 @@ export function useConversationPersistence({
     let timer: ReturnType<typeof setTimeout> | null = null;
     let lastFiredAt = 0;
 
-    const flush = (options: { cancelStreamingRuns?: boolean } = {}) => {
-      timer = null;
-      const storeState = store.get(conversationsAtom);
-      const state = storeState[conversationId];
-      if (!state) return;
-      if (state.messages.length === 0 && state.activeRunId === null) return;
-
-      const persistState = {
-        // WHY: rewriting "streaming" runs to "canceled" prevents
-        // `normalizeRestoredConversation` from dropping a run's messages on
-        // next mount (leaving an empty row with a stale title). The live
-        // in-memory state keeps "streaming" until the stream actually ends.
-        ...(options.cancelStreamingRuns ? cancelStreamingRuns(state) : state),
-        // WHY: revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
-        // §Revert); stripping it means reload never resurrects a hidden prefix.
-        revertState: null,
-      };
-
-      const title = computeConversationTitle(persistState);
-      const data: SetConversationData = {
-        id: persistState.id,
-        // WHY: structuredClone detaches persistState from the Jotai store so
-        // the async mutation below doesn't capture a reference the reducer
-        // will keep mutating. Unlike JSON.parse(JSON.stringify(...)) it
-        // preserves Date instances; serialization to the jsonb column happens
-        // at the DB layer.
-        state: structuredClone(persistState),
-        title,
-        updatedAt: persistState.updatedAt,
-      };
-      tokenAtSaveRef.current = saveTokenRef.current;
-      setConversation.mutate(data);
-    };
-
     const flushNow = (options: { cancelStreamingRuns?: boolean } = {}) => {
       if (timer) {
         clearTimeout(timer);
         timer = null;
       }
-      flush(options);
+      flush(conversationId, options);
     };
 
     const scheduleFlush = () => {
       const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
       const now = Date.now();
       const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
-      const delay = Math.max(0, wait - (now - lastFiredAt));
+      // WHY: clamp to `wait`. Without it, a pending idle schedule (lastFiredAt in
+      // the future) plus a streaming bump computes delay > throttle window, so the
+      // save never fires inside STREAM_SAVE_THROTTLE_MS. Clamping also resets
+      // idle debounce to a full `wait` from the latest bump.
+      const delay = Math.min(wait, Math.max(0, wait - (now - lastFiredAt)));
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => flush({ cancelStreamingRuns: true }), delay);
+      timer = setTimeout(() => {
+        timer = null;
+        flush(conversationId, { cancelStreamingRuns: true });
+      }, delay);
       // WHY: track the scheduled fire time, not `now`, so back-to-back bumps
       // measure relative to the next fire and coalesce instead of cascading.
       lastFiredAt = now + delay;
@@ -194,19 +215,19 @@ export function useConversationPersistence({
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
 
-    // WHY: the cleanup only flushes when there is a pending throttled save
-    // timer. Unconditionally flushing would cause re-renders because the
-    // mutation ref changes every render.
+    // WHY: only flush a pending timer on cleanup. An unconditional flush would
+    // re-enter the mutation when conversationId changes before the restore
+    // effect has marked the new id as saved.
     return () => {
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("beforeunload", handlePageHide);
       unsub();
       if (timer) {
         clearTimeout(timer);
-        flush({ cancelStreamingRuns: true });
+        flush(conversationId, { cancelStreamingRuns: true });
       }
     };
-  }, [store, conversationId, readStateForSave, setConversation]);
+  }, [store, conversationId]); // oxlint-disable-line react/exhaustive-deps -- flush via useEffectEvent
 
   useEffect(() => {
     if (!conversationId) return;
@@ -224,6 +245,8 @@ export function useConversationPersistence({
       upsertConversation(restored ?? freshConversation(conversationId, readLastUsed()));
     }
     restoredIdRef.current = conversationId;
+    // WHY: overwrite (never null) — see the declaration's WHY. This is the only
+    // writer; a switch does not clear it, only the next restore replaces it.
     lastSavedIdRef.current = conversationId;
     // WHY: Setting the current id AFTER the conversation is in the store
     // lets `setCurrentConversationIdAtom`'s mark-read side effect find
