@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};
-use crate::domain::cards::CardState;
-use crate::domain::settings_learning::CountedDailyLimit;
+use crate::domain::progress::{
+    validate_difficulty, validate_learning_steps, validate_scheduled_days, validate_stability, validate_state,
+};
+use crate::domain::settings_learning::DailyLimits;
 use crate::domain::time::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
-const DIFFICULTY_MIN: f64 = 0.0;
-const DIFFICULTY_MAX: f64 = 10.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,11 +52,11 @@ pub struct InsertReviewData {
 impl InsertReviewData {
     pub fn validate(&self) -> Result<(), AppError> {
         validate_rating(self.rating)?;
-        validate_state(self.state)?;
-        validate_stability(self.stability)?;
-        validate_difficulty(self.difficulty)?;
-        validate_scheduled_days(self.scheduled_days)?;
-        validate_learning_steps(self.learning_steps)?;
+        validate_state(self.state, error_codes::VALIDATION_REVIEWS_STATE)?;
+        validate_stability(self.stability, error_codes::VALIDATION_REVIEWS_STABILITY)?;
+        validate_difficulty(self.difficulty, error_codes::VALIDATION_REVIEWS_DIFFICULTY)?;
+        validate_scheduled_days(self.scheduled_days, error_codes::VALIDATION_REVIEWS_SCHEDULED_DAYS)?;
+        validate_learning_steps(self.learning_steps, error_codes::VALIDATION_REVIEWS_LEARNING_STEPS)?;
         validate_time(self.time)?;
         Ok(())
     }
@@ -86,15 +86,6 @@ pub struct ReviewTotals {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DailyLimits {
-    pub total: u32,
-    pub untouched: CountedDailyLimit,
-    pub learn: CountedDailyLimit,
-    pub review: CountedDailyLimit,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct TodaysReviewTotalsMeta {
     pub is_untouched_over_the_limit: bool,
     pub is_learn_over_the_limit: bool,
@@ -115,56 +106,6 @@ fn validate_rating(rating: i32) -> Result<(), AppError> {
         return Err(AppError::new(
             error_codes::VALIDATION_REVIEWS_RATING,
             Some(format!("Invalid review rating: {}", rating)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_state(state: i32) -> Result<(), AppError> {
-    if !CardState::is_valid(state) {
-        return Err(AppError::new(
-            error_codes::VALIDATION_REVIEWS_STATE,
-            Some(format!("Invalid review state: {}", state)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_stability(stability: f64) -> Result<(), AppError> {
-    if stability < 0.0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_REVIEWS_STABILITY,
-            Some(format!("Invalid review stability: {}", stability)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_difficulty(difficulty: f64) -> Result<(), AppError> {
-    if !(DIFFICULTY_MIN..=DIFFICULTY_MAX).contains(&difficulty) {
-        return Err(AppError::new(
-            error_codes::VALIDATION_REVIEWS_DIFFICULTY,
-            Some(format!("Invalid review difficulty: {}", difficulty)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_scheduled_days(days: i32) -> Result<(), AppError> {
-    if days < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_REVIEWS_SCHEDULED_DAYS,
-            Some(format!("Invalid scheduled days: {}", days)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_learning_steps(steps: i32) -> Result<(), AppError> {
-    if steps < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_REVIEWS_LEARNING_STEPS,
-            Some(format!("Invalid review learning steps: {}", steps)),
         ));
     }
     Ok(())

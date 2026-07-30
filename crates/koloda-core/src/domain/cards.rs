@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::app::error::{error_codes, AppError};
+use crate::domain::progress::{
+    validate_difficulty, validate_lapses, validate_learning_steps, validate_reps, validate_scheduled_days,
+    validate_stability, validate_state,
+};
 use crate::domain::templates::TemplateField;
 use crate::domain::time::{
     default_now, deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp,
@@ -9,9 +13,6 @@ use crate::domain::time::{
 };
 
 pub type CardContent = HashMap<String, CardContentField>;
-
-const DIFFICULTY_MIN: f64 = 0.0;
-const DIFFICULTY_MAX: f64 = 10.0;
 
 /// FSRS card/review state integers stored in SQLite (mirrors `ts-fsrs` `State`).
 ///
@@ -152,17 +153,23 @@ pub struct GetCardsParams {
 impl InsertCardData {
     pub fn validate(&self, template_fields: &[TemplateField]) -> Result<(), AppError> {
         validate_content(&self.content, template_fields)?;
-        validate_state(self.state.unwrap_or(0))?;
+        validate_state(self.state.unwrap_or(0), error_codes::VALIDATION_CARDS_PROGRESS_STATE)?;
         if let Some(stability) = self.stability {
-            validate_stability(stability)?;
+            validate_stability(stability, error_codes::VALIDATION_CARDS_PROGRESS_STABILITY)?;
         }
         if let Some(difficulty) = self.difficulty {
-            validate_difficulty(difficulty)?;
+            validate_difficulty(difficulty, error_codes::VALIDATION_CARDS_PROGRESS_DIFFICULTY)?;
         }
-        validate_scheduled_days(self.scheduled_days.unwrap_or(0))?;
-        validate_learning_steps(self.learning_steps.unwrap_or(0))?;
-        validate_reps(self.reps.unwrap_or(0))?;
-        validate_lapses(self.lapses.unwrap_or(0))?;
+        validate_scheduled_days(
+            self.scheduled_days.unwrap_or(0),
+            error_codes::VALIDATION_CARDS_PROGRESS_SCHEDULED_DAYS,
+        )?;
+        validate_learning_steps(
+            self.learning_steps.unwrap_or(0),
+            error_codes::VALIDATION_CARDS_PROGRESS_LEARNING_STEPS,
+        )?;
+        validate_reps(self.reps.unwrap_or(0), error_codes::VALIDATION_CARDS_PROGRESS_REPS)?;
+        validate_lapses(self.lapses.unwrap_or(0), error_codes::VALIDATION_CARDS_PROGRESS_LAPSES)?;
         Ok(())
     }
 }
@@ -175,35 +182,21 @@ impl UpdateCardValues {
 
 impl UpdateCardProgress {
     pub fn validate(&self) -> Result<(), AppError> {
-        validate_progress_fields(
-            self.state,
-            self.stability,
-            self.difficulty,
+        validate_state(self.state, error_codes::VALIDATION_CARDS_PROGRESS_STATE)?;
+        validate_stability(self.stability, error_codes::VALIDATION_CARDS_PROGRESS_STABILITY)?;
+        validate_difficulty(self.difficulty, error_codes::VALIDATION_CARDS_PROGRESS_DIFFICULTY)?;
+        validate_scheduled_days(
             self.scheduled_days,
+            error_codes::VALIDATION_CARDS_PROGRESS_SCHEDULED_DAYS,
+        )?;
+        validate_learning_steps(
             self.learning_steps,
-            self.reps,
-            self.lapses,
-        )
+            error_codes::VALIDATION_CARDS_PROGRESS_LEARNING_STEPS,
+        )?;
+        validate_reps(self.reps, error_codes::VALIDATION_CARDS_PROGRESS_REPS)?;
+        validate_lapses(self.lapses, error_codes::VALIDATION_CARDS_PROGRESS_LAPSES)?;
+        Ok(())
     }
-}
-
-fn validate_progress_fields(
-    state: i32,
-    stability: f64,
-    difficulty: f64,
-    scheduled_days: i32,
-    learning_steps: i32,
-    reps: i32,
-    lapses: i32,
-) -> Result<(), AppError> {
-    validate_state(state)?;
-    validate_stability(stability)?;
-    validate_difficulty(difficulty)?;
-    validate_scheduled_days(scheduled_days)?;
-    validate_learning_steps(learning_steps)?;
-    validate_reps(reps)?;
-    validate_lapses(lapses)?;
-    Ok(())
 }
 
 fn validate_content(content: &CardContent, template_fields: &[TemplateField]) -> Result<(), AppError> {
@@ -226,83 +219,5 @@ fn validate_content(content: &CardContent, template_fields: &[TemplateField]) ->
         }
     }
 
-    Ok(())
-}
-
-fn validate_state(state: i32) -> Result<(), AppError> {
-    if !CardState::is_valid(state) {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_STATE,
-            Some(format!(
-                "State must be between {} and {}, got {}",
-                CardState::MIN,
-                CardState::MAX,
-                state
-            )),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_stability(stability: f64) -> Result<(), AppError> {
-    if stability < 0.0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_STABILITY,
-            Some(format!("Stability must be non-negative, got {}", stability)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_difficulty(difficulty: f64) -> Result<(), AppError> {
-    if !(DIFFICULTY_MIN..=DIFFICULTY_MAX).contains(&difficulty) {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_DIFFICULTY,
-            Some(format!(
-                "Difficulty must be between {} and {}, got {}",
-                DIFFICULTY_MIN, DIFFICULTY_MAX, difficulty
-            )),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_scheduled_days(days: i32) -> Result<(), AppError> {
-    if days < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_SCHEDULED_DAYS,
-            Some(format!("Scheduled days must be non-negative, got {}", days)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_learning_steps(steps: i32) -> Result<(), AppError> {
-    if steps < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_LEARNING_STEPS,
-            Some(format!("Learning steps must be non-negative, got {}", steps)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_reps(reps: i32) -> Result<(), AppError> {
-    if reps < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_REPS,
-            Some(format!("Reps must be non-negative, got {}", reps)),
-        ));
-    }
-    Ok(())
-}
-
-fn validate_lapses(lapses: i32) -> Result<(), AppError> {
-    if lapses < 0 {
-        return Err(AppError::new(
-            error_codes::VALIDATION_CARDS_PROGRESS_LAPSES,
-            Some(format!("Lapses must be non-negative, got {}", lapses)),
-        ));
-    }
     Ok(())
 }

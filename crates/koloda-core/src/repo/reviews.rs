@@ -5,8 +5,7 @@ use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::cards::CardState;
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
-    DailyLimits, GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals,
-    TodaysReviewTotalsMeta,
+    GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals, TodaysReviewTotalsMeta,
 };
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_learning::LearningSettings;
@@ -102,12 +101,7 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         let (from, to) = current_learning_day_range(&learning_settings.day_starts_at)?;
         let review_totals = get_review_totals(db, GetReviewTotalsParams { from, to })?;
 
-        let daily_limits = DailyLimits {
-            total: learning_settings.daily_limits.total,
-            untouched: learning_settings.daily_limits.untouched.clone(),
-            learn: learning_settings.daily_limits.learn.clone(),
-            review: learning_settings.daily_limits.review.clone(),
-        };
+        let daily_limits = learning_settings.daily_limits.clone();
         let counted_total = [
             (daily_limits.untouched.counts, review_totals.untouched),
             (daily_limits.learn.counts, review_totals.learn),
