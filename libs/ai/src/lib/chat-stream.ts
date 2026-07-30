@@ -1,3 +1,4 @@
+import type { ProviderOptions } from "@ai-sdk/provider-utils";
 import { streamText } from "ai";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { wrapAIError } from "./error";
@@ -5,251 +6,145 @@ import type { ChatStreamRequest, Message } from "./generation";
 import type { StreamUsage } from "./models";
 import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
+import type { AiProvider } from "./provider-catalog";
 import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import type { AISecrets } from "./provider-secrets";
 
-export async function streamChatWithOpenRouter(
+async function runChatStream(
+  modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
+  providerLabel: AiProvider,
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  providerOptions?: ProviderOptions,
+): Promise<StreamUsage | undefined> {
+  let streamedError: unknown = null;
+  const result = streamText({
+    model: modelFactory(request.input.modelId),
+    temperature: resolveGenerationTemperature(request.input.temperature),
+    system: compilePromptTemplate(
+      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+      request.template?.content.fields ?? [],
+      providerLabel,
+      "chat",
+    ),
+    messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    abortSignal,
+    ...(providerOptions ? { providerOptions } : {}),
+    onError: ({ error }) => {
+      streamedError = error;
+    },
+  });
+
+  try {
+    for await (const chunk of result.textStream) {
+      onChunk(chunk);
+    }
+  } catch (error) {
+    // WHY: The Vercel AI SDK's for-await loop can swallow the actual API error.
+    // Prefer the onError payload when present — it has better details.
+    throw streamedError ?? error;
+  }
+
+  // WHY: onError may fire without the for-await loop throwing; rethrow so callers still see the failure.
+  if (streamedError) throw streamedError;
+
+  const usage = await result.usage;
+  if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
+
+  return {
+    promptTokens: usage.inputTokens ?? 0,
+    completionTokens: usage.outputTokens ?? 0,
+    totalTokens: usage.totalTokens ?? 0,
+  };
+}
+
+/*
+ * Provider-specific chat streaming
+ */
+
+export function streamChatWithOpenRouter(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   { apiKey }: Extract<AISecrets, { provider: "openrouter" }>,
-): Promise<StreamUsage | undefined> {
+) {
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
     const openrouter = createOpenRouter({ apiKey });
-    let streamedError: unknown = null;
-    const result = streamText({
-      model: openrouter(request.input.modelId),
-      temperature: resolveGenerationTemperature(request.input.temperature),
-      system: compilePromptTemplate(
-        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-        request.template?.content.fields ?? [],
-        "openrouter",
-        "chat",
-      ),
-      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      abortSignal,
-      onError: ({ error }) => {
-        streamedError = error;
-      },
-    });
-
-    try {
-      for await (const chunk of result.textStream) {
-        onChunk(chunk);
-      }
-    } catch (error) {
-      throw streamedError ?? error;
-    }
-
-    if (streamedError) throw streamedError;
-
-    const usage = await result.usage;
-    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
-
-    return {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: usage.totalTokens ?? 0,
-    };
+    return runChatStream((modelId) => openrouter(modelId), "openrouter", request, onChunk, abortSignal);
   });
 }
 
-export async function streamChatWithOllama(
+export function streamChatWithOllama(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   { baseUrl, apiKey }: Extract<AISecrets, { provider: "ollama" }>,
-): Promise<StreamUsage | undefined> {
-  const { createOllama } = await import("ai-sdk-ollama");
-  const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey: apiKey } : {}) });
-
+) {
   return wrapAIError(async () => {
-    let streamedError: unknown = null;
-    const result = streamText({
-      model: ollama(request.input.modelId),
-      temperature: resolveGenerationTemperature(request.input.temperature),
-      system: compilePromptTemplate(
-        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-        request.template?.content.fields ?? [],
-        "ollama",
-        "chat",
-      ),
-      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      abortSignal,
-      onError: ({ error }) => {
-        streamedError = error;
-      },
-    });
-
-    try {
-      for await (const chunk of result.textStream) {
-        onChunk(chunk);
-      }
-    } catch (error) {
-      throw streamedError ?? error;
-    }
-
-    if (streamedError) throw streamedError;
-
-    const usage = await result.usage;
-    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
-
-    return {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: usage.totalTokens ?? 0,
-    };
+    const { createOllama } = await import("ai-sdk-ollama");
+    const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
+    return runChatStream((modelId) => ollama(modelId), "ollama", request, onChunk, abortSignal);
   });
 }
 
-export async function streamChatWithLMStudio(
+export function streamChatWithLMStudio(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   { baseUrl, apiKey }: Extract<AISecrets, { provider: "lmstudio" }>,
-): Promise<StreamUsage | undefined> {
+) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const lmstudio = createOpenAICompatible({ name: "lmstudio", baseURL: baseUrl, apiKey });
-    let streamedError: unknown = null;
-
-    const result = streamText({
-      model: lmstudio(request.input.modelId),
-      temperature: resolveGenerationTemperature(request.input.temperature),
-      system: compilePromptTemplate(
-        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-        request.template?.content.fields ?? [],
-        "lmstudio",
-        "chat",
-      ),
-      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
-      abortSignal,
-      onError: ({ error }) => {
-        streamedError = error;
-      },
-    });
-
-    try {
-      for await (const chunk of result.textStream) {
-        onChunk(chunk);
-      }
-    } catch (error) {
-      throw streamedError ?? error;
-    }
-
-    if (streamedError) throw streamedError;
-
-    const usage = await result.usage;
-    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
-
-    return {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: usage.totalTokens ?? 0,
-    };
+    return runChatStream((modelId) => lmstudio(modelId), "lmstudio", request, onChunk, abortSignal);
   });
 }
 
-export async function streamChatWithOpencodeGo(
+export function streamChatWithOpencodeGo(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   { apiKey }: Extract<AISecrets, { provider: "opencodeGo" }>,
-): Promise<StreamUsage | undefined> {
+) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeGo = createOpenAICompatible({ name: "opencode-go", baseURL: OPENCODE_GO_BASE_URL, apiKey });
-    let streamedError: unknown = null;
-
-    const result = streamText({
-      model: opencodeGo(request.input.modelId),
-      temperature: resolveGenerationTemperature(request.input.temperature),
-      system: compilePromptTemplate(
-        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-        request.template?.content.fields ?? [],
-        "opencodeGo",
-        "chat",
-      ),
-      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    const providerOptions = request.input.reasoningEffort
+      ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
+      : undefined;
+    return runChatStream(
+      (modelId) => opencodeGo(modelId),
+      "opencodeGo",
+      request,
+      onChunk,
       abortSignal,
-      providerOptions: request.input.reasoningEffort
-        ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
-        : undefined,
-      onError: ({ error }) => {
-        streamedError = error;
-      },
-    });
-
-    try {
-      for await (const chunk of result.textStream) {
-        onChunk(chunk);
-      }
-    } catch (error) {
-      throw streamedError ?? error;
-    }
-
-    if (streamedError) throw streamedError;
-
-    const usage = await result.usage;
-    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
-
-    return {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: usage.totalTokens ?? 0,
-    };
+      providerOptions,
+    );
   });
 }
 
-export async function streamChatWithOpencodeZen(
+export function streamChatWithOpencodeZen(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
   { apiKey }: Extract<AISecrets, { provider: "opencodeZen" }>,
-): Promise<StreamUsage | undefined> {
+) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeZen = createOpenAICompatible({ name: "opencode-zen", baseURL: OPENCODE_ZEN_BASE_URL, apiKey });
-    let streamedError: unknown = null;
-
-    const result = streamText({
-      model: opencodeZen(request.input.modelId),
-      temperature: resolveGenerationTemperature(request.input.temperature),
-      system: compilePromptTemplate(
-        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-        request.template?.content.fields ?? [],
-        "opencodeZen",
-        "chat",
-      ),
-      messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+    const providerOptions = request.input.reasoningEffort
+      ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
+      : undefined;
+    return runChatStream(
+      (modelId) => opencodeZen(modelId),
+      "opencodeZen",
+      request,
+      onChunk,
       abortSignal,
-      providerOptions: request.input.reasoningEffort
-        ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
-        : undefined,
-      onError: ({ error }) => {
-        streamedError = error;
-      },
-    });
-
-    try {
-      for await (const chunk of result.textStream) {
-        onChunk(chunk);
-      }
-    } catch (error) {
-      throw streamedError ?? error;
-    }
-
-    if (streamedError) throw streamedError;
-
-    const usage = await result.usage;
-    if (usage.inputTokens == null && usage.outputTokens == null) return undefined;
-
-    return {
-      promptTokens: usage.inputTokens ?? 0,
-      completionTokens: usage.outputTokens ?? 0,
-      totalTokens: usage.totalTokens ?? 0,
-    };
+      providerOptions,
+    );
   });
 }
 

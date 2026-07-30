@@ -168,48 +168,23 @@ If the new fetch/URL is part of the public `@koloda/ai` surface, also re-export 
 
 ### 5. Chat Streaming (`libs/ai/src/lib/chat-stream.ts`)
 
-Add streaming function for chat:
+Add a thin wrapper that supplies the AI SDK model factory to shared `runChatStream`:
 
 ```typescript
-export async function streamChatWithMyProvider(
+export function streamChatWithMyProvider(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  secrets: Extract<AISecrets, { provider: "myProvider" }>,
-): Promise<StreamUsage | undefined> {
+  { apiKey }: Extract<AISecrets, { provider: "myProvider" }>,
+) {
   return wrapAIError(async () => {
-    const systemMessage = compilePromptTemplate(
-      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-      request.template?.content.fields ?? [],
-      "myProvider",
-      "chat",
-    );
-    const messages = systemMessage
-      ? [
-          { role: "system", content: systemMessage },
-          ...request.messages.map((m) => ({ role: m.role, content: m.content })),
-        ]
-      : request.messages.map((m) => ({ role: m.role, content: m.content }));
-
-    const response = throwForAIResponse(
-      await fetch("https://api.myprovider.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${secrets.apiKey}`,
-        },
-        body: JSON.stringify({
-          model: request.input.modelId,
-          temperature: resolveGenerationTemperature(request.input.temperature),
-          messages,
-          stream: true,
-          stream_options: { include_usage: true },
-        }),
-        signal: abortSignal,
-      }),
-    );
-
-    return await readOpenAICompatibleChatStream(response, onChunk);
+    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
+    const myProvider = createOpenAICompatible({
+      name: "my-provider",
+      baseURL: "https://api.myprovider.com/v1",
+      apiKey,
+    });
+    return runChatStream((modelId) => myProvider(modelId), "myProvider", request, onChunk, abortSignal);
   });
 }
 ```
