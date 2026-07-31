@@ -61,38 +61,38 @@ msgstr "seconds"
 msgid "fsrs.learning-steps.units.seconds.short"
 msgstr "s"
 
-#: ../../libs/srs/src/lib/lessons.ts:14
+#: ../../libs/srs/src/lib/lessons.ts:15
 msgid "lesson.init.labels.learn"
 msgstr "Learn"
 
-#: ../../libs/srs/src/lib/lessons.ts:15
+#: ../../libs/srs/src/lib/lessons.ts:16
 msgid "lesson.init.labels.review"
 msgstr "Review"
 
-#: ../../libs/srs/src/lib/lessons.ts:16
+#: ../../libs/srs/src/lib/lessons.ts:17
 msgid "lesson.init.labels.total"
 msgstr "Total"
 
-#: ../../libs/srs/src/lib/lessons.ts:13
+#: ../../libs/srs/src/lib/lessons.ts:14
 msgid "lesson.init.labels.untouched"
 msgstr "New"
 
-#: ../../libs/srs/src/lib/templates.ts:13
+#: ../../libs/srs/src/lib/templates.ts:14
 msgid "templates.field-types.markdown"
 msgstr "Markdown"
 
-#: ../../libs/srs/src/lib/templates.ts:12
+#: ../../libs/srs/src/lib/templates.ts:13
 msgid "templates.field-types.text"
 msgstr "Text"
 
-#: ../../libs/srs/src/lib/templates.ts:17
+#: ../../libs/srs/src/lib/templates.ts:18
 msgid "templates.operations.display"
 msgstr "Display"
 
-#: ../../libs/srs/src/lib/templates.ts:18
+#: ../../libs/srs/src/lib/templates.ts:19
 msgid "templates.operations.reveal"
 msgstr "Reveal"
 
-#: ../../libs/srs/src/lib/templates.ts:19
+#: ../../libs/srs/src/lib/templates.ts:20
 msgid "templates.operations.type"
 msgstr "Type"

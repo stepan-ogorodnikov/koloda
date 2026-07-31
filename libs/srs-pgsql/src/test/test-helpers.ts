@@ -1,7 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import type { LearningSettings } from "@koloda/app";
-import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
+import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE, reviewRowSchema } from "@koloda/srs";
 import type { InsertAlgorithmData, InsertDeckData, InsertTemplateData, Review, Template } from "@koloda/srs";
 import { drizzle } from "drizzle-orm/pglite";
 import { readdir, readFile } from "node:fs/promises";
@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { addAlgorithm } from "../lib/algorithms";
 import type { DB } from "../lib/db";
 import { addDeck } from "../lib/decks";
+import { assertRow } from "../lib/parse-rows";
 import { reviews, schema } from "../lib/schema";
 import { setSettings } from "../lib/settings";
 import { addTemplate } from "../lib/templates";
@@ -170,5 +171,5 @@ export async function seedLearningSettings(
 
 export async function insertReview(db: DB, review: Omit<Review, "id">) {
   const result = await db.insert(reviews).values(review).returning();
-  return result[0] as Review;
+  return assertRow(reviewRowSchema, result[0]);
 }

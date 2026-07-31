@@ -44,8 +44,7 @@ describe("algorithms repository integration", () => {
     const { db } = testDb;
 
     await expect(cloneAlgorithm(db, { title: "Clone", sourceId: 999 })).rejects.toMatchObject({
-      code: "db.clone",
-      details: "not-found.algorithms.clone.source",
+      code: "not-found.algorithms.clone.source",
     });
   });
 
@@ -78,8 +77,7 @@ describe("algorithms repository integration", () => {
     const { algorithm } = await seedDeckContext(db);
 
     await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: 999 })).rejects.toMatchObject({
-      code: "db.delete",
-      details: "not-found.algorithms.delete.successor",
+      code: "not-found.algorithms.delete.successor",
     });
 
     expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();

@@ -61,38 +61,38 @@ msgstr "секунды"
 msgid "fsrs.learning-steps.units.seconds.short"
 msgstr "с"
 
-#: ../../libs/srs/src/lib/lessons.ts:14
+#: ../../libs/srs/src/lib/lessons.ts:15
 msgid "lesson.init.labels.learn"
 msgstr "Изучение"
 
-#: ../../libs/srs/src/lib/lessons.ts:15
+#: ../../libs/srs/src/lib/lessons.ts:16
 msgid "lesson.init.labels.review"
 msgstr "Повтор"
 
-#: ../../libs/srs/src/lib/lessons.ts:16
+#: ../../libs/srs/src/lib/lessons.ts:17
 msgid "lesson.init.labels.total"
 msgstr "Всего"
 
-#: ../../libs/srs/src/lib/lessons.ts:13
+#: ../../libs/srs/src/lib/lessons.ts:14
 msgid "lesson.init.labels.untouched"
 msgstr "Новые"
 
-#: ../../libs/srs/src/lib/templates.ts:13
+#: ../../libs/srs/src/lib/templates.ts:14
 msgid "templates.field-types.markdown"
 msgstr "Markdown"
 
-#: ../../libs/srs/src/lib/templates.ts:12
+#: ../../libs/srs/src/lib/templates.ts:13
 msgid "templates.field-types.text"
 msgstr "Текст"
 
-#: ../../libs/srs/src/lib/templates.ts:17
+#: ../../libs/srs/src/lib/templates.ts:18
 msgid "templates.operations.display"
 msgstr "Показать"
 
-#: ../../libs/srs/src/lib/templates.ts:18
+#: ../../libs/srs/src/lib/templates.ts:19
 msgid "templates.operations.reveal"
 msgstr "Раскрыть"
 
-#: ../../libs/srs/src/lib/templates.ts:19
+#: ../../libs/srs/src/lib/templates.ts:20
 msgid "templates.operations.type"
 msgstr "Печатать"

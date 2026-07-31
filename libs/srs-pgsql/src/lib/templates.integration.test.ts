@@ -79,8 +79,7 @@ describe("templates repository integration", () => {
         },
       }),
     ).rejects.toMatchObject({
-      code: "db.update",
-      details: "validation.templates.update-locked",
+      code: "validation.templates.update-locked",
     });
 
     const storedTemplate = await getTemplate(db, template.id);
@@ -98,8 +97,7 @@ describe("templates repository integration", () => {
     });
 
     await expect(deleteTemplate(db, { id: template.id })).rejects.toMatchObject({
-      code: "db.delete",
-      details: "validation.templates.delete-locked",
+      code: "validation.templates.delete-locked",
     });
   });
 });

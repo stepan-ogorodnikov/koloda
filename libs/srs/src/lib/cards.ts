@@ -1,9 +1,9 @@
-import type { ObjectPropertiesMapping, Timestamps, UpdateData } from "@koloda/app";
-import { mapObjectProperties, mapObjectPropertiesReverse } from "@koloda/app";
+import type { ObjectPropertiesMapping, UpdateData } from "@koloda/app";
+import { mapObjectProperties, mapObjectPropertiesReverse, timestampsValidation } from "@koloda/app";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
 import { z } from "zod";
-import type { Algorithm } from "./algorithms";
+import type { Algorithm, LessonAlgorithm } from "./algorithms";
 import { createFSRSAlgorithm } from "./algorithms-fsrs";
 import { deckValidation } from "./decks";
 import type { ReviewFSRS } from "./reviews";
@@ -26,7 +26,10 @@ export const cardValidation = z.object({
   lastReviewedAt: z.nullable(z.date()).default(null),
 });
 
-export type Card = z.input<typeof cardValidation> & Timestamps;
+export const cardRowSchema = cardValidation.extend(timestampsValidation.shape);
+
+// WHY: z.input keeps insert/update callers free to omit defaulted FSRS fields.
+export type Card = z.input<typeof cardValidation> & z.infer<typeof timestampsValidation>;
 
 export type GetCardsParams = { deckId: Card["deckId"] };
 
@@ -96,7 +99,7 @@ export type CardGrade = {
  * @param algorithm - The algorithm to use for grading
  * @returns Array of ts-fsrs grades in order: [Again, Hard, Good, Easy]
  */
-export function getCardGrades(card: Card, algorithm: Algorithm) {
+export function getCardGrades(card: Card, algorithm: Pick<Algorithm, "content"> | LessonAlgorithm) {
   const fsrsCard = createFSRSCard(card);
   const fsrsAlgorithm = createFSRSAlgorithm(algorithm.content);
   const grades = fsrsAlgorithm.repeat(fsrsCard, new Date());

@@ -1,34 +1,27 @@
-import type { Modify } from "@koloda/app";
 import { AppError, throwKnownError } from "@koloda/app";
-import type {
-  Algorithm,
-  Card,
-  Deck,
-  LessonAmounts,
-  LessonData,
-  LessonDeck,
-  LessonFilters,
-  LessonResultData,
-  LessonsResult,
-  Review,
-  Template,
-  TemplateField,
-  TemplateLayoutItem,
+import type { Deck, LessonAmounts, LessonDeck, LessonFilters, LessonResultData, LessonsResult } from "@koloda/srs";
+import {
+  cardRowSchema,
+  convertTemplateToLessonTemplate,
+  lessonAlgorithmRowSchema,
+  lessonDeckSchema,
+  lessonTemplateRowSchema,
+  reviewRowSchema,
 } from "@koloda/srs";
-import { convertTemplateToLessonTemplate } from "@koloda/srs";
 import { and, asc, eq, inArray, lt, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { DB } from "./db";
 import { getDecks } from "./decks";
+import { assertRow, assertRows, parseRows } from "./parse-rows";
 import { cards, decks, reviews } from "./schema";
 
 function sumLessonAmounts(decks: LessonDeck[]): LessonAmounts {
   return decks.reduce<LessonAmounts>(
     (total, deck) => ({
-      untouched: total.untouched + Number(deck.untouched),
-      learn: total.learn + Number(deck.learn),
-      review: total.review + Number(deck.review),
-      total: total.total + Number(deck.total),
+      untouched: total.untouched + deck.untouched,
+      learn: total.learn + deck.learn,
+      review: total.review + deck.review,
+      total: total.total + deck.total,
     }),
     { untouched: 0, learn: 0, review: 0, total: 0 },
   );
@@ -69,7 +62,7 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
       ORDER BY id
     `);
 
-    const decks = result.rows as LessonDeck[];
+    const decks = parseRows(lessonDeckSchema, result.rows);
 
     return {
       total: sumLessonAmounts(decks),
@@ -111,7 +104,8 @@ export async function getLessonCards(db: DB, dueAt: Date, filters: LessonFilters
       .orderBy(asc(cards.dueAt))
       .limit(amounts.review);
 
-    return unionAll(untouched, learn, review) as unknown as Card[];
+    const rows = await unionAll(untouched, learn, review);
+    return assertRows(cardRowSchema, rows);
   });
 }
 
@@ -135,23 +129,9 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
       )})
     `);
 
-    return result.rows as Algorithm[];
+    return parseRows(lessonAlgorithmRowSchema, result.rows);
   });
 }
-
-export type LessonTemplateLayoutItem = Modify<
-  TemplateLayoutItem,
-  {
-    field: TemplateField | undefined;
-  }
->;
-
-export type LessonTemplate = Modify<
-  Template,
-  {
-    layout: LessonTemplateLayoutItem[];
-  }
->;
 
 /**
  * Retrieves the templates used by given decks
@@ -172,7 +152,7 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
         sql`, `,
       )})
     `);
-    const templates = result.rows as Template[];
+    const templates = parseRows(lessonTemplateRowSchema, result.rows);
 
     return templates.map(convertTemplateToLessonTemplate);
   });
@@ -199,12 +179,12 @@ export async function getLessonData(db: DB, dueAt: Date, filters: LessonFilters,
   const lessonAlgorithms = await getLessonAlgorithms(db, deckIds);
 
   return lessonDecks && lessonTemplates && lessonAlgorithms
-    ? ({
+    ? {
         cards: lessonCards,
         decks: lessonDecks,
         templates: lessonTemplates,
         algorithms: lessonAlgorithms,
-      } as LessonData)
+      }
     : null;
 }
 
@@ -225,7 +205,7 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
 
       const result = await tx.insert(reviews).values(review).returning();
 
-      return result[0] as Review;
+      return assertRow(reviewRowSchema, result[0]);
     });
   });
 }

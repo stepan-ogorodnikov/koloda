@@ -1,21 +1,22 @@
-import type { Conversation, DeleteConversationData, SetConversationData } from "@koloda/app";
-import { throwKnownError } from "@koloda/app";
+import type { DeleteConversationData, SetConversationData } from "@koloda/app";
+import { conversationListItemSchema, conversationRowSchema, throwKnownError } from "@koloda/app";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
+import { assertRow, assertRowOrNull, assertRows } from "./parse-rows";
 import { conversations } from "./schema";
 
 export async function getConversation(db: DB, id: string) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(conversations).where(eq(conversations.id, id)).limit(1);
 
-    return result[0] ?? null;
+    return assertRowOrNull(conversationRowSchema, result[0]);
   });
 }
 
 export async function getConversations(db: DB) {
   return throwKnownError("db.get", async () => {
-    return db
+    const result = await db
       .select({
         id: conversations.id,
         title: conversations.title,
@@ -24,6 +25,8 @@ export async function getConversations(db: DB) {
       })
       .from(conversations)
       .orderBy(sql`${conversations.updatedAt} DESC NULLS LAST`, sql`${conversations.createdAt} DESC NULLS LAST`);
+
+    return assertRows(conversationListItemSchema, result);
   });
 }
 
@@ -44,7 +47,7 @@ export async function setConversation(db: DB, { id, state, title, updatedAt }: S
       })
       .returning();
 
-    return result[0] as Conversation;
+    return assertRow(conversationRowSchema, result[0]);
   });
 }
 

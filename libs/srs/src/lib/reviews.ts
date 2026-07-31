@@ -24,6 +24,9 @@ export const reviewValidation = z.object({
   createdAt: z.date(),
 });
 
+/** Full review row as stored / returned by Drizzle. */
+export const reviewRowSchema = reviewValidation;
+
 export type Review = z.input<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] };
@@ -70,6 +73,13 @@ export type GetReviewTotalsProps = {
 };
 
 export type ReviewTotals = Record<LessonType, number>;
+
+export const reviewTotalsSchema = z.object({
+  untouched: z.coerce.number(),
+  learn: z.coerce.number(),
+  review: z.coerce.number(),
+  total: z.coerce.number(),
+}) satisfies z.ZodType<ReviewTotals>;
 
 /**
  * Gets the review totals for the current learning day

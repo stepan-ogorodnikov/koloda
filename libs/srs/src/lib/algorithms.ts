@@ -1,4 +1,5 @@
-import type { Timestamps, UpdateData } from "@koloda/app";
+import type { UpdateData } from "@koloda/app";
+import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
 
@@ -8,7 +9,17 @@ export const algorithmValidation = z.object({
   content: algorithmFSRSValidation,
 });
 
-export type Algorithm = Timestamps & z.infer<typeof algorithmValidation>;
+export const algorithmRowSchema = algorithmValidation.extend(timestampsValidation.shape);
+
+/** Partial algorithm row from lesson SQL (`id` + `content` only). */
+export const lessonAlgorithmRowSchema = algorithmValidation.pick({ id: true, content: true }).extend({
+  // WHY: raw `db.execute` rows may surface int4 as string; coerce at this boundary.
+  id: z.coerce.number().int(),
+});
+
+export type Algorithm = z.infer<typeof algorithmRowSchema>;
+
+export type LessonAlgorithm = z.infer<typeof lessonAlgorithmRowSchema>;
 
 export const insertAlgorithmSchema = algorithmValidation.omit({ id: true });
 

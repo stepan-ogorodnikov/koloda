@@ -1,4 +1,5 @@
-import type { Timestamps, UpdateData } from "@koloda/app";
+import type { UpdateData } from "@koloda/app";
+import { timestampsValidation } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 
@@ -44,7 +45,20 @@ export const templateValidation = z.object({
   }),
 });
 
-export type Template = z.infer<typeof templateValidation> & Timestamps & { isLocked: boolean };
+export const templateRowSchema = templateValidation.extend(timestampsValidation.shape).extend({
+  // WHY: List/insert returning rows omit isLocked; only lock-aware queries compute it.
+  isLocked: z.boolean().default(false),
+});
+
+/** Partial template row from lesson SQL (`id` + `content` only). */
+export const lessonTemplateRowSchema = templateValidation.pick({ id: true, content: true }).extend({
+  // WHY: raw `db.execute` rows may surface int4 as string; coerce at this boundary.
+  id: z.coerce.number().int(),
+});
+
+export type Template = z.infer<typeof templateRowSchema>;
+
+export type LessonTemplateRow = z.infer<typeof lessonTemplateRowSchema>;
 
 export type TemplateFields = Template["content"]["fields"];
 

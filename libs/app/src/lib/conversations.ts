@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { timestampsValidation } from "./db";
 import type { Timestamps } from "./db";
 
 export type ConversationListItem = Timestamps & {
@@ -8,6 +10,17 @@ export type ConversationListItem = Timestamps & {
 export type Conversation = ConversationListItem & {
   state: unknown;
 };
+
+export const conversationListItemSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  ...timestampsValidation.shape,
+});
+
+export const conversationRowSchema = conversationListItemSchema.extend({
+  // WHY: Conversation state is validated at restore (srs-react), not at the DB boundary.
+  state: z.unknown(),
+});
 
 export type SetConversationData = {
   id: string;

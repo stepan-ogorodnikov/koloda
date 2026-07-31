@@ -1,10 +1,12 @@
 import { AppError, throwKnownError } from "@koloda/app";
 import { deepMerge } from "@koloda/app";
 import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/app";
-import { allowedSettings } from "@koloda/app";
+import { allowedSettings, settingsRowEnvelopeSchema, settingsRowSchema } from "@koloda/app";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import type { DB } from "./db";
 import { withUpdatedAt } from "./db";
+import { assertRow } from "./parse-rows";
 import { settings } from "./schema";
 
 /**
@@ -19,11 +21,14 @@ export async function getSettings<T extends SettingsName>(db: DB, name: Settings
 
     if (!result[0]) return null;
 
+    const envelope = assertRow(settingsRowEnvelopeSchema, result[0]);
+
     // validate to inject default values if value is missing
     // e.g. after introducing a new setting default value is returned until explicitly set
-    const { data, success } = allowedSettings[name].safeParse(result[0].content);
+    const { data, success } = allowedSettings[name].safeParse(envelope.content);
+    if (!success) return null;
 
-    return ((success ? { ...result[0], content: data } : null) as unknown as AllowedSettings<T>) || null;
+    return assertRow(settingsRowSchema(name), { ...envelope, content: data }) as AllowedSettings<T>;
   });
 }
 
@@ -44,7 +49,7 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
       .onConflictDoUpdate({ target: settings.name, set: withUpdatedAt({ name, content: parsed }) })
       .returning();
 
-    return result[0] as AllowedSettings<T>;
+    return assertRow(settingsRowSchema(name), result[0]) as AllowedSettings<T>;
   });
 }
 
@@ -58,9 +63,10 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
   return throwKnownError("db.update", async () => {
     const original = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
+    if (!original[0]) throw new AppError("db.update");
 
-    const base = original[0].content as Record<string, unknown>;
-    if (!base) throw new AppError("db.update");
+    const envelope = assertRow(settingsRowEnvelopeSchema, original[0]);
+    const base = z.record(z.string(), z.unknown()).parse(envelope.content);
     const merged = deepMerge(base, content);
     const parsed = allowedSettings[name].parse(merged);
 
@@ -70,6 +76,6 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
       .where(eq(settings.name, name))
       .returning();
 
-    return result[0] as AllowedSettings<T>;
+    return assertRow(settingsRowSchema(name), result[0]) as AllowedSettings<T>;
   });
 }

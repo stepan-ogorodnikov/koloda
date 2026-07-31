@@ -1,5 +1,5 @@
 import { AppError, throwKnownError } from "@koloda/app";
-import { getInsertCardSchema, getUpdateCardSchema } from "@koloda/srs";
+import { cardRowSchema, getInsertCardSchema, getUpdateCardSchema } from "@koloda/srs";
 import type {
   Card,
   DeleteCardData,
@@ -13,6 +13,7 @@ import type {
 import { eq, inArray } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
+import { assertRow, assertRowOrUndefined, assertRows } from "./parse-rows";
 import { cards, reviews } from "./schema";
 import { getTemplate, getTemplatesByIds } from "./templates";
 
@@ -26,7 +27,7 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(cards).where(eq(cards.deckId, deckId)).orderBy(cards.createdAt);
 
-    return result as Card[];
+    return assertRows(cardRowSchema, result);
   });
 }
 
@@ -40,7 +41,7 @@ async function getCard(db: DB, id: Card["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
 
-    return (result[0] as Card) || undefined;
+    return assertRowOrUndefined(cardRowSchema, result[0]);
   });
 }
 
@@ -59,7 +60,7 @@ export async function addCard(db: DB, data: InsertCardData) {
 
     const result = await db.insert(cards).values(data).returning();
 
-    return result[0] as Card;
+    return assertRow(cardRowSchema, result[0]);
   });
 }
 
@@ -115,7 +116,7 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
 
     const result = await db.update(cards).set(withUpdatedAt(validated)).where(eq(cards.id, id)).returning();
 
-    return result[0] as Card;
+    return assertRow(cardRowSchema, result[0]);
   });
 }
 
@@ -154,6 +155,9 @@ export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
  */
 export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
   return throwKnownError("db.update", async () => {
+    const card = await getCard(db, id);
+    if (!card) throw new AppError("not-found.cards.reset.card", `Card id: ${id}`);
+
     return db.transaction(async (tx) => {
       await tx.delete(reviews).where(eq(reviews.cardId, id));
 
@@ -171,7 +175,7 @@ export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
 
       const result = await tx.update(cards).set(data).where(eq(cards.id, id)).returning();
 
-      return result[0] as Card;
+      return assertRow(cardRowSchema, result[0]);
     });
   });
 }

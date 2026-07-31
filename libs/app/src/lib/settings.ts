@@ -1,5 +1,6 @@
 import { aiSettingsValidation } from "@koloda/ai";
-import type { z } from "zod";
+import { z } from "zod";
+import { timestampsValidation } from "./db";
 import type { Timestamps } from "./db";
 import { hotkeysSettingsValidation } from "./settings-hotkeys";
 import { interfaceSettingsValidation } from "./settings-interface";
@@ -22,6 +23,23 @@ export type AllowedSettings<T extends SettingsName> = Timestamps & {
   name: T;
   content: SettingsContent<T>;
 };
+
+/** Row envelope before content is re-parsed for defaults. */
+export const settingsRowEnvelopeSchema = z.object({
+  id: z.int(),
+  name: z.string(),
+  content: z.unknown(),
+  ...timestampsValidation.shape,
+});
+
+export function settingsRowSchema<T extends SettingsName>(name: T) {
+  return z.object({
+    id: z.int(),
+    name: z.literal(name),
+    content: allowedSettings[name],
+    ...timestampsValidation.shape,
+  });
+}
 
 export type SetSettingsData<T extends SettingsName> = {
   name: SettingsName;

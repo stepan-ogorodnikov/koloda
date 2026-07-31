@@ -1,9 +1,15 @@
 import { throwKnownError } from "@koloda/app";
 import { learningSettingsValidation } from "@koloda/app";
-import { calculateTodaysReviewTotals, getCurrentLearningDayRange } from "@koloda/srs";
-import type { GetReviewsData, GetReviewTotalsProps, Review, ReviewTotals } from "@koloda/srs";
+import {
+  calculateTodaysReviewTotals,
+  getCurrentLearningDayRange,
+  reviewRowSchema,
+  reviewTotalsSchema,
+} from "@koloda/srs";
+import type { GetReviewsData, GetReviewTotalsProps } from "@koloda/srs";
 import { eq, sql } from "drizzle-orm";
 import type { DB } from "./db";
+import { assertRows, parseRow } from "./parse-rows";
 import { reviews } from "./schema";
 import { getSettings } from "./settings";
 
@@ -19,7 +25,7 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
       .select()
       .from(reviews)
       .where(eq(reviews.cardId, Number(cardId)));
-    return result as Review[];
+    return assertRows(reviewRowSchema, result);
   });
 }
 
@@ -44,7 +50,7 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
         AND created_at <  ${to}
     `);
 
-    return result.rows[0] as ReviewTotals;
+    return parseRow(reviewTotalsSchema, result.rows[0]);
   });
 }
 
@@ -58,7 +64,7 @@ export async function getTodaysReviewTotals(db: DB) {
   return throwKnownError("db.get", async () => {
     const learningSettings = await getSettings(db, "learning");
     const content = learningSettingsValidation.parse(learningSettings?.content);
-    const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt as string);
+    const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt);
     const reviewTotals = await getReviewTotals(db, { from, to });
 
     return calculateTodaysReviewTotals(content, reviewTotals);

@@ -1,9 +1,8 @@
 import { AppError, throwKnownError } from "@koloda/app";
-import { insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
+import { algorithmRowSchema, deckWithOnlyTitleSchema, insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
 import type {
   Algorithm,
   CloneAlgorithmData,
-  DeckWithOnlyTitle,
   DeleteAlgorithmData,
   InsertAlgorithmData,
   UpdateAlgorithmData,
@@ -11,6 +10,7 @@ import type {
 import { eq } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
+import { assertRow, assertRowOrNull, assertRows } from "./parse-rows";
 import { algorithms, decks } from "./schema";
 
 /**
@@ -22,7 +22,7 @@ export async function getAlgorithms(db: DB) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(algorithms).orderBy(algorithms.createdAt);
 
-    return result as Algorithm[];
+    return assertRows(algorithmRowSchema, result);
   });
 }
 
@@ -36,7 +36,7 @@ export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(algorithms).where(eq(algorithms.id, id)).limit(1);
 
-    return (result[0] as Algorithm) || null;
+    return assertRowOrNull(algorithmRowSchema, result[0]);
   });
 }
 
@@ -50,7 +50,7 @@ export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
   return throwKnownError("db.add", async () => {
     const result = await db.insert(algorithms).values(data).returning();
 
-    return result[0] as Algorithm;
+    return assertRow(algorithmRowSchema, result[0]);
   });
 }
 
@@ -64,9 +64,13 @@ export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
 export async function updateAlgorithm(db: DB, { id, values }: UpdateAlgorithmData) {
   return throwKnownError("db.update", async () => {
     const payload = updateAlgorithmSchema.parse(values);
+
+    const existing = await getAlgorithm(db, id);
+    if (!existing) throw new AppError("not-found.algorithms.update.algorithm", `Algorithm id: ${id}`);
+
     const result = await db.update(algorithms).set(withUpdatedAt(payload)).where(eq(algorithms.id, id)).returning();
 
-    return result[0] as Algorithm;
+    return assertRow(algorithmRowSchema, result[0]);
   });
 }
 
@@ -82,9 +86,7 @@ export async function cloneAlgorithm(db: DB, { title, sourceId }: CloneAlgorithm
     const sourceAlgorithm = await getAlgorithm(db, sourceId);
     if (!sourceAlgorithm) throw new AppError("not-found.algorithms.clone.source");
     const data = insertAlgorithmSchema.parse({ ...sourceAlgorithm, title });
-    const result = await addAlgorithm(db, data);
-
-    return result as Algorithm;
+    return addAlgorithm(db, data);
   });
 }
 
@@ -129,6 +131,6 @@ export async function getAlgorithmDecks(db: DB, id: Algorithm["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select({ id: decks.id, title: decks.title }).from(decks).where(eq(decks.algorithmId, id));
 
-    return result as DeckWithOnlyTitle[];
+    return assertRows(deckWithOnlyTitleSchema, result);
   });
 }

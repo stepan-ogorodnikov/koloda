@@ -1,4 +1,5 @@
-import type { Timestamps, UpdateData } from "@koloda/app";
+import type { UpdateData } from "@koloda/app";
+import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import { type Template, templateValidation } from "./templates";
@@ -10,11 +11,15 @@ export const deckValidation = z.object({
   templateId: templateValidation.shape.id,
 });
 
-export type Deck = z.infer<typeof deckValidation> & Timestamps;
+export const deckRowSchema = deckValidation.extend(timestampsValidation.shape);
+
+export type Deck = z.infer<typeof deckRowSchema>;
 
 export type DeckWithTemplate = Deck & { template: Template };
 
-export type DeckWithOnlyTitle = Pick<Deck, "id" | "title">;
+export const deckWithOnlyTitleSchema = deckValidation.pick({ id: true, title: true });
+
+export type DeckWithOnlyTitle = z.infer<typeof deckWithOnlyTitleSchema>;
 
 export const insertDeckSchema = deckValidation.omit({ id: true });
 

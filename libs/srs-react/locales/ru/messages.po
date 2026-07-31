@@ -413,11 +413,11 @@ msgstr "Шаблон"
 msgid "cards-table.filters.trigger"
 msgstr "Фильтры"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:197
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:196
 msgid "cards-table.search.label"
 msgstr "Поиск по карточкам"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:207
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:206
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
@@ -437,19 +437,19 @@ msgstr "Удалить"
 msgid "cards-table.selection.delete.trigger"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:104
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:103
 msgid "cards.table.columns.created-at"
 msgstr "Создана"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:88
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:87
 msgid "cards.table.columns.due-at"
 msgstr "Срок"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:79
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:78
 msgid "cards.table.columns.state"
 msgstr "Статус"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:111
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:110
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 

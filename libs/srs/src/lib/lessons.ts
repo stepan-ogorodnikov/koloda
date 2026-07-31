@@ -1,11 +1,12 @@
 import type { Modify } from "@koloda/app";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
-import type { Algorithm } from "./algorithms";
+import { z } from "zod";
+import type { LessonAlgorithm } from "./algorithms";
 import type { Card } from "./cards";
 import type { Deck } from "./decks";
 import type { InsertReviewData } from "./reviews";
-import type { Template, TemplateField, TemplateLayoutItem } from "./templates";
+import type { LessonTemplateRow, Template, TemplateField, TemplateLayoutItem } from "./templates";
 
 export const LESSON_TYPES = ["untouched", "learn", "review", "total"] as const;
 
@@ -18,10 +19,17 @@ export const LESSON_TYPE_LABELS: Record<LessonType, MessageDescriptor> = {
 
 export type LessonType = (typeof LESSON_TYPES)[number];
 
-export type LessonDeck = Record<LessonType, number> & {
-  id: Deck["id"];
-  title: Deck["title"];
-};
+export const lessonDeckSchema = z.object({
+  // WHY: raw `db.execute` rows may surface int4/counts as string; coerce at this boundary.
+  id: z.coerce.number().int(),
+  title: z.string(),
+  untouched: z.coerce.number(),
+  learn: z.coerce.number(),
+  review: z.coerce.number(),
+  total: z.coerce.number(),
+});
+
+export type LessonDeck = z.infer<typeof lessonDeckSchema>;
 
 export type LessonsResult = {
   total: LessonAmounts;
@@ -66,7 +74,7 @@ export type LessonData = {
   cards: Card[];
   decks: Deck[];
   templates: LessonTemplate[];
-  algorithms: Algorithm[];
+  algorithms: LessonAlgorithm[];
 };
 
 export type LessonResultData = {
@@ -77,10 +85,12 @@ export type LessonResultData = {
 /**
  * Converts template to a LessonTemplate format for lesson and card preview
  */
-export function convertTemplateToLessonTemplate(template: Template): LessonTemplate {
+export function convertTemplateToLessonTemplate(
+  template: Pick<Template, "id" | "content"> | LessonTemplateRow,
+): LessonTemplate {
   const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => ({
     ...entry,
     field: template.content.fields.find((x) => x.id === entry.field),
   }));
-  return { ...template, layout };
+  return { ...template, layout } as LessonTemplate;
 }

@@ -1,11 +1,12 @@
 import { AppError, throwKnownError } from "@koloda/app";
-import { updateDeckSchema } from "@koloda/srs";
+import { deckRowSchema, updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import type { SQL } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 import { getAlgorithm } from "./algorithms";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
+import { assertRow, assertRowOrNull, assertRows } from "./parse-rows";
 import { decks } from "./schema";
 import { getTemplate } from "./templates";
 
@@ -19,7 +20,7 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(decks).where(filters).orderBy(decks.createdAt);
 
-    return result as Deck[];
+    return assertRows(deckRowSchema, result);
   });
 }
 
@@ -33,7 +34,7 @@ export async function getDeck(db: DB, id: Deck["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(decks).where(eq(decks.id, id)).limit(1);
 
-    return (result[0] as Deck) || null;
+    return assertRowOrNull(deckRowSchema, result[0]);
   });
 }
 
@@ -52,7 +53,7 @@ export async function addDeck(db: DB, data: InsertDeckData) {
 
     const result = await db.insert(decks).values(data).returning();
 
-    return result[0] as Deck;
+    return assertRow(deckRowSchema, result[0]);
   });
 }
 
@@ -76,7 +77,7 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
 
     const result = await db.update(decks).set(withUpdatedAt(payload)).where(eq(decks.id, id)).returning();
 
-    return result[0] as Deck;
+    return assertRow(deckRowSchema, result[0]);
   });
 }
 
