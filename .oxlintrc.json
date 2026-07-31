@@ -59,10 +59,12 @@
     "require-yield": "warn",
     "use-isnan": "warn",
     "valid-typeof": "warn",
+    "eqeqeq": ["error", "smart"],
     "import/default": "warn",
     "import/namespace": "warn",
     "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
     "react/exhaustive-deps": "warn",
+    "react/rules-of-hooks": "error",
     "react/forward-ref-uses-ref": "warn",
     "react/jsx-key": "warn",
     "react/jsx-no-duplicate-props": "warn",
@@ -89,6 +91,17 @@
     "typescript/prefer-as-const": "warn",
     "typescript/triple-slash-reference": "warn",
     "typescript/consistent-type-imports": ["error", { "fixStyle": "separate-type-imports" }],
+    "typescript/ban-ts-comment": [
+      "error",
+      {
+        "ts-expect-error": "allow-with-description",
+        "ts-ignore": true,
+        "ts-nocheck": true,
+        "ts-check": false,
+        "minimumDescriptionLength": 3
+      }
+    ],
+    "typescript/prefer-ts-expect-error": "error",
     "unicorn/no-await-in-promise-methods": "warn",
     "unicorn/no-empty-file": "warn",
     "unicorn/no-invalid-fetch-options": "warn",
@@ -163,5 +176,5 @@
     "browser": true
   },
   "globals": {},
-  "ignorePatterns": []
+  "ignorePatterns": ["**/routeTree.gen.ts"]
 }

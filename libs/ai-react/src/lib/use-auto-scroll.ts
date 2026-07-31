@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const AUTO_SCROLL_THRESHOLD = 80;
 
@@ -29,37 +29,43 @@ export function useAutoScroll({ messages, isLoading }: UseAutoScrollOptions): Us
   const isProgrammaticScrollRef = useRef(false);
   const shouldAutoScrollRef = useRef(true);
 
-  const getIsNearBottom = useEffectEvent(() => {
+  // WHY: Returned handlers are used as DOM/event callbacks. useEffectEvent may only be
+  // called from Effects / Effect Events (react/rules-of-hooks in oxlint ≥1.75), so these
+  // stay as stable useCallbacks over refs instead.
+  const getIsNearBottom = useCallback(() => {
     const viewport = scrollViewportRef.current;
     if (!viewport) return true;
 
     const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
     return distanceFromBottom <= AUTO_SCROLL_THRESHOLD;
-  });
+  }, []);
 
-  const syncScrollState = useEffectEvent(() => {
+  const syncScrollState = useCallback(() => {
     const nextIsNearBottom = getIsNearBottom();
     shouldAutoScrollRef.current = nextIsNearBottom;
     setIsNearBottom((current) => (current === nextIsNearBottom ? current : nextIsNearBottom));
-  });
+  }, [getIsNearBottom]);
 
-  const scrollToBottom = useEffectEvent((behavior: ScrollBehavior = "auto") => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
     const viewport = scrollViewportRef.current;
     if (!viewport) return;
 
     viewport.scrollTo({ top: viewport.scrollHeight, behavior });
-  });
+  }, []);
 
-  const startFollowingLatest = useEffectEvent((behavior: ScrollBehavior = "smooth") => {
-    shouldAutoScrollRef.current = true;
-    isProgrammaticScrollRef.current = behavior === "smooth";
-    setIsNearBottom(true);
-    scrollToBottom(behavior);
-  });
+  const startFollowingLatest = useCallback(
+    (behavior: ScrollBehavior = "smooth") => {
+      shouldAutoScrollRef.current = true;
+      isProgrammaticScrollRef.current = behavior === "smooth";
+      setIsNearBottom(true);
+      scrollToBottom(behavior);
+    },
+    [scrollToBottom],
+  );
 
   useEffect(() => {
     syncScrollState();
-  }, []);
+  }, [syncScrollState]);
 
   useEffect(() => {
     const messagesElement = messagesRef.current;
@@ -81,7 +87,7 @@ export function useAutoScroll({ messages, isLoading }: UseAutoScrollOptions): Us
     return () => {
       resizeObserver.disconnect();
     };
-  }, []);
+  }, [startFollowingLatest, syncScrollState]);
 
   useLayoutEffect(() => {
     if (shouldAutoScrollRef.current) {
@@ -90,9 +96,9 @@ export function useAutoScroll({ messages, isLoading }: UseAutoScrollOptions): Us
     }
 
     syncScrollState();
-  }, [messages, isLoading]);
+  }, [messages, isLoading, startFollowingLatest, syncScrollState]);
 
-  const handleScroll = useEffectEvent(() => {
+  const handleScroll = useCallback(() => {
     if (isProgrammaticScrollRef.current) {
       if (getIsNearBottom()) {
         isProgrammaticScrollRef.current = false;
@@ -103,39 +109,39 @@ export function useAutoScroll({ messages, isLoading }: UseAutoScrollOptions): Us
     }
 
     syncScrollState();
-  });
+  }, [getIsNearBottom, syncScrollState]);
 
-  const handleScrollToLatest = useEffectEvent(() => {
+  const handleScrollToLatest = useCallback(() => {
     startFollowingLatest("smooth");
-  });
+  }, [startFollowingLatest]);
 
-  const handleScrollUp = useEffectEvent(() => {
+  const handleScrollUp = useCallback(() => {
     scrollViewportRef.current?.scrollBy({ top: -300, behavior: "smooth" });
-  });
+  }, []);
 
-  const handleScrollDown = useEffectEvent(() => {
+  const handleScrollDown = useCallback(() => {
     scrollViewportRef.current?.scrollBy({ top: 300, behavior: "smooth" });
-  });
+  }, []);
 
-  const handleScrollToTop = useEffectEvent(() => {
+  const handleScrollToTop = useCallback(() => {
     scrollViewportRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  }, []);
 
-  const handleScrollToBottom = useEffectEvent(() => {
+  const handleScrollToBottom = useCallback(() => {
     startFollowingLatest("smooth");
-  });
+  }, [startFollowingLatest]);
 
-  const prepareSubmit = useEffectEvent(() => {
+  const prepareSubmit = useCallback(() => {
     const shouldFollow = getIsNearBottom();
     shouldAutoScrollRef.current = shouldFollow;
     return shouldFollow;
-  });
+  }, [getIsNearBottom]);
 
-  const resetScroll = useEffectEvent(() => {
+  const resetScroll = useCallback(() => {
     shouldAutoScrollRef.current = true;
     isProgrammaticScrollRef.current = false;
     setIsNearBottom(true);
-  });
+  }, []);
 
   const showJumpToLatest = messages.length > 0 && !isNearBottom;
 
