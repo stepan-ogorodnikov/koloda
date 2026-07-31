@@ -1,6 +1,6 @@
 use rusqlite::{params, Connection, OptionalExtension};
 
-use crate::app::db::Database;
+use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::templates::{
@@ -10,9 +10,7 @@ use crate::domain::templates::{
 
 fn get_template_row(row: &rusqlite::Row<'_>) -> Result<Template, rusqlite::Error> {
     let content_str: String = row.get(2)?;
-    let content: TemplateContent = serde_json::from_str(&content_str).map_err(|e| {
-        rusqlite::Error::FromSqlConversionFailure(content_str.len(), rusqlite::types::Type::Text, Box::new(e))
-    })?;
+    let content: TemplateContent = parse_json_column(2, &content_str)?;
 
     Ok(Template {
         id: row.get(0)?,

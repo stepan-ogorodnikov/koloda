@@ -2,7 +2,7 @@ use crate::domain::cards::AddCardsItemResult;
 use crate::domain::cards::AddCardsResponse;
 use rusqlite::{params, OptionalExtension};
 
-use crate::app::db::Database;
+use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::{
@@ -17,9 +17,7 @@ use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
     let content_str: String = row.get(3)?;
-    let content: CardContent = serde_json::from_str(&content_str).map_err(|e| {
-        rusqlite::Error::FromSqlConversionFailure(content_str.len(), rusqlite::types::Type::Text, Box::new(e))
-    })?;
+    let content: CardContent = parse_json_column(3, &content_str)?;
 
     Ok(Card {
         id: row.get(0)?,

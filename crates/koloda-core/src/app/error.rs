@@ -132,7 +132,8 @@ impl From<std::io::Error> for AppError {
     fn from(err: std::io::Error) -> Self {
         Self {
             code: error_codes::UNKNOWN.to_string(),
-            details: Some(format!("IO error: {:?}", err)),
+            // WHY: `Display`, not `Debug` — details can surface to the UI for `unknown` codes.
+            details: Some(format!("IO error: {}", err)),
         }
     }
 }
@@ -141,7 +142,7 @@ impl From<rusqlite::Error> for AppError {
     fn from(err: rusqlite::Error) -> Self {
         Self {
             code: error_codes::UNKNOWN.to_string(),
-            details: Some(format!("Database error: {:?}", err)),
+            details: Some(format!("Database error: {}", err)),
         }
     }
 }
@@ -150,7 +151,7 @@ impl From<serde_json::Error> for AppError {
     fn from(err: serde_json::Error) -> Self {
         Self {
             code: error_codes::UNKNOWN.to_string(),
-            details: Some(format!("JSON error: {:?}", err)),
+            details: Some(format!("JSON error: {}", err)),
         }
     }
 }
@@ -159,7 +160,7 @@ impl From<refinery::Error> for AppError {
     fn from(err: refinery::Error) -> Self {
         Self {
             code: error_codes::UNKNOWN.to_string(),
-            details: Some(format!("Migration error: {:?}", err)),
+            details: Some(format!("Migration error: {}", err)),
         }
     }
 }

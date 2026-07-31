@@ -1,4 +1,5 @@
 use rusqlite::{Connection, Transaction};
+use serde::de::DeserializeOwned;
 use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -8,6 +9,13 @@ use crate::app::error::AppError;
 use crate::migrations;
 
 pub const MIGRATIONS_TABLE: &str = "_migrations";
+
+pub fn parse_json_column<T: DeserializeOwned>(column: usize, json: &str) -> Result<T, rusqlite::Error> {
+    serde_json::from_str(json).map_err(|e| {
+        // WHY: first arg is column index — callers used to pass `json.len()` / `content_str.len()`.
+        rusqlite::Error::FromSqlConversionFailure(column, rusqlite::types::Type::Text, Box::new(e))
+    })
+}
 
 #[derive(Clone)]
 // INVARIANT: single SQLite connection — acceptable for a single-user desktop app.

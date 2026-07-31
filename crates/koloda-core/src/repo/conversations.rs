@@ -2,7 +2,7 @@ use rusqlite::{params, OptionalExtension};
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::app::db::Database;
+use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::conversations::Conversation;
@@ -10,8 +10,7 @@ use crate::domain::time::deserialize_optional_timestamp;
 
 fn get_conversation_row(row: &rusqlite::Row<'_>) -> Result<Conversation, rusqlite::Error> {
     let state_str: String = row.get(2)?;
-    let state = serde_json::from_str(&state_str)
-        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(2, rusqlite::types::Type::Text, Box::new(e)))?;
+    let state = parse_json_column(2, &state_str)?;
 
     Ok(Conversation {
         id: row.get(0)?,

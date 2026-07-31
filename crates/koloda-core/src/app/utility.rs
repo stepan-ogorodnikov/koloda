@@ -1,5 +1,4 @@
 use crate::app::error::{error_codes, AppError};
-use crate::domain::time::parse_iso_timestamp;
 
 pub fn get_current_timestamp() -> Result<i64, AppError> {
     std::time::SystemTime::now()
@@ -10,8 +9,4 @@ pub fn get_current_timestamp() -> Result<i64, AppError> {
 
 pub fn generate_uuid() -> String {
     uuid::Uuid::new_v4().to_string()
-}
-
-pub fn parse_iso_to_millis(value: &str) -> Result<i64, AppError> {
-    parse_iso_timestamp(value).map_err(|msg| AppError::new(error_codes::UNKNOWN, Some(msg)))
 }

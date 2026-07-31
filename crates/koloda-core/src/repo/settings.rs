@@ -4,7 +4,7 @@ use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde_json::Value;
 
-use crate::app::db::Database;
+use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
@@ -23,8 +23,7 @@ impl FromSql for SettingsName {
 
 fn get_settings_row(row: &rusqlite::Row<'_>) -> Result<Settings, rusqlite::Error> {
     let content_str: String = row.get(2)?;
-    let content = serde_json::from_str(&content_str)
-        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(2, rusqlite::types::Type::Text, Box::new(e)))?;
+    let content = parse_json_column(2, &content_str)?;
 
     Ok(Settings {
         id: row.get(0)?,
