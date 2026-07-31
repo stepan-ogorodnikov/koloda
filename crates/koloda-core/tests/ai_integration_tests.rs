@@ -78,7 +78,10 @@ mod test_store {
             Ok(self.data.lock().unwrap().get(key).cloned())
         }
         fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
-            Err(AppError::new("keyring", Some("simulated keyring set failure".to_string())))
+            Err(AppError::new(
+                "keyring",
+                Some("simulated keyring set failure".to_string()),
+            ))
         }
         fn remove(&self, key: &str) -> Result<(), AppError> {
             self.data.lock().unwrap().remove(key);
@@ -119,14 +122,14 @@ mod test_store {
     pub fn setup_failing_store() -> Guard {
         let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let store: Arc<dyn SecretStore> = Arc::new(FailingGetSecretStore);
-        set_test_secret_store(Some(store));
+        set_test_secret_store(Some(store)).expect("set test secret store");
         Guard(guard)
     }
 
     pub fn setup_failing_set_store() -> Guard {
         let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let store = FailingSetSecretStore::new(Arc::new(Mutex::new(HashMap::new()))).into_arc();
-        set_test_secret_store(Some(store));
+        set_test_secret_store(Some(store)).expect("set test secret store");
         Guard(guard)
     }
 
@@ -135,7 +138,7 @@ mod test_store {
     pub fn setup() -> Guard {
         let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let store = MockSecretStore::new().into_arc();
-        set_test_secret_store(Some(store));
+        set_test_secret_store(Some(store)).expect("set test secret store");
         Guard(guard)
     }
 
@@ -146,16 +149,16 @@ mod test_store {
             data: Arc::clone(&data),
         }
         .into_arc();
-        set_test_secret_store(Some(store));
+        set_test_secret_store(Some(store)).expect("set test secret store");
         (Guard(guard), data)
     }
 
     pub fn replace_store(store: Arc<dyn SecretStore>) {
-        set_test_secret_store(Some(store));
+        set_test_secret_store(Some(store)).expect("set test secret store");
     }
 
     pub fn teardown(_guard: Guard) {
-        set_test_secret_store(None);
+        set_test_secret_store(None).expect("clear test secret store");
     }
 }
 
@@ -277,7 +280,10 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
     let store_key = format!("ai-profile-{}", added.id);
 
     assert_eq!(
-        get_secret_store().get(&store_key).expect("read keyring"),
+        get_secret_store()
+            .expect("get secret store")
+            .get(&store_key)
+            .expect("read keyring"),
         Some("sk-original-key".to_string()),
         "key should be stored after add"
     );
@@ -294,7 +300,10 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
     .expect("profile should be updated");
 
     assert_eq!(
-        get_secret_store().get(&store_key).expect("read keyring"),
+        get_secret_store()
+            .expect("get secret store")
+            .get(&store_key)
+            .expect("read keyring"),
         None,
         "old key must be cleared after updating to a no-key variant"
     );
@@ -310,7 +319,10 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
 
     match updated.secrets.as_ref() {
         Some(AISecrets::Ollama { api_key, .. }) => {
-            assert!(api_key.is_none(), "returned updated profile should not carry the old key");
+            assert!(
+                api_key.is_none(),
+                "returned updated profile should not carry the old key"
+            );
         }
         other => panic!("expected Ollama secrets in update return, got {:?}", other),
     }
@@ -360,10 +372,7 @@ fn add_ai_profile_rolls_back_settings_when_keyring_set_fails() {
     assert_eq!(err.code, "keyring");
 
     let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
-    assert!(
-        profiles.is_empty(),
-        "failed add must not leave a profile in settings"
-    );
+    assert!(profiles.is_empty(), "failed add must not leave a profile in settings");
 
     test_store::teardown(_guard);
 }
@@ -396,7 +405,10 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
     assert_eq!(err.code, "keyring");
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = profiles.iter().find(|p| p.id == added.id).expect("profile should remain");
+    let retrieved = profiles
+        .iter()
+        .find(|p| p.id == added.id)
+        .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     match retrieved.secrets.as_ref() {
         Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key, "sk-original-key"),
@@ -435,7 +447,10 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     assert_eq!(err.code, "keyring");
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
-    let retrieved = profiles.iter().find(|p| p.id == added.id).expect("profile should remain");
+    let retrieved = profiles
+        .iter()
+        .find(|p| p.id == added.id)
+        .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     match retrieved.secrets.as_ref() {
         Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key, "sk-original-key"),

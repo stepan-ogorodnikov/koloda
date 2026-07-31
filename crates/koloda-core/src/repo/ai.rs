@@ -12,15 +12,15 @@ fn get_ai_profile_store_key(profile_id: &str) -> String {
 }
 
 fn set_api_key(profile_id: &str, api_key: &str) -> Result<(), AppError> {
-    get_secret_store().set(&get_ai_profile_store_key(profile_id), api_key)
+    get_secret_store()?.set(&get_ai_profile_store_key(profile_id), api_key)
 }
 
 fn get_api_key(profile_id: &str) -> Result<Option<String>, AppError> {
-    get_secret_store().get(&get_ai_profile_store_key(profile_id))
+    get_secret_store()?.get(&get_ai_profile_store_key(profile_id))
 }
 
 fn remove_api_key(profile_id: &str) -> Result<(), AppError> {
-    get_secret_store().remove(&get_ai_profile_store_key(profile_id))
+    get_secret_store()?.remove(&get_ai_profile_store_key(profile_id))
 }
 
 fn redact_secrets(secrets: &AISecrets) -> AISecrets {

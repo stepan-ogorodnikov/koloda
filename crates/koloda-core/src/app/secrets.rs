@@ -12,34 +12,38 @@ use std::sync::{RwLockReadGuard, RwLockWriteGuard};
 
 const STORE_ID: &str = "koloda";
 
+// WHY: Kept under `debug_assertions` (not `cfg(test)`). Integration tests in
+// `tests/` are a separate crate and link a non-`test` build of this library, so
+// `cfg(test)` would strip the seam. Release Electron builds use `--release`,
+// which disables `debug_assertions` and removes the override entirely.
 #[cfg(debug_assertions)]
 static TEST_SECRET_STORE: LazyLock<RwLock<Option<Arc<dyn SecretStore>>>> = LazyLock::new(|| RwLock::new(None));
 
 #[cfg(debug_assertions)]
-pub fn set_test_secret_store(store: Option<Arc<dyn SecretStore>>) {
-    let mut guard = TEST_SECRET_STORE.write().unwrap();
+fn test_store_lock_poisoned() -> AppError {
+    AppError::new("secret-store", Some("Test secret store lock poisoned".to_string()))
+}
+
+#[cfg(debug_assertions)]
+pub fn set_test_secret_store(store: Option<Arc<dyn SecretStore>>) -> Result<(), AppError> {
+    let mut guard = TEST_SECRET_STORE.write().map_err(|_| test_store_lock_poisoned())?;
     *guard = store;
+    Ok(())
 }
 
 #[cfg(debug_assertions)]
-pub fn clear_test_secret_store() {
-    let mut guard = TEST_SECRET_STORE.write().unwrap();
-    *guard = None;
-}
-
-#[cfg(debug_assertions)]
-pub fn get_secret_store() -> Arc<dyn SecretStore> {
-    let guard = TEST_SECRET_STORE.read().unwrap();
+pub fn get_secret_store() -> Result<Arc<dyn SecretStore>, AppError> {
+    let guard = TEST_SECRET_STORE.read().map_err(|_| test_store_lock_poisoned())?;
     if let Some(store) = guard.as_ref() {
-        return Arc::clone(store);
+        return Ok(Arc::clone(store));
     }
     drop(guard);
-    Arc::clone(&*REAL_SECRET_STORE)
+    Ok(Arc::clone(&*REAL_SECRET_STORE))
 }
 
 #[cfg(not(debug_assertions))]
-pub fn get_secret_store() -> Arc<dyn SecretStore> {
-    Arc::clone(&*REAL_SECRET_STORE)
+pub fn get_secret_store() -> Result<Arc<dyn SecretStore>, AppError> {
+    Ok(Arc::clone(&*REAL_SECRET_STORE))
 }
 
 pub trait SecretStore: Send + Sync {
