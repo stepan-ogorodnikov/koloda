@@ -85,5 +85,7 @@
         "unitTestRunner": "none"
       }
     }
-  }
+  },
+  "analytics": true,
+  "neverConnectToCloud": true
 }
