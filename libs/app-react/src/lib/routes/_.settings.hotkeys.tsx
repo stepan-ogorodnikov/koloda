@@ -1,5 +1,5 @@
 import { DEFAULT_HOTKEYS_SETTINGS } from "@koloda/app";
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { QueryState } from "@koloda/ui";
 import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_/settings/hotkeys")({
   component: SettingsHotkeysRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.settings.detail("hotkeys"), ...getSettingsQuery("hotkeys") });
+    queryClient.ensureQueryData(getSettingsQuery("hotkeys"));
     return { title: msg`title.settings.hotkeys` };
   },
 });
@@ -24,10 +24,7 @@ function SettingsHotkeysRoute() {
   const ref = useRouteFocus();
   useLayoutHeaderScrollShadow(ref);
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({
-    ...getSettingsQuery<"hotkeys">("hotkeys"),
-    queryKey: queryKeys.settings.detail("hotkeys"),
-  });
+  const query = useQuery(getSettingsQuery<"hotkeys">("hotkeys"));
 
   return (
     <>

@@ -21,7 +21,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
   const navigate = useNavigate({ from: "/templates/$templateId" });
   const defaultTemplate = useAtomValue(defaultTemplateAtom);
   const { deleteTemplateMutation, getTemplateDecksQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: queryKeys.templates.decks(id), ...getTemplateDecksQuery({ id: Number(id) }) });
+  const { data } = useQuery(getTemplateDecksQuery({ id: Number(id) }));
   const { mutate, error, reset } = useMutation(deleteTemplateMutation());
 
   const handleOpenChange = (isOpen: boolean) => {

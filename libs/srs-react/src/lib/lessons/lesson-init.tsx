@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { queriesAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
@@ -18,14 +18,8 @@ export function LessonInit({ state, dispatch }: LessonInitProps) {
   const { ui } = useHotkeysSettings();
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
-  const { data: learnedToday } = useQuery({
-    queryKey: queryKeys.lessons.todayReviewTotals(),
-    ...getTodayReviewTotalsQuery(),
-  });
-  const { data: lessons } = useQuery({
-    queryKey: queryKeys.lessons.all(state.filters),
-    ...getLessonsQuery(state.filters!),
-  });
+  const { data: learnedToday } = useQuery(getTodayReviewTotalsQuery());
+  const { data: lessons } = useQuery(getLessonsQuery(state.filters!));
 
   useAppHotkey(["Escape"], () => dispatch(["isOpenUpdated", false]), "lesson", { ignoreInputs: false });
 

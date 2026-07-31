@@ -1,7 +1,7 @@
 import type { AIProfile, AISecrets } from "@koloda/ai";
 import { getProviderConfig } from "@koloda/ai";
 import type { SecretField } from "@koloda/ai";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -28,7 +28,7 @@ function getApiKey(secrets: AISecrets): string | null {
 export function useAIProfiles(profileId?: string | null) {
   const { _ } = useLingui();
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
+  const query = useQuery(getAIProfilesQuery());
   const profiles = useMemo(() => query.data ?? [], [query.data]);
   const defaultProfileId = useMemo(() => {
     if (profiles.length === 0) return null;

@@ -1,6 +1,6 @@
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { Button, Fade, Number } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -20,10 +20,7 @@ type CardsTableProps = {
 export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery } = useAtomValue(queriesAtom);
-  const { data: cards = [] } = useQuery({
-    queryKey: queryKeys.cards.deck({ deckId }),
-    ...getCardsQuery({ deckId }),
-  });
+  const { data: cards = [] } = useQuery(getCardsQuery({ deckId }));
   const [index, setIndex] = useState(0);
   const card = cards[index];
 

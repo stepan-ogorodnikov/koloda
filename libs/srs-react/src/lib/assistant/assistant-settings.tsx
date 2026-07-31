@@ -28,7 +28,7 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const { getSettingsQuery, patchSettingsMutation } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ ...getSettingsQuery("ai"), queryKey: queryKeys.settings.detail("ai") });
+  const { data } = useQuery(getSettingsQuery("ai"));
   const { mutate } = useMutation(patchSettingsMutation());
 
   const assistantSettings = data?.content?.assistant as AssistantSettingsType | undefined;

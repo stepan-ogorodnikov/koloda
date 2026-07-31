@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Card, Deck, Template } from "@koloda/srs";
 import { SearchField, Table } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -48,8 +48,8 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   });
   const [searchValue, setSearchValue] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const { data: cards = [] } = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
-  const { data: deck } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
+  const { data: cards = [] } = useQuery(getCardsQuery({ deckId }));
+  const { data: deck } = useQuery(getDeckQuery(deckId));
   const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
 
   const columns = useMemo<ColumnDef<Card>[]>(

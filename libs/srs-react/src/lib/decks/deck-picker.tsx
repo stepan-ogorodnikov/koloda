@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
@@ -17,7 +17,7 @@ type DeckPickerProps = Omit<SelectProps<Deck>, "value" | "onChange" | "items" | 
 export function DeckPicker({ variants, label, isNullable, value, onChange, ...props }: DeckPickerProps) {
   const { _ } = useLingui();
   const { getDecksQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: queryKeys.decks.all(), ...getDecksQuery() });
+  const { data } = useQuery(getDecksQuery());
 
   useEffect(() => {
     if (!isNullable && !value && data?.length) onChange(data[0].id);

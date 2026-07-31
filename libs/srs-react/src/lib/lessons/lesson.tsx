@@ -29,10 +29,7 @@ export function Lesson() {
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data: learningSettings } = useQuery({
-    queryKey: queryKeys.settings.detail("learning"),
-    ...getSettingsQuery("learning"),
-  });
+  const { data: learningSettings } = useQuery(getSettingsQuery("learning"));
   const { isOpen, isSubmitted, isFinished } = state.meta;
 
   useEffect(() => {

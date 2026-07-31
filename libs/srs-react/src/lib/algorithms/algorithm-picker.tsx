@@ -1,5 +1,5 @@
 import { defaultAlgorithmAtom } from "@koloda/core-react";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Algorithm } from "@koloda/srs";
 import { Select } from "@koloda/ui";
 import type { SelectProps } from "@koloda/ui";
@@ -19,7 +19,7 @@ export function AlgorithmPicker({ label, isNullable, value, onChange, ...props }
   const { _ } = useLingui();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
-  const { data } = useQuery({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
+  const { data } = useQuery(getAlgorithmsQuery());
 
   useEffect(() => {
     if (!isNullable && !value) onChange(defaultAlgorithm);

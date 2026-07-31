@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { QueryState, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/settings/ai")({
   component: SettingsAiRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
+    queryClient.ensureQueryData(getAIProfilesQuery());
     return { title: msg`title.settings.ai` };
   },
 });
@@ -23,7 +23,7 @@ function SettingsAiRoute() {
   const ref = useRouteFocus();
   useLayoutHeaderScrollShadow(ref);
   const { getAIProfilesQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ ...getAIProfilesQuery(), queryKey: queryKeys.ai.profiles() });
+  const query = useQuery(getAIProfilesQuery());
 
   return (
     <>

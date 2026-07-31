@@ -1,5 +1,5 @@
 import type { ConversationListItem } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { Link, QueryState, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -23,7 +23,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversations = useAtomValue(conversationsAtom);
   const unreadIds = useAtomValue(unreadConversationIdsAtom);
-  const query = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
+  const query = useQuery(getConversationsQuery());
 
   return (
     <QueryState query={query}>

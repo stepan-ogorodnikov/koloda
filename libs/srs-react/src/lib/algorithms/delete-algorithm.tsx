@@ -19,8 +19,8 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
   const navigate = useNavigate({ from: "/algorithms/$algorithmId" });
   const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
   const { getAlgorithmsQuery, getAlgorithmDecksQuery, deleteAlgorithmMutation } = useAtomValue(queriesAtom);
-  const { data: algorithms } = useQuery({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
-  const { data: decks } = useQuery({ queryKey: queryKeys.algorithms.decks(id), ...getAlgorithmDecksQuery(id) });
+  const { data: algorithms } = useQuery(getAlgorithmsQuery());
+  const { data: decks } = useQuery(getAlgorithmDecksQuery(id));
   const { mutate, reset, error } = useMutation(deleteAlgorithmMutation());
   const [successorId, setSuccessorId] = useState<Algorithm["id"] | null>(null);
 

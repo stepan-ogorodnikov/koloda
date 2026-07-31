@@ -1,5 +1,5 @@
 import type { AIModel } from "@koloda/ai";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { useQueries } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
@@ -23,7 +23,6 @@ export function useAIProfilesModels(profileIds: string[]): {
 
   const queries = useQueries({
     queries: stableIds.map((profileId) => ({
-      queryKey: queryKeys.ai.models(profileId),
       ...getAIProfileModelsQuery(profileId),
       enabled: !!profileId,
       retry: false,

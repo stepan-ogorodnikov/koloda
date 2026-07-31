@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { queriesAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Fade } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -18,10 +18,7 @@ type LessonStudyingProps = {
 export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   const { getLessonDataQuery } = useAtomValue(queriesAtom);
   const { grades, ui } = useHotkeysSettings();
-  const { data } = useQuery({
-    queryKey: queryKeys.lessons.data({ amounts: state.amounts!, filters: state.filters! }),
-    ...getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }),
-  });
+  const { data } = useQuery(getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }));
 
   useAppHotkey(grades.again, () => dispatch(["gradeSelected", 0]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.hard, () => dispatch(["gradeSelected", 1]), "lesson", { eventType: "keyup" });

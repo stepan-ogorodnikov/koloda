@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { Algorithm } from "@koloda/srs-react";
 import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   loader: ({ context: { queryClient, queries }, params: { algorithmId } }) => {
     const id = Number(algorithmId);
     const { getAlgorithmQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
+    queryClient.ensureQueryData(getAlgorithmQuery(id));
   },
 });
 
@@ -22,7 +22,7 @@ function AlgorithmRoute() {
   useLayoutHeaderScrollShadow(ref);
   const id = Number(algorithmId);
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
+  const query = useQuery(getAlgorithmQuery(id));
 
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 

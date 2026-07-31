@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { FSRS_GRADES } from "@koloda/srs";
 import type { Card } from "@koloda/srs";
 import { QueryState } from "@koloda/ui";
@@ -20,10 +20,7 @@ type CardReviewsProps = { card: Card };
 export function CardReviews({ card }: CardReviewsProps) {
   const { i18n, _ } = useLingui();
   const { getReviewsQuery } = useAtomValue(queriesAtom);
-  const reviewsQuery = useQuery({
-    queryKey: queryKeys.reviews.card({ cardId: card.id }),
-    ...getReviewsQuery({ cardId: card.id }),
-  });
+  const reviewsQuery = useQuery(getReviewsQuery({ cardId: card.id }));
 
   if (!card.state) return null;
 

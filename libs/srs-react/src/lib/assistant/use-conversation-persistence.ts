@@ -61,7 +61,6 @@ export function useConversationPersistence({
     isFetching,
   } = useQuery({
     ...getConversationQuery(conversationId!),
-    queryKey: queryKeys.conversations.detail(conversationId!),
     enabled: !!conversationId,
   });
   const { mutationFn: setConversationFn } = setConversationMutation();
@@ -94,10 +93,7 @@ export function useConversationPersistence({
     onSuccess: (row, variables, context) => {
       // WHY: only update save UI for the active conversation's in-flight save.
       // Cache updates still apply to `row.id` either way.
-      if (
-        context?.saveToken === saveTokenRef.current &&
-        variables.id === conversationIdRef.current
-      ) {
+      if (context?.saveToken === saveTokenRef.current && variables.id === conversationIdRef.current) {
         setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
       }
       queryClient.setQueryData(queryKeys.conversations.detail(row.id), row);
@@ -114,10 +110,7 @@ export function useConversationPersistence({
     },
     onError: (error, variables, context) => {
       console.error("Failed to save conversation", error);
-      if (
-        context?.saveToken === saveTokenRef.current &&
-        variables.id === conversationIdRef.current
-      ) {
+      if (context?.saveToken === saveTokenRef.current && variables.id === conversationIdRef.current) {
         setSaveStatus({
           conversationId: variables.id,
           message: (error as Error).message,

@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { LESSON_TYPE_LABELS, type LessonType } from "@koloda/srs";
 import { Layout, QueryState } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -45,7 +45,7 @@ const learnedTodayProgressPercentage = tv({
 export function LearnedToday() {
   const { _ } = useLingui();
   const { getTodayReviewTotalsQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.lessons.todayReviewTotals(), ...getTodayReviewTotalsQuery() });
+  const query = useQuery(getTodayReviewTotalsQuery());
 
   return (
     <>

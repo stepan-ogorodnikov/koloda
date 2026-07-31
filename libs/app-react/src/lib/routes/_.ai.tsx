@@ -1,7 +1,7 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { clearActiveConversationId, getActiveConversationId, setActiveConversationId } from "@koloda/app";
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import {
   AssistantChat,
   AssistantConversationsList,
@@ -32,8 +32,8 @@ export const Route = createFileRoute("/_/ai")({
   }),
   loader: ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery, getConversationsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
-    queryClient.ensureQueryData({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
+    queryClient.ensureQueryData(getAIProfilesQuery());
+    queryClient.ensureQueryData(getConversationsQuery());
     return { title: msg`title.ai` };
   },
 });
@@ -50,7 +50,7 @@ function AIRoute() {
   const setDeck = useSetAtom(setAssistantDeckAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const { getConversationsQuery } = useAtomValue(queriesAtom);
-  const conversationsQuery = useQuery({ queryKey: queryKeys.conversations.all(), ...getConversationsQuery() });
+  const conversationsQuery = useQuery(getConversationsQuery());
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
   const { title } =
     useMemo(() => conversations.find((c) => c.id === conversationId), [conversations, conversationId]) || {};

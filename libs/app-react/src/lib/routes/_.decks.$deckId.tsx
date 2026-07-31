@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { DeckCards } from "@koloda/srs-react";
 import { DeckDetails } from "@koloda/srs-react";
 import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
@@ -15,9 +15,9 @@ export const Route = createFileRoute("/_/decks/$deckId")({
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
     const id = Number(deckId);
     const { getDeckQuery, getCardsQuery, getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
-    queryClient.ensureQueryData({ queryKey: queryKeys.cards.deck({ deckId: id }), ...getCardsQuery({ deckId: id }) });
-    queryClient.ensureQueryData({ queryKey: queryKeys.ai.profiles(), ...getAIProfilesQuery() });
+    queryClient.ensureQueryData(getDeckQuery(id));
+    queryClient.ensureQueryData(getCardsQuery({ deckId: id }));
+    queryClient.ensureQueryData(getAIProfilesQuery());
   },
 });
 
@@ -34,7 +34,7 @@ function DeckRoute() {
   useLayoutHeaderScrollShadow(ref);
   const id = Number(deckId);
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
+  const query = useQuery(getDeckQuery(id));
 
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 

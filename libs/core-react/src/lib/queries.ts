@@ -44,11 +44,14 @@ import type {
   UpdateTemplateData,
 } from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
-import { type QueryOptions } from "@tanstack/react-query";
+import { type QueryKey, type QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 
+/** Query factory result: TanStack `QueryOptions` with a required `queryKey`. */
+export type AppQueryOptions<TData> = Omit<QueryOptions<TData>, "queryKey"> & { queryKey: QueryKey };
+
 export type Queries = {
-  getSettingsQuery: <T extends SettingsName>(name: T) => QueryOptions<AllowedSettings<T> | null>;
+  getSettingsQuery: <T extends SettingsName>(name: T) => AppQueryOptions<AllowedSettings<T> | null>;
   setSettingsMutation: <T extends SettingsName>() => UseMutationOptions<
     AllowedSettings<T> | undefined,
     AppError,
@@ -61,46 +64,46 @@ export type Queries = {
     PatchSettingsData<T>,
     unknown
   >;
-  getConversationQuery: (id: string) => QueryOptions<Conversation | null>;
-  getConversationsQuery: () => QueryOptions<ConversationListItem[]>;
+  getConversationQuery: (id: string) => AppQueryOptions<Conversation | null>;
+  getConversationsQuery: () => AppQueryOptions<ConversationListItem[]>;
   setConversationMutation: () => UseMutationOptions<Conversation, AppError, SetConversationData, unknown>;
   deleteConversationMutation: () => UseMutationOptions<unknown, AppError, DeleteConversationData, unknown>;
-  getAlgorithmsQuery: () => QueryOptions<Algorithm[]>;
-  getAlgorithmQuery: (id: Algorithm["id"]) => QueryOptions<Algorithm | null | undefined>;
+  getAlgorithmsQuery: () => AppQueryOptions<Algorithm[]>;
+  getAlgorithmQuery: (id: Algorithm["id"]) => AppQueryOptions<Algorithm | null | undefined>;
   addAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, AppError, InsertAlgorithmData, unknown>;
   cloneAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, AppError, CloneAlgorithmData, unknown>;
   updateAlgorithmMutation: () => UseMutationOptions<Algorithm | undefined, AppError, UpdateAlgorithmData, unknown>;
   deleteAlgorithmMutation: () => UseMutationOptions<unknown, AppError, DeleteAlgorithmData, unknown>;
-  getAlgorithmDecksQuery: (id: Algorithm["id"]) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
-  getDecksQuery: () => QueryOptions<Deck[] | undefined>;
-  getDeckQuery: (id: Deck["id"]) => QueryOptions<Deck | null | undefined>;
+  getAlgorithmDecksQuery: (id: Algorithm["id"]) => AppQueryOptions<DeckWithOnlyTitle[] | undefined>;
+  getDecksQuery: () => AppQueryOptions<Deck[] | undefined>;
+  getDeckQuery: (id: Deck["id"]) => AppQueryOptions<Deck | null | undefined>;
   addDeckMutation: () => UseMutationOptions<Deck | undefined, AppError, InsertDeckData, unknown>;
   updateDeckMutation: () => UseMutationOptions<Deck | undefined, AppError, UpdateDeckData, unknown>;
   deleteDeckMutation: () => UseMutationOptions<unknown, AppError, DeleteDeckData, unknown>;
-  getTemplatesQuery: () => QueryOptions<Template[]>;
-  getTemplateQuery: (id: Template["id"]) => QueryOptions<Template | null | undefined>;
+  getTemplatesQuery: () => AppQueryOptions<Template[]>;
+  getTemplateQuery: (id: Template["id"]) => AppQueryOptions<Template | null | undefined>;
   addTemplateMutation: () => UseMutationOptions<Template | undefined, AppError, InsertTemplateData, unknown>;
   cloneTemplateMutation: () => UseMutationOptions<Template | undefined, AppError, CloneTemplateData, unknown>;
   updateTemplateMutation: () => UseMutationOptions<Template | undefined, AppError, UpdateTemplateData, unknown>;
   deleteTemplateMutation: () => UseMutationOptions<unknown, AppError, DeleteTemplateData, unknown>;
-  getTemplateDecksQuery: (data: DeleteDeckData) => QueryOptions<DeckWithOnlyTitle[] | undefined>;
-  getCardsQuery: (params: GetCardsParams) => QueryOptions<Card[]>;
+  getTemplateDecksQuery: (data: DeleteDeckData) => AppQueryOptions<DeckWithOnlyTitle[] | undefined>;
+  getCardsQuery: (params: GetCardsParams) => AppQueryOptions<Card[]>;
   addCardMutation: () => UseMutationOptions<Card | undefined, AppError, InsertCardData, unknown>;
   addCardsMutation: () => UseMutationOptions<InsertCardsResponse, AppError, InsertCardData[], unknown>;
   updateCardMutation: () => UseMutationOptions<Card | undefined, AppError, UpdateCardData, unknown>;
   deleteCardMutation: () => UseMutationOptions<unknown, AppError, DeleteCardData, unknown>;
   deleteCardsMutation: () => UseMutationOptions<unknown, AppError, DeleteCardsData, unknown>;
   resetCardProgressMutation: () => UseMutationOptions<unknown, AppError, ResetCardProgressData, unknown>;
-  getLessonsQuery: (filters?: LessonFilters) => QueryOptions<LessonsResult | undefined>;
-  getTodayReviewTotalsQuery: () => QueryOptions<TodaysReviewTotals | undefined>;
-  getLessonDataQuery: (params: GetLessonDataParams) => QueryOptions<LessonData | null>;
+  getLessonsQuery: (filters?: LessonFilters) => AppQueryOptions<LessonsResult | undefined>;
+  getTodayReviewTotalsQuery: () => AppQueryOptions<TodaysReviewTotals | undefined>;
+  getLessonDataQuery: (params: GetLessonDataParams) => AppQueryOptions<LessonData | null>;
   submitLessonResultMutation: () => UseMutationOptions<Review | undefined, AppError, LessonResultData, unknown>;
-  getReviewsQuery: (data: GetReviewsData) => QueryOptions<Review[] | undefined>;
+  getReviewsQuery: (data: GetReviewsData) => AppQueryOptions<Review[] | undefined>;
   addAIProfileMutation: () => UseMutationOptions<void, AppError, AddAIProfileData, unknown>;
   updateAIProfileMutation: () => UseMutationOptions<void, AppError, UpdateAIProfileData, unknown>;
   removeAIProfileMutation: () => UseMutationOptions<void, AppError, RemoveAIProfileData, unknown>;
-  getAIProfileModelsQuery: (profileId: string) => QueryOptions<AIModel[]>;
-  getAIProfilesQuery: () => QueryOptions<AIProfile[]>;
+  getAIProfileModelsQuery: (profileId: string) => AppQueryOptions<AIModel[]>;
+  getAIProfilesQuery: () => AppQueryOptions<AIProfile[]>;
 };
 
 export const queriesAtom = atom<Queries>(null!);

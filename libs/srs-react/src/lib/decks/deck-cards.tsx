@@ -1,6 +1,6 @@
 import { AiMagicIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
 import { button, getCSSVar, Link, QueryState, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -21,8 +21,8 @@ export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { _ } = useLingui();
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: queryKeys.decks.detail(deckId), ...getDeckQuery(deckId) });
-  const query = useQuery({ queryKey: queryKeys.cards.deck({ deckId }), ...getCardsQuery({ deckId }) });
+  const { data } = useQuery(getDeckQuery(deckId));
+  const query = useQuery(getCardsQuery({ deckId }));
   const [view, setView] = useAtom(cardsViewAtom);
   const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 

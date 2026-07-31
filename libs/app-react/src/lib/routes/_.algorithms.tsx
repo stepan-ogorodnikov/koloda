@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { AddAlgorithm } from "@koloda/srs-react";
 import { QueryState } from "@koloda/ui";
 import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/algorithms")({
   component: AlgorithmsRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getAlgorithmsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
+    queryClient.ensureQueryData(getAlgorithmsQuery());
     return { title: msg`title.algorithms` };
   },
 });
@@ -23,7 +23,7 @@ function AlgorithmsRoute() {
   const { _ } = useLingui();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const query = useQuery({ queryKey: queryKeys.algorithms.all(), ...getAlgorithmsQuery() });
+  const query = useQuery(getAlgorithmsQuery());
 
   return (
     <>

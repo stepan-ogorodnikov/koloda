@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Card, Template } from "@koloda/srs";
 import { useQueries } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -14,7 +14,7 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
   }, [cards, deckTemplateId]);
 
   const templateQueries = useQueries({
-    queries: templateIds.map((id) => ({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) })),
+    queries: templateIds.map((id) => getTemplateQuery(id)),
   });
 
   const templates = useMemo(

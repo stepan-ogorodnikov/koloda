@@ -6,7 +6,7 @@ import {
   lightThemeAtom,
   schemeAtom,
 } from "@koloda/core-react";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -14,11 +14,8 @@ import { useEffect } from "react";
 
 export function useGlobalSync() {
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data: learning } = useQuery({
-    ...getSettingsQuery("learning"),
-    queryKey: queryKeys.settings.detail("learning"),
-  });
-  const { data } = useQuery({ ...getSettingsQuery("interface"), queryKey: queryKeys.settings.detail("interface") });
+  const { data: learning } = useQuery(getSettingsQuery("learning"));
+  const { data } = useQuery(getSettingsQuery("interface"));
   const setDefaultAlgorithm = useSetAtom(defaultAlgorithmAtom);
   const setDefaultTemplate = useSetAtom(defaultTemplateAtom);
   const setScheme = useSetAtom(schemeAtom);

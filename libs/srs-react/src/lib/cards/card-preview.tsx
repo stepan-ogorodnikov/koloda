@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Card, Template } from "@koloda/srs";
 import { Button, Dialog, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -25,10 +25,7 @@ export function CardPreview({ isOpen, onOpenChange, card, templateId }: PreviewC
   const { _ } = useLingui();
   const [state, dispatch] = useReducer(cardPreviewReducer, cardPreviewReducerDefault);
   const { getTemplateQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({
-    queryKey: queryKeys.templates.detail(templateId),
-    ...getTemplateQuery(templateId),
-  });
+  const query = useQuery(getTemplateQuery(templateId));
 
   useEffect(() => {
     dispatch(["cardUpdated", card]);

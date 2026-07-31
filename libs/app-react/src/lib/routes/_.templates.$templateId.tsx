@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { Template } from "@koloda/srs-react";
 import { NotFound, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { QueryState } from "@koloda/ui";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/templates/$templateId")({
   loader: ({ context: { queryClient, queries }, params: { templateId } }) => {
     const id = Number(templateId);
     const { getTemplateQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) });
+    queryClient.ensureQueryData(getTemplateQuery(id));
   },
 });
 
@@ -22,7 +22,7 @@ function TemplateRoute() {
   useLayoutHeaderScrollShadow(ref);
   const id = Number(templateId);
   const { getTemplateQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) });
+  const query = useQuery(getTemplateQuery(id));
 
   if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
 

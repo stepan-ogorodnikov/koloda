@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { AddDeck } from "@koloda/srs-react";
 import { QueryState } from "@koloda/ui";
 import { Layout, layoutSidebarItemLink, Link, useMotionSetting, useRouteFocus } from "@koloda/ui";
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_/decks")({
   component: DecksRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getDecksQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.decks.all(), ...getDecksQuery() });
+    queryClient.ensureQueryData(getDecksQuery());
     return { title: msg`title.decks` };
   },
 });
@@ -23,7 +23,7 @@ function DecksRoute() {
   const { _ } = useLingui();
   const { getDecksQuery } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
-  const query = useQuery({ queryKey: queryKeys.decks.all(), ...getDecksQuery() });
+  const query = useQuery(getDecksQuery());
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { QueryState } from "@koloda/ui";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -11,7 +11,7 @@ import { LessonsTable } from "./lessons-table";
 export function Lessons() {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
   const { getLessonsQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.lessons.all(), ...getLessonsQuery() });
+  const query = useQuery(getLessonsQuery());
 
   return (
     <div className="w-full wd:max-w-180 mx-auto p-4">

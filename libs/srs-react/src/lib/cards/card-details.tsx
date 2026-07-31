@@ -30,10 +30,7 @@ export function CardDetails({ card }: CardDetailsProps) {
   const queryClient = useQueryClient();
   const { i18n, _ } = useLingui();
   const { getTemplateQuery, updateCardMutation, resetCardProgressMutation } = useAtomValue(queriesAtom);
-  const query = useQuery({
-    queryKey: queryKeys.templates.detail(card.templateId),
-    ...getTemplateQuery(card.templateId),
-  });
+  const query = useQuery(getTemplateQuery(card.templateId));
   const template = query.data;
   const { mutate } = useMutation(updateCardMutation());
   const resetProgressMutation = useMutation(resetCardProgressMutation());

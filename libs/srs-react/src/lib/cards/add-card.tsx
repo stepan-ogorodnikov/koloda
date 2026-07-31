@@ -25,7 +25,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   const { _ } = useLingui();
   const { ui } = useHotkeysSettings();
   const { getTemplateQuery, addCardMutation } = useAtomValue(queriesAtom);
-  const query = useQuery({ queryKey: queryKeys.templates.detail(templateId), ...getTemplateQuery(templateId) });
+  const query = useQuery(getTemplateQuery(templateId));
   const template = query.data;
   const { mutate, error, reset } = useMutation(addCardMutation());
   const content = useMemo(

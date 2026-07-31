@@ -18,7 +18,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getDeckQuery, updateDeckMutation } = useAtomValue(queriesAtom);
-  const { data } = useQuery({ queryKey: queryKeys.decks.detail(id), ...getDeckQuery(id) });
+  const { data } = useQuery(getDeckQuery(id));
   const { mutate } = useMutation(updateDeckMutation());
   const form = useAppForm({
     defaultValues: data as UpdateDeckValues,

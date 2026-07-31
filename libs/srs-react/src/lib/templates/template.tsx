@@ -22,7 +22,7 @@ export function Template({ id }: TemplateProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getTemplateQuery, updateTemplateMutation } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: queryKeys.templates.detail(id), ...getTemplateQuery(id) });
+  const { data, isSuccess } = useQuery(getTemplateQuery(id));
   const { mutate } = useMutation(updateTemplateMutation());
   const form = useAppForm({
     defaultValues: data as UpdateTemplateValues,

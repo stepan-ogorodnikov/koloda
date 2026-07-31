@@ -1,5 +1,5 @@
 import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/app";
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, useTitle } from "@koloda/core-react";
 import { QueryState, useLayoutHeaderScrollShadow } from "@koloda/ui";
 import { Layout, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_/settings/learning")({
   component: SettingsLearningRoute,
   loader: ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData({ queryKey: queryKeys.settings.detail("learning"), ...getSettingsQuery("learning") });
+    queryClient.ensureQueryData(getSettingsQuery("learning"));
     return { title: msg`title.settings.learning` };
   },
 });
@@ -24,10 +24,7 @@ function SettingsLearningRoute() {
   const ref = useRouteFocus();
   useLayoutHeaderScrollShadow(ref);
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const query = useQuery({
-    ...getSettingsQuery<"learning">("learning"),
-    queryKey: queryKeys.settings.detail("learning"),
-  });
+  const query = useQuery(getSettingsQuery<"learning">("learning"));
 
   return (
     <>

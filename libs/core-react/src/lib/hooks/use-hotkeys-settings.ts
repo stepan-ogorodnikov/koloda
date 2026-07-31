@@ -1,16 +1,13 @@
 import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
 import type { AppHotkeys } from "@koloda/app";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { queriesAtom } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 
 export function useHotkeysSettings(): AppHotkeys {
   const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data } = useQuery({
-    ...getSettingsQuery("hotkeys"),
-    queryKey: queryKeys.settings.detail("hotkeys"),
-  });
+  const { data } = useQuery(getSettingsQuery("hotkeys"));
 
   return useMemo(
     () =>

@@ -19,7 +19,7 @@ export function Algorithm({ id }: AlgorithmProps) {
   const queryClient = useQueryClient();
   const { _ } = useLingui();
   const { getAlgorithmQuery, updateAlgorithmMutation } = useAtomValue(queriesAtom);
-  const { data, isSuccess } = useQuery({ queryKey: queryKeys.algorithms.detail(id), ...getAlgorithmQuery(id) });
+  const { data, isSuccess } = useQuery(getAlgorithmQuery(id));
   const { mutate } = useMutation(updateAlgorithmMutation());
   const form = useAppForm({
     defaultValues: data as UpdateAlgorithmValues,

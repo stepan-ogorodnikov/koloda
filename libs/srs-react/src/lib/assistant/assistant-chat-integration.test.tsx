@@ -166,7 +166,8 @@ vi.mock("@lingui/react", () => ({
 
 function buildQueries(): Queries {
   return {
-    getSettingsQuery: () => ({
+    getSettingsQuery: (name) => ({
+      queryKey: queryKeys.settings.detail(name),
       queryFn: async () => ({
         content: { assistant: { temperature: 0.2, cardsPromptTemplate: null, chatPromptTemplate: null } },
       }),
@@ -174,6 +175,7 @@ function buildQueries(): Queries {
     setSettingsMutation: () => ({ mutationFn: async () => undefined }),
     patchSettingsMutation: () => ({ mutationFn: async () => undefined }),
     getConversationQuery: (id: string) => ({
+      queryKey: queryKeys.conversations.detail(id),
       queryFn: async () => ({
         id,
         title: null,
@@ -182,7 +184,10 @@ function buildQueries(): Queries {
         updatedAt: null,
       }),
     }),
-    getConversationsQuery: () => ({ queryFn: async () => [] }),
+    getConversationsQuery: () => ({
+      queryKey: queryKeys.conversations.all(),
+      queryFn: async () => [],
+    }),
     setConversationMutation: () => ({
       mutationFn: async (data: { id: string; title?: string | null }) => {
         wire.setConversationCalls.push({
@@ -200,15 +205,16 @@ function buildQueries(): Queries {
       },
     }),
     deleteConversationMutation: () => ({ mutationFn: async () => undefined }),
-    getAlgorithmsQuery: () => ({ queryFn: async () => [] }),
-    getAlgorithmQuery: () => ({ queryFn: async () => null }),
+    getAlgorithmsQuery: () => ({ queryKey: queryKeys.algorithms.all(), queryFn: async () => [] }),
+    getAlgorithmQuery: (id) => ({ queryKey: queryKeys.algorithms.detail(id), queryFn: async () => null }),
     addAlgorithmMutation: () => ({ mutationFn: async () => undefined }),
     cloneAlgorithmMutation: () => ({ mutationFn: async () => undefined }),
     updateAlgorithmMutation: () => ({ mutationFn: async () => undefined }),
     deleteAlgorithmMutation: () => ({ mutationFn: async () => undefined }),
-    getAlgorithmDecksQuery: () => ({ queryFn: async () => [] }),
-    getDecksQuery: () => ({ queryFn: async () => [] }),
+    getAlgorithmDecksQuery: (id) => ({ queryKey: queryKeys.algorithms.decks(id), queryFn: async () => [] }),
+    getDecksQuery: () => ({ queryKey: queryKeys.decks.all(), queryFn: async () => [] }),
     getDeckQuery: (id: number) => ({
+      queryKey: queryKeys.decks.detail(id),
       queryFn: async () => ({
         id,
         title: "Test deck",
@@ -221,32 +227,51 @@ function buildQueries(): Queries {
     addDeckMutation: () => ({ mutationFn: async () => undefined }),
     updateDeckMutation: () => ({ mutationFn: async () => undefined }),
     deleteDeckMutation: () => ({ mutationFn: async () => undefined }),
-    getTemplatesQuery: () => ({ queryFn: async () => [wire.template] }),
-    getTemplateQuery: () => ({ queryFn: async () => wire.template }),
+    getTemplatesQuery: () => ({ queryKey: queryKeys.templates.all(), queryFn: async () => [wire.template] }),
+    getTemplateQuery: (id) => ({
+      queryKey: queryKeys.templates.detail(id),
+      queryFn: async () => wire.template,
+    }),
     addTemplateMutation: () => ({ mutationFn: async () => undefined }),
     cloneTemplateMutation: () => ({ mutationFn: async () => undefined }),
     updateTemplateMutation: () => ({ mutationFn: async () => undefined }),
     deleteTemplateMutation: () => ({ mutationFn: async () => undefined }),
-    getTemplateDecksQuery: () => ({ queryFn: async () => [] }),
-    getCardsQuery: () => ({ queryFn: async () => [] }),
+    getTemplateDecksQuery: (data) => ({
+      queryKey: queryKeys.templates.decks(data.id),
+      queryFn: async () => [],
+    }),
+    getCardsQuery: (params) => ({ queryKey: queryKeys.cards.deck(params), queryFn: async () => [] }),
     addCardMutation: () => ({ mutationFn: async () => undefined }),
     addCardsMutation: () => ({ mutationFn: async () => ({ insertedIds: [] }) }),
     updateCardMutation: () => ({ mutationFn: async () => undefined }),
     deleteCardMutation: () => ({ mutationFn: async () => undefined }),
     deleteCardsMutation: () => ({ mutationFn: async () => undefined }),
     resetCardProgressMutation: () => ({ mutationFn: async () => undefined }),
-    getLessonsQuery: () => ({
+    getLessonsQuery: (filters) => ({
+      queryKey: queryKeys.lessons.all(filters),
       queryFn: async () => ({ total: { untouched: 0, learn: 0, review: 0, total: 0 }, decks: [] }),
     }),
-    getTodayReviewTotalsQuery: () => ({ queryFn: async () => undefined }),
-    getLessonDataQuery: () => ({ queryFn: async () => null }),
+    getTodayReviewTotalsQuery: () => ({
+      queryKey: queryKeys.lessons.todayReviewTotals(),
+      queryFn: async () => undefined,
+    }),
+    getLessonDataQuery: (params) => ({
+      queryKey: queryKeys.lessons.data(params),
+      queryFn: async () => null,
+    }),
     submitLessonResultMutation: () => ({ mutationFn: async () => undefined }),
-    getReviewsQuery: () => ({ queryFn: async () => [] }),
+    getReviewsQuery: (data) => ({ queryKey: queryKeys.reviews.card(data), queryFn: async () => [] }),
     addAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     updateAIProfileMutation: () => ({ mutationFn: async () => undefined }),
     removeAIProfileMutation: () => ({ mutationFn: async () => undefined }),
-    getAIProfileModelsQuery: (_profileId: string) => ({ queryFn: async () => wire.models }),
-    getAIProfilesQuery: () => ({ queryFn: async () => wire.profiles }),
+    getAIProfileModelsQuery: (profileId: string) => ({
+      queryKey: queryKeys.ai.models(profileId),
+      queryFn: async () => wire.models,
+    }),
+    getAIProfilesQuery: () => ({
+      queryKey: queryKeys.ai.profiles(),
+      queryFn: async () => wire.profiles,
+    }),
   };
 }
 
