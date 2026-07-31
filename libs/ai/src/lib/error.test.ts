@@ -27,6 +27,7 @@ describe("error", () => {
     const response = new Response("ok", { status: 200 });
     expect(throwForAIResponse(response)).toBe(response);
 
+    let error: unknown;
     try {
       throwForAIResponse(
         new Response("rate limited", {
@@ -34,13 +35,14 @@ describe("error", () => {
           statusText: "Too Many Requests",
         }),
       );
-    } catch (error) {
-      expect(error).toBeInstanceOf(AIError);
-      expect(error).toMatchObject({
-        code: "ai.http.429",
-        message: "429 Too Many Requests",
-      });
+    } catch (caught) {
+      error = caught;
     }
+    expect(error).toBeInstanceOf(AIError);
+    expect(error).toMatchObject({
+      code: "ai.http.429",
+      message: "429 Too Many Requests",
+    });
   });
 
   it("maps structured, network, and invalid-response errors", () => {

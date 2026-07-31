@@ -125,22 +125,20 @@ describe("toFormErrors", () => {
   it("converts a ZodError with one issue to indexed record", () => {
     const schema = z.object({ name: z.string().min(1) });
     const result = schema.safeParse({ name: "" });
-    if (!result.success) {
-      const errors = toFormErrors(result.error);
-      expect(errors["0"]).toHaveLength(1);
-      expect(errors["0"][0].path).toEqual(["name"]);
-      expect(errors["0"][0].message).toBe("Too small: expected string to have >=1 characters");
-    }
+    expect(result.success).toBe(false);
+    const errors = toFormErrors(result.error!);
+    expect(errors["0"]).toHaveLength(1);
+    expect(errors["0"][0].path).toEqual(["name"]);
+    expect(errors["0"][0].message).toBe("Too small: expected string to have >=1 characters");
   });
 
   it("converts a ZodError with multiple issues to indexed keys", () => {
     const schema = z.object({ a: z.string().min(1), b: z.string().min(1) });
     const result = schema.safeParse({ a: "", b: "" });
-    if (!result.success) {
-      const errors = toFormErrors(result.error);
-      expect(errors["0"]).toHaveLength(1);
-      expect(errors["1"]).toHaveLength(1);
-    }
+    expect(result.success).toBe(false);
+    const errors = toFormErrors(result.error!);
+    expect(errors["0"]).toHaveLength(1);
+    expect(errors["1"]).toHaveLength(1);
   });
 
   it("converts AppError to a single entry with error code", () => {

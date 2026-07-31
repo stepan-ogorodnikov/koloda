@@ -641,7 +641,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // snapshot that would cause normalizeRestoredConversation to drop
     // the user/assistant messages on next mount.
     const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
-    expect(persistedRunIds.length).toBe(1);
+    expect(persistedRunIds).toHaveLength(1);
     expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
     expect(persisted.title).toBe("Hello from A");
 
@@ -701,7 +701,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Sanity check: the in-memory run is streaming.
     const beforeState = store.get(conversationsAtom)["A"];
     const beforeRunIds = Object.keys(beforeState.runs);
-    expect(beforeRunIds.length).toBe(1);
+    expect(beforeRunIds).toHaveLength(1);
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
     // Simulate the user closing the tab. The save effect's pagehide
@@ -712,7 +712,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     });
 
     // A save was issued.
-    expect(wire.setConversationCalls.length).toBe(callsBeforePagehide + 1);
+    expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide + 1);
     const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(persisted.id).toBe("A");
 
@@ -720,7 +720,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // and the title is derived from the user message (i.e. the
     // user-message text is visible in the persisted title).
     const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
-    expect(persistedRunIds.length).toBe(1);
+    expect(persistedRunIds).toHaveLength(1);
     expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
     expect(persisted.title).toBe("Hello from A");
 
@@ -782,7 +782,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // The run is streaming in memory.
     const beforeState = store.get(conversationsAtom)["A"];
     const beforeRunIds = Object.keys(beforeState.runs);
-    expect(beforeRunIds.length).toBe(1);
+    expect(beforeRunIds).toHaveLength(1);
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
     // Simulate a hard close: pagehide fires, then React unmounts the
@@ -803,7 +803,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     const lastForA = [...wire.setConversationCalls].reverse().find((c) => c.id === "A");
     expect(lastForA).toBeDefined();
     const lastRunIds = Object.keys(lastForA?.state?.runs ?? {});
-    expect(lastRunIds.length).toBe(1);
+    expect(lastRunIds).toHaveLength(1);
     expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("canceled");
     expect(lastForA?.title).toBe("Hello from A");
 

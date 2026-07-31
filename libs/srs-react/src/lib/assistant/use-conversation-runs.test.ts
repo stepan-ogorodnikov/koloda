@@ -242,7 +242,7 @@ describe("useConversationRuns", () => {
     });
 
     const addCardActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "addCard");
-    expect(addCardActions.length).toBe(2);
+    expect(addCardActions).toHaveLength(2);
     for (const entry of addCardActions) {
       expect(entry.id).toBe("A");
     }

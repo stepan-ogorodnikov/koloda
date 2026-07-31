@@ -59,7 +59,7 @@ describe("ipc wire", () => {
     expect(toWire("hello")).toBe("hello");
     expect(toWire(42)).toBe(42);
     expect(toWire(true)).toBe(true);
-    expect(toWire(null)).toBe(null);
+    expect(toWire(null)).toBeNull();
   });
 
   it("round-trips arrays with dates", () => {

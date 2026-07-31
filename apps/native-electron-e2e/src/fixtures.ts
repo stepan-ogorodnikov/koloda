@@ -19,14 +19,15 @@ type ElectronFixtures = {
 };
 
 export const test = base.extend<ElectronFixtures>({
-  // WHY: Playwright's fixture signature is `(parentFixtures, use) => …`, so root fixtures must destructure an empty object.
-  userDataDir: async ({}, use) => { // oxlint-disable-line no-empty-pattern
+  // WHY: Playwright's fixture signature is `(parentFixtures, provide) => …`, so root fixtures must destructure an empty object.
+  // Parameter is `provide` (not Playwright's usual `use`) so react/rules-of-hooks does not treat it as React `use`.
+  userDataDir: async ({}, provide) => { // oxlint-disable-line no-empty-pattern
     const dir = await mkdtemp(resolve(tmpdir(), "koloda-e2e-"));
-    await use(dir);
+    await provide(dir);
     await rm(dir, { recursive: true, force: true });
   },
 
-  electronApp: async ({ userDataDir }, use) => {
+  electronApp: async ({ userDataDir }, provide) => {
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {
       if (key === "ELECTRON_RUN_AS_NODE" || value === undefined) continue;
@@ -42,14 +43,14 @@ export const test = base.extend<ElectronFixtures>({
       env,
     });
 
-    await use(app);
+    await provide(app);
     await app.close();
   },
 
-  page: async ({ electronApp }, use) => {
+  page: async ({ electronApp }, provide) => {
     const page = await electronApp.firstWindow();
     await page.waitForLoadState("domcontentloaded");
-    await use(page);
+    await provide(page);
   },
 });
 

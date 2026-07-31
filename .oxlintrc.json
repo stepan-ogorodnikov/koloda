@@ -4,7 +4,8 @@
     "react",
     "unicorn",
     "typescript",
-    "import"
+    "import",
+    "vitest"
   ],
   "categories": {},
   "rules": {
@@ -100,8 +101,41 @@
     "unicorn/no-useless-length-check": "warn",
     "unicorn/no-useless-spread": "warn",
     "unicorn/prefer-set-size": "warn",
-    "unicorn/prefer-string-starts-ends-with": "warn"
+    "unicorn/prefer-string-starts-ends-with": "warn",
+    "vitest/expect-expect": "error",
+    "vitest/no-conditional-expect": "error",
+    "vitest/no-disabled-tests": "warn",
+    "vitest/no-focused-tests": "error",
+    "vitest/no-standalone-expect": "error",
+    "vitest/valid-expect": "error",
+    "vitest/no-conditional-tests": "warn",
+    "vitest/no-import-node-test": "error",
+    "vitest/hoisted-apis-on-top": "off",
+    "vitest/prefer-snapshot-hint": "off",
+    "vitest/require-awaited-expect-poll": "off",
+    "vitest/require-local-test-context-for-concurrent-snapshots": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "vitest/require-to-throw-message": "off",
+    "vitest/valid-describe-callback": "off",
+    "vitest/valid-expect-in-promise": "off",
+    "vitest/valid-title": "off",
+    "vitest/warn-todo": "off"
   },
+  "overrides": [
+    {
+      "files": ["**/*-e2e/**", "**/*.spec.ts"],
+      "rules": {
+        "vitest/expect-expect": "off",
+        "vitest/no-conditional-expect": "off",
+        "vitest/no-disabled-tests": "off",
+        "vitest/no-focused-tests": "off",
+        "vitest/no-standalone-expect": "off",
+        "vitest/valid-expect": "off",
+        "vitest/no-conditional-tests": "off",
+        "vitest/no-import-node-test": "off"
+      }
+    }
+  ],
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,
