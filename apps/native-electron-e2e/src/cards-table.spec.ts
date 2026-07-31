@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "./fixtures";
+import { expect, test } from "./fixtures";
+import type { Page } from "./fixtures";
 import { cardRows, createDeckWithCards, setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {

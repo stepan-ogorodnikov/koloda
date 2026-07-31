@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { type AISecrets, aiSecretsValidation } from "./provider-secrets";
+import { aiSecretsValidation } from "./provider-secrets";
+import type { AISecrets } from "./provider-secrets";
 
 export const aiProfileValidation = z.object({
   id: z.uuid(),

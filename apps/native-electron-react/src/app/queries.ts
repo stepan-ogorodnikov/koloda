@@ -7,7 +7,8 @@ import type {
   SetSettingsData,
   SettingsName,
 } from "@koloda/app";
-import { type Queries, queryKeys } from "@koloda/core-react";
+import { queryKeys } from "@koloda/core-react";
+import type { Queries } from "@koloda/core-react";
 import type {
   Algorithm,
   CloneAlgorithmData,

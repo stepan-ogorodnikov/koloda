@@ -1,5 +1,6 @@
 import type { AIChatMode, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
-import { dispatchReducerAction, type ReducerAction } from "@koloda/core-react";
+import { dispatchReducerAction } from "@koloda/core-react";
+import type { ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { produce } from "immer";

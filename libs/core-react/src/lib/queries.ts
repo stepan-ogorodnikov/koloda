@@ -44,7 +44,7 @@ import type {
   UpdateTemplateData,
 } from "@koloda/srs";
 import type { UseMutationOptions } from "@tanstack/react-query";
-import { type QueryKey, type QueryOptions } from "@tanstack/react-query";
+import type { QueryKey, QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 
 /** Query factory result: TanStack `QueryOptions` with a required `queryKey`. */

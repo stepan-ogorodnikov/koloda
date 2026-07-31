@@ -1,4 +1,5 @@
-import { button, type TWVProps } from "@koloda/ui";
+import { button } from "@koloda/ui";
+import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { SelectionIndicator, ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import type { ToggleButtonGroupProps, ToggleButtonProps } from "react-aria-components";

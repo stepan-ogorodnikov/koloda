@@ -5,8 +5,8 @@ import {
   formatCheckFailures,
   isProductionSource,
   normalizeKolodaPackage,
-  type LibraryCheckResult,
 } from "./contract.ts";
+import type { LibraryCheckResult } from "./contract.ts";
 
 describe("normalizeKolodaPackage", () => {
   it("normalizes subpaths to the package root", () => {

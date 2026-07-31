@@ -9,7 +9,8 @@ import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
 import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
-import { type StreamRequestResult, buildStreamRequest } from "./build-stream-request";
+import { buildStreamRequest } from "./build-stream-request";
+import type { StreamRequestResult } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 

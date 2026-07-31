@@ -1,4 +1,5 @@
-import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";

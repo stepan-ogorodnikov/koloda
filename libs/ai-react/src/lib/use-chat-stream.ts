@@ -1,6 +1,7 @@
 import type { ChatStreamGenerator, StreamUsage } from "@koloda/ai";
 import { useCallback } from "react";
-import { type StreamResult, useStreamingRequest } from "./use-streaming-request";
+import { useStreamingRequest } from "./use-streaming-request";
+import type { StreamResult } from "./use-streaming-request";
 
 export type UseChatStreamReturn = {
   text: string;

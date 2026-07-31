@@ -1,7 +1,7 @@
 import { appEntryAtom, useTitle } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { NotFound } from "@koloda/ui";
-import { type QueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { createRootRouteWithContext, HeadContent } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
 import { App } from "../components/app";

@@ -4,7 +4,8 @@ import type { AllowedSettings } from "@koloda/app";
 import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "@koloda/app";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
 import { z } from "zod";
-import { type Card, cardValidation } from "./cards";
+import { cardValidation } from "./cards";
+import type { Card } from "./cards";
 import type { LessonType } from "./lessons";
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";

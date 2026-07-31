@@ -1,5 +1,6 @@
 import type { TWVProps } from "@koloda/ui";
-import { Group, type GroupProps } from "react-aria-components";
+import { Group } from "react-aria-components";
+import type { GroupProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
 export const fieldGroup = tv({

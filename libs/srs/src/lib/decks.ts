@@ -2,7 +2,8 @@ import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
-import { type Template, templateValidation } from "./templates";
+import { templateValidation } from "./templates";
+import type { Template } from "./templates";
 
 export const deckValidation = z.object({
   id: z.int(),

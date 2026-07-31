@@ -2,7 +2,8 @@ import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { TextField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { type KeyboardEvent, useRef } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent } from "react";
 
 export type AIChatPromptInputProps = {
   value: string;

@@ -1,4 +1,5 @@
-import { AppError, type ErrorCode } from "@koloda/app";
+import { AppError } from "@koloda/app";
+import type { ErrorCode } from "@koloda/app";
 import { fromWire, toWire } from "./ipc";
 
 declare global {

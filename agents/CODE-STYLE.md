@@ -66,9 +66,11 @@ const user = { isAdmin: true, isVerified: true };
 
 ## Imports: `separate-type-imports`
 
-Prefer `@typescript-eslint/consistent-type-imports` with `fix: "separate-type-imports"`.
-Type-only imports use `import type { … }`.
-Value imports stay on their own line.
+Prefer top-level `import type { … }` over inline `import { type … }`.
+
+Oxlint enforces this with:
+- `typescript/consistent-type-imports` (`fixStyle: "separate-type-imports"`) — type-only value imports become `import type`
+- `import/consistent-type-specifier-style` (`prefer-top-level`) — inline `type` specifiers move to a separate `import type` line
 
 Bad:
 

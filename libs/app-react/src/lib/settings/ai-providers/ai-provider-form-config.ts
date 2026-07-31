@@ -1,13 +1,12 @@
 import {
   aiProfileValidation,
-  type AiProvider,
-  type AISecrets,
   lmstudioSecretsValidation,
   ollamaSecretsValidation,
   opencodeGoSecretsValidation,
   opencodeZenSecretsValidation,
   openRouterSecretsValidation,
 } from "@koloda/ai";
+import type { AiProvider, AISecrets } from "@koloda/ai";
 import type { z } from "zod";
 
 export type AIProfileFieldType = "title" | "baseUrl" | "apiKey";

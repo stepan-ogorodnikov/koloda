@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type AISettings, aiSettingsValidation, findDuplicateProfileId } from "./settings";
+import { aiSettingsValidation, findDuplicateProfileId } from "./settings";
+import type { AISettings } from "./settings";
 
 describe("findDuplicateProfileId", () => {
   it("returns null when all profile ids are unique", () => {
