@@ -78,7 +78,23 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bunx nx run native-electron-e2e:e2e"
+        "commands": [
+          "bunx nx run native-electron-react:test",
+          "bunx nx run native-electron-e2e:e2e"
+        ],
+        "parallel": false
+      },
+      "configurations": {
+        "unit": {
+          "commands": [
+            "bunx nx run native-electron-react:test"
+          ]
+        },
+        "e2e": {
+          "commands": [
+            "bunx nx run native-electron-e2e:e2e"
+          ]
+        }
       }
     },
     "typecheck": {
