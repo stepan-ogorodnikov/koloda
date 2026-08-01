@@ -1,5 +1,3 @@
-import { Label } from "@koloda/ui";
-import type { LabelProps } from "@koloda/ui";
 import type { ReactNode, RefObject } from "react";
 import { useMemo, useRef } from "react";
 import {
@@ -7,7 +5,9 @@ import {
   Collection as ReactAriaCollection,
   useFilter,
 } from "react-aria-components";
-import { createSelectKeyboardDelegate, isIterableEmpty, SelectStateBridge } from "./select-behavior";
+import { Label } from "../form/label";
+import type { LabelProps } from "../form/label";
+import { SelectStateBridge, createSelectKeyboardDelegate, isIterableEmpty } from "./select-behavior";
 import type { SelectState } from "./select-behavior";
 import { SelectButton } from "./select-button";
 import type { SelectButtonProps } from "./select-button";

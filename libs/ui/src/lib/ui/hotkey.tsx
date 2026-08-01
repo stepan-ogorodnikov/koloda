@@ -1,6 +1,6 @@
-import type { TWVProps } from "@koloda/ui";
 import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../types";
 
 const hotkey = tv({
   base: ["inline-flex items-center justify-center", "border-2 border-main bg-input font-medium fg-level-2"],

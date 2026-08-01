@@ -1,8 +1,8 @@
-import type { TWVProps } from "@koloda/ui";
 import { useRef } from "react";
 import { OverlayArrow, Tooltip as ReactAriaTooltip } from "react-aria-components";
 import type { TooltipProps as ReactAriaTooltipProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../../types";
 import { getTooltipArrowPlacement, TooltipSurface } from "./tooltip-surface";
 
 const tooltipContent = tv({

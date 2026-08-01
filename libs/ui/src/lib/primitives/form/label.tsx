@@ -1,7 +1,7 @@
-import type { TWVProps } from "@koloda/ui";
 import { Label as ReactAriaLabel } from "react-aria-components";
 import type { LabelProps as ReactAriaLabelProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 import { formLayoutSectionTerm } from "./form-layout";
 
 export const label = tv({

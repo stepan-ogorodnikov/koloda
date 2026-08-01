@@ -1,10 +1,10 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { CheckIcon } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import { useRef } from "react";
 import { ListBox, ListBoxItem, ListBoxSection, ListLayout, Virtualizer } from "react-aria-components";
 import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { CheckIcon } from "../../icons/check-icon";
+import type { TWVProps } from "../../types";
 import { useSelectHotkeys } from "./select-behavior";
 
 export const selectListBox = tv({

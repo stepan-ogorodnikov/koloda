@@ -1,6 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { getCSSVar, Link, Tooltip, useMotionSetting } from "@koloda/ui";
 import type { MessageDescriptor } from "@lingui/core";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
@@ -11,6 +10,10 @@ import type { PropsWithChildren } from "react";
 import { useCallback, useContext, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { tv } from "tailwind-variants";
+import { useMotionSetting } from "../hooks/use-motion-settings";
+import { Link } from "../primitives/link";
+import { Tooltip } from "../primitives/overlay/tooltip/tooltip";
+import { getCSSVar } from "../utility";
 import { useLayoutDrawer } from "./drawer";
 import { LayoutPortalContext } from "./layout";
 

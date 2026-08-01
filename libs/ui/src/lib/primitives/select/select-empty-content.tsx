@@ -1,6 +1,6 @@
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { useRef } from "react";
+import type { TWVProps } from "../../types";
 import { useSelectHotkeys } from "./select-behavior";
 import { selectListBox } from "./select-list-box";
 

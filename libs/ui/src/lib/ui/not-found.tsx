@@ -1,7 +1,7 @@
-import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCanGoBack, useRouter } from "@tanstack/react-router";
+import { Button } from "../primitives/form/button";
 
 export function NotFound() {
   const { _ } = useLingui();

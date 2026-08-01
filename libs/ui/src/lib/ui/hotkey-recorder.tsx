@@ -1,13 +1,15 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { CheckIcon } from "@koloda/ui";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Dialog, HotKey } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useHotkeyRecorder } from "@tanstack/react-hotkeys";
 import type { Hotkey } from "@tanstack/react-hotkeys";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { CheckIcon } from "../icons/check-icon";
+import { Button } from "../primitives/form/button";
+import { Dialog } from "../primitives/overlay/dialog";
+import { HotKey } from "./hotkey";
 
 export type HotkeyRecorderProps = {
   onAccept: (hotkey: Hotkey | null) => void;

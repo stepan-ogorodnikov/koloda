@@ -1,11 +1,11 @@
 import { useAppHotkey, useHotkeysSettings, useHotkeysStatus } from "@koloda/core-react";
-import { dispatchKey, matchesAnyHotkey } from "@koloda/ui";
 import type { Key, KeyboardDelegate } from "@react-types/shared";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import type { RefObject } from "react";
 import { useContext, useEffect } from "react";
 import { SelectStateContext } from "react-aria-components";
 import type { SelectState as ReactAriaSelectState } from "react-stately";
+import { dispatchKey, matchesAnyHotkey } from "../../core/hotkeys";
 
 export type SelectState = ReactAriaSelectState<unknown, "single" | "multiple"> | null;
 

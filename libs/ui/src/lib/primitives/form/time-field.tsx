@@ -1,9 +1,10 @@
-import { Label, Number } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren, ReactNode } from "react";
 import { DateInput, DateSegment, TimeField as ReactAriaTimeField } from "react-aria-components";
 import type { DateInputProps, TimeFieldProps as ReactAriaTimeFieldProps, TimeValue } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
+import { Number } from "../animations/number";
+import { Label } from "./label";
 import { formLayoutSection } from "./form-layout";
 import { textFieldInput } from "./text-field";
 

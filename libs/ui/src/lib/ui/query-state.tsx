@@ -1,7 +1,7 @@
-import { Fade } from "@koloda/ui";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
+import { Fade } from "../primitives/animations/fade";
 import { QueryError } from "./query-error";
 import { QueryLoading } from "./query-loading";
 

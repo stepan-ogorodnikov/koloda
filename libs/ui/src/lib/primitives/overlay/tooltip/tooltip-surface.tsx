@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
 import { useCallback, useLayoutEffect, useState } from "react";
 import type { PlacementAxis } from "react-aria";
-import { getTooltipSurfacePath, isSameTooltipSurfaceGeometry, TOOLTIP_BORDER_WIDTH } from "./tooltip-geometry";
+import { TOOLTIP_BORDER_WIDTH, getTooltipSurfacePath, isSameTooltipSurfaceGeometry } from "./tooltip-geometry";
 import type { TooltipArrowPlacement, TooltipSurfaceGeometry } from "./tooltip-geometry";
 
 export function getTooltipArrowPlacement(placement: PlacementAxis | null): TooltipArrowPlacement {

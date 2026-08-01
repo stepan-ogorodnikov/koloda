@@ -1,6 +1,6 @@
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 
 export const tableCellContent = tv({
   base: "overflow-hidden break-all",

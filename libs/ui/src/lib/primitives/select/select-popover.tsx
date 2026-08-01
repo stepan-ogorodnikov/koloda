@@ -1,7 +1,7 @@
-import { Popover, popover } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import type { PopoverProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
+import { Popover, popover } from "../overlay/popover";
 
 const selectPopover = tv({
   extend: popover,

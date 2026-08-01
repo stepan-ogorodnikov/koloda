@@ -1,16 +1,19 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import type { ButtonProps, TWVProps } from "@koloda/ui";
-import { Button, button, dispatchKey, overlay, Popover } from "@koloda/ui";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import type { ComponentProps } from "react";
 import { useRef } from "react";
 import type { DialogProps, ModalOverlayProps } from "react-aria-components";
 import { Dialog as ReactAriaDialog, DialogTrigger, ModalOverlay } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { dispatchKey } from "../../core/hotkeys";
+import type { TWVProps } from "../../types";
+import { Button, button } from "../form/button";
+import type { ButtonProps } from "../form/button";
+import { OverlayFrameContent, OverlayFrameFooter, OverlayFrameHeader, OverlayFrameTitle, overlay } from "./overlay";
+import { Popover } from "./popover";
 import { Modal } from "./modal";
-import { OverlayFrameContent, OverlayFrameFooter, OverlayFrameHeader, OverlayFrameTitle } from "./overlay";
 
 const options: HotkeyOptions = { ignoreInputs: false, conflictBehavior: "allow" };
 

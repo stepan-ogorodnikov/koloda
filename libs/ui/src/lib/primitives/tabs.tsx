@@ -1,4 +1,3 @@
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import {
   SelectionIndicator,
@@ -16,6 +15,7 @@ import type {
   TabsProps as ReactAriaTabsProps,
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../types";
 
 const tabs = tv({ base: "grow flex flex-col min-h-0" });
 

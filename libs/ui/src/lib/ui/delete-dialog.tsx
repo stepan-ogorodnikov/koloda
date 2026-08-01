@@ -1,9 +1,11 @@
 import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, button, Dialog } from "@koloda/ui";
-import type { ButtonProps, TWVProps } from "@koloda/ui";
 import type { ComponentProps, PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import { Button, button } from "../primitives/form/button";
+import type { ButtonProps } from "../primitives/form/button";
+import { Dialog } from "../primitives/overlay/dialog";
+import type { TWVProps } from "../types";
 
 type DeleteDialogProps = ComponentProps<typeof Dialog.Root>;
 

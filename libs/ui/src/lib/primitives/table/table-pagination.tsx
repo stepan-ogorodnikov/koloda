@@ -5,11 +5,13 @@ import {
   ArrowRightDoubleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Label, Select } from "@koloda/ui";
-import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Table } from "@tanstack/react-table";
+import { Button } from "../form/button";
+import type { ButtonProps } from "../form/button";
+import { Label } from "../form/label";
+import { Select } from "../select/select";
 
 type TablePaginationProps = {
   table: Table<any>;

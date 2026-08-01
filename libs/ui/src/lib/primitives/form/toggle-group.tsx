@@ -1,9 +1,9 @@
-import { button } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { SelectionIndicator, ToggleButton, ToggleButtonGroup } from "react-aria-components";
 import type { ToggleButtonGroupProps, ToggleButtonProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
+import { button } from "./button";
 
 export const toggleGroup = tv({
   base: "flex flex-row items-center gap-1 h-10 rounded-lg bg-toggle-group",

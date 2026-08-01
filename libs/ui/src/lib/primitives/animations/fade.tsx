@@ -1,7 +1,7 @@
-import { useMotionSetting } from "@koloda/ui";
 import { motion } from "motion/react";
 import type { MotionProps } from "motion/react";
 import type { ComponentProps } from "react";
+import { useMotionSetting } from "../../hooks/use-motion-settings";
 
 export function Fade(props: MotionProps & ComponentProps<"div">) {
   const isMotionOn = useMotionSetting();

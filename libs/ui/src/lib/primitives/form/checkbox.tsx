@@ -1,11 +1,11 @@
 import { MinusSignIcon } from "@hugeicons/core-free-icons";
-import { CheckIcon } from "@koloda/ui";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { Checkbox as ReactAriaCheckbox } from "react-aria-components";
 import type { CheckboxProps as ReactAriaCheckboxProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import { CheckIcon } from "../../icons/check-icon";
+import type { TWVProps } from "../../types";
 import { label } from "./label";
 
 const checkbox = tv({ base: "group flex flex-row items-center gap-2 min-size-10 rounded-md focus-ring" });

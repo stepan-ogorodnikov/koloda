@@ -1,15 +1,15 @@
 import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { TWVProps } from "@koloda/ui";
-import { Number } from "@koloda/ui";
 import { useContext, useRef, useState } from "react";
 import { Button, NumberField as ReactAriaNumberField, NumberFieldStateContext } from "react-aria-components";
 import type { ButtonProps, NumberFieldProps as ReactAriaNumberFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
+import { Number } from "../animations/number";
 import { button } from "./button";
 import { FieldGroup, fieldGroup } from "./field-group";
+import { TextFieldInput, textField, textFieldInput } from "./text-field";
 import type { TextFieldInputProps } from "./text-field";
-import { textField, TextFieldInput, textFieldInput } from "./text-field";
 
 export const numberField = tv({ extend: textField });
 

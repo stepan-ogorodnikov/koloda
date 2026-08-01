@@ -1,8 +1,8 @@
-import type { TWVProps } from "@koloda/ui";
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
 import { mergeProps, useFocusRing } from "react-aria";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../../types";
 
 const tooltipTrigger = tv({
   base: "rounded-lg focus-ring",

@@ -1,7 +1,7 @@
-import type { TWVProps } from "@koloda/ui";
 import { Group } from "react-aria-components";
 import type { GroupProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 
 export const fieldGroup = tv({
   base: "flex flex-row items-center min-w-0 rounded-lg",

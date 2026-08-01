@@ -1,20 +1,17 @@
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import {
-  Button,
-  getCSSVar,
-  layoutHasContentAtom,
-  layoutHasNavAtom,
-  layoutHasSidebarAtom,
-  useLayoutDrawer,
-  useNavCollapsed,
-} from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useAtomValue } from "jotai";
 import { useCallback } from "react";
+import { layoutHasContentAtom } from "../layout/content";
+import { useLayoutDrawer } from "../layout/drawer";
+import { layoutHasNavAtom, useNavCollapsed } from "../layout/nav";
+import { layoutHasSidebarAtom } from "../layout/sidebar";
+import { Button } from "../primitives/form/button";
+import { getCSSVar } from "../utility";
 
 export function TitlebarSidebarControls() {
   const { _ } = useLingui();

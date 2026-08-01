@@ -11,10 +11,12 @@ import type {
   SliderThumbRenderProps,
   SliderTrackProps as ReactAriaSliderTrackProps,
 } from "react-aria-components";
-import { formLayoutSection, Number, useMotionSetting } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import type { Format } from "@number-flow/react";
 import { tv } from "tailwind-variants";
+import { useMotionSetting } from "../../hooks/use-motion-settings";
+import type { TWVProps } from "../../types";
+import { Number } from "../animations/number";
+import { formLayoutSection } from "./form-layout";
 import type { TooltipArrowPlacement } from "../overlay/tooltip/tooltip-geometry";
 import { TooltipSurface } from "../overlay/tooltip/tooltip-surface";
 import { label } from "./label";

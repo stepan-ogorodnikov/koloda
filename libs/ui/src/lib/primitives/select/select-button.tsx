@@ -1,9 +1,10 @@
 import { ChevronDoubleCloseIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, button, formLayoutSectionContent } from "@koloda/ui";
-import type { TWVProps } from "@koloda/ui";
 import type { ComponentProps, ReactNode } from "react";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
+import { Button, button } from "../form/button";
+import { formLayoutSectionContent } from "../form/form-layout";
 import { SelectValue } from "./select-value";
 
 const selectButton = tv({

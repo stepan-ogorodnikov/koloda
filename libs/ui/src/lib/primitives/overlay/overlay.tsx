@@ -1,7 +1,7 @@
-import type { TWVProps } from "@koloda/ui";
 import type { ComponentProps } from "react";
 import { Heading } from "react-aria-components";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 
 export const overlay = tv({
   base: [

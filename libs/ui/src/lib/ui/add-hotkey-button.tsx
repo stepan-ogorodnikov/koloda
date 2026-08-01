@@ -1,8 +1,8 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { Button } from "../primitives/form/button";
 import { HotkeyRecorder } from "./hotkey-recorder";
 
 type AddHotkeyButtonProps = {

@@ -1,7 +1,7 @@
-import type { TWVProps } from "@koloda/ui";
 import type { Table as TanstackTable } from "@tanstack/react-table";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 import { TableBody } from "./table-body";
 import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";

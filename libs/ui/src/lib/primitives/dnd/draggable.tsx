@@ -1,7 +1,7 @@
 import { useSortable } from "@dnd-kit/react/sortable";
-import type { TWVProps } from "@koloda/ui";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
+import type { TWVProps } from "../../types";
 import { DragHandle } from "./drag-handle";
 
 const draggable = tv({

@@ -1,8 +1,6 @@
 import { ERROR_MESSAGES } from "@koloda/app";
 import type { ErrorCode, FormError, ZodIssue } from "@koloda/app";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import { Button, Fade, FormTextField } from "@koloda/ui";
-import type { ButtonProps } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -10,6 +8,10 @@ import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import { AnimatePresence, LayoutGroup } from "motion/react";
 import type { PropsWithChildren } from "react";
+import { Fade } from "../animations/fade";
+import { Button } from "./button";
+import type { ButtonProps } from "./button";
+import { FormTextField } from "./text-field";
 
 function Timestamps(props: PropsWithChildren) {
   return <div className="flex flex-row flex-wrap items-center gap-4" {...props} />;
