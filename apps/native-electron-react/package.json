@@ -6,7 +6,7 @@
   "nx": {
     "tags": [
       "type:app",
-      "platform:web"
+      "platform:desktop"
     ]
   }
 }

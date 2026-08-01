@@ -1,6 +1,5 @@
 /// <reference types='vitest' />
 import { lingui } from "@lingui/vite-plugin";
-import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
@@ -22,8 +21,10 @@ export default defineConfig(() => ({
     port: 3000,
     host: "localhost",
   },
+  resolve: {
+    tsconfigPaths: true,
+  },
   plugins: [
-    nxViteTsPaths(),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
@@ -36,10 +37,6 @@ export default defineConfig(() => ({
     tailwindcss(),
     lingui(),
   ],
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
   build: {
     outDir: "../../dist/apps/demo",
     emptyOutDir: true,

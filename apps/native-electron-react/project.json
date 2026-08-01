@@ -9,15 +9,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": [
-        "{options.outputPath}"
-      ],
       "defaultConfiguration": "production",
-      "options": {
-        "outputPath": "dist/apps/native-electron-react",
-        "configFile": "apps/native-electron-react/vite.config.ts"
-      },
       "configurations": {
         "development": {
           "mode": "development"
@@ -28,20 +20,9 @@
       }
     },
     "serve": {
-      "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "build",
         "port": 3000
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "build:production"
-        }
       }
     },
     "lingui-extract": {
@@ -70,10 +51,13 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default"
+      ],
       "options": {
         "command": "bunx vitest run --config apps/native-electron-react/vitest.config.mjs --configLoader runner"
       },
-      "inputs": ["default", "^default"],
       "configurations": {}
     }
   }
