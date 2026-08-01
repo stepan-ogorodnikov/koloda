@@ -53,3 +53,8 @@ vitest.config.*.timestamp*
 # Rust
 target/
 
+
+.claude/worktrees
+.nx/polygraph
+.nx/self-healing
+.nx/migrate-runs

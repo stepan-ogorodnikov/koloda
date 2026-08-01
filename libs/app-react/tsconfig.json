@@ -4,22 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../ui"
-    },
-    {
-      "path": "../srs-react"
-    },
-    {
-      "path": "../core-react"
-    },
-    {
-      "path": "../ai"
-    },
-    {
-      "path": "../app"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

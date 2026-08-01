@@ -3,29 +3,11 @@
   "include": [],
   "references": [
     {
-      "path": "../../libs/app-react"
-    },
-    {
-      "path": "../../libs/ui"
-    },
-    {
-      "path": "../../libs/srs"
-    },
-    {
-      "path": "../../libs/core-react"
-    },
-    {
-      "path": "../../libs/app"
-    },
-    {
-      "path": "../../libs/srs-pgsql"
-    },
-    {
-      "path": "../../libs/ai"
-    },
-    {
       "path": "./tsconfig.app.json"
     }
   ],
-  "extends": "../../tsconfig.base.json"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

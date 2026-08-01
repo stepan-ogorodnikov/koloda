@@ -21,6 +21,12 @@
     "target": "es2022",
     "customConditions": [
       "@koloda/source"
-    ]
+    ],
+    "noUncheckedSideEffectImports": false,
+    "types": [
+      "*"
+    ],
+    "esModuleInterop": false,
+    "ignoreDeprecations": "6.0"
   }
 }

@@ -45,5 +45,8 @@
     {
       "path": "./apps/native-electron-e2e"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

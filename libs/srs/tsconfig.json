@@ -4,13 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../ai"
-    },
-    {
-      "path": "../app"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

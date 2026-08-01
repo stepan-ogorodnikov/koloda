@@ -6,7 +6,11 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "tsBuildInfoFile": "../../node_modules/.cache/tsc/native-electron-e2e.tsbuildinfo",
-    "types": ["node", "@playwright/test"]
+    "types": [
+      "node",
+      "@playwright/test"
+    ],
+    "ignoreDeprecations": "6.0"
   },
   "include": ["playwright.config.ts", "src/**/*.ts"]
 }

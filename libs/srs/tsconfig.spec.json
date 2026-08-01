@@ -5,7 +5,11 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "types": ["node", "vitest/globals"]
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts"]
 }

@@ -44,9 +44,6 @@ export default defineConfig(() => ({
     outDir: "../../dist/apps/demo",
     emptyOutDir: true,
     reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
   optimizeDeps: {
     exclude: ["@electric-sql/pglite", "@koloda/srs"],

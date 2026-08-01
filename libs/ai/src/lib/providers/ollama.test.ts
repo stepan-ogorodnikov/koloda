@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchOllamaModels } from "./ollama";
 
 const listMock = vi.fn();
-const OllamaMock = vi.fn().mockImplementation(() => ({
-  list: listMock,
-}));
+const OllamaMock = vi.fn().mockImplementation(function Ollama() {
+  return { list: listMock };
+});
 
 vi.mock("ollama", () => ({
   Ollama: OllamaMock,

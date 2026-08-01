@@ -43,8 +43,5 @@ export default defineConfig(() => ({
     outDir: "../../dist/apps/native-electron-react",
     emptyOutDir: true,
     reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 }));

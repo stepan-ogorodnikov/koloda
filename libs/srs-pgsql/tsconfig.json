@@ -4,13 +4,10 @@
   "include": [],
   "references": [
     {
-      "path": "../app"
-    },
-    {
-      "path": "../srs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }
