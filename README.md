@@ -35,7 +35,25 @@ nx build native-electron
 - **Frontend**: Vite, React, TanStack Router
 - **Web**: PGLite
 - **Desktop**: Electron + Rust NAPI + SQLite
-- **Testing**: Playwright (E2E)
+- **Testing**: Vitest (unit), Playwright (E2E), Cargo (Rust)
+
+## Testing
+
+```bash
+# TypeScript unit tests (libs tagged type:lib)
+bun run test:libs
+
+# Desktop: Electron IPC unit tests + Playwright e2e
+nx test native-electron
+nx run native-electron:test:unit
+nx run native-electron:test:e2e
+
+# Web Playwright e2e
+nx run demo-e2e:e2e
+
+# Rust (workspace: koloda-core + Electron NAPI crate)
+cargo test
+```
 
 ## Project Structure
 
