@@ -1,12 +1,12 @@
 # @koloda/ui
 
 Design system and layout shell: Tailwind/RAC primitives, responsive layout zones, color themes, hotkey widgets, and async query-state components.
-Presentational only — no business logic, routing, or data fetching.
+No routing, feature screens, or data fetching — form/overlay chrome and query-error UI may still call app hotkey hooks and domain error catalogs.
 
 ## Where it sits
 
 Consumed by `@koloda/app-react`, `@koloda/srs-react`, and app entry components.
-Depends on `@koloda/app` for shared types and `@koloda/core-react` for hotkey hooks used by form/overlay chrome.
+Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and `@koloda/core-react` (settings-backed hotkeys for Dialog, Form controls, Select, titlebar). That edge is intentional; do not “fix” it by splitting widgets or injecting binders unless a new ADR says so.
 
 ## Architectural Map
 
