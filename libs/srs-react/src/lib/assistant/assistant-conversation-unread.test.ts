@@ -3,12 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   assistantConversationStateAtom,
   conversationsAtom,
+  markReadIfCurrentOnStore,
   pendingSaveAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
 import { unreadConversationIdsAtom } from "./conversation-selectors";
-import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
+import { dispatchTerminal, dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 
 describe("unreadConversationIdsAtom", () => {
   it("is empty when there are no conversations", () => {
@@ -74,11 +75,9 @@ describe("unreadConversationIdsAtom", () => {
     // `newConversation` action sets `currentConversationIdAtom` via the
     // writable atom's internal branch — it does NOT go through
     // `setCurrentConversationIdAtom`, so the mark-read side effect there
-    // does not fire. `dispatchToConversation`'s run-completion detection
-    // is the safety net: it must notice that the run finished while the
-    // conversation was current and bump `lastReadRunId` itself. Without
-    // this, navigating away would surface the brand-new conversation
-    // as unread.
+    // does not fire. Stream hooks call `markReadIfCurrent` after the
+    // terminal dispatch; without that, navigating away would surface the
+    // brand-new conversation as unread.
     const store = createStore();
     store.set(assistantConversationStateAtom, [
       "newConversation",
@@ -95,6 +94,7 @@ describe("unreadConversationIdsAtom", () => {
       },
     ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r1" }]);
+    markReadIfCurrentOnStore(store, "A", "r1");
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
@@ -119,6 +119,7 @@ describe("unreadConversationIdsAtom", () => {
       },
     ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r2" }]);
+    markReadIfCurrentOnStore(store, "A", "r2");
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
@@ -138,7 +139,7 @@ describe("unreadConversationIdsAtom", () => {
     store.set(setCurrentConversationIdAtom, "B");
 
     dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat" }]);
-    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
@@ -150,21 +151,20 @@ describe("unreadConversationIdsAtom", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat" }]);
-    dispatchTo(store, "A", ["runFailed", { runId: "r1", error: { message: "failed" } }]);
+    dispatchTerminal(store, "A", ["runFailed", { runId: "r1", error: { message: "failed" } }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 
     dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat" }]);
-    dispatchTo(store, "A", ["cancelRun", { runId: "r2" }]);
+    dispatchTerminal(store, "A", ["cancelRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
 
   it("does not bump lastReadRunId when restartRun flips a run back to streaming", () => {
     // WHY: A retry flips the existing run's status to "streaming" and
-    // clears its content. The latest run id is unchanged, but the
-    // transition goes from "success" to "streaming" — not the
-    // streaming-to-finished transition the detector cares about.
+    // clears its content. Terminal hooks do not call markReadIfCurrent
+    // on restart, so lastReadRunId must stay put.
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -291,7 +291,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     store.set(setCurrentConversationIdAtom, "B");
 
     dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat" }]);
-    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
 
     store.set(setCurrentConversationIdAtom, "A");
@@ -310,7 +310,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
 
   it("a run that completes in the current conversation stays read after the user navigates away", () => {
     // WHY: A run that finishes while the user is viewing the
-    // conversation is auto-marked-read by `dispatchToConversation`.
+    // conversation is auto-marked-read via `markReadIfCurrent`.
     // When the user then navigates to a different conversation, the
     // previous one must NOT surface as unread — the user already saw
     // the response.
@@ -322,7 +322,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat" }]);
-    dispatchTo(store, "A", ["completeRun", { runId: "r2" }]);
+    dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 

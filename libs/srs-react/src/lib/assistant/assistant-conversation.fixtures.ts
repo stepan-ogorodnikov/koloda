@@ -1,5 +1,5 @@
 import type { createStore } from "jotai";
-import { dispatchToConversationOnStore } from "./conversation-store";
+import { dispatchToConversationOnStore, markReadIfCurrentOnStore } from "./conversation-store";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 import { initialConversationState } from "./conversation-reducer";
 
@@ -34,4 +34,14 @@ export function dispatchTo(
   action: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ) {
   dispatchToConversationOnStore(store, id, action);
+}
+
+/** Terminal run action + auto-mark-read when the conversation is current (mirrors stream hooks). */
+export function dispatchTerminal(
+  store: ReturnType<typeof createStore>,
+  id: string,
+  action: Extract<ConversationReducerAction, ["completeRun" | "cancelRun" | "runFailed", unknown]>,
+) {
+  dispatchToConversationOnStore(store, id, action);
+  markReadIfCurrentOnStore(store, id, action[1].runId);
 }

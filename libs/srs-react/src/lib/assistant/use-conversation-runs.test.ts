@@ -8,6 +8,7 @@ import {
   assistantConversationStateAtom,
   conversationsAtom,
   dispatchToConversationOnStore,
+  markReadIfCurrentOnStore,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
@@ -93,6 +94,10 @@ function createHarness() {
     dispatchToConversationOnStore(store, id, action);
   };
 
+  const markReadIfCurrent = (id: string, runId: string) => {
+    markReadIfCurrentOnStore(store, id, runId);
+  };
+
   const getState: GetState = () => store.get(assistantConversationStateAtom);
   const bumpPendingSave = vi.fn();
 
@@ -100,6 +105,7 @@ function createHarness() {
     store,
     dispatchPersisted,
     dispatchToConversation,
+    markReadIfCurrent,
     getState,
     bumpPendingSave,
     dispatchToMap,
@@ -114,6 +120,7 @@ function renderRuns(harness: ReturnType<typeof createHarness>) {
       chatStreamGenerator: vi.fn() as ChatStreamGenerator,
       dispatchPersisted: harness.dispatchPersisted,
       dispatchToConversation: harness.dispatchToConversation,
+      markReadIfCurrent: harness.markReadIfCurrent,
       readState: harness.getState,
       bumpPendingSave: harness.bumpPendingSave,
     }),

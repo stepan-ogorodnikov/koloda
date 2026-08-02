@@ -12,6 +12,7 @@ import {
   assistantConversationStateAtom,
   bumpPendingSaveAtom,
   dispatchToConversationOnStore,
+  markReadIfCurrentOnStore,
 } from "./conversation-store";
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useConversationRuns } from "./use-conversation-runs";
@@ -90,6 +91,13 @@ export function useAssistantSession({
     [store],
   );
 
+  const markReadIfCurrent = useCallback(
+    (id: string, runId: string) => {
+      markReadIfCurrentOnStore(store, id, runId);
+    },
+    [store],
+  );
+
   const dispatchEphemeral = useCallback(
     (action: ConversationReducerAction) => {
       setConversationReducerAction(action);
@@ -102,15 +110,22 @@ export function useAssistantSession({
     chatStreamGenerator: configRef.current.chatStreamGenerator,
     dispatchPersisted,
     dispatchToConversation,
+    markReadIfCurrent,
     readState,
     bumpPendingSave,
   });
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) dispatchPersisted(["cancelRun", { runId: currentActiveRunId }]);
+    if (currentActiveRunId) {
+      dispatchPersisted(["cancelRun", { runId: currentActiveRunId }]);
+      // WHY: User cancel is always on the current conversation. Mark read
+      // after cancelRun so navigating away does not surface this run as unread
+      // (ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status).
+      setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
+    }
     cancel();
-  }, [dispatchPersisted, cancel, readState]);
+  }, [dispatchPersisted, cancel, readState, setConversationReducerAction]);
 
   const handleReset = useCallback(() => {
     const stored = readLastUsed();

@@ -64,6 +64,8 @@ export type UseConversationRunsOptions = {
   chatStreamGenerator: ChatStreamGenerator;
   dispatchPersisted: (action: ConversationReducerAction) => void;
   dispatchToConversation: DispatchToConversation;
+  /** Mark a finished run read when `conversationId` is the current conversation. */
+  markReadIfCurrent: (conversationId: string, runId: string) => void;
   readState: () => ConversationReducerState;
   bumpPendingSave: () => void;
 };
@@ -91,10 +93,11 @@ export function useConversationRuns({
   chatStreamGenerator,
   dispatchPersisted,
   dispatchToConversation,
+  markReadIfCurrent,
   readState,
   bumpPendingSave,
 }: UseConversationRunsOptions): UseConversationRunsReturn {
-  const pendingRunRefs = usePendingRunRefs(dispatchToConversation);
+  const pendingRunRefs = usePendingRunRefs(dispatchToConversation, markReadIfCurrent);
 
   const handleChatStreamError = useCallback(
     (error: Error) => pendingRunRefs.handleError("chat", error),
@@ -114,6 +117,7 @@ export function useConversationRuns({
       switch (result) {
         case "success":
           dispatchToConversation(conversationId, ["completeRun", { runId }]);
+          markReadIfCurrent(conversationId, runId);
           // WHY: Force a save with the post-completion state so a
           // throttled save that fires during streaming cannot leave a
           // successful run persisted as "canceled" with elapsedSeconds: 0.
@@ -123,6 +127,7 @@ export function useConversationRuns({
           break;
         case "aborted":
           dispatchToConversation(conversationId, ["cancelRun", { runId }]);
+          markReadIfCurrent(conversationId, runId);
           // WHY: Same rationale as success — the throttled save is still
           // queued from run start and would otherwise persist a "canceled"
           // snapshot derived from `cancelStreamingRuns` rather than the
@@ -131,7 +136,7 @@ export function useConversationRuns({
           break;
       }
     },
-    [dispatchToConversation, bumpPendingSave],
+    [dispatchToConversation, markReadIfCurrent, bumpPendingSave],
   );
 
   const executeChatRun = useCallback(

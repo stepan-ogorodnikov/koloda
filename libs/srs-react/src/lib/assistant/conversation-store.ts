@@ -69,31 +69,6 @@ export const assistantConversationStateAtom = atom(
   },
 );
 
-// WHY: A run that finishes while the user is viewing the conversation
-// has been implicitly "read" — the user watched it stream. Bumping
-// `lastReadRunId` to the just-finished run id keeps the conversation
-// out of `unreadConversationIdsAtom` after the user navigates away.
-// We detect the transition by comparing the latest run id in `prev`
-// and `next` and checking that its status moved out of `streaming`;
-// this works for both the explicit `completeRun` / `runFailed` /
-// `cancelRun` actions and for function-form updaters
-// that mutate the run status directly.
-function detectRunJustFinished(prev: ConversationReducerState, next: ConversationReducerState) {
-  const prevIds = Object.keys(prev.runs);
-  const nextIds = Object.keys(next.runs);
-  if (prevIds.length === 0 || nextIds.length === 0) return null;
-  const prevLatest = prevIds[prevIds.length - 1]!;
-  const nextLatest = nextIds[nextIds.length - 1]!;
-  if (prevLatest !== nextLatest) return null;
-  const prevRun = prev.runs[prevLatest];
-  const nextRun = next.runs[nextLatest];
-  if (!prevRun || !nextRun) return null;
-  if (prevRun.status !== "streaming") return null;
-  if (nextRun.status === "streaming") return null;
-
-  return nextLatest;
-}
-
 export function dispatchToConversation(
   id: string,
   update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
@@ -102,21 +77,22 @@ export function dispatchToConversation(
     const store = get(conversationsAtom);
     const prev = store[id];
     if (!prev) return;
-    const stamped = applyConversationUpdate(prev, update);
-    if (stamped === prev) return;
+    const next = applyConversationUpdate(prev, update);
+    if (next === prev) return;
+    set(conversationsAtom, { ...store, [id]: next });
+  };
+}
 
-    // WHY: See `detectRunJustFinished`. We only mark-as-read when the
-    // dispatch targets the currently-viewed conversation; a background
-    // run finishing in a non-current conversation must remain unread
-    // so the user notices it when they return.
-    const currentId = get(currentConversationIdAtom);
-    const finishedRunId = id === currentId ? detectRunJustFinished(prev, stamped) : null;
-    const final =
-      finishedRunId !== null && stamped.lastReadRunId !== finishedRunId
-        ? { ...stamped, lastReadRunId: finishedRunId }
-        : stamped;
-
-    set(conversationsAtom, { ...store, [id]: final });
+/**
+ * Marks a run as read when it finished in the conversation the user is
+ * viewing. Call after terminal run dispatches (`completeRun` / `cancelRun` /
+ * `runFailed`) from the stream hooks — see ASSISTANT-CHAT-CONVERSATIONS.md
+ * §Unread Status. Background completions must stay unread.
+ */
+export function markReadIfCurrent(id: string, runId: string): (get: Getter, set: Setter) => void {
+  return (get, set) => {
+    if (get(currentConversationIdAtom) !== id) return;
+    dispatchToConversation(id, ["markRead", { runId }])(get, set);
   };
 }
 
@@ -126,6 +102,10 @@ export function dispatchToConversationOnStore(
   action: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState),
 ): void {
   dispatchToConversation(id, action)(store.get, store.set);
+}
+
+export function markReadIfCurrentOnStore(store: Store, id: string, runId: string): void {
+  markReadIfCurrent(id, runId)(store.get, store.set);
 }
 
 export const saveStatusAtom = atom<SaveStatus>({

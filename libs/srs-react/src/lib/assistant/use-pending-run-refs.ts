@@ -21,7 +21,8 @@ import type { DispatchToConversation } from "./use-conversation-runs";
  *    conversation.
  * 2. **Error** — The stream hook's `onError` callback should call
  *    `handleError(mode, error)`. This dispatches `runFailed` to the
- *    originating conversation and clears the ref.
+ *    originating conversation, marks the run read when that conversation
+ *    is current, and clears the ref.
  * 3. **Complete** — The stream executor's `finally` block should call
  *    `onComplete(mode, runId)`. This clears the ref *only* if the runId
  *    still matches — preventing a stale stream's cleanup from clobbering
@@ -33,7 +34,10 @@ export type UsePendingRunRefsReturn = {
   onComplete: (mode: AIChatMode, runId: string) => void;
 };
 
-export function usePendingRunRefs(dispatchToConversation: DispatchToConversation): UsePendingRunRefsReturn {
+export function usePendingRunRefs(
+  dispatchToConversation: DispatchToConversation,
+  markReadIfCurrent: (conversationId: string, runId: string) => void,
+): UsePendingRunRefsReturn {
   const chatRef = useRef<{ id: string; runId: string } | null>(null);
   const cardRef = useRef<{ id: string; runId: string } | null>(null);
 
@@ -49,8 +53,9 @@ export function usePendingRunRefs(dispatchToConversation: DispatchToConversation
       if (!entry) return;
       ref.current = null;
       dispatchToConversation(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
+      markReadIfCurrent(entry.id, entry.runId);
     },
-    [dispatchToConversation],
+    [dispatchToConversation, markReadIfCurrent],
   );
 
   const onComplete = useCallback((mode: AIChatMode, runId: string) => {
