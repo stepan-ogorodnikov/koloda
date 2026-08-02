@@ -201,7 +201,7 @@ export function useConversationRuns({
       const run = readState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      dispatchPersisted(["restartRun", { runId, request, templateFields, mode: effectiveMode, modelName }]);
+      dispatchPersisted(["restartRun", { runId, templateFields, mode: effectiveMode, modelName }]);
 
       if (effectiveMode === "chat") {
         dispatchPersisted(["updateAssistantText", { runId, text: "" }]);

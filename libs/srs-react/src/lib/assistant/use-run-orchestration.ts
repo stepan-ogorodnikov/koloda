@@ -85,7 +85,6 @@ function dispatchStartRun(
     {
       runId,
       mode: prepared.kind,
-      request: prepared.request,
       templateFields: prepared.templateFields,
       modelName: prepared.modelName,
     },

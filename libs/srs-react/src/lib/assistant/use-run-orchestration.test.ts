@@ -70,7 +70,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     const { withUserMessage = true } = opts;
     if (withUserMessage) dispatchPersisted(["addUserMessage", { runId, text: "hello" }]);
     dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatchPersisted(["startRun", { runId, mode: "chat", request: {} }]);
+    dispatchPersisted(["startRun", { runId, mode: "chat" }]);
   }
 
   function orchestrate(cfg: AssistantConversationConfig) {

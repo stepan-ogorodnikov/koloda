@@ -84,7 +84,7 @@ describe("conversationReducer", () => {
     it("stays unlocked when a generated-cards run is still streaming or failed", () => {
       let state = reduce([
         { type: "addUserMessage", runId: "r1", text: "Hi" },
-        { type: "startRun", runId: "r1", mode: "cards", request: {} },
+        { type: "startRun", runId: "r1", mode: "cards" },
         { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" },
         { type: "runFailed", runId: "r1", error: { message: "failed" } },
       ]);
@@ -96,7 +96,7 @@ describe("conversationReducer", () => {
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "cards", request: {} },
+        { type: "startRun", runId: "r1", mode: "cards" },
         { type: "addCard", runId: "r1", card: { content: {} } },
       ]);
       state = conversationReducer(state, act({ type: "setCardStatus", runId: "r1", index: 0, status: "success" }));
@@ -163,7 +163,7 @@ describe("conversationReducer", () => {
       const createdAt = new Date(1234);
       let state = reduce([
         { type: "addUserMessage", runId: "r1", text: "Hi" },
-        { type: "startRun", runId: "r1", mode: "chat", request: {} },
+        { type: "startRun", runId: "r1", mode: "chat" },
         { type: "setDeck", deckId: 3 },
         { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
         { type: "setAIModel", modelId: "m2", modelParameters: { reasoning_effort: "low" } },

@@ -16,7 +16,8 @@ import { z } from "zod";
  *      → `null`; `modelParameters` → `{}`) while still rejecting wrong-typed
  *      present values.
  *   3. Ignore persisted `revertState` (always rebuilt as `null` on restore)
- *      and tolerate untyped `messages`/`cards`/`request`/`usage`.
+ *      and tolerate untyped `messages`/`cards`/`usage`.
+ *      Legacy `request` on runs is stripped (never read back; retry rebuilds live).
  *
  * The existing `conversation-restore.test.ts` fixtures are the contract; this
  * port keeps them green for all real persisted rows. The collapse on the first
@@ -101,7 +102,7 @@ const modelNameField = z
  * a record, so behavior for persisted rows is unchanged (see file header). */
 const templateFieldsField = z.union([z.null(), z.array(z.unknown())]);
 
-/** Tolerate an untyped passthrough value (e.g. `request`, `usage`). */
+/** Tolerate an untyped passthrough value (e.g. `usage`). */
 const passthroughField = z.unknown();
 
 /** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message }`. */
@@ -121,7 +122,6 @@ const runSchema: z.ZodType<GenerationRun> = z
     cards: z.array(z.unknown()),
     cardStatuses: z.record(z.string(), z.unknown()),
     templateFields: templateFieldsField,
-    request: passthroughField,
     startedAt: dateField,
     elapsedSeconds: nullableNumberField,
     modelName: modelNameField,
@@ -136,7 +136,6 @@ const runSchema: z.ZodType<GenerationRun> = z
       cards: run.cards as GeneratedCard[],
       cardStatuses: run.cardStatuses as Record<number, CardStatus>,
       templateFields: (run.templateFields ?? null) as TemplateFields | null,
-      request: run.request,
       startedAt: run.startedAt,
       elapsedSeconds: run.elapsedSeconds,
       modelName: run.modelName,

@@ -24,7 +24,6 @@ export type GenerationRun = {
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
   templateFields: TemplateFields | null;
-  request?: unknown;
   error?: { message: string };
   startedAt: Date;
   elapsedSeconds: number | null;
@@ -116,7 +115,6 @@ function makeRun(
   mode: AIChatMode,
   templateFields: TemplateFields | null | undefined,
   modelName?: string,
-  request?: unknown,
 ): GenerationRun {
   return {
     id: runId,
@@ -125,7 +123,6 @@ function makeRun(
     cards: [],
     cardStatuses: {},
     templateFields: templateFields ?? null,
-    request,
     startedAt: new Date(),
     elapsedSeconds: null,
     modelName,
@@ -221,20 +218,13 @@ function updateAssistantText(draft: ConversationReducerState, payload: UpdateAss
 type StartRunPayload = {
   runId: string;
   mode: AIChatMode;
-  request: unknown;
   templateFields?: TemplateFields | null;
   modelName?: string;
 };
 
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
-  draft.runs[payload.runId] = makeRun(
-    payload.runId,
-    payload.mode,
-    payload.templateFields,
-    payload.modelName,
-    payload.request,
-  );
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
 }
 
 type AddCardPayload = { runId: string; card: GeneratedCard };
@@ -278,7 +268,6 @@ function cancelRun(draft: ConversationReducerState, payload: RunIdPayload) {
 
 type RestartRunPayload = {
   runId: string;
-  request: unknown;
   templateFields: TemplateFields | null;
   mode: AIChatMode;
   modelName?: string;
@@ -290,7 +279,6 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
     existing.status = "streaming";
     existing.cards = [];
     existing.cardStatuses = {};
-    existing.request = payload.request;
     existing.templateFields = payload.templateFields;
     existing.startedAt = new Date();
     existing.elapsedSeconds = null;
@@ -298,13 +286,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
     existing.usage = undefined;
     existing.error = undefined;
   } else {
-    draft.runs[payload.runId] = makeRun(
-      payload.runId,
-      payload.mode,
-      payload.templateFields,
-      payload.modelName,
-      payload.request,
-    );
+    draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
     // Fix up the error→assistant message if it existed
     const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
     if (msg) {

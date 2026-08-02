@@ -93,7 +93,6 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
       {
         runId: "run-A",
         mode: "chat",
-        request: {},
       },
     ]);
     store.set(assistantConversationStateAtom, [
@@ -136,7 +135,6 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
       {
         runId: "run-A",
         mode: "chat",
-        request: {},
       },
     ]);
 
@@ -337,7 +335,6 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
       {
         runId: "run-B",
         mode: "chat",
-        request: {},
       },
     ]);
     expect(store.get(assistantActiveRunIdAtom)).toBe("run-B");
@@ -413,7 +410,7 @@ describe("setAssistantDeckAtom lock check", () => {
    */
   function lockConversationWithGeneratedCards(store: ReturnType<typeof createStore>, id: string) {
     dispatchTo(store, id, ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, id, ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, id, ["startRun", { runId: "r1", mode: "cards" }]);
     dispatchTo(store, id, ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
     dispatchTo(store, id, ["completeRun", { runId: "r1" }]);
   }
@@ -451,7 +448,7 @@ describe("setAssistantDeckAtom lock check", () => {
 
     // User message + a started but not-yet-completed run does not lock.
     dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
     expect(store.get(assistantIsLockedAtom)).toBe(false);
 
     store.set(setAssistantDeckAtom, 9);
@@ -462,7 +459,7 @@ describe("setAssistantDeckAtom lock check", () => {
 describe("updatedAt stamping (only on run start)", () => {
   function seedUpdatedAt(store: ReturnType<typeof createStore>, id: string) {
     const original = store.get(conversationsAtom)[id]!.updatedAt;
-    dispatchTo(store, id, ["startRun", { runId: "seed", mode: "chat", request: {} }]);
+    dispatchTo(store, id, ["startRun", { runId: "seed", mode: "chat" }]);
     const seeded = store.get(conversationsAtom)[id]!.updatedAt;
     expect(seeded).not.toBeNull();
     expect(seeded).not.toEqual(original);
@@ -481,7 +478,7 @@ describe("updatedAt stamping (only on run start)", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat", request: {} }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat" }]);
     const after = store.get(conversationsAtom)["A"]!;
     expect(after.updatedAt).not.toBeNull();
   });
@@ -503,7 +500,6 @@ describe("updatedAt stamping (only on run start)", () => {
       {
         runId: "r1",
         mode: "chat",
-        request: {},
         templateFields: null,
       },
     ]);
@@ -547,7 +543,7 @@ describe("updatedAt stamping (only on run start)", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
-    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
     const ts = store.get(conversationsAtom)["A"]!.updatedAt!.getTime();
     advanceClock();
 

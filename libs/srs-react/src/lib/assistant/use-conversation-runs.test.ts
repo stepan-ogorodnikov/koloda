@@ -138,7 +138,6 @@ describe("useConversationRuns", () => {
       {
         runId: "run-1",
         mode: "chat",
-        request: {},
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -210,7 +209,6 @@ describe("useConversationRuns", () => {
       {
         runId: "run-A",
         mode: "cards",
-        request: {},
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -261,7 +259,6 @@ describe("useConversationRuns", () => {
       {
         runId: "run-A",
         mode: "chat",
-        request: {},
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -306,7 +303,6 @@ describe("useConversationRuns", () => {
       {
         runId: "run-A",
         mode: "cards",
-        request: {},
       },
     ]);
 
@@ -345,7 +341,6 @@ describe("useConversationRuns", () => {
       {
         runId: "run-A",
         mode: "cards",
-        request: {},
       },
     ]);
 
@@ -373,7 +368,7 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat", request: {} }]);
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat" }]);
     harness.store.set(assistantConversationStateAtom, [
       "addAssistantMessage",
       { runId: "run-A", kind: "chat-text", text: "" },
@@ -407,7 +402,7 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat", request: {} }]);
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat" }]);
     harness.store.set(assistantConversationStateAtom, [
       "addAssistantMessage",
       { runId: "run-A", kind: "chat-text", text: "" },

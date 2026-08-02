@@ -188,6 +188,13 @@ describe("coerceConversationState", () => {
       expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: true })))).toBeNull();
       expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: {} })))).toBeNull();
     });
+
+    it("strips legacy request from restored runs", () => {
+      const coerced = coerceConversationState(
+        makeStateWithRun(baseRun({ request: { messages: [{ role: "user", content: "hi" }] } })),
+      )!;
+      expect(coerced.runs["r1"]).not.toHaveProperty("request");
+    });
   });
 
   // WHY: `TemplateFields` is an *array* of field objects

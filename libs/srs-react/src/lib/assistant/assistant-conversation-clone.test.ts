@@ -162,7 +162,7 @@ describe("cloneConversationAtom", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
     dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards", request: {} }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
     dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
     dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
     store.set(setCurrentConversationIdAtom, "A");

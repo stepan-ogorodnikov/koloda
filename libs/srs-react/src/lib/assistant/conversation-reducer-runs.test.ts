@@ -16,7 +16,6 @@ describe("conversationReducer", () => {
           type: "startRun",
           runId: "r1",
           mode: "chat",
-          request: { prompt: "test" },
         }),
       );
 
@@ -44,7 +43,6 @@ describe("conversationReducer", () => {
           type: "startRun",
           runId: "r1",
           mode: "cards",
-          request: {},
           templateFields: fields,
         }),
       );
@@ -59,7 +57,6 @@ describe("conversationReducer", () => {
           type: "startRun",
           runId: "r1",
           mode: "chat",
-          request: {},
           modelName: "GPT-4",
         }),
       );
@@ -74,7 +71,6 @@ describe("conversationReducer", () => {
           type: "startRun",
           runId: "r1",
           mode: "chat",
-          request: {},
         }),
       );
 
@@ -84,7 +80,7 @@ describe("conversationReducer", () => {
 
   describe("addCard", () => {
     it("adds a card to the run's cards array and seeds idle status", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "cards", request: {} }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "cards" }]);
       state = conversationReducer(
         state,
         act({
@@ -104,7 +100,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
 
       vi.setSystemTime(5000);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
@@ -119,8 +115,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run completes", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat", request: {} },
-        { type: "startRun", runId: "r2", mode: "chat", request: {} },
+        { type: "startRun", runId: "r1", mode: "chat" },
+        { type: "startRun", runId: "r2", mode: "chat" },
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -135,7 +131,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
 
       vi.setSystemTime(3000);
       state = conversationReducer(
@@ -157,8 +153,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run fails", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat", request: {} },
-        { type: "startRun", runId: "r2", mode: "chat", request: {} },
+        { type: "startRun", runId: "r1", mode: "chat" },
+        { type: "startRun", runId: "r2", mode: "chat" },
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -177,7 +173,7 @@ describe("conversationReducer", () => {
 
   describe("cancelRun", () => {
     it("sets status to canceled and clears activeRunId", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
       state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
 
       expect(state.runs["r1"].status).toBe("canceled");
@@ -195,7 +191,6 @@ describe("conversationReducer", () => {
           type: "startRun",
           runId: "r1",
           mode: "cards",
-          request: {},
           templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
         },
         { type: "addCard", runId: "r1", card: { content: {} } },
@@ -208,7 +203,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: { updated: true },
           templateFields: null,
           mode: "cards",
         }),
@@ -217,7 +211,6 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
-      expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toBeNull();
       expect(state.runs["r1"].startedAt).toEqual(new Date(10_000));
       expect(state.runs["r1"].elapsedSeconds).toBeNull();
@@ -245,7 +238,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "chat",
         }),
@@ -279,7 +271,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "cards",
         }),
@@ -296,13 +287,12 @@ describe("conversationReducer", () => {
       });
     });
 
-    it("updates request and templateFields on retry", () => {
+    it("updates templateFields on retry", () => {
       let state = reduce([
         {
           type: "startRun",
           runId: "r1",
           mode: "cards",
-          request: {},
           templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
         },
       ]);
@@ -314,18 +304,16 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: { updated: true },
           templateFields: nextFields,
           mode: "cards",
         }),
       );
 
-      expect(state.runs["r1"].request).toEqual({ updated: true });
       expect(state.runs["r1"].templateFields).toEqual(nextFields);
     });
 
     it("overwrites modelName when a new value is provided", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(
@@ -333,7 +321,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "chat",
           modelName: "Claude",
@@ -344,7 +331,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun omits it", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(
@@ -352,7 +339,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "chat",
         }),
@@ -362,7 +348,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {}, modelName: "GPT-4" }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
 
       state = conversationReducer(
@@ -370,7 +356,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "chat",
           modelName: undefined,
@@ -386,7 +371,6 @@ describe("conversationReducer", () => {
         act({
           type: "restartRun",
           runId: "r1",
-          request: {},
           templateFields: null,
           mode: "chat",
           modelName: "Claude",
@@ -399,7 +383,7 @@ describe("conversationReducer", () => {
 
   describe("setUsage", () => {
     it("sets usage on the specified run", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", request: {} }]);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
       const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
       state = conversationReducer(state, act({ type: "setUsage", runId: "r1", usage }));
       expect(state.runs["r1"].usage).toEqual(usage);
