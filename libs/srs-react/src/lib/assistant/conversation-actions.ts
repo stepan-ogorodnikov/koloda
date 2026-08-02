@@ -7,7 +7,7 @@ import type { CardStatus, ConversationReducerState } from "./conversation-reduce
 import { assistantIsLockedAtom } from "./conversation-selectors";
 import {
   assistantConversationStateAtom,
-  bumpPendingSaveAtom,
+  touchAtom,
   conversationsAtom,
   currentConversationIdAtom,
   pendingSaveByConversationAtom,
@@ -39,13 +39,13 @@ export const removeConversationAtom = atom(null, (_get, set, id: string) => {
 
 export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
   set(assistantConversationStateAtom, ["setMode", { mode }]);
-  set(bumpPendingSaveAtom);
+  set(touchAtom);
 });
 
 export const setAssistantDeckAtom = atom(null, (get, set, deckId: number | null) => {
   if (get(assistantIsLockedAtom)) return;
   set(assistantConversationStateAtom, ["setDeck", { deckId }]);
-  set(bumpPendingSaveAtom);
+  set(touchAtom);
 });
 
 type SetAssistantAIProfileAtomPayload = {
@@ -56,7 +56,7 @@ type SetAssistantAIProfileAtomPayload = {
 
 export const setAssistantAIProfileAtom = atom(null, (_get, set, payload: SetAssistantAIProfileAtomPayload) => {
   set(assistantConversationStateAtom, ["setAIProfile", payload]);
-  set(bumpPendingSaveAtom);
+  set(touchAtom);
 });
 
 export const setAssistantAIModelAtom = atom(
@@ -67,7 +67,7 @@ export const setAssistantAIModelAtom = atom(
     payload: { modelId: string | null; modelParameters?: Partial<Record<ModelParameter["type"], string>> },
   ) => {
     set(assistantConversationStateAtom, ["setAIModel", payload]);
-    set(bumpPendingSaveAtom);
+    set(touchAtom);
   },
 );
 
@@ -75,7 +75,7 @@ export const setAssistantAIModelParameterAtom = atom(
   null,
   (_get, set, payload: { paramType: ModelParameter["type"]; value: string | null }) => {
     set(assistantConversationStateAtom, ["setAIModelParameter", payload]);
-    set(bumpPendingSaveAtom);
+    set(touchAtom);
   },
 );
 
@@ -97,7 +97,7 @@ export const setAssistantCardStatusAtom = atom(
   null,
   (_get, set, payload: { runId: string; index: number; status: CardStatus }) => {
     set(assistantConversationStateAtom, ["setCardStatus", payload]);
-    set(bumpPendingSaveAtom);
+    set(touchAtom);
   },
 );
 

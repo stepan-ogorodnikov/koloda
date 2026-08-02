@@ -2,7 +2,7 @@ import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
 import {
   assistantConversationStateAtom,
-  bumpPendingSaveAtom,
+  touchAtom,
   conversationsAtom,
   pendingSaveAtom,
   setCurrentConversationIdAtom,
@@ -384,7 +384,7 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
 
   it("bumps the current conversation's counter when no current is set, the bump is a no-op", () => {
     const store = createStore();
-    store.set(bumpPendingSaveAtom);
+    store.set(touchAtom);
     expect(store.get(pendingSaveAtom)).toBe(0);
   });
 
@@ -396,8 +396,8 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(pendingSaveAtom)).toBe(0);
 
-    store.set(bumpPendingSaveAtom);
-    store.set(bumpPendingSaveAtom);
+    store.set(touchAtom);
+    store.set(touchAtom);
     expect(store.get(pendingSaveAtom)).toBe(2);
 
     // Switch to B — its counter is 0
@@ -405,7 +405,7 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     expect(store.get(pendingSaveAtom)).toBe(0);
 
     // Bump B
-    store.set(bumpPendingSaveAtom);
+    store.set(touchAtom);
     expect(store.get(pendingSaveAtom)).toBe(1);
 
     // Switch back to A — its counter is still 2

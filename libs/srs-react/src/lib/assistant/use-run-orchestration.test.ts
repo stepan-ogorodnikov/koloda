@@ -43,7 +43,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
   let armPendingRun: ReturnType<typeof vi.fn>;
   let retryRun: ReturnType<typeof vi.fn>;
   let setGlobalAIProfileState: ReturnType<typeof vi.fn>;
-  let dispatchPersisted: (action: ConversationReducerAction) => void;
+  let dispatch: (action: ConversationReducerAction) => void;
   let store: ReturnType<typeof createStore>;
   let readState: () => ConversationReducerState;
 
@@ -54,12 +54,12 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     setGlobalAIProfileState = vi.fn((...args: unknown[]) => calls.push({ fn: "setGlobalAIProfileState", args }));
 
     store = createStore();
-    dispatchPersisted = (action) => store.set(assistantConversationStateAtom, action);
+    dispatch = (action) => store.set(assistantConversationStateAtom, action);
     readState = () => store.get(assistantConversationStateAtom);
   });
 
   // Seed a conversation into the test store, make it current, and build its
-  // state through the real write path so `readState`/`dispatchPersisted` see
+  // state through the real write path so `readState`/`dispatch` see
   // the same shape production does.
   function seedConversation(id: string) {
     store.set(upsertConversationAtom, { ...initialConversationState, id, createdAt: new Date(1) });
@@ -68,9 +68,9 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
 
   function addChatRun(runId: string, opts: { withUserMessage?: boolean } = {}) {
     const { withUserMessage = true } = opts;
-    if (withUserMessage) dispatchPersisted(["addUserMessage", { runId, text: "hello" }]);
-    dispatchPersisted(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatchPersisted(["startRun", { runId, mode: "chat" }]);
+    if (withUserMessage) dispatch(["addUserMessage", { runId, text: "hello" }]);
+    dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
+    dispatch(["startRun", { runId, mode: "chat" }]);
   }
 
   function orchestrate(cfg: AssistantConversationConfig) {
@@ -78,8 +78,8 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
       useRunOrchestration({
         configRef: { current: cfg },
         readState,
-        dispatchPersisted,
-        dispatchEphemeral: vi.fn(),
+        dispatch,
+        dispatchLocal: vi.fn(),
         setGlobalAIProfileState,
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),

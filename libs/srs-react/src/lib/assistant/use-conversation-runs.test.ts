@@ -84,7 +84,7 @@ function createHarness() {
   const dispatchToMap: Array<{ id: string; action: ConversationReducerAction }> = [];
   const dispatchToCurrent: Array<ConversationReducerAction> = [];
 
-  const dispatchPersisted: Dispatch = (action) => {
+  const dispatch: Dispatch = (action) => {
     dispatchToCurrent.push(action);
     store.set(assistantConversationStateAtom, action);
   };
@@ -99,15 +99,15 @@ function createHarness() {
   };
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);
-  const bumpPendingSave = vi.fn();
+  const touch = vi.fn();
 
   return {
     store,
-    dispatchPersisted,
+    dispatch,
     dispatchToConversation,
     markReadIfCurrent,
     getState,
-    bumpPendingSave,
+    touch,
     dispatchToMap,
     dispatchToCurrent,
   };
@@ -118,11 +118,11 @@ function renderRuns(harness: ReturnType<typeof createHarness>) {
     useConversationRuns({
       streamGenerator: vi.fn() as CardGenerationExecutor,
       chatStreamGenerator: vi.fn() as ChatStreamGenerator,
-      dispatchPersisted: harness.dispatchPersisted,
+      dispatch: harness.dispatch,
       dispatchToConversation: harness.dispatchToConversation,
       markReadIfCurrent: harness.markReadIfCurrent,
       readState: harness.getState,
-      bumpPendingSave: harness.bumpPendingSave,
+      touch: harness.touch,
     }),
   );
 }
@@ -203,7 +203,7 @@ describe("useConversationRuns", () => {
     expect(stateB.messages).toHaveLength(0);
     expect(stateB.activeRunId).toBeNull();
 
-    expect(harness.bumpPendingSave).toHaveBeenCalled();
+    expect(harness.touch).toHaveBeenCalled();
   });
 
   it("executeGenerateRun dispatches addCard via dispatchToConversation (per-id)", async () => {
@@ -333,7 +333,7 @@ describe("useConversationRuns", () => {
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
 
-    expect(harness.bumpPendingSave).toHaveBeenCalledTimes(1);
+    expect(harness.touch).toHaveBeenCalledTimes(1);
   });
 
   it("bumps the pending save when an aborted card generation run is canceled", async () => {
@@ -363,7 +363,7 @@ describe("useConversationRuns", () => {
     expect(cancelActions).toHaveLength(1);
     expect(cancelActions[0].id).toBe("A");
 
-    expect(harness.bumpPendingSave).toHaveBeenCalledTimes(1);
+    expect(harness.touch).toHaveBeenCalledTimes(1);
   });
 
   it("an aborted chat run re-dispatches the final accumulated text via finalize (A)", async () => {

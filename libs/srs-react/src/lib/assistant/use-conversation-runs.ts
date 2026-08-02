@@ -62,12 +62,12 @@ export type DispatchToConversation = (id: string, action: ConversationReducerAct
 export type UseConversationRunsOptions = {
   streamGenerator: CardGenerationExecutor;
   chatStreamGenerator: ChatStreamGenerator;
-  dispatchPersisted: (action: ConversationReducerAction) => void;
+  dispatch: (action: ConversationReducerAction) => void;
   dispatchToConversation: DispatchToConversation;
   /** Mark a finished run read when `conversationId` is the current conversation. */
   markReadIfCurrent: (conversationId: string, runId: string) => void;
   readState: () => ConversationReducerState;
-  bumpPendingSave: () => void;
+  touch: () => void;
 };
 
 export type UseConversationRunsReturn = {
@@ -91,11 +91,11 @@ export type UseConversationRunsReturn = {
 export function useConversationRuns({
   streamGenerator,
   chatStreamGenerator,
-  dispatchPersisted,
+  dispatch,
   dispatchToConversation,
   markReadIfCurrent,
   readState,
-  bumpPendingSave,
+  touch,
 }: UseConversationRunsOptions): UseConversationRunsReturn {
   const pendingRunRefs = usePendingRunRefs(dispatchToConversation, markReadIfCurrent);
 
@@ -121,7 +121,7 @@ export function useConversationRuns({
           // WHY: Force a save with the post-completion state so a
           // throttled save that fires during streaming cannot leave a
           // successful run persisted as "canceled" with elapsedSeconds: 0.
-          bumpPendingSave();
+          touch();
           break;
         case "error":
           break;
@@ -132,11 +132,11 @@ export function useConversationRuns({
           // queued from run start and would otherwise persist a "canceled"
           // snapshot derived from `cancelStreamingRuns` rather than the
           // real cancelRun terminal state.
-          bumpPendingSave();
+          touch();
           break;
       }
     },
-    [dispatchToConversation, markReadIfCurrent, bumpPendingSave],
+    [dispatchToConversation, markReadIfCurrent, touch],
   );
 
   const executeChatRun = useCallback(
@@ -206,16 +206,16 @@ export function useConversationRuns({
       const run = readState().runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      dispatchPersisted(["restartRun", { runId, templateFields, mode: effectiveMode, modelName }]);
+      dispatch(["restartRun", { runId, templateFields, mode: effectiveMode, modelName }]);
 
       if (effectiveMode === "chat") {
-        dispatchPersisted(["updateAssistantText", { runId, text: "" }]);
+        dispatch(["updateAssistantText", { runId, text: "" }]);
         await executeChatRun(readState().id, runId, request as ChatStreamRequest);
       } else {
         await executeGenerateRun(readState().id, runId, request as CardGenerationStreamRequest);
       }
     },
-    [executeChatRun, executeGenerateRun, dispatchPersisted, readState],
+    [executeChatRun, executeGenerateRun, dispatch, readState],
   );
 
   const cancel = useCallback(() => {

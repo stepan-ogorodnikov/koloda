@@ -13,7 +13,7 @@ import { initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import {
   assistantConversationStateAtom,
-  bumpPendingSaveAtom,
+  touchAtom,
   conversationsAtom,
   dismissSaveStatusAtom,
   pendingSaveAtom,
@@ -66,7 +66,7 @@ export function useConversationPersistence({
   });
   const { mutationFn: setConversationFn } = setConversationMutation();
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
-  const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
+  const touch = useSetAtom(touchAtom);
   const setCurrentConversationId = useSetAtom(setCurrentConversationIdAtom);
   const upsertConversation = useSetAtom(upsertConversationAtom);
   const setSaveStatus = useSetAtom(saveStatusAtom);
@@ -244,7 +244,7 @@ export function useConversationPersistence({
     // below persists the refreshed `lastReadRunId` on first restore, so
     // a freshly opened conversation is not shown as unread on next load.
     setCurrentConversationId(conversationId);
-    bumpPendingSave();
+    touch();
   }, [
     store,
     conversationId,
@@ -254,7 +254,7 @@ export function useConversationPersistence({
     conversationError,
     setCurrentConversationId,
     upsertConversation,
-    bumpPendingSave,
+    touch,
     readLastUsed,
   ]);
 

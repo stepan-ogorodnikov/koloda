@@ -10,9 +10,9 @@ import { newConversationAtom, setAssistantModeAtom } from "./conversation-action
 import type { ConversationReducerAction } from "./conversation-reducer";
 import {
   assistantConversationStateAtom,
-  bumpPendingSaveAtom,
   dispatchToConversationOnStore,
   markReadIfCurrentOnStore,
+  touchAtom,
 } from "./conversation-store";
 import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
 import { useConversationRuns } from "./use-conversation-runs";
@@ -54,7 +54,7 @@ export function useAssistantSession({
 }: UseAssistantSessionOptions): UseAssistantSessionReturn {
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
-  const bumpPendingSave = useSetAtom(bumpPendingSaveAtom);
+  const touch = useSetAtom(touchAtom);
   const newConversation = useSetAtom(newConversationAtom);
 
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
@@ -71,17 +71,17 @@ export function useAssistantSession({
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
   const store = useStore();
 
-  // WHY: Keep three named helpers (persisted / by-id / ephemeral) instead of
-  // one options-bag dispatch. Collapsing them makes it easy to bump save on
-  // stream chunks or revert and persist mid-stream "canceled" runs or
-  // in-memory revertState. `dispatchToConversation` never auto-bumps —
-  // terminal success/abort bumps explicitly in useConversationRuns.
-  const dispatchPersisted = useCallback(
+  // WHY: Keep three named helpers (dispatch / by-id / local) instead of
+  // one options-bag. Collapsing them makes it easy to touch() on stream
+  // chunks or persist in-memory revertState. `dispatchToConversation`
+  // never auto-touches — terminal success/abort calls touch() explicitly
+  // in useConversationRuns.
+  const dispatch = useCallback(
     (action: ConversationReducerAction) => {
       setConversationReducerAction(action);
-      bumpPendingSave();
+      touch();
     },
-    [setConversationReducerAction, bumpPendingSave],
+    [setConversationReducerAction, touch],
   );
 
   const dispatchToConversation = useCallback(
@@ -98,7 +98,7 @@ export function useAssistantSession({
     [store],
   );
 
-  const dispatchEphemeral = useCallback(
+  const dispatchLocal = useCallback(
     (action: ConversationReducerAction) => {
       setConversationReducerAction(action);
     },
@@ -108,24 +108,24 @@ export function useAssistantSession({
   const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
     streamGenerator: configRef.current.streamGenerator,
     chatStreamGenerator: configRef.current.chatStreamGenerator,
-    dispatchPersisted,
+    dispatch,
     dispatchToConversation,
     markReadIfCurrent,
     readState,
-    bumpPendingSave,
+    touch,
   });
 
   const handleCancel = useCallback(() => {
     const currentActiveRunId = readState().activeRunId;
     if (currentActiveRunId) {
-      dispatchPersisted(["cancelRun", { runId: currentActiveRunId }]);
+      dispatch(["cancelRun", { runId: currentActiveRunId }]);
       // WHY: User cancel is always on the current conversation. Mark read
       // after cancelRun so navigating away does not surface this run as unread
       // (ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status).
       setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
     }
     cancel();
-  }, [dispatchPersisted, cancel, readState, setConversationReducerAction]);
+  }, [dispatch, cancel, readState, setConversationReducerAction]);
 
   const handleReset = useCallback(() => {
     const stored = readLastUsed();
@@ -144,17 +144,17 @@ export function useAssistantSession({
       const id = generateUUID();
       localConversationIdRef.current = id;
       const stored = readLastUsed();
-      dispatchPersisted(["newConversation", { ...stored, id, createdAt: new Date() }]);
+      dispatch(["newConversation", { ...stored, id, createdAt: new Date() }]);
       onConversationIdChange(id);
     }
     return localConversationIdRef.current;
-  }, [conversationId, onConversationIdChange, dispatchPersisted, readLastUsed]);
+  }, [conversationId, onConversationIdChange, dispatch, readLastUsed]);
 
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } = useRunOrchestration({
     configRef,
     readState,
-    dispatchPersisted,
-    dispatchEphemeral,
+    dispatch,
+    dispatchLocal,
     setGlobalAIProfileState,
     cancelActiveRun: handleCancel,
     setMode,

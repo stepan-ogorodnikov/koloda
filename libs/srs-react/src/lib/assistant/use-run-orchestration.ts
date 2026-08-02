@@ -17,10 +17,10 @@ import type { ConversationReducerAction, ConversationReducerState, GenerationRun
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
   readState: () => ConversationReducerState;
-  dispatchPersisted: (action: ConversationReducerAction) => void;
-  // WHY: Revert is visual/in-memory only and must not bump pending save
-  // (persist strips revertState). Mode changes still go through setMode.
-  dispatchEphemeral: (action: ConversationReducerAction) => void;
+  dispatch: (action: ConversationReducerAction) => void;
+  // WHY: Revert is visual/in-memory only and must not touch()
+  // (`toPersistedState` omits revertState). Mode changes still go through setMode.
+  dispatchLocal: (action: ConversationReducerAction) => void;
   setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
@@ -102,8 +102,8 @@ function dispatchStartRun(
 export function useRunOrchestration({
   configRef,
   readState,
-  dispatchPersisted,
-  dispatchEphemeral,
+  dispatch,
+  dispatchLocal,
   setGlobalAIProfileState,
   cancelActiveRun,
   setMode,
@@ -147,8 +147,8 @@ export function useRunOrchestration({
 
   const handleDismissGenerate = useCallback(() => {
     const run = findLatestErroredRun(readState());
-    if (run) dispatchPersisted(["dismissRunError", { runId: run.id }]);
-  }, [readState, dispatchPersisted]);
+    if (run) dispatch(["dismissRunError", { runId: run.id }]);
+  }, [readState, dispatch]);
 
   const handleGenerate = useCallback(
     async (value?: string) => {
@@ -162,7 +162,7 @@ export function useRunOrchestration({
       // starts a fresh run. Re-read the state afterwards so the rest of
       // this handler sees the post-commit shape.
       if (currentState.revertState) {
-        dispatchPersisted(["commitRevert"]);
+        dispatch(["commitRevert"]);
         currentState = readState();
       }
 
@@ -181,8 +181,8 @@ export function useRunOrchestration({
 
       setGlobalAIProfileState(cfg);
 
-      dispatchPersisted(["addUserMessage", { runId, text: promptText }]);
-      dispatchStartRun(dispatchPersisted, cfg, runId, prepared);
+      dispatch(["addUserMessage", { runId, text: promptText }]);
+      dispatchStartRun(dispatch, cfg, runId, prepared);
 
       if (prepared.kind === "chat") {
         await executeChatRun(activeConversationId, runId, prepared.request);
@@ -193,7 +193,7 @@ export function useRunOrchestration({
     [
       configRef,
       ensureConversationId,
-      dispatchPersisted,
+      dispatch,
       executeChatRun,
       executeGenerateRun,
       readState,
@@ -215,7 +215,7 @@ export function useRunOrchestration({
       // stream is canceled because its run will be among the hidden
       // messages and must not keep streaming.
       cancelActiveRun();
-      dispatchEphemeral([
+      dispatchLocal([
         "setRevertState",
         { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
       ]);
@@ -229,16 +229,16 @@ export function useRunOrchestration({
       }
       return promptText;
     },
-    [readState, cancelActiveRun, dispatchEphemeral, setMode],
+    [readState, cancelActiveRun, dispatchLocal, setMode],
   );
 
   const handleRestore = useCallback(() => {
     const state = readState();
     if (!state.revertState) return null;
     const text = state.revertState.preRevertInputText;
-    dispatchEphemeral(["setRevertState", null]);
+    dispatchLocal(["setRevertState", null]);
     return text;
-  }, [readState, dispatchEphemeral]);
+  }, [readState, dispatchLocal]);
 
   return { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore };
 }

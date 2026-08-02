@@ -127,7 +127,9 @@ export const pendingSaveAtom = atom((get) => {
   return get(pendingSaveByConversationAtom)[id] ?? 0;
 });
 
-export const bumpPendingSaveAtom = atom(null, (get, set) => {
+// INVARIANT: Sole write path that marks the *current* conversation dirty.
+// Non-current ids (clone) bump `pendingSaveByConversationAtom` directly.
+export const touchAtom = atom(null, (get, set) => {
   const id = get(currentConversationIdAtom);
   if (!id) return;
   set(pendingSaveByConversationAtom, (prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
@@ -148,7 +150,7 @@ export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | n
       const latestRunId = runIds[runIds.length - 1] ?? null;
       if (latestRunId && latestRunId !== state.lastReadRunId) {
         dispatchToConversation(id, ["markRead", { runId: latestRunId }])(get, set);
-        set(bumpPendingSaveAtom);
+        set(touchAtom);
       }
     }
   }
