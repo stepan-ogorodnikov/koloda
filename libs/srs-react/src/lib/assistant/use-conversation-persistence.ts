@@ -21,9 +21,7 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-
-const STREAM_SAVE_THROTTLE_MS = 1000;
-const IDLE_SAVE_DEBOUNCE_MS = 250;
+import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
 
 function restoreFromData(loaded: unknown): ConversationReducerState | null {
   const coerced = coerceConversationState(loaded);
@@ -163,45 +161,22 @@ export function useConversationPersistence({
   useEffect(() => {
     if (!conversationId) return;
 
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    let lastFiredAt = 0;
-
-    const flushNow = (options: { cancelStreamingRuns?: boolean } = {}) => {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      flush(conversationId, options);
-    };
-
-    const scheduleFlush = () => {
-      const isStreaming = store.get(conversationsAtom)[conversationId]?.activeRunId != null;
-      const now = Date.now();
-      const wait = isStreaming ? STREAM_SAVE_THROTTLE_MS : IDLE_SAVE_DEBOUNCE_MS;
-      // WHY: clamp to `wait`. Without it, a pending idle schedule (lastFiredAt in
-      // the future) plus a streaming bump computes delay > throttle window, so the
-      // save never fires inside STREAM_SAVE_THROTTLE_MS. Clamping also resets
-      // idle debounce to a full `wait` from the latest bump.
-      const delay = Math.min(wait, Math.max(0, wait - (now - lastFiredAt)));
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        timer = null;
-        flush(conversationId, { cancelStreamingRuns: true });
-      }, delay);
-      // WHY: track the scheduled fire time, not `now`, so back-to-back bumps
-      // measure relative to the next fire and coalesce instead of cascading.
-      lastFiredAt = now + delay;
-    };
+    const scheduler = createSaveScheduler({
+      flush: (options) => flush(conversationId, options),
+      throttleMs: STREAM_SAVE_THROTTLE_MS,
+      debounceMs: IDLE_SAVE_DEBOUNCE_MS,
+      isStreaming: () => store.get(conversationsAtom)[conversationId]?.activeRunId != null,
+    });
 
     const handler = () => {
       if (restoredIdRef.current !== conversationId) return;
       if (lastSavedIdRef.current !== conversationId) return;
-      scheduleFlush();
+      scheduler.schedule();
     };
 
     const unsub = store.sub(pendingSaveAtom, handler);
 
-    const handlePageHide = () => flushNow({ cancelStreamingRuns: true });
+    const handlePageHide = () => scheduler.flushNow({ cancelStreamingRuns: true });
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
 
@@ -212,10 +187,7 @@ export function useConversationPersistence({
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("beforeunload", handlePageHide);
       unsub();
-      if (timer) {
-        clearTimeout(timer);
-        flush(conversationId, { cancelStreamingRuns: true });
-      }
+      scheduler.flushIfPending();
     };
   }, [store, conversationId]); // oxlint-disable-line react/exhaustive-deps -- flush via useEffectEvent
 
