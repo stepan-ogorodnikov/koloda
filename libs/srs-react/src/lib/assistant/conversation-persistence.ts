@@ -3,6 +3,22 @@ import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from
 import { dropRuns } from "./conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 
+/**
+ * DB-writable conversation fields.
+ * No `revertState` — revert is in-memory only
+ * (ASSISTANT-CHAT-CONVERSATIONS.md §Revert / §Persistence).
+ */
+export type PersistedConversation = Omit<ConversationReducerState, "revertState">;
+
+export function toPersistedState(state: ConversationReducerState): PersistedConversation {
+  const { revertState: _omit, ...persisted } = state;
+  return persisted;
+}
+
+export function fromPersistedState(persisted: PersistedConversation): ConversationReducerState {
+  return { ...persisted, revertState: null };
+}
+
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {
   let normalizedAny = false;
   const runs: Record<string, GenerationRun> = {};

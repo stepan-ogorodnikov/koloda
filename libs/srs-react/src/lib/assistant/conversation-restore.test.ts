@@ -1,8 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { normalizeRestoredConversation } from "./conversation-persistence";
+import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
 import { findLatestErroredRun, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
+
+describe("toPersistedState / fromPersistedState", () => {
+  it("omits revertState on the way out and restores it as null on the way in", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
+    };
+    const persisted = toPersistedState(state);
+    expect("revertState" in persisted).toBe(false);
+    expect(fromPersistedState(persisted).revertState).toBeNull();
+  });
+});
 
 describe("coerceConversationState", () => {
   it("accepts a valid conversation shape with Date timestamps", () => {

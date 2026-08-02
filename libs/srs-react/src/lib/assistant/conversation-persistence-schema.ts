@@ -1,6 +1,8 @@
 import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
+import type { PersistedConversation } from "./conversation-persistence";
+import { fromPersistedState } from "./conversation-persistence";
 import type { CardStatus, ConversationReducerState, GenerationRun, RunStatus } from "./conversation-reducer";
 import { z } from "zod";
 
@@ -15,9 +17,11 @@ import { z } from "zod";
  *   2. Default missing legacy optional fields (`profileId`/`modelId`/…
  *      → `null`; `modelParameters` → `{}`) while still rejecting wrong-typed
  *      present values.
- *   3. Ignore persisted `revertState` (always rebuilt as `null` on restore)
- *      and tolerate untyped `messages`/`cards`/`usage`.
- *      Legacy `request` on runs is stripped (never read back; retry rebuilds live).
+ *   3. Parse into `PersistedConversation` (no `revertState`; unknown keys
+ *      including a stale `revertState` are stripped). Live state is rebuilt
+ *      via `fromPersistedState`. Also tolerate untyped `messages`/`cards`/
+ *      `usage`. Legacy `request` on runs is stripped (never read back; retry
+ *      rebuilds live).
  *
  * The existing `conversation-restore.test.ts` fixtures are the contract; this
  * port keeps them green for all real persisted rows. The collapse on the first
@@ -145,12 +149,12 @@ const runSchema: z.ZodType<GenerationRun> = z
   );
 
 /**
- * The persisted conversation row schema. `revertState` is intentionally absent
- * — restore always rebuilds it as `null`. `dismissedRunErrorId` is tolerated
- * as any type (matching the pre-refactor "no validation gate" behavior) and
- * defaulted to `null`.
+ * The persisted conversation row schema. Shape is `PersistedConversation`
+ * (`revertState` absent). `dismissedRunErrorId` is tolerated as any type
+ * (matching the pre-refactor "no validation gate" behavior) and defaulted
+ * to `null`.
  */
-const persistedConversationStateSchema: z.ZodType<ConversationReducerState> = z
+const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
   .object({
     id: z.string(),
     createdAt: dateField,
@@ -167,7 +171,7 @@ const persistedConversationStateSchema: z.ZodType<ConversationReducerState> = z
     mode: z.enum(["chat", "cards"]),
   })
   .transform(
-    (state): ConversationReducerState => ({
+    (state): PersistedConversation => ({
       id: state.id,
       createdAt: state.createdAt,
       updatedAt: state.updatedAt,
@@ -181,8 +185,6 @@ const persistedConversationStateSchema: z.ZodType<ConversationReducerState> = z
       lastReadRunId: state.lastReadRunId,
       deckId: state.deckId,
       mode: state.mode,
-      // WHY: revert is in-memory only; a stale persisted row never resurrects it.
-      revertState: null,
     }),
   );
 
@@ -193,5 +195,5 @@ const persistedConversationStateSchema: z.ZodType<ConversationReducerState> = z
  */
 export function coerceConversationState(value: unknown): ConversationReducerState | null {
   const result = persistedConversationStateSchema.safeParse(value);
-  return result.success ? result.data : null;
+  return result.success ? fromPersistedState(result.data) : null;
 }

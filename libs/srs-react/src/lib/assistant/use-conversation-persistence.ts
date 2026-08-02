@@ -7,7 +7,7 @@ import { useAtomCallback } from "jotai/utils";
 import { useEffect, useEffectEvent, useRef } from "react";
 import { aiProfileStateAtom } from "./ai-profile-state";
 import type { AIProfileState } from "./ai-profile-state";
-import { cancelStreamingRuns, normalizeRestoredConversation } from "./conversation-persistence";
+import { cancelStreamingRuns, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
 import { initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
@@ -135,16 +135,12 @@ export function useConversationPersistence({
     if (!state) return;
     if (state.messages.length === 0 && state.activeRunId === null) return;
 
-    const persistState = {
-      // WHY: rewriting "streaming" runs to "canceled" prevents
-      // `normalizeRestoredConversation` from dropping a run's messages on
-      // next mount (leaving an empty row with a stale title). The live
-      // in-memory state keeps "streaming" until the stream actually ends.
-      ...(options.cancelStreamingRuns ? cancelStreamingRuns(state) : state),
-      // WHY: revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
-      // §Revert); stripping it means reload never resurrects a hidden prefix.
-      revertState: null,
-    };
+    // WHY: rewriting "streaming" runs to "canceled" prevents
+    // `normalizeRestoredConversation` from dropping a run's messages on
+    // next mount (leaving an empty row with a stale title). The live
+    // in-memory state keeps "streaming" until the stream actually ends.
+    const liveState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
+    const persistState = toPersistedState(liveState);
 
     const title = computeConversationTitle(persistState);
     const data: SetConversationData = {
