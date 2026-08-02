@@ -181,6 +181,31 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("illegal terminal transitions", () => {
+    it("ignores completeRun after the run already finished", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(0);
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      vi.setSystemTime(2000);
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      const afterFirst = state.runs["r1"];
+
+      vi.setSystemTime(9000);
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, act({ type: "runFailed", runId: "r1", error: { message: "late" } }));
+      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+
+      expect(state.runs["r1"]).toEqual(afterFirst);
+      vi.useRealTimers();
+    });
+
+    it("ignores terminal actions for a missing runId", () => {
+      const state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      const next = conversationReducer(state, act({ type: "completeRun", runId: "missing" }));
+      expect(next).toEqual(state);
+    });
+  });
+
   describe("restartRun", () => {
     it("resets run status to streaming, clears cards and statuses, and sets activeRunId", () => {
       vi.useFakeTimers();

@@ -175,15 +175,63 @@ export function findLatestErroredRun(state: ConversationReducerState): Generatio
   return null;
 }
 
-function finishRun(draft: ConversationReducerState, runId: string, status: RunStatus) {
-  const run = draft.runs[runId];
-  if (!run) return;
-  run.status = status;
+function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
+  if (draft.activeRunId === runId) draft.activeRunId = null;
+}
+
+export type RunLifecycleEvent =
+  | { type: "complete" }
+  | { type: "fail"; error: { message: string } }
+  | { type: "cancel" }
+  | {
+      type: "restart";
+      templateFields: TemplateFields | null;
+      modelName?: string;
+    };
+
+function stampElapsed(run: GenerationRun) {
   run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
 }
 
-function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
-  if (draft.activeRunId === runId) draft.activeRunId = null;
+/**
+ * Applies a legal run lifecycle event in place.
+ * Spec: streaming → success | failed | canceled; restart → streaming
+ * (ASSISTANT-CHAT-CONVERSATIONS.md §Runs / §Retry).
+ */
+export function transitionRun(draft: ConversationReducerState, runId: string, event: RunLifecycleEvent): boolean {
+  const run = draft.runs[runId];
+  if (!run) return false;
+
+  if (event.type === "restart") {
+    run.status = "streaming";
+    run.cards = [];
+    run.cardStatuses = {};
+    run.templateFields = event.templateFields;
+    run.startedAt = new Date();
+    run.elapsedSeconds = null;
+    run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
+    run.usage = undefined;
+    run.error = undefined;
+    draft.activeRunId = runId;
+    return true;
+  }
+
+  // INVARIANT: terminal events only from streaming — rejects double-complete /
+  // fail-after-cancel and similar illegal transitions.
+  if (run.status !== "streaming") return false;
+
+  if (event.type === "complete") {
+    run.status = "success";
+    run.error = undefined;
+  } else if (event.type === "fail") {
+    run.status = "failed";
+    run.error = event.error;
+  } else {
+    run.status = "canceled";
+  }
+  stampElapsed(run);
+  clearActiveIfRun(draft, runId);
+  return true;
 }
 
 type AddUserMessagePayload = { runId: string; text: string };
@@ -248,24 +296,17 @@ function setCardStatus(draft: ConversationReducerState, payload: SetCardStatusPa
 type RunIdPayload = { runId: string };
 
 function completeRun(draft: ConversationReducerState, payload: RunIdPayload) {
-  finishRun(draft, payload.runId, "success");
-  clearActiveIfRun(draft, payload.runId);
-  const run = draft.runs[payload.runId];
-  if (run) run.error = undefined;
+  transitionRun(draft, payload.runId, { type: "complete" });
 }
 
 type RunFailedPayload = { runId: string; error: { message: string } };
 
 function runFailed(draft: ConversationReducerState, payload: RunFailedPayload) {
-  finishRun(draft, payload.runId, "failed");
-  const run = draft.runs[payload.runId];
-  if (run) run.error = payload.error;
-  clearActiveIfRun(draft, payload.runId);
+  transitionRun(draft, payload.runId, { type: "fail", error: payload.error });
 }
 
 function cancelRun(draft: ConversationReducerState, payload: RunIdPayload) {
-  finishRun(draft, payload.runId, "canceled");
-  clearActiveIfRun(draft, payload.runId);
+  transitionRun(draft, payload.runId, { type: "cancel" });
 }
 
 type RestartRunPayload = {
@@ -276,29 +317,28 @@ type RestartRunPayload = {
 };
 
 function restartRun(draft: ConversationReducerState, payload: RestartRunPayload) {
-  const existing = draft.runs[payload.runId];
-  if (existing) {
-    existing.status = "streaming";
-    existing.cards = [];
-    existing.cardStatuses = {};
-    existing.templateFields = payload.templateFields;
-    existing.startedAt = new Date();
-    existing.elapsedSeconds = null;
-    existing.modelName = payload.modelName !== undefined ? payload.modelName : existing.modelName;
-    existing.usage = undefined;
-    existing.error = undefined;
-  } else {
-    draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
-    // Fix up the error→assistant message if it existed
-    const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
-    if (msg) {
-      const metadata = getAssistantMetadata(msg);
-      if (metadata?.kind === "error") {
-        msg.metadata = {
-          kind: modeToMessageKind(payload.mode),
-          runId: payload.runId,
-        };
-      }
+  if (
+    transitionRun(draft, payload.runId, {
+      type: "restart",
+      templateFields: payload.templateFields,
+      modelName: payload.modelName,
+    })
+  ) {
+    return;
+  }
+
+  // WHY: Retry after restore may find the run dropped (normalize removes
+  // streaming / orphaned failed markers) while the assistant error message
+  // remains — recreate the run and rewrite the error marker.
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
+  const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
+  if (msg) {
+    const metadata = getAssistantMetadata(msg);
+    if (metadata?.kind === "error") {
+      msg.metadata = {
+        kind: modeToMessageKind(payload.mode),
+        runId: payload.runId,
+      };
     }
   }
   draft.activeRunId = payload.runId;
