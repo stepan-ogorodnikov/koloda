@@ -3,7 +3,7 @@ import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { PersistedConversation } from "./conversation-persistence";
 import { fromPersistedState } from "./conversation-persistence";
-import type { CardStatus, ConversationReducerState, GenerationRun, RunStatus } from "./conversation-reducer";
+import type { CardStatus, ConversationReducerState, GenerationRun, RunStatus } from "../state/conversation-reducer";
 import { z } from "zod";
 
 /**

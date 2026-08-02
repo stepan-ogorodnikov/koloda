@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
-import { findLatestErroredRun, initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerState } from "./conversation-reducer";
+import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
+import type { ConversationReducerState } from "../state/conversation-reducer";
 
 describe("toPersistedState / fromPersistedState", () => {
   it("omits revertState on the way out and restores it as null on the way in", () => {

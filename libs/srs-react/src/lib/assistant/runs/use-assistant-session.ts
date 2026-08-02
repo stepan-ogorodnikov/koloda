@@ -4,17 +4,17 @@ import type { Template } from "@koloda/srs";
 import { useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
-import type { AIProfileStateUpdater } from "./ai-profile-state";
-import { aiProfileStateAtom } from "./ai-profile-state";
-import { newConversationAtom, setAssistantModeAtom } from "./conversation-actions";
-import type { ConversationReducerAction } from "./conversation-reducer";
+import type { AIProfileStateUpdater } from "../state/ai-profile-state";
+import { aiProfileStateAtom } from "../state/ai-profile-state";
+import { newConversationAtom, setAssistantModeAtom } from "../state/conversation-actions";
+import type { ConversationReducerAction } from "../state/conversation-reducer";
 import {
   assistantConversationStateAtom,
   dispatchToConversationOnStore,
   markReadIfCurrentOnStore,
   touchAtom,
-} from "./conversation-store";
-import { useAssistantRuntimeConfig } from "./use-assistant-runtime-config";
+} from "../state/conversation-store";
+import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";
 

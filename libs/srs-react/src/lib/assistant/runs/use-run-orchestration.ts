@@ -6,13 +6,13 @@ import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useCallback } from "react";
 import type { RefObject } from "react";
-import type { AIProfileStateUpdater } from "./ai-profile-state";
-import type { AssistantConversationConfig } from "./assistant-conversation-config";
-import { buildConversationMessages, getMessageRunId, userMessageId } from "./assistant-messages";
+import type { AIProfileStateUpdater } from "../state/ai-profile-state";
+import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
+import { buildConversationMessages, getMessageRunId, userMessageId } from "../state/assistant-messages";
 import { buildStreamRequest } from "./build-stream-request";
 import type { StreamRequestResult } from "./build-stream-request";
-import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
-import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "./conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 
 export type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cancelStreamingRuns } from "./conversation-persistence";
+import { cancelStreamingRuns } from "../persistence/conversation-persistence";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { act, reduce } from "./conversation-reducer.fixtures";

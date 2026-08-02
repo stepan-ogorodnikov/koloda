@@ -11,9 +11,9 @@ import {
   markReadIfCurrentOnStore,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./conversation-store";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
-import { initialConversationState } from "./conversation-reducer";
+} from "../state/conversation-store";
+import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-reducer";
 import { useConversationRuns } from "./use-conversation-runs";
 
 type Dispatch = (action: ConversationReducerAction) => void;

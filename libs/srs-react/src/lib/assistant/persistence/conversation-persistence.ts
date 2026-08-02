@@ -1,7 +1,7 @@
 import { produce } from "immer";
-import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from "./assistant-messages";
-import { dropRuns, transitionRun } from "./conversation-reducer";
-import type { CardStatus, ConversationReducerState, GenerationRun } from "./conversation-reducer";
+import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from "../state/assistant-messages";
+import { dropRuns, transitionRun } from "../state/conversation-reducer";
+import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 
 /**
  * DB-writable conversation fields.

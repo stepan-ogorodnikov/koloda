@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import type { RefObject } from "react";
-import type { AssistantConversationConfig } from "./assistant-conversation-config";
-import { assistantDeckIdAtom } from "./conversation-selectors";
+import type { AssistantConversationConfig } from "./state/assistant-conversation-config";
+import { assistantDeckIdAtom } from "./state/conversation-selectors";
 import { useAssistantClient } from "./use-assistant-client";
 
 export type UseAssistantRuntimeConfigOptions = {

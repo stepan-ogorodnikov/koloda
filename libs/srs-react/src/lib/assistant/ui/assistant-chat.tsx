@@ -32,14 +32,14 @@ import {
   assistantIsProcessingAtom,
   assistantMessagesAtom,
   assistantRevertStateAtom,
-} from "./conversation-selectors";
-import { saveStatusAtom } from "./conversation-store";
+} from "../state/conversation-selectors";
+import { saveStatusAtom } from "../state/conversation-store";
 import { RevertBanner } from "./revert-banner";
 import { useAssistantChatHotkeys } from "./use-assistant-chat-hotkeys";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
-import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
-import { useAssistantSession } from "./use-assistant-session";
-import { useConversationPersistence } from "./use-conversation-persistence";
+import { useAssistantProfileSelection } from "../use-assistant-profile-selection";
+import { useAssistantSession } from "../runs/use-assistant-session";
+import { useConversationPersistence } from "../persistence/use-conversation-persistence";
 
 export type RenderAddProfileDialogProps = {
   isOpen: boolean;

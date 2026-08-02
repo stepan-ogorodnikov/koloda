@@ -3,14 +3,14 @@ import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AssistantConversationConfig } from "./assistant-conversation-config";
-import { initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
+import { initialConversationState } from "../state/conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import {
   assistantConversationStateAtom,
   currentConversationIdAtom,
   upsertConversationAtom,
-} from "./conversation-store";
+} from "../state/conversation-store";
 import type { TemplateFields } from "@koloda/srs";
 import { useRunOrchestration } from "./use-run-orchestration";
 

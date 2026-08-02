@@ -12,7 +12,7 @@ import {
   dismissSaveStatusAtom,
   pendingSaveAtom,
   saveStatusAtom,
-} from "./conversation-store";
+} from "../state/conversation-store";
 import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
 
 export type UseConversationSaverOptions = {

@@ -1,8 +1,8 @@
 import { useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
-import { aiProfileStateAtom, reconcileAIProfileState } from "./ai-profile-state";
-import type { AIProfileState, AIProfileStateUpdater } from "./ai-profile-state";
+import { aiProfileStateAtom, reconcileAIProfileState } from "./state/ai-profile-state";
+import type { AIProfileState, AIProfileStateUpdater } from "./state/ai-profile-state";
 
 export type UseGlobalAIProfileStateReturn = [AIProfileState, (updater: AIProfileStateUpdater) => void];
 

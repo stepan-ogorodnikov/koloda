@@ -10,8 +10,8 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
-import { setAssistantCardStatusAtom } from "./conversation-actions";
-import type { CardStatus } from "./conversation-reducer";
+import { setAssistantCardStatusAtom } from "../state/conversation-actions";
+import type { CardStatus } from "../state/conversation-reducer";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 

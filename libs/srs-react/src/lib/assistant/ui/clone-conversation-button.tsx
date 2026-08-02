@@ -5,8 +5,8 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
-import { cloneConversationAtom } from "./conversation-actions";
-import { assistantConversationHasContextAtom } from "./conversation-selectors";
+import { cloneConversationAtom } from "../state/conversation-actions";
+import { assistantConversationHasContextAtom } from "../state/conversation-selectors";
 
 export type CloneConversationButtonProps = {
   id: string;

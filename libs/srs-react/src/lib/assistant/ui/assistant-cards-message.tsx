@@ -4,7 +4,7 @@ import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AssistantCardsTable } from "./assistant-cards-table";
-import type { CardStatus } from "./conversation-reducer";
+import type { CardStatus } from "../state/conversation-reducer";
 
 export type AssistantCardsMessageProps = {
   runId: string;

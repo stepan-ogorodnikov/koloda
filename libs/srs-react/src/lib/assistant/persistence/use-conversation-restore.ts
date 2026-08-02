@@ -4,18 +4,18 @@ import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useEffect } from "react";
 import type { MutableRefObject } from "react";
-import { aiProfileStateAtom } from "./ai-profile-state";
-import type { AIProfileState } from "./ai-profile-state";
+import { aiProfileStateAtom } from "../state/ai-profile-state";
+import type { AIProfileState } from "../state/ai-profile-state";
 import { normalizeRestoredConversation } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
-import { initialConversationState } from "./conversation-reducer";
-import type { ConversationReducerState } from "./conversation-reducer";
+import { initialConversationState } from "../state/conversation-reducer";
+import type { ConversationReducerState } from "../state/conversation-reducer";
 import {
   touchAtom,
   conversationsAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
-} from "./conversation-store";
+} from "../state/conversation-store";
 
 function restoreFromData(loaded: unknown): ConversationReducerState | null {
   const coerced = coerceConversationState(loaded);

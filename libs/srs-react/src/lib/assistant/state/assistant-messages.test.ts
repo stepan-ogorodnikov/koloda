@@ -4,7 +4,7 @@ import type { Template } from "@koloda/srs";
 import { DEFAULT_TEMPLATE } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { createGeneratedCard, createTemplate } from "../../test/test-helpers";
+import { createGeneratedCard, createTemplate } from "../../../test/test-helpers";
 import {
   backfillUserMessageRunIds,
   buildConversationMessages,

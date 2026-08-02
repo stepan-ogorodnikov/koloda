@@ -1,6 +1,6 @@
-import { useAssistantProfileSelection } from "./use-assistant-profile-selection";
-import { useAssistantSession } from "./use-assistant-session";
-import { useConversationPersistence } from "./use-conversation-persistence";
+import { useAssistantProfileSelection } from "../use-assistant-profile-selection";
+import { useAssistantSession } from "../runs/use-assistant-session";
+import { useConversationPersistence } from "../persistence/use-conversation-persistence";
 
 export type UseAssistantChatTestHarnessOptions = {
   conversationId: string | undefined;

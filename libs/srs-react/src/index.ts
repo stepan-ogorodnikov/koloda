@@ -3,13 +3,16 @@ export * from "./lib/algorithms/algorithm";
 export * from "./lib/algorithms/algorithm-picker";
 export * from "./lib/algorithms/clone-algorithm";
 export * from "./lib/algorithms/delete-algorithm";
-export { AssistantChat } from "./lib/assistant/assistant-chat";
-export { AssistantConversationsList, CONVERSATION_TITLE_FALLBACK } from "./lib/assistant/assistant-conversations-list";
-export { AssistantNewConversationButton } from "./lib/assistant/assistant-new-conversation-button";
-export { ConversationHeaderMenu } from "./lib/assistant/conversation-header-menu";
+export { AssistantChat } from "./lib/assistant/ui/assistant-chat";
+export {
+  AssistantConversationsList,
+  CONVERSATION_TITLE_FALLBACK,
+} from "./lib/assistant/ui/assistant-conversations-list";
+export { AssistantNewConversationButton } from "./lib/assistant/ui/assistant-new-conversation-button";
+export { ConversationHeaderMenu } from "./lib/assistant/ui/conversation-header-menu";
 export { useGlobalAIProfileState } from "./lib/assistant/use-global-ai-profile-state";
-export { assistantDeckIdAtom, assistantIsLockedAtom } from "./lib/assistant/conversation-selectors";
-export { newConversationAtom, setAssistantDeckAtom } from "./lib/assistant/conversation-actions";
+export { assistantDeckIdAtom, assistantIsLockedAtom } from "./lib/assistant/state/conversation-selectors";
+export { newConversationAtom, setAssistantDeckAtom } from "./lib/assistant/state/conversation-actions";
 export * from "./lib/cards/add-card";
 export * from "./lib/cards/card-details";
 export * from "./lib/cards/card-preview";

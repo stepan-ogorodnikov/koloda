@@ -12,14 +12,14 @@ import {
   getGeneratedCardsMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
-} from "./assistant-messages";
-import type { GenerationRun } from "./conversation-reducer";
+} from "../state/assistant-messages";
+import type { GenerationRun } from "../state/conversation-reducer";
 import {
   assistantActiveRunIdAtom,
   assistantDeckIdAtom,
   assistantMessagesAtom,
   assistantRunsAtom,
-} from "./conversation-selectors";
+} from "../state/conversation-selectors";
 import { CopyMessageButton } from "./copy-message-button";
 import { MessageTimestamp } from "./message-timestamp";
 import { RevertMessageButton } from "./revert-message-button";

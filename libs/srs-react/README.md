@@ -14,11 +14,8 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 
 - Algorithms / templates / decks / cards / lessons: folders under `src/lib/` — CRUD screens, pickers, editors, lesson session UI.
 - Dashboard widget: `components/learned-today.tsx`.
-- Assistant state: `assistant/conversation-reducer.ts`, `conversation-store.ts`, `conversation-actions.ts`, `conversation-selectors.ts`, related atoms.
-- Assistant orchestration: `use-run-orchestration.ts`, `use-conversation-runs.ts`, `use-assistant-session.ts`, `build-stream-request.ts`.
-- Assistant persistence: `conversation-persistence.ts`, `use-conversation-restore.ts`, `use-conversation-saver.ts`, `use-conversation-persistence.ts` (composer), `create-save-scheduler.ts`.
-- Assistant UI: `assistant-chat.tsx`, message renderers, conversations list, generated-cards table, prompt/settings, revert wiring.
-- Profile cascade: `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts` — chat-tree subscription rules live here, not in `ai-react`.
+- Assistant layout under `assistant/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (session, orchestration, stream execution, `build-stream-request`), `persistence/` (restore/saver/composer, scheduler, coerce/normalize), `ui/` (chat shell, lists, settings, renderers).
+- Profile cascade (assistant root): `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts` — chat-tree subscription rules live here, not in `ai-react`.
 
 ### Does NOT own (prevent scope creep)
 

@@ -3,7 +3,7 @@ import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult 
 import { useAssistantCardGeneration, useChatStream } from "@koloda/ai-react";
 import type { TemplateFields } from "@koloda/srs";
 import { useCallback } from "react";
-import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { usePendingRunRefs } from "./use-pending-run-refs";
 
 /**

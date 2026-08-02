@@ -3,17 +3,17 @@ import type { AIModel, AISecrets } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
-import type { AIProfileStateUpdater } from "./ai-profile-state";
+import type { AIProfileStateUpdater } from "./state/ai-profile-state";
 import {
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
   setAssistantAIProfileAtom,
-} from "./conversation-actions";
+} from "./state/conversation-actions";
 import {
   assistantAIModelIdAtom,
   assistantAIModelParametersAtom,
   assistantProfileIdAtom,
-} from "./conversation-selectors";
+} from "./state/conversation-selectors";
 import { useSetGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type UseAssistantProfileSelectionReturn = {
