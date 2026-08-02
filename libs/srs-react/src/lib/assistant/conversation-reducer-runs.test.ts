@@ -226,7 +226,12 @@ describe("conversationReducer", () => {
         {
           ...initialConversationState,
           messages: [
-            { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "Hi" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
             {
               id: "assistant-r1",
               role: "assistant",
@@ -259,7 +264,12 @@ describe("conversationReducer", () => {
         {
           ...initialConversationState,
           messages: [
-            { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "Make cards" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
             {
               id: "assistant-r1",
               role: "assistant",
@@ -513,8 +523,18 @@ describe("cancelStreamingRuns", () => {
       modelParameters: { temperature: "0.2" },
       activeRunId: "r1",
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: {
         r1: {

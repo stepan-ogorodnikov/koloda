@@ -8,7 +8,7 @@ import {
   assistantMessageId,
   createTextMessage,
   getAssistantMetadata,
-  getRunIdFromMessageId,
+  getMessageRunId,
   modeToMessageKind,
   userMessageId,
 } from "./assistant-messages";
@@ -132,15 +132,14 @@ function makeRun(
 /**
  * WHY: `cloneConversationAtom` and restore-time normalization both
  * need to drop a set of run ids together with their user/assistant
- * message pair. The user/assistant ids encode the run id (`user-<id>`,
- * `assistant-<id>`), so the filtering rules live in one place here.
+ * message pair. Linkage is via `runId` in message metadata.
  */
 export function dropRuns(
   state: ConversationReducerState,
   droppedRunIds: ReadonlySet<string>,
 ): { messages: UIMessage[]; runs: Record<string, GenerationRun> } {
   const messages = state.messages.filter((m) => {
-    const runId = getRunIdFromMessageId(m.id);
+    const runId = getMessageRunId(m);
     return !runId || !droppedRunIds.has(runId);
   });
   const runs: Record<string, GenerationRun> = {};
@@ -191,7 +190,10 @@ type AddUserMessagePayload = { runId: string; text: string };
 
 function addUserMessage(draft: ConversationReducerState, payload: AddUserMessagePayload) {
   draft.messages.push(
-    createTextMessage(userMessageId(payload.runId), "user", payload.text, { createdAt: new Date().toISOString() }),
+    createTextMessage(userMessageId(payload.runId), "user", payload.text, {
+      createdAt: new Date().toISOString(),
+      runId: payload.runId,
+    }),
   );
 }
 
@@ -426,7 +428,7 @@ function commitRevert(draft: ConversationReducerState) {
 
   const survivingRunIds = new Set<string>();
   for (const m of draft.messages) {
-    const runId = getRunIdFromMessageId(m.id);
+    const runId = getMessageRunId(m);
     if (runId) survivingRunIds.add(runId);
   }
   for (const id of Object.keys(draft.runs)) {

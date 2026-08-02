@@ -26,14 +26,24 @@ describe("revert state in-memory lifecycle", () => {
   it("setRevertState does not bump updatedAt and is not persisted", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant" as const,
         metadata: { kind: "chat-text" as const, runId: "r1" },
         parts: [{ type: "text" as const, text: "Hello" }],
       },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Bye" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
       {
         id: "assistant-r2",
         role: "assistant" as const,
@@ -78,14 +88,24 @@ describe("revert state in-memory lifecycle", () => {
   it("assistantMessagesAtom hides messages from the revert point onward", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant" as const,
         metadata: { kind: "chat-text" as const, runId: "r1" },
         parts: [{ type: "text" as const, text: "Hello" }],
       },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Bye" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
       {
         id: "assistant-r2",
         role: "assistant" as const,
@@ -123,14 +143,24 @@ describe("revert state in-memory lifecycle", () => {
   it("clearing the revert state restores the full visible message list", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant" as const,
         metadata: { kind: "chat-text" as const, runId: "r1" },
         parts: [{ type: "text" as const, text: "Hello" }],
       },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Bye" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
     ];
     store.set(upsertConversationAtom, makeConversation("A", { messages, runs: { r1: chatRun("r1") } }));
     store.set(setCurrentConversationIdAtom, "A");
@@ -146,14 +176,24 @@ describe("revert state in-memory lifecycle", () => {
   it("commitRevert permanently removes the hidden prefix and clears the revert state", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant" as const,
         metadata: { kind: "chat-text" as const, runId: "r1" },
         parts: [{ type: "text" as const, text: "Hello" }],
       },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Bye" }] },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Bye" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
       {
         id: "assistant-r2",
         role: "assistant" as const,

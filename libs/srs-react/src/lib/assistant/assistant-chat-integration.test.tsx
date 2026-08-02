@@ -498,13 +498,27 @@ describe("assistant chat integration (per-conversation state)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(
       upsertConversationAtom,
       makeConversation("B", {
-        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Different" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Different" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");

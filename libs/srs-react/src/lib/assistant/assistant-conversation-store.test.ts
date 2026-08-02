@@ -176,8 +176,18 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // Simulate a conversation with a background run still in flight
     const convA = makeConversation("A", {
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Streaming..." }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Streaming..." }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: {
         r1: {
@@ -278,7 +288,14 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "In A" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "In A" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -311,13 +328,27 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Question" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Question" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(
       upsertConversationAtom,
       makeConversation("B", {
-        messages: [{ id: "user-r2", role: "user", parts: [{ type: "text", text: "Different question" }] }],
+        messages: [
+          {
+            id: "user-r2",
+            role: "user",
+            parts: [{ type: "text", text: "Different question" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+          },
+        ],
       }),
     );
 
@@ -620,8 +651,18 @@ describe("updatedAt stamping (only on run start)", () => {
   it("commitRevert does NOT bump updatedAt", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Hello" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      },
     ];
     store.set(upsertConversationAtom, makeConversation("A", { messages, runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "A");
@@ -641,7 +682,14 @@ describe("assistantConversationHasContextAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Hi" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(upsertConversationAtom, makeConversation("B"));

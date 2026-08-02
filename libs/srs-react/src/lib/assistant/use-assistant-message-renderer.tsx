@@ -10,7 +10,7 @@ import {
   getChatTextMetadata,
   getErrorMetadata,
   getGeneratedCardsMetadata,
-  getRunIdFromMessageId,
+  getMessageRunId,
   getUserMessageCreatedAt,
 } from "./assistant-messages";
 import type { GenerationRun } from "./conversation-reducer";
@@ -44,7 +44,7 @@ export function useAssistantMessageRenderer({
   return useCallback(
     (message: UIMessage, content: ReactNode) => {
       if (message.role === "user") {
-        const runId = getRunIdFromMessageId(message.id);
+        const runId = getMessageRunId(message);
         const timestamp = getUserMessageCreatedAt(message) ?? (runId ? runs[runId]?.startedAt : undefined) ?? null;
         return renderUserMessage(message, content, handleRevert, timestamp);
       }

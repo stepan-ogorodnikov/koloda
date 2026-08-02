@@ -299,8 +299,18 @@ describe("normalizeRestoredConversation", () => {
       id: "conv-1",
       activeRunId: "r1",
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: {
         r1: {
@@ -331,7 +341,12 @@ describe("normalizeRestoredConversation", () => {
       activeRunId: null,
       dismissedRunErrorId: "r1",
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
@@ -358,7 +373,12 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs).toEqual({});
     expect(next.messages).toEqual([
-      { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
+      {
+        id: "user-r1",
+        role: "user",
+        parts: [{ type: "text", text: "Hello" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant",
@@ -375,7 +395,12 @@ describe("normalizeRestoredConversation", () => {
       id: "conv-1",
       activeRunId: null,
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Make cards" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
@@ -402,7 +427,12 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs).toEqual({});
     expect(next.messages).toEqual([
-      { id: "user-r1", role: "user", parts: [{ type: "text", text: "Make cards" }] },
+      {
+        id: "user-r1",
+        role: "user",
+        parts: [{ type: "text", text: "Make cards" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant",
@@ -419,8 +449,18 @@ describe("normalizeRestoredConversation", () => {
       activeRunId: null,
       dismissedRunErrorId: null,
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Hi there" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hi there" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: {
         r1: {
@@ -439,6 +479,48 @@ describe("normalizeRestoredConversation", () => {
     const next = normalizeRestoredConversation(state);
 
     expect(next).toBeNull();
+  });
+
+  it("backfills runId onto legacy user messages that only encoded it in the id", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      messages: [
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.messages[0].metadata).toEqual({
+      createdAt: "2026-07-01T11:00:00.000Z",
+      runId: "r1",
+    });
+    expect(next.runs["r1"].status).toBe("success");
   });
 
   it("resets pending card statuses to idle while preserving success and error", () => {
@@ -483,14 +565,24 @@ describe("normalizeRestoredConversation", () => {
       activeRunId: null,
       dismissedRunErrorId: null,
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           parts: [{ type: "text", text: "Response 1" }],
           metadata: { kind: "chat-text", runId: "r1" },
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
@@ -527,14 +619,24 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs).toEqual({ r1: state.runs["r1"] });
     expect(next.messages).toEqual([
-      { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+      {
+        id: "user-r1",
+        role: "user",
+        parts: [{ type: "text", text: "First" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant",
         parts: [{ type: "text", text: "Response 1" }],
         metadata: { kind: "chat-text", runId: "r1" },
       },
-      { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+      {
+        id: "user-r2",
+        role: "user",
+        parts: [{ type: "text", text: "Second" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
       {
         id: "assistant-r2",
         role: "assistant",

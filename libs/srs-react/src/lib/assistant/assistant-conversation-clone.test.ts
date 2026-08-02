@@ -18,7 +18,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -35,8 +42,18 @@ describe("cloneConversationAtom", () => {
     const store = createStore();
     const source: ConversationReducerState = makeConversation("A", {
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hello" }] },
-        { id: "assistant-r1", role: "assistant", parts: [{ type: "text", text: "Hi there" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Hi there" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
       ],
       runs: { r1: makeRun("r1", "success") },
       lastReadRunId: "r1",
@@ -54,10 +71,30 @@ describe("cloneConversationAtom", () => {
   it("copies all messages from the source into the clone", () => {
     const store = createStore();
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hello" }] },
-      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "How are you?" }] },
-      { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "Good" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hello" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "How are you?" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
+      {
+        id: "assistant-r2",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Good" }],
+        metadata: { kind: "chat-text", runId: "r2" },
+      },
     ];
     store.set(upsertConversationAtom, makeConversation("A", { messages }));
     store.set(setCurrentConversationIdAtom, "A");
@@ -74,12 +111,42 @@ describe("cloneConversationAtom", () => {
       upsertConversationAtom,
       makeConversation("A", {
         messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q1" }] },
-          { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "A1" }] },
-          { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Q2" }] },
-          { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "A2" }] },
-          { id: "user-r3", role: "user" as const, parts: [{ type: "text" as const, text: "Q3" }] },
-          { id: "assistant-r3", role: "assistant" as const, parts: [{ type: "text" as const, text: "A3" }] },
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q1" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A1" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
+          {
+            id: "user-r2",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q2" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+          },
+          {
+            id: "assistant-r2",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A2" }],
+            metadata: { kind: "chat-text", runId: "r2" },
+          },
+          {
+            id: "user-r3",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q3" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r3" },
+          },
+          {
+            id: "assistant-r3",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A3" }],
+            metadata: { kind: "chat-text", runId: "r3" },
+          },
         ],
         runs: {
           r1: makeRun("r1", "success"),
@@ -105,12 +172,42 @@ describe("cloneConversationAtom", () => {
       upsertConversationAtom,
       makeConversation("A", {
         messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q1" }] },
-          { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "A1" }] },
-          { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Q2" }] },
-          { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "mid-stream" }] },
-          { id: "user-r3", role: "user" as const, parts: [{ type: "text" as const, text: "Q3" }] },
-          { id: "assistant-r3", role: "assistant" as const, parts: [{ type: "text" as const, text: "A3" }] },
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q1" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A1" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
+          {
+            id: "user-r2",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q2" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+          },
+          {
+            id: "assistant-r2",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "mid-stream" }],
+            metadata: { kind: "chat-text", runId: "r2" },
+          },
+          {
+            id: "user-r3",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q3" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r3" },
+          },
+          {
+            id: "assistant-r3",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A3" }],
+            metadata: { kind: "chat-text", runId: "r3" },
+          },
         ],
         runs: {
           r1: makeRun("r1", "success"),
@@ -185,8 +282,18 @@ describe("cloneConversationAtom", () => {
       upsertConversationAtom,
       makeConversation("A", {
         messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-          { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "A" }] },
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
         ],
         runs: { r1: makeRun("r1", "streaming") },
         activeRunId: "r1",
@@ -207,10 +314,30 @@ describe("cloneConversationAtom", () => {
       upsertConversationAtom,
       makeConversation("A", {
         messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q1" }] },
-          { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "A1" }] },
-          { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Q2" }] },
-          { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "A2" }] },
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q1" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A1" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
+          {
+            id: "user-r2",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q2" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+          },
+          {
+            id: "assistant-r2",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A2" }],
+            metadata: { kind: "chat-text", runId: "r2" },
+          },
         ],
         runs: {
           r1: makeRun("r1", "success"),
@@ -234,7 +361,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
         runs: { r1: makeRun("r1", "success") },
         updatedAt: new Date(1000),
       }),
@@ -252,7 +386,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -273,7 +414,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -304,7 +452,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
         runs: { r1: makeRun("r1", "success") },
       }),
     );
@@ -324,8 +479,18 @@ describe("cloneConversationAtom", () => {
       upsertConversationAtom,
       makeConversation("A", {
         messages: [
-          { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] },
-          { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "streaming" }] },
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "streaming" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
         ],
         runs: { r1: makeRun("r1", "streaming") },
         activeRunId: "r1",
@@ -348,7 +513,14 @@ describe("cloneConversationAtom", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        messages: [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Q" }] }],
+        messages: [
+          {
+            id: "user-r1",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
         runs: { r1: makeRun("r1", "success") },
         dismissedRunErrorId: "r1",
       }),

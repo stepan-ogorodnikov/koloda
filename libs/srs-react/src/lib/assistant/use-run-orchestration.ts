@@ -8,7 +8,7 @@ import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { AIProfileStateUpdater } from "./ai-profile-state";
 import type { AssistantConversationConfig } from "./assistant-conversation-config";
-import { buildConversationMessages, getRunIdFromMessageId, userMessageId } from "./assistant-messages";
+import { buildConversationMessages, getMessageRunId, userMessageId } from "./assistant-messages";
 import { buildStreamRequest } from "./build-stream-request";
 import type { StreamRequestResult } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "./conversation-reducer";
@@ -222,7 +222,7 @@ export function useRunOrchestration({
       // WHY: Mirror the mode of the target message so the prompt input
       // lines up with what the run was sent in. Use setMode (bumps save)
       // rather than a raw setMode dispatch so the change persists.
-      const runId = getRunIdFromMessageId(userMessageId);
+      const runId = getMessageRunId(userMessage);
       const targetMode = runId ? resolveRunMode(state, runId) : null;
       if (targetMode && targetMode !== state.mode) {
         setMode(targetMode);

@@ -11,6 +11,7 @@ describe("conversationReducer", () => {
       expect(state.messages[0].id).toBe("user-r1");
       expect(state.messages[0].metadata).toEqual({
         createdAt: expect.any(String),
+        runId: "r1",
       });
     });
   });
@@ -321,25 +322,62 @@ describe("conversationReducer", () => {
 describe("getVisibleMessages", () => {
   it("returns all messages when revertState is null", () => {
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] },
-      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hello" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Hello" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      },
     ];
     expect(getVisibleMessages(messages, null)).toBe(messages);
   });
 
   it("returns messages before the revert point", () => {
     const messages = [
-      { id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "First" }] },
-      { id: "assistant-r1", role: "assistant" as const, parts: [{ type: "text" as const, text: "Reply 1" }] },
-      { id: "user-r2", role: "user" as const, parts: [{ type: "text" as const, text: "Second" }] },
-      { id: "assistant-r2", role: "assistant" as const, parts: [{ type: "text" as const, text: "Reply 2" }] },
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "First" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
+      {
+        id: "assistant-r1",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Reply 1" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      },
+      {
+        id: "user-r2",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Second" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+      },
+      {
+        id: "assistant-r2",
+        role: "assistant" as const,
+        parts: [{ type: "text" as const, text: "Reply 2" }],
+        metadata: { kind: "chat-text", runId: "r2" },
+      },
     ];
     const revertState = { revertedToUserMessageId: "user-r2", preRevertInputText: "" };
     expect(getVisibleMessages(messages, revertState)).toEqual([messages[0], messages[1]]);
   });
 
   it("returns all messages when revert point is not found", () => {
-    const messages = [{ id: "user-r1", role: "user" as const, parts: [{ type: "text" as const, text: "Hi" }] }];
+    const messages = [
+      {
+        id: "user-r1",
+        role: "user" as const,
+        parts: [{ type: "text" as const, text: "Hi" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
+    ];
     const revertState = { revertedToUserMessageId: "user-missing", preRevertInputText: "" };
     expect(getVisibleMessages(messages, revertState)).toBe(messages);
   });

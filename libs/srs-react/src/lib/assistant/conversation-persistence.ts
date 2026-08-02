@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { getAssistantMetadata, getRunIdFromMessageId } from "./assistant-messages";
+import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from "./assistant-messages";
 import { dropRuns } from "./conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "./conversation-reducer";
 
@@ -48,6 +48,11 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     }
   }
 
+  // WHY: Backfill before dropRuns so legacy user messages (runId only in
+  // `user-<id>` encoding) are still removed with their streaming run.
+  const messagesWithRunIds = backfillUserMessageRunIds(state.messages);
+  if (messagesWithRunIds !== state.messages) normalizedAny = true;
+
   if (
     !normalizedAny &&
     state.activeRunId === null &&
@@ -58,10 +63,10 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     return null;
   }
 
-  const filtered = dropRuns(state, droppedRunIds);
+  const filtered = dropRuns({ ...state, messages: messagesWithRunIds }, droppedRunIds);
   const messages = filtered.messages.map((m) => {
     if (m.role !== "assistant") return m;
-    const runId = getRunIdFromMessageId(m.id);
+    const runId = getMessageRunId(m);
     if (!runId || !failedRunIds.has(runId)) return m;
     const run = state.runs[runId];
     if (!run) return m;

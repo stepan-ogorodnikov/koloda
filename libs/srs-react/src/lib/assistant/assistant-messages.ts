@@ -9,7 +9,7 @@ export type AssistantMessageMetadata =
   | { kind: "chat-text"; runId: string }
   | { kind: "error"; runId: string; mode: AIChatMode };
 
-export type UserMessageMetadata = { createdAt: string };
+export type UserMessageMetadata = { createdAt: string; runId: string };
 
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
   if (!value || typeof value !== "object") return false;
@@ -24,19 +24,60 @@ function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata 
 
 function isUserMessageMetadata(value: unknown): value is UserMessageMetadata {
   if (!value || typeof value !== "object") return false;
+  const obj = value as Record<string, unknown>;
 
-  return typeof (value as Record<string, unknown>).createdAt === "string";
+  return typeof obj.createdAt === "string" && typeof obj.runId === "string";
 }
 
 export function getUserMessageCreatedAt(message: UIMessage): Date | null {
-  if (!isUserMessageMetadata(message.metadata)) return null;
-  const createdAt = new Date(message.metadata.createdAt);
+  if (!message.metadata || typeof message.metadata !== "object") return null;
+  const createdAt = (message.metadata as Record<string, unknown>).createdAt;
+  if (typeof createdAt !== "string") return null;
+  const date = new Date(createdAt);
 
-  return Number.isNaN(createdAt.getTime()) ? null : createdAt;
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export function getAssistantMetadata(message: UIMessage) {
   return isAssistantMetadata(message.metadata) ? message.metadata : null;
+}
+
+/** Run id from message metadata (user or assistant). Null when missing or not a chat message. */
+export function getMessageRunId(message: UIMessage): string | null {
+  if (message.role === "user") {
+    return isUserMessageMetadata(message.metadata) ? message.metadata.runId : null;
+  }
+  if (message.role === "assistant") {
+    return getAssistantMetadata(message)?.runId ?? null;
+  }
+  return null;
+}
+
+/**
+ * Stamp `runId` on legacy user messages that only encoded it in the id
+ * (`user-<runId>`). Used by restore normalization so drop/revert can rely on
+ * metadata. Returns the same array reference when nothing changes.
+ */
+export function backfillUserMessageRunIds(messages: UIMessage[]): UIMessage[] {
+  let changed = false;
+  const next = messages.map((m) => {
+    if (m.role !== "user") return m;
+    if (isUserMessageMetadata(m.metadata)) return m;
+    if (!m.id.startsWith("user-")) return m;
+    const runId = m.id.slice("user-".length);
+    if (!runId) return m;
+
+    const createdAt =
+      m.metadata &&
+      typeof m.metadata === "object" &&
+      typeof (m.metadata as Record<string, unknown>).createdAt === "string"
+        ? ((m.metadata as Record<string, unknown>).createdAt as string)
+        : new Date(0).toISOString();
+
+    changed = true;
+    return { ...m, metadata: { createdAt, runId } satisfies UserMessageMetadata };
+  });
+  return changed ? next : messages;
 }
 
 export function getGeneratedCardsMetadata(
@@ -64,12 +105,6 @@ export function userMessageId(runId: string) {
 
 export function assistantMessageId(runId: string) {
   return `assistant-${runId}`;
-}
-
-export function getRunIdFromMessageId(messageId: string) {
-  if (messageId.startsWith("user-")) return messageId.slice(5);
-  if (messageId.startsWith("assistant-")) return messageId.slice(10);
-  return null;
 }
 
 export function modeToMessageKind(mode: AIChatMode): "generated-cards" | "chat-text" {

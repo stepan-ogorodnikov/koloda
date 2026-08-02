@@ -113,7 +113,7 @@ export type CloneConversationPayload = {
 // would not help here: messages are only ever appended one at a time
 // via `addUserMessage` / `addAssistantMessage`, and we need to copy an
 // arbitrary prefix of the source's message history while dropping the
-// `user-<runId>` / `assistant-<runId>` pair for any streaming run. So
+// message pair for any streaming run (linked by `runId` metadata). So
 // the clone is assembled here directly and inserted into the store as a
 // complete unit (see ASSISTANT-CHAT-CONVERSATIONS.md §Clone).
 export const cloneConversationAtom = atom(null, (get, set, payload: CloneConversationPayload) => {

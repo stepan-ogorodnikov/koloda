@@ -27,14 +27,24 @@ describe("conversationReducer → setRevertState", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r1" },
           parts: [{ type: "text", text: "Reply 1" }],
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
@@ -85,7 +95,12 @@ describe("conversationReducer → setRevertState", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
@@ -125,21 +140,36 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r1" },
           parts: [{ type: "text", text: "Reply 1" }],
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r2" },
           parts: [{ type: "text", text: "Reply 2" }],
         },
-        { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
+        {
+          id: "user-r3",
+          role: "user",
+          parts: [{ type: "text", text: "Third" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r3" },
+        },
         {
           id: "assistant-r3",
           role: "assistant",
@@ -218,7 +248,12 @@ describe("conversationReducer → commitRevert", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
@@ -240,21 +275,36 @@ describe("conversationReducer → commitRevert", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r1" },
           parts: [{ type: "text", text: "Reply 1" }],
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r2" },
           parts: [{ type: "text", text: "Reply 2" }],
         },
-        { id: "user-r3", role: "user", parts: [{ type: "text", text: "Third" }] },
+        {
+          id: "user-r3",
+          role: "user",
+          parts: [{ type: "text", text: "Third" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r3" },
+        },
         {
           id: "assistant-r3",
           role: "assistant",
@@ -273,7 +323,12 @@ describe("conversationReducer → commitRevert", () => {
     const next = conversationReducer(state, act({ type: "commitRevert" }));
 
     expect(next.messages).toEqual([
-      { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+      {
+        id: "user-r1",
+        role: "user",
+        parts: [{ type: "text", text: "First" }],
+        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+      },
       {
         id: "assistant-r1",
         role: "assistant",
@@ -293,14 +348,24 @@ describe("conversationReducer → commitRevert", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r1" },
           parts: [{ type: "text", text: "Reply 1" }],
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
@@ -328,14 +393,24 @@ describe("conversationReducer → commitRevert", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "First" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "First" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
           metadata: { kind: "chat-text", runId: "r1" },
           parts: [{ type: "text", text: "Reply 1" }],
         },
-        { id: "user-r2", role: "user", parts: [{ type: "text", text: "Second" }] },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Second" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
+        },
         {
           id: "assistant-r2",
           role: "assistant",
@@ -363,7 +438,12 @@ describe("conversationReducer → commitRevert", () => {
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
       messages: [
-        { id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
         {
           id: "assistant-r1",
           role: "assistant",
@@ -386,7 +466,14 @@ describe("conversationReducer → commitRevert", () => {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      messages: [{ id: "user-r1", role: "user", parts: [{ type: "text", text: "Hi" }] }],
+      messages: [
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+      ],
       runs: {},
       revertState: { revertedToUserMessageId: "user-nonexistent", preRevertInputText: "" },
     };

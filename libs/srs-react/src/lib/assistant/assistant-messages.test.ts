@@ -6,10 +6,12 @@ import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import { createGeneratedCard, createTemplate } from "../../test/test-helpers";
 import {
+  backfillUserMessageRunIds,
   buildConversationMessages,
   createTextMessage,
   getErrorMetadata,
   getGeneratedCardsMetadata,
+  getMessageRunId,
   getUserMessageCreatedAt,
   serializeGeneratedCards,
 } from "./assistant-messages";
@@ -18,10 +20,39 @@ describe("aiChatUtility", () => {
   it("reads createdAt from user message metadata", () => {
     const message = createTextMessage("user-1", "user", "Hello", {
       createdAt: "2026-07-18T11:00:00.000Z",
+      runId: "1",
     });
 
     expect(getUserMessageCreatedAt(message)?.toISOString()).toBe("2026-07-18T11:00:00.000Z");
     expect(getUserMessageCreatedAt(createTextMessage("user-2", "user", "Hello"))).toBeNull();
+  });
+
+  it("reads runId from user and assistant message metadata", () => {
+    const user = createTextMessage("user-r1", "user", "Hi", {
+      createdAt: "2026-07-18T11:00:00.000Z",
+      runId: "r1",
+    });
+    const assistant = createTextMessage("assistant-r1", "assistant", "Hello", {
+      kind: "chat-text",
+      runId: "r1",
+    });
+
+    expect(getMessageRunId(user)).toBe("r1");
+    expect(getMessageRunId(assistant)).toBe("r1");
+    expect(getMessageRunId(createTextMessage("user-r1", "user", "Hi"))).toBeNull();
+  });
+
+  it("backfills runId onto legacy user messages from the message id", () => {
+    const legacy = createTextMessage("user-r1", "user", "Hi", {
+      createdAt: "2026-07-18T11:00:00.000Z",
+    });
+    const [backfilled] = backfillUserMessageRunIds([legacy]);
+    expect(backfilled.metadata).toEqual({
+      createdAt: "2026-07-18T11:00:00.000Z",
+      runId: "r1",
+    });
+    const already = [backfilled];
+    expect(backfillUserMessageRunIds(already)).toBe(already);
   });
 
   it("reads generated-card metadata only from matching assistant messages", () => {
