@@ -11,17 +11,14 @@ fn test_ai_secrets_validate_for_storage_rejects_optional_api_key() {
     };
 
     let result = secrets.validate_for_storage();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
 #[test]
 fn test_ai_secrets_validate_for_storage_accepts_redacted_openrouter() {
-    let secrets = AISecrets::OpenRouter {
-        api_key: String::new(),
-    };
+    let secrets = AISecrets::OpenRouter { api_key: String::new() };
 
-    assert!(secrets.validate_for_storage().is_ok());
+    secrets.validate_for_storage().unwrap();
 }
 
 #[test]
@@ -32,7 +29,6 @@ fn test_ollama_validate_empty_base_url_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
 }
 
@@ -43,7 +39,7 @@ fn test_lmstudio_validate_ok_with_optional_api_key() {
         api_key: None,
     };
 
-    assert!(secrets.validate().is_ok());
+    secrets.validate().unwrap();
 }
 
 #[test]
@@ -54,7 +50,6 @@ fn test_lmstudio_validate_empty_base_url_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
 }
 
@@ -88,7 +83,7 @@ fn test_opencode_go_validate_ok_with_api_key() {
         api_key: "go-secret".to_string(),
     };
 
-    assert!(secrets.validate().is_ok());
+    secrets.validate().unwrap();
     assert_eq!(secrets.provider(), "opencodeGo");
     assert_eq!(secrets.api_key(), Some("go-secret"));
 }
@@ -100,7 +95,6 @@ fn test_opencode_go_validate_empty_api_key_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -111,7 +105,6 @@ fn test_opencode_go_validate_whitespace_api_key_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -133,7 +126,7 @@ fn test_opencode_zen_validate_ok_with_api_key() {
         api_key: "zen-secret".to_string(),
     };
 
-    assert!(secrets.validate().is_ok());
+    secrets.validate().unwrap();
     assert_eq!(secrets.provider(), "opencodeZen");
     assert_eq!(secrets.api_key(), Some("zen-secret"));
 }
@@ -145,7 +138,6 @@ fn test_opencode_zen_validate_empty_api_key_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -156,7 +148,6 @@ fn test_opencode_zen_validate_whitespace_api_key_fails() {
     };
 
     let result = secrets.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -194,7 +185,7 @@ fn test_ai_profile_validate_for_input_ok_with_secrets() {
         created_at: TEST_CREATED_AT,
     };
 
-    assert!(profile.validate_for_input().is_ok());
+    profile.validate_for_input().unwrap();
 }
 
 #[test]
@@ -209,7 +200,6 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
     };
 
     let result = profile.validate_for_storage();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -222,7 +212,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
         created_at: TEST_CREATED_AT,
     };
 
-    assert!(profile.validate().is_ok());
+    profile.validate().unwrap();
 }
 
 #[test]
@@ -235,7 +225,6 @@ fn test_ai_profile_validate_empty_id_fails() {
     };
 
     let result = profile.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
 }
 
@@ -249,7 +238,6 @@ fn test_ai_profile_validate_title_too_long_fails() {
     };
 
     let result = profile.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
 }
 
@@ -265,7 +253,6 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     };
 
     let result = profile.validate_for_input();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
 }
 
@@ -297,7 +284,6 @@ fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
         "createdAt": "2026-01-01T00:00:00Z"
     });
 
-    let profile: AIProfile =
-        serde_json::from_value(data).expect("ISO string for createdAt should deserialize");
+    let profile: AIProfile = serde_json::from_value(data).expect("ISO string for createdAt should deserialize");
     assert_eq!(profile.created_at, TEST_CREATED_AT);
 }

@@ -27,7 +27,7 @@ fn test_valid_settings_passes() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize valid JSON");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -40,7 +40,7 @@ fn test_legacy_numeric_daily_limits_are_accepted() {
     }"#;
 
     let settings: LearningSettings = serde_json::from_str(json).expect("Should deserialize legacy JSON");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn test_settings_with_extra_fields_ignored() {
     }"#;
 
     let settings: LearningSettings = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn test_day_starts_at_valid_format_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -220,7 +220,7 @@ fn test_day_starts_at_boundary_hours_23_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""23:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -228,7 +228,7 @@ fn test_day_starts_at_boundary_minutes_59_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:59""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn test_learn_ahead_limit_valid_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -300,7 +300,7 @@ fn test_learn_ahead_limit_boundary_hours_48_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[48, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -308,7 +308,7 @@ fn test_learn_ahead_limit_boundary_minutes_59_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[0, 59]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -332,7 +332,7 @@ fn test_learn_ahead_limit_zero_ok() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[0, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -379,5 +379,5 @@ fn test_settings_name_learning_validation_valid() {
         "learnAheadLimit": [4, 0]
     });
     let result = SettingsName::Learning.validate(&content);
-    assert!(result.is_ok());
+    result.unwrap();
 }

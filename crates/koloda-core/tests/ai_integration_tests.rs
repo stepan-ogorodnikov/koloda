@@ -21,16 +21,19 @@ mod test_store {
 
     impl SecretStore for MockSecretStore {
         fn get(&self, key: &str) -> Result<Option<String>, AppError> {
-            Ok(self.data.lock().unwrap().get(key).cloned())
+            Ok(self.data.lock().unwrap_or_else(|e| e.into_inner()).get(key).cloned())
         }
 
         fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
-            self.data.lock().unwrap().insert(key.to_string(), value.to_string());
+            self.data
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(key.to_string(), value.to_string());
             Ok(())
         }
 
         fn remove(&self, key: &str) -> Result<(), AppError> {
-            self.data.lock().unwrap().remove(key);
+            self.data.lock().unwrap_or_else(|e| e.into_inner()).remove(key);
             Ok(())
         }
     }
@@ -75,7 +78,7 @@ mod test_store {
 
     impl SecretStore for FailingSetSecretStore {
         fn get(&self, key: &str) -> Result<Option<String>, AppError> {
-            Ok(self.data.lock().unwrap().get(key).cloned())
+            Ok(self.data.lock().unwrap_or_else(|e| e.into_inner()).get(key).cloned())
         }
         fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
             Err(AppError::new(
@@ -84,7 +87,7 @@ mod test_store {
             ))
         }
         fn remove(&self, key: &str) -> Result<(), AppError> {
-            self.data.lock().unwrap().remove(key);
+            self.data.lock().unwrap_or_else(|e| e.into_inner()).remove(key);
             Ok(())
         }
     }
@@ -105,10 +108,13 @@ mod test_store {
 
     impl SecretStore for FailingRemoveSecretStore {
         fn get(&self, key: &str) -> Result<Option<String>, AppError> {
-            Ok(self.data.lock().unwrap().get(key).cloned())
+            Ok(self.data.lock().unwrap_or_else(|e| e.into_inner()).get(key).cloned())
         }
         fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
-            self.data.lock().unwrap().insert(key.to_string(), value.to_string());
+            self.data
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(key.to_string(), value.to_string());
             Ok(())
         }
         fn remove(&self, _key: &str) -> Result<(), AppError> {
@@ -133,7 +139,9 @@ mod test_store {
         Guard(guard)
     }
 
-    pub struct Guard(#[allow(dead_code)] std::sync::MutexGuard<'static, ()>);
+    pub struct Guard(
+        #[expect(dead_code, reason = "holds mutex guard for test isolation")] std::sync::MutexGuard<'static, ()>,
+    );
 
     pub fn setup() -> Guard {
         let guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());

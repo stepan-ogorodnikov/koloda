@@ -24,7 +24,7 @@ fn test_valid_hotkeys_settings_full() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize valid JSON");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn test_empty_navigation_and_grades() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -48,7 +48,7 @@ fn test_empty_navigation_with_valid_grades() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn test_empty_grades_with_valid_navigation() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn test_single_key_binding() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -87,7 +87,7 @@ fn test_multiple_key_bindings_per_action() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn test_multiple_actions_with_unique_keys() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn test_key_bindings_with_modifiers() {
     }"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -203,7 +203,7 @@ fn test_extra_top_level_fields_ignored() {
 
     let settings: HotkeysSettings =
         serde_json::from_str(json).expect("Should deserialize ignoring extra top-level fields");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -221,8 +221,10 @@ fn test_duplicate_keys_in_same_action_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with duplicate keys in same action");
-    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
+    assert_eq!(
+        result.expect_err("Should fail with duplicate keys in same action").code,
+        "validation.settings-hotkeys.duplicate-keys"
+    );
 }
 
 #[test]
@@ -276,8 +278,10 @@ fn test_duplicate_keys_between_ui_and_navigation_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Same key in ui and navigation should fail");
-    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
+    assert_eq!(
+        result.expect_err("Same key in ui and navigation should fail").code,
+        "validation.settings-hotkeys.duplicate-keys"
+    );
 }
 
 #[test]
@@ -291,8 +295,10 @@ fn test_duplicate_keys_in_grades_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with duplicate keys in grades");
-    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
+    assert_eq!(
+        result.expect_err("Should fail with duplicate keys in grades").code,
+        "validation.settings-hotkeys.duplicate-keys"
+    );
 }
 
 #[test]
@@ -307,8 +313,12 @@ fn test_duplicate_keys_across_different_grade_actions_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with duplicate keys across grade actions");
-    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
+    assert_eq!(
+        result
+            .expect_err("Should fail with duplicate keys across grade actions")
+            .code,
+        "validation.settings-hotkeys.duplicate-keys"
+    );
 }
 
 #[test]
@@ -322,8 +332,12 @@ fn test_duplicate_in_middle_of_multiple_keys_fails() {
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail when duplicate appears later in array");
-    assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
+    assert_eq!(
+        result
+            .expect_err("Should fail when duplicate appears later in array")
+            .code,
+        "validation.settings-hotkeys.duplicate-keys"
+    );
 }
 
 // ============================================================================
@@ -439,7 +453,7 @@ fn test_settings_name_hotkeys_validation_via_json() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 #[test]
@@ -454,7 +468,6 @@ fn test_settings_name_hotkeys_validation_with_duplicates() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }
 
@@ -464,7 +477,7 @@ fn test_settings_name_hotkeys_validation_empty() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 #[test]
@@ -475,7 +488,7 @@ fn test_settings_name_hotkeys_validation_missing_field() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 #[test]
@@ -491,6 +504,5 @@ fn test_settings_name_hotkeys_validation_rejects_ui_collision() {
 
     let content: serde_json::Value = serde_json::from_str(json).expect("Should parse JSON");
     let result = SettingsName::Hotkeys.validate(&content);
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.settings-hotkeys.duplicate-keys");
 }

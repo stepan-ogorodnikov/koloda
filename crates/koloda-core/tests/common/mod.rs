@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![expect(dead_code, reason = "shared test helpers are not all used by every including test")]
 
 use koloda_core::app::db::Database;
 use serde_json::json;

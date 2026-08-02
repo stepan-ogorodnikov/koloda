@@ -12,7 +12,7 @@ fn test_valid_ai_settings_empty_profiles() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize valid JSON");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn test_valid_ai_settings_with_openrouter_profile_redacted() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -53,9 +53,10 @@ fn test_ai_settings_with_plaintext_api_key_fails_storage_validation() {
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Plaintext apiKey must not pass storage validation");
     assert_eq!(
-        result.unwrap_err().code,
+        result
+            .expect_err("Plaintext apiKey must not pass storage validation")
+            .code,
         "validation.settings-ai.providers.apiKey"
     );
 }
@@ -78,7 +79,7 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -98,7 +99,7 @@ fn test_valid_ai_settings_with_opencode_go_profile_redacted() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -118,7 +119,7 @@ fn test_valid_ai_settings_with_opencode_zen_profile_redacted() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -145,7 +146,7 @@ fn test_ai_settings_extra_fields_ignored() {
     }"#;
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -199,7 +200,7 @@ fn test_settings_name_ai_validation_valid() {
     });
 
     let result = SettingsName::Ai.validate(&content);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -227,8 +228,7 @@ fn test_duplicate_profile_ids_fail() {
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Duplicate profile ids should fail validation");
-    let err = result.unwrap_err();
+    let err = result.expect_err("Duplicate profile ids should fail validation");
     assert_eq!(
         err.code, "validation.ai-providers.profile-id.duplicate",
         "Wrong error code for duplicate profile id: {}",
@@ -325,9 +325,8 @@ fn test_assistant_temperature_below_range_fails() {
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Negative temperature should fail");
     assert_eq!(
-        result.unwrap_err().code,
+        result.expect_err("Negative temperature should fail").code,
         "validation.assistant-settings.temperature-range"
     );
 }
@@ -341,9 +340,8 @@ fn test_assistant_temperature_above_range_fails() {
 
     let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Out-of-range temperature should fail");
     assert_eq!(
-        result.unwrap_err().code,
+        result.expect_err("Out-of-range temperature should fail").code,
         "validation.assistant-settings.temperature-range"
     );
 }
@@ -359,9 +357,8 @@ fn test_assistant_temperature_nan_value_fails_validation() {
     });
 
     let result = settings.validate();
-    assert!(result.is_err(), "NaN temperature should fail validation");
     assert_eq!(
-        result.unwrap_err().code,
+        result.expect_err("NaN temperature should fail validation").code,
         "validation.assistant-settings.temperature-range"
     );
 }

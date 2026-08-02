@@ -15,7 +15,7 @@ impl FromSql for SettingsName {
             ValueRef::Text(text) => Self::from_str(
                 std::str::from_utf8(text).map_err(|e| rusqlite::types::FromSqlError::Other(Box::new(e)))?,
             )
-            .map_err(|_| rusqlite::types::FromSqlError::InvalidType),
+            .map_err(|_parse_err| rusqlite::types::FromSqlError::InvalidType),
             _ => Err(rusqlite::types::FromSqlError::InvalidType),
         }
     }

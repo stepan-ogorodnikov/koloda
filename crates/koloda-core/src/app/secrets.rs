@@ -26,14 +26,18 @@ fn test_store_lock_poisoned() -> AppError {
 
 #[cfg(debug_assertions)]
 pub fn set_test_secret_store(store: Option<Arc<dyn SecretStore>>) -> Result<(), AppError> {
-    let mut guard = TEST_SECRET_STORE.write().map_err(|_| test_store_lock_poisoned())?;
+    let mut guard = TEST_SECRET_STORE
+        .write()
+        .map_err(|_poisoned| test_store_lock_poisoned())?;
     *guard = store;
     Ok(())
 }
 
 #[cfg(debug_assertions)]
 pub fn get_secret_store() -> Result<Arc<dyn SecretStore>, AppError> {
-    let guard = TEST_SECRET_STORE.read().map_err(|_| test_store_lock_poisoned())?;
+    let guard = TEST_SECRET_STORE
+        .read()
+        .map_err(|_poisoned| test_store_lock_poisoned())?;
     if let Some(store) = guard.as_ref() {
         return Ok(Arc::clone(store));
     }
@@ -72,13 +76,13 @@ impl KeyringSecretStore {
     fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
         self.cache
             .read()
-            .map_err(|_| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
+            .map_err(|_poisoned| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
     }
 
     fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
         self.cache
             .write()
-            .map_err(|_| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
+            .map_err(|_poisoned| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
     }
 
     fn get_from_keyring(&self, key: &str) -> Result<Option<String>, AppError> {
@@ -183,15 +187,15 @@ mod windows_store {
         }
 
         fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
-            self.cache
-                .read()
-                .map_err(|_| AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string())))
+            self.cache.read().map_err(|_poisoned| {
+                AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string()))
+            })
         }
 
         fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
-            self.cache
-                .write()
-                .map_err(|_| AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string())))
+            self.cache.write().map_err(|_poisoned| {
+                AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string()))
+            })
         }
 
         fn to_wide(service: &str, key: &str) -> Vec<u16> {
@@ -201,55 +205,61 @@ mod windows_store {
 
         fn get_from_windows(&self, key: &str) -> Result<Option<String>, AppError> {
             let target = Self::to_wide(self.service, key);
-            unsafe {
-                let mut cred_ptr: *mut CREDENTIALW = std::ptr::null_mut();
-                let result = CredReadW(target.as_ptr(), CRED_TYPE_GENERIC, 0, &mut cred_ptr);
-                if result == 0 {
-                    let os_error = std::io::Error::last_os_error();
-                    return match os_error.raw_os_error() {
-                        Some(ERROR_NOT_FOUND) => Ok(None),
-                        _ => Err(AppError::new(
-                            "windows-credentials",
-                            Some(format!("Failed to read credential '{}': {}", key, os_error)),
-                        )),
-                    };
-                }
+            let mut cred_ptr: *mut CREDENTIALW = std::ptr::null_mut();
 
-                if cred_ptr.is_null() {
-                    return Err(AppError::new(
+            // SAFETY: `target` is a null-terminated wide string owned by this function.
+            // CredReadW either fails or writes a credential pointer that we free with CredFree.
+            let result = unsafe { CredReadW(target.as_ptr(), CRED_TYPE_GENERIC, 0, &mut cred_ptr) };
+            if result == 0 {
+                let os_error = std::io::Error::last_os_error();
+                return match os_error.raw_os_error() {
+                    Some(ERROR_NOT_FOUND) => Ok(None),
+                    _ => Err(AppError::new(
                         "windows-credentials",
-                        Some(format!("Credential API returned null pointer for key '{}'", key)),
-                    ));
-                }
-
-                let cred = &*cred_ptr;
-                let blob_size = cred.CredentialBlobSize as usize;
-                if blob_size > 0 && cred.CredentialBlob.is_null() {
-                    CredFree(cred_ptr as *mut _);
-                    return Err(AppError::new(
-                        "windows-credentials",
-                        Some(format!(
-                            "Credential API returned empty blob pointer for non-empty key '{}'",
-                            key
-                        )),
-                    ));
-                }
-
-                let blob_bytes = if blob_size == 0 {
-                    Vec::new()
-                } else {
-                    std::slice::from_raw_parts(cred.CredentialBlob, blob_size).to_vec()
+                        Some(format!("Failed to read credential '{}': {}", key, os_error)),
+                    )),
                 };
-
-                let value_result = String::from_utf8(blob_bytes).map_err(|e| {
-                    AppError::new(
-                        "windows-credentials",
-                        Some(format!("Stored credential for '{}' is not valid UTF-8: {}", key, e)),
-                    )
-                });
-                CredFree(cred_ptr as *mut _);
-                value_result.map(Some)
             }
+
+            if cred_ptr.is_null() {
+                return Err(AppError::new(
+                    "windows-credentials",
+                    Some(format!("Credential API returned null pointer for key '{}'", key)),
+                ));
+            }
+
+            // SAFETY: CredReadW succeeded and returned a non-null credential pointer.
+            let cred = unsafe { &*cred_ptr };
+            let blob_size = cred.CredentialBlobSize as usize;
+            if blob_size > 0 && cred.CredentialBlob.is_null() {
+                // SAFETY: `cred_ptr` was allocated by CredReadW and must be freed with CredFree.
+                unsafe { CredFree(cred_ptr as *mut _) };
+                return Err(AppError::new(
+                    "windows-credentials",
+                    Some(format!(
+                        "Credential API returned empty blob pointer for non-empty key '{}'",
+                        key
+                    )),
+                ));
+            }
+
+            let blob_bytes = if blob_size == 0 {
+                Vec::new()
+            } else {
+                // SAFETY: CredentialBlob is non-null with `blob_size` bytes as reported by the API.
+                // The slice is copied before CredFree below.
+                unsafe { std::slice::from_raw_parts(cred.CredentialBlob, blob_size).to_vec() }
+            };
+
+            let value_result = String::from_utf8(blob_bytes).map_err(|e| {
+                AppError::new(
+                    "windows-credentials",
+                    Some(format!("Stored credential for '{}' is not valid UTF-8: {}", key, e)),
+                )
+            });
+            // SAFETY: `cred_ptr` was allocated by CredReadW and must be freed with CredFree.
+            unsafe { CredFree(cred_ptr as *mut _) };
+            value_result.map(Some)
         }
 
         fn set_to_windows(&self, key: &str, value: &str) -> Result<(), AppError> {
@@ -271,15 +281,15 @@ mod windows_store {
                 UserName: std::ptr::null_mut(),
             };
 
-            unsafe {
-                let result = CredWriteW(&cred, 0);
-                if result == 0 {
-                    let os_error = std::io::Error::last_os_error();
-                    return Err(AppError::new(
-                        "windows-credentials",
-                        Some(format!("Failed to write credential '{}': {}", key, os_error)),
-                    ));
-                }
+            // SAFETY: `cred` pointers reference live local buffers (`target`, `password_bytes`)
+            // for the duration of this CredWriteW call.
+            let result = unsafe { CredWriteW(&cred, 0) };
+            if result == 0 {
+                let os_error = std::io::Error::last_os_error();
+                return Err(AppError::new(
+                    "windows-credentials",
+                    Some(format!("Failed to write credential '{}': {}", key, os_error)),
+                ));
             }
 
             Ok(())
@@ -288,18 +298,17 @@ mod windows_store {
         fn remove_from_windows(&self, key: &str) -> Result<(), AppError> {
             let target = Self::to_wide(self.service, key);
 
-            unsafe {
-                let result = CredDeleteW(target.as_ptr(), CRED_TYPE_GENERIC, 0);
-                if result == 0 {
-                    let os_error = std::io::Error::last_os_error();
-                    return match os_error.raw_os_error() {
-                        Some(ERROR_NOT_FOUND) => Ok(()),
-                        _ => Err(AppError::new(
-                            "windows-credentials",
-                            Some(format!("Failed to delete credential '{}': {}", key, os_error)),
-                        )),
-                    };
-                }
+            // SAFETY: `target` is a null-terminated wide string owned by this function.
+            let result = unsafe { CredDeleteW(target.as_ptr(), CRED_TYPE_GENERIC, 0) };
+            if result == 0 {
+                let os_error = std::io::Error::last_os_error();
+                return match os_error.raw_os_error() {
+                    Some(ERROR_NOT_FOUND) => Ok(()),
+                    _ => Err(AppError::new(
+                        "windows-credentials",
+                        Some(format!("Failed to delete credential '{}': {}", key, os_error)),
+                    )),
+                };
             }
 
             Ok(())

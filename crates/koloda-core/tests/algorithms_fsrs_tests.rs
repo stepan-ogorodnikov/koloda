@@ -13,7 +13,7 @@ fn test_valid_algorithm_full() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize valid JSON");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -144,7 +144,7 @@ fn test_extra_fields_ignored() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -192,7 +192,7 @@ fn test_retention_minimum_boundary() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -208,7 +208,7 @@ fn test_retention_maximum_boundary() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -288,7 +288,7 @@ fn test_weights_exactly_21_values() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -393,7 +393,7 @@ fn test_is_fuzz_enabled_true() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
     assert!(algorithm.is_fuzz_enabled);
 }
 
@@ -410,7 +410,7 @@ fn test_is_fuzz_enabled_false() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
     assert!(!algorithm.is_fuzz_enabled);
 }
 
@@ -443,7 +443,7 @@ fn test_learning_steps_empty_array() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -545,7 +545,7 @@ fn test_relearning_steps_empty_array() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -561,7 +561,7 @@ fn test_relearning_steps_valid() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -609,7 +609,7 @@ fn test_maximum_interval_minimum() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]
@@ -625,7 +625,7 @@ fn test_maximum_interval_large_value() {
     }"#;
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
-    assert!(algorithm.validate().is_ok());
+    algorithm.validate().unwrap();
 }
 
 #[test]

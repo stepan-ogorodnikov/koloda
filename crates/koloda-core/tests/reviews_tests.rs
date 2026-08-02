@@ -20,7 +20,7 @@ fn test_valid_review_data() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -102,8 +102,8 @@ fn test_valid_review_difficulty_boundaries() {
     let data_min: InsertReviewData = serde_json::from_str(json_min).expect("Should deserialize");
     let data_max: InsertReviewData = serde_json::from_str(json_max).expect("Should deserialize");
 
-    assert!(data_min.validate().is_ok());
-    assert!(data_max.validate().is_ok());
+    data_min.validate().unwrap();
+    data_max.validate().unwrap();
 }
 
 #[test]
@@ -122,7 +122,7 @@ fn test_valid_stability_zero() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -141,7 +141,7 @@ fn test_valid_stability_large_value() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn test_valid_scheduled_days_zero() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -179,7 +179,7 @@ fn test_valid_learning_steps_zero() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn test_valid_time_zero() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 #[test]
@@ -217,7 +217,7 @@ fn test_valid_time_positive() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 // ============================================================================
@@ -293,7 +293,7 @@ fn test_missing_due_at_defaults_to_null() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
     assert!(data.due_at.is_none());
 }
 
@@ -435,7 +435,7 @@ fn test_extra_fields_ignored() {
     }"#;
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
-    assert!(data.validate().is_ok());
+    data.validate().unwrap();
 }
 
 // ============================================================================
@@ -520,7 +520,6 @@ fn test_rating_below_min_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
 }
 
@@ -541,7 +540,6 @@ fn test_rating_above_max_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
 }
 
@@ -562,7 +560,6 @@ fn test_rating_negative_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
 }
 
@@ -625,7 +622,6 @@ fn test_state_below_min_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.state");
 }
 
@@ -646,7 +642,6 @@ fn test_state_above_max_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.state");
 }
 
@@ -732,7 +727,6 @@ fn test_stability_negative_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.stability");
 }
 
@@ -795,7 +789,6 @@ fn test_difficulty_below_min_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.difficulty");
 }
 
@@ -816,7 +809,6 @@ fn test_difficulty_above_max_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.difficulty");
 }
 
@@ -879,7 +871,6 @@ fn test_scheduled_days_negative_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.scheduled-days");
 }
 
@@ -942,7 +933,6 @@ fn test_learning_steps_negative_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.learning-steps");
 }
 
@@ -1005,7 +995,6 @@ fn test_time_negative_fails() {
 
     let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
     let result = data.validate();
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, "validation.reviews.time");
 }
 

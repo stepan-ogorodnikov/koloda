@@ -150,7 +150,7 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
                 if let Err(err) = set_api_key(&profile_id, api_key) {
                     // WHY: Best-effort rollback; prefer the original keyring error over a
                     // secondary settings failure. `?` here would replace the cause.
-                    let _ = drop_ai_profile_from_settings(db, &profile_id);
+                    if let Err(_rollback_err) = drop_ai_profile_from_settings(db, &profile_id) {}
                     return Err(err);
                 }
             }
@@ -178,8 +178,15 @@ pub fn update_ai_profile(
             secrets.validate_for_input()?;
         }
 
-        let previous_profile = settings.profiles[profile_idx].clone();
-        let existing_profile = &mut settings.profiles[profile_idx];
+        let previous_profile = settings
+            .profiles
+            .get(profile_idx)
+            .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?
+            .clone();
+        let existing_profile = settings
+            .profiles
+            .get_mut(profile_idx)
+            .ok_or_else(|| AppError::new(error_codes::NOT_FOUND_AI_PROFILE, Some("Profile not found".to_string())))?;
 
         if let Some(ref new_secrets) = secrets {
             existing_profile.secrets = Some(redact_secrets(new_secrets));
@@ -205,7 +212,7 @@ pub fn update_ai_profile(
             if let Err(err) = keyring_result {
                 // WHY: Best-effort rollback; prefer the original keyring error over a
                 // secondary settings failure. `?` here would replace the cause.
-                let _ = restore_ai_profile_in_settings(db, previous_profile);
+                if let Err(_rollback_err) = restore_ai_profile_in_settings(db, previous_profile) {}
                 return Err(err);
             }
         }

@@ -63,7 +63,7 @@ fn test_insert_card_data_missing_deck_id() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn test_insert_card_data_missing_template_id() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn test_insert_card_data_missing_content() {
         "templateId": 1
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -100,7 +100,7 @@ fn test_insert_card_data_extra_fields_ok() {
         "another": 123
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -115,7 +115,7 @@ fn test_insert_card_data_deck_id_invalid_type() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn test_insert_card_data_template_id_invalid_type() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn test_insert_card_data_content_invalid_type() {
         "content": "not-an-object"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -151,7 +151,7 @@ fn test_insert_card_data_content_field_text_invalid_type() {
         }
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -163,7 +163,7 @@ fn test_insert_card_data_state_invalid_type() {
         "state": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -175,7 +175,7 @@ fn test_insert_card_data_due_at_invalid_type() {
         "dueAt": "not-a-timestamp"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -187,7 +187,7 @@ fn test_insert_card_data_stability_invalid_type() {
         "stability": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -199,7 +199,7 @@ fn test_insert_card_data_difficulty_invalid_type() {
         "difficulty": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -211,7 +211,7 @@ fn test_insert_card_data_scheduled_days_invalid_type() {
         "scheduledDays": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -223,7 +223,7 @@ fn test_insert_card_data_learning_steps_invalid_type() {
         "learningSteps": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -235,7 +235,7 @@ fn test_insert_card_data_reps_invalid_type() {
         "reps": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -247,7 +247,7 @@ fn test_insert_card_data_lapses_invalid_type() {
         "lapses": "not-a-number"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn test_insert_card_data_last_reviewed_at_invalid_type() {
         "lastReviewedAt": "not-a-timestamp"
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -274,9 +274,8 @@ fn test_insert_card_content_valid_ok() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
-    assert!(card_data.validate(&valid_template_fields()).is_ok());
+    card_data.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -287,10 +286,8 @@ fn test_insert_card_content_required_field_empty_fails() {
         "content": empty_required_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards.content.field-empty"
@@ -305,10 +302,8 @@ fn test_insert_card_content_required_field_missing_fails() {
         "content": missing_required_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards.content.field-empty"
@@ -323,9 +318,8 @@ fn test_insert_card_content_optional_field_empty_ok() {
         "content": empty_optional_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
-    assert!(card_data.validate(&valid_template_fields()).is_ok());
+    card_data.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -336,9 +330,8 @@ fn test_insert_card_content_optional_field_missing_ok() {
         "content": missing_optional_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
-    assert!(card_data.validate(&valid_template_fields()).is_ok());
+    card_data.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -353,9 +346,8 @@ fn test_insert_card_content_unicode_ok() {
         "content": unicode_content
     });
     let result = serde_json::from_value::<InsertCardData>(data);
-    assert!(result.is_ok());
     let card_data = result.unwrap();
-    assert!(card_data.validate(&valid_template_fields()).is_ok());
+    card_data.validate(&valid_template_fields()).unwrap();
 }
 
 // ============================================================================
@@ -373,7 +365,7 @@ fn minimal_insert_card_data() -> serde_json::Value {
 #[test]
 fn test_insert_card_progress_defaults_valid() {
     let card_data = serde_json::from_value::<InsertCardData>(minimal_insert_card_data()).unwrap();
-    assert!(card_data.validate(&valid_template_fields()).is_ok());
+    card_data.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -382,7 +374,6 @@ fn test_insert_card_progress_state_above_max_fails() {
     data["state"] = json!(4);
     let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
@@ -392,7 +383,6 @@ fn test_insert_card_progress_reps_negative_fails() {
     data["reps"] = json!(-1);
     let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
 }
 
@@ -402,7 +392,6 @@ fn test_insert_card_progress_stability_negative_fails() {
     data["stability"] = json!(-1.0);
     let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.stability"
@@ -415,7 +404,6 @@ fn test_insert_card_progress_difficulty_above_max_fails() {
     data["difficulty"] = json!(10.1);
     let card_data = serde_json::from_value::<InsertCardData>(data).unwrap();
     let validation_result = card_data.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.difficulty"
@@ -430,7 +418,7 @@ fn test_insert_card_progress_difficulty_above_max_fails() {
 fn test_update_card_values_missing_content() {
     let data = json!({});
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -444,7 +432,7 @@ fn test_update_card_values_extra_fields_ok() {
         "unknownField": "ignored"
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -457,7 +445,7 @@ fn test_update_card_values_content_invalid_type() {
         "content": "not-an-object"
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -469,7 +457,7 @@ fn test_update_card_values_content_field_text_invalid_type() {
         }
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -482,9 +470,8 @@ fn test_update_card_content_valid_ok() {
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
     let values = result.unwrap();
-    assert!(values.validate(&valid_template_fields()).is_ok());
+    values.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -493,10 +480,8 @@ fn test_update_card_content_required_field_empty_fails() {
         "content": empty_required_field_content()
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
     let values = result.unwrap();
     let validation_result = values.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards.content.field-empty"
@@ -509,10 +494,8 @@ fn test_update_card_content_required_field_missing_fails() {
         "content": missing_required_field_content()
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
     let values = result.unwrap();
     let validation_result = values.validate(&valid_template_fields());
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards.content.field-empty"
@@ -525,9 +508,8 @@ fn test_update_card_content_optional_field_empty_ok() {
         "content": empty_optional_field_content()
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
     let values = result.unwrap();
-    assert!(values.validate(&valid_template_fields()).is_ok());
+    values.validate(&valid_template_fields()).unwrap();
 }
 
 #[test]
@@ -536,9 +518,8 @@ fn test_update_card_content_optional_field_missing_ok() {
         "content": missing_optional_field_content()
     });
     let result = serde_json::from_value::<UpdateCardValues>(data);
-    assert!(result.is_ok());
     let values = result.unwrap();
-    assert!(values.validate(&valid_template_fields()).is_ok());
+    values.validate(&valid_template_fields()).unwrap();
 }
 
 // ============================================================================
@@ -558,7 +539,7 @@ fn test_update_card_progress_missing_id() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -574,7 +555,7 @@ fn test_update_card_progress_missing_state() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -590,7 +571,7 @@ fn test_update_card_progress_missing_due_at() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -606,7 +587,7 @@ fn test_update_card_progress_missing_stability() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -622,7 +603,7 @@ fn test_update_card_progress_missing_difficulty() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -638,7 +619,7 @@ fn test_update_card_progress_missing_scheduled_days() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -654,7 +635,7 @@ fn test_update_card_progress_missing_learning_steps() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -670,7 +651,7 @@ fn test_update_card_progress_missing_reps() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -686,7 +667,7 @@ fn test_update_card_progress_missing_lapses() {
         "reps": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -703,7 +684,7 @@ fn test_update_card_progress_missing_last_reviewed_at_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -726,7 +707,7 @@ fn test_update_card_progress_extra_fields_ok() {
         "unknownField": "ignored"
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -747,7 +728,7 @@ fn test_update_card_progress_id_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -764,7 +745,7 @@ fn test_update_card_progress_state_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -781,7 +762,7 @@ fn test_update_card_progress_due_at_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -798,7 +779,7 @@ fn test_update_card_progress_stability_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -815,7 +796,7 @@ fn test_update_card_progress_difficulty_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -832,7 +813,7 @@ fn test_update_card_progress_scheduled_days_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -849,7 +830,7 @@ fn test_update_card_progress_learning_steps_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -866,7 +847,7 @@ fn test_update_card_progress_reps_invalid_type() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -883,7 +864,7 @@ fn test_update_card_progress_lapses_invalid_type() {
         "lapses": "not-a-number"
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -901,7 +882,7 @@ fn test_update_card_progress_last_reviewed_at_invalid_type() {
         "lastReviewedAt": "not-a-timestamp"
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -922,8 +903,7 @@ fn test_update_card_progress_state_valid() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -941,7 +921,6 @@ fn test_update_card_progress_state_all_valid() {
             "lapses": 0
         });
         let result = serde_json::from_value::<UpdateCardProgress>(data);
-        assert!(result.is_ok());
         assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
     }
 }
@@ -960,9 +939,7 @@ fn test_update_card_progress_state_above_max_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
@@ -980,9 +957,7 @@ fn test_update_card_progress_state_negative_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
@@ -1004,8 +979,7 @@ fn test_update_card_progress_stability_zero_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1022,9 +996,7 @@ fn test_update_card_progress_stability_negative_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.stability"
@@ -1049,8 +1021,7 @@ fn test_update_card_progress_difficulty_min_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1067,8 +1038,7 @@ fn test_update_card_progress_difficulty_max_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1085,9 +1055,7 @@ fn test_update_card_progress_difficulty_below_min_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.difficulty"
@@ -1108,9 +1076,7 @@ fn test_update_card_progress_difficulty_above_max_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.difficulty"
@@ -1135,8 +1101,7 @@ fn test_update_card_progress_scheduled_days_zero_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1153,9 +1118,7 @@ fn test_update_card_progress_scheduled_days_negative_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.scheduled-days"
@@ -1180,8 +1143,7 @@ fn test_update_card_progress_learning_steps_zero_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1198,9 +1160,7 @@ fn test_update_card_progress_learning_steps_negative_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.learning-steps"
@@ -1225,8 +1185,7 @@ fn test_update_card_progress_reps_zero_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1243,9 +1202,7 @@ fn test_update_card_progress_reps_negative_fails() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
 }
 
@@ -1267,8 +1224,7 @@ fn test_update_card_progress_lapses_zero_ok() {
         "lapses": 0
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1285,8 +1241,6 @@ fn test_update_card_progress_lapses_negative_fails() {
         "lapses": -1
     });
     let result = serde_json::from_value::<UpdateCardProgress>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.lapses");
 }

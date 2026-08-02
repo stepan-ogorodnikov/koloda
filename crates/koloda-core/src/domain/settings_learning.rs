@@ -32,21 +32,15 @@ impl LearningSettings {
 // INVARIANT: on `Ok`, returns `(hours, minutes)` with `0 <= hours <= 23` and `0 <= minutes <= 59`.
 // Callers (`learning_day_range_at`) rely on this to construct a `NaiveTime` without re-validating.
 pub fn parse_day_starts_at(value: &str) -> Result<(u32, u32), AppError> {
-    let bytes = value.as_bytes();
-    if value.len() != 5 || bytes[2] != b':' {
+    let [h0, h1, colon, m0, m1] = value.as_bytes() else {
+        return Err(day_starts_at_error(value));
+    };
+    if *colon != b':' || !h0.is_ascii_digit() || !h1.is_ascii_digit() || !m0.is_ascii_digit() || !m1.is_ascii_digit() {
         return Err(day_starts_at_error(value));
     }
 
-    if !bytes[0].is_ascii_digit()
-        || !bytes[1].is_ascii_digit()
-        || !bytes[3].is_ascii_digit()
-        || !bytes[4].is_ascii_digit()
-    {
-        return Err(day_starts_at_error(value));
-    }
-
-    let hours: u32 = value[0..2].parse().map_err(|_| day_starts_at_error(value))?;
-    let minutes: u32 = value[3..5].parse().map_err(|_| day_starts_at_error(value))?;
+    let hours = u32::from(*h0 - b'0') * 10 + u32::from(*h1 - b'0');
+    let minutes = u32::from(*m0 - b'0') * 10 + u32::from(*m1 - b'0');
 
     if hours > 23 {
         return Err(AppError::new(

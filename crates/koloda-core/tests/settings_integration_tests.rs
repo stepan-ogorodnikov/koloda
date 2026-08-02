@@ -131,7 +131,6 @@ fn patch_settings_fails_when_target_setting_does_not_exist() {
         }),
     );
 
-    assert!(result.is_err());
     assert_eq!(result.expect_err("patch should fail").code, error_codes::DB_UPDATE);
 }
 
@@ -157,7 +156,6 @@ fn set_settings_rejects_plaintext_ai_api_key() {
         }),
     );
 
-    assert!(result.is_err(), "plaintext apiKey must not be persisted via set_settings");
     assert_eq!(
         result.expect_err("set_settings should fail").code,
         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY
@@ -205,7 +203,6 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
         }),
     );
 
-    assert!(result.is_err(), "patch must not smuggle plaintext apiKey into settings");
     assert_eq!(
         result.expect_err("patch_settings should fail").code,
         error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY

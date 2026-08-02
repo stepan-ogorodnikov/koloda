@@ -429,7 +429,6 @@ fn get_lesson_cards_rejects_negative_amounts() {
         },
     );
 
-    assert!(result.is_err());
     assert_eq!(
         result.unwrap_err().code,
         error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE

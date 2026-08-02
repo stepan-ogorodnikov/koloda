@@ -42,7 +42,7 @@ fn test_lesson_result_missing_card() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn test_lesson_result_missing_review() {
         "card": valid_card_progress_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -66,7 +66,7 @@ fn test_lesson_result_extra_fields_ok() {
         "unknownField": "ignored"
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 // ============================================================================
@@ -80,7 +80,7 @@ fn test_lesson_result_card_invalid_type() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn test_lesson_result_review_invalid_type() {
         "review": "not-an-object"
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 // ============================================================================
@@ -104,8 +104,7 @@ fn test_lesson_result_valid() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -128,7 +127,6 @@ fn test_lesson_result_all_ratings_valid() {
             "review": review
         });
         let result = serde_json::from_value::<LessonResultData>(data);
-        assert!(result.is_ok());
         assert!(result.unwrap().validate().is_ok(), "Rating {} should be valid", rating);
     }
 }
@@ -165,7 +163,6 @@ fn test_lesson_result_all_states_valid() {
             "review": review
         });
         let result = serde_json::from_value::<LessonResultData>(data);
-        assert!(result.is_ok());
         assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
     }
 }
@@ -182,7 +179,7 @@ fn lesson_amounts_zero_ok() {
         review: 0,
         total: 0,
     };
-    assert!(amounts.validate().is_ok());
+    amounts.validate().unwrap();
 }
 
 #[test]
@@ -194,7 +191,6 @@ fn lesson_amounts_negative_untouched_fails() {
         total: 0,
     };
     let result = amounts.validate();
-    assert!(result.is_err());
     assert_eq!(
         result.unwrap_err().code,
         error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE
@@ -210,7 +206,6 @@ fn lesson_amounts_negative_learn_fails() {
         total: 0,
     };
     let result = amounts.validate();
-    assert!(result.is_err());
     assert_eq!(
         result.unwrap_err().code,
         error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE
@@ -226,7 +221,6 @@ fn lesson_amounts_negative_review_fails() {
         total: 0,
     };
     let result = amounts.validate();
-    assert!(result.is_err());
     assert_eq!(
         result.unwrap_err().code,
         error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE
@@ -246,7 +240,6 @@ fn get_lesson_data_params_rejects_negative_amounts() {
         },
     };
     let result = params.validate();
-    assert!(result.is_err());
     assert_eq!(
         result.unwrap_err().code,
         error_codes::VALIDATION_LESSONS_AMOUNTS_NEGATIVE
@@ -276,9 +269,7 @@ fn test_lesson_result_card_state_above_max_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
@@ -301,9 +292,7 @@ fn test_lesson_result_card_state_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
@@ -330,8 +319,7 @@ fn test_lesson_result_card_stability_zero_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -353,9 +341,7 @@ fn test_lesson_result_card_stability_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.stability"
@@ -385,8 +371,7 @@ fn test_lesson_result_card_difficulty_min_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -408,8 +393,7 @@ fn test_lesson_result_card_difficulty_max_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -431,9 +415,7 @@ fn test_lesson_result_card_difficulty_below_min_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.difficulty"
@@ -459,9 +441,7 @@ fn test_lesson_result_card_difficulty_above_max_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.difficulty"
@@ -491,8 +471,7 @@ fn test_lesson_result_card_scheduled_days_zero_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -514,9 +493,7 @@ fn test_lesson_result_card_scheduled_days_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.scheduled-days"
@@ -546,8 +523,7 @@ fn test_lesson_result_card_learning_steps_zero_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -569,9 +545,7 @@ fn test_lesson_result_card_learning_steps_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(
         validation_result.unwrap_err().code,
         "validation.cards-progress.learning-steps"
@@ -601,8 +575,7 @@ fn test_lesson_result_card_reps_zero_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -624,9 +597,7 @@ fn test_lesson_result_card_reps_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
 }
 
@@ -653,8 +624,7 @@ fn test_lesson_result_card_lapses_zero_ok() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -676,9 +646,7 @@ fn test_lesson_result_card_lapses_negative_fails() {
         "review": valid_review_json()
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.lapses");
 }
 
@@ -705,9 +673,7 @@ fn test_lesson_result_review_rating_below_min_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.rating");
 }
 
@@ -730,9 +696,7 @@ fn test_lesson_result_review_rating_above_max_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.rating");
 }
 
@@ -759,9 +723,7 @@ fn test_lesson_result_review_state_below_min_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.state");
 }
 
@@ -784,9 +746,7 @@ fn test_lesson_result_review_state_above_max_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.state");
 }
 
@@ -813,8 +773,7 @@ fn test_lesson_result_review_stability_zero_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -836,9 +795,7 @@ fn test_lesson_result_review_stability_negative_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.stability");
 }
 
@@ -865,8 +822,7 @@ fn test_lesson_result_review_difficulty_min_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -888,8 +844,7 @@ fn test_lesson_result_review_difficulty_max_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -911,9 +866,7 @@ fn test_lesson_result_review_difficulty_below_min_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.difficulty");
 }
 
@@ -936,9 +889,7 @@ fn test_lesson_result_review_difficulty_above_max_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.difficulty");
 }
 
@@ -965,8 +916,7 @@ fn test_lesson_result_review_scheduled_days_zero_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -988,9 +938,7 @@ fn test_lesson_result_review_scheduled_days_negative_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.scheduled-days");
 }
 
@@ -1017,8 +965,7 @@ fn test_lesson_result_review_learning_steps_zero_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1040,9 +987,7 @@ fn test_lesson_result_review_learning_steps_negative_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.learning-steps");
 }
 
@@ -1069,8 +1014,7 @@ fn test_lesson_result_review_time_zero_ok() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
-    assert!(result.unwrap().validate().is_ok());
+    result.unwrap().validate().unwrap();
 }
 
 #[test]
@@ -1092,8 +1036,6 @@ fn test_lesson_result_review_time_negative_fails() {
         "review": review
     });
     let result = serde_json::from_value::<LessonResultData>(data);
-    assert!(result.is_ok());
     let validation_result = result.unwrap().validate();
-    assert!(validation_result.is_err());
     assert_eq!(validation_result.unwrap_err().code, "validation.reviews.time");
 }

@@ -16,7 +16,7 @@ fn test_valid_interface_settings_full() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize valid JSON");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn test_valid_language_en() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -40,7 +40,7 @@ fn test_valid_language_ru() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn test_valid_scheme_light() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -64,7 +64,7 @@ fn test_valid_scheme_dark() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn test_valid_scheme_system() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -88,7 +88,7 @@ fn test_valid_motion_on() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn test_valid_motion_off() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn test_valid_motion_system() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -175,7 +175,7 @@ fn test_extra_fields_ignored() {
     }"#;
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
-    assert!(settings.validate().is_ok());
+    settings.validate().unwrap();
 }
 
 // ============================================================================
@@ -192,8 +192,10 @@ fn test_invalid_language_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid language");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.language");
+    assert_eq!(
+        result.expect_err("Should fail with invalid language").code,
+        "validation.settings-interface.language"
+    );
 }
 
 #[test]
@@ -206,8 +208,10 @@ fn test_empty_language_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with empty language");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.language");
+    assert_eq!(
+        result.expect_err("Should fail with empty language").code,
+        "validation.settings-interface.language"
+    );
 }
 
 #[test]
@@ -220,8 +224,10 @@ fn test_language_with_different_case_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with uppercase language");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.language");
+    assert_eq!(
+        result.expect_err("Should fail with uppercase language").code,
+        "validation.settings-interface.language"
+    );
 }
 
 #[test]
@@ -262,8 +268,10 @@ fn test_invalid_scheme_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid scheme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
+    assert_eq!(
+        result.expect_err("Should fail with invalid scheme").code,
+        "validation.settings-interface.scheme"
+    );
 }
 
 #[test]
@@ -276,8 +284,10 @@ fn test_empty_scheme_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with empty scheme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
+    assert_eq!(
+        result.expect_err("Should fail with empty scheme").code,
+        "validation.settings-interface.scheme"
+    );
 }
 
 #[test]
@@ -290,8 +300,10 @@ fn test_scheme_with_different_case_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with capitalized scheme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.scheme");
+    assert_eq!(
+        result.expect_err("Should fail with capitalized scheme").code,
+        "validation.settings-interface.scheme"
+    );
 }
 
 #[test]
@@ -333,8 +345,10 @@ fn test_invalid_light_theme_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid light theme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.light-theme");
+    assert_eq!(
+        result.expect_err("Should fail with invalid light theme").code,
+        "validation.settings-interface.light-theme"
+    );
 }
 
 #[test]
@@ -348,8 +362,10 @@ fn test_invalid_dark_theme_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid dark theme");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.dark-theme");
+    assert_eq!(
+        result.expect_err("Should fail with invalid dark theme").code,
+        "validation.settings-interface.dark-theme"
+    );
 }
 
 // ============================================================================
@@ -366,8 +382,10 @@ fn test_invalid_motion_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with invalid motion");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.motion");
+    assert_eq!(
+        result.expect_err("Should fail with invalid motion").code,
+        "validation.settings-interface.motion"
+    );
 }
 
 #[test]
@@ -380,8 +398,10 @@ fn test_empty_motion_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with empty motion");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.motion");
+    assert_eq!(
+        result.expect_err("Should fail with empty motion").code,
+        "validation.settings-interface.motion"
+    );
 }
 
 #[test]
@@ -394,8 +414,10 @@ fn test_motion_with_different_case_fails() {
 
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
     let result = settings.validate();
-    assert!(result.is_err(), "Should fail with capitalized motion");
-    assert_eq!(result.unwrap_err().code, "validation.settings-interface.motion");
+    assert_eq!(
+        result.expect_err("Should fail with capitalized motion").code,
+        "validation.settings-interface.motion"
+    );
 }
 
 #[test]

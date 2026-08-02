@@ -12,7 +12,7 @@ fn unique_service_name(prefix: &str) -> String {
 }
 
 fn cleanup_key(store: &dyn SecretStore, key: &str) {
-    let _ = store.remove(key);
+    if let Err(_cleanup_err) = store.remove(key) {}
 }
 
 #[test]

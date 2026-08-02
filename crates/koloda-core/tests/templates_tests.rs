@@ -57,7 +57,7 @@ fn test_valid_template_passes() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize valid JSON");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 // ============================================================================
@@ -152,7 +152,7 @@ fn test_template_with_extra_fields_ignored() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 // ============================================================================
@@ -213,7 +213,7 @@ fn test_title_unicode_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
     assert_eq!(template.title, "Шаблон карточки 🎴");
 }
 
@@ -254,7 +254,7 @@ fn test_field_type_text_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 #[test]
@@ -272,7 +272,7 @@ fn test_field_type_markdown_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 #[test]
@@ -330,7 +330,7 @@ fn test_layout_operation_display_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 #[test]
@@ -348,7 +348,7 @@ fn test_layout_operation_reveal_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 #[test]
@@ -366,7 +366,7 @@ fn test_layout_operation_type_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 #[test]
@@ -429,7 +429,7 @@ fn test_layout_references_valid_field_ok() {
     }"#;
 
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
-    assert!(template.validate().is_ok());
+    template.validate().unwrap();
 }
 
 // ============================================================================

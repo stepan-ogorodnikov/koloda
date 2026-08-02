@@ -35,7 +35,6 @@ fn add_card_rejects_missing_deck() {
         },
     );
 
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, error_codes::NOT_FOUND_CARDS_ADD_DECK);
 }
 
@@ -64,7 +63,6 @@ fn add_card_rejects_invalid_progress_state() {
         },
     );
 
-    assert!(result.is_err());
     assert_eq!(result.unwrap_err().code, error_codes::VALIDATION_CARDS_PROGRESS_STATE);
 }
 
@@ -142,7 +140,6 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
         ],
     );
 
-    assert!(result.is_ok());
     let results = result.unwrap();
     assert_eq!(results.len(), 2);
 
@@ -201,7 +198,6 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
         ],
     );
 
-    assert!(result.is_ok());
     let results = result.unwrap();
     assert_eq!(results.len(), 2);
     assert!(results[0].error.is_none(), "first card (template A) should succeed");
