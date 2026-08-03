@@ -1,4 +1,4 @@
-import type { AIProfile, AISecrets } from "@koloda/ai";
+import type { AIProfile } from "@koloda/ai";
 import { getProviderConfig } from "@koloda/ai";
 import type { SecretField } from "@koloda/ai";
 import { queriesAtom } from "@koloda/core-react";
@@ -14,15 +14,12 @@ const SECRETS_LABELS: Record<SecretField, MessageDescriptor> = {
   baseUrl: msg`settings.ai.profiles.base-url.label`,
 };
 
-function getMissingSecretFields(secrets: AISecrets | null | undefined): SecretField[] {
-  if (!secrets) return [];
-  const entry = getProviderConfig(secrets.provider);
-  return entry.getMissingSecretFields(secrets);
-}
-
-function getApiKey(secrets: AISecrets): string | null {
-  const entry = getProviderConfig(secrets.provider);
-  return entry.getApiKey(secrets);
+function getMissingSecretFields(profile: AIProfile | null | undefined): SecretField[] {
+  if (!profile?.secrets) return [];
+  const entry = getProviderConfig(profile.secrets.provider);
+  const missing = entry.getMissingSecretFields(profile.secrets);
+  // WHY: Public profiles redact `apiKey`; presence lives on `hasSecrets`.
+  return missing.filter((field) => (field === "apiKey" ? !profile.hasSecrets : true));
 }
 
 export function useAIProfiles(profileId?: string | null) {
@@ -43,7 +40,7 @@ export function useAIProfiles(profileId?: string | null) {
     return profiles.find((p: AIProfile) => p.id === profileId) ?? null;
   }, [profiles, profileId]);
 
-  const missingSecretFields = getMissingSecretFields(selectedProfile?.secrets);
+  const missingSecretFields = getMissingSecretFields(selectedProfile);
   const missingSecretFieldLabels = useMemo(
     () => missingSecretFields.map((field) => _(SECRETS_LABELS[field])),
     [missingSecretFields, _],
@@ -54,8 +51,6 @@ export function useAIProfiles(profileId?: string | null) {
     profiles,
     defaultProfileId,
     selectedProfile,
-    secrets: selectedProfile?.secrets ?? null,
-    apiKey: selectedProfile?.secrets ? getApiKey(selectedProfile.secrets) : null,
     missingSecretFieldLabels,
   };
 }

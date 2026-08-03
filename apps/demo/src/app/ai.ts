@@ -10,15 +10,48 @@ function profileHasSecrets(secrets?: AISecrets): boolean {
   return isPresentApiKey(secrets.apiKey);
 }
 
+function redactSecrets(secrets: AISecrets): AISecrets {
+  switch (secrets.provider) {
+    case "openrouter":
+      return { provider: "openrouter", apiKey: null };
+    case "opencodeGo":
+      return { provider: "opencodeGo", apiKey: null };
+    case "opencodeZen":
+      return { provider: "opencodeZen", apiKey: null };
+    case "ollama":
+      return { provider: "ollama", baseUrl: secrets.baseUrl, apiKey: null };
+    case "lmstudio":
+      return { provider: "lmstudio", baseUrl: secrets.baseUrl, apiKey: null };
+  }
+}
+
+function toPublicProfile(profile: {
+  id: string;
+  title?: string;
+  secrets?: AISecrets;
+  hasSecrets?: boolean;
+  createdAt: string;
+}): AIProfile {
+  // WHY: `hasSecrets` from stored key presence — not from a redacted `apiKey: null`.
+  const hasSecrets = profile.hasSecrets === true || profileHasSecrets(profile.secrets);
+  return {
+    ...profile,
+    secrets: profile.secrets ? redactSecrets(profile.secrets) : undefined,
+    hasSecrets,
+  };
+}
+
+// INVARIANT: Host-local only. Loads usable secrets from PGlite for demo AIRuntime
+// (step 3). Never call from React Query / shared UI.
+export async function loadAIProfileSecrets(db: DB, profileId: string): Promise<AISecrets | null> {
+  const aiSettings = await getSettings<"ai">(db, "ai");
+  return aiSettings?.content?.profiles.find((item) => item.id === profileId)?.secrets ?? null;
+}
+
 export async function getAIProfiles(db: DB): Promise<AIProfile[]> {
   const aiSettings = await getSettings<"ai">(db, "ai");
   const profiles = aiSettings?.content?.profiles ?? [];
-  // WHY: Settings JSON may omit `hasSecrets` (zod default on parse). Fill from
-  // present apiKey so the `AIProfile` output type is satisfied without redacting.
-  return profiles.map((profile) => ({
-    ...profile,
-    hasSecrets: profile.hasSecrets ?? profileHasSecrets(profile.secrets),
-  }));
+  return profiles.map(toPublicProfile);
 }
 
 export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void> {
@@ -60,8 +93,16 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       if (profile) {
         if (data.title !== undefined) profile.title = data.title;
         if (data.secrets !== undefined) {
-          profile.secrets = data.secrets;
-          profile.hasSecrets = profileHasSecrets(data.secrets);
+          const previous = profile.secrets;
+          const providerChanged = previous?.provider !== data.secrets.provider;
+          // WHY: Edit submits may omit apiKey when the user did not replace it.
+          // Keep the stored key unless the provider changed or a new key was sent.
+          if (!profileHasSecrets(data.secrets) && !providerChanged && profileHasSecrets(previous)) {
+            profile.secrets = { ...data.secrets, apiKey: previous!.apiKey } as AISecrets;
+          } else {
+            profile.secrets = data.secrets;
+          }
+          profile.hasSecrets = profileHasSecrets(profile.secrets);
         }
       }
     }),
@@ -89,8 +130,6 @@ export async function removeAIProfile(db: DB, data: RemoveAIProfileData): Promis
 }
 
 export async function getAIProfileModels(db: DB, profileId: string) {
-  const aiSettings = await getSettings<"ai">(db, "ai");
-  const profile = aiSettings?.content?.profiles.find((item) => item.id === profileId) ?? null;
-
-  return profile ? await fetchModels(profile.secrets) : [];
+  const secrets = await loadAIProfileSecrets(db, profileId);
+  return secrets ? await fetchModels(secrets) : [];
 }

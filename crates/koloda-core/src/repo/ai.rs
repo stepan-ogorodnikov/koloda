@@ -88,15 +88,12 @@ fn restore_ai_profile_in_settings(db: &Database, previous: AIProfile) -> Result<
     set_ai_settings(db, settings)
 }
 
-fn attach_api_key(profile: AIProfile, api_key: Option<String>) -> AIProfile {
-    let secrets_with_key = match (&profile.secrets, api_key) {
-        (Some(s), Some(key)) => Some(reconstruct_secrets(s, key)),
-        (Some(s), None) => Some(s.clone()),
-        _ => None,
-    };
-    let has_secrets = secrets_with_key.as_ref().and_then(|s| s.api_key()).is_some();
+// WHY: Public reads must never ship usable keys. `has_secrets` comes from keyring
+// presence — not from a redacted `api_key: None` — so older settings rows that
+// still deserialize `has_secrets: false` stay correct when a key exists.
+fn to_public_profile(profile: AIProfile, has_secrets: bool) -> AIProfile {
     AIProfile {
-        secrets: secrets_with_key,
+        secrets: profile.secrets.as_ref().map(redact_secrets),
         has_secrets,
         ..profile
     }
@@ -110,16 +107,35 @@ pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
         // real keyring failure (lock poisoned / I/O error) used to be
         // indistinguishable from `Ok(None)` (no key stored) under `.ok().flatten()`,
         // so a broken keyring silently masqueraded as "no api keys configured".
-        let profiles_with_secrets: Vec<AIProfile> = settings
+        let profiles: Vec<AIProfile> = settings
             .profiles
             .into_iter()
             .map(|profile| -> Result<AIProfile, AppError> {
-                let api_key = get_api_key(&profile.id)?;
-                Ok(attach_api_key(profile, api_key))
+                let has_secrets = get_api_key(&profile.id)?.is_some();
+                Ok(to_public_profile(profile, has_secrets))
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(profiles_with_secrets)
+        Ok(profiles)
+    })
+}
+
+// INVARIANT: Main-process only. Reconstructs usable secrets for host AI handlers.
+// Never expose this as a renderer `cmd_*`.
+pub fn get_ai_profile_secrets(db: &Database, profile_id: &str) -> Result<Option<AISecrets>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        let settings = get_ai_settings_or_default(db)?;
+        let Some(profile) = settings.profiles.into_iter().find(|p| p.id == profile_id) else {
+            return Ok(None);
+        };
+        let Some(secrets) = profile.secrets else {
+            return Ok(None);
+        };
+        let api_key = get_api_key(&profile.id)?;
+        Ok(Some(match api_key {
+            Some(key) => reconstruct_secrets(&secrets, key),
+            None => secrets,
+        }))
     })
 }
 
@@ -160,8 +176,8 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
             }
         }
 
-        let api_key = get_api_key(&profile_id)?;
-        Ok(attach_api_key(profile, api_key))
+        let has_secrets = get_api_key(&profile_id)?.is_some();
+        Ok(to_public_profile(profile, has_secrets))
     })
 }
 
@@ -194,6 +210,7 @@ pub fn update_ai_profile(
 
         if let Some(ref new_secrets) = secrets {
             existing_profile.secrets = Some(redact_secrets(new_secrets));
+            // WHY: Stored flag is advisory; public reads re-derive from keyring.
             existing_profile.has_secrets = new_secrets.api_key().is_some();
         }
 
@@ -204,15 +221,18 @@ pub fn update_ai_profile(
         let updated_profile = existing_profile.clone();
         set_ai_settings(db, settings)?;
 
-        // WHY: Same DB-then-keyring ordering as add. Clear stale keys after the DB
-        // write so a failed remove can restore settings and avoid re-attaching an
-        // orphaned keyring entry on the next get. On any keyring failure, roll back.
+        // WHY: Same DB-then-keyring ordering as add. On any keyring failure, roll back.
         if let Some(ref new_secrets) = secrets {
+            let previous_provider = previous_profile.secrets.as_ref().map(|s| s.provider());
+            let provider_changed = previous_provider != Some(new_secrets.provider());
             let keyring_result = match new_secrets.api_key() {
                 Some(api_key) => set_api_key(id, api_key),
-                // WHY: otherwise get_ai_profiles reconstructs the redacted profile
-                // from the orphaned keyring entry, re-attaching the old secret.
-                None => remove_api_key(id),
+                // WHY: Edit forms submit redacted/empty apiKey when the user did not
+                // replace the key. Keep the keyring entry unless the provider changed
+                // (e.g. OpenRouter → Ollama with no key) so an orphaned key cannot
+                // flip `has_secrets` on the next public read.
+                None if provider_changed => remove_api_key(id),
+                None => Ok(()),
             };
             if let Err(err) = keyring_result {
                 // WHY: Best-effort rollback; prefer the original keyring error over a
@@ -222,8 +242,8 @@ pub fn update_ai_profile(
             }
         }
 
-        let api_key = get_api_key(id)?;
-        Ok(attach_api_key(updated_profile, api_key))
+        let has_secrets = get_api_key(id)?.is_some();
+        Ok(to_public_profile(updated_profile, has_secrets))
     })
 }
 

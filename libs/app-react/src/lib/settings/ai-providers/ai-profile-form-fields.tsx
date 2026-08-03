@@ -21,9 +21,10 @@ export type AIProfileFormFieldsProps = {
   };
   fields: AIProfileProviderField[];
   mode: "add" | "edit";
+  hasSecrets?: boolean;
 };
 
-export function AIProfileFormFields({ form, fields, mode }: AIProfileFormFieldsProps) {
+export function AIProfileFormFields({ form, fields, mode, hasSecrets = false }: AIProfileFormFieldsProps) {
   const { _ } = useLingui();
 
   return fields.map((fieldConfig) => {
@@ -50,6 +51,7 @@ export function AIProfileFormFields({ form, fields, mode }: AIProfileFormFieldsP
                 label={label}
                 value={field.state.value}
                 onChange={field.handleChange}
+                hasSecrets={hasSecrets}
                 errors={!field.state.meta.isValid ? (field.state.meta.errors as ZodIssue[]) : undefined}
               />
             );

@@ -217,7 +217,18 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == profile.id).expect("profile should exist");
 
-    assert!(matches!(retrieved.secrets, Some(AISecrets::OpenRouter { .. })));
+    assert!(retrieved.has_secrets);
+    match retrieved.secrets.as_ref() {
+        Some(AISecrets::OpenRouter { api_key }) => {
+            assert!(api_key.is_none(), "public read must redact apiKey");
+        }
+        other => panic!("expected OpenRouter secrets, got {:?}", other),
+    }
+
+    let secrets = ai::get_ai_profile_secrets(&db, &profile.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-secret-key"));
 
     test_store::teardown(_guard);
 }
@@ -239,10 +250,16 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
+    assert!(retrieved.has_secrets);
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeGo { api_key }) => assert_eq!(api_key.as_deref(), Some("go-secret-key")),
+        Some(AISecrets::OpencodeGo { api_key }) => assert!(api_key.is_none()),
         other => panic!("expected OpencodeGo secrets, got {:?}", other),
     }
+
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("go-secret-key"));
 
     test_store::teardown(_guard);
 }
@@ -264,10 +281,16 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
     let all = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
+    assert!(retrieved.has_secrets);
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeZen { api_key }) => assert_eq!(api_key.as_deref(), Some("zen-secret-key")),
+        Some(AISecrets::OpencodeZen { api_key }) => assert!(api_key.is_none()),
         other => panic!("expected OpencodeZen secrets, got {:?}", other),
     }
+
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("zen-secret-key"));
 
     test_store::teardown(_guard);
 }
@@ -333,6 +356,48 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
             );
         }
         other => panic!("expected Ollama secrets in update return, got {:?}", other),
+    }
+    assert!(!updated.has_secrets);
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn update_ai_profile_keeps_keyring_when_same_provider_omits_api_key() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("Local".to_string()),
+        Some(AISecrets::Ollama {
+            base_url: "http://localhost:11434".to_string(),
+            api_key: Some("local-key".to_string()),
+        }),
+    )
+    .expect("profile should be added");
+
+    let updated = ai::update_ai_profile(
+        &db,
+        &added.id,
+        Some("Local renamed".to_string()),
+        Some(AISecrets::Ollama {
+            base_url: "http://127.0.0.1:11434".to_string(),
+            api_key: None,
+        }),
+    )
+    .expect("profile should be updated");
+
+    assert!(updated.has_secrets);
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    match secrets {
+        AISecrets::Ollama { base_url, api_key } => {
+            assert_eq!(base_url, "http://127.0.0.1:11434");
+            assert_eq!(api_key.as_deref(), Some("local-key"));
+        }
+        other => panic!("expected Ollama secrets, got {:?}", other),
     }
 
     test_store::teardown(_guard);
@@ -418,10 +483,15 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         .find(|p| p.id == added.id)
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
+    assert!(retrieved.has_secrets);
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key.as_deref(), Some("sk-original-key")),
-        other => panic!("expected original OpenRouter secrets after rollback, got {:?}", other),
+        Some(AISecrets::OpenRouter { api_key }) => assert!(api_key.is_none()),
+        other => panic!("expected redacted OpenRouter secrets after rollback, got {:?}", other),
     }
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-original-key"));
 
     test_store::teardown(guard);
 }
@@ -460,10 +530,15 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         .find(|p| p.id == added.id)
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
+    assert!(retrieved.has_secrets);
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key.as_deref(), Some("sk-original-key")),
-        other => panic!("expected original OpenRouter secrets after rollback, got {:?}", other),
+        Some(AISecrets::OpenRouter { api_key }) => assert!(api_key.is_none()),
+        other => panic!("expected redacted OpenRouter secrets after rollback, got {:?}", other),
     }
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-original-key"));
 
     test_store::teardown(guard);
 }

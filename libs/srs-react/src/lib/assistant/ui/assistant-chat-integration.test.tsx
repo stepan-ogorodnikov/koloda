@@ -109,8 +109,6 @@ vi.mock("@koloda/ai-react", async () => {
         isError: false,
         defaultProfileId: profile?.id ?? null,
         selectedProfile,
-        secrets: selectedProfile?.secrets ?? null,
-        apiKey: selectedProfile?.secrets?.apiKey ?? null,
         missingSecretFieldLabels: [],
       };
     },

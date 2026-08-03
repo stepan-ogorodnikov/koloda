@@ -7,7 +7,8 @@ import {
   openRouterSecretsValidation,
 } from "@koloda/ai";
 import type { AiProvider, AISecrets } from "@koloda/ai";
-import type { z } from "zod";
+import { z } from "zod";
+import type { ZodObject, ZodRawShape } from "zod";
 
 export type AIProfileFieldType = "title" | "baseUrl" | "apiKey";
 
@@ -26,7 +27,7 @@ export type AIProfileFormValues = {
 export type AIProviderFormConfig = {
   fields: AIProfileProviderField[];
   /** Concrete Zod object used as TanStack Form `onSubmit` validator (Standard Schema). */
-  schema: z.ZodObject<z.ZodRawShape>;
+  schema: ZodObject<ZodRawShape>;
   toSecrets: (values: AIProfileFormValues) => AISecrets;
   fromSecrets: (secrets: AISecrets | undefined) => Pick<AIProfileFormValues, "baseUrl" | "apiKey">;
 };
@@ -105,4 +106,12 @@ export function getEditDefaultValues(
     title: profile.title ?? "",
     ...config.fromSecrets(profile.secrets),
   };
+}
+
+// WHY: Public profiles never return apiKey; keep existing key when the field is left blank.
+export function getEditSchema(config: AIProviderFormConfig, hasSecrets: boolean): ZodObject<ZodRawShape> {
+  if (!hasSecrets) return config.schema;
+  return config.schema.extend({
+    apiKey: z.string().optional(),
+  });
 }

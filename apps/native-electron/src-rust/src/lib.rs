@@ -371,6 +371,14 @@ impl KolodaDb {
         to_value(&profiles)
     }
 
+    // INVARIANT: Main-process only — usable secrets for host AI handlers.
+    // Do not register as a renderer `cmd_*`.
+    #[napi]
+    pub fn get_ai_profile_secrets(&self, profile_id: String) -> Result<serde_json::Value> {
+        let secrets = repo::ai::get_ai_profile_secrets(&self.db, &profile_id).map_err(to_napi_error)?;
+        to_value(&secrets)
+    }
+
     #[napi]
     pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
         let data: koloda_core::domain::ai::AddProfileData =

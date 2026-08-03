@@ -170,9 +170,10 @@ export function createAIProfile(overrides: DeepPartial<AIProfile> = {}): AIProfi
   const base: AIProfile = {
     id: DEFAULT_AI_PROFILE_ID,
     title: "OpenRouter",
+    // WHY: Public profile shape — usable keys stay out of React Query / shared UI.
     secrets: {
       provider: "openrouter" as const,
-      apiKey: "test-key",
+      apiKey: null,
     },
     hasSecrets: true,
     createdAt: DEFAULT_DATE.toISOString(),

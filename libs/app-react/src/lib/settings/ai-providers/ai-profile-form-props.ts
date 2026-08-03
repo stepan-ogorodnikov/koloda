@@ -7,7 +7,7 @@ export type AddAIProfileFormProps = {
 };
 
 export type EditAIProfileFormProps = {
-  profile: { id: string; title?: string; secrets?: AISecrets };
+  profile: { id: string; title?: string; secrets?: AISecrets; hasSecrets?: boolean };
   onSubmit: (data: { title?: string; secrets?: AISecrets }) => void;
   isPending: boolean;
   error?: Error | null;
