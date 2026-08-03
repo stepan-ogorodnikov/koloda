@@ -144,7 +144,7 @@ export function useAssistantSession({
     return localConversationIdRef.current;
   }, [conversationId, onConversationIdChange, dispatch, readLastUsed]);
 
-  const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } = useRunOrchestration({
+  const orchestrationOptions = {
     configRef,
     readState,
     dispatch,
@@ -157,7 +157,9 @@ export function useAssistantSession({
     retryRun,
     ensureConversationId,
     armPendingRun,
-  });
+  };
+  const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =
+    useRunOrchestration(orchestrationOptions);
 
   const controller: RunController = {
     submit: handleGenerate,

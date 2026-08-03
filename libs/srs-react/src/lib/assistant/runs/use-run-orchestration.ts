@@ -14,7 +14,9 @@ import type { StreamRequestResult } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 
-export type UseRunOrchestrationOptions = {
+// Private to session composition — not part of the UI / package surface.
+// UI talks to `RunController`; only `useAssistantSession` assembles these deps.
+type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
   readState: () => ConversationReducerState;
   dispatch: (action: ConversationReducerAction) => void;
@@ -37,7 +39,7 @@ export type UseRunOrchestrationOptions = {
   armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
 };
 
-export type UseRunOrchestrationReturn = {
+type UseRunOrchestrationReturn = {
   handleGenerate: (value?: string) => Promise<void>;
   handleRetry: (runId: string) => Promise<void>;
   handleDismissGenerate: () => void;
@@ -99,20 +101,22 @@ function dispatchStartRun(
   ]);
 }
 
-export function useRunOrchestration({
-  configRef,
-  readState,
-  dispatch,
-  dispatchLocal,
-  setGlobalAIProfileState,
-  cancelActiveRun,
-  setMode,
-  executeChatRun,
-  executeGenerateRun,
-  retryRun,
-  ensureConversationId,
-  armPendingRun,
-}: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
+export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
+  const {
+    configRef,
+    readState,
+    dispatch,
+    dispatchLocal,
+    setGlobalAIProfileState,
+    cancelActiveRun,
+    setMode,
+    executeChatRun,
+    executeGenerateRun,
+    retryRun,
+    ensureConversationId,
+    armPendingRun,
+  } = options;
+
   const handleRetry = useCallback(
     async (runId: string) => {
       const cfg = configRef.current;
