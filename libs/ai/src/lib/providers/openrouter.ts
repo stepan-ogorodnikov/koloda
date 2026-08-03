@@ -4,6 +4,7 @@ import { AIError, throwForAIResponse } from "../error";
 import type { AIModel } from "../models";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
+import { isPresentApiKey } from "../provider-secrets";
 
 export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
 
@@ -46,11 +47,15 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
 }
 
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {
+  if (!isPresentApiKey(secrets.apiKey)) {
+    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+  }
+  const resolved = { apiKey: secrets.apiKey };
   return {
     provider: "openrouter",
     listModels: fetchOpenRouterModels,
-    chat: (request, onChunk, abortSignal) => streamChatWithOpenRouter(request, onChunk, abortSignal, secrets),
-    generateCards: (request) => generateCardsWithOpenRouter(request, secrets),
+    chat: (request, onChunk, abortSignal) => streamChatWithOpenRouter(request, onChunk, abortSignal, resolved),
+    generateCards: (request) => generateCardsWithOpenRouter(request, resolved),
   };
 }
 
@@ -60,7 +65,10 @@ export const openrouterProviderEntry: AIProviderEntry = {
   fetchModels: () => fetchOpenRouterModels(),
   getMissingSecretFields: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "openrouter" }>;
-    return s.apiKey ? [] : ["apiKey"];
+    return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "openrouter" }>).apiKey,
+  getApiKey: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "openrouter" }>;
+    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
+  },
 };

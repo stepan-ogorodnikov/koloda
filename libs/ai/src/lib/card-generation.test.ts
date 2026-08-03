@@ -93,7 +93,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" });
+    await generateCardsWithOllama(request, { baseUrl: "http://localhost:11434" });
 
     expect(request.onCard).toHaveBeenCalledTimes(1);
     expect(request.onCard).toHaveBeenCalledWith({
@@ -136,7 +136,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await generateCardsWithLMStudio(request, { provider: "lmstudio", baseUrl: "http://localhost:1234" });
+    await generateCardsWithLMStudio(request, { baseUrl: "http://localhost:1234" });
 
     expect(request.onCard).toHaveBeenNthCalledWith(1, {
       content: {
@@ -172,9 +172,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await expect(
-      generateCardsWithOllama(request, { provider: "ollama", baseUrl: "http://localhost:11434" }),
-    ).rejects.toMatchObject({
+    await expect(generateCardsWithOllama(request, { baseUrl: "http://localhost:11434" })).rejects.toMatchObject({
       code: "ai.invalid-response",
     });
     expect(request.onCard).not.toHaveBeenCalled();
@@ -204,9 +202,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await expect(
-      generateCardsWithLMStudio(request, { provider: "lmstudio", baseUrl: "http://localhost:1234" }),
-    ).rejects.toMatchObject({
+    await expect(generateCardsWithLMStudio(request, { baseUrl: "http://localhost:1234" })).rejects.toMatchObject({
       code: "ai.invalid-response",
     });
     expect(request.onCard).not.toHaveBeenCalled();
@@ -236,7 +232,7 @@ describe("card-generation", () => {
     );
     const request = createRequest();
 
-    await generateCardsWithLMStudio(request, { provider: "lmstudio", baseUrl: "http://localhost:1234" });
+    await generateCardsWithLMStudio(request, { baseUrl: "http://localhost:1234" });
 
     expect(request.onCard).not.toHaveBeenCalled();
   });
@@ -263,7 +259,7 @@ describe("card-generation", () => {
     vi.stubGlobal("fetch", fetchMock);
     const request = createRequest();
 
-    await generateCardsWithOpencodeGo(request, { provider: "opencodeGo", apiKey: "test-key" });
+    await generateCardsWithOpencodeGo(request, { apiKey: "test-key" });
 
     expect(request.onCard).toHaveBeenCalledTimes(1);
     expect(request.onCard).toHaveBeenCalledWith({
@@ -307,7 +303,7 @@ describe("card-generation", () => {
     vi.stubGlobal("fetch", fetchMock);
     const request = createRequest();
 
-    await generateCardsWithOpencodeZen(request, { provider: "opencodeZen", apiKey: "test-key" });
+    await generateCardsWithOpencodeZen(request, { apiKey: "test-key" });
 
     expect(request.onCard).toHaveBeenCalledTimes(1);
     expect(request.onCard).toHaveBeenCalledWith({

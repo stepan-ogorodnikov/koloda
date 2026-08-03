@@ -8,7 +8,6 @@ import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
-import type { AISecrets } from "./provider-secrets";
 
 async function runCardGeneration(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
@@ -86,10 +85,7 @@ async function runCardGeneration(
  * Provider-specific card generation
  */
 
-export function generateCardsWithOpenRouter(
-  request: CardGenerationRequest,
-  { apiKey }: Extract<AISecrets, { provider: "openrouter" }>,
-) {
+export function generateCardsWithOpenRouter(request: CardGenerationRequest, { apiKey }: { apiKey: string }) {
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
     const openrouter = createOpenRouter({ apiKey });
@@ -99,7 +95,7 @@ export function generateCardsWithOpenRouter(
 
 export function generateCardsWithOllama(
   request: CardGenerationRequest,
-  { baseUrl, apiKey }: Extract<AISecrets, { provider: "ollama" }>,
+  { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
@@ -110,7 +106,7 @@ export function generateCardsWithOllama(
 
 export function generateCardsWithLMStudio(
   request: CardGenerationRequest,
-  { baseUrl, apiKey }: Extract<AISecrets, { provider: "lmstudio" }>,
+  { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -124,10 +120,7 @@ export function generateCardsWithLMStudio(
   });
 }
 
-export function generateCardsWithOpencodeGo(
-  request: CardGenerationRequest,
-  { apiKey }: Extract<AISecrets, { provider: "opencodeGo" }>,
-) {
+export function generateCardsWithOpencodeGo(request: CardGenerationRequest, { apiKey }: { apiKey: string }) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeGo = createOpenAICompatible({
@@ -143,10 +136,7 @@ export function generateCardsWithOpencodeGo(
   });
 }
 
-export function generateCardsWithOpencodeZen(
-  request: CardGenerationRequest,
-  { apiKey }: Extract<AISecrets, { provider: "opencodeZen" }>,
-) {
+export function generateCardsWithOpencodeZen(request: CardGenerationRequest, { apiKey }: { apiKey: string }) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeZen = createOpenAICompatible({

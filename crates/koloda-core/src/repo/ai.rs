@@ -25,7 +25,7 @@ fn remove_api_key(profile_id: &str) -> Result<(), AppError> {
 
 fn redact_secrets(secrets: &AISecrets) -> AISecrets {
     match secrets {
-        AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key: String::new() },
+        AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key: None },
         AISecrets::Ollama { base_url, .. } => AISecrets::Ollama {
             base_url: base_url.clone(),
             api_key: None,
@@ -34,14 +34,14 @@ fn redact_secrets(secrets: &AISecrets) -> AISecrets {
             base_url: base_url.clone(),
             api_key: None,
         },
-        AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: String::new() },
-        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: String::new() },
+        AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: None },
+        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: None },
     }
 }
 
 fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
     match secrets {
-        AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key },
+        AISecrets::OpenRouter { .. } => AISecrets::OpenRouter { api_key: Some(api_key) },
         AISecrets::Ollama { base_url, .. } => AISecrets::Ollama {
             base_url: base_url.clone(),
             api_key: Some(api_key),
@@ -50,8 +50,8 @@ fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
             base_url: base_url.clone(),
             api_key: Some(api_key),
         },
-        AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key },
-        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key },
+        AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: Some(api_key) },
+        AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: Some(api_key) },
     }
 }
 

@@ -16,7 +16,7 @@ fn test_ai_secrets_validate_for_storage_rejects_optional_api_key() {
 
 #[test]
 fn test_ai_secrets_validate_for_storage_accepts_redacted_openrouter() {
-    let secrets = AISecrets::OpenRouter { api_key: String::new() };
+    let secrets = AISecrets::OpenRouter { api_key: None };
 
     secrets.validate_for_storage().unwrap();
 }
@@ -80,7 +80,7 @@ fn test_ai_secrets_ollama_deserialize_base_url_alias() {
 #[test]
 fn test_opencode_go_validate_ok_with_api_key() {
     let secrets = AISecrets::OpencodeGo {
-        api_key: "go-secret".to_string(),
+        api_key: Some("go-secret".to_string()),
     };
 
     secrets.validate().unwrap();
@@ -90,9 +90,7 @@ fn test_opencode_go_validate_ok_with_api_key() {
 
 #[test]
 fn test_opencode_go_validate_empty_api_key_fails() {
-    let secrets = AISecrets::OpencodeGo {
-        api_key: "".to_string(),
-    };
+    let secrets = AISecrets::OpencodeGo { api_key: None };
 
     let result = secrets.validate();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
@@ -101,7 +99,7 @@ fn test_opencode_go_validate_empty_api_key_fails() {
 #[test]
 fn test_opencode_go_validate_whitespace_api_key_fails() {
     let secrets = AISecrets::OpencodeGo {
-        api_key: "  ".to_string(),
+        api_key: Some("  ".to_string()),
     };
 
     let result = secrets.validate();
@@ -123,7 +121,7 @@ fn test_ai_secrets_opencode_go_deserialize_api_key_alias() {
 #[test]
 fn test_opencode_zen_validate_ok_with_api_key() {
     let secrets = AISecrets::OpencodeZen {
-        api_key: "zen-secret".to_string(),
+        api_key: Some("zen-secret".to_string()),
     };
 
     secrets.validate().unwrap();
@@ -133,9 +131,7 @@ fn test_opencode_zen_validate_ok_with_api_key() {
 
 #[test]
 fn test_opencode_zen_validate_empty_api_key_fails() {
-    let secrets = AISecrets::OpencodeZen {
-        api_key: "".to_string(),
-    };
+    let secrets = AISecrets::OpencodeZen { api_key: None };
 
     let result = secrets.validate();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
@@ -144,7 +140,7 @@ fn test_opencode_zen_validate_empty_api_key_fails() {
 #[test]
 fn test_opencode_zen_validate_whitespace_api_key_fails() {
     let secrets = AISecrets::OpencodeZen {
-        api_key: "  ".to_string(),
+        api_key: Some("  ".to_string()),
     };
 
     let result = secrets.validate();
@@ -180,7 +176,7 @@ fn test_ai_profile_validate_for_input_ok_with_secrets() {
         id: "profile-1".to_string(),
         title: Some("Main profile".to_string()),
         secrets: Some(AISecrets::OpenRouter {
-            api_key: "key-123".to_string(),
+            api_key: Some("key-123".to_string()),
         }),
         created_at: TEST_CREATED_AT,
     };
@@ -194,7 +190,7 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
         id: "profile-1".to_string(),
         title: Some("Main profile".to_string()),
         secrets: Some(AISecrets::OpenRouter {
-            api_key: "key-123".to_string(),
+            api_key: Some("key-123".to_string()),
         }),
         created_at: TEST_CREATED_AT,
     };
@@ -246,14 +242,26 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     let profile = AIProfile {
         id: "profile-4".to_string(),
         title: Some("Profile".to_string()),
-        secrets: Some(AISecrets::OpenRouter {
-            api_key: "".to_string(),
-        }),
+        secrets: Some(AISecrets::OpenRouter { api_key: None }),
         created_at: TEST_CREATED_AT,
     };
 
     let result = profile.validate_for_input();
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
+fn test_ai_secrets_deserialize_empty_api_key_as_none() {
+    let json = r#"{
+        "provider": "openrouter",
+        "apiKey": ""
+    }"#;
+
+    let secrets: AISecrets = serde_json::from_str(json).expect("legacy empty apiKey should deserialize");
+    assert_eq!(secrets.api_key(), None);
+
+    let serialized = serde_json::to_value(&secrets).expect("redacted secrets should serialize");
+    assert_eq!(serialized.get("apiKey"), Some(&serde_json::Value::Null));
 }
 
 #[test]

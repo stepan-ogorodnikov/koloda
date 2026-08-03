@@ -209,7 +209,7 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
         &db,
         Some("Test".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-secret-key".to_string(),
+            api_key: Some("sk-secret-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -231,7 +231,7 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
         &db,
         Some("OpenCode Go".to_string()),
         Some(AISecrets::OpencodeGo {
-            api_key: "go-secret-key".to_string(),
+            api_key: Some("go-secret-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -240,7 +240,7 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeGo { api_key }) => assert_eq!(api_key, "go-secret-key"),
+        Some(AISecrets::OpencodeGo { api_key }) => assert_eq!(api_key.as_deref(), Some("go-secret-key")),
         other => panic!("expected OpencodeGo secrets, got {:?}", other),
     }
 
@@ -256,7 +256,7 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
         &db,
         Some("OpenCode Zen".to_string()),
         Some(AISecrets::OpencodeZen {
-            api_key: "zen-secret-key".to_string(),
+            api_key: Some("zen-secret-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -265,7 +265,7 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
     let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
 
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpencodeZen { api_key }) => assert_eq!(api_key, "zen-secret-key"),
+        Some(AISecrets::OpencodeZen { api_key }) => assert_eq!(api_key.as_deref(), Some("zen-secret-key")),
         other => panic!("expected OpencodeZen secrets, got {:?}", other),
     }
 
@@ -281,7 +281,7 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
         &db,
         Some("OpenRouter".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-original-key".to_string(),
+            api_key: Some("sk-original-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -349,7 +349,7 @@ fn get_ai_profiles_propagates_keyring_error_instead_of_swallowing_it() {
         &db,
         Some("OpenRouter".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-secret-key".to_string(),
+            api_key: Some("sk-secret-key".to_string()),
         }),
     )
     .expect("profile should be added under working store");
@@ -373,7 +373,7 @@ fn add_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         &db,
         Some("OpenRouter".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-secret-key".to_string(),
+            api_key: Some("sk-secret-key".to_string()),
         }),
     )
     .expect_err("add must fail when keyring set fails");
@@ -394,7 +394,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         &db,
         Some("OpenRouter".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-original-key".to_string(),
+            api_key: Some("sk-original-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -406,7 +406,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         &added.id,
         Some("Renamed".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-new-key".to_string(),
+            api_key: Some("sk-new-key".to_string()),
         }),
     )
     .expect_err("update must fail when keyring set fails");
@@ -419,7 +419,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key, "sk-original-key"),
+        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key.as_deref(), Some("sk-original-key")),
         other => panic!("expected original OpenRouter secrets after rollback, got {:?}", other),
     }
 
@@ -435,7 +435,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         &db,
         Some("OpenRouter".to_string()),
         Some(AISecrets::OpenRouter {
-            api_key: "sk-original-key".to_string(),
+            api_key: Some("sk-original-key".to_string()),
         }),
     )
     .expect("profile should be added");
@@ -461,7 +461,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         .expect("profile should remain");
     assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
     match retrieved.secrets.as_ref() {
-        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key, "sk-original-key"),
+        Some(AISecrets::OpenRouter { api_key }) => assert_eq!(api_key.as_deref(), Some("sk-original-key")),
         other => panic!("expected original OpenRouter secrets after rollback, got {:?}", other),
     }
 

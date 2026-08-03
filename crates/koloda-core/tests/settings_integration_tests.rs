@@ -176,7 +176,7 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
                     "title": "OpenRouter",
                     "secrets": {
                         "provider": "openrouter",
-                        "apiKey": ""
+                        "apiKey": null
                     },
                     "createdAt": "2026-01-01T00:00:00Z"
                 }

@@ -4,6 +4,7 @@ import { AIError } from "../error";
 import type { AIModel } from "../models";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
+import { isPresentApiKey } from "../provider-secrets";
 
 export async function fetchOllamaModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
   const { Ollama } = await import("ollama");
@@ -25,11 +26,13 @@ export async function fetchOllamaModels(baseUrl: string, apiKey?: string): Promi
 }
 
 function createOllamaClient(secrets: Extract<AISecrets, { provider: "ollama" }>): AIGenerationClient {
+  const apiKey = isPresentApiKey(secrets.apiKey) ? secrets.apiKey : undefined;
+  const resolved = { baseUrl: secrets.baseUrl, apiKey };
   return {
     provider: "ollama",
-    listModels: () => fetchOllamaModels(secrets.baseUrl, secrets.apiKey),
-    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, secrets),
-    generateCards: (request) => generateCardsWithOllama(request, secrets),
+    listModels: () => fetchOllamaModels(resolved.baseUrl, resolved.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithOllama(request, onChunk, abortSignal, resolved),
+    generateCards: (request) => generateCardsWithOllama(request, resolved),
   };
 }
 

@@ -22,10 +22,11 @@ export const AI_PROVIDER_LABELS = {
 **`libs/ai/src/lib/provider-secrets.ts`** — add secrets validation:
 
 ```typescript
+// Form/input schema (required non-empty key):
 export const myProviderSecretsValidation = z.object({
   apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
   // Optional fields:
-  // baseUrl: z.string().url().optional(),
+  // baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
 });
 
 // Add to AIPrompterSecrets union
@@ -33,10 +34,10 @@ export type AIPrompterSecrets =
   // ...
   | z.infer<typeof myProviderSecretsValidation>;
 
-// Add to aiSecretsValidation discriminated union
+// Wire/storage schema uses `storedApiKey` (`string | null`; legacy "" → null):
 export const aiSecretsValidation = z.discriminatedUnion("provider", [
   // ...
-  z.object({ provider: z.literal("myProvider"), ...myProviderSecretsValidation.shape }),
+  z.object({ provider: z.literal("myProvider"), apiKey: storedApiKey }),
 ]);
 ```
 
@@ -51,37 +52,23 @@ pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "myProvi
 // Add variant to AISecrets enum
 #[serde(rename = "myProvider")]
 MyProvider {
-    #[serde(rename = "apiKey", alias = "api_key")]
-    api_key: String,
-    // Optional: #[serde(rename = "baseUrl", skip_serializing_if = "Option::is_none")]
-    // base_url: Option<String>,
+    // INVARIANT: `None` = redacted/absent in settings JSON (`"apiKey": null`).
+    #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+    api_key: Option<String>,
+    // Optional: #[serde(rename = "baseUrl", alias = "base_url")]
+    // base_url: String,
 },
 
 // Add to provider() method
 AISecrets::MyProvider { .. } => "myProvider",
 
-// Add to api_key() method
-AISecrets::MyProvider { api_key } => Some(api_key),
+// api_key() already covers Option via the shared match arms — include MyProvider there.
 
-// Add validation in validate() method
-AISecrets::MyProvider { api_key } => {
-    if api_key.trim().is_empty() {
-        return Err(AppError::new(
-            error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-            Some("myProvider.apiKey is required".to_string()),
-        ));
-    }
-}
+// Add validation in validate_for_input()
+AISecrets::MyProvider { api_key } => Self::require_api_key_for_input(api_key, "myProvider"),
 
-// Add whitespace validation in validate_not_whitespace_only() method
-AISecrets::MyProvider { api_key } => {
-    if !api_key.is_empty() && api_key.trim().is_empty() {
-        return Err(AppError::new(
-            error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-            Some("myProvider.apiKey cannot be whitespace only".to_string()),
-        ));
-    }
-}
+// Add validation in validate_for_storage()
+AISecrets::MyProvider { api_key } => Self::reject_stored_api_key(api_key, "myProvider"),
 ```
 
 ### 3. Rust Repository (`crates/koloda-core/src/repo/ai.rs`)
@@ -90,10 +77,10 @@ Add redaction and reconstruction for secrets:
 
 ```rust
 // Add to redact_secrets()
-AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key: String::new() },
+AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key: None },
 
 // Add to reconstruct_secrets()
-AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key },
+AISecrets::MyProvider { .. } => AISecrets::MyProvider { api_key: Some(api_key) },
 ```
 
 ### 4. Provider module (`libs/ai/src/lib/providers/`)
@@ -106,7 +93,8 @@ import { generateCardsWithMyProvider } from "../card-generation";
 import { streamChatWithMyProvider } from "../chat-stream";
 import { AIError, throwForAIResponse } from "../error";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
-import type { AIModel, AISecrets } from "../types";
+import { isPresentApiKey, type AISecrets } from "../provider-secrets";
+import type { AIModel } from "../models";
 
 export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> {
   const response = throwForAIResponse(
@@ -131,11 +119,15 @@ export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> 
 }
 
 function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvider" }>): AIGenerationClient {
+  if (!isPresentApiKey(secrets.apiKey)) {
+    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+  }
+  const resolved = { apiKey: secrets.apiKey };
   return {
     provider: "myProvider",
-    listModels: () => fetchMyProviderModels(secrets.apiKey),
-    chat: (request, onChunk, abortSignal) => streamChatWithMyProvider(request, onChunk, abortSignal, secrets),
-    generateCards: (request) => generateCardsWithMyProvider(request, secrets),
+    listModels: () => fetchMyProviderModels(resolved.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithMyProvider(request, onChunk, abortSignal, resolved),
+    generateCards: (request) => generateCardsWithMyProvider(request, resolved),
   };
 }
 
@@ -144,13 +136,19 @@ export const myProviderEntry: AIProviderEntry = {
   createClient: (secrets) => createMyProviderClient(secrets as Extract<AISecrets, { provider: "myProvider" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
+    if (!isPresentApiKey(s.apiKey)) {
+      throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    }
     return fetchMyProviderModels(s.apiKey);
   },
   getMissingSecretFields: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
-    return s.apiKey ? [] : ["apiKey"];
+    return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "myProvider" }>).apiKey,
+  getApiKey: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
+    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
+  },
 };
 ```
 
@@ -175,7 +173,7 @@ export function streamChatWithMyProvider(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { apiKey }: Extract<AISecrets, { provider: "myProvider" }>,
+  { apiKey }: { apiKey: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -197,7 +195,7 @@ Add a thin wrapper that supplies the AI SDK model factory to shared `runCardGene
 ```typescript
 export function generateCardsWithMyProvider(
   request: CardGenerationRequest,
-  { apiKey }: Extract<AISecrets, { provider: "myProvider" }>,
+  { apiKey }: { apiKey: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");

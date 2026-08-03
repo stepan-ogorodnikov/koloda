@@ -48,7 +48,7 @@ function apiKeyOnlyConfig(
     }),
     toSecrets: (values) => ({ provider, apiKey: values.apiKey ?? "" }),
     fromSecrets: (secrets) => ({
-      apiKey: secrets?.provider === provider ? secrets.apiKey : "",
+      apiKey: secrets?.provider === provider ? (secrets.apiKey ?? "") : "",
     }),
   };
 }

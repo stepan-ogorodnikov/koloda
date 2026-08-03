@@ -8,7 +8,6 @@ import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
-import type { AISecrets } from "./provider-secrets";
 
 async function runChatStream(
   modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
@@ -67,7 +66,7 @@ export function streamChatWithOpenRouter(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { apiKey }: Extract<AISecrets, { provider: "openrouter" }>,
+  { apiKey }: { apiKey: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
@@ -80,7 +79,7 @@ export function streamChatWithOllama(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { baseUrl, apiKey }: Extract<AISecrets, { provider: "ollama" }>,
+  { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
@@ -93,7 +92,7 @@ export function streamChatWithLMStudio(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { baseUrl, apiKey }: Extract<AISecrets, { provider: "lmstudio" }>,
+  { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -106,7 +105,7 @@ export function streamChatWithOpencodeGo(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { apiKey }: Extract<AISecrets, { provider: "opencodeGo" }>,
+  { apiKey }: { apiKey: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
@@ -129,7 +128,7 @@ export function streamChatWithOpencodeZen(
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
-  { apiKey }: Extract<AISecrets, { provider: "opencodeZen" }>,
+  { apiKey }: { apiKey: string },
 ) {
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");

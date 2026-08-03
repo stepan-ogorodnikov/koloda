@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::app::error::{error_codes, AppError};
 use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
@@ -16,37 +16,57 @@ pub struct AIProfile {
     pub created_at: i64,
 }
 
+// WHY: Settings JSON and IPC use `null` for redacted/absent keys. Legacy `""` still
+// deserializes as `None` so older rows keep validating without a migration rewrite.
+fn deserialize_api_key<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Option::<String>::deserialize(deserializer)?;
+    Ok(value.and_then(|key| if key.is_empty() { None } else { Some(key) }))
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "provider", rename_all = "camelCase")]
 pub enum AISecrets {
     #[serde(rename = "openrouter")]
     OpenRouter {
-        #[serde(rename = "apiKey", alias = "api_key")]
-        api_key: String,
+        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        api_key: Option<String>,
     },
     #[serde(rename = "ollama")]
     Ollama {
         #[serde(rename = "baseUrl", alias = "base_url")]
         base_url: String,
-        #[serde(rename = "apiKey", alias = "api_key", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            rename = "apiKey",
+            alias = "api_key",
+            default,
+            deserialize_with = "deserialize_api_key"
+        )]
         api_key: Option<String>,
     },
     #[serde(rename = "lmstudio")]
     LmStudio {
         #[serde(rename = "baseUrl", alias = "base_url")]
         base_url: String,
-        #[serde(rename = "apiKey", alias = "api_key", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            rename = "apiKey",
+            alias = "api_key",
+            default,
+            deserialize_with = "deserialize_api_key"
+        )]
         api_key: Option<String>,
     },
     #[serde(rename = "opencodeGo")]
     OpencodeGo {
-        #[serde(rename = "apiKey", alias = "api_key")]
-        api_key: String,
+        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        api_key: Option<String>,
     },
     #[serde(rename = "opencodeZen")]
     OpencodeZen {
-        #[serde(rename = "apiKey", alias = "api_key")]
-        api_key: String,
+        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        api_key: Option<String>,
     },
 }
 
@@ -89,12 +109,32 @@ impl AISecrets {
 
     pub fn api_key(&self) -> Option<&str> {
         match self {
-            AISecrets::OpenRouter { api_key } => Some(api_key),
-            AISecrets::Ollama { api_key, .. } => api_key.as_deref(),
-            AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
-            AISecrets::OpencodeGo { api_key } => Some(api_key),
-            AISecrets::OpencodeZen { api_key } => Some(api_key),
+            AISecrets::OpenRouter { api_key }
+            | AISecrets::OpencodeGo { api_key }
+            | AISecrets::OpencodeZen { api_key }
+            | AISecrets::Ollama { api_key, .. }
+            | AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
         }
+    }
+
+    fn require_api_key_for_input(api_key: &Option<String>, provider: &str) -> Result<(), AppError> {
+        match api_key.as_deref().map(str::trim) {
+            Some(key) if !key.is_empty() => Ok(()),
+            _ => Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
+                Some(format!("{provider}.apiKey is required")),
+            )),
+        }
+    }
+
+    fn reject_stored_api_key(api_key: &Option<String>, provider: &str) -> Result<(), AppError> {
+        if api_key.is_some() {
+            return Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
+                Some(format!("{provider}.apiKey must not be stored in settings")),
+            ));
+        }
+        Ok(())
     }
 
     // WHY: `validate` on secrets is input-strict (full values). Do not retarget to storage rules.
@@ -104,14 +144,7 @@ impl AISecrets {
 
     pub fn validate_for_input(&self) -> Result<(), AppError> {
         match self {
-            AISecrets::OpenRouter { api_key } => {
-                if api_key.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("openrouter.apiKey is required".to_string()),
-                    ));
-                }
-            }
+            AISecrets::OpenRouter { api_key } => Self::require_api_key_for_input(api_key, "openrouter"),
             AISecrets::Ollama { base_url, .. } => {
                 if base_url.trim().is_empty() {
                     return Err(AppError::new(
@@ -119,6 +152,7 @@ impl AISecrets {
                         Some("ollama.baseUrl is required".to_string()),
                     ));
                 }
+                Ok(())
             }
             AISecrets::LmStudio { base_url, .. } => {
                 if base_url.trim().is_empty() {
@@ -127,41 +161,19 @@ impl AISecrets {
                         Some("lmstudio.baseUrl is required".to_string()),
                     ));
                 }
+                Ok(())
             }
-            AISecrets::OpencodeGo { api_key } => {
-                if api_key.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeGo.apiKey is required".to_string()),
-                    ));
-                }
-            }
-            AISecrets::OpencodeZen { api_key } => {
-                if api_key.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeZen.apiKey is required".to_string()),
-                    ));
-                }
-            }
+            AISecrets::OpencodeGo { api_key } => Self::require_api_key_for_input(api_key, "opencodeGo"),
+            AISecrets::OpencodeZen { api_key } => Self::require_api_key_for_input(api_key, "opencodeZen"),
         }
-
-        Ok(())
     }
 
     // INVARIANT: The settings JSON must hold only the redacted form. Real API
-    // keys are persisted through the OS keyring, so a non-empty `api_key` here
+    // keys are persisted through the OS keyring, so a non-null `api_key` here
     // means plaintext is about to leak into the `settings` table — reject it.
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
         match self {
-            AISecrets::OpenRouter { api_key } => {
-                if !api_key.is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("openrouter.apiKey must not be stored in settings".to_string()),
-                    ));
-                }
-            }
+            AISecrets::OpenRouter { api_key } => Self::reject_stored_api_key(api_key, "openrouter"),
             AISecrets::Ollama { base_url, api_key } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
                     return Err(AppError::new(
@@ -169,12 +181,7 @@ impl AISecrets {
                         Some("ollama.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
-                if api_key.as_ref().is_some_and(|key| !key.is_empty()) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("ollama.apiKey must not be stored in settings".to_string()),
-                    ));
-                }
+                Self::reject_stored_api_key(api_key, "ollama")
             }
             AISecrets::LmStudio { base_url, api_key } => {
                 if !base_url.is_empty() && base_url.trim().is_empty() {
@@ -183,32 +190,11 @@ impl AISecrets {
                         Some("lmstudio.baseUrl cannot be whitespace only".to_string()),
                     ));
                 }
-                if api_key.as_ref().is_some_and(|key| !key.is_empty()) {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("lmstudio.apiKey must not be stored in settings".to_string()),
-                    ));
-                }
+                Self::reject_stored_api_key(api_key, "lmstudio")
             }
-            AISecrets::OpencodeGo { api_key } => {
-                if !api_key.is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeGo.apiKey must not be stored in settings".to_string()),
-                    ));
-                }
-            }
-            AISecrets::OpencodeZen { api_key } => {
-                if !api_key.is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY,
-                        Some("opencodeZen.apiKey must not be stored in settings".to_string()),
-                    ));
-                }
-            }
+            AISecrets::OpencodeGo { api_key } => Self::reject_stored_api_key(api_key, "opencodeGo"),
+            AISecrets::OpencodeZen { api_key } => Self::reject_stored_api_key(api_key, "opencodeZen"),
         }
-
-        Ok(())
     }
 }
 

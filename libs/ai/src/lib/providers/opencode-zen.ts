@@ -1,9 +1,11 @@
 import { generateCardsWithOpencodeZen } from "../card-generation";
 import { streamChatWithOpencodeZen } from "../chat-stream";
+import { AIError } from "../error";
 import type { AIModel } from "../models";
 import { OPENCODE_ZEN_BASE_URL } from "../provider-catalog";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
+import { isPresentApiKey } from "../provider-secrets";
 import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 
 export const OPENCODE_ZEN_MODELS_URL = `${OPENCODE_ZEN_BASE_URL}/models`;
@@ -13,11 +15,15 @@ export async function fetchOpencodeZenModels(apiKey?: string): Promise<AIModel[]
 }
 
 function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "opencodeZen" }>): AIGenerationClient {
+  if (!isPresentApiKey(secrets.apiKey)) {
+    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+  }
+  const resolved = { apiKey: secrets.apiKey };
   return {
     provider: "opencodeZen",
-    listModels: () => fetchOpencodeZenModels(secrets.apiKey),
-    chat: (request, onChunk, abortSignal) => streamChatWithOpencodeZen(request, onChunk, abortSignal, secrets),
-    generateCards: (request) => generateCardsWithOpencodeZen(request, secrets),
+    listModels: () => fetchOpencodeZenModels(resolved.apiKey),
+    chat: (request, onChunk, abortSignal) => streamChatWithOpencodeZen(request, onChunk, abortSignal, resolved),
+    generateCards: (request) => generateCardsWithOpencodeZen(request, resolved),
   };
 }
 
@@ -26,11 +32,14 @@ export const opencodeZenProviderEntry: AIProviderEntry = {
   createClient: (secrets) => createOpencodeZenClient(secrets as Extract<AISecrets, { provider: "opencodeZen" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
-    return fetchOpencodeZenModels(s.apiKey);
+    return fetchOpencodeZenModels(isPresentApiKey(s.apiKey) ? s.apiKey : undefined);
   },
   getMissingSecretFields: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
-    return s.apiKey ? [] : ["apiKey"];
+    return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => (secrets as Extract<AISecrets, { provider: "opencodeZen" }>).apiKey,
+  getApiKey: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
+    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
+  },
 };
