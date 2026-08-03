@@ -89,7 +89,6 @@ export function AssistantChat({
     profiles,
     provider,
     modelParameters,
-    selectedProfile,
     missingSecretFieldLabels,
     isModelsLoading,
     isModelsError,
@@ -109,7 +108,6 @@ export function AssistantChat({
     modelId,
     modelName,
     modelParameters,
-    selectedProfile,
   });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({

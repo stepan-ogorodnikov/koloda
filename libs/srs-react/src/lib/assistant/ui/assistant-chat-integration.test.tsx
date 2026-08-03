@@ -1,8 +1,18 @@
-import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
+import type {
+  AIModel,
+  AIProfile,
+  AIRuntime,
+  ChatStreamGenerator,
+  ChatStreamRequest,
+  GeneratedCard,
+  ModelParameter,
+  StreamUsage,
+} from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
 import type { CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
+import type { Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
@@ -21,6 +31,9 @@ import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
  */
 const wire = vi.hoisted(() => {
   return {
+    profiles: [] as AIProfile[],
+    models: [] as AIModel[],
+    template: { id: 1 } as Template,
     // Stream controls
     chatStream: {
       started: 0,
@@ -148,13 +161,6 @@ vi.mock("./use-assistant-profile-selection", () => {
   };
 });
 
-vi.mock("./use-assistant-client", () => ({
-  useAssistantClient: () => ({
-    streamGenerator: (() => {}) as never,
-    chatStreamGenerator: (() => {}) as never,
-  }),
-}));
-
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({
     _: (message: { toString(): string }) => message.toString(),
@@ -281,9 +287,18 @@ function makeConversation(id: string, overrides: Partial<ConversationReducerStat
   };
 }
 
+function createMockAIRuntime(): AIRuntime {
+  return {
+    listModels: async () => wire.models,
+    chat: async () => undefined,
+    generateCards: async () => {},
+  };
+}
+
 function makeWrapper() {
   const store = createStore();
   store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+  store.set(aiRuntimeAtom, createMockAIRuntime());
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -344,6 +359,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(upsertConversationAtom, makeConversation("B"));
     store.set(setCurrentConversationIdAtom, "A");
@@ -423,6 +439,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(upsertConversationAtom, makeConversation("B"));
     store.set(setCurrentConversationIdAtom, "A");
@@ -492,6 +509,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
@@ -595,6 +613,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
@@ -670,6 +689,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
@@ -751,6 +771,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 

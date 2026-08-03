@@ -1,4 +1,4 @@
-import type { AddAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, AIRuntime } from "@koloda/ai";
 import type { RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   DeleteConversationData,
@@ -76,7 +76,7 @@ import {
   updateDeck,
   updateTemplate,
 } from "@koloda/srs-pgsql";
-import { addAIProfile, getAIProfileModels, getAIProfiles, removeAIProfile, updateAIProfile } from "./ai";
+import { addAIProfile, getAIProfiles, removeAIProfile, updateAIProfile } from "./ai";
 import { getStatus, setupFromScratch } from "./setup";
 
 export const demoAppQueryOptions = {
@@ -89,7 +89,7 @@ export const demoAppQueryOptions = {
 
 export const demoSetupMutationOptions = { mutationFn: setupFromScratch };
 
-export const queriesFn = (db: DB): Queries => ({
+export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
     queryFn: () => getSettings<T>(db, name),
@@ -189,7 +189,7 @@ export const queriesFn = (db: DB): Queries => ({
   removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
   getAIProfileModelsQuery: (profileId: string) => ({
     queryKey: queryKeys.ai.models(profileId),
-    queryFn: () => getAIProfileModels(db, profileId),
+    queryFn: () => aiRuntime.listModels(profileId),
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),

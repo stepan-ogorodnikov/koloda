@@ -1,5 +1,5 @@
 import type { AddAIProfileData, AIProfile, AISecrets, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import { aiSettingsValidation, fetchModels, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
+import { aiSettingsValidation, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/srs-pgsql";
 import { getSettings, setSettings } from "@koloda/srs-pgsql";
@@ -41,8 +41,8 @@ function toPublicProfile(profile: {
   };
 }
 
-// INVARIANT: Host-local only. Loads usable secrets from PGlite for demo AIRuntime
-// (step 3). Never call from React Query / shared UI.
+// INVARIANT: Host-local only. Loads usable secrets from PGlite for demo AIRuntime.
+// Never call from React Query / shared UI.
 export async function loadAIProfileSecrets(db: DB, profileId: string): Promise<AISecrets | null> {
   const aiSettings = await getSettings<"ai">(db, "ai");
   return aiSettings?.content?.profiles.find((item) => item.id === profileId)?.secrets ?? null;
@@ -127,9 +127,4 @@ export async function removeAIProfile(db: DB, data: RemoveAIProfileData): Promis
   );
 
   await setSettings<"ai">(db, { name: "ai", content: newContent });
-}
-
-export async function getAIProfileModels(db: DB, profileId: string) {
-  const secrets = await loadAIProfileSecrets(db, profileId);
-  return secrets ? await fetchModels(secrets) : [];
 }

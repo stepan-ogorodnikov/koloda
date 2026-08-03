@@ -1,12 +1,13 @@
-import { queriesAtom } from "@koloda/core-react";
+import { aiRuntimeAtom, queryKeys } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 
 export function useAIModels(credentialId: string | null) {
-  const { getAIProfileModelsQuery } = useAtomValue(queriesAtom);
+  const aiRuntime = useAtomValue(aiRuntimeAtom);
   const query = useQuery({
-    ...getAIProfileModelsQuery(credentialId || ""),
+    queryKey: queryKeys.ai.models(credentialId || ""),
+    queryFn: () => aiRuntime.listModels(credentialId!),
     enabled: !!credentialId,
     retry: false,
     refetchOnMount: false,

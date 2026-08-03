@@ -1,4 +1,4 @@
-import type { AIProfile, AssistantSettings } from "@koloda/ai";
+import type { AssistantSettings } from "@koloda/ai";
 import { queriesAtom } from "@koloda/core-react";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +14,6 @@ export type UseAssistantRuntimeConfigOptions = {
   modelId: string;
   modelName: string | undefined;
   reasoningEffort: string;
-  selectedProfile: AIProfile | null;
 };
 
 export type UseAssistantRuntimeConfigReturn = {
@@ -28,7 +27,6 @@ export function useAssistantRuntimeConfig({
   modelId,
   modelName,
   reasoningEffort,
-  selectedProfile,
 }: UseAssistantRuntimeConfigOptions): UseAssistantRuntimeConfigReturn {
   const { _ } = useLingui();
   const { getDeckQuery, getTemplateQuery, getSettingsQuery } = useAtomValue(queriesAtom);
@@ -49,7 +47,7 @@ export function useAssistantRuntimeConfig({
   });
   const template = templateQuery.data;
 
-  const { streamGenerator, chatStreamGenerator } = useAssistantClient({ selectedProfile, template });
+  const { streamGenerator, chatStreamGenerator } = useAssistantClient({ profileId, template });
 
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;

@@ -1,4 +1,4 @@
-import type { AIProfile, ModelParameter } from "@koloda/ai";
+import type { ModelParameter } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import type { Template } from "@koloda/srs";
 import { useSetAtom, useStore } from "jotai";
@@ -26,7 +26,6 @@ export type UseAssistantSessionOptions = {
   modelId: string;
   modelName: string | undefined;
   modelParameters: ModelParameter[];
-  selectedProfile: AIProfile | null;
 };
 
 export type UseAssistantSessionReturn = {
@@ -42,7 +41,6 @@ export function useAssistantSession({
   modelId,
   modelName,
   modelParameters,
-  selectedProfile,
 }: UseAssistantSessionOptions): UseAssistantSessionReturn {
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
@@ -57,7 +55,6 @@ export function useAssistantSession({
     modelId,
     modelName,
     reasoningEffort,
-    selectedProfile,
   });
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
