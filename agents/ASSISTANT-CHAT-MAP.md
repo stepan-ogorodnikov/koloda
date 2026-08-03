@@ -44,7 +44,7 @@ If your task matches one of these, read the specified doc first, then target the
 ### Composition
 
 `AssistantChat` (`ui/`) wires `useAssistantProfileSelection` → `useConversationPersistence` → `useAssistantSession` directly.
-Session returns a `RunController` (`runs/run-controller.ts`) plus template bits — that is the UI’s run/session surface.
+Session returns a `RunController` (`runs/run-controller.ts`) plus template bits; UI and the test harness call through `controller.*`.
 Do not reintroduce a god `useAssistantChat` hook; integration tests use `ui/assistant-chat-test-harness.ts` only.
 
 ### Public surface (`@koloda/srs-react`)

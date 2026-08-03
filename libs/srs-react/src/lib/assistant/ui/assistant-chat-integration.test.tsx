@@ -383,7 +383,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Start a chat run on A. The mock keeps it in flight.
     await act(async () => {
       // Fire and forget — the promise never resolves.
-      void result.current.handleGenerate("Hello from A");
+      void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 
@@ -391,7 +391,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     rerender({ conversationId: "B" });
     await act(async () => {
       store.set(setCurrentConversationIdAtom, "B");
-      void result.current.handleGenerate("Hello from B");
+      void result.current.controller.submit("Hello from B");
       await Promise.resolve();
     });
 
@@ -468,7 +468,7 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     let chatPromise!: Promise<void>;
     await act(async () => {
-      chatPromise = result.current.handleGenerate("Hello from A") as unknown as Promise<void>;
+      chatPromise = result.current.controller.submit("Hello from A") as unknown as Promise<void>;
       // Advance the mocked clock so the chunks fire.
       vi.advanceTimersByTime(150);
     });
@@ -565,14 +565,14 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Bump the save counter for A a few times.
     for (let i = 0; i < 3; i += 1) {
       await act(async () => {
-        result.current.setMode(result.current.profileId ? "cards" : "chat");
+        result.current.controller.setMode(result.current.profileId ? "cards" : "chat");
       });
     }
 
     // Switch to B and bump its save counter.
     rerender({ conversationId: "B" });
     await act(async () => {
-      result.current.setMode("chat");
+      result.current.controller.setMode("chat");
     });
 
     // Allow the idle-save debounce to fire.
@@ -634,7 +634,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // addAssistantMessage, each of which bumps the save counter and
     // schedules the throttled save.
     await act(async () => {
-      void result.current.handleGenerate("Hello from A");
+      void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 
@@ -708,7 +708,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Fire and forget — the stream promise never resolves, so the
     // generation run remains in "streaming" status.
     await act(async () => {
-      void result.current.handleGenerate("Hello from A");
+      void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 
@@ -789,7 +789,7 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     // Start a streaming run.
     await act(async () => {
-      void result.current.handleGenerate("Hello from A");
+      void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 

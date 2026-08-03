@@ -113,37 +113,29 @@ export function AssistantChat({
     selectedProfile,
     setGlobalAIProfileState,
   });
-  const {
-    submit: handleGenerate,
-    cancel: handleCancel,
-    reset: handleReset,
-    retry: handleRetry,
-    revert: revertToMessage,
-    restore: restoreFromRevert,
-    dismissGenerate: handleDismissGenerate,
-    setMode,
-  } = controller;
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
-    onSubmit: handleGenerate,
-    onCancel: handleCancel,
-    onReset: handleReset,
+    onSubmit: controller.submit,
+    onCancel: controller.cancel,
+    onReset: controller.reset,
     isLoading: isProcessing,
     scroll,
   });
 
+  // WHY: Revert/restore return prompt text the input must adopt; that glue
+  // stays in the chat shell, not on RunController.
   const handleRevert = useCallback(
     (userMessageId: string) => {
-      const promptText = revertToMessage(userMessageId, inputValue);
+      const promptText = controller.revert(userMessageId, inputValue);
       if (promptText != null) setInputValue(promptText);
     },
-    [revertToMessage, inputValue, setInputValue],
+    [controller, inputValue, setInputValue],
   );
 
   const handleRestore = useCallback(() => {
-    const text = restoreFromRevert();
+    const text = controller.restore();
     if (text != null) setInputValue(text);
-  }, [restoreFromRevert, setInputValue]);
+  }, [controller, setInputValue]);
 
   const { canSubmit, canCancel, showMissingSecretsWarning } = useAIChatValidation({
     profileId,
@@ -155,10 +147,14 @@ export function AssistantChat({
     isModelsError,
   });
 
-  const renderMessage = useAssistantMessageRenderer({ templateId, handleRetry, handleRevert });
+  const renderMessage = useAssistantMessageRenderer({
+    templateId,
+    handleRetry: controller.retry,
+    handleRevert,
+  });
 
   useAssistantChatHotkeys({
-    handleCancel,
+    handleCancel: controller.cancel,
     handleNewConversation,
     scroll,
     modelProfilePickerRef,
@@ -204,7 +200,7 @@ export function AssistantChat({
               scroll={scroll}
             />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-            {generateErr && <AIChatError error={generateErr} onDismiss={handleDismissGenerate} />}
+            {generateErr && <AIChatError error={generateErr} onDismiss={controller.dismissGenerate} />}
             {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
             {revertState && <RevertBanner onRestore={handleRestore} />}
             <AIChatPromptPanel onSubmit={handleSubmit}>
@@ -212,8 +208,12 @@ export function AssistantChat({
               <div className="flex flex-row items-center min-w-0 px-1 pb-2">
                 <div className="grow min-w-3" />
                 <div className="flex flex-row items-center gap-2 shrink-0 px-1">
-                  <AIChatModeToggle mode={effectiveMode} deckId={deckId ?? undefined} onModeChange={setMode} />
-                  <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={handleCancel} />
+                  <AIChatModeToggle
+                    mode={effectiveMode}
+                    deckId={deckId ?? undefined}
+                    onModeChange={controller.setMode}
+                  />
+                  <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={controller.cancel} />
                 </div>
               </div>
             </AIChatPromptPanel>

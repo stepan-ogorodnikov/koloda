@@ -19,7 +19,7 @@ export function useAssistantChatTestHarness({
     useAssistantProfileSelection();
 
   // Mounted for save / pagehide / unmount coverage even when the suite
-  // only drives session handlers.
+  // only drives RunController.
   useConversationPersistence({ conversationId });
 
   const { controller } = useAssistantSession({
@@ -33,5 +33,5 @@ export function useAssistantChatTestHarness({
     setGlobalAIProfileState,
   });
 
-  return { profileId, handleGenerate: controller.submit, setMode: controller.setMode };
+  return { profileId, controller };
 }
