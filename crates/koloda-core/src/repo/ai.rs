@@ -94,8 +94,10 @@ fn attach_api_key(profile: AIProfile, api_key: Option<String>) -> AIProfile {
         (Some(s), None) => Some(s.clone()),
         _ => None,
     };
+    let has_secrets = secrets_with_key.as_ref().and_then(|s| s.api_key()).is_some();
     AIProfile {
         secrets: secrets_with_key,
+        has_secrets,
         ..profile
     }
 }
@@ -132,10 +134,12 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
         }
 
         let secrets_for_db = secrets.as_ref().map(redact_secrets);
+        let has_secrets = secrets.as_ref().and_then(|s| s.api_key()).is_some();
         let profile = AIProfile {
             id: profile_id.clone(),
             title,
             secrets: secrets_for_db,
+            has_secrets,
             created_at: now,
         };
 
@@ -190,6 +194,7 @@ pub fn update_ai_profile(
 
         if let Some(ref new_secrets) = secrets {
             existing_profile.secrets = Some(redact_secrets(new_secrets));
+            existing_profile.has_secrets = new_secrets.api_key().is_some();
         }
 
         if title.is_some() {

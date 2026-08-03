@@ -12,6 +12,10 @@ pub struct AIProfile {
     pub title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub secrets: Option<AISecrets>,
+    // WHY: Default so stored settings without the field still deserialize; hosts set
+    // the real value when returning profiles (key may exist while `apiKey` is redacted).
+    #[serde(default)]
+    pub has_secrets: bool,
     #[serde(serialize_with = "serialize_timestamp", deserialize_with = "deserialize_timestamp")]
     pub created_at: i64,
 }

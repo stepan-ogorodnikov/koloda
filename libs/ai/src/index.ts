@@ -14,4 +14,5 @@ export * from "./lib/providers/openai-compatible";
 export * from "./lib/providers/opencode-go";
 export * from "./lib/providers/opencode-zen";
 export * from "./lib/providers/openrouter";
+export * from "./lib/runtime";
 export * from "./lib/settings";

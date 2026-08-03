@@ -174,6 +174,7 @@ export function createAIProfile(overrides: DeepPartial<AIProfile> = {}): AIProfi
       provider: "openrouter" as const,
       apiKey: "test-key",
     },
+    hasSecrets: true,
     createdAt: DEFAULT_DATE.toISOString(),
   };
 

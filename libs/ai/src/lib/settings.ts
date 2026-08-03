@@ -6,6 +6,9 @@ export const aiProfileValidation = z.object({
   id: z.uuid(),
   title: z.string().max(128, "validation.common.title.too-long").optional(),
   secrets: aiSecretsValidation.optional(),
+  // WHY: Default so stored settings without the field still parse; hosts set the
+  // real value when returning profiles (key may exist while `apiKey` is redacted).
+  hasSecrets: z.boolean().default(false),
   createdAt: z.iso.datetime(),
 });
 

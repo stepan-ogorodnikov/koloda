@@ -178,6 +178,7 @@ fn test_ai_profile_validate_for_input_ok_with_secrets() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: Some("key-123".to_string()),
         }),
+        has_secrets: true,
         created_at: TEST_CREATED_AT,
     };
 
@@ -192,6 +193,7 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
         secrets: Some(AISecrets::OpenRouter {
             api_key: Some("key-123".to_string()),
         }),
+        has_secrets: true,
         created_at: TEST_CREATED_AT,
     };
 
@@ -205,6 +207,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
         id: "profile-2".to_string(),
         title: None,
         secrets: None,
+        has_secrets: false,
         created_at: TEST_CREATED_AT,
     };
 
@@ -217,6 +220,7 @@ fn test_ai_profile_validate_empty_id_fails() {
         id: "".to_string(),
         title: Some("Profile".to_string()),
         secrets: None,
+        has_secrets: false,
         created_at: TEST_CREATED_AT,
     };
 
@@ -230,6 +234,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
         id: "profile-3".to_string(),
         title: Some("a".repeat(129)),
         secrets: None,
+        has_secrets: false,
         created_at: TEST_CREATED_AT,
     };
 
@@ -243,6 +248,7 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
         id: "profile-4".to_string(),
         title: Some("Profile".to_string()),
         secrets: Some(AISecrets::OpenRouter { api_key: None }),
+        has_secrets: false,
         created_at: TEST_CREATED_AT,
     };
 
@@ -270,6 +276,7 @@ fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
         id: "profile-1".to_string(),
         title: None,
         secrets: None,
+        has_secrets: false,
         created_at: TEST_CREATED_AT,
     };
 

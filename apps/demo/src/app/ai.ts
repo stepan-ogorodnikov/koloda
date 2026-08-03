@@ -1,13 +1,24 @@
-import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import { aiSettingsValidation, fetchModels, findDuplicateProfileId } from "@koloda/ai";
+import type { AddAIProfileData, AIProfile, AISecrets, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import { aiSettingsValidation, fetchModels, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/srs-pgsql";
 import { getSettings, setSettings } from "@koloda/srs-pgsql";
 import { produce } from "immer";
 
+function profileHasSecrets(secrets?: AISecrets): boolean {
+  if (!secrets) return false;
+  return isPresentApiKey(secrets.apiKey);
+}
+
 export async function getAIProfiles(db: DB): Promise<AIProfile[]> {
   const aiSettings = await getSettings<"ai">(db, "ai");
-  return aiSettings?.content?.profiles ?? [];
+  const profiles = aiSettings?.content?.profiles ?? [];
+  // WHY: Settings JSON may omit `hasSecrets` (zod default on parse). Fill from
+  // present apiKey so the `AIProfile` output type is satisfied without redacting.
+  return profiles.map((profile) => ({
+    ...profile,
+    hasSecrets: profile.hasSecrets ?? profileHasSecrets(profile.secrets),
+  }));
 }
 
 export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void> {
@@ -18,6 +29,7 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     id,
     title: data.title,
     secrets: data.secrets,
+    hasSecrets: profileHasSecrets(data.secrets),
     createdAt: now,
   };
 
@@ -47,7 +59,10 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       const profile = draft.profiles.find((p) => p.id === data.id);
       if (profile) {
         if (data.title !== undefined) profile.title = data.title;
-        if (data.secrets !== undefined) profile.secrets = data.secrets;
+        if (data.secrets !== undefined) {
+          profile.secrets = data.secrets;
+          profile.hasSecrets = profileHasSecrets(data.secrets);
+        }
       }
     }),
   );
