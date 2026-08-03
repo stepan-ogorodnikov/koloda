@@ -142,7 +142,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // clear the ref via `onComplete`. Prepare → arm → dispatch/execute.
       armPendingRun(mode, conversationId, runId);
 
-      setGlobalAIProfileState(cfg);
+      setGlobalAIProfileState({ profileId: cfg.profileId, modelId: cfg.modelId });
 
       await retryRun(runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
     },
@@ -183,7 +183,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const activeConversationId = readState().id;
       armPendingRun(currentMode, activeConversationId, runId);
 
-      setGlobalAIProfileState(cfg);
+      setGlobalAIProfileState({ profileId: cfg.profileId, modelId: cfg.modelId });
 
       dispatch(["addUserMessage", { runId, text: promptText }]);
       dispatchStartRun(dispatch, cfg, runId, prepared);

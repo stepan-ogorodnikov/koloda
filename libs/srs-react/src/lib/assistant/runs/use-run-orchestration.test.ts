@@ -144,7 +144,10 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     expect(armPendingRun).toHaveBeenCalledTimes(1);
     expect(armPendingRun).toHaveBeenCalledWith("chat", "conv-1", "run-1");
 
-    expect(setGlobalAIProfileState).toHaveBeenCalledWith(cfg);
+    expect(setGlobalAIProfileState).toHaveBeenCalledWith({
+      profileId: cfg.profileId,
+      modelId: cfg.modelId,
+    });
 
     expect(retryRun).toHaveBeenCalledTimes(1);
     const [runId, request, templateFields, mode, modelName] = retryRun.mock.calls[0] as [
