@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import { join } from "node:path";
+import { registerAiIpc } from "./ai-ipc";
 
 const isDev = !app.isPackaged;
 const __dirname = import.meta.dirname!;
@@ -316,6 +317,9 @@ function registerDataIpc(db: any) {
   ipcMain.handle("cmd_add_ai_profile", async (_event, { data }: any) => db.addAiProfile(data));
   ipcMain.handle("cmd_update_ai_profile", async (_event, { data }: any) => db.updateAiProfile(data));
   ipcMain.handle("cmd_remove_ai_profile", async (_event, { data }: any) => db.removeAiProfile(data));
+
+  // INVARIANT: AI provider calls + secret loads stay in main. Do not add cmd_* for getAiProfileSecrets.
+  registerAiIpc(db);
 }
 
 configureUserData();

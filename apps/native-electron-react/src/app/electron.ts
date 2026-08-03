@@ -6,7 +6,7 @@ declare global {
   interface Window {
     electronAPI: {
       invoke: <T>(cmd: string, args?: unknown) => Promise<T>;
-      on: (channel: string, callback: (...args: unknown[]) => void) => void;
+      on: (channel: string, callback: (...args: unknown[]) => void) => () => void;
       getZoomFactor: () => number;
       getZoomLevel: () => number;
       onZoomFactorChanged: (callback: (zoomFactor: number) => void) => () => void;

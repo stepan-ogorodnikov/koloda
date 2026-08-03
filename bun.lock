@@ -98,6 +98,9 @@
     "apps/native-electron": {
       "name": "@koloda/native-electron",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+      },
       "devDependencies": {
         "electron": "^35.2.0",
         "electron-builder": "^25.1.8",

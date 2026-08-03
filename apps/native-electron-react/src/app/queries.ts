@@ -1,4 +1,4 @@
-import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, AIProfile, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AllowedSettings,
   DeleteConversationData,
@@ -39,7 +39,6 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import { getAIProfileModels } from "../services/ai";
 import { invoke } from "./electron";
 import { getStatus, seedDB } from "./setup";
 
@@ -53,7 +52,7 @@ export const appQueryOptions = {
 
 export const appSetupMutationOptions = { mutationFn: seedDB };
 
-export const queriesFn = (): Queries => ({
+export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
     queryFn: () => invoke<AllowedSettings<T>>("cmd_get_settings", { name }),
@@ -199,6 +198,6 @@ export const queriesFn = (): Queries => ({
   }),
   getAIProfileModelsQuery: (profileId: string) => ({
     queryKey: queryKeys.ai.models(profileId),
-    queryFn: () => getAIProfileModels(profileId),
+    queryFn: () => aiRuntime.listModels(profileId),
   }),
 });

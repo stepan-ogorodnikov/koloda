@@ -3,7 +3,7 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "jsx": "preserve",
-    "lib": ["es2022"],
+    "lib": ["es2022", "dom"],
     "types": ["node"],
     "rootDir": "src",
     "module": "esnext",
@@ -31,5 +31,10 @@
     "src/**/*.spec.ts",
     "src/**/*.test.ts"
   ],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../libs/ai/tsconfig.lib.json"
+    }
+  ]
 }

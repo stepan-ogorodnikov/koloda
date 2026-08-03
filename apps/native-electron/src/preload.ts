@@ -24,7 +24,11 @@ function setZoomLevel(level: number) {
 contextBridge.exposeInMainWorld("electronAPI", {
   invoke: <T>(cmd: string, args?: unknown): Promise<T> => ipcRenderer.invoke(cmd, args),
   on: (channel: string, callback: (...args: unknown[]) => void) => {
-    ipcRenderer.on(channel, (_event, ...args) => callback(...args));
+    const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);
+    ipcRenderer.on(channel, listener);
+    return () => {
+      ipcRenderer.removeListener(channel, listener);
+    };
   },
   getZoomFactor: () => webFrame.getZoomFactor(),
   getZoomLevel: () => webFrame.getZoomLevel(),
