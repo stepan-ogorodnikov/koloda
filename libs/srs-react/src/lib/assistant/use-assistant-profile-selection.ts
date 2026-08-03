@@ -3,7 +3,7 @@ import type { AIModel, AISecrets } from "@koloda/ai";
 import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
-import type { AIProfileStateUpdater } from "./state/ai-profile-state";
+import { modelChangeSync, parameterChangeSync, profileChangeSync } from "./state/ai-profile-sync";
 import {
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
@@ -31,13 +31,16 @@ export type UseAssistantProfileSelectionReturn = {
   provider: AISecrets["provider"] | null;
   modelParameters: ModelParameter[];
   hasProfiles: boolean;
-  setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
   handleModelProfileChange: (next: { profileId: string; modelId: string }) => void;
   handleModelParameterChange: (type: ModelParameter["type"], value: string) => void;
 };
 
 type HandleModelProfileChangeParams = { profileId: string; modelId: string };
 
+/**
+ * Chat-tree owner of per-conversation AI selection + dual-write to global last-used.
+ * Sole `useAIProfiles` subscriber in the chat tree (pass `profiles` into the picker).
+ */
 export function useAssistantProfileSelection(): UseAssistantProfileSelectionReturn {
   const storedProfileId = useAtomValue(assistantProfileIdAtom);
   const storedModelId = useAtomValue(assistantAIModelIdAtom);
@@ -96,12 +99,14 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     (params: HandleModelProfileChangeParams) => {
       const { profileId: nextProfileId, modelId: nextModelId } = params;
       if (nextProfileId !== storedProfileId) {
-        setAIProfile({ profileId: nextProfileId, modelId: nextModelId, modelParameters: {} });
-        setGlobalAIProfileState({ profileId: nextProfileId, modelId: nextModelId, modelParameters: {} });
+        const sync = profileChangeSync(nextProfileId, nextModelId);
+        setAIProfile(sync.conversation);
+        setGlobalAIProfileState(sync.global);
         return;
       }
-      setAIModel({ modelId: nextModelId, modelParameters: {} });
-      setGlobalAIProfileState({ profileId: storedProfileId, modelId: nextModelId, modelParameters: {} });
+      const sync = modelChangeSync(storedProfileId, nextModelId);
+      setAIModel(sync.conversation);
+      setGlobalAIProfileState(sync.global);
     },
     [setAIProfile, setAIModel, setGlobalAIProfileState, storedProfileId],
   );
@@ -109,16 +114,13 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
   const handleModelParameterChange = useCallback(
     (type: ModelParameter["type"], value: string) => {
       const nextValue = value || null;
+      const sync = parameterChangeSync(storedProfileId, storedModelId, type, nextValue);
       switch (type) {
         case "reasoning_effort":
-          setAIModelParameter({ paramType: type, value: nextValue });
+          setAIModelParameter(sync.conversation);
           break;
       }
-      setGlobalAIProfileState({
-        profileId: storedProfileId,
-        modelId: storedModelId,
-        modelParameters: { [type]: nextValue ?? "" },
-      });
+      setGlobalAIProfileState(sync.global);
     },
     [setAIModelParameter, setGlobalAIProfileState, storedProfileId, storedModelId],
   );
@@ -138,7 +140,6 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
     provider,
     modelParameters,
     hasProfiles,
-    setGlobalAIProfileState,
     handleModelProfileChange,
     handleModelParameterChange,
   };

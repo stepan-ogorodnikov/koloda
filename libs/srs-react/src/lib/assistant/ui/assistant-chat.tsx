@@ -94,7 +94,6 @@ export function AssistantChat({
     isModelsLoading,
     isModelsError,
     areProfilesLoading,
-    setGlobalAIProfileState,
     handleModelProfileChange,
     handleModelParameterChange,
   } = useAssistantProfileSelection();
@@ -111,7 +110,6 @@ export function AssistantChat({
     modelName,
     modelParameters,
     selectedProfile,
-    setGlobalAIProfileState,
   });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({

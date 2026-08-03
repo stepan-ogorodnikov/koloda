@@ -143,7 +143,6 @@ vi.mock("./use-assistant-profile-selection", () => {
         provider: profile?.secrets?.provider ?? null,
         modelParameters: [] as ModelParameter[],
         hasProfiles: wire.profiles.length > 0,
-        setGlobalAIProfileState: () => {},
         handleModelProfileChange: () => {},
         handleModelParameterChange: () => {},
       };

@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { aiProfileStateAtom, reconcileAIProfileState } from "./state/ai-profile-state";
 import type { AIProfileState, AIProfileStateUpdater } from "./state/ai-profile-state";
+import { lastUsedOnRunStart } from "./state/ai-profile-sync";
 
 export type UseGlobalAIProfileStateReturn = [AIProfileState, (updater: AIProfileStateUpdater) => void];
 
@@ -33,6 +34,19 @@ export function useSetGlobalAIProfileState(): (updater: AIProfileStateUpdater) =
       });
     },
     [setStored, stored],
+  );
+}
+
+/**
+ * Submit/retry path: persist last-used profile/model without touching params.
+ */
+export function useRememberLastUsedAIProfile(): (profileId: string, modelId: string) => void {
+  const setGlobal = useSetGlobalAIProfileState();
+  return useCallback(
+    (profileId: string, modelId: string) => {
+      setGlobal(lastUsedOnRunStart(profileId, modelId));
+    },
+    [setGlobal],
   );
 }
 

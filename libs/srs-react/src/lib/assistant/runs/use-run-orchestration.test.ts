@@ -42,7 +42,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
   let calls: Array<{ fn: string; args: unknown[] }>;
   let armPendingRun: ReturnType<typeof vi.fn>;
   let retryRun: ReturnType<typeof vi.fn>;
-  let setGlobalAIProfileState: ReturnType<typeof vi.fn>;
+  let rememberLastUsedAIProfile: ReturnType<typeof vi.fn>;
   let dispatch: (action: ConversationReducerAction) => void;
   let store: ReturnType<typeof createStore>;
   let readState: () => ConversationReducerState;
@@ -51,7 +51,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     calls = [];
     armPendingRun = vi.fn((...args: unknown[]) => calls.push({ fn: "arm", args }));
     retryRun = vi.fn(async (...args: unknown[]) => calls.push({ fn: "retryRun", args }));
-    setGlobalAIProfileState = vi.fn((...args: unknown[]) => calls.push({ fn: "setGlobalAIProfileState", args }));
+    rememberLastUsedAIProfile = vi.fn((...args: unknown[]) => calls.push({ fn: "rememberLastUsedAIProfile", args }));
 
     store = createStore();
     dispatch = (action) => store.set(assistantConversationStateAtom, action);
@@ -80,7 +80,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
         readState,
         dispatch,
         dispatchLocal: vi.fn(),
-        setGlobalAIProfileState,
+        rememberLastUsedAIProfile,
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
         executeChatRun: vi.fn(async () => undefined) as never,
@@ -105,7 +105,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     const names = calls.map((c) => c.fn);
     expect(names).not.toContain("arm");
     expect(names).not.toContain("retryRun");
-    expect(names).not.toContain("setGlobalAIProfileState");
+    expect(names).not.toContain("rememberLastUsedAIProfile");
     expect(armPendingRun).not.toHaveBeenCalled();
     expect(retryRun).not.toHaveBeenCalled();
   });
@@ -144,10 +144,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     expect(armPendingRun).toHaveBeenCalledTimes(1);
     expect(armPendingRun).toHaveBeenCalledWith("chat", "conv-1", "run-1");
 
-    expect(setGlobalAIProfileState).toHaveBeenCalledWith({
-      profileId: cfg.profileId,
-      modelId: cfg.modelId,
-    });
+    expect(rememberLastUsedAIProfile).toHaveBeenCalledWith(cfg.profileId, cfg.modelId);
 
     expect(retryRun).toHaveBeenCalledTimes(1);
     const [runId, request, templateFields, mode, modelName] = retryRun.mock.calls[0] as [

@@ -4,7 +4,6 @@ import type { Template } from "@koloda/srs";
 import { useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
-import type { AIProfileStateUpdater } from "../state/ai-profile-state";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom, setAssistantModeAtom } from "../state/conversation-actions";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
@@ -15,6 +14,7 @@ import {
   touchAtom,
 } from "../state/conversation-store";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
+import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
 import type { RunController } from "./run-controller";
 import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";
@@ -27,7 +27,6 @@ export type UseAssistantSessionOptions = {
   modelName: string | undefined;
   modelParameters: ModelParameter[];
   selectedProfile: AIProfile | null;
-  setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
 };
 
 export type UseAssistantSessionReturn = {
@@ -44,12 +43,12 @@ export function useAssistantSession({
   modelName,
   modelParameters,
   selectedProfile,
-  setGlobalAIProfileState,
 }: UseAssistantSessionOptions): UseAssistantSessionReturn {
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
   const touch = useSetAtom(touchAtom);
   const newConversation = useSetAtom(newConversationAtom);
+  const rememberLastUsedAIProfile = useRememberLastUsedAIProfile();
 
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
 
@@ -149,7 +148,7 @@ export function useAssistantSession({
     readState,
     dispatch,
     dispatchLocal,
-    setGlobalAIProfileState,
+    rememberLastUsedAIProfile,
     cancelActiveRun: handleCancel,
     setMode,
     executeChatRun,

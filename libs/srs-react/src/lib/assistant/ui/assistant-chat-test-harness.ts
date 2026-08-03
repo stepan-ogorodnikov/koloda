@@ -15,8 +15,7 @@ export function useAssistantChatTestHarness({
   conversationId,
   onConversationIdChange,
 }: UseAssistantChatTestHarnessOptions) {
-  const { profileId, modelId, modelName, modelParameters, selectedProfile, setGlobalAIProfileState } =
-    useAssistantProfileSelection();
+  const { profileId, modelId, modelName, modelParameters, selectedProfile } = useAssistantProfileSelection();
 
   // Mounted for save / pagehide / unmount coverage even when the suite
   // only drives RunController.
@@ -30,7 +29,6 @@ export function useAssistantChatTestHarness({
     modelName,
     modelParameters,
     selectedProfile,
-    setGlobalAIProfileState,
   });
 
   return { profileId, controller };

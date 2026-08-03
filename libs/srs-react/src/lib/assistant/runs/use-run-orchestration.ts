@@ -6,7 +6,6 @@ import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useCallback } from "react";
 import type { RefObject } from "react";
-import type { AIProfileStateUpdater } from "../state/ai-profile-state";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { buildConversationMessages, getMessageRunId, userMessageId } from "../state/assistant-messages";
 import { buildStreamRequest } from "./build-stream-request";
@@ -23,7 +22,7 @@ type UseRunOrchestrationOptions = {
   // WHY: Revert is visual/in-memory only and must not touch()
   // (`toPersistedState` omits revertState). Mode changes still go through setMode.
   dispatchLocal: (action: ConversationReducerAction) => void;
-  setGlobalAIProfileState: (updater: AIProfileStateUpdater) => void;
+  rememberLastUsedAIProfile: (profileId: string, modelId: string) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
@@ -107,7 +106,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     readState,
     dispatch,
     dispatchLocal,
-    setGlobalAIProfileState,
+    rememberLastUsedAIProfile,
     cancelActiveRun,
     setMode,
     executeChatRun,
@@ -142,11 +141,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // clear the ref via `onComplete`. Prepare → arm → dispatch/execute.
       armPendingRun(mode, conversationId, runId);
 
-      setGlobalAIProfileState({ profileId: cfg.profileId, modelId: cfg.modelId });
+      rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
       await retryRun(runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
     },
-    [configRef, retryRun, readState, setGlobalAIProfileState, armPendingRun],
+    [configRef, retryRun, readState, rememberLastUsedAIProfile, armPendingRun],
   );
 
   const handleDismissGenerate = useCallback(() => {
@@ -183,7 +182,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const activeConversationId = readState().id;
       armPendingRun(currentMode, activeConversationId, runId);
 
-      setGlobalAIProfileState({ profileId: cfg.profileId, modelId: cfg.modelId });
+      rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
       dispatch(["addUserMessage", { runId, text: promptText }]);
       dispatchStartRun(dispatch, cfg, runId, prepared);
@@ -201,7 +200,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       executeChatRun,
       executeGenerateRun,
       readState,
-      setGlobalAIProfileState,
+      rememberLastUsedAIProfile,
       armPendingRun,
     ],
   );
