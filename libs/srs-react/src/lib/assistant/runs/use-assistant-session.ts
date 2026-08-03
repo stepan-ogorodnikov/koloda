@@ -1,4 +1,4 @@
-import type { AIChatMode, AIProfile, ModelParameter } from "@koloda/ai";
+import type { AIProfile, ModelParameter } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import type { Template } from "@koloda/srs";
 import { useSetAtom, useStore } from "jotai";
@@ -15,6 +15,7 @@ import {
   touchAtom,
 } from "../state/conversation-store";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
+import type { RunController } from "./run-controller";
 import { useConversationRuns } from "./use-conversation-runs";
 import { useRunOrchestration } from "./use-run-orchestration";
 
@@ -30,16 +31,9 @@ export type UseAssistantSessionOptions = {
 };
 
 export type UseAssistantSessionReturn = {
+  controller: RunController;
   template: Template | null | undefined;
   templateId: Template["id"] | undefined;
-  handleGenerate: (value?: string) => Promise<void>;
-  handleCancel: () => void;
-  handleReset: () => void;
-  handleRetry: (runId: string) => Promise<void>;
-  handleRevert: (userMessageId: string, currentInputText: string) => string | null;
-  handleRestore: () => string | null;
-  handleDismissGenerate: () => void;
-  setMode: (mode: AIChatMode) => void;
 };
 
 export function useAssistantSession({
@@ -165,16 +159,16 @@ export function useAssistantSession({
     armPendingRun,
   });
 
-  return {
-    template,
-    templateId,
-    handleGenerate,
-    handleCancel,
-    handleReset,
-    handleRetry,
-    handleRevert,
-    handleRestore,
-    handleDismissGenerate,
+  const controller: RunController = {
+    submit: handleGenerate,
+    retry: handleRetry,
+    cancel: handleCancel,
+    reset: handleReset,
+    revert: handleRevert,
+    restore: handleRestore,
+    dismissGenerate: handleDismissGenerate,
     setMode,
   };
+
+  return { controller, template, templateId };
 }

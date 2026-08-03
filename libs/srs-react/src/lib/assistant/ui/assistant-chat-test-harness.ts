@@ -22,7 +22,7 @@ export function useAssistantChatTestHarness({
   // only drives session handlers.
   useConversationPersistence({ conversationId });
 
-  const { handleGenerate, setMode } = useAssistantSession({
+  const { controller } = useAssistantSession({
     conversationId,
     onConversationIdChange,
     profileId,
@@ -33,5 +33,5 @@ export function useAssistantChatTestHarness({
     setGlobalAIProfileState,
   });
 
-  return { profileId, handleGenerate, setMode };
+  return { profileId, handleGenerate: controller.submit, setMode: controller.setMode };
 }

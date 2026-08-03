@@ -9,7 +9,7 @@ Before modifying the assistant chat feature, read this map to load the correct s
 | Folder | Owns |
 |--------|------|
 | `state/` | Reducer, store, selectors, actions, messages, profile/config types |
-| `runs/` | Session, orchestration, stream execution, pending-refs, `build-stream-request` |
+| `runs/` | Session (`RunController`), orchestration, stream execution, pending-refs, `build-stream-request` |
 | `persistence/` | Restore/saver hooks, coerce/normalize, save scheduler |
 | `ui/` | Chat shell, lists, settings, message/card renderers, chrome |
 | *(root)* | Profile cascade hooks (`use-assistant-profile-selection`, `use-global-ai-profile-state`, runtime config, client, prompt templates) |
@@ -44,6 +44,7 @@ If your task matches one of these, read the specified doc first, then target the
 ### Composition
 
 `AssistantChat` (`ui/`) wires `useAssistantProfileSelection` → `useConversationPersistence` → `useAssistantSession` directly.
+Session returns a `RunController` (`runs/run-controller.ts`) plus template bits — that is the UI’s run/session surface.
 Do not reintroduce a god `useAssistantChat` hook; integration tests use `ui/assistant-chat-test-harness.ts` only.
 
 ### Public surface (`@koloda/srs-react`)

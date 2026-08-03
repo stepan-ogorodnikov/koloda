@@ -103,18 +103,7 @@ export function AssistantChat({
 
   const { isRestoring, loadError, handleDismissSave, retryLoad } = useConversationPersistence({ conversationId });
 
-  const {
-    template,
-    templateId,
-    handleGenerate,
-    handleCancel,
-    handleReset,
-    handleRetry,
-    handleRevert: revertToMessage,
-    handleRestore: restoreFromRevert,
-    handleDismissGenerate,
-    setMode,
-  } = useAssistantSession({
+  const { controller, template, templateId } = useAssistantSession({
     conversationId,
     onConversationIdChange,
     profileId,
@@ -124,6 +113,16 @@ export function AssistantChat({
     selectedProfile,
     setGlobalAIProfileState,
   });
+  const {
+    submit: handleGenerate,
+    cancel: handleCancel,
+    reset: handleReset,
+    retry: handleRetry,
+    revert: revertToMessage,
+    restore: restoreFromRevert,
+    dismissGenerate: handleDismissGenerate,
+    setMode,
+  } = controller;
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     onSubmit: handleGenerate,

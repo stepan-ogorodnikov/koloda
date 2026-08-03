@@ -14,7 +14,7 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 
 - Algorithms / templates / decks / cards / lessons: folders under `src/lib/` — CRUD screens, pickers, editors, lesson session UI.
 - Dashboard widget: `components/learned-today.tsx`.
-- Assistant layout under `assistant/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (session, orchestration, stream execution, `build-stream-request`), `persistence/` (restore/saver/composer, scheduler, coerce/normalize), `ui/` (chat shell, lists, settings, renderers).
+- Assistant layout under `assistant/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (session/`RunController`, orchestration, stream execution, `build-stream-request`), `persistence/` (restore/saver/composer, scheduler, coerce/normalize), `ui/` (chat shell, lists, settings, renderers).
 - Profile cascade (assistant root): `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts` — chat-tree subscription rules live here, not in `ai-react`.
 
 ### Does NOT own (prevent scope creep)
