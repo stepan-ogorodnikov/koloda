@@ -1,7 +1,8 @@
 # Assistant Chat: Conversations
 
 Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI profile state, persistence, restore, error handling, retry, and revert.
-Does not cover deck management, AI provider configuration, or the streaming transport layer.
+Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
+Those prompt and temperature preferences are covered by the assistant settings spec.
 
 ## What is a Conversation
 

@@ -1,7 +1,8 @@
 # Assistant Chat: Card Generation
 
 Covers how the AI generates flashcard content, how generated cards are displayed, selected, and added to a deck, and the strategies used to parse AI output into structured card data.
-Does not cover deck management, conversation lifecycle, mode switching, or the streaming transport layer.
+Does not cover deck management, conversation lifecycle, mode switching, assistant settings editing, or the streaming transport layer.
+Prompt templates, temperature, and preview are covered by the assistant settings spec.
 
 ## What is Card Generation
 
@@ -20,24 +21,12 @@ A card with at least one field value is kept.
 
 ## Generation Prompt
 
-The system prompt sent to the AI includes:
+Cards-mode runs send a compiled system prompt built from the card generation prompt template in assistant settings.
+That template may include `{{fields}}`, `{{rules}}`, and `{{provider}}`.
+How those templates are edited, previewed, reset, and saved — and how temperature is set — is covered by the assistant settings spec.
 
-- A description of each field (ID, title, type, whether it is required)
-- Rules for card structure and content
-- Provider-specific format instructions when the provider does not support structured output
-
-The system prompt is compiled from a user-customizable template.
-The user can edit the template in assistant settings and preview the compiled result.
-
-The template supports three variables that are replaced when the prompt is sent:
-
-- `{{fields}}` — expands to a list of the template's fields with their titles, types, and whether they are required
-- `{{rules}}` — expands to the rules for card structure and content
-- `{{provider}}` — expands to provider-specific format instructions (only included when the provider needs them)
-
-Variables are optional — the user can include only the ones they need.
-
-The temperature for generation defaults to 0.2 but can be configured in assistant settings.
+At run time the prompt is compiled against the active deck's template fields and the selected provider.
+The temperature from assistant settings is included on the request.
 
 ## Generation Behavior
 
