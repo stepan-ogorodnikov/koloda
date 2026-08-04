@@ -26,7 +26,7 @@ export function DemoSetup() {
 
   const handleClick = () => {
     mutate(
-      { language, scheme, t: _ },
+      { language, scheme },
       {
         onSuccess: (result) => {
           if (result) {

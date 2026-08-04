@@ -127,7 +127,7 @@ msgstr "Delete"
 msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:52
+#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
 msgid "settings.ai.edit.submit"
 msgstr "Save"
 
@@ -139,11 +139,11 @@ msgstr "Edit AI profile"
 msgid "settings.ai.edit.trigger"
 msgstr "Edit profile"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:42
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:43
 msgid "settings.ai.profiles.api-key.label"
 msgstr "API key"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:41
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:42
 msgid "settings.ai.profiles.base-url.label"
 msgstr "Base URL"
 
@@ -159,7 +159,7 @@ msgstr "No profiles"
 msgid "settings.ai.profiles.provider.label"
 msgstr "Provider"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:41
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:50
 msgid "settings.ai.profiles.replace"
 msgstr "Replace with a new value"
 
@@ -167,16 +167,16 @@ msgstr "Replace with a new value"
 msgid "settings.ai.profiles.title"
 msgstr "AI Profiles"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:39
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:40
 msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:32
+#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:33
 #: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Untitled"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:35
+#: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
 msgid "settings.hotkeys"
 msgstr "Hotkeys"
@@ -206,7 +206,7 @@ msgstr "Animations"
 msgid "settings.interface.scheme"
 msgstr "Color scheme"
 
-#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:35
+#: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Learning"

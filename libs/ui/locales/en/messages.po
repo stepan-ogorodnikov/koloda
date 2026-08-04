@@ -22,24 +22,24 @@ msgid "drag-handle.label"
 msgstr "Drag handle"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:31
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
 msgstr "Created {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:106
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:108
 msgid "form.reset"
 msgstr "Discard"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:85
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:87
 msgid "form.save"
 msgstr "Save"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:43
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:45
 msgid "form.updatedAt {0}"
 msgstr "Updated {0}"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:51
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:53
 msgid "hotkey-recorder.accept"
 msgstr "Accept this hotkey"
 
@@ -47,11 +47,11 @@ msgstr "Accept this hotkey"
 msgid "hotkey-recorder.add-button.label"
 msgstr "Add another hotkey"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:59
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:61
 msgid "hotkey-recorder.cancel"
 msgstr "Cancel"
 
-#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:46
+#: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:48
 msgid "hotkey-recorder.input.placeholder"
 msgstr "Expecting input"
 
@@ -83,27 +83,27 @@ msgstr "Retry"
 msgid "query-loading.message"
 msgstr "Loading"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:55
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:57
 msgid "table.pagination.buttons.first"
 msgstr "Go to first page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:77
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:79
 msgid "table.pagination.buttons.last"
 msgstr "Go to last page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:70
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:72
 msgid "table.pagination.buttons.next"
 msgstr "Go to next page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:62
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:64
 msgid "table.pagination.buttons.previous"
 msgstr "Go to previous page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:96
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:98
 msgid "table.pagination.page-size.label"
 msgstr "Per page:"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:48
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:50
 msgid "table.pagination.records.label"
 msgstr "of"
 
@@ -115,6 +115,6 @@ msgstr "Go back"
 msgid "titlebar.navigation.forward"
 msgstr "Go forward"
 
-#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:48
+#: ../../libs/ui/src/lib/ui/titlebar-sidebar-controls.tsx:45
 msgid "titlebar.sidebar-controls.label"
 msgstr "Toggle navigation panel"

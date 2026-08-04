@@ -103,78 +103,78 @@ msgstr "New template"
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:15
-#: ../../libs/srs-react/src/lib/assistant/copy-message-button.tsx:22
+#: ../../libs/srs-react/src/lib/assistant/ui/copy-message-button.tsx:15
+#: ../../libs/srs-react/src/lib/assistant/ui/copy-message-button.tsx:22
 msgid "ai.chat.message.copy.tooltip"
 msgstr "Copy message"
 
-#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:22
+#: ../../libs/srs-react/src/lib/assistant/ui/revert-banner.tsx:22
 msgid "ai.chat.message.restore.label"
 msgstr "Restore"
 
-#: ../../libs/srs-react/src/lib/assistant/revert-banner.tsx:20
+#: ../../libs/srs-react/src/lib/assistant/ui/revert-banner.tsx:20
 msgid "ai.chat.message.revert.indicator"
 msgstr "Messages reverted"
 
-#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:15
-#: ../../libs/srs-react/src/lib/assistant/revert-message-button.tsx:22
+#: ../../libs/srs-react/src/lib/assistant/ui/revert-message-button.tsx:15
+#: ../../libs/srs-react/src/lib/assistant/ui/revert-message-button.tsx:22
 msgid "ai.chat.message.revert.tooltip"
 msgstr "Revert message"
 
-#: ../../libs/srs-react/src/lib/assistant/message-timestamp.tsx:24
+#: ../../libs/srs-react/src/lib/assistant/ui/message-timestamp.tsx:24
 msgid "ai.chat.message.timestamp.today {time}"
 msgstr "Today at {time}"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:30
-#: ../../libs/srs-react/src/lib/assistant/assistant-new-conversation-button.tsx:35
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-new-conversation-button.tsx:30
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-new-conversation-button.tsx:35
 msgid "ai.chat.new-conversation.label"
 msgstr "New conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:17
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-no-profiles.tsx:17
 msgid "ai.chat.no-profiles"
 msgstr "You don't have any AI profiles"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-no-profiles.tsx:13
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-no-profiles.tsx:13
 msgid "ai.chat.no-profiles.add"
 msgstr "Add profile"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-chat.tsx:188
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:179
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
-#: ../../libs/srs-react/src/lib/assistant/clone-conversation-button.tsx:33
+#: ../../libs/srs-react/src/lib/assistant/ui/clone-conversation-button.tsx:33
 msgid "ai.conversation.clone.action"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:81
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:81
 msgid "ai.conversation.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:78
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:78
 msgid "ai.conversation.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:73
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:73
 msgid "ai.conversation.delete.message"
 msgstr "Delete this conversation? This cannot be undone."
 
-#: ../../libs/srs-react/src/lib/assistant/delete-conversation-button.tsx:62
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:62
 msgid "ai.conversation.delete.trigger"
 msgstr "Delete conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/conversation-header-menu.tsx:26
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-header-menu.tsx:26
 msgid "ai.conversation.menu.trigger"
 msgstr "Conversation actions"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:13
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:13
 msgid "ai.conversation.running"
 msgstr "Running"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:14
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:14
 msgid "ai.conversation.unread"
 msgstr "Unread"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-conversations-list.tsx:12
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:12
 msgid "ai.conversation.untitled"
 msgstr "Untitled conversation"
 
@@ -252,74 +252,74 @@ msgstr "Delete relearning step number {0}"
 msgid "algorithm.relearning-steps.unit.{0}"
 msgstr "Time period for relearning step number {0}"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table.tsx:54
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table.tsx:54
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/assistant/use-run-orchestration.ts:97
+#: ../../libs/srs-react/src/lib/assistant/runs/use-run-orchestration.ts:98
 msgid "assistant.chat.message.status.pending"
 msgstr "Working"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:78
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:78
 msgid "assistant.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:40
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:47
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:47
 msgid "assistant.settings.prompt.edit"
 msgstr "Edit"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:40
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:47
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:40
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:47
 msgid "assistant.settings.prompt.preview"
 msgstr "Preview"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:60
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-prompt-editor.tsx:63
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:60
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:63
 msgid "assistant.settings.prompt.reset"
 msgstr "Reset"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:106
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:106
 msgid "assistant.settings.system-prompt.cards.label"
 msgstr "Card generation prompt"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:93
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:93
 msgid "assistant.settings.system-prompt.chat.label"
 msgstr "Chat prompt"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:16
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:16
 msgid "assistant.settings.system-prompt.variables"
 msgstr "Variables"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:5
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:5
 msgid "assistant.settings.system-prompt.variables.fields"
 msgstr "Fields"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:7
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:7
 msgid "assistant.settings.system-prompt.variables.provider"
 msgstr "Provider"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings-variables.tsx:6
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:6
 msgid "assistant.settings.system-prompt.variables.rules"
 msgstr "Rules"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-settings.tsx:120
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:120
 msgid "assistant.settings.temperature.label"
 msgstr "Temperature"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:55
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table-select-cell.tsx:55
 msgid "assistant.table.columns.status.error"
 msgstr "Error"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:35
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table-select-cell.tsx:35
 msgid "assistant.table.columns.status.pending"
 msgstr "Pending"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-table-select-cell.tsx:45
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table-select-cell.tsx:45
 msgid "assistant.table.columns.status.success"
 msgstr "Success"
 
-#: ../../libs/srs-react/src/lib/assistant/assistant-cards-message.tsx:58
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:58
 msgid "assistant.template-unavailable"
 msgstr "This message was generated with a template that is no longer accessible."
 
@@ -327,36 +327,36 @@ msgstr "This message was generated with a template that is no longer accessible.
 msgid "assistant.trigger"
 msgstr "AI Chat"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:155
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
 msgid "card.action.reset-progress"
 msgstr "Reset progress"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:149
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:146
 msgid "card.labels.actions"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:129
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:126
 msgid "card.labels.difficulty"
 msgstr "Difficulty"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:115
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:87
 msgid "card.labels.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:136
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:133
 msgid "card.labels.lapses"
 msgstr "Lapses"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:143
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:140
 msgid "card.labels.reviews"
 msgstr "Reviews"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:122
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:119
 msgid "card.labels.stability"
 msgstr "Stability"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:109
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:106
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:69
 msgid "card.labels.state"
 msgstr "Status"
@@ -377,11 +377,11 @@ msgstr "Review"
 msgid "card.state.untouched"
 msgstr "New"
 
-#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:46
+#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:43
 msgid "cards-stack.navigation.next"
 msgstr "Go to next card"
 
-#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:38
+#: ../../libs/srs-react/src/lib/cards/cards-stack.tsx:35
 msgid "cards-stack.navigation.prev"
 msgstr "Go to previous card"
 
@@ -624,7 +624,7 @@ msgstr "Delete template"
 msgid "edit-card.trigger"
 msgstr "Edit card"
 
-#: ../../libs/srs-react/src/lib/components/learned-today.tsx:53
+#: ../../libs/srs-react/src/lib/components/learned-today.tsx:54
 msgid "learned-today.title"
 msgstr "Learned today"
 
@@ -636,7 +636,7 @@ msgstr "Close"
 msgid "lesson.completion.message"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:61
+#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:58
 #: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:56
 msgid "lesson.content.submit"
 msgstr "Continue"

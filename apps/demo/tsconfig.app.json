@@ -19,6 +19,7 @@
     "rootDir": "src",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "ignoreDeprecations": "6.0"
   },
   "exclude": [
@@ -37,7 +38,8 @@
     "src/**/*.js",
     "src/**/*.jsx",
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "src/**/*.json"
   ],
   "references": [
     {

@@ -1,0 +1,30 @@
+{
+  "id": "type",
+  "title": "Type answer",
+  "content": {
+    "fields": [
+      {
+        "id": 1,
+        "title": "Front",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": 2,
+        "title": "Back",
+        "type": "text",
+        "isRequired": true
+      }
+    ],
+    "layout": [
+      {
+        "field": 1,
+        "operation": "display"
+      },
+      {
+        "field": 2,
+        "operation": "type"
+      }
+    ]
+  }
+}

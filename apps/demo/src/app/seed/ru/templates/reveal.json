@@ -1,0 +1,30 @@
+{
+  "id": "reveal",
+  "title": "Показ ответа",
+  "content": {
+    "fields": [
+      {
+        "id": 1,
+        "title": "Лицо",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": 2,
+        "title": "Оборот",
+        "type": "text",
+        "isRequired": true
+      }
+    ],
+    "layout": [
+      {
+        "field": 1,
+        "operation": "display"
+      },
+      {
+        "field": 2,
+        "operation": "reveal"
+      }
+    ]
+  }
+}

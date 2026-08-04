@@ -2,12 +2,10 @@ import type { InterfaceSettings } from "@koloda/app";
 import { AppError, DEFAULT_INTERFACE_SETTINGS, interfaceSettingsValidation } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/app";
-import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
 import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";
-import { msg } from "@lingui/core/macro";
-import type { I18nContext } from "@lingui/react";
 import { sql } from "drizzle-orm";
 import { db, migrations, MIGRATIONS_TABLE } from "./db";
+import { loadSeedData } from "./seed/seed";
 
 /**
  * Gets the current status of the database
@@ -56,27 +54,37 @@ export async function migrate() {
   });
 }
 
-type SetupFromScratchData = Partial<InterfaceSettings> & { t: I18nContext["_"] };
+type SetupFromScratchData = Partial<InterfaceSettings>;
 
 /**
  * Sets up the application from scratch by applying migrations,
- * creating default algorithm and template, and configuring settings
- * @param data - Configuration data including interface settings and translation function
+ * seeding locale templates/algorithms, and configuring settings
+ * @param data - Configuration data including interface settings
  * @returns Promise resolving to true if setup was successful, false otherwise
  */
-export async function setupFromScratch({ t, ...settings }: SetupFromScratchData) {
+export async function setupFromScratch(settings: SetupFromScratchData) {
   try {
     await migrate();
 
-    const title = t(msg`demo.setup.default-title`);
+    const seed = await loadSeedData(settings.language ?? "en");
 
-    const returningAlgorithm = await addAlgorithm(db, { title, content: DEFAULT_FSRS_ALGORITHM });
-    const algorithm = returningAlgorithm?.id;
-    if (!algorithm) throw new AppError("db.add");
+    const algorithmIds = new Map<string, number>();
+    for (const algorithm of seed.algorithms) {
+      const returning = await addAlgorithm(db, { title: algorithm.title, content: algorithm.content });
+      if (!returning?.id) throw new AppError("db.add");
+      algorithmIds.set(algorithm.id, returning.id);
+    }
 
-    const returningTemplate = await addTemplate(db, { ...DEFAULT_TEMPLATE, title });
-    const template = returningTemplate?.id;
-    if (!template) throw new AppError("db.add");
+    const templateIds = new Map<string, number>();
+    for (const template of seed.templates) {
+      const returning = await addTemplate(db, { title: template.title, content: template.content });
+      if (!returning?.id) throw new AppError("db.add");
+      templateIds.set(template.id, returning.id);
+    }
+
+    const algorithm = algorithmIds.get("simple");
+    const template = templateIds.get("type");
+    if (!algorithm || !template) throw new AppError("db.add");
 
     await setSettings(db, {
       name: "interface",
