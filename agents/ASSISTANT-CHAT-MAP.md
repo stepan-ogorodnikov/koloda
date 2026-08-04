@@ -21,7 +21,8 @@ If your task matches one of these, read the specified doc first, then target the
 | Task | Read First (Spec/Playbook) | Primary Files to Edit | Critical Invariant to Preserve |
 |------|---------------------------|----------------------|-------------------------------|
 | Add a new AI provider | agents/ADD-AI-PROVIDER.md | libs/ai/src/lib/provider-catalog.ts, provider-secrets.ts, libs/ai/src/lib/providers/<provider>.ts, provider-registry.ts, crates/koloda-core/src/domain/ai.rs | TS and Rust provider enums must stay in sync. One provider = one module under `providers/`; wire it in `provider-registry.ts`. |
-| Fix streaming / chunk handling | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Runs, §During Streaming) | libs/ai/src/lib/chat-stream.ts, libs/ai-react/src/lib/use-chat-stream.ts, use-assistant-card-generation.ts | Partial content must be preserved on failure/cancel. Chat and cards mode each have a transport hook in ai-react. |
+| Fix streaming / chunk handling | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Runs, §During Streaming) | libs/ai chat-stream; ai-react stream hooks; host `AIRuntime` adapters | Partial content preserved on failure/cancel. Provider HTTP runs in the host, not the renderer. |
+| Change AIRuntime / key proxy | this map (§AIRuntime seam); libs/ai/README.md | libs/ai `runtime.ts`; core-react `aiRuntimeAtom`; Electron `ai-ipc` + renderer `ai-runtime`; demo `ai-runtime` | Renderer never gets usable `apiKey`. Streams correlate by `requestId` and support abort. |
 | Change run lifecycle (start/cancel/fail) | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Runs) | `assistant/state/conversation-reducer.ts` (`transitionRun`), `runs/use-conversation-runs.ts`, `runs/use-run-orchestration.ts`; libs/ai-react/src/lib/use-streaming-request.ts (transport) | A run has exactly one user msg and one assistant msg. Status transitions go through `transitionRun` (streaming → success\|failed\|canceled; restart → streaming); illegal terminals are no-ops. Stream transport + run execution live in `use-conversation-runs.ts`. |
 | Change conversation history rules | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Conversation History) | `assistant/state/conversation-reducer.ts` (getVisibleMessages), `state/assistant-messages.ts`, `runs/use-run-orchestration.ts`, `runs/build-stream-request.ts` | "What the user sees is what the model gets" (incl. partial fails, excl. card outputs). |
 | Change chat ↔ cards mode switching | docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md (§Mode Switching) | libs/ai-react/src/lib/ai-chat-mode-toggle.tsx; `assistant/state/conversation-actions.ts` (setMode), `state/conversation-selectors.ts` (effectiveMode), `state/assistant-messages.ts` (getEffectiveChatMode) | Mode is user-controlled only (toggle/hotkey/revert). Deck must be selected to toggle. Run completion does not change mode. |
@@ -36,10 +37,24 @@ If your task matches one of these, read the specified doc first, then target the
 
 ## Layer Boundaries (Enforce these)
 
-- libs/ai: Provider calls, streaming, zod schemas. NO React, NO DB, NO run state.
+- libs/ai: Provider calls, streaming, zod schemas, `AIRuntime` contract. NO React, NO DB, NO run state.
 - libs/ai-react: Shared AI UI primitives and streaming hooks. NO conversation store, NO DB schemas.
 - libs/srs-react/.../assistant: Conversation store/reducer, run orchestration, chat UI. NO provider HTTP, NO DB schemas.
 - crates/koloda-core: Source of truth for provider enum, secrets redaction, DB repo.
+- Host apps: Own `AIRuntime` adapters and secret loading. Shared React calls by `profileId` only.
+
+### AIRuntime seam
+
+Shared React never builds provider clients or holds usable API keys.
+Hosts inject `aiRuntimeAtom` (`libs/core-react`); assistant uses `useAssistantClient` → `AIRuntime`.
+
+| Host | Adapter | Secrets |
+|------|---------|---------|
+| Electron | `apps/native-electron-react/.../ai-runtime.ts` over IPC; main `apps/native-electron/src/ai-ipc.ts` | Keyring via NAPI in main only |
+| Demo | `apps/demo/src/app/ai-runtime.ts` | Host-local PGlite read at call time |
+
+Public profile reads are redacted (`apiKey: null` + `hasSecrets`).
+Settings add/replace still writes keys; edit UI uses `hasSecrets` for Replace.
 
 ### Composition
 

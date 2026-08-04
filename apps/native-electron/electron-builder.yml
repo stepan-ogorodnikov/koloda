@@ -1,11 +1,22 @@
 appId: com.koloda.app
 productName: KOLODA
 directories:
-  output: dist
+  output: dist-pack
   buildResources: build
+# Flatten dist/ into asar root so packaged `__dirname` is sibling to preload + .node,
+# and `../native-electron-react` resolves to extraResources (see main.ts loadFile).
 files:
-  - dist/**/*
-  - "!dist/tsconfig*"
+  - from: dist
+    filter:
+      - "**/*"
+      - "!tsconfig*"
+      - "!**/*.d.ts"
+      - "!**/*.d.ts.map"
+      - "!**/*.tsbuildinfo"
+extraMetadata:
+  main: main.cjs
+asarUnpack:
+  - "**/*.node"
 extraResources:
   - from: ../native-electron-react/dist
     to: native-electron-react

@@ -1,4 +1,5 @@
 import type { AIChatMode } from "@koloda/ai";
+import { isAppError } from "@koloda/app";
 import { useCallback, useRef } from "react";
 import type { DispatchToConversation } from "./use-conversation-runs";
 
@@ -34,6 +35,12 @@ export type UsePendingRunRefsReturn = {
   onComplete: (mode: AIChatMode, runId: string) => void;
 };
 
+// WHY: AppError.message is the code; the human-readable text is `.details`.
+function displayErrorMessage(error: Error): string {
+  if (isAppError(error) && error.details) return error.details;
+  return error.message || error.name || "unknown";
+}
+
 export function usePendingRunRefs(
   dispatchToConversation: DispatchToConversation,
   markReadIfCurrent: (conversationId: string, runId: string) => void,
@@ -52,7 +59,10 @@ export function usePendingRunRefs(
       const entry = ref.current;
       if (!entry) return;
       ref.current = null;
-      dispatchToConversation(entry.id, ["runFailed", { runId: entry.runId, error: { message: error.message } }]);
+      dispatchToConversation(entry.id, [
+        "runFailed",
+        { runId: entry.runId, error: { message: displayErrorMessage(error) } },
+      ]);
       markReadIfCurrent(entry.id, entry.runId);
     },
     [dispatchToConversation, markReadIfCurrent],

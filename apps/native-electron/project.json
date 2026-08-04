@@ -64,7 +64,8 @@
       ],
       "options": {
         "commands": [
-          "bunx swc src -d dist --copy-files -C module.type=commonjs",
+          "bunx swc src/preload.ts -o dist/preload.js -C module.type=commonjs",
+          "bunx tsx scripts/bundle-main.ts",
           "bunx tsx scripts/copy-native-release.ts",
           "electron-builder"
         ],

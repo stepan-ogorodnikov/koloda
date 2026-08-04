@@ -16,10 +16,25 @@ export function getAIHttpErrorCode(status: number): string {
   return `ai.http.${status}`;
 }
 
-export function throwForAIResponse(response: Response): Response {
+const MAX_ERROR_BODY = 800;
+
+function truncate(text: string, max = MAX_ERROR_BODY): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max)}…`;
+}
+
+/** Prefer provider response bodies over bare status text (e.g. "Forbidden"). */
+export async function throwForAIResponse(response: Response): Promise<Response> {
   if (response.ok) return response;
   const code = getAIHttpErrorCode(response.status);
-  throw new AIError(code, `${response.status} ${response.statusText}`.trim());
+  const statusLabel = `${response.status} ${response.statusText}`.trim();
+  let body = "";
+  try {
+    body = (await response.text()).trim();
+  } catch {
+    body = "";
+  }
+  throw new AIError(code, body ? `${statusLabel} — ${truncate(body)}` : statusLabel);
 }
 
 export function toAIError(error: unknown): AIError {
@@ -29,7 +44,7 @@ export function toAIError(error: unknown): AIError {
   const status = getHttpStatus(error);
   if (status !== null) {
     const code = getAIHttpErrorCode(status);
-    return new AIError(code, getErrorDetails(error));
+    return new AIError(code, getErrorDetails(error) ?? String(status));
   }
 
   if (error instanceof SyntaxError) return new AIError("ai.invalid-response", getErrorDetails(error));
@@ -65,15 +80,49 @@ function getHttpStatus(error: unknown, visited = new Set<object>()): number | nu
   return null;
 }
 
-function getErrorDetails(error: unknown): string | undefined {
-  if (error instanceof Error) return error.message;
+/**
+ * Builds a human-readable detail string from AI SDK / fetch failures.
+ * WHY: `APICallError.message` is often just statusText ("Forbidden"); the useful
+ * provider JSON lives on `responseBody` / `data` / `url`.
+ */
+export function getErrorDetails(error: unknown): string | undefined {
   if (typeof error === "string") return error;
   if (!error || typeof error !== "object") return undefined;
 
-  const responseBody = (error as Record<string, unknown>).responseBody;
-  if (typeof responseBody === "string") return responseBody;
+  const record = error as Record<string, unknown>;
+  const parts: string[] = [];
 
-  const cause = (error as Record<string, unknown>).cause;
+  const status =
+    typeof record.statusCode === "number"
+      ? record.statusCode
+      : typeof record.status === "number"
+        ? record.status
+        : null;
+  const message = error instanceof Error ? error.message : undefined;
+
+  if (status != null && message) parts.push(`${status} ${message}`);
+  else if (message) parts.push(message);
+  else if (status != null) parts.push(String(status));
+
+  const responseBody = record.responseBody;
+  if (typeof responseBody === "string" && responseBody.trim()) {
+    parts.push(truncate(responseBody.trim()));
+  } else if (record.data !== undefined) {
+    try {
+      const serialized = typeof record.data === "string" ? record.data : JSON.stringify(record.data);
+      if (serialized) parts.push(truncate(serialized));
+    } catch {
+      // ignore non-serializable data
+    }
+  }
+
+  if (typeof record.url === "string" && record.url) {
+    parts.push(`url=${record.url}`);
+  }
+
+  if (parts.length > 0) return parts.join(" — ");
+
+  const cause = record.cause;
   if (cause instanceof Error) return cause.message;
 
   return undefined;

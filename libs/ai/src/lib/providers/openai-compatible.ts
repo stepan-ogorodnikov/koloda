@@ -51,7 +51,7 @@ export function resolveReasoningLevelsForModel(id: string): ReasoningLevels | un
 
 /** Minimal /v1/models listing (id only) — used by LM Studio. */
 export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(
+  const response = await throwForAIResponse(
     await fetch(new URL("/v1/models", baseUrl), {
       headers: {
         "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
  * for deepseek-* / mimo-* (Opencode Go / Zen).
  */
 export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, apiKey?: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(
+  const response = await throwForAIResponse(
     await fetch(modelsUrl, {
       headers: {
         "Content-Type": "application/json",

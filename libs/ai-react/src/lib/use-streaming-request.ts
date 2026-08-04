@@ -72,7 +72,10 @@ export function useStreamingRequest<TData, TChunk, TRequest, TResult = void>(opt
       setResult(executorResult ?? null);
       return { streamResult: "success" as const, result: executorResult ?? null };
     } catch (e) {
-      if (controller.signal.aborted || isAbortError(e)) return { streamResult: "aborted" as const, result: null };
+      // WHY: Only AbortError means intentional cancel. A real Error must surface even
+      // if the signal was also aborted (provider failure racing with teardown) —
+      // otherwise auth/network failures become silent cancelRun.
+      if (isAbortError(e)) return { streamResult: "aborted" as const, result: null };
       const error = e instanceof Error ? e : new Error(String(e));
       optionsRef.current.onError?.(error);
       setError(error);

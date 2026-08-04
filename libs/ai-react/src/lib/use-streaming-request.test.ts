@@ -297,6 +297,38 @@ describe("useStreamingRequest", () => {
       expect(result.current.error).toBeNull();
     });
 
+    it("surfaces a real Error even when the abort signal is already aborted", async () => {
+      const onError = vi.fn();
+      const executor = vi.fn((_request: string, _onChunk: (chunk: string) => void, signal: AbortSignal) => {
+        return new Promise<string | undefined>((_resolve, reject) => {
+          signal.addEventListener("abort", () => {
+            reject(new Error("apiKey is required"));
+          });
+        });
+      });
+
+      const { result } = renderHook(() =>
+        useStreamingRequest({
+          initialData: "",
+          accumulate: (prev, chunk) => prev + chunk,
+          executor,
+          onError,
+        }),
+      );
+
+      let outcome: Awaited<ReturnType<typeof result.current.start>> | undefined;
+
+      await act(async () => {
+        const pending = result.current.start("request");
+        result.current.cancel();
+        outcome = await pending;
+      });
+
+      expect(outcome).toEqual({ streamResult: "error", result: null });
+      expect(result.current.error).toEqual(new Error("apiKey is required"));
+      expect(onError).toHaveBeenCalledWith(new Error("apiKey is required"));
+    });
+
     it("ignores chunks emitted after the signal is aborted", async () => {
       const executor = vi.fn((_request: string, onChunk: (chunk: string) => void, signal: AbortSignal) => {
         signal.addEventListener("abort", () => {

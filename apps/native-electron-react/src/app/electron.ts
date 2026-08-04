@@ -18,36 +18,43 @@ declare global {
   }
 }
 
-function parseElectronError(error: unknown): ConstructorParameters<typeof AppError> {
-  console.error("[Electron Error]", {
-    error,
-    type: typeof error,
-    constructor: error?.constructor?.name,
-    keys: error && typeof error === "object" ? Object.keys(error) : null,
-    stringified: error && typeof error === "object" ? JSON.stringify(error) : null,
-  });
-
-  if (error && typeof error === "object") {
-    const err = error as { code?: string; details?: string; message?: string };
-    if (err.code && typeof err.code === "string") return [err.code as ErrorCode, err.details];
+function parseErrorPayload(message: string): { code: string; details?: string } | null {
+  const start = message.indexOf("{");
+  const end = message.lastIndexOf("}");
+  if (start === -1 || end <= start) return null;
+  try {
+    const parsed = JSON.parse(message.slice(start, end + 1)) as { code?: unknown; details?: unknown };
+    if (typeof parsed.code !== "string" || !parsed.code) return null;
+    return {
+      code: parsed.code,
+      details: typeof parsed.details === "string" ? parsed.details : undefined,
+    };
+  } catch {
+    return null;
   }
+}
 
+function parseElectronError(error: unknown): ConstructorParameters<typeof AppError> {
+  // WHY: Prefer structured `{ code, details }` from our throwIpcError JSON over
+  // Electron/Node `error.code` (e.g. ERR_*) which would hide the real payload.
   if (error instanceof Error) {
-    try {
-      const parsed = JSON.parse(error.message);
-      if (parsed.code) return [parsed.code as ErrorCode, parsed.details];
-    } catch {
-      return ["unknown", error.message];
-    }
+    const fromMessage = parseErrorPayload(error.message);
+    if (fromMessage) return [fromMessage.code as ErrorCode, fromMessage.details];
   }
 
   if (typeof error === "string") {
-    try {
-      const parsed = JSON.parse(error);
-      if (parsed.code) return [parsed.code as ErrorCode, parsed.details];
-    } catch {
-      return ["unknown", error];
+    const fromString = parseErrorPayload(error);
+    if (fromString) return [fromString.code as ErrorCode, fromString.details];
+    return ["unknown", error];
+  }
+
+  if (error && typeof error === "object") {
+    const err = error as { code?: string; details?: string; message?: string };
+    if (typeof err.message === "string") {
+      const fromNested = parseErrorPayload(err.message);
+      if (fromNested) return [fromNested.code as ErrorCode, fromNested.details];
     }
+    if (err.code && typeof err.code === "string") return [err.code as ErrorCode, err.details];
   }
 
   return ["unknown", error instanceof Error ? error.message : String(error)];

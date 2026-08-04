@@ -110,6 +110,7 @@ function createWindow() {
     resizable: true,
     show: false,
     webPreferences: {
+      // WHY: Packaged main.cjs + preload.js sit at asar root (electron-builder flattens dist/).
       preload: join(__dirname, isDev ? "../dist/preload.js" : "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,

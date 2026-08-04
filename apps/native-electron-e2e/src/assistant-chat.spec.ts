@@ -9,20 +9,20 @@ import {
   setupPageDefaults,
   waitForAssistantReady,
 } from "./helpers";
-import { E2E_LM_STUDIO_BASE_URL, mockOpenAICompatibleProvider } from "./mock-openai-compatible";
+import { mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
 test("sends a message and shows the mocked assistant reply", async ({ page }) => {
-  const mock = await mockOpenAICompatibleProvider(page, {
+  const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { text: "Mocked reply for E2E.", chunkBy: "all" },
   });
 
   try {
     await setupApp(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
     await createDeckAndOpenAssistant(page);
     await waitForAssistantReady(page);
 
@@ -39,13 +39,13 @@ test("sends a message and shows the mocked assistant reply", async ({ page }) =>
 });
 
 test("cancels an in-flight stream", async ({ page }) => {
-  const mock = await mockOpenAICompatibleProvider(page, {
+  const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { hold: true },
   });
 
   try {
     await setupApp(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
     await createDeckAndOpenAssistant(page);
     await waitForAssistantReady(page);
 
@@ -66,13 +66,13 @@ test("cancels an in-flight stream", async ({ page }) => {
 });
 
 test("retries a failed assistant response", async ({ page }) => {
-  const mock = await mockOpenAICompatibleProvider(page, {
+  const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { status: 500 },
   });
 
   try {
     await setupApp(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
     await createDeckAndOpenAssistant(page);
     await waitForAssistantReady(page);
 
@@ -92,13 +92,13 @@ test("retries a failed assistant response", async ({ page }) => {
 });
 
 test("reverts a user message and restores it", async ({ page }) => {
-  const mock = await mockOpenAICompatibleProvider(page, {
+  const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { text: "Reply before revert.", chunkBy: "all" },
   });
 
   try {
     await setupApp(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
     await createDeckAndOpenAssistant(page);
     await waitForAssistantReady(page);
 
@@ -126,13 +126,13 @@ test("reverts a user message and restores it", async ({ page }) => {
 
 test("generates cards and locks the deck", async ({ page }) => {
   const cardMarkdown = ["## Card 1", "**Front**: E2E front", "**Back**: E2E back"].join("\n");
-  const mock = await mockOpenAICompatibleProvider(page, {
+  const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { text: cardMarkdown, chunkBy: "all" },
   });
 
   try {
     await setupApp(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
     await createDeckAndOpenAssistant(page, "E2E Cards Deck");
     await waitForAssistantReady(page);
 

@@ -1,5 +1,6 @@
 import type { AIRuntime, CardGenerationRequest, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
-import { AIError } from "@koloda/ai";
+import { AIError, isAIError } from "@koloda/ai";
+import { isAppError } from "@koloda/app";
 import { invoke } from "./electron";
 
 export const AI_STREAM_CHANNEL = "ai:stream";
@@ -16,6 +17,19 @@ function isAiStreamEvent(value: unknown): value is AiStreamEvent {
   return typeof event.requestId === "string" && typeof event.type === "string";
 }
 
+// WHY: `invoke` throws AppError whose `.message` is the code (details live on
+// `.details`). Assistant UI stores `error.message`, so convert to AIError here.
+function toRuntimeError(error: unknown): AIError {
+  if (isAIError(error)) return error;
+  if (isAppError(error)) {
+    return new AIError(error.code, error.details || error.message);
+  }
+  if (error instanceof Error) {
+    return new AIError("unknown", error.message || error.name);
+  }
+  return new AIError("unknown", String(error));
+}
+
 type WaitForStreamOptions = {
   requestId: string;
   abortSignal: AbortSignal;
@@ -25,22 +39,28 @@ type WaitForStreamOptions = {
 
 type StreamWaiter = {
   promise: Promise<StreamUsage | undefined>;
+  /** Detach listeners without settling — caller must throw/reject instead. */
   dispose: () => void;
 };
 
 function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStreamOptions): StreamWaiter {
   let isSettled = false;
   let unsubscribe = () => {};
-  let cleanup = () => {};
+  let removeAbortListener = () => {};
+
+  const cleanup = () => {
+    unsubscribe();
+    removeAbortListener();
+  };
+
+  const settle = (fn: () => void) => {
+    if (isSettled) return;
+    isSettled = true;
+    cleanup();
+    fn();
+  };
 
   const promise = new Promise<StreamUsage | undefined>((resolve, reject) => {
-    const settle = (fn: () => void) => {
-      if (isSettled) return;
-      isSettled = true;
-      cleanup();
-      fn();
-    };
-
     const onEvent = (...args: unknown[]) => {
       const event = args[0];
       if (!isAiStreamEvent(event) || event.requestId !== requestId) return;
@@ -57,11 +77,13 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStrea
           return;
         case "error":
           settle(() => {
-            if (event.code === "aborted" || abortSignal.aborted) {
+            // WHY: Prefer provider/IPC failure over a racing abort so auth/network
+            // errors are not turned into silent cancelRun.
+            if (event.code === "aborted") {
               reject(new DOMException("Aborted", "AbortError"));
               return;
             }
-            reject(new AIError(event.code, event.message));
+            reject(new AIError(event.code, event.message || event.code));
           });
           return;
       }
@@ -73,10 +95,6 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStrea
     };
 
     unsubscribe = window.electronAPI.on(AI_STREAM_CHANNEL, onEvent);
-    cleanup = () => {
-      unsubscribe();
-      abortSignal.removeEventListener("abort", onAbort);
-    };
 
     if (abortSignal.aborted) {
       onAbort();
@@ -84,6 +102,7 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStrea
     }
 
     abortSignal.addEventListener("abort", onAbort, { once: true });
+    removeAbortListener = () => abortSignal.removeEventListener("abort", onAbort);
   });
 
   return {
@@ -99,7 +118,13 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStrea
 // INVARIANT: Renderer adapter — profileId only; secrets stay in main via NAPI.
 export function createElectronAIRuntime(): AIRuntime {
   return {
-    listModels: (profileId) => invoke("cmd_ai_list_models", { profileId }),
+    listModels: async (profileId) => {
+      try {
+        return await invoke("cmd_ai_list_models", { profileId });
+      } catch (error) {
+        throw toRuntimeError(error);
+      }
+    },
 
     chat: async (profileId, request: ChatStreamRequest, onChunk, abortSignal) => {
       const requestId = crypto.randomUUID();
@@ -112,8 +137,9 @@ export function createElectronAIRuntime(): AIRuntime {
       try {
         await invoke("cmd_ai_chat_stream", { requestId, profileId, request });
       } catch (error) {
+        // WHY: Dispose (don't reject) — throwing below is the single rejection path.
         waiter.dispose();
-        throw error;
+        throw toRuntimeError(error);
       }
       // WHY: Abort during start may miss main's AbortController; re-abort after invoke binds.
       if (abortSignal.aborted) {
@@ -145,8 +171,9 @@ export function createElectronAIRuntime(): AIRuntime {
           },
         });
       } catch (error) {
+        // WHY: Dispose (don't reject) — throwing below is the single rejection path.
         waiter.dispose();
-        throw error;
+        throw toRuntimeError(error);
       }
       // WHY: Abort during start may miss main's AbortController; re-abort after invoke binds.
       if (abortSignal.aborted) {

@@ -1,5 +1,13 @@
 import type { AISecrets, CardGenerationRequest, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
-import { aiSecretsValidation, createAIGenerationClient, fetchModels, isAIError } from "@koloda/ai";
+import {
+  AIError,
+  aiSecretsValidation,
+  createAIGenerationClient,
+  fetchModels,
+  isAIError,
+  toAIError,
+  wrapAIError,
+} from "@koloda/ai";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { ipcMain } from "electron";
 
@@ -47,27 +55,45 @@ function isAbortError(error: unknown): boolean {
 }
 
 function toStreamError(error: unknown): Pick<Extract<AiStreamEvent, { type: "error" }>, "code" | "message"> {
-  if (isAIError(error)) return { code: error.code, message: error.message };
-  if (error instanceof Error) return { code: "unknown", message: error.message };
-  return { code: "unknown", message: String(error) };
+  const aiError = isAIError(error) ? error : toAIError(error);
+  return { code: aiError.code, message: aiError.message || aiError.code };
 }
 
 function throwIpcError(error: unknown): never {
-  if (isAIError(error)) {
-    throw new Error(JSON.stringify({ code: error.code, details: error.message }));
-  }
-  if (error instanceof Error) {
-    throw new Error(JSON.stringify({ code: "unknown", details: error.message }));
-  }
-  throw new Error(JSON.stringify({ code: "unknown", details: String(error) }));
+  const { code, message } = toStreamError(error);
+  throw new Error(JSON.stringify({ code, details: message }));
 }
 
 function loadSecrets(db: KolodaDb, profileId: string): AISecrets {
-  const raw = db.getAiProfileSecrets(profileId);
-  if (raw == null) {
-    throw new Error(JSON.stringify({ code: "not-found.ai-profile", details: "No secrets loaded for AI profile" }));
+  let raw: unknown;
+  try {
+    raw = db.getAiProfileSecrets(profileId);
+  } catch (error) {
+    // WHY: NAPI AppError reasons are JSON `{ code, details }`.
+    if (error instanceof Error) {
+      const start = error.message.indexOf("{");
+      const end = error.message.lastIndexOf("}");
+      if (start !== -1 && end > start) {
+        try {
+          const parsed = JSON.parse(error.message.slice(start, end + 1)) as { code?: string; details?: string };
+          if (typeof parsed.code === "string") {
+            throw new AIError(parsed.code, parsed.details || parsed.code);
+          }
+        } catch (inner) {
+          if (isAIError(inner)) throw inner;
+        }
+      }
+    }
+    throw toAIError(error);
   }
-  return aiSecretsValidation.parse(raw);
+  if (raw == null) {
+    throw new AIError("not-found.ai-profile", "No secrets loaded for AI profile");
+  }
+  try {
+    return aiSecretsValidation.parse(raw);
+  } catch (error) {
+    throw toAIError(error);
+  }
 }
 
 function beginRequest(requestId: string): AbortController {
@@ -87,7 +113,7 @@ export function registerAiIpc(db: KolodaDb) {
   ipcMain.handle("cmd_ai_list_models", async (_event, args: AiListModelsArgs) => {
     try {
       const secrets = loadSecrets(db, args.profileId);
-      return await fetchModels(secrets);
+      return await wrapAIError(() => fetchModels(secrets));
     } catch (error) {
       throwIpcError(error);
     }
@@ -125,7 +151,9 @@ export function registerAiIpc(db: KolodaDb) {
         );
         sendStreamEvent(sender, { requestId, type: "done", usage });
       } catch (error) {
-        if (controller.signal.aborted || isAbortError(error)) {
+        // WHY: Only AbortError is cancel. Prefer provider errors over a racing
+        // aborted signal so auth/network failures are not reported as Aborted.
+        if (isAbortError(error)) {
           sendStreamEvent(sender, { requestId, type: "error", code: "aborted", message: "Aborted" });
           return;
         }
@@ -169,7 +197,9 @@ export function registerAiIpc(db: KolodaDb) {
         });
         sendStreamEvent(sender, { requestId, type: "done" });
       } catch (error) {
-        if (controller.signal.aborted || isAbortError(error)) {
+        // WHY: Only AbortError is cancel. Prefer provider errors over a racing
+        // aborted signal so auth/network failures are not reported as Aborted.
+        if (isAbortError(error)) {
           sendStreamEvent(sender, { requestId, type: "error", code: "aborted", message: "Aborted" });
           return;
         }

@@ -22,7 +22,7 @@ type OpenRouterModelData = Omit<AIModel, "supported_reasoning_levels" | "default
 type OpenRouterModelsResponse = { data: OpenRouterModelData[] };
 
 export async function fetchOpenRouterModels(): Promise<AIModel[]> {
-  const response = throwForAIResponse(
+  const response = await throwForAIResponse(
     await fetch(OPENROUTER_MODELS_URL, {
       headers: { "Content-Type": "application/json" },
     }),

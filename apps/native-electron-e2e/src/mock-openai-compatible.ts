@@ -1,8 +1,10 @@
-import type { Page, Route } from "@playwright/test";
+import http from "node:http";
+import type { AddressInfo } from "node:net";
 
-/** Same-origin base URL so renderer fetch avoids CORS (matches Electron Vite host/port). */
-export const E2E_LM_STUDIO_BASE_URL = "http://localhost:3000/v1";
-
+/**
+ * Dedicated Node mock — Electron main-process AI HTTP is invisible to Playwright
+ * `page.route` after the AIRuntime cutover.
+ */
 export const E2E_LM_STUDIO_MODEL_ID = "e2e-test-model";
 
 export type MockChatCompletionOptions = {
@@ -11,7 +13,7 @@ export type MockChatCompletionOptions = {
   /** How to split `text` into streamed chunks. Default: one chunk per word. */
   chunkBy?: "word" | "all";
   /**
-   * Hold the route without fulfilling until `release()` is called.
+   * Hold the response without fulfilling until `release()` is called.
    * Used for cancel / in-flight assertions.
    */
   hold?: boolean;
@@ -22,6 +24,8 @@ export type MockChatCompletionOptions = {
 };
 
 export type MockOpenAICompatibleHandle = {
+  /** LM Studio-style base URL including `/v1` (pass to `addLmStudioProfile`). */
+  baseUrl: string;
   /** Completions requests observed so far. */
   completionRequests: number;
   /** Resolve a held completions response (no-op if not holding). */
@@ -34,11 +38,10 @@ export type MockOpenAICompatibleHandle = {
 };
 
 /**
- * Intercept LM Studio OpenAI-compatible `/v1/models` and `/v1/chat/completions`.
- * Install before navigating to Assistant so the model list loads from the mock.
+ * Serve OpenAI-compatible `/v1/models` and `/v1/chat/completions` for main-process fetch.
+ * Start before adding the LM Studio profile so model list loads from this mock.
  */
 export async function mockOpenAICompatibleProvider(
-  page: Page,
   options: {
     modelId?: string;
     defaultCompletion?: MockChatCompletionOptions;
@@ -52,104 +55,114 @@ export async function mockOpenAICompatibleProvider(
     ...options.defaultCompletion,
   };
   let completionRequests = 0;
-
-  const modelsHandler = async (route: Route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        data: [{ id: modelId, object: "model" }],
-      }),
-    });
-  };
-
   let releaseHold: (() => void) | null = null;
 
-  const completionsHandler = async (route: Route) => {
-    completionRequests += 1;
-    const next = queue.shift() ?? { ...defaultCompletion };
+  const server = http.createServer((req, res) => {
+    void handleRequest(req, res);
+  });
 
-    if (next.hold) {
-      await new Promise<void>((resolve) => {
-        releaseHold = resolve;
-      });
-      releaseHold = null;
-    }
+  async function handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+    const url = new URL(req.url ?? "/", "http://127.0.0.1");
 
-    const status = next.status ?? 200;
-    if (status >= 400) {
-      try {
-        await route.fulfill({
-          status,
-          contentType: "application/json",
-          body: JSON.stringify(next.errorBody ?? { error: { message: "Mock provider error" } }),
-        });
-      } catch {
-        // Request may have been aborted (cancel).
-      }
+    if (req.method === "GET" && url.pathname === "/v1/models") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ data: [{ id: modelId, object: "model" }] }));
       return;
     }
 
-    const text = next.text ?? "Hello from the mock assistant.";
-    // doGenerate omits `stream`; only doStream sets `stream: true`. Defaulting to
-    // SSE when the field is absent breaks generateText (cards fallback) with
-    // "Invalid JSON response".
-    let stream = false;
-    let wantsStructured = false;
-    try {
-      const raw = route.request().postData();
-      if (raw) {
-        const body = JSON.parse(raw) as { stream?: boolean; response_format?: unknown };
-        stream = body.stream === true;
-        // LM Studio card generation sets supportsStructuredOutputs and sends
-        // response_format. Reject so runCardGeneration falls back to generateText
-        // + markdown parse against this mock's plain completion body.
-        wantsStructured = body.response_format != null;
-      }
-    } catch {
-      // Keep non-stream default when body is missing/unparseable.
-    }
+    if (req.method === "POST" && url.pathname === "/v1/chat/completions") {
+      completionRequests += 1;
+      const next = queue.shift() ?? { ...defaultCompletion };
+      const bodyText = await readBody(req);
 
-    try {
+      if (next.hold) {
+        const aborted = await waitForHoldOrAbort(req);
+        releaseHold = null;
+        if (aborted || res.writableEnded) return;
+      }
+
+      const status = next.status ?? 200;
+      if (status >= 400) {
+        if (res.writableEnded) return;
+        res.writeHead(status, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(next.errorBody ?? { error: { message: "Mock provider error" } }));
+        return;
+      }
+
+      const text = next.text ?? "Hello from the mock assistant.";
+      // WHY: doGenerate omits `stream`; only doStream sets `stream: true`. Defaulting to
+      // SSE when the field is absent breaks generateText (cards fallback) with
+      // "Invalid JSON response".
+      let stream = false;
+      let wantsStructured = false;
+      try {
+        if (bodyText) {
+          const body = JSON.parse(bodyText) as { stream?: boolean; response_format?: unknown };
+          stream = body.stream === true;
+          // WHY: LM Studio card generation sets supportsStructuredOutputs and sends
+          // response_format. Reject so runCardGeneration falls back to generateText
+          // + markdown parse against this mock's plain completion body.
+          wantsStructured = body.response_format != null;
+        }
+      } catch {}
+
+      if (res.writableEnded) return;
+
       if (wantsStructured) {
-        await route.fulfill({
-          status: 400,
-          contentType: "application/json",
-          body: JSON.stringify({
-            error: { message: "E2E mock does not support structured outputs" },
-          }),
-        });
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: { message: "E2E mock does not support structured outputs" } }));
         return;
       }
 
       if (!stream) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text)),
-        });
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text)));
         return;
       }
 
       const chunks = next.chunkBy === "all" ? [text] : text.split(/(\s+)/).filter((part) => part.length > 0);
-      await route.fulfill({
-        status: 200,
-        headers: {
-          "Content-Type": "text/event-stream; charset=utf-8",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-        body: buildOpenAIChatCompletionSSE(modelId, chunks),
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
       });
-    } catch {
-      // Aborted while fulfilling.
+      res.end(buildOpenAIChatCompletionSSE(modelId, chunks));
+      return;
     }
-  };
 
-  await page.route("**/v1/models", modelsHandler);
-  await page.route("**/v1/chat/completions", completionsHandler);
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: { message: "Not found" } }));
+  }
+
+  function waitForHoldOrAbort(req: http.IncomingMessage): Promise<boolean> {
+    return new Promise((resolve) => {
+      const onAbort = () => {
+        cleanup();
+        resolve(true);
+      };
+      const onRelease = () => {
+        cleanup();
+        resolve(false);
+      };
+      const cleanup = () => {
+        req.off("close", onAbort);
+        releaseHold = null;
+      };
+      req.once("close", onAbort);
+      releaseHold = onRelease;
+    });
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => resolve());
+  });
+
+  const { port } = server.address() as AddressInfo;
+  const baseUrl = `http://127.0.0.1:${port}/v1`;
 
   return {
+    baseUrl,
     get completionRequests() {
       return completionRequests;
     },
@@ -162,10 +175,20 @@ export async function mockOpenAICompatibleProvider(
     },
     dispose: async () => {
       releaseHold?.();
-      await page.unroute("**/v1/models", modelsHandler);
-      await page.unroute("**/v1/chat/completions", completionsHandler);
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      });
     },
   };
+}
+
+function readBody(req: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
 }
 
 export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: string[]): string {

@@ -34,7 +34,7 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
-      "path": "../../libs/ai/tsconfig.lib.json"
+      "path": "../../libs/ai"
     }
   ]
 }

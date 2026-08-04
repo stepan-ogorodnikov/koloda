@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { AIError, getAIHttpErrorCode, isAIError, throwForAIResponse, toAIError, wrapAIError } from "./error";
+import {
+  AIError,
+  getAIHttpErrorCode,
+  getErrorDetails,
+  isAIError,
+  throwForAIResponse,
+  toAIError,
+  wrapAIError,
+} from "./error";
 
 describe("error", () => {
   it("constructs AIError with code and optional message", () => {
@@ -23,25 +31,20 @@ describe("error", () => {
     expect(getAIHttpErrorCode(500)).toBe("ai.http.500");
   });
 
-  it("throws an AIError for failed AI responses", () => {
+  it("throws an AIError for failed AI responses including body text", async () => {
     const response = new Response("ok", { status: 200 });
-    expect(throwForAIResponse(response)).toBe(response);
+    expect(await throwForAIResponse(response)).toBe(response);
 
-    let error: unknown;
-    try {
+    await expect(
       throwForAIResponse(
-        new Response("rate limited", {
+        new Response('{"error":{"message":"nope"}}', {
           status: 429,
           statusText: "Too Many Requests",
         }),
-      );
-    } catch (caught) {
-      error = caught;
-    }
-    expect(error).toBeInstanceOf(AIError);
-    expect(error).toMatchObject({
+      ),
+    ).rejects.toMatchObject({
       code: "ai.http.429",
-      message: "429 Too Many Requests",
+      message: '429 Too Many Requests — {"error":{"message":"nope"}}',
     });
   });
 
@@ -50,7 +53,7 @@ describe("error", () => {
     expect(err1).toBeInstanceOf(AIError);
     expect(err1).toMatchObject({
       code: "ai.http.503",
-      message: "gateway timeout",
+      message: "503 — gateway timeout",
     });
 
     const err2 = toAIError(new TypeError("network down"));
@@ -68,6 +71,23 @@ describe("error", () => {
     });
 
     expect(() => toAIError(new DOMException("Aborted", "AbortError"))).toThrow("Aborted");
+  });
+
+  it("prefers APICallError responseBody over bare statusText like Forbidden", () => {
+    const apiError = Object.assign(new Error("Forbidden"), {
+      statusCode: 403,
+      url: "https://openrouter.ai/api/v1/chat/completions",
+      responseBody: '{"error":{"message":"Key limit exceeded","code":403}}',
+    });
+
+    expect(getErrorDetails(apiError)).toBe(
+      '403 Forbidden — {"error":{"message":"Key limit exceeded","code":403}} — url=https://openrouter.ai/api/v1/chat/completions',
+    );
+    expect(toAIError(apiError)).toMatchObject({
+      code: "ai.http.403",
+      message:
+        '403 Forbidden — {"error":{"message":"Key limit exceeded","code":403}} — url=https://openrouter.ai/api/v1/chat/completions',
+    });
   });
 
   it("wraps rejected async work into AI errors", async () => {

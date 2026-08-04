@@ -2,17 +2,22 @@ import type { AIRuntime } from "@koloda/ai";
 import { AIError } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@koloda/app", () => ({
-  AppError: class AppError extends Error {
+vi.mock("@koloda/app", () => {
+  class AppError extends Error {
     constructor(
       public code: string,
       public details?: string,
     ) {
-      super(details ?? code);
+      // Match production AppError: message is the code; text lives on details.
+      super(code);
       this.name = "AppError";
     }
-  },
-}));
+  }
+  return {
+    AppError,
+    isAppError: (error: unknown) => error instanceof AppError,
+  };
+});
 
 import { AI_STREAM_CHANNEL, createElectronAIRuntime } from "./ai-runtime";
 
@@ -211,5 +216,38 @@ describe("createElectronAIRuntime", () => {
         new AbortController().signal,
       ),
     ).rejects.toEqual(new AIError("ai.http.401", "Unauthorized"));
+  });
+
+  it("surfaces invoke failures as AIError with details (not the AppError code)", async () => {
+    invokeMock.mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          'Error invoking remote method \'cmd_ai_list_models\': Error: {"code":"validation.settings-ai.providers.apiKey","details":"apiKey is required"}',
+        ),
+        // Electron sometimes attaches a system code; must not win over JSON payload.
+        { code: "ERR_FAILED" },
+      ),
+    );
+
+    const runtime = createElectronAIRuntime();
+    await expect(runtime.listModels("profile-1")).rejects.toEqual(
+      new AIError("validation.settings-ai.providers.apiKey", "apiKey is required"),
+    );
+  });
+
+  it("fails the stream waiter when chat start invoke rejects", async () => {
+    invokeMock.mockRejectedValueOnce(
+      new Error(JSON.stringify({ code: "not-found.ai-profile", details: "No secrets loaded for AI profile" })),
+    );
+
+    const runtime = createElectronAIRuntime();
+    await expect(
+      runtime.chat(
+        "profile-1",
+        { messages: [], input: { modelId: "m", prompt: "hi" } },
+        () => {},
+        new AbortController().signal,
+      ),
+    ).rejects.toEqual(new AIError("not-found.ai-profile", "No secrets loaded for AI profile"));
   });
 });

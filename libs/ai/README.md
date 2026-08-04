@@ -4,7 +4,10 @@ Provider-agnostic AI abstraction: streams chat completions and generates structu
 
 ## Where it sits
 
-Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client factory, pure helpers). Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`. Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
+Consumed by host `AIRuntime` adapters (Electron main / demo) for provider HTTP, and by `libs/ai-react` / `libs/srs-react/.../assistant` for types, pure helpers, and the `AIRuntime` contract.
+Shared React must not call `createAIGenerationClient` with secrets — see `agents/ASSISTANT-CHAT-MAP.md` (AIRuntime seam).
+Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`.
+Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
 
 **Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over package READMEs when routing edits.
 
@@ -21,6 +24,7 @@ Consumed by `libs/ai-react` and `libs/srs-react/.../assistant` (types, client fa
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
 - Reasoning levels: `providers/openrouter.ts` (API-provided); `providers/openai-compatible.ts` hardcodes deepseek-* / mimo-* via `resolveReasoningLevelsForModel` (Opencode Go/Zen).
+- Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` / `generateCards` by `profileId`). Hosts implement; shared React injects via `aiRuntimeAtom`.
 - Compatibility: `types.ts` re-exports the domain modules above; prefer importing from the specific files.
 
 ### Does NOT own (prevent scope creep)
