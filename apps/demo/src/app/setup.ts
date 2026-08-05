@@ -2,7 +2,7 @@ import type { InterfaceSettings } from "@koloda/app";
 import { AppError, DEFAULT_INTERFACE_SETTINGS, interfaceSettingsValidation } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/app";
-import { addAlgorithm, addTemplate, setSettings } from "@koloda/srs-pgsql";
+import { addAlgorithm, addCards, addDeck, addTemplate, setSettings } from "@koloda/srs-pgsql";
 import { sql } from "drizzle-orm";
 import { db, migrations, MIGRATIONS_TABLE } from "./db";
 import { loadSeedData } from "./seed/seed";
@@ -58,7 +58,7 @@ type SetupFromScratchData = Partial<InterfaceSettings>;
 
 /**
  * Sets up the application from scratch by applying migrations,
- * seeding locale templates/algorithms, and configuring settings
+ * seeding locale templates/algorithms/decks, and configuring settings
  * @param data - Configuration data including interface settings
  * @returns Promise resolving to true if setup was successful, false otherwise
  */
@@ -95,6 +95,28 @@ export async function setupFromScratch(settings: SetupFromScratchData) {
       content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
     });
     await setSettings(db, { name: "hotkeys", content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS) });
+
+    for (const sample of seed.decks) {
+      const algorithmId = algorithmIds.get(sample.algorithm);
+      const templateId = templateIds.get(sample.template);
+      if (!algorithmId || !templateId) throw new AppError("db.add");
+
+      const deck = await addDeck(db, { title: sample.title, algorithmId, templateId });
+      if (!deck?.id) throw new AppError("db.add");
+
+      const results = await addCards(
+        db,
+        sample.cards.map((card) => ({
+          deckId: deck.id,
+          templateId,
+          content: {
+            "1": { text: card.front },
+            "2": { text: card.back },
+          },
+        })),
+      );
+      if (results.some((result) => result.error)) throw new AppError("db.add");
+    }
 
     return true;
   } catch (e) {

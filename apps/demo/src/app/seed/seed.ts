@@ -16,9 +16,22 @@ export type DemoSeedAlgorithm = {
   content: AlgorithmFSRS;
 };
 
+export type DemoSeedCard = {
+  front: string;
+  back: string;
+};
+
+export type DemoSeedDeck = {
+  title: string;
+  template: DemoSeedTemplateId;
+  algorithm: DemoSeedAlgorithmId;
+  cards: DemoSeedCard[];
+};
+
 export type DemoSeed = {
   templates: DemoSeedTemplate[];
   algorithms: DemoSeedAlgorithm[];
+  decks: DemoSeedDeck[];
 };
 
 export async function loadSeedData(locale: string): Promise<DemoSeed> {

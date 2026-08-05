@@ -1,0 +1,271 @@
+{
+  "title": "Famous Architects",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "Who designed “Fallingwater” in Pennsylvania?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed the Solomon R. Guggenheim Museum in New York?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed the Robie House in Chicago?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed the Imperial Hotel in Tokyo?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed the Guggenheim Museum Bilbao?",
+      "back": "Frank Gehry"
+    },
+    {
+      "front": "Who designed the Walt Disney Concert Hall in Los Angeles?",
+      "back": "Frank Gehry"
+    },
+    {
+      "front": "Who designed the Sydney Opera House?",
+      "back": "Jørn Utzon"
+    },
+    {
+      "front": "Who designed the Sagrada Família in Barcelona?",
+      "back": "Antoni Gaudí"
+    },
+    {
+      "front": "Who designed Casa Milà (“La Pedrera”) in Barcelona?",
+      "back": "Antoni Gaudí"
+    },
+    {
+      "front": "Who designed Park Güell in Barcelona?",
+      "back": "Antoni Gaudí"
+    },
+    {
+      "front": "Who designed the Centre Pompidou in Paris?",
+      "back": "Renzo Piano and Richard Rogers"
+    },
+    {
+      "front": "Who designed the Shard in London?",
+      "back": "Renzo Piano"
+    },
+    {
+      "front": "Who designed the Menil Collection in Houston?",
+      "back": "Renzo Piano"
+    },
+    {
+      "front": "Who designed St. Paul's Cathedral in London?",
+      "back": "Christopher Wren"
+    },
+    {
+      "front": "Who designed the Seagram Building in New York?",
+      "back": "Ludwig Mies van der Rohe"
+    },
+    {
+      "front": "Who designed the Barcelona Pavilion?",
+      "back": "Ludwig Mies van der Rohe"
+    },
+    {
+      "front": "Who designed the Neue Nationalgalerie in Berlin?",
+      "back": "Ludwig Mies van der Rohe"
+    },
+    {
+      "front": "Who designed Villa Savoye near Paris?",
+      "back": "Le Corbusier"
+    },
+    {
+      "front": "Who designed the chapel of Notre-Dame du Haut in Ronchamp?",
+      "back": "Le Corbusier"
+    },
+    {
+      "front": "Who designed Unité d'Habitation in Marseille?",
+      "back": "Le Corbusier"
+    },
+    {
+      "front": "Who designed the Bauhaus Building in Dessau?",
+      "back": "Walter Gropius"
+    },
+    {
+      "front": "Who designed the Chrysler Building in New York?",
+      "back": "William Van Alen"
+    },
+    {
+      "front": "Who designed the Empire State Building in New York?",
+      "back": "Shreve, Lamb and Harmon"
+    },
+    {
+      "front": "Who designed the Crystal Palace in London?",
+      "back": "Joseph Paxton"
+    },
+    {
+      "front": "Who designed the Eiffel Tower in Paris?",
+      "back": "Gustave Eiffel"
+    },
+    {
+      "front": "Who designed the Houses of Parliament in London?",
+      "back": "Charles Barry and Augustus Pugin"
+    },
+    {
+      "front": "Who designed the Brooklyn Bridge?",
+      "back": "John A. Roebling"
+    },
+    {
+      "front": "Who designed the White House?",
+      "back": "James Hoban"
+    },
+    {
+      "front": "Who designed the Winter Palace in Saint Petersburg?",
+      "back": "Bartolomeo Rastrelli"
+    },
+    {
+      "front": "Who designed the dome of Florence Cathedral?",
+      "back": "Filippo Brunelleschi"
+    },
+    {
+      "front": "Who designed Villa Rotonda near Vicenza?",
+      "back": "Andrea Palladio"
+    },
+    {
+      "front": "Who designed the Hungarian Parliament Building?",
+      "back": "Imre Steindl"
+    },
+    {
+      "front": "Who designed the Petronas Towers in Kuala Lumpur?",
+      "back": "César Pelli"
+    },
+    {
+      "front": "Who designed the Burj Al Arab in Dubai?",
+      "back": "Tom Wright"
+    },
+    {
+      "front": "Who designed the Gateway Arch in St. Louis?",
+      "back": "Eero Saarinen"
+    },
+    {
+      "front": "Who designed the TWA Flight Center at JFK Airport?",
+      "back": "Eero Saarinen"
+    },
+    {
+      "front": "Who designed Helsinki Central Station?",
+      "back": "Eliel Saarinen"
+    },
+    {
+      "front": "Who designed the Bird's Nest (Beijing National Stadium)?",
+      "back": "Herzog & de Meuron"
+    },
+    {
+      "front": "Who designed the Salk Institute in La Jolla?",
+      "back": "Louis Kahn"
+    },
+    {
+      "front": "Who designed the Kimbell Art Museum in Fort Worth?",
+      "back": "Louis Kahn"
+    },
+    {
+      "front": "Who designed the Louvre Pyramid in Paris?",
+      "back": "I. M. Pei"
+    },
+    {
+      "front": "Who designed the Bank of China Tower in Hong Kong?",
+      "back": "I. M. Pei"
+    },
+    {
+      "front": "Who designed the Glass House in New Canaan?",
+      "back": "Philip Johnson"
+    },
+    {
+      "front": "Who designed the Wainwright Building in St. Louis?",
+      "back": "Louis Sullivan"
+    },
+    {
+      "front": "Who designed the Auditorium Building in Chicago?",
+      "back": "Adler and Sullivan"
+    },
+    {
+      "front": "Who designed the Johnson Wax Headquarters in Racine?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed Taliesin West in Arizona?",
+      "back": "Frank Lloyd Wright"
+    },
+    {
+      "front": "Who designed 30 St Mary Axe (“The Gherkin”) in London?",
+      "back": "Norman Foster"
+    },
+    {
+      "front": "Who designed the Reichstag dome in Berlin?",
+      "back": "Norman Foster"
+    },
+    {
+      "front": "Who designed Villa Mairea in Finland?",
+      "back": "Alvar Aalto"
+    },
+    {
+      "front": "Who designed the Paimio Sanatorium in Finland?",
+      "back": "Alvar Aalto"
+    },
+    {
+      "front": "Who designed the Stoclet House in Brussels?",
+      "back": "Josef Hoffmann"
+    },
+    {
+      "front": "Who designed the Secession Building in Vienna?",
+      "back": "Joseph Maria Olbrich"
+    },
+    {
+      "front": "Who designed the Vienna Post Office Savings Bank?",
+      "back": "Otto Wagner"
+    },
+    {
+      "front": "Who designed Habitat 67 in Montreal?",
+      "back": "Moshe Safdie"
+    },
+    {
+      "front": "Who designed Marina Bay Sands in Singapore?",
+      "back": "Moshe Safdie"
+    },
+    {
+      "front": "Who designed the CCTV Headquarters in Beijing?",
+      "back": "Rem Koolhaas (OMA)"
+    },
+    {
+      "front": "Who designed the Heydar Aliyev Center in Baku?",
+      "back": "Zaha Hadid"
+    },
+    {
+      "front": "Who designed the Getty Center in Los Angeles?",
+      "back": "Richard Meier"
+    },
+    {
+      "front": "Who designed the Burj Khalifa in Dubai?",
+      "back": "Adrian Smith"
+    },
+    {
+      "front": "Who led the design of the Willis Tower in Chicago?",
+      "back": "Bruce Graham"
+    },
+    {
+      "front": "Who designed the Jewish Museum Berlin?",
+      "back": "Daniel Libeskind"
+    },
+    {
+      "front": "Who designed the London Eye?",
+      "back": "Marks Barfield"
+    },
+    {
+      "front": "Who designed the Red House in Bexleyheath?",
+      "back": "Philip Webb"
+    },
+    {
+      "front": "Who designed the Palace of Versailles in the 17th century?",
+      "back": "Louis Le Vau"
+    },
+    {
+      "front": "Who designed the dome of St. Peter's Basilica?",
+      "back": "Michelangelo"
+    }
+  ]
+}

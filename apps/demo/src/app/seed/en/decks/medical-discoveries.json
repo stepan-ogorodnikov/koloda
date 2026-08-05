@@ -1,0 +1,375 @@
+{
+  "title": "Medical Discoveries",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "Who developed pasteurization?",
+      "back": "Louis Pasteur"
+    },
+    {
+      "front": "Who identified the bacterium that causes tuberculosis?",
+      "back": "Robert Koch"
+    },
+    {
+      "front": "Who created a vaccine against rabies?",
+      "back": "Louis Pasteur"
+    },
+    {
+      "front": "Who identified the bacterium that causes cholera?",
+      "back": "Robert Koch"
+    },
+    {
+      "front": "Who created an early vaccine against anthrax in livestock?",
+      "back": "Louis Pasteur"
+    },
+    {
+      "front": "Who discovered penicillin?",
+      "back": "Alexander Fleming"
+    },
+    {
+      "front": "Who developed the first smallpox vaccine?",
+      "back": "Edward Jenner"
+    },
+    {
+      "front": "Who discovered blood groups A, B, and O?",
+      "back": "Karl Landsteiner"
+    },
+    {
+      "front": "Who introduced vaccination using cowpox against smallpox?",
+      "back": "Edward Jenner"
+    },
+    {
+      "front": "Who discovered the Rh blood factor?",
+      "back": "Karl Landsteiner"
+    },
+    {
+      "front": "Who noticed penicillin mold killing staphylococci on a culture plate?",
+      "back": "Alexander Fleming"
+    },
+    {
+      "front": "Who linked microbes to fermentation and infectious disease?",
+      "back": "Louis Pasteur"
+    },
+    {
+      "front": "Who formulated Koch’s postulates in bacteriology?",
+      "back": "Robert Koch"
+    },
+    {
+      "front": "Who purified penicillin for clinical use?",
+      "back": "Howard Florey"
+    },
+    {
+      "front": "Who chemically characterized penicillin with Florey’s team?",
+      "back": "Ernst Chain"
+    },
+    {
+      "front": "Who discovered the circulation of blood?",
+      "back": "William Harvey"
+    },
+    {
+      "front": "Who invented the stethoscope?",
+      "back": "René Laennec"
+    },
+    {
+      "front": "Who pioneered antiseptic surgery with carbolic acid?",
+      "back": "Joseph Lister"
+    },
+    {
+      "front": "Who discovered X-rays?",
+      "back": "Wilhelm Röntgen"
+    },
+    {
+      "front": "Who co-discovered insulin as a diabetes treatment?",
+      "back": "Frederick Banting"
+    },
+    {
+      "front": "Who co-discovered insulin with Banting in Toronto?",
+      "back": "Charles Best"
+    },
+    {
+      "front": "Who linked the pancreas to diabetes before Banting?",
+      "back": "Oskar Minkowski"
+    },
+    {
+      "front": "Who demonstrated ether anesthesia publicly at Massachusetts General Hospital?",
+      "back": "William Morton"
+    },
+    {
+      "front": "Who introduced handwashing to reduce infections in maternity wards?",
+      "back": "Ignaz Semmelweis"
+    },
+    {
+      "front": "Who developed the inactivated polio vaccine?",
+      "back": "Jonas Salk"
+    },
+    {
+      "front": "Who developed the oral polio vaccine?",
+      "back": "Albert Sabin"
+    },
+    {
+      "front": "Who co-discovered the double-helix structure of DNA?",
+      "back": "James Watson"
+    },
+    {
+      "front": "Who co-discovered DNA’s double helix with Watson?",
+      "back": "Francis Crick"
+    },
+    {
+      "front": "Whose X-ray work was crucial to discovering DNA’s structure?",
+      "back": "Rosalind Franklin"
+    },
+    {
+      "front": "Who showed that DNA is the molecule of heredity?",
+      "back": "Oswald Avery"
+    },
+    {
+      "front": "Who discovered streptomycin, used against tuberculosis?",
+      "back": "Selman Waksman"
+    },
+    {
+      "front": "Who isolated streptomycin in Waksman’s laboratory?",
+      "back": "Albert Schatz"
+    },
+    {
+      "front": "Who discovered salvarsan, an early drug for syphilis?",
+      "back": "Paul Ehrlich"
+    },
+    {
+      "front": "Who performed the first successful heart transplant?",
+      "back": "Christiaan Barnard"
+    },
+    {
+      "front": "Who invented the electrocardiograph (ECG)?",
+      "back": "Willem Einthoven"
+    },
+    {
+      "front": "Who discovered vitamins through research on beriberi?",
+      "back": "Christiaan Eijkman"
+    },
+    {
+      "front": "Who coined the term “vitamin”?",
+      "back": "Casimir Funk"
+    },
+    {
+      "front": "Who showed citrus prevents scurvy in a controlled trial?",
+      "back": "James Lind"
+    },
+    {
+      "front": "Who isolated ascorbic acid (vitamin C)?",
+      "back": "Albert Szent-Györgyi"
+    },
+    {
+      "front": "Who discovered that mosquitoes transmit malaria?",
+      "back": "Ronald Ross"
+    },
+    {
+      "front": "Who discovered the malaria parasite in human blood?",
+      "back": "Charles Laveran"
+    },
+    {
+      "front": "Who proved that mosquitoes transmit yellow fever?",
+      "back": "Walter Reed"
+    },
+    {
+      "front": "Who synthesized acetylsalicylic acid for aspirin at Bayer?",
+      "back": "Felix Hoffmann"
+    },
+    {
+      "front": "Who developed dialysis for kidney failure?",
+      "back": "Willem Kolff"
+    },
+    {
+      "front": "Who discovered adrenaline (epinephrine)?",
+      "back": "Jokichi Takamine"
+    },
+    {
+      "front": "Who isolated thyroxine from the thyroid gland?",
+      "back": "Edward Kendall"
+    },
+    {
+      "front": "Who discovered cortisone’s anti-inflammatory effects?",
+      "back": "Philip Hench"
+    },
+    {
+      "front": "Who discovered heparin as an anticoagulant?",
+      "back": "Jay McLean"
+    },
+    {
+      "front": "Who developed the Apgar score for newborns?",
+      "back": "Virginia Apgar"
+    },
+    {
+      "front": "Who discovered Helicobacter pylori as a cause of peptic ulcers?",
+      "back": "Barry Marshall"
+    },
+    {
+      "front": "Who co-discovered Helicobacter pylori with Marshall?",
+      "back": "Robin Warren"
+    },
+    {
+      "front": "Who discovered prions as infectious proteins?",
+      "back": "Stanley Prusiner"
+    },
+    {
+      "front": "Who developed IVF leading to the first “test-tube baby”?",
+      "back": "Robert Edwards"
+    },
+    {
+      "front": "Who performed the surgery for the first IVF birth?",
+      "back": "Patrick Steptoe"
+    },
+    {
+      "front": "Who developed an early measles vaccine?",
+      "back": "John Enders"
+    },
+    {
+      "front": "Who developed many childhood vaccines, including mumps?",
+      "back": "Maurice Hilleman"
+    },
+    {
+      "front": "Who invented a practical hypodermic syringe?",
+      "back": "Alexander Wood"
+    },
+    {
+      "front": "Who discovered the tobacco mosaic virus, founding virology?",
+      "back": "Dmitri Ivanovsky"
+    },
+    {
+      "front": "Who coined the modern concept of a “virus” as a filterable agent?",
+      "back": "Martinus Beijerinck"
+    },
+    {
+      "front": "Who developed the BCG vaccine for tuberculosis?",
+      "back": "Albert Calmette"
+    },
+    {
+      "front": "Who co-developed the BCG vaccine with Calmette?",
+      "back": "Camille Guérin"
+    },
+    {
+      "front": "Who invented the sphygmomanometer for blood pressure?",
+      "back": "Scipione Riva-Rocci"
+    },
+    {
+      "front": "Who added auscultation to blood-pressure measurement?",
+      "back": "Nikolai Korotkov"
+    },
+    {
+      "front": "Who discovered surfactant deficiency in premature-infant respiratory distress?",
+      "back": "Mary Ellen Avery"
+    },
+    {
+      "front": "Who led development of the first oral contraceptive pill?",
+      "back": "Gregory Pincus"
+    },
+    {
+      "front": "Who discovered lithium’s effectiveness for bipolar disorder?",
+      "back": "John Cade"
+    },
+    {
+      "front": "Who discovered the antipsychotic effects of chlorpromazine?",
+      "back": "Henri Laborit"
+    },
+    {
+      "front": "Who performed the first successful kidney transplant between identical twins?",
+      "back": "Joseph Murray"
+    },
+    {
+      "front": "Who invented the heart-lung machine for open-heart surgery?",
+      "back": "John Gibbon"
+    },
+    {
+      "front": "Who developed the Pap smear for cervical cancer screening?",
+      "back": "Georgios Papanikolaou"
+    },
+    {
+      "front": "Who linked smoking to lung cancer in epidemiology?",
+      "back": "Richard Doll"
+    },
+    {
+      "front": "Who invented computed tomography (CT)?",
+      "back": "Godfrey Hounsfield"
+    },
+    {
+      "front": "Who developed foundational MRI methods for medicine?",
+      "back": "Paul Lauterbur"
+    },
+    {
+      "front": "Who co-developed MRI methods with Lauterbur?",
+      "back": "Peter Mansfield"
+    },
+    {
+      "front": "Who pioneered diagnostic ultrasound in obstetrics?",
+      "back": "Ian Donald"
+    },
+    {
+      "front": "Who discovered that Down syndrome is caused by trisomy 21?",
+      "back": "Jérôme Lejeune"
+    },
+    {
+      "front": "Who co-developed CRISPR-Cas9 gene editing?",
+      "back": "Jennifer Doudna"
+    },
+    {
+      "front": "Who co-developed CRISPR-Cas9 with Doudna?",
+      "back": "Emmanuelle Charpentier"
+    },
+    {
+      "front": "Whose mRNA work enabled modern mRNA vaccines?",
+      "back": "Katalin Karikó"
+    },
+    {
+      "front": "Who co-developed modified mRNA technology with Karikó?",
+      "back": "Drew Weissman"
+    },
+    {
+      "front": "Who introduced sterile surgical gloves in the operating room?",
+      "back": "William Halsted"
+    },
+    {
+      "front": "Who discovered local anesthesia with cocaine for eye surgery?",
+      "back": "Carl Koller"
+    },
+    {
+      "front": "Who synthesized chloroquine as an antimalarial?",
+      "back": "Hans Andersag"
+    },
+    {
+      "front": "Who discovered artemisinin as an antimalarial?",
+      "back": "Tu Youyou"
+    },
+    {
+      "front": "Who co-discovered HIV as the cause of AIDS?",
+      "back": "Luc Montagnier"
+    },
+    {
+      "front": "Who independently identified HIV around the same time as Montagnier?",
+      "back": "Robert Gallo"
+    },
+    {
+      "front": "Who discovered AZT’s antiretroviral activity?",
+      "back": "Hiroaki Mitsuya"
+    },
+    {
+      "front": "Who invented the flexible fiber-optic endoscope?",
+      "back": "Basil Hirschowitz"
+    },
+    {
+      "front": "Who discovered the parathyroid glands’ role in calcium metabolism?",
+      "back": "Eugene Gley"
+    },
+    {
+      "front": "Who developed the tuberculin skin test?",
+      "back": "Clemens von Pirquet"
+    },
+    {
+      "front": "Who performed an early documented human blood transfusion in the 17th century?",
+      "back": "Jean-Baptiste Denys"
+    },
+    {
+      "front": "Who crystallized insulin and advanced its chemistry?",
+      "back": "John Abel"
+    }
+  ]
+}

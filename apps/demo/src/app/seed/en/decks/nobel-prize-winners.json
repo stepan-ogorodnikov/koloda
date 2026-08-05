@@ -1,0 +1,323 @@
+{
+  "title": "Nobel Prize Winners",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "Who won the Nobel Prize for research on radiation phenomena discovered by Becquerel?",
+      "back": "Marie Curie"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of X-rays?",
+      "back": "Wilhelm Röntgen"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of the elements radium and polonium?",
+      "back": "Marie Curie"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of radioactivity?",
+      "back": "Henri Becquerel"
+    },
+    {
+      "front": "Who won the Nobel Prize for the photoelectric effect?",
+      "back": "Albert Einstein"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of the electron?",
+      "back": "J. J. Thomson"
+    },
+    {
+      "front": "Who won the Nobel Prize for investigations of radioactive substances and the disintegration of elements?",
+      "back": "Ernest Rutherford"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of the neutron?",
+      "back": "James Chadwick"
+    },
+    {
+      "front": "Who won the Nobel Prize for the invention of the cyclotron?",
+      "back": "Ernest Lawrence"
+    },
+    {
+      "front": "Who won the Nobel Prize for the creation of quantum mechanics?",
+      "back": "Werner Heisenberg"
+    },
+    {
+      "front": "Who won the Nobel Prize for new forms of atomic theory, including wave mechanics?",
+      "back": "Erwin Schrödinger"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of the exclusion principle?",
+      "back": "Wolfgang Pauli"
+    },
+    {
+      "front": "Who won the Nobel Prize for new forms of atomic theory, including the Dirac equation?",
+      "back": "Paul Dirac"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of the positron?",
+      "back": "Carl Anderson"
+    },
+    {
+      "front": "Who won the Nobel Prize for semiconductor research and the discovery of the transistor effect?",
+      "back": "William Shockley"
+    },
+    {
+      "front": "Who won the Nobel Prize for the theory of superconductivity (BCS theory)?",
+      "back": "John Bardeen"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of cosmic microwave background radiation?",
+      "back": "Arno Penzias"
+    },
+    {
+      "front": "Who won the Nobel Prize for theoretical work on black-hole formation?",
+      "back": "Roger Penrose"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of graphene?",
+      "back": "Andre Geim"
+    },
+    {
+      "front": "Who won the Nobel Prize for the invention of efficient blue light-emitting diodes?",
+      "back": "Shuji Nakamura"
+    },
+    {
+      "front": "Who won the Nobel Prize for research on blackbody radiation that founded quantum theory?",
+      "back": "Max Planck"
+    },
+    {
+      "front": "Who won the Nobel Prize for work on the elementary electric charge and the photoelectric effect?",
+      "back": "Robert Millikan"
+    },
+    {
+      "front": "Who won the Nobel Prize for the experimental detection of the neutrino?",
+      "back": "Frederick Reines"
+    },
+    {
+      "front": "Who won the Nobel Prize for the invention of the cloud chamber?",
+      "back": "Charles Wilson"
+    },
+    {
+      "front": "Who won the Nobel Prize for the carbon-14 method of age determination?",
+      "back": "Willard Libby"
+    },
+    {
+      "front": "Who won the Nobel Prize for the synthesis of ammonia from its elements?",
+      "back": "Fritz Haber"
+    },
+    {
+      "front": "Who won the Nobel Prize for the development of chemical high-pressure methods (Haber–Bosch process)?",
+      "back": "Carl Bosch"
+    },
+    {
+      "front": "Who won the Nobel Prize for studies of the structures of globular proteins?",
+      "back": "Max Perutz"
+    },
+    {
+      "front": "Who won the Nobel Prize for determinations of the structures of important biochemical substances by X-ray techniques?",
+      "back": "Dorothy Hodgkin"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of fullerenes?",
+      "back": "Harold Kroto"
+    },
+    {
+      "front": "Who won the Nobel Prize for the development of click chemistry and bioorthogonal chemistry?",
+      "back": "Carolyn Bertozzi"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of artificial radioactivity?",
+      "back": "Irène Joliot-Curie"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of nuclear fission?",
+      "back": "Otto Hahn"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of argon and work on noble gases?",
+      "back": "William Ramsay"
+    },
+    {
+      "front": "Who won the Nobel Prize for biochemical research and the discovery of cell-free fermentation?",
+      "back": "Eduard Buchner"
+    },
+    {
+      "front": "Who won the Nobel Prize for the development of CRISPR-Cas9 genome editing?",
+      "back": "Emmanuelle Charpentier"
+    },
+    {
+      "front": "Who won the Nobel Prize for CRISPR-Cas9 genome editing (shared award)?",
+      "back": "Jennifer Doudna"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of penicillin?",
+      "back": "Alexander Fleming"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of insulin?",
+      "back": "Frederick Banting"
+    },
+    {
+      "front": "Who won the Nobel Prize for discoveries concerning the molecular structure of nucleic acids and its significance for information transfer in living material?",
+      "back": "James Watson"
+    },
+    {
+      "front": "Who won the Nobel Prize for discoveries concerning the molecular structure of nucleic acids (shared with Watson)?",
+      "back": "Francis Crick"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of human blood groups?",
+      "back": "Karl Landsteiner"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of prions?",
+      "back": "Stanley Prusiner"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of Helicobacter pylori and its role in gastritis and peptic ulcer disease?",
+      "back": "Barry Marshall"
+    },
+    {
+      "front": "Who won the Nobel Prize for the development of in vitro fertilization?",
+      "back": "Robert Edwards"
+    },
+    {
+      "front": "Who won the Nobel Prize for the discovery of HIV?",
+      "back": "Françoise Barré-Sinoussi"
+    },
+    {
+      "front": "Who won the Nobel Prize for discoveries concerning magnetic resonance imaging?",
+      "back": "Paul Lauterbur"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Old Man and the Sea”?",
+      "back": "Ernest Hemingway"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “One Hundred Years of Solitude”?",
+      "back": "Gabriel García Márquez"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Gulag Archipelago”?",
+      "back": "Aleksandr Solzhenitsyn"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Doctor Zhivago”?",
+      "back": "Boris Pasternak"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Stranger” and “The Plague”?",
+      "back": "Albert Camus"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Siddhartha” and “Steppenwolf”?",
+      "back": "Hermann Hesse"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Beloved”?",
+      "back": "Toni Morrison"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Tin Drum”?",
+      "back": "Günter Grass"
+    },
+    {
+      "front": "Who won the Nobel Prize for poetry including “The Waste Land”?",
+      "back": "T. S. Eliot"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Waiting for Godot”?",
+      "back": "Samuel Beckett"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Jungle Book”?",
+      "back": "Rudyard Kipling"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “The Forsyte Saga”?",
+      "back": "John Galsworthy"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Buddenbrooks” and “The Magic Mountain”?",
+      "back": "Thomas Mann"
+    },
+    {
+      "front": "Who won the Nobel Prize for works including “Independent People”?",
+      "back": "Halldór Laxness"
+    },
+    {
+      "front": "Who won the Nobel Prize for poetry including “The Tower”?",
+      "back": "W. B. Yeats"
+    },
+    {
+      "front": "Who won the Nobel Prize for founding the International Committee of the Red Cross?",
+      "back": "Henry Dunant"
+    },
+    {
+      "front": "Who won the Nobel Prize for leadership in ending apartheid in South Africa?",
+      "back": "Nelson Mandela"
+    },
+    {
+      "front": "Who won the Nobel Prize for nonviolent struggle for civil rights in the United States?",
+      "back": "Martin Luther King Jr."
+    },
+    {
+      "front": "Who won the Nobel Prize for nonviolent struggle for democracy and human rights in Myanmar?",
+      "back": "Aung San Suu Kyi"
+    },
+    {
+      "front": "Who won the Nobel Prize for work to ban antipersonnel landmines?",
+      "back": "Jody Williams"
+    },
+    {
+      "front": "Who won the Nobel Prize for humanitarian work for refugees, including the Nansen passport?",
+      "back": "Fridtjof Nansen"
+    },
+    {
+      "front": "Who won the Nobel Prize for mediating the end of the Russo-Japanese War?",
+      "back": "Theodore Roosevelt"
+    },
+    {
+      "front": "Who won the Nobel Prize for efforts to found the League of Nations?",
+      "back": "Woodrow Wilson"
+    },
+    {
+      "front": "Who won the Nobel Prize for microcredit and founding the Grameen Bank?",
+      "back": "Muhammad Yunus"
+    },
+    {
+      "front": "Who won the Nobel Prize for the Camp David Accords?",
+      "back": "Anwar Sadat"
+    },
+    {
+      "front": "Who won the Nobel Prize for the Camp David Accords (shared award)?",
+      "back": "Menachem Begin"
+    },
+    {
+      "front": "Who won the Nobel Prize for the struggle against the oppression of children and child labour?",
+      "back": "Kailash Satyarthi"
+    },
+    {
+      "front": "Who won the Nobel Prize for the right of all children to education?",
+      "back": "Malala Yousafzai"
+    },
+    {
+      "front": "Who won the Nobel Prize for research on poverty and famine?",
+      "back": "Amartya Sen"
+    },
+    {
+      "front": "Who won the Nobel Prize for analyses of markets with asymmetric information?",
+      "back": "George Akerlof"
+    },
+    {
+      "front": "Who won the Nobel Prize for contributions to the theory of economic growth?",
+      "back": "Robert Solow"
+    },
+    {
+      "front": "Who won the Nobel Prize for work on behavioral economics and prospect theory?",
+      "back": "Daniel Kahneman"
+    }
+  ]
+}

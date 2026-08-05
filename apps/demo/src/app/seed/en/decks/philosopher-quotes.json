@@ -1,0 +1,283 @@
+{
+  "title": "Philosopher Quotes",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "Who said “That which does not kill us makes us stronger”?",
+      "back": "Friedrich Nietzsche"
+    },
+    {
+      "front": "Who said “Workers of the world, unite!”?",
+      "back": "Karl Marx"
+    },
+    {
+      "front": "Who said “Two things fill the mind with ever new and increasing admiration and awe: the starry heavens above me and the moral law within me”?",
+      "back": "Immanuel Kant"
+    },
+    {
+      "front": "Who said “Religion is the opium of the people”?",
+      "back": "Karl Marx"
+    },
+    {
+      "front": "Who said “Act only according to that maxim whereby you can at the same time will that it should become a universal law”?",
+      "back": "Immanuel Kant"
+    },
+    {
+      "front": "Who said “God is dead”?",
+      "back": "Friedrich Nietzsche"
+    },
+    {
+      "front": "Who said “The unexamined life is not worth living”?",
+      "back": "Socrates"
+    },
+    {
+      "front": "Who said “Man is by nature a political animal”?",
+      "back": "Aristotle"
+    },
+    {
+      "front": "Who said “Hell is other people”?",
+      "back": "Jean-Paul Sartre"
+    },
+    {
+      "front": "Who said “You cannot step twice into the same river”?",
+      "back": "Heraclitus"
+    },
+    {
+      "front": "Who said “Existence precedes essence”?",
+      "back": "Jean-Paul Sartre"
+    },
+    {
+      "front": "Who said “Everything flows”?",
+      "back": "Heraclitus"
+    },
+    {
+      "front": "Who said “Plato is dear to me, but dearer still is truth”?",
+      "back": "Aristotle"
+    },
+    {
+      "front": "Who said “I know that I know nothing”?",
+      "back": "Socrates"
+    },
+    {
+      "front": "Who said “He who fights with monsters should look to it that he himself does not become a monster”?",
+      "back": "Friedrich Nietzsche"
+    },
+    {
+      "front": "Who said “Happiness is not an ideal of reason but of imagination”?",
+      "back": "Immanuel Kant"
+    },
+    {
+      "front": "Who said “The philosophers have only interpreted the world, in various ways; the point is to change it”?",
+      "back": "Karl Marx"
+    },
+    {
+      "front": "Who said “I think, therefore I am”?",
+      "back": "René Descartes"
+    },
+    {
+      "front": "Who said “Whereof one cannot speak, thereof one must be silent”?",
+      "back": "Ludwig Wittgenstein"
+    },
+    {
+      "front": "Who said “There is but one truly serious philosophical problem, and that is suicide”?",
+      "back": "Albert Camus"
+    },
+    {
+      "front": "Who said “The heart has its reasons which reason knows nothing of”?",
+      "back": "Blaise Pascal"
+    },
+    {
+      "front": "Who said “Life can only be understood backwards; but it must be lived forwards”?",
+      "back": "Søren Kierkegaard"
+    },
+    {
+      "front": "Who said “A foolish consistency is the hobgoblin of little minds”?",
+      "back": "Ralph Waldo Emerson"
+    },
+    {
+      "front": "Who said “Over himself, over his own body and mind, the individual is sovereign”?",
+      "back": "John Stuart Mill"
+    },
+    {
+      "front": "Who said “A journey of a thousand miles begins with a single step”?",
+      "back": "Laozi"
+    },
+    {
+      "front": "Who said “You have power over your mind — not outside events. Realize this, and you will find strength”?",
+      "back": "Marcus Aurelius"
+    },
+    {
+      "front": "Who said “We suffer more often in imagination than in reality”?",
+      "back": "Seneca"
+    },
+    {
+      "front": "Who said “It’s not what happens to you, but how you react to it that matters”?",
+      "back": "Epictetus"
+    },
+    {
+      "front": "Who said “Our hearts are restless until they rest in You”?",
+      "back": "Augustine of Hippo"
+    },
+    {
+      "front": "Who said “No man is free who is not master of himself”?",
+      "back": "Epictetus"
+    },
+    {
+      "front": "Who said “Love, and do what you will”?",
+      "back": "Augustine of Hippo"
+    },
+    {
+      "front": "Who said “It is not that we have a short time to live, but that we waste a lot of it”?",
+      "back": "Seneca"
+    },
+    {
+      "front": "Who said “The happiness of your life depends upon the quality of your thoughts”?",
+      "back": "Marcus Aurelius"
+    },
+    {
+      "front": "Who said “He who knows does not speak. He who speaks does not know”?",
+      "back": "Laozi"
+    },
+    {
+      "front": "Who said “It is better to be a human being dissatisfied than a pig satisfied”?",
+      "back": "John Stuart Mill"
+    },
+    {
+      "front": "Who said “Trust thyself: every heart vibrates to that iron string”?",
+      "back": "Ralph Waldo Emerson"
+    },
+    {
+      "front": "Who said “Anxiety is the dizziness of freedom”?",
+      "back": "Søren Kierkegaard"
+    },
+    {
+      "front": "Who said “Man is but a reed, the weakest in nature, but he is a thinking reed”?",
+      "back": "Blaise Pascal"
+    },
+    {
+      "front": "Who said “One must imagine Sisyphus happy”?",
+      "back": "Albert Camus"
+    },
+    {
+      "front": "Who said “The limits of my language mean the limits of my world”?",
+      "back": "Ludwig Wittgenstein"
+    },
+    {
+      "front": "Who said “Cogito, ergo sum”?",
+      "back": "René Descartes"
+    },
+    {
+      "front": "Who said “The history of all hitherto existing society is the history of class struggles”?",
+      "back": "Karl Marx"
+    },
+    {
+      "front": "Who said “Dare to know! Have courage to use your own understanding!”?",
+      "back": "Immanuel Kant"
+    },
+    {
+      "front": "Who said “Become who you are”?",
+      "back": "Friedrich Nietzsche"
+    },
+    {
+      "front": "Who said “The only true wisdom is in knowing you know nothing”?",
+      "back": "Socrates"
+    },
+    {
+      "front": "Who said “All men by nature desire to know”?",
+      "back": "Aristotle"
+    },
+    {
+      "front": "Who said “Nothing endures but change”?",
+      "back": "Heraclitus"
+    },
+    {
+      "front": "Who said “Man is condemned to be free”?",
+      "back": "Jean-Paul Sartre"
+    },
+    {
+      "front": "Who said “Man is born free, and everywhere he is in chains”?",
+      "back": "Jean-Jacques Rousseau"
+    },
+    {
+      "front": "Who said “One is not born, but rather becomes, a woman”?",
+      "back": "Simone de Beauvoir"
+    },
+    {
+      "front": "Who said “Man is the measure of all things”?",
+      "back": "Protagoras"
+    },
+    {
+      "front": "Who said “The life of man, solitary, poor, nasty, brutish, and short”?",
+      "back": "Thomas Hobbes"
+    },
+    {
+      "front": "Who said “Reason is, and ought only to be the slave of the passions”?",
+      "back": "David Hume"
+    },
+    {
+      "front": "Who said “What is rational is actual; and what is actual is rational”?",
+      "back": "Georg Wilhelm Friedrich Hegel"
+    },
+    {
+      "front": "Who said “Life swings like a pendulum backward and forward between pain and boredom”?",
+      "back": "Arthur Schopenhauer"
+    },
+    {
+      "front": "Who said “The mass of men lead lives of quiet desperation”?",
+      "back": "Henry David Thoreau"
+    },
+    {
+      "front": "Who said “The greatest happiness of the greatest number is the foundation of morals and legislation”?",
+      "back": "Jeremy Bentham"
+    },
+    {
+      "front": "Who said “Knowledge is power”?",
+      "back": "Francis Bacon"
+    },
+    {
+      "front": "Who said “No man's knowledge here can go beyond his experience”?",
+      "back": "John Locke"
+    },
+    {
+      "front": "Who said “Language is the house of Being”?",
+      "back": "Martin Heidegger"
+    },
+    {
+      "front": "Who said “The banality of evil”?",
+      "back": "Hannah Arendt"
+    },
+    {
+      "front": "Who said “If God did not exist, it would be necessary to invent him”?",
+      "back": "Voltaire"
+    },
+    {
+      "front": "Who said “Que sais-je?”?",
+      "back": "Michel de Montaigne"
+    },
+    {
+      "front": "Who said “Am I a man who dreamt he was a butterfly, or a butterfly now dreaming he is a man?”?",
+      "back": "Zhuangzi"
+    },
+    {
+      "front": "Who said “The free man thinks of nothing less than of death”?",
+      "back": "Baruch Spinoza"
+    },
+    {
+      "front": "Who said “Science must begin with myths, and with the criticism of myths”?",
+      "back": "Karl Popper"
+    },
+    {
+      "front": "Who said “The whole problem with the world is that fools and fanatics are always so certain of themselves, and wiser people so full of doubts”?",
+      "back": "Bertrand Russell"
+    },
+    {
+      "front": "Who said “Entities should not be multiplied without necessity”?",
+      "back": "William of Ockham"
+    },
+    {
+      "front": "Who said “Until philosophers are kings, or the kings and princes of this world have the spirit and power of philosophy, cities will never have rest from their evils”?",
+      "back": "Plato"
+    }
+  ]
+}

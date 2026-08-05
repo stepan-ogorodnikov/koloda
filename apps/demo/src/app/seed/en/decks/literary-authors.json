@@ -1,0 +1,327 @@
+{
+  "title": "Literary Authors",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "Who wrote “1984”?",
+      "back": "George Orwell"
+    },
+    {
+      "front": "Who wrote “Hamlet”?",
+      "back": "William Shakespeare"
+    },
+    {
+      "front": "Who wrote “The Lord of the Rings”?",
+      "back": "J. R. R. Tolkien"
+    },
+    {
+      "front": "Who wrote “Pride and Prejudice”?",
+      "back": "Jane Austen"
+    },
+    {
+      "front": "Who wrote “To Kill a Mockingbird”?",
+      "back": "Harper Lee"
+    },
+    {
+      "front": "Who wrote “The Great Gatsby”?",
+      "back": "F. Scott Fitzgerald"
+    },
+    {
+      "front": "Who wrote “Harry Potter and the Philosopher's Stone”?",
+      "back": "J. K. Rowling"
+    },
+    {
+      "front": "Who wrote “The Catcher in the Rye”?",
+      "back": "J. D. Salinger"
+    },
+    {
+      "front": "Who wrote “Crime and Punishment”?",
+      "back": "Fyodor Dostoevsky"
+    },
+    {
+      "front": "Who wrote “War and Peace”?",
+      "back": "Leo Tolstoy"
+    },
+    {
+      "front": "Who wrote “Don Quixote”?",
+      "back": "Miguel de Cervantes"
+    },
+    {
+      "front": "Who wrote “Brave New World”?",
+      "back": "Aldous Huxley"
+    },
+    {
+      "front": "Who wrote “Fahrenheit 451”?",
+      "back": "Ray Bradbury"
+    },
+    {
+      "front": "Who wrote “The Chronicles of Narnia”?",
+      "back": "C. S. Lewis"
+    },
+    {
+      "front": "Who wrote “The Old Man and the Sea”?",
+      "back": "Ernest Hemingway"
+    },
+    {
+      "front": "Who wrote “Les Misérables”?",
+      "back": "Victor Hugo"
+    },
+    {
+      "front": "Who wrote “One Hundred Years of Solitude”?",
+      "back": "Gabriel García Márquez"
+    },
+    {
+      "front": "Who wrote “The Count of Monte Cristo”?",
+      "back": "Alexandre Dumas"
+    },
+    {
+      "front": "Who wrote “Moby-Dick”?",
+      "back": "Herman Melville"
+    },
+    {
+      "front": "Who wrote “Frankenstein”?",
+      "back": "Mary Shelley"
+    },
+    {
+      "front": "Who wrote “The Odyssey”?",
+      "back": "Homer"
+    },
+    {
+      "front": "Who wrote “Dracula”?",
+      "back": "Bram Stoker"
+    },
+    {
+      "front": "Who wrote “Jane Eyre”?",
+      "back": "Charlotte Brontë"
+    },
+    {
+      "front": "Who wrote “Great Expectations”?",
+      "back": "Charles Dickens"
+    },
+    {
+      "front": "Who wrote “Wuthering Heights”?",
+      "back": "Emily Brontë"
+    },
+    {
+      "front": "Who wrote “The Picture of Dorian Gray”?",
+      "back": "Oscar Wilde"
+    },
+    {
+      "front": "Who wrote “The Metamorphosis”?",
+      "back": "Franz Kafka"
+    },
+    {
+      "front": "Who wrote “Ulysses”?",
+      "back": "James Joyce"
+    },
+    {
+      "front": "Who wrote “The Stranger”?",
+      "back": "Albert Camus"
+    },
+    {
+      "front": "Who wrote “Lolita”?",
+      "back": "Vladimir Nabokov"
+    },
+    {
+      "front": "Who wrote “Catch-22”?",
+      "back": "Joseph Heller"
+    },
+    {
+      "front": "Who wrote “Madame Bovary”?",
+      "back": "Gustave Flaubert"
+    },
+    {
+      "front": "Who wrote “Slaughterhouse-Five”?",
+      "back": "Kurt Vonnegut"
+    },
+    {
+      "front": "Who wrote “The Grapes of Wrath”?",
+      "back": "John Steinbeck"
+    },
+    {
+      "front": "Who wrote “Mrs Dalloway”?",
+      "back": "Virginia Woolf"
+    },
+    {
+      "front": "Who wrote “Beloved”?",
+      "back": "Toni Morrison"
+    },
+    {
+      "front": "Who wrote “The Handmaid's Tale”?",
+      "back": "Margaret Atwood"
+    },
+    {
+      "front": "Who wrote “Things Fall Apart”?",
+      "back": "Chinua Achebe"
+    },
+    {
+      "front": "Who wrote “The Divine Comedy”?",
+      "back": "Dante Alighieri"
+    },
+    {
+      "front": "Who wrote “Middlemarch”?",
+      "back": "George Eliot"
+    },
+    {
+      "front": "Who wrote “Invisible Man”?",
+      "back": "Ralph Ellison"
+    },
+    {
+      "front": "Who wrote “Faust”?",
+      "back": "Johann Wolfgang von Goethe"
+    },
+    {
+      "front": "Who wrote “The Little Prince”?",
+      "back": "Antoine de Saint-Exupéry"
+    },
+    {
+      "front": "Who wrote “Candide”?",
+      "back": "Voltaire"
+    },
+    {
+      "front": "Who wrote “The Name of the Rose”?",
+      "back": "Umberto Eco"
+    },
+    {
+      "front": "Who wrote “The Alchemist”?",
+      "back": "Paulo Coelho"
+    },
+    {
+      "front": "Who wrote “Life of Pi”?",
+      "back": "Yann Martel"
+    },
+    {
+      "front": "Who wrote “The Kite Runner”?",
+      "back": "Khaled Hosseini"
+    },
+    {
+      "front": "Who wrote “Midnight's Children”?",
+      "back": "Salman Rushdie"
+    },
+    {
+      "front": "Who wrote “The Unbearable Lightness of Being”?",
+      "back": "Milan Kundera"
+    },
+    {
+      "front": "Who wrote “Norwegian Wood”?",
+      "back": "Haruki Murakami"
+    },
+    {
+      "front": "Who wrote “Blindness”?",
+      "back": "José Saramago"
+    },
+    {
+      "front": "Who wrote “The Remains of the Day”?",
+      "back": "Kazuo Ishiguro"
+    },
+    {
+      "front": "Who wrote “A Passage to India”?",
+      "back": "E. M. Forster"
+    },
+    {
+      "front": "Who wrote “Heart of Darkness”?",
+      "back": "Joseph Conrad"
+    },
+    {
+      "front": "Who wrote “Lord of the Flies”?",
+      "back": "William Golding"
+    },
+    {
+      "front": "Who wrote “The Bell Jar”?",
+      "back": "Sylvia Plath"
+    },
+    {
+      "front": "Who wrote “On the Road”?",
+      "back": "Jack Kerouac"
+    },
+    {
+      "front": "Who wrote “The Scarlet Letter”?",
+      "back": "Nathaniel Hawthorne"
+    },
+    {
+      "front": "Who wrote “Animal Farm”?",
+      "back": "George Orwell"
+    },
+    {
+      "front": "Who wrote “Romeo and Juliet”?",
+      "back": "William Shakespeare"
+    },
+    {
+      "front": "Who wrote “The Hobbit”?",
+      "back": "J. R. R. Tolkien"
+    },
+    {
+      "front": "Who wrote “Sense and Sensibility”?",
+      "back": "Jane Austen"
+    },
+    {
+      "front": "Who wrote “The Brothers Karamazov”?",
+      "back": "Fyodor Dostoevsky"
+    },
+    {
+      "front": "Who wrote “Anna Karenina”?",
+      "back": "Leo Tolstoy"
+    },
+    {
+      "front": "Who wrote “For Whom the Bell Tolls”?",
+      "back": "Ernest Hemingway"
+    },
+    {
+      "front": "Who wrote “The Hunchback of Notre-Dame”?",
+      "back": "Victor Hugo"
+    },
+    {
+      "front": "Who wrote “Love in the Time of Cholera”?",
+      "back": "Gabriel García Márquez"
+    },
+    {
+      "front": "Who wrote “The Three Musketeers”?",
+      "back": "Alexandre Dumas"
+    },
+    {
+      "front": "Who wrote “The Iliad”?",
+      "back": "Homer"
+    },
+    {
+      "front": "Who wrote “A Tale of Two Cities”?",
+      "back": "Charles Dickens"
+    },
+    {
+      "front": "Who wrote “The Trial”?",
+      "back": "Franz Kafka"
+    },
+    {
+      "front": "Who wrote “The Plague”?",
+      "back": "Albert Camus"
+    },
+    {
+      "front": "Who wrote “Of Mice and Men”?",
+      "back": "John Steinbeck"
+    },
+    {
+      "front": "Who wrote “To the Lighthouse”?",
+      "back": "Virginia Woolf"
+    },
+    {
+      "front": "Who wrote “Kafka on the Shore”?",
+      "back": "Haruki Murakami"
+    },
+    {
+      "front": "Who wrote “Never Let Me Go”?",
+      "back": "Kazuo Ishiguro"
+    },
+    {
+      "front": "Who wrote “Macbeth”?",
+      "back": "William Shakespeare"
+    },
+    {
+      "front": "Who wrote “The Sun Also Rises”?",
+      "back": "Ernest Hemingway"
+    },
+    {
+      "front": "Who wrote “Oliver Twist”?",
+      "back": "Charles Dickens"
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "title": "Famous Landmarks",
+  "template": "reveal",
+  "algorithm": "simple",
+  "cards": [
+    {
+      "front": "In which city is “The Colosseum” located?",
+      "back": "Rome"
+    },
+    {
+      "front": "In which city is “The Eiffel Tower” located?",
+      "back": "Paris"
+    },
+    {
+      "front": "In which city is “The Statue of Liberty” located?",
+      "back": "New York"
+    },
+    {
+      "front": "In which city is “Big Ben” located?",
+      "back": "London"
+    },
+    {
+      "front": "In which city is “The Sydney Opera House” located?",
+      "back": "Sydney"
+    },
+    {
+      "front": "In which city is “The Taj Mahal” located?",
+      "back": "Agra"
+    },
+    {
+      "front": "In which city is “Christ the Redeemer” located?",
+      "back": "Rio de Janeiro"
+    },
+    {
+      "front": "In which city is “The Forbidden City” located?",
+      "back": "Beijing"
+    },
+    {
+      "front": "In which city is “The Acropolis” located?",
+      "back": "Athens"
+    },
+    {
+      "front": "In which city is “The Sagrada Família” located?",
+      "back": "Barcelona"
+    },
+    {
+      "front": "In which city is “The Golden Gate Bridge” located?",
+      "back": "San Francisco"
+    },
+    {
+      "front": "In which city is “Machu Picchu” near?",
+      "back": "Cusco"
+    },
+    {
+      "front": "In which city is “The Brandenburg Gate” located?",
+      "back": "Berlin"
+    },
+    {
+      "front": "In which city is “Red Square” located?",
+      "back": "Moscow"
+    },
+    {
+      "front": "In which city is “The Burj Khalifa” located?",
+      "back": "Dubai"
+    },
+    {
+      "front": "In which city is “The Leaning Tower of Pisa” located?",
+      "back": "Pisa"
+    },
+    {
+      "front": "In which city is “Mount Fuji” near?",
+      "back": "Tokyo"
+    },
+    {
+      "front": "In which city is “Angkor Wat” near?",
+      "back": "Siem Reap"
+    },
+    {
+      "front": "In which city is “Table Mountain” overlooking?",
+      "back": "Cape Town"
+    },
+    {
+      "front": "In which city is “The CN Tower” located?",
+      "back": "Toronto"
+    },
+    {
+      "front": "In which city is “The Alhambra” located?",
+      "back": "Granada"
+    },
+    {
+      "front": "In which city is “Petronas Towers” located?",
+      "back": "Kuala Lumpur"
+    },
+    {
+      "front": "In which city is “The Space Needle” located?",
+      "back": "Seattle"
+    },
+    {
+      "front": "In which city is “Hagia Sophia” located?",
+      "back": "Istanbul"
+    },
+    {
+      "front": "In which city is “The Atomium” located?",
+      "back": "Brussels"
+    },
+    {
+      "front": "In which city is “Charles Bridge” located?",
+      "back": "Prague"
+    },
+    {
+      "front": "In which city is “The Little Mermaid statue” located?",
+      "back": "Copenhagen"
+    },
+    {
+      "front": "In which city is “The Guggenheim Museum Bilbao” located?",
+      "back": "Bilbao"
+    },
+    {
+      "front": "In which city is “Marina Bay Sands” located?",
+      "back": "Singapore"
+    },
+    {
+      "front": "In which city is “The Gateway Arch” located?",
+      "back": "St. Louis"
+    },
+    {
+      "front": "In which city is “The Hollywood Sign” overlooking?",
+      "back": "Los Angeles"
+    },
+    {
+      "front": "In which city is “The Willis Tower” located?",
+      "back": "Chicago"
+    },
+    {
+      "front": "In which city is “Edinburgh Castle” located?",
+      "back": "Edinburgh"
+    },
+    {
+      "front": "In which city is “The Duomo” located?",
+      "back": "Milan"
+    },
+    {
+      "front": "In which city is “The Uffizi Gallery” located?",
+      "back": "Florence"
+    },
+    {
+      "front": "In which city is “Neuschwanstein Castle” near?",
+      "back": "Füssen"
+    },
+    {
+      "front": "In which city is “The Sphinx of Giza” near?",
+      "back": "Cairo"
+    },
+    {
+      "front": "In which city is “The Hermitage Museum” located?",
+      "back": "Saint Petersburg"
+    },
+    {
+      "front": "In which city is “The Grand Palace” located?",
+      "back": "Bangkok"
+    },
+    {
+      "front": "In which city is “Stonehenge” near?",
+      "back": "Salisbury"
+    },
+    {
+      "front": "In which city is “The Plaza Mayor” located?",
+      "back": "Madrid"
+    },
+    {
+      "front": "In which city is “The Opera House of Vienna” located?",
+      "back": "Vienna"
+    },
+    {
+      "front": "In which city is “The Trevi Fountain” located?",
+      "back": "Rome"
+    },
+    {
+      "front": "In which city is “Notre-Dame Cathedral” located?",
+      "back": "Paris"
+    },
+    {
+      "front": "In which city is “The Empire State Building” located?",
+      "back": "New York"
+    },
+    {
+      "front": "In which city is “The Tower of London” located?",
+      "back": "London"
+    },
+    {
+      "front": "In which city is “The Parthenon” located?",
+      "back": "Athens"
+    },
+    {
+      "front": "In which city is “The Berlin Wall Memorial” located?",
+      "back": "Berlin"
+    },
+    {
+      "front": "In which city is “The Kremlin” located?",
+      "back": "Moscow"
+    },
+    {
+      "front": "In which city is “Shibuya Crossing” located?",
+      "back": "Tokyo"
+    },
+    {
+      "front": "In which city is “The Blue Mosque” located?",
+      "back": "Istanbul"
+    },
+    {
+      "front": "In which city are “The Great Pyramids of Giza” near?",
+      "back": "Cairo"
+    },
+    {
+      "front": "In which city is “The Winter Palace” located?",
+      "back": "Saint Petersburg"
+    },
+    {
+      "front": "In which city is “The Prado Museum” located?",
+      "back": "Madrid"
+    },
+    {
+      "front": "In which city is “Schönbrunn Palace” located?",
+      "back": "Vienna"
+    },
+    {
+      "front": "In which city is “The Pantheon” located?",
+      "back": "Rome"
+    },
+    {
+      "front": "In which city is “The Louvre” located?",
+      "back": "Paris"
+    },
+    {
+      "front": "In which city is “Times Square” located?",
+      "back": "New York"
+    },
+    {
+      "front": "In which city is “Buckingham Palace” located?",
+      "back": "London"
+    },
+    {
+      "front": "In which city is “Saint Basil’s Cathedral” located?",
+      "back": "Moscow"
+    },
+    {
+      "front": "In which city is “The Spanish Steps” located?",
+      "back": "Rome"
+    },
+    {
+      "front": "In which city is “The Champs-Élysées” located?",
+      "back": "Paris"
+    },
+    {
+      "front": "In which city is “The Chrysler Building” located?",
+      "back": "New York"
+    },
+    {
+      "front": "In which city is “Westminster Abbey” located?",
+      "back": "London"
+    },
+    {
+      "front": "In which city is “The Arc de Triomphe” located?",
+      "back": "Paris"
+    }
+  ]
+}
