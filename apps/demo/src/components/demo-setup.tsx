@@ -1,3 +1,5 @@
+import { Refresh04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/app-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
@@ -20,7 +22,7 @@ export function DemoSetup() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { mutate } = useMutation(demoSetupMutationOptions);
+  const { mutate, isPending } = useMutation(demoSetupMutationOptions);
   const language = useAtomValue(langAtom);
   const scheme = useAtomValue(schemeAtom);
 
@@ -45,17 +47,39 @@ export function DemoSetup() {
           <OverlayFrameTitle>{_(msg`demo.setup.header`)}</OverlayFrameTitle>
         </OverlayFrameHeader>
         <OverlayFrameContent variants={{ class: "justify-center gap-4 min-h-32 text-center" }}>
-          <p>{_(msg`demo.setup.storage`)}</p>
+          {isPending ? (
+            <p className="animate-shimmer-text--fg-level-4/fg-level-1">{_(msg`demo.setup.loading`)}</p>
+          ) : (
+            <p>{_(msg`demo.setup.storage`)}</p>
+          )}
         </OverlayFrameContent>
         <OverlayFrameFooter variants={{ class: "justify-center" }}>
-          <Button variants={{ style: "primary" }} onClick={handleClick}>
+          <Button variants={{ style: "primary" }} onClick={handleClick} isDisabled={isPending}>
+            {isPending && (
+              <HugeiconsIcon
+                className="size-5 min-w-5 animate-spin"
+                strokeWidth={1.75}
+                icon={Refresh04Icon}
+                aria-hidden="true"
+              />
+            )}
             {_(msg`demo.setup.submit`)}
           </Button>
         </OverlayFrameFooter>
       </div>
       <div className="flex flex-row gap-2">
-        <ColorSchemePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
-        <LanguagePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <ColorSchemePicker
+          buttonVariants={{ style: "ghost" }}
+          withChevron={false}
+          isPersisted={false}
+          isDisabled={isPending}
+        />
+        <LanguagePicker
+          buttonVariants={{ style: "ghost" }}
+          withChevron={false}
+          isPersisted={false}
+          isDisabled={isPending}
+        />
       </div>
     </div>
   );
