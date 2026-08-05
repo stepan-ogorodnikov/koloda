@@ -77,10 +77,14 @@ pub fn set_conversation(db: &Database, input: SetConversationInput) -> Result<Co
         let now = get_current_timestamp()?;
 
         db.with_conn(|conn| {
+            // WHY: First insert must stamp `updated_at` (caller value or now).
+            // Leaving it NULL sorted new chats to the bottom of the sidebar
+            // (`ORDER BY updated_at DESC`) until a later upsert — typically
+            // after streaming finished. Matches srs-pgsql `updatedAt ?? new Date()`.
             conn.execute(
                 r#"
                 INSERT INTO conversations (id, title, state, created_at, updated_at)
-                VALUES (?1, ?2, ?3, ?4, NULL)
+                VALUES (?1, ?2, ?3, ?4, COALESCE(?5, ?6))
                 ON CONFLICT(id) DO UPDATE SET
                     title = excluded.title,
                     state = excluded.state,

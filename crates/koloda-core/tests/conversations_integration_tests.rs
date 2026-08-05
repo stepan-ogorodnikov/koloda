@@ -52,8 +52,13 @@ fn set_conversation_inserts_new_row_with_timestamps() {
         "created_at should fall within [before, after] (handles backward NTP jumps)"
     );
     assert!(
-        stored.updated_at.is_none(),
-        "updated_at should be NULL on initial insert"
+        stored.updated_at.is_some(),
+        "updated_at should be stamped on initial insert (sidebar sort key)"
+    );
+    let updated_at = stored.updated_at.unwrap();
+    assert!(
+        updated_at >= before && updated_at <= after,
+        "updated_at should fall within [before, after] when omitted on insert"
     );
     assert!(stored.title.is_none(), "title should be NULL on initial insert");
 }
@@ -73,7 +78,8 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
         },
     )
     .expect("initial insert should succeed");
-    assert!(initial.updated_at.is_none(), "updated_at starts NULL");
+    assert!(initial.updated_at.is_some(), "updated_at is stamped on insert");
+    let initial_updated_at = initial.updated_at.unwrap();
 
     // 50ms exceeds the default Windows timer resolution (~15ms), guaranteeing
     // a strictly later timestamp on every platform.
@@ -94,8 +100,8 @@ fn set_conversation_upserts_existing_row_and_advances_updated_at() {
     assert_eq!(updated.state, json!({"version": 2}));
     assert!(updated.updated_at.is_some(), "updated_at should be set after upsert");
     assert!(
-        updated.updated_at.unwrap() > initial.created_at,
-        "updated_at should advance past the original created_at"
+        updated.updated_at.unwrap() > initial_updated_at,
+        "updated_at should advance past the original insert stamp"
     );
 }
 
@@ -126,34 +132,31 @@ fn set_conversation_with_explicit_updated_at_preserves_timestamp() {
     let db = test_db();
     let id = "conv-explicit-updated";
 
-    // First insert with no updated_at: row should have NULL updated_at.
-    let initial = set(&db, id, json!({"v": 1})).expect("initial insert should succeed");
-    assert!(initial.updated_at.is_none(), "updated_at starts NULL on insert");
-
-    // An arbitrary historical timestamp that the caller wants to keep.
+    // An arbitrary historical timestamp that the caller wants to keep —
+    // including on the *first* insert (sidebar order on first message save).
     let provided = 1_700_000_000_123_i64;
 
     let stored = repo::set_conversation(
         &db,
         repo::SetConversationInput {
             id: id.to_string(),
-            state: json!({"v": 2}),
+            state: json!({"v": 1}),
             title: None,
             updated_at: Some(provided),
         },
     )
-    .expect("upsert with explicit updated_at should succeed");
+    .expect("insert with explicit updated_at should succeed");
 
     assert_eq!(
         stored.updated_at,
         Some(provided),
-        "explicit updated_at should be persisted as-is"
+        "explicit updated_at should be persisted as-is on insert"
     );
 
     // A follow-up save without an updated_at should still bump it via the
     // server-side fallback.
     std::thread::sleep(std::time::Duration::from_millis(50));
-    let _ = set(&db, id, json!({"v": 3})).expect("follow-up upsert should succeed");
+    let _ = set(&db, id, json!({"v": 2})).expect("follow-up upsert should succeed");
 
     let after = repo::get_conversation(&db, id)
         .expect("query should succeed")
@@ -162,6 +165,46 @@ fn set_conversation_with_explicit_updated_at_preserves_timestamp() {
         after.updated_at.unwrap() > provided,
         "missing updated_at should fall back to the current time"
     );
+}
+
+#[test]
+fn set_conversation_insert_with_explicit_updated_at_sorts_to_top() {
+    let db = test_db();
+
+    // Older conversations stamped earlier.
+    let _ = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: "older".to_string(),
+            state: json!({}),
+            title: None,
+            updated_at: Some(1_700_000_000_000),
+        },
+    )
+    .expect("older insert should succeed");
+
+    // First message save for a brand-new conversation: pass the run-start
+    // stamp so the row appears at the top immediately (not after a later upsert).
+    let newer_stamp = 1_700_000_100_000_i64;
+    let _ = repo::set_conversation(
+        &db,
+        repo::SetConversationInput {
+            id: "brand-new".to_string(),
+            state: json!({"messages": ["hi"]}),
+            title: Some("hi".to_string()),
+            updated_at: Some(newer_stamp),
+        },
+    )
+    .expect("brand-new insert should succeed");
+
+    let result = repo::get_conversations(&db).expect("query should succeed");
+    assert_eq!(result.len(), 2);
+    assert_eq!(
+        result[0].id, "brand-new",
+        "first insert with explicit updated_at must sort ahead of older rows"
+    );
+    assert_eq!(result[0].updated_at, Some(newer_stamp));
+    assert_eq!(result[1].id, "older");
 }
 
 #[test]
@@ -275,22 +318,30 @@ fn get_conversations_orders_by_updated_at_desc_then_created_at_desc() {
 #[test]
 fn get_conversations_groups_rows_with_null_updated_at_after_touched_rows() {
     let db = test_db();
-    let first = set(&db, "first", json!({})).expect("insert should succeed");
-    std::thread::sleep(std::time::Duration::from_millis(50));
-    let second = set(&db, "second", json!({})).expect("insert should succeed");
 
-    // Only touch "first"; "second" remains with NULL updated_at.
+    // Seed a legacy/untouched row with NULL updated_at via raw SQL — normal
+    // set_conversation inserts always stamp updated_at now.
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("clock should be after unix epoch")
+        .as_millis() as i64;
+    db.with_conn(|conn| {
+        conn.execute(
+            "INSERT INTO conversations (id, state, created_at, updated_at) VALUES (?1, ?2, ?3, NULL)",
+            rusqlite::params!["untouched", "{}", now + 50],
+        )?;
+        Ok(())
+    })
+    .expect("raw insert should succeed");
+
     std::thread::sleep(std::time::Duration::from_millis(50));
-    let _touched = set(&db, "first", json!({"v": 2})).expect("upsert should succeed");
+    let _touched = set(&db, "touched", json!({"v": 1})).expect("insert should succeed");
 
     let result = repo::get_conversations(&db).expect("query should succeed");
     assert_eq!(result.len(), 2);
-    assert_eq!(result[0].id, "first");
-    assert_eq!(result[1].id, "second");
-
-    // created_at on "second" is still strictly later than "first.created_at",
-    // but "first" wins because it has a non-null updated_at.
-    assert!(second.created_at > first.created_at);
+    assert_eq!(result[0].id, "touched");
+    assert_eq!(result[1].id, "untouched");
+    assert!(result[1].updated_at.is_none());
 }
 
 // ============================================================================
