@@ -106,15 +106,18 @@ export function useAssistantSession({
   });
 
   const handleCancel = useCallback(() => {
-    const currentActiveRunId = readState().activeRunId;
-    if (currentActiveRunId) {
-      dispatch(["cancelRun", { runId: currentActiveRunId }]);
-      // WHY: User cancel is always on the current conversation. Mark read
-      // after cancelRun so navigating away does not surface this run as unread
-      // (ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status).
-      setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
-    }
-    cancel();
+    const state = readState();
+    const currentActiveRunId = state.activeRunId;
+    if (!currentActiveRunId) return;
+    const run = state.runs[currentActiveRunId];
+    dispatch(["cancelRun", { runId: currentActiveRunId }]);
+    // WHY: User cancel is always on the current conversation. Mark read
+    // after cancelRun so navigating away does not surface this run as unread
+    // (ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status).
+    setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
+    // WHY: Abort only this run's controller. Other conversations can stream
+    // concurrently (same or different mode); canceling must not kill them.
+    if (run) cancel(currentActiveRunId);
   }, [dispatch, cancel, readState, setConversationReducerAction]);
 
   const handleReset = useCallback(() => {

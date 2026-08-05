@@ -1,6 +1,5 @@
-import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import type * as KolodaAiReactModule from "@koloda/ai-react";
-import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
+import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { CardGenerationExecutor, CardGenerationStreamRequest } from "@koloda/ai-react";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,56 +18,6 @@ import { useConversationRuns } from "./use-conversation-runs";
 type Dispatch = (action: ConversationReducerAction) => void;
 type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 type GetState = () => ConversationReducerState;
-
-const wire = vi.hoisted(() => ({
-  streamChat: null as
-    | null
-    | ((
-        request: ChatStreamRequest,
-        onChunk: (chunk: string) => void,
-      ) => Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>),
-  generate: null as
-    | null
-    | ((
-        request: CardGenerationStreamRequest,
-        onCard?: (card: { content: Record<string, { text: string }> }) => void,
-      ) => Promise<StreamResult>),
-  cancelChat: vi.fn(),
-  cancelGenerate: vi.fn(),
-}));
-
-vi.mock("@koloda/ai-react", async () => {
-  const actual = await vi.importActual<typeof KolodaAiReactModule>("@koloda/ai-react");
-  return {
-    ...actual,
-    useChatStream: () => ({
-      text: "",
-      isStreaming: false,
-      error: null,
-      usage: null,
-      stream: (request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
-        if (!wire.streamChat) throw new Error("streamChat mock not set");
-        return wire.streamChat(request, onChunk);
-      },
-      cancel: wire.cancelChat,
-      reset: vi.fn(),
-    }),
-    useAssistantCardGeneration: () => ({
-      cards: [],
-      isGenerating: false,
-      error: null,
-      generate: (
-        request: CardGenerationStreamRequest,
-        onCard?: (card: { content: Record<string, { text: string }> }) => void,
-      ) => {
-        if (!wire.generate) throw new Error("generate mock not set");
-        return wire.generate(request, onCard);
-      },
-      clearCards: vi.fn(),
-      cancel: wire.cancelGenerate,
-    }),
-  };
-});
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {
@@ -100,6 +49,8 @@ function createHarness() {
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);
   const touch = vi.fn();
+  const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
+  const streamGenerator = vi.fn<CardGenerationExecutor>();
 
   return {
     store,
@@ -110,14 +61,16 @@ function createHarness() {
     touch,
     dispatchToMap,
     dispatchToCurrent,
+    chatStreamGenerator,
+    streamGenerator,
   };
 }
 
 function renderRuns(harness: ReturnType<typeof createHarness>) {
   return renderHook(() =>
     useConversationRuns({
-      streamGenerator: vi.fn() as CardGenerationExecutor,
-      chatStreamGenerator: vi.fn() as ChatStreamGenerator,
+      streamGenerator: harness.streamGenerator,
+      chatStreamGenerator: harness.chatStreamGenerator,
       dispatch: harness.dispatch,
       dispatchToConversation: harness.dispatchToConversation,
       markReadIfCurrent: harness.markReadIfCurrent,
@@ -127,12 +80,19 @@ function renderRuns(harness: ReturnType<typeof createHarness>) {
   );
 }
 
+function holdUntilAborted(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+  });
+}
+
 describe("useConversationRuns", () => {
   beforeEach(() => {
-    wire.streamChat = null;
-    wire.generate = null;
-    wire.cancelChat.mockClear();
-    wire.cancelGenerate.mockClear();
+    vi.clearAllMocks();
   });
 
   it("executeChatRun dispatches updateAssistantText via dispatchToConversation (per-id) so background streams land on the originating conversation", async () => {
@@ -157,15 +117,16 @@ describe("useConversationRuns", () => {
     ]);
 
     let streamStarted = false;
-    let resolveStream!: (result: { streamResult: StreamResult; usage: StreamUsage | null }) => void;
-    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+    let resolveStream!: () => void;
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       streamStarted = true;
       onChunk("Hello ");
       onChunk("world");
       harness.store.set(setCurrentConversationIdAtom, "B");
-      return new Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>((resolve) => {
+      await new Promise<void>((resolve) => {
         resolveStream = resolve;
       });
+      return undefined;
     });
 
     const { result } = renderRuns(harness);
@@ -180,7 +141,7 @@ describe("useConversationRuns", () => {
     });
 
     await act(async () => {
-      resolveStream({ streamResult: "success", usage: null });
+      resolveStream();
       await runPromise;
     });
 
@@ -229,16 +190,10 @@ describe("useConversationRuns", () => {
 
     harness.store.set(setCurrentConversationIdAtom, "B");
 
-    wire.generate = vi.fn(
-      async (
-        _request: CardGenerationStreamRequest,
-        onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
-      ) => {
-        onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
-        onCard({ content: { front: { text: "Q2" }, back: { text: "A2" } } });
-        return "success" as StreamResult;
-      },
-    );
+    harness.streamGenerator.mockImplementation(async (_request, onCard) => {
+      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } } as GeneratedCard);
+      onCard({ content: { front: { text: "Q2" }, back: { text: "A2" } } } as GeneratedCard);
+    });
 
     const { result } = renderRuns(harness);
 
@@ -278,9 +233,9 @@ describe("useConversationRuns", () => {
     ]);
     harness.store.set(setCurrentConversationIdAtom, "B");
 
-    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       onChunk("partial");
-      return { streamResult: "aborted" as StreamResult, usage: null };
+      throw new DOMException("Aborted", "AbortError");
     });
 
     const { result } = renderRuns(harness);
@@ -313,15 +268,9 @@ describe("useConversationRuns", () => {
       },
     ]);
 
-    wire.generate = vi.fn(
-      async (
-        _request: CardGenerationStreamRequest,
-        onCard: (card: { content: Record<string, { text: string }> }) => void = () => undefined,
-      ) => {
-        onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } });
-        return "success" as StreamResult;
-      },
-    );
+    harness.streamGenerator.mockImplementation(async (_request, onCard) => {
+      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } } as GeneratedCard);
+    });
 
     const { result } = renderRuns(harness);
 
@@ -351,7 +300,9 @@ describe("useConversationRuns", () => {
       },
     ]);
 
-    wire.generate = vi.fn(async () => "aborted" as StreamResult);
+    harness.streamGenerator.mockImplementation(async () => {
+      throw new DOMException("Aborted", "AbortError");
+    });
 
     const { result } = renderRuns(harness);
 
@@ -381,10 +332,10 @@ describe("useConversationRuns", () => {
       { runId: "run-A", kind: "chat-text", text: "" },
     ]);
 
-    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       onChunk("partial ");
       onChunk("text");
-      return { streamResult: "aborted" as StreamResult, usage: null };
+      throw new DOMException("Aborted", "AbortError");
     });
 
     const { result } = renderRuns(harness);
@@ -415,10 +366,10 @@ describe("useConversationRuns", () => {
       { runId: "run-A", kind: "chat-text", text: "" },
     ]);
 
-    const usage: StreamUsage = { input: 10, output: 5 } as unknown as StreamUsage;
-    wire.streamChat = vi.fn(async (_request: ChatStreamRequest, onChunk: (chunk: string) => void) => {
+    const usage: StreamUsage = { promptTokens: 10, completionTokens: 5, totalTokens: 15 };
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       onChunk("hi");
-      return { streamResult: "success" as StreamResult, usage };
+      return usage;
     });
 
     const { result } = renderRuns(harness);
@@ -431,5 +382,101 @@ describe("useConversationRuns", () => {
     expect(setUsageActions).toHaveLength(1);
     expect(setUsageActions[0].id).toBe("A");
     expect((setUsageActions[0].action[1] as { runId: string; usage: StreamUsage }).usage).toBe(usage);
+  });
+
+  it("cancel(runId) aborts only that run, leaving a concurrent same-mode stream running", async () => {
+    // WHY: two chats on different conversations must each own a controller.
+    // Mode-scoped cancel was not enough — the singleton stream hook aborted both.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(upsertConversationAtom, makeConversation("B"));
+
+    const signals: AbortSignal[] = [];
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
+      signals.push(signal);
+      onChunk("chunk");
+      await holdUntilAborted(signal);
+    });
+
+    const { result } = renderRuns(harness);
+
+    let runA!: Promise<void>;
+    let runB!: Promise<void>;
+    act(() => {
+      runA = result.current.executeChatRun("A", "run-A", {} as ChatStreamRequest);
+      runB = result.current.executeChatRun("B", "run-B", {} as ChatStreamRequest);
+    });
+
+    await act(async () => {
+      while (signals.length < 2) await Promise.resolve();
+    });
+
+    expect(signals[0]?.aborted).toBe(false);
+    expect(signals[1]?.aborted).toBe(false);
+
+    await act(async () => {
+      result.current.cancel("run-A");
+      await runA;
+    });
+
+    expect(signals[0]?.aborted).toBe(true);
+    expect(signals[1]?.aborted).toBe(false);
+
+    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
+    expect(cancelActions).toHaveLength(1);
+    expect(cancelActions[0]?.id).toBe("A");
+
+    await act(async () => {
+      result.current.cancel("run-B");
+      await runB;
+    });
+
+    expect(signals[1]?.aborted).toBe(true);
+  });
+
+  it("cancel(runId) aborts only that run across chat + cards", async () => {
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(upsertConversationAtom, makeConversation("B"));
+
+    const chatSignals: AbortSignal[] = [];
+    const cardSignals: AbortSignal[] = [];
+
+    harness.chatStreamGenerator.mockImplementation(async (_request, _onChunk, signal) => {
+      chatSignals.push(signal);
+      await holdUntilAborted(signal);
+    });
+    harness.streamGenerator.mockImplementation(async (_request, _onCard, signal) => {
+      cardSignals.push(signal);
+      await holdUntilAborted(signal);
+    });
+
+    const { result } = renderRuns(harness);
+
+    let chatRun!: Promise<void>;
+    let cardRun!: Promise<void>;
+    act(() => {
+      chatRun = result.current.executeChatRun("A", "run-chat", {} as ChatStreamRequest);
+      cardRun = result.current.executeGenerateRun("B", "run-cards", {} as CardGenerationStreamRequest);
+    });
+
+    await act(async () => {
+      while (chatSignals.length < 1 || cardSignals.length < 1) await Promise.resolve();
+    });
+
+    await act(async () => {
+      result.current.cancel("run-chat");
+      await chatRun;
+    });
+
+    expect(chatSignals[0]?.aborted).toBe(true);
+    expect(cardSignals[0]?.aborted).toBe(false);
+
+    await act(async () => {
+      result.current.cancel("run-cards");
+      await cardRun;
+    });
+
+    expect(cardSignals[0]?.aborted).toBe(true);
   });
 });

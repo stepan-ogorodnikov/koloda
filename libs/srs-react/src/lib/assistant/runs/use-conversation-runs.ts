@@ -1,10 +1,16 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard } from "@koloda/ai";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { CardGenerationExecutor, CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
-import { useAssistantCardGeneration, useChatStream } from "@koloda/ai-react";
+import { isAbortError, isAppError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { usePendingRunRefs } from "./use-pending-run-refs";
+
+// WHY: AppError.message is the code; the human-readable text is `.details`.
+function displayErrorMessage(error: Error): string {
+  if (isAppError(error) && error.details) return error.details;
+  return error.message || error.name || "unknown";
+}
 
 /**
  * Per-kind spec for {@link runStream}. The two stream transports diverge in
@@ -81,12 +87,17 @@ export type UseConversationRunsReturn = {
     mode: AIChatMode,
     modelName?: string,
   ) => Promise<void>;
-  cancel: () => void;
+  /** Abort only this run — concurrent streams on other conversations keep going. */
+  cancel: (runId: string) => void;
 };
 
 /**
  * Wires chat/card stream transport to conversation run execution:
  * pending-run error routing, chunk/card dispatch, terminal status, retry.
+ *
+ * INVARIANT: Each in-flight run owns its own AbortController keyed by runId.
+ * Singleton stream hooks cannot express concurrent same-mode runs across
+ * conversations — canceling or starting another would abort the shared signal.
  */
 export function useConversationRuns({
   streamGenerator,
@@ -98,19 +109,33 @@ export function useConversationRuns({
   touch,
 }: UseConversationRunsOptions): UseConversationRunsReturn {
   const pendingRunRefs = usePendingRunRefs(dispatchToConversation, markReadIfCurrent);
+  const controllersRef = useRef(new Map<string, AbortController>());
+  const chatStreamGeneratorRef = useRef(chatStreamGenerator);
+  chatStreamGeneratorRef.current = chatStreamGenerator;
+  const streamGeneratorRef = useRef(streamGenerator);
+  streamGeneratorRef.current = streamGenerator;
 
-  const handleChatStreamError = useCallback(
-    (error: Error) => pendingRunRefs.handleError("chat", error),
-    [pendingRunRefs],
-  );
+  useEffect(() => {
+    const controllers = controllersRef.current;
+    return () => {
+      for (const controller of controllers.values()) controller.abort();
+      controllers.clear();
+    };
+  }, []);
 
-  const handleCardStreamError = useCallback(
-    (error: Error) => pendingRunRefs.handleError("cards", error),
-    [pendingRunRefs],
-  );
+  const beginRun = useCallback((runId: string) => {
+    // WHY: Retry reuses runId; drop any leftover controller for that id first.
+    controllersRef.current.get(runId)?.abort();
+    const controller = new AbortController();
+    controllersRef.current.set(runId, controller);
+    return controller;
+  }, []);
 
-  const { generate, cancel: cancelGenerate } = useAssistantCardGeneration(streamGenerator, handleCardStreamError);
-  const { stream: streamChat, cancel: cancelChat } = useChatStream(chatStreamGenerator, handleChatStreamError);
+  const endRun = useCallback((runId: string, controller: AbortController) => {
+    if (controllersRef.current.get(runId) === controller) {
+      controllersRef.current.delete(runId);
+    }
+  }, []);
 
   const handleStreamResult = useCallback(
     (conversationId: string, result: StreamResult, runId: string) => {
@@ -144,7 +169,36 @@ export function useConversationRuns({
       await runStream(
         {
           mode: "chat",
-          transport: streamChat,
+          transport: async (req, onValue) => {
+            const controller = beginRun(runId);
+            try {
+              const usage = await chatStreamGeneratorRef.current(
+                req,
+                (chunk) => {
+                  if (!controller.signal.aborted) onValue(chunk);
+                },
+                controller.signal,
+              );
+              return { streamResult: "success" as const, usage: usage ?? null };
+            } catch (e) {
+              // WHY: Only AbortError means intentional cancel. A real Error must
+              // surface even if the signal was also aborted.
+              if (isAbortError(e)) {
+                return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
+              }
+              // WHY: Dispatch with this run's ids — a shared pending-ref would
+              // mis-route when two same-mode streams are in flight.
+              const error = e instanceof Error ? e : new Error(String(e));
+              dispatchToConversation(conversationId, [
+                "runFailed",
+                { runId, error: { message: displayErrorMessage(error) } },
+              ]);
+              markReadIfCurrent(conversationId, runId);
+              return { streamResult: "error" as const, usage: null as StreamUsage | null };
+            } finally {
+              endRun(runId, controller);
+            }
+          },
           initial: "",
           onValue: (text, chunk) => {
             const currentText = text + chunk;
@@ -152,7 +206,7 @@ export function useConversationRuns({
             return currentText;
           },
           finalize: ({ streamResult, usage }, currentText) => {
-            // WHY: On abort the stream hook stops calling onChunk mid-text;
+            // WHY: On abort the stream stops calling onChunk mid-text;
             // re-dispatch the final accumulated value so the persisted
             // assistant message reflects everything received.
             if (streamResult === "aborted") {
@@ -169,7 +223,7 @@ export function useConversationRuns({
         pendingRunRefs.onComplete,
       );
     },
-    [dispatchToConversation, streamChat, handleStreamResult, pendingRunRefs],
+    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs],
   );
 
   const executeGenerateRun = useCallback(
@@ -177,7 +231,30 @@ export function useConversationRuns({
       await runStream<CardGenerationStreamRequest, GeneratedCard, StreamResult, null>(
         {
           mode: "cards",
-          transport: generate,
+          transport: async (req, onValue) => {
+            const controller = beginRun(runId);
+            try {
+              await streamGeneratorRef.current(
+                req,
+                (card) => {
+                  if (!controller.signal.aborted) onValue(card);
+                },
+                controller.signal,
+              );
+              return "success" as const;
+            } catch (e) {
+              if (isAbortError(e)) return "aborted" as const;
+              const error = e instanceof Error ? e : new Error(String(e));
+              dispatchToConversation(conversationId, [
+                "runFailed",
+                { runId, error: { message: displayErrorMessage(error) } },
+              ]);
+              markReadIfCurrent(conversationId, runId);
+              return "error" as const;
+            } finally {
+              endRun(runId, controller);
+            }
+          },
           initial: null,
           onValue: (_acc, card) => {
             dispatchToConversation(conversationId, ["addCard", { runId, card }]);
@@ -192,7 +269,7 @@ export function useConversationRuns({
         pendingRunRefs.onComplete,
       );
     },
-    [dispatchToConversation, generate, handleStreamResult, pendingRunRefs],
+    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs],
   );
 
   const retryRun = useCallback(
@@ -218,10 +295,14 @@ export function useConversationRuns({
     [executeChatRun, executeGenerateRun, dispatch, readState],
   );
 
-  const cancel = useCallback(() => {
-    cancelGenerate();
-    cancelChat();
-  }, [cancelGenerate, cancelChat]);
+  // WHY: Concurrent runs (same or different mode, across conversations) each
+  // own a controller. Cancel must abort only the run the user stopped.
+  const cancel = useCallback((runId: string) => {
+    const controller = controllersRef.current.get(runId);
+    if (!controller) return;
+    controller.abort();
+    controllersRef.current.delete(runId);
+  }, []);
 
   return {
     armPendingRun: pendingRunRefs.arm,

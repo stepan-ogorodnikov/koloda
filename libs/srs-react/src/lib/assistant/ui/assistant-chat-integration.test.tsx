@@ -2,14 +2,13 @@ import type {
   AIModel,
   AIProfile,
   AIRuntime,
-  ChatStreamGenerator,
   ChatStreamRequest,
   GeneratedCard,
   ModelParameter,
   StreamUsage,
 } from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
-import type { CardGenerationStreamRequest, StreamResult } from "@koloda/ai-react";
+import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
@@ -25,8 +24,13 @@ import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
 import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
 
+type PendingChat = {
+  resolve: (usage: StreamUsage | undefined) => void;
+  reject: (error: Error) => void;
+};
+
 /**
- * Module-level "wire" used by the mocked stream hooks and the test code to
+ * Module-level "wire" used by the mocked AIRuntime and the test code to
  * coordinate stream lifecycle and error injection.
  */
 const wire = vi.hoisted(() => {
@@ -34,15 +38,15 @@ const wire = vi.hoisted(() => {
     profiles: [] as AIProfile[],
     models: [] as AIModel[],
     template: { id: 1 } as Template,
-    // Stream controls
+    // Stream controls — AIRuntime.chat/generateCards read these.
     chatStream: {
       started: 0,
       onChunk: null as null | ((chunk: string) => void),
       onStart: null as null | ((request: ChatStreamRequest, onChunk: (chunk: string) => void) => void),
-      // Deferred promise controls for the chat stream. The mock returns
-      // a deferred promise and exposes the resolve function so the test
-      // can decide when (and whether) the stream completes.
+      // Deferred promise controls for concurrent in-flight chats.
+      pending: [] as PendingChat[],
       resolveNext: null as null | (() => void),
+      rejectNext: null as null | ((error: Error) => void),
       keepInFlight: false,
     },
     cardStream: {
@@ -51,9 +55,6 @@ const wire = vi.hoisted(() => {
       onStart: null as null | ((request: CardGenerationStreamRequest, onCard: (card: GeneratedCard) => void) => void),
       abortNext: false,
     },
-    // Captured error callbacks so the test can trigger errors.
-    onChatError: null as null | ((error: Error) => void),
-    onCardError: null as null | ((error: Error) => void),
     // Save mutation spy. The `state` payload is the full serialized
     // ConversationReducerState — tests that need to assert on the run status
     // (e.g. the pagehide-cancellation test) inspect this field.
@@ -69,50 +70,6 @@ vi.mock("@koloda/ai-react", async () => {
   const actual = await vi.importActual<typeof KolodaAiReactModule>("@koloda/ai-react");
   return {
     ...actual,
-    useChatStream: (_generator: ChatStreamGenerator, onError?: (error: Error) => void) => {
-      wire.onChatError = onError ?? null;
-      return {
-        text: "",
-        isStreaming: false,
-        error: null,
-        usage: null,
-        stream: (
-          request: ChatStreamRequest,
-          onChunk: (chunk: string) => void,
-        ): Promise<{ streamResult: StreamResult; usage: StreamUsage | null }> => {
-          wire.chatStream.started += 1;
-          wire.chatStream.onChunk = onChunk;
-          wire.chatStream.onStart?.(request, onChunk);
-          // If the test asked to keep the stream in flight, return a
-          // deferred promise that the test can resolve via
-          // `wire.chatStream.resolveNext`. Otherwise resolve immediately
-          // so the run completes synchronously.
-          if (wire.chatStream.keepInFlight) {
-            return new Promise<{ streamResult: StreamResult; usage: StreamUsage | null }>((resolve) => {
-              wire.chatStream.resolveNext = () => resolve({ streamResult: "success" as StreamResult, usage: null });
-            });
-          }
-          return Promise.resolve({ streamResult: "success" as StreamResult, usage: null });
-        },
-        cancel: () => {},
-      };
-    },
-    useAssistantCardGeneration: (_streamGenerator: unknown, onError?: (error: Error) => void) => {
-      wire.onCardError = onError ?? null;
-      return {
-        cards: [],
-        isGenerating: false,
-        error: null,
-        generate: async (_request: CardGenerationStreamRequest, onCard?: (card: GeneratedCard) => void) => {
-          wire.cardStream.started += 1;
-          wire.cardStream.onCard = onCard ?? null;
-          wire.cardStream.onStart?.(_request, onCard ?? (() => {}));
-          return "success" as StreamResult;
-        },
-        clearCards: () => {},
-        cancel: () => {},
-      };
-    },
     useAIProfiles: (profileId?: string | null) => {
       const profile = wire.profiles[0] ?? null;
       const selectedProfile = profileId ? profile : null;
@@ -290,8 +247,62 @@ function makeConversation(id: string, overrides: Partial<ConversationReducerStat
 function createMockAIRuntime(): AIRuntime {
   return {
     listModels: async () => wire.models,
-    chat: async () => undefined,
-    generateCards: async () => {},
+    chat: async (_profileId, request, onChunk, abortSignal) => {
+      wire.chatStream.started += 1;
+      wire.chatStream.onChunk = onChunk;
+      wire.chatStream.onStart?.(request, onChunk);
+
+      if (!wire.chatStream.keepInFlight) return undefined;
+
+      return await new Promise<StreamUsage | undefined>((resolve, reject) => {
+        const entry: PendingChat = { resolve, reject };
+        wire.chatStream.pending.push(entry);
+        // WHY: resolve/reject the oldest pending stream (FIFO) so tests that
+        // start one stream and later resolveNext still work; rejectNext pops
+        // the newest so an error lands on the latest armed run.
+        wire.chatStream.resolveNext = () => {
+          const next = wire.chatStream.pending.shift();
+          next?.resolve(undefined);
+        };
+        wire.chatStream.rejectNext = (error: Error) => {
+          const next = wire.chatStream.pending.pop();
+          next?.reject(error);
+        };
+
+        if (abortSignal.aborted) {
+          wire.chatStream.pending = wire.chatStream.pending.filter((p) => p !== entry);
+          reject(new DOMException("Aborted", "AbortError"));
+          return;
+        }
+        abortSignal.addEventListener(
+          "abort",
+          () => {
+            wire.chatStream.pending = wire.chatStream.pending.filter((p) => p !== entry);
+            reject(new DOMException("Aborted", "AbortError"));
+          },
+          { once: true },
+        );
+      });
+    },
+    generateCards: async (_profileId, request) => {
+      wire.cardStream.started += 1;
+      wire.cardStream.onCard = request.onCard ?? null;
+      wire.cardStream.onStart?.(
+        {
+          input: request.input,
+          messages: request.messages,
+          systemPromptTemplate: request.systemPromptTemplate,
+        },
+        request.onCard ?? (() => {}),
+      );
+      if (wire.cardStream.abortNext) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      const signal = request.abortSignal;
+      if (signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+    },
   };
 }
 
@@ -327,13 +338,12 @@ function setupTestHarness(overrides: { profileId?: string; modelId?: string } = 
     started: 0,
     onChunk: null,
     onStart: null,
-    abortNext: false,
+    pending: [],
     resolveNext: null,
+    rejectNext: null,
     keepInFlight: false,
   };
   wire.cardStream = { started: 0, onCard: null, onStart: null, abortNext: false };
-  wire.onChatError = null;
-  wire.onCardError = null;
   wire.setConversationCalls = [];
 
   const wrapper = makeWrapper();
@@ -411,12 +421,12 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Both streams were started.
     expect(wire.chatStream.started).toBe(2);
 
-    // Now reject the chat stream — this simulates a stream error for B.
+    // Now reject the latest chat stream — this simulates a stream error for B.
     // The error should be routed to B's run via the chat pending-failure
     // ref managed by `usePendingRunRefs`.
-    expect(wire.onChatError).not.toBeNull();
+    expect(wire.chatStream.rejectNext).not.toBeNull();
     await act(async () => {
-      wire.onChatError!(new Error("stream blew up"));
+      wire.chatStream.rejectNext!(new Error("stream blew up"));
     });
 
     // B's most recent run is failed with the error message.
@@ -839,13 +849,10 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("canceled");
     expect(lastForA?.title).toBe("Hello from A");
 
-    // The in-memory state was not touched by the persist transform.
+    // WHY: Unmount aborts in-flight run controllers, so the live store
+    // also lands on cancelRun (distinct from the persist-only
+    // `cancelStreamingRuns` rewrite used by pagehide/cleanup flush).
     const afterState = store.get(conversationsAtom)["A"];
-    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
-
-    // Cleanup: resolve the in-flight stream so the test exits cleanly.
-    await act(async () => {
-      wire.chatStream.resolveNext?.();
-    });
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("canceled");
   });
 });
