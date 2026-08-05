@@ -2,6 +2,7 @@ import type { InterfaceSettings } from "@koloda/app";
 import { AppError, DEFAULT_INTERFACE_SETTINGS, interfaceSettingsValidation } from "@koloda/app";
 import { DEFAULT_HOTKEYS_SETTINGS, hotkeysSettingsValidation } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS, learningSettingsValidation } from "@koloda/app";
+import type { DB } from "@koloda/srs-pgsql";
 import { addAlgorithm, addCards, addDeck, addTemplate, setSettings } from "@koloda/srs-pgsql";
 import { sql } from "drizzle-orm";
 import { db, migrations, MIGRATIONS_TABLE } from "./db";
@@ -12,17 +13,14 @@ import { loadSeedData } from "./seed/seed";
  * @returns "blank" if no migrations have been applied, "ok" otherwise
  */
 export async function getStatus() {
+  await ensureMigrationsTable();
   const appliedMigrations = await getAppliedMigrations();
   if (appliedMigrations.length === 0) return "blank";
   await migrate();
   return "ok";
 }
 
-/**
- * Retrieves the list of applied database migrations
- * @returns Array of migration records
- */
-async function getAppliedMigrations() {
+async function ensureMigrationsTable() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
     	id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "__migrations_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
@@ -30,93 +28,115 @@ async function getAppliedMigrations() {
     	created_at timestamp DEFAULT now() NOT NULL
     );
   `);
+}
 
-  const result = await db.execute(sql`SELECT * FROM ${MIGRATIONS_TABLE};`);
-  return result?.rows;
+/**
+ * Retrieves the list of applied database migrations
+ * @returns Array of migration records
+ */
+async function getAppliedMigrations(client: DB = db) {
+  const result = await client.execute(sql`SELECT * FROM ${MIGRATIONS_TABLE};`);
+  return result?.rows ?? [];
+}
+
+async function applyPendingMigrations(tx: DB) {
+  const appliedMigrations = await getAppliedMigrations(tx);
+
+  for (const [name, { default: migration }] of migrations) {
+    if (appliedMigrations.some((x) => x.name === name)) continue;
+
+    const statements = migration.split("--> statement-breakpoint");
+    for (const statement of statements) {
+      await tx.execute(statement);
+    }
+    await tx.execute(sql` INSERT INTO ${MIGRATIONS_TABLE} ("name") VALUES (${sql.raw(`'${name}'`)}); `);
+  }
 }
 
 /**
  * Applies missing database migrations
  */
 export async function migrate() {
-  const appliedMigrations = await getAppliedMigrations();
-
+  await ensureMigrationsTable();
   await db.transaction(async (tx) => {
-    for (const [name, { default: migration }] of migrations) {
-      if (appliedMigrations.some((x) => x.name === name)) continue;
-
-      const statements = migration.split("--> statement-breakpoint");
-      for (const statement of statements) {
-        await tx.execute(statement);
-      }
-      await tx.execute(sql` INSERT INTO ${MIGRATIONS_TABLE} ("name") VALUES (${sql.raw(`'${name}'`)}); `);
-    }
+    // WORKAROUND: Drizzle's PgliteTransaction is not assignable to DB (PgliteDatabase) but shares the execute/insert surface used by helpers.
+    await applyPendingMigrations(tx as unknown as DB);
   });
 }
 
 type SetupFromScratchData = Partial<InterfaceSettings>;
 
 /**
- * Sets up the application from scratch by applying migrations,
- * seeding locale templates/algorithms/decks, and configuring settings
+ * Sets up the application from scratch by applying migrations and seeding
+ * locale templates/algorithms/decks inside one transaction. An interrupted
+ * setup rolls back migrations too, so status stays "blank".
  * @param data - Configuration data including interface settings
  * @returns Promise resolving to true if setup was successful, false otherwise
  */
 export async function setupFromScratch(settings: SetupFromScratchData) {
   try {
-    await migrate();
-
+    await ensureMigrationsTable();
     const seed = await loadSeedData(settings.language ?? "en");
 
-    const algorithmIds = new Map<string, number>();
-    for (const algorithm of seed.algorithms) {
-      const returning = await addAlgorithm(db, { title: algorithm.title, content: algorithm.content });
-      if (!returning?.id) throw new AppError("db.add");
-      algorithmIds.set(algorithm.id, returning.id);
-    }
+    await db.transaction(async (tx) => {
+      // WORKAROUND: Drizzle's PgliteTransaction is not assignable to DB (PgliteDatabase) but shares the execute/insert surface used by helpers.
+      const client = tx as unknown as DB;
 
-    const templateIds = new Map<string, number>();
-    for (const template of seed.templates) {
-      const returning = await addTemplate(db, { title: template.title, content: template.content });
-      if (!returning?.id) throw new AppError("db.add");
-      templateIds.set(template.id, returning.id);
-    }
+      await applyPendingMigrations(client);
 
-    const algorithm = algorithmIds.get("simple");
-    const template = templateIds.get("type");
-    if (!algorithm || !template) throw new AppError("db.add");
+      const algorithmIds = new Map<string, number>();
+      for (const algorithm of seed.algorithms) {
+        const returning = await addAlgorithm(client, { title: algorithm.title, content: algorithm.content });
+        if (!returning?.id) throw new AppError("db.add");
+        algorithmIds.set(algorithm.id, returning.id);
+      }
 
-    await setSettings(db, {
-      name: "interface",
-      content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }),
+      const templateIds = new Map<string, number>();
+      for (const template of seed.templates) {
+        const returning = await addTemplate(client, { title: template.title, content: template.content });
+        if (!returning?.id) throw new AppError("db.add");
+        templateIds.set(template.id, returning.id);
+      }
+
+      const algorithm = algorithmIds.get("simple");
+      const template = templateIds.get("type");
+      if (!algorithm || !template) throw new AppError("db.add");
+
+      await setSettings(client, {
+        name: "interface",
+        content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }),
+      });
+      await setSettings(client, {
+        name: "learning",
+        content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
+      });
+      await setSettings(client, {
+        name: "hotkeys",
+        content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS),
+      });
+
+      for (const sample of seed.decks) {
+        const algorithmId = algorithmIds.get(sample.algorithm);
+        const templateId = templateIds.get(sample.template);
+        if (!algorithmId || !templateId) throw new AppError("db.add");
+
+        const deck = await addDeck(client, { title: sample.title, algorithmId, templateId });
+        if (!deck?.id) throw new AppError("db.add");
+
+        const results = await addCards(
+          client,
+          sample.cards.map((card) => ({
+            deckId: deck.id,
+            templateId,
+            content: {
+              "1": { text: card.front },
+              "2": { text: card.back },
+            },
+          })),
+        );
+        if (results.some((result) => result.error)) throw new AppError("db.add");
+      }
     });
-    await setSettings(db, {
-      name: "learning",
-      content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
-    });
-    await setSettings(db, { name: "hotkeys", content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS) });
-
-    for (const sample of seed.decks) {
-      const algorithmId = algorithmIds.get(sample.algorithm);
-      const templateId = templateIds.get(sample.template);
-      if (!algorithmId || !templateId) throw new AppError("db.add");
-
-      const deck = await addDeck(db, { title: sample.title, algorithmId, templateId });
-      if (!deck?.id) throw new AppError("db.add");
-
-      const results = await addCards(
-        db,
-        sample.cards.map((card) => ({
-          deckId: deck.id,
-          templateId,
-          content: {
-            "1": { text: card.front },
-            "2": { text: card.back },
-          },
-        })),
-      );
-      if (results.some((result) => result.error)) throw new AppError("db.add");
-    }
 
     return true;
   } catch (e) {
