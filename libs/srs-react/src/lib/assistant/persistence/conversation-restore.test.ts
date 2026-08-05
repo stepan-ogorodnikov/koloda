@@ -536,6 +536,64 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"].status).toBe("success");
   });
 
+  it("normalizes Date createdAt and heals epoch timestamps from run.startedAt", () => {
+    const startedAt = new Date("2026-07-18T11:00:00.000Z");
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      messages: [
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          // WHY: Electron fromWire used to revive ISO strings into Dates here.
+          metadata: { createdAt: new Date("2026-07-18T11:00:00.000Z"), runId: "r1" },
+        },
+        {
+          id: "user-r2",
+          role: "user",
+          parts: [{ type: "text", text: "Again" }],
+          // WHY: Prior buggy restore wrote epoch; heal from the paired run.
+          metadata: { createdAt: "1970-01-01T00:00:00.000Z", runId: "r2" },
+        },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt,
+          elapsedSeconds: 1,
+        },
+        r2: {
+          id: "r2",
+          mode: "chat",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt,
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
+    expect(next.messages[0].metadata).toEqual({
+      createdAt: "2026-07-18T11:00:00.000Z",
+      runId: "r1",
+    });
+    expect(next.messages[1].metadata).toEqual({
+      createdAt: "2026-07-18T11:00:00.000Z",
+      runId: "r2",
+    });
+  });
+
   it("resets pending card statuses to idle while preserving success and error", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,

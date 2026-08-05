@@ -11,6 +11,29 @@ export type AssistantMessageMetadata =
 
 export type UserMessageMetadata = { createdAt: string; runId: string };
 
+/** Unix epoch — used only when no real createdAt / run.startedAt is available. */
+const EPOCH_ISO = new Date(0).toISOString();
+
+/**
+ * Coerce message metadata `createdAt` into an ISO string.
+ * Accepts string / Date / epoch-ms number so Electron `fromWire` (which may
+ * revive ISO strings into Dates) and legacy rows still round-trip.
+ */
+function coerceCreatedAtToIso(value: unknown): string | null {
+  if (typeof value === "string") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  }
+  return null;
+}
+
 function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
@@ -26,16 +49,16 @@ function isUserMessageMetadata(value: unknown): value is UserMessageMetadata {
   if (!value || typeof value !== "object") return false;
   const obj = value as Record<string, unknown>;
 
-  return typeof obj.createdAt === "string" && typeof obj.runId === "string";
+  // INVARIANT: Canonical in-memory shape — createdAt must already be an ISO string.
+  return (
+    typeof obj.createdAt === "string" && typeof obj.runId === "string" && coerceCreatedAtToIso(obj.createdAt) !== null
+  );
 }
 
 export function getUserMessageCreatedAt(message: UIMessage): Date | null {
   if (!message.metadata || typeof message.metadata !== "object") return null;
-  const createdAt = (message.metadata as Record<string, unknown>).createdAt;
-  if (typeof createdAt !== "string") return null;
-  const date = new Date(createdAt);
-
-  return Number.isNaN(date.getTime()) ? null : date;
+  const iso = coerceCreatedAtToIso((message.metadata as Record<string, unknown>).createdAt);
+  return iso ? new Date(iso) : null;
 }
 
 export function getAssistantMetadata(message: UIMessage) {
@@ -45,7 +68,9 @@ export function getAssistantMetadata(message: UIMessage) {
 /** Run id from message metadata (user or assistant). Null when missing or not a chat message. */
 export function getMessageRunId(message: UIMessage): string | null {
   if (message.role === "user") {
-    return isUserMessageMetadata(message.metadata) ? message.metadata.runId : null;
+    if (!message.metadata || typeof message.metadata !== "object") return null;
+    const runId = (message.metadata as Record<string, unknown>).runId;
+    return typeof runId === "string" ? runId : null;
   }
   if (message.role === "assistant") {
     return getAssistantMetadata(message)?.runId ?? null;
@@ -55,24 +80,40 @@ export function getMessageRunId(message: UIMessage): string | null {
 
 /**
  * Stamp `runId` on legacy user messages that only encoded it in the id
- * (`user-<runId>`). Used by restore normalization so drop/revert can rely on
- * metadata. Returns the same array reference when nothing changes.
+ * (`user-<runId>`), and normalize `createdAt` to an ISO string when a Date /
+ * epoch-ms slipped in (Electron wire revival). Returns the same array
+ * reference when nothing changes.
+ *
+ * `startedAtByRunId` heals epoch / missing createdAt from the paired run.
  */
-export function backfillUserMessageRunIds(messages: UIMessage[]): UIMessage[] {
+export function backfillUserMessageRunIds(
+  messages: UIMessage[],
+  startedAtByRunId?: Readonly<Record<string, Date>>,
+): UIMessage[] {
   let changed = false;
   const next = messages.map((m) => {
     if (m.role !== "user") return m;
-    if (isUserMessageMetadata(m.metadata)) return m;
-    if (!m.id.startsWith("user-")) return m;
-    const runId = m.id.slice("user-".length);
+
+    const meta = m.metadata && typeof m.metadata === "object" ? (m.metadata as Record<string, unknown>) : null;
+    const existingRunId = typeof meta?.runId === "string" ? meta.runId : null;
+    const runIdFromId = m.id.startsWith("user-") ? m.id.slice("user-".length) : "";
+    const runId = existingRunId ?? (runIdFromId || null);
     if (!runId) return m;
 
+    const coerced = meta ? coerceCreatedAtToIso(meta.createdAt) : null;
+    const startedAt = startedAtByRunId?.[runId];
     const createdAt =
-      m.metadata &&
-      typeof m.metadata === "object" &&
-      typeof (m.metadata as Record<string, unknown>).createdAt === "string"
-        ? ((m.metadata as Record<string, unknown>).createdAt as string)
-        : new Date(0).toISOString();
+      coerced && coerced !== EPOCH_ISO
+        ? coerced
+        : startedAt && !Number.isNaN(startedAt.getTime())
+          ? startedAt.toISOString()
+          : (coerced ?? EPOCH_ISO);
+
+    const alreadyCanonical =
+      isUserMessageMetadata(m.metadata) &&
+      (m.metadata as UserMessageMetadata).createdAt === createdAt &&
+      (m.metadata as UserMessageMetadata).runId === runId;
+    if (alreadyCanonical) return m;
 
     changed = true;
     return { ...m, metadata: { createdAt, runId } satisfies UserMessageMetadata };

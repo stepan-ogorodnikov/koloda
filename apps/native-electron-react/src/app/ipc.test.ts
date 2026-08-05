@@ -13,6 +13,23 @@ describe("ipc wire", () => {
     expect(result.updatedAt).toEqual(new Date(iso));
   });
 
+  it("does not revive ISO strings inside opaque conversation state", () => {
+    const iso = "2026-07-18T11:00:00.000Z";
+    const result = fromWire<{
+      createdAt: Date;
+      state: { messages: Array<{ metadata: { createdAt: string; runId: string } }> };
+    }>({
+      createdAt: iso,
+      state: {
+        messages: [{ metadata: { createdAt: iso, runId: "r1" } }],
+      },
+    });
+
+    expect(result.createdAt).toEqual(new Date(iso));
+    expect(result.state.messages[0].metadata.createdAt).toBe(iso);
+    expect(typeof result.state.messages[0].metadata.createdAt).toBe("string");
+  });
+
   it("round-trips conversation timestamps through the wire layer", () => {
     const ms = 1_700_000_001_000;
     const wire = toWire({

@@ -66,7 +66,13 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
 
   // WHY: Backfill before dropRuns so legacy user messages (runId only in
   // `user-<id>` encoding) are still removed with their streaming run.
-  const messagesWithRunIds = backfillUserMessageRunIds(state.messages);
+  // Also re-stringify Date/`epoch-ms` createdAt values that Electron wire
+  // revival may have injected, and heal epoch timestamps from run.startedAt.
+  const startedAtByRunId: Record<string, Date> = {};
+  for (const [runId, run] of Object.entries(state.runs)) {
+    startedAtByRunId[runId] = run.startedAt;
+  }
+  const messagesWithRunIds = backfillUserMessageRunIds(state.messages, startedAtByRunId);
   if (messagesWithRunIds !== state.messages) normalizedAny = true;
 
   if (

@@ -88,7 +88,14 @@ function walkWire(value: unknown, seen: WeakSet<object>, path: string): JsonValu
 
 export type WireReviver = (key: string, value: unknown) => unknown;
 
-const defaultWireReviver: WireReviver = (_key, value) => reviveDates(value);
+const defaultWireReviver: WireReviver = (path, value) => {
+  // WHY: Conversation `state` is an opaque TS blob coerced by srs-react
+  // (`coerceConversationState`). Reviving ISO strings inside it turns
+  // message metadata `createdAt` (intentionally a string) into a Date;
+  // restore backfill then treats it as missing and writes epoch (1970).
+  if (path === "state" || path.startsWith("state.")) return value;
+  return reviveDates(value);
+};
 
 /**
  * Recursively rehydrates a JSON-decoded value, applying the supplied reviver

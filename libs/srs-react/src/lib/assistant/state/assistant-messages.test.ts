@@ -27,6 +27,16 @@ describe("aiChatUtility", () => {
     expect(getUserMessageCreatedAt(createTextMessage("user-2", "user", "Hello"))).toBeNull();
   });
 
+  it("reads createdAt when wire revival left a Date instead of an ISO string", () => {
+    const message = createTextMessage("user-1", "user", "Hello", {
+      createdAt: new Date("2026-07-18T11:00:00.000Z"),
+      runId: "1",
+    });
+
+    expect(getUserMessageCreatedAt(message)?.toISOString()).toBe("2026-07-18T11:00:00.000Z");
+    expect(getMessageRunId(message)).toBe("1");
+  });
+
   it("reads runId from user and assistant message metadata", () => {
     const user = createTextMessage("user-r1", "user", "Hi", {
       createdAt: "2026-07-18T11:00:00.000Z",
@@ -44,15 +54,32 @@ describe("aiChatUtility", () => {
 
   it("backfills runId onto legacy user messages from the message id", () => {
     const legacy = createTextMessage("user-r1", "user", "Hi", {
-      createdAt: "2026-07-18T11:00:00.000Z",
+      createdAt: "2026-07-01T11:00:00.000Z",
     });
     const [backfilled] = backfillUserMessageRunIds([legacy]);
     expect(backfilled.metadata).toEqual({
-      createdAt: "2026-07-18T11:00:00.000Z",
+      createdAt: "2026-07-01T11:00:00.000Z",
       runId: "r1",
     });
     const already = [backfilled];
     expect(backfillUserMessageRunIds(already)).toBe(already);
+  });
+
+  it("re-stringifies Date createdAt and heals epoch from run startedAt", () => {
+    const realIso = "2026-07-18T11:00:00.000Z";
+    const withDate = createTextMessage("user-r1", "user", "Hi", {
+      createdAt: new Date(realIso),
+      runId: "r1",
+    });
+    const [normalized] = backfillUserMessageRunIds([withDate]);
+    expect(normalized.metadata).toEqual({ createdAt: realIso, runId: "r1" });
+
+    const corrupted = createTextMessage("user-r2", "user", "Hi", {
+      createdAt: "1970-01-01T00:00:00.000Z",
+      runId: "r2",
+    });
+    const [healed] = backfillUserMessageRunIds([corrupted], { r2: new Date(realIso) });
+    expect(healed.metadata).toEqual({ createdAt: realIso, runId: "r2" });
   });
 
   it("reads generated-card metadata only from matching assistant messages", () => {
