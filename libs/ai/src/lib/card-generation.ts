@@ -8,9 +8,10 @@ import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
 async function runCardGeneration(
-  modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
+  modelFactory: (modelId: string) => Parameters<typeof wrapModelWithReasoningExtraction>[0],
   providerLabel: AiProvider,
   request: CardGenerationRequest,
   providerOptions?: ProviderOptions,
@@ -25,12 +26,13 @@ async function runCardGeneration(
     "generation",
   );
   const chatMessages = getConversationMessages(messages, input.prompt);
+  const model = wrapModelWithReasoningExtraction(modelFactory(input.modelId));
 
   // Try structured output first (streaming)
   try {
     let streamedError: unknown = null;
     const result = streamText({
-      model: modelFactory(input.modelId),
+      model,
       temperature,
       output: Output.array({ element: elementSchema }),
       system: systemPrompt,
@@ -68,7 +70,7 @@ async function runCardGeneration(
 
   // Fallback: plain text generation + heuristic parsing
   const fallbackResult = await generateText({
-    model: modelFactory(input.modelId),
+    model,
     temperature,
     system: systemPrompt,
     messages: chatMessages,

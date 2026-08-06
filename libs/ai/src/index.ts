@@ -16,3 +16,4 @@ export * from "./lib/providers/opencode-zen";
 export * from "./lib/providers/openrouter";
 export * from "./lib/runtime";
 export * from "./lib/settings";
+export * from "./lib/model-reasoning-extraction";

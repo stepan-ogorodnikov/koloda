@@ -8,9 +8,10 @@ import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
 async function runChatStream(
-  modelFactory: (modelId: string) => Parameters<typeof streamText>[0]["model"],
+  modelFactory: (modelId: string) => Parameters<typeof wrapModelWithReasoningExtraction>[0],
   providerLabel: AiProvider,
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
@@ -19,7 +20,8 @@ async function runChatStream(
 ): Promise<StreamUsage | undefined> {
   let streamedError: unknown = null;
   const result = streamText({
-    model: modelFactory(request.input.modelId),
+    model: wrapModelWithReasoningExtraction(modelFactory(request.input.modelId)),
+
     temperature: resolveGenerationTemperature(request.input.temperature),
     system: compilePromptTemplate(
       request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
