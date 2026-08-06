@@ -7,27 +7,31 @@ import { AiChatMessageStatusPending } from "./ai-chat-message-status-pending";
 
 export type AIChatMessageStatusState = "pending" | "success" | "canceled" | "failed";
 
-export type AIChatMessageStatusProps = {
-  state: AIChatMessageStatusState;
-  elapsedSeconds?: number;
+type AIChatMessageStatusSharedProps = {
   modelName?: string;
   canRetry?: boolean;
   onRetry?: () => void;
   actions?: ReactNode;
 };
 
-export function AIChatMessageStatus({
-  state,
-  elapsedSeconds,
-  modelName,
-  canRetry,
-  onRetry,
-  actions,
-}: AIChatMessageStatusProps) {
+export type AIChatMessageStatusProps =
+  | (AIChatMessageStatusSharedProps & {
+      state: "pending";
+      startedAt: Date;
+      elapsedSeconds?: number;
+    })
+  | (AIChatMessageStatusSharedProps & {
+      state: Exclude<AIChatMessageStatusState, "pending">;
+      startedAt?: Date;
+      elapsedSeconds?: number;
+    });
+
+export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
+  const { state, elapsedSeconds, modelName, canRetry, onRetry, actions, startedAt } = props;
   const { _ } = useLingui();
 
   if (state === "pending") {
-    return <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} />;
+    return <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} startedAt={startedAt} />;
   }
 
   if (state === "success") {

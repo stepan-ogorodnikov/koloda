@@ -21,6 +21,7 @@ export type AssistantCardsMessageProps = {
   canRetry: boolean;
   onRetry: () => void;
   elapsedSeconds?: number;
+  startedAt: Date;
   modelName?: string;
 };
 
@@ -39,6 +40,7 @@ export function AssistantCardsMessage({
   canRetry,
   onRetry,
   elapsedSeconds,
+  startedAt,
   modelName,
 }: AssistantCardsMessageProps) {
   const { _ } = useLingui();
@@ -47,7 +49,7 @@ export function AssistantCardsMessage({
 
   return (
     <AIChatMessageLayout role="assistant">
-      {isGenerating && <AIChatMessageStatus state="pending" />}
+      {isGenerating && <AIChatMessageStatus state="pending" startedAt={startedAt} />}
       {isCanceled && (
         <div className="flex flex-col gap-2">
           {elapsedSeconds !== undefined && <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} />}

@@ -1,6 +1,6 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const period = "flex flex-row gap-0.5";
 
@@ -37,18 +37,21 @@ export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: { seconds: n
   );
 }
 
-export function AiChatElapsedTimer() {
-  const startRef = useRef(Date.now());
-  const [seconds, setSeconds] = useState(0);
+export type AiChatElapsedTimerProps = { startedAt: Date };
+
+export function AiChatElapsedTimer({ startedAt }: AiChatElapsedTimerProps) {
+  const startMs = startedAt.getTime();
+  const [seconds, setSeconds] = useState(() => Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
 
   useEffect(() => {
     const update = () => {
-      setSeconds(Math.floor((Date.now() - startRef.current) / 1000));
+      setSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
     };
     update();
     const id = setInterval(update, 1000);
+
     return () => clearInterval(id);
-  }, []);
+  }, [startMs]);
 
   return <AiChatElapsedTimeDisplay seconds={seconds} />;
 }

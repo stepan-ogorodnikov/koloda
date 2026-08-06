@@ -134,6 +134,7 @@ function renderCardsMessage(options: {
       canRetry={isTail && !!run}
       onRetry={() => handleRetry(runId)}
       elapsedSeconds={run.elapsedSeconds ?? undefined}
+      startedAt={run.startedAt}
       modelName={run.modelName}
     />
   );
@@ -164,7 +165,7 @@ function renderChatMessage(options: {
 
     return (
       <AIChatMessageLayout role="assistant">
-        <AIChatMessageStatus state="pending" />
+        <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
       </AIChatMessageLayout>
     );
   }
