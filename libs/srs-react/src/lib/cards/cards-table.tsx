@@ -1,12 +1,10 @@
 import { queriesAtom } from "@koloda/core-react";
 import type { Card, Deck, Template } from "@koloda/srs";
-import { SearchField, Table, cardsTableOptions } from "@koloda/ui";
-import type { CardsTableFeatures } from "@koloda/ui";
+import { SearchField, Table, createCardsColumnHelper, useCardsTable } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import { useTable } from "@tanstack/react-table";
-import type { CellContext, ColumnDef, ColumnVisibilityState, FilterFn, RowSelectionState } from "@tanstack/react-table";
+import type { ColumnVisibilityState, RowSelectionState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
@@ -21,7 +19,7 @@ import { useCardsTemplates } from "./use-cards-templates";
 
 const PAGE_SIZES = [15, 20, 25];
 
-const cell = (cell: CellContext<CardsTableFeatures, Card, unknown>) => <CardsTableCell cell={cell} />;
+const columnHelper = createCardsColumnHelper<Card>();
 
 type CardState = NonNullable<Card["state"]>;
 
@@ -50,97 +48,95 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { data: deck } = useQuery(getDeckQuery(deckId));
   const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
 
-  const columns = useMemo<ColumnDef<CardsTableFeatures, Card>[]>(
-    () => [
-      {
-        id: "select",
-        header: ({ table }) => <CardsTableHeaderSelect table={table} />,
-        size: 2,
-        minSize: 2,
-        enableHiding: false,
-        enableSorting: false,
-        cell,
-      },
-      ...getCardsTableContentColumns(templates).map((field) => ({
-        accessorFn: (row: Card) => {
-          const template = templateMapRef.current.get(row.templateId);
-          const fieldId = field.getFieldId(template);
-          return fieldId ? (row.content[fieldId]?.text ?? "") : "";
-        },
-        id: `content.field.${field.index}`,
-        header: field.header,
-        cell,
-      })),
-      {
-        accessorKey: "state",
-        header: _(msg`cards.table.columns.state`),
-        enableGlobalFilter: false,
-        filterFn: ((row, columnId, filterValue: CardState[]) =>
-          filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<
-          CardsTableFeatures,
-          Card
-        >,
-        size: 8,
-        cell,
-      },
-      {
-        accessorKey: "dueAt",
-        header: _(msg`cards.table.columns.due-at`),
-        enableGlobalFilter: false,
-        filterFn: ((row, columnId, filterValue: { isOverdue: boolean; isNotDue: boolean }) => {
-          const value = row.getValue(columnId) as string | null;
-          const isDue = value ? new Date(value).getTime() <= new Date().getTime() : false;
-          const isNotDue = !value || new Date(value) > new Date();
-          if (filterValue.isOverdue && filterValue.isNotDue) return true;
-          if (filterValue.isOverdue) return isDue;
-          if (filterValue.isNotDue) return isNotDue;
-          return true;
-        }) as FilterFn<CardsTableFeatures, Card>,
-        size: 14,
-        cell,
-      },
-      {
-        accessorKey: "createdAt",
-        header: _(msg`cards.table.columns.created-at`),
-        enableGlobalFilter: false,
-        size: 14,
-        cell,
-      },
-      {
-        accessorKey: "updatedAt",
-        header: _(msg`cards.table.columns.updated-at`),
-        enableGlobalFilter: false,
-        size: 14,
-        cell,
-      },
-      {
-        id: "preview",
-        header: "",
-        enableHiding: false,
-        enableGlobalFilter: false,
-        minSize: 4,
-        size: 4,
-        cell,
-      },
-      {
-        id: "edit",
-        header: "",
-        enableHiding: false,
-        enableGlobalFilter: false,
-        minSize: 4,
-        size: 4,
-        cell,
-      },
-      {
-        id: "delete",
-        header: "",
-        enableHiding: false,
-        enableGlobalFilter: false,
-        minSize: 4,
-        size: 4,
-        cell,
-      },
-    ],
+  const columns = useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.display({
+          id: "select",
+          header: ({ table }) => <CardsTableHeaderSelect table={table} />,
+          size: 2,
+          minSize: 2,
+          enableHiding: false,
+          enableSorting: false,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        ...getCardsTableContentColumns(templates).map((field) =>
+          columnHelper.accessor(
+            (row) => {
+              const template = templateMapRef.current.get(row.templateId);
+              const fieldId = field.getFieldId(template);
+              return fieldId ? (row.content[fieldId]?.text ?? "") : "";
+            },
+            {
+              id: `content.field.${field.index}`,
+              header: field.header,
+              cell: (cell) => <CardsTableCell cell={cell} />,
+            },
+          ),
+        ),
+        columnHelper.accessor("state", {
+          header: _(msg`cards.table.columns.state`),
+          enableGlobalFilter: false,
+          filterFn: (row, columnId, filterValue: CardState[]) =>
+            filterValue.length === 0 || filterValue.includes(row.getValue(columnId)),
+          size: 8,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.accessor("dueAt", {
+          header: _(msg`cards.table.columns.due-at`),
+          enableGlobalFilter: false,
+          filterFn: (row, columnId, filterValue: { isOverdue: boolean; isNotDue: boolean }) => {
+            const value = row.getValue(columnId) as string | null;
+            const isDue = value ? new Date(value).getTime() <= new Date().getTime() : false;
+            const isNotDue = !value || new Date(value) > new Date();
+            if (filterValue.isOverdue && filterValue.isNotDue) return true;
+            if (filterValue.isOverdue) return isDue;
+            if (filterValue.isNotDue) return isNotDue;
+            return true;
+          },
+          size: 14,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.accessor("createdAt", {
+          header: _(msg`cards.table.columns.created-at`),
+          enableGlobalFilter: false,
+          size: 14,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.accessor("updatedAt", {
+          header: _(msg`cards.table.columns.updated-at`),
+          enableGlobalFilter: false,
+          size: 14,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.display({
+          id: "preview",
+          header: "",
+          enableHiding: false,
+          enableGlobalFilter: false,
+          minSize: 4,
+          size: 4,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.display({
+          id: "edit",
+          header: "",
+          enableHiding: false,
+          enableGlobalFilter: false,
+          minSize: 4,
+          size: 4,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+        columnHelper.display({
+          id: "delete",
+          header: "",
+          enableHiding: false,
+          enableGlobalFilter: false,
+          minSize: 4,
+          size: 4,
+          cell: (cell) => <CardsTableCell cell={cell} />,
+        }),
+      ]),
     [_, templates, templateMapRef],
   );
 
@@ -150,8 +146,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     [cards, filters.templateIds],
   );
 
-  const table = useTable({
-    ...cardsTableOptions,
+  const table = useCardsTable({
     columns,
     data: filteredCards,
     state: {

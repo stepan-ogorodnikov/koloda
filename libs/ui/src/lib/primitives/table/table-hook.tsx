@@ -1,5 +1,5 @@
 import { createTableHook, createTableHookContexts } from "@tanstack/react-table";
-import { appTableOptions, lessonsTableOptions, selectionTableOptions } from "./table-features";
+import { appTableOptions, cardsTableOptions, lessonsTableOptions, selectionTableOptions } from "./table-features";
 import type { appTableFeatures } from "./table-features";
 
 const { tableContext, cellContext, headerContext, useTableContext, useCellContext, useHeaderContext } =
@@ -14,7 +14,7 @@ const { useAppTable, createAppColumnHelper, appFeatures } = createTableHook({
 
 // WHY: createTableHook binds TFeatures at the hook. A single wide useAppTable would
 // force unused features onto simple tables and weaken types/tree-shaking. Pair each
-// named preset (lessonsTableOptions / selectionTableOptions) with its own hook.
+// named preset with its own hook.
 const {
   useAppTable: useLessonsTable,
   createAppColumnHelper: createLessonsColumnHelper,
@@ -31,6 +31,14 @@ const {
   ...selectionTableOptions,
 });
 
+const {
+  useAppTable: useCardsTable,
+  createAppColumnHelper: createCardsColumnHelper,
+  appFeatures: cardsFeatures,
+} = createTableHook({
+  ...cardsTableOptions,
+});
+
 export {
   useAppTable,
   createAppColumnHelper,
@@ -41,6 +49,9 @@ export {
   useSelectionTable,
   createSelectionColumnHelper,
   selectionFeatures,
+  useCardsTable,
+  createCardsColumnHelper,
+  cardsFeatures,
   useTableContext,
   useCellContext,
   useHeaderContext,

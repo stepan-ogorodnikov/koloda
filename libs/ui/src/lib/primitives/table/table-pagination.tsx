@@ -13,7 +13,7 @@ import { Label } from "../form/label";
 import { Select } from "../select/select";
 
 type TableLike = {
-  store: { state: { pagination: { pageIndex: number; pageSize: number } } };
+  state: { pagination: { pageIndex: number; pageSize: number } };
   getFilteredRowModel: () => { rows: unknown[] };
   getPageCount: () => number;
   setPageSize: (size: number) => void;
@@ -31,7 +31,7 @@ type TablePaginationProps = {
 
 export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps, "totalCount">) {
   const { _ } = useLingui();
-  const { pagination } = table.store.state;
+  const { pagination } = table.state;
   const filteredCount = table.getFilteredRowModel().rows.length;
   const startIndex = filteredCount > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0;
   const endIndex = Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredCount);

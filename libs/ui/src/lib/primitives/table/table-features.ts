@@ -14,6 +14,7 @@ import {
   rowSelectionFeature,
   rowSortingFeature,
   sortFn_alphanumeric,
+  sortFn_datetime,
   sortFn_text,
   tableFeatures,
   tableOptions,
@@ -34,7 +35,8 @@ export const cardsTableFeatures = tableFeatures({
   columnVisibilityFeature,
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
-  sortFns: { alphanumeric: sortFn_alphanumeric },
+  // WHY: sortFn auto resolves content strings to "text" and Date columns (dueAt/createdAt/updatedAt) to "datetime".
+  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text, datetime: sortFn_datetime },
   rowPinningFeature,
   columnFilteringFeature,
   globalFilteringFeature,
