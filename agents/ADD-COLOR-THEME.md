@@ -106,6 +106,9 @@ Runtime sampling does not work reliably — bake solid hex into the theme:
 `--titlebar-overlay-color` must match **`bg-level-1` / `--color-bg`** (same hex as `--color-bg`).
 `--titlebar-overlay-symbol-color` should match `--color-mono-1`.
 
+Also add the same `--color-bg` hex to the `SURFACE` map in `libs/app-react/public/theme-boot.js`
+so the pre-paint boot script can tint the blank page before CSS loads.
+
 ### 5. Optional theme overrides
 
 Override a scheme token only when the shared formula is wrong for this palette.
@@ -176,6 +179,7 @@ Do not change app `store.ts` seed values unless that is requested.
 - [ ] Full palette (`--color-bg`, monos, accents)
 - [ ] Accent-derived selected + lesson-type fills via `oklch(from …)`
 - [ ] Titlebar overlay hex pair (matched to `--color-bg` / `bg-level-1`)
+- [ ] `SURFACE` map entry in `libs/app-react/public/theme-boot.js`
 - [ ] `@import` in `global.css`
 - [ ] Entry in TS `LIGHT_THEMES` or `DARK_THEMES`
 - [ ] Matching entry in Rust `LIGHT_THEMES` or `DARK_THEMES`

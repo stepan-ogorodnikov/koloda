@@ -5,8 +5,10 @@ export async function setupPageDefaults(page: Page) {
   await page.evaluate(() => {
     window.localStorage.clear();
     window.localStorage.setItem("lang", "en");
-    window.localStorage.setItem("scheme", "light");
-    window.localStorage.setItem("motion", "off");
+    window.localStorage.setItem(
+      "koloda-ui-prefs",
+      JSON.stringify({ scheme: "light", motion: "off", lightTheme: "atom-one-light", darkTheme: "atom-one-dark" }),
+    );
   });
   await page.reload({ waitUntil: "domcontentloaded" });
 }

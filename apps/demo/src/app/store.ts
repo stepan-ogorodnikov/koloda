@@ -1,5 +1,5 @@
 import type { AIRuntime } from "@koloda/ai";
-import { aiProvidersAtom, aiRuntimeAtom, appEntryAtom, langAtom, queriesAtom, schemeAtom } from "@koloda/core-react";
+import { aiProvidersAtom, aiRuntimeAtom, appEntryAtom, langAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { wireUiPreferences } from "@koloda/app-react";
 import { createStore } from "jotai";
@@ -18,10 +18,6 @@ store.sub(langAtom, () => {
   const lang = store.get(langAtom);
   localStorage.setItem("lang", lang);
   activateLanguage(lang);
-});
-
-store.sub(schemeAtom, () => {
-  localStorage.setItem("scheme", store.get(schemeAtom));
 });
 
 wireUiPreferences(store);

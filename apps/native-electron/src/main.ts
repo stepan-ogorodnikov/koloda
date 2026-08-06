@@ -11,6 +11,13 @@ const TITLEBAR_HEIGHT = 40;
 const WINDOW_BUTTON_X = 12;
 const MACOS_WINDOW_BUTTON_HEIGHT = 12;
 const WINDOW_STATE_FILE = "window-state.json";
+const UI_PREFS_FILE = "ui-prefs.json";
+
+type UiPrefsState = {
+  backgroundColor?: string;
+  overlayColor?: string;
+  overlaySymbolColor?: string;
+};
 
 function configureUserData() {
   const override = process.env.KOLODA_USER_DATA;
@@ -36,13 +43,37 @@ function loadNativeAddon(): { KolodaDb: new (dbPath: string) => any } {
   return req(addonPath);
 }
 
+function loadUiPrefs(): UiPrefsState {
+  try {
+    const raw = readFileSync(join(app.getPath("userData"), UI_PREFS_FILE), "utf-8");
+    return JSON.parse(raw) as UiPrefsState;
+  } catch {
+    return {};
+  }
+}
+
+function saveUiPrefs(prefs: UiPrefsState) {
+  try {
+    writeFileSync(join(app.getPath("userData"), UI_PREFS_FILE), JSON.stringify({ ...loadUiPrefs(), ...prefs }));
+  } catch {}
+}
+
+function getDefaultSurfaceColor() {
+  return nativeTheme.shouldUseDarkColors ? "#282c34" : "#fafafa";
+}
+
+function getInitialBackgroundColor() {
+  return loadUiPrefs().backgroundColor ?? getDefaultSurfaceColor();
+}
+
 function getInitialTitleBarOverlay(): { height: number; color: string; symbolColor: string } | undefined {
   if (process.platform === "darwin") return undefined;
+  const prefs = loadUiPrefs();
   const isDark = nativeTheme.shouldUseDarkColors;
   return {
     height: TITLEBAR_HEIGHT,
-    color: isDark ? "#282c34" : "#fafafa",
-    symbolColor: isDark ? "#abb2bf" : "#383a42",
+    color: prefs.overlayColor ?? getDefaultSurfaceColor(),
+    symbolColor: prefs.overlaySymbolColor ?? (isDark ? "#abb2bf" : "#383a42"),
   };
 }
 
@@ -109,6 +140,7 @@ function createWindow() {
     minHeight: 320,
     resizable: true,
     show: false,
+    backgroundColor: getInitialBackgroundColor(),
     webPreferences: {
       // WHY: Packaged main.cjs + preload.js sit at asar root (electron-builder flattens dist/).
       preload: join(__dirname, isDev ? "../dist/preload.js" : "preload.js"),
@@ -248,6 +280,13 @@ function registerWindowIpc() {
         color: options.color,
         symbolColor: options.symbolColor,
       });
+      if (options.color) {
+        saveUiPrefs({
+          backgroundColor: options.color,
+          overlayColor: options.color,
+          ...(options.symbolColor !== undefined ? { overlaySymbolColor: options.symbolColor } : {}),
+        });
+      }
     },
   );
   ipcMain.handle("window:get-overlay-width", () => getWindowOverlayWidth());

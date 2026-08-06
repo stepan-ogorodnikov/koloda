@@ -15,4 +15,5 @@ export * from "./lib/settings/settings-hotkeys";
 export * from "./lib/settings/settings-hotkeys-hotkey";
 export * from "./lib/settings/settings-interface";
 export * from "./lib/settings/settings-learning";
+export * from "./lib/ui-preferences-cache";
 export * from "./lib/wire-ui-preferences";
