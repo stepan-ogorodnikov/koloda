@@ -1,5 +1,6 @@
 import type { Card } from "@koloda/srs";
 import { Table } from "@koloda/ui";
+import type { CardsTableFeatures } from "@koloda/ui";
 import { useLingui } from "@lingui/react";
 import type { CellContext } from "@tanstack/react-table";
 import { isDate } from "date-fns";
@@ -15,16 +16,15 @@ const TIMESTAMP_OPTIONS = {
   day: "numeric",
 } as Intl.DateTimeFormatOptions;
 
-type CardsTableCellProps = { cell: CellContext<Card, any> };
+type CardsTableCellProps = { cell: CellContext<CardsTableFeatures, Card, any> };
 
 export function CardsTableCell({ cell }: CardsTableCellProps) {
   const { i18n } = useLingui();
   const {
     row: { original: card },
     column: { id },
-    getValue,
   } = cell;
-  const value = getValue();
+  const value = cell.getValue();
   const isDateValue = isDate(value);
   const isTimestampColumn = ["dueAt", "createdAt", "updatedAt"].includes(id);
   const formatted = isTimestampColumn && value ? i18n.date(value, TIMESTAMP_OPTIONS) : value;

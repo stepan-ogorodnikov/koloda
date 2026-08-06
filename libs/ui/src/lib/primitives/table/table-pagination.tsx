@@ -7,20 +7,31 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { Table } from "@tanstack/react-table";
 import { Button } from "../form/button";
 import type { ButtonProps } from "../form/button";
 import { Label } from "../form/label";
 import { Select } from "../select/select";
 
+type TableLike = {
+  store: { state: { pagination: { pageIndex: number; pageSize: number } } };
+  getFilteredRowModel: () => { rows: unknown[] };
+  getPageCount: () => number;
+  setPageSize: (size: number) => void;
+  setPageIndex: (index: number) => void;
+  previousPage: () => void;
+  nextPage: () => void;
+  getCanPreviousPage: () => boolean;
+  getCanNextPage: () => boolean;
+};
+
 type TablePaginationProps = {
-  table: Table<any>;
+  table: TableLike;
   pageSizes: number[];
 };
 
 export function TablePagination({ table, pageSizes }: Omit<TablePaginationProps, "totalCount">) {
   const { _ } = useLingui();
-  const { pagination } = table.getState();
+  const { pagination } = table.store.state;
   const filteredCount = table.getFilteredRowModel().rows.length;
   const startIndex = filteredCount > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0;
   const endIndex = Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredCount);

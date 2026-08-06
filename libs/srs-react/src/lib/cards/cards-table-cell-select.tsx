@@ -1,8 +1,13 @@
 import type { Card } from "@koloda/srs";
 import { Checkbox, tableCellContent } from "@koloda/ui";
+import type { CardsTableFeatures } from "@koloda/ui";
 import type { Row } from "@tanstack/react-table";
 
-export function CardsTableCellSelect({ row }: { row: Row<Card> }) {
+export type CardsTableCellSelectProps = {
+  row: Row<CardsTableFeatures, Card>;
+};
+
+export function CardsTableCellSelect({ row }: CardsTableCellSelectProps) {
   const isSelected = row.getIsSelected();
   const isSelectable = row.getCanSelect();
 

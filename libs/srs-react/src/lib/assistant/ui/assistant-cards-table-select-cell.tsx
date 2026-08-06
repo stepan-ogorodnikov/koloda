@@ -1,13 +1,18 @@
 import { AlertCircleIcon, CheckmarkCircle02Icon, DashedLineCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Checkbox, Fade, tableCellContent } from "@koloda/ui";
+import type { SelectionTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { Row } from "@tanstack/react-table";
 import { AnimatePresence } from "motion/react";
 import type { CardWithStatus } from "./use-assistant-cards-table";
 
-export function AssistantCardsTableSelectCell({ row }: { row: Row<CardWithStatus> }) {
+export type AssistantCardsTableSelectCellProps = {
+  row: Row<SelectionTableFeatures, CardWithStatus>;
+};
+
+export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelectCellProps) {
   const { _ } = useLingui();
   const status = row.original.status;
   const isSelected = row.getIsSelected();

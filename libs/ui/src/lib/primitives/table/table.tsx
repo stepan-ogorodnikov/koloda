@@ -1,4 +1,3 @@
-import type { Table as TanstackTable } from "@tanstack/react-table";
 import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 import type { TWVProps } from "../../types";
@@ -7,9 +6,11 @@ import { TableCellContent } from "./table-cell-content";
 import { TableHead } from "./table-head";
 import { TablePagination } from "./table-pagination";
 
-type TableProps<TData> = { table: TanstackTable<TData> };
+type TableProps = {
+  table: Parameters<typeof TableHead>[0]["table"] & Parameters<typeof TableBody>[0]["table"];
+};
 
-export function Table<TData>({ table }: TableProps<TData>) {
+export function Table({ table }: TableProps) {
   return (
     <TableRoot>
       <TableHead table={table} />

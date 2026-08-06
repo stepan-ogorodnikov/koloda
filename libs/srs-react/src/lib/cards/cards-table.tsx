@@ -1,17 +1,12 @@
 import { queriesAtom } from "@koloda/core-react";
 import type { Card, Deck, Template } from "@koloda/srs";
-import { SearchField, Table } from "@koloda/ui";
+import { SearchField, Table, cardsTableOptions } from "@koloda/ui";
+import type { CardsTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import type { CellContext, ColumnDef, FilterFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
+import { useTable } from "@tanstack/react-table";
+import type { CellContext, ColumnDef, ColumnVisibilityState, FilterFn, RowSelectionState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useMemo, useState } from "react";
@@ -26,7 +21,7 @@ import { useCardsTemplates } from "./use-cards-templates";
 
 const PAGE_SIZES = [15, 20, 25];
 
-const cell = (cell: CellContext<Card, unknown>) => <CardsTableCell cell={cell} />;
+const cell = (cell: CellContext<CardsTableFeatures, Card, unknown>) => <CardsTableCell cell={cell} />;
 
 type CardState = NonNullable<Card["state"]>;
 
@@ -39,7 +34,10 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { _ } = useLingui();
   const { getCardsQuery, getDeckQuery } = useAtomValue(queriesAtom);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: PAGE_SIZES[0] });
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({ createdAt: false, updatedAt: false });
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({
+    createdAt: false,
+    updatedAt: false,
+  });
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [filters, setFilters] = useState({
     state: [] as CardState[],
@@ -52,7 +50,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const { data: deck } = useQuery(getDeckQuery(deckId));
   const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
 
-  const columns = useMemo<ColumnDef<Card>[]>(
+  const columns = useMemo<ColumnDef<CardsTableFeatures, Card>[]>(
     () => [
       {
         id: "select",
@@ -78,7 +76,10 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         header: _(msg`cards.table.columns.state`),
         enableGlobalFilter: false,
         filterFn: ((row, columnId, filterValue: CardState[]) =>
-          filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<Card>,
+          filterValue.length === 0 || filterValue.includes(row.getValue(columnId))) as FilterFn<
+          CardsTableFeatures,
+          Card
+        >,
         size: 8,
         cell,
       },
@@ -94,7 +95,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
           if (filterValue.isOverdue) return isDue;
           if (filterValue.isNotDue) return isNotDue;
           return true;
-        }) as FilterFn<Card>,
+        }) as FilterFn<CardsTableFeatures, Card>,
         size: 14,
         cell,
       },
@@ -149,7 +150,8 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     [cards, filters.templateIds],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    ...cardsTableOptions,
     columns,
     data: filteredCards,
     state: {
@@ -166,12 +168,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
     onColumnVisibilityChange: setColumnVisibility,
     onColumnOrderChange: setColumnOrder,
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: "includesString",
-    autoResetPageIndex: false,
     defaultColumn: {
       minSize: 32,
       maxSize: 1024,

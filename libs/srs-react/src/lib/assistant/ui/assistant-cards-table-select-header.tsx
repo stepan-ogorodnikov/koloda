@@ -1,10 +1,11 @@
 import { Checkbox, Fade } from "@koloda/ui";
+import type { SelectionTableFeatures } from "@koloda/ui";
 import type { Table } from "@tanstack/react-table";
 import { AnimatePresence } from "motion/react";
 import type { CardWithStatus } from "./use-assistant-cards-table";
 
 export type AssistantCardsTableSelectHeaderProps = {
-  table: Table<CardWithStatus>;
+  table: Table<SelectionTableFeatures, CardWithStatus>;
 };
 
 export function AssistantCardsTableSelectHeader({ table }: AssistantCardsTableSelectHeaderProps) {

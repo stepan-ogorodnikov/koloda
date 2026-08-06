@@ -6,20 +6,21 @@ import { isSortable } from "@dnd-kit/react/sortable";
 import { ColumnsThreeCogIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Checkbox, Dialog, Draggable } from "@koloda/ui";
+import type { CardsTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { Column } from "@tanstack/react-table";
+import type { Column, RowData } from "@tanstack/react-table";
 import { useState } from "react";
 
 const verticalAxisModifiers: Modifiers = [RestrictToVerticalAxis];
 
-type CardsTableColumnsVisibilityProps<TData> = {
-  columns: Column<TData>[];
+type CardsTableColumnsVisibilityProps<TData extends RowData> = {
+  columns: Column<CardsTableFeatures, TData>[];
   onColumnVisibilityChange: (columnId: string, isVisible: boolean) => void;
   onColumnOrderChange?: (newOrder: string[]) => void;
 };
 
-export function CardsTableColumnsVisibility<TData>({
+export function CardsTableColumnsVisibility<TData extends RowData>({
   columns,
   onColumnVisibilityChange,
   onColumnOrderChange,

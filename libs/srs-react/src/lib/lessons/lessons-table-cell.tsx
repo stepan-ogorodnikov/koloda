@@ -1,20 +1,20 @@
 import type { LessonTableRow, LessonType } from "@koloda/srs";
 import { Table } from "@koloda/ui";
+import type { LessonsTableFeatures } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { CellContext } from "@tanstack/react-table";
 import { LessonBadge } from "./lesson-badge";
 
-type LessonTableCellProps = { cell: CellContext<LessonTableRow, any> };
+type LessonTableCellProps = { cell: CellContext<LessonsTableFeatures, LessonTableRow, any> };
 
 export function LessonsTableCell({ cell }: LessonTableCellProps) {
   const { _ } = useLingui();
   const {
     column: { id },
     row: { original },
-    getValue,
   } = cell;
-  const value = getValue();
+  const value = cell.getValue();
 
   if (id === "title") {
     return value === null ? (

@@ -1,5 +1,5 @@
 import { flexRender } from "@tanstack/react-table";
-import type { SortDirection, Table } from "@tanstack/react-table";
+import type { SortDirection } from "@tanstack/react-table";
 import { tv } from "tailwind-variants";
 import { tableCellContent } from "./table-cell-content";
 import { TableSortIcon } from "./table-sort-icon";
@@ -15,7 +15,24 @@ export const tableHeadCellContent = tv({
   },
 });
 
-type TableHeadProps = { table: Table<any> };
+type TableLike = {
+  getHeaderGroups: () => Array<{
+    id: string;
+    headers: Array<{
+      id: string;
+      getSize: () => number;
+      getContext: () => any;
+      column: {
+        columnDef: { header?: any };
+        getIsSorted: () => false | SortDirection;
+        getCanSort: () => boolean;
+        getToggleSortingHandler: () => ((event: unknown) => void) | undefined;
+      };
+    }>;
+  }>;
+};
+
+type TableHeadProps = { table: TableLike };
 
 export function TableHead({ table }: TableHeadProps) {
   return (
