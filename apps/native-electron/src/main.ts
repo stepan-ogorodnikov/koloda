@@ -41,8 +41,8 @@ function getInitialTitleBarOverlay(): { height: number; color: string; symbolCol
   const isDark = nativeTheme.shouldUseDarkColors;
   return {
     height: TITLEBAR_HEIGHT,
-    color: isDark ? "#151515" : "#f5f5f4",
-    symbolColor: isDark ? "#e8e8e8" : "#171717",
+    color: isDark ? "#282c34" : "#fafafa",
+    symbolColor: isDark ? "#abb2bf" : "#383a42",
   };
 }
 
