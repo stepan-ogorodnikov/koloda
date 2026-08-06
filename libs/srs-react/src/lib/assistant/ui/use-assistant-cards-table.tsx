@@ -2,11 +2,8 @@ import type { GeneratedCard } from "@koloda/ai";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
 import { transformGeneratedCards } from "@koloda/srs";
-import { Table, selectionTableOptions } from "@koloda/ui";
-import type { SelectionTableFeatures } from "@koloda/ui";
+import { Table, createSelectionColumnHelper, useSelectionTable } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTable } from "@tanstack/react-table";
-import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
@@ -15,6 +12,8 @@ import { setAssistantCardStatusAtom } from "../state/conversation-actions";
 import type { CardStatus } from "../state/conversation-reducer";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
+
+const columnHelper = createSelectionColumnHelper<CardWithStatus>();
 
 type UseAssistantCardsTableOptions = {
   runId: string;
@@ -37,34 +36,34 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     [cards, cardStatuses],
   );
 
-  const columns = useMemo<ColumnDef<SelectionTableFeatures, CardWithStatus>[]>(() => {
+  const columns = useMemo(() => {
     if (!template) return [];
 
-    const selectionColumn: ColumnDef<SelectionTableFeatures, CardWithStatus> = {
+    const selectionColumn = columnHelper.display({
       id: "select",
       header: ({ table }) => <AssistantCardsTableSelectHeader table={table} />,
       cell: ({ row }) => <AssistantCardsTableSelectCell row={row} />,
       size: 2,
       minSize: 2,
       enableSorting: false,
-    };
+    });
 
-    const fieldColumns = (template.content?.fields || []).map((field) => ({
-      id: field.id.toString(),
-      header: field.title,
-      accessorFn: (row: CardWithStatus) => row.content[field.id]?.text || "",
-      cell: (cell: CellContext<SelectionTableFeatures, CardWithStatus, unknown>) => (
-        <Table.CellContent variants={{ class: "truncate" }}>{String(cell.getValue() ?? "")}</Table.CellContent>
-      ),
-      size: 16,
-      minSize: 8,
-    }));
+    const fieldColumns = (template.content?.fields || []).map((field) =>
+      columnHelper.accessor((row) => row.content[field.id]?.text || "", {
+        id: field.id.toString(),
+        header: field.title,
+        cell: (cell) => (
+          <Table.CellContent variants={{ class: "truncate" }}>{String(cell.getValue() ?? "")}</Table.CellContent>
+        ),
+        size: 16,
+        minSize: 8,
+      }),
+    );
 
-    return [selectionColumn, ...fieldColumns];
+    return columnHelper.columns([selectionColumn, ...fieldColumns]);
   }, [template]);
 
-  const table = useTable({
-    ...selectionTableOptions,
+  const table = useSelectionTable({
     data: cardsWithStatus,
     columns,
     getRowId: (_, index) => index.toString(),

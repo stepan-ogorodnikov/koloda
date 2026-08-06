@@ -1,15 +1,47 @@
 import { createTableHook, createTableHookContexts } from "@tanstack/react-table";
-import { appTableFeatures, appTableOptions } from "./table-features";
+import { appTableOptions, lessonsTableOptions, selectionTableOptions } from "./table-features";
+import type { appTableFeatures } from "./table-features";
 
 const { tableContext, cellContext, headerContext, useTableContext, useCellContext, useHeaderContext } =
   createTableHookContexts<typeof appTableFeatures>();
 
 const { useAppTable, createAppColumnHelper, appFeatures } = createTableHook({
   ...appTableOptions,
-  features: appTableFeatures,
   tableContext,
   cellContext,
   headerContext,
 });
 
-export { useAppTable, createAppColumnHelper, appFeatures, useTableContext, useCellContext, useHeaderContext };
+// WHY: createTableHook binds TFeatures at the hook. A single wide useAppTable would
+// force unused features onto simple tables and weaken types/tree-shaking. Pair each
+// named preset (lessonsTableOptions / selectionTableOptions) with its own hook.
+const {
+  useAppTable: useLessonsTable,
+  createAppColumnHelper: createLessonsColumnHelper,
+  appFeatures: lessonsFeatures,
+} = createTableHook({
+  ...lessonsTableOptions,
+});
+
+const {
+  useAppTable: useSelectionTable,
+  createAppColumnHelper: createSelectionColumnHelper,
+  appFeatures: selectionFeatures,
+} = createTableHook({
+  ...selectionTableOptions,
+});
+
+export {
+  useAppTable,
+  createAppColumnHelper,
+  appFeatures,
+  useLessonsTable,
+  createLessonsColumnHelper,
+  lessonsFeatures,
+  useSelectionTable,
+  createSelectionColumnHelper,
+  selectionFeatures,
+  useTableContext,
+  useCellContext,
+  useHeaderContext,
+};

@@ -14,6 +14,7 @@ import {
   rowSelectionFeature,
   rowSortingFeature,
   sortFn_alphanumeric,
+  sortFn_text,
   tableFeatures,
   tableOptions,
 } from "@tanstack/react-table";
@@ -51,7 +52,8 @@ export const lessonsTableFeatures = tableFeatures({
   columnResizingFeature,
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
-  sortFns: { alphanumeric: sortFn_alphanumeric },
+  // WHY: sortFn auto resolves plain string columns to "text"; title is string|null.
+  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
   rowPinningFeature,
 });
 
@@ -60,7 +62,8 @@ export const selectionTableFeatures = tableFeatures({
   columnVisibilityFeature,
   rowSortingFeature,
   sortedRowModel: createSortedRowModel(),
-  sortFns: { alphanumeric: sortFn_alphanumeric },
+  // WHY: sortFn auto resolves plain string field columns to "text".
+  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
   rowPinningFeature,
   rowSelectionFeature,
 });
