@@ -4,11 +4,10 @@
   "private": true,
   "type": "module",
   "main": "src/main.ts",
-  "dependencies": {
-    "@koloda/ai": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "electron": "^35.2.0",
+    "@koloda/ai": "workspace:*",
+    "electron": "35.7.5",
     "electron-builder": "^25.1.8"
   }
 }

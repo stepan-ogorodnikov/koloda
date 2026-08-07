@@ -10,9 +10,11 @@ import { themeBootPlugin } from "../../tools/vite-plugin-theme-boot";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig(() => ({
+export default defineConfig(({ command }) => ({
   root: __dirname,
-  base: "/",
+  // WHY: Packaged Electron loads via file://; absolute "/" assets resolve to the
+  // drive root and the window stays blank. Dev server still uses absolute paths.
+  base: command === "build" ? "./" : "/",
   cacheDir: "../../node_modules/.vite/apps/native-electron-react",
   server: {
     port: 3000,

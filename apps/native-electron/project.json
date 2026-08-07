@@ -67,7 +67,7 @@
           "bunx swc src/preload.ts -o dist/preload.js -C module.type=commonjs",
           "bunx tsx scripts/bundle-main.ts",
           "bunx tsx scripts/copy-native-release.ts",
-          "electron-builder"
+          "node ../../node_modules/electron-builder/cli.js"
         ],
         "parallel": false,
         "cwd": "apps/native-electron"

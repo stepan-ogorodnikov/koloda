@@ -14,10 +14,13 @@ await build({
   external: ["electron", /\.node$/],
   // WHY: CJS output has no real `import.meta`; map to Node CJS equivalents so
   // `createRequire` and path joins keep working (dev still runs src via tsx/esm).
+  // Do NOT define import.meta.dirname → `__dirname`: main.ts does
+  // `const __dirname = import.meta.dirname`, which becomes a TDZ self-init after
+  // the bundler renames the binding (`const __dirname$1 = __dirname$1`).
   transform: {
     define: {
       "import.meta.url": "__import_meta_url",
-      "import.meta.dirname": "__dirname",
+      "import.meta.dirname": "__cjs_dirname",
     },
   },
   output: {
@@ -26,7 +29,9 @@ await build({
     sourcemap: true,
     // WHY: AI SDK / providers use dynamic import(); keep one main.cjs for asar.
     codeSplitting: false,
-    banner: 'var __import_meta_url = require("node:url").pathToFileURL(__filename).href;',
+    banner:
+      'var __import_meta_url = require("node:url").pathToFileURL(__filename).href;\n' +
+      "var __cjs_dirname = __dirname;",
   },
   logLevel: "info",
 });

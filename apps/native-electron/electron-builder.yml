@@ -1,11 +1,21 @@
 appId: com.koloda.app
 productName: KOLODA
+# WHY: electron is hoisted to the workspace root; builder can't require() it from
+# this package dir, and a ^ range is rejected as "not fixed". Pin explicitly.
+electronVersion: "35.7.5"
+# WHY: Main is pre-bundled (bundle-main.ts) and the .node addon is copied into dist/.
+# Skipping install/rebuild avoids Bun's npm_execpath→bunx (node tries to parse the
+# PE binary) and npm's failure on workspace:* deps in this package.
+npmRebuild: false
 directories:
   output: dist-pack
   buildResources: build
 # Flatten dist/ into asar root so packaged `__dirname` is sibling to preload + .node,
 # and `../native-electron-react` resolves to extraResources (see main.ts loadFile).
+# WHY: package.json must be listed — a `from: dist` fileSet replaces the default
+# include set, and builder sanity-checks for package.json inside the asar.
 files:
+  - package.json
   - from: dist
     filter:
       - "**/*"
@@ -18,7 +28,8 @@ extraMetadata:
 asarUnpack:
   - "**/*.node"
 extraResources:
-  - from: ../native-electron-react/dist
+  # WHY: Vite outDir is workspace dist/apps/native-electron-react (not apps/.../dist).
+  - from: ../../dist/apps/native-electron-react
     to: native-electron-react
 mac:
   category: public.app-category.education
@@ -31,6 +42,9 @@ win:
   target:
     - nsis
   icon: build/icon.ico
+  # WHY: rcedit pulls winCodeSign, whose .7z contains macOS dylib symlinks. Extracting
+  # those needs Windows Developer Mode (or admin). Skip for unsigned local packages.
+  signAndEditExecutable: false
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
