@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
-import type { SaveFlushOptions } from "./create-save-scheduler";
 
 describe("createSaveScheduler", () => {
-  let flush: ReturnType<typeof vi.fn<(options?: SaveFlushOptions) => void>>;
+  let flush: ReturnType<typeof vi.fn<() => void>>;
   let isStreaming: ReturnType<typeof vi.fn<() => boolean>>;
 
   beforeEach(() => {
@@ -30,7 +29,6 @@ describe("createSaveScheduler", () => {
     scheduler.schedule();
     vi.advanceTimersByTime(0);
     expect(flush).toHaveBeenCalledTimes(1);
-    expect(flush).toHaveBeenCalledWith({ cancelStreamingRuns: true });
 
     flush.mockClear();
     scheduler.schedule();
@@ -78,7 +76,7 @@ describe("createSaveScheduler", () => {
     flush.mockClear();
 
     scheduler.schedule();
-    scheduler.flushNow({ cancelStreamingRuns: true });
+    scheduler.flushNow();
     expect(flush).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(IDLE_SAVE_DEBOUNCE_MS);
     expect(flush).toHaveBeenCalledTimes(1);
@@ -92,7 +90,6 @@ describe("createSaveScheduler", () => {
     scheduler.schedule();
     scheduler.flushIfPending();
     expect(flush).toHaveBeenCalledTimes(1);
-    expect(flush).toHaveBeenCalledWith({ cancelStreamingRuns: true });
 
     vi.advanceTimersByTime(IDLE_SAVE_DEBOUNCE_MS);
     expect(flush).toHaveBeenCalledTimes(1);

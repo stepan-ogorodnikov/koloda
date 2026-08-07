@@ -1,12 +1,8 @@
 export const STREAM_SAVE_THROTTLE_MS = 1000;
 export const IDLE_SAVE_DEBOUNCE_MS = 250;
 
-export type SaveFlushOptions = {
-  cancelStreamingRuns?: boolean;
-};
-
 export type CreateSaveSchedulerOptions = {
-  flush: (options?: SaveFlushOptions) => void;
+  flush: () => void;
   throttleMs: number;
   debounceMs: number;
   isStreaming: () => boolean;
@@ -14,7 +10,7 @@ export type CreateSaveSchedulerOptions = {
 
 export type SaveScheduler = {
   schedule: () => void;
-  flushNow: (options?: SaveFlushOptions) => void;
+  flushNow: () => void;
   flushIfPending: () => void;
 };
 
@@ -22,6 +18,9 @@ export type SaveScheduler = {
  * Throttle/debounce coalescing for conversation autosave.
  * Framework-free so timing can be unit-tested with fake timers
  * (ASSISTANT-CHAT-CONVERSATIONS.md §Persistence).
+ *
+ * Streaming checkpoints are persisted as-is (`streaming` status). Restore
+ * normalizes orphaned streaming runs to `interrupted`/`crash_recovery`.
  */
 export function createSaveScheduler({
   flush,
@@ -38,9 +37,9 @@ export function createSaveScheduler({
     timer = null;
   };
 
-  const flushNow = (options: SaveFlushOptions = {}) => {
+  const flushNow = () => {
     clearTimer();
-    flush(options);
+    flush();
   };
 
   const schedule = () => {
@@ -54,7 +53,7 @@ export function createSaveScheduler({
     clearTimer();
     timer = setTimeout(() => {
       timer = null;
-      flush({ cancelStreamingRuns: true });
+      flush();
     }, delay);
     // WHY: track the scheduled fire time, not `now`, so back-to-back bumps
     // measure relative to the next fire and coalesce instead of cascading.
@@ -64,7 +63,7 @@ export function createSaveScheduler({
   const flushIfPending = () => {
     if (!timer) return;
     clearTimer();
-    flush({ cancelStreamingRuns: true });
+    flush();
   };
 
   return { schedule, flushNow, flushIfPending };

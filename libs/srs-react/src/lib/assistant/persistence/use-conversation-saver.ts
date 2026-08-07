@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useEffect, useEffectEvent, useRef } from "react";
 import type { MutableRefObject } from "react";
-import { cancelStreamingRuns, toPersistedState } from "./conversation-persistence";
+import { toPersistedState } from "./conversation-persistence";
 import {
   assistantConversationStateAtom,
   conversationsAtom,
@@ -86,18 +86,17 @@ export function useConversationSaver({
   // out of the subscription effect deps via useEffectEvent so pagehide /
   // beforeunload listeners and the pendingSave subscription are not torn down
   // on every render (same pattern as lesson-uploader).
-  const flush = useEffectEvent((id: string, options: { cancelStreamingRuns?: boolean } = {}) => {
+  const flush = useEffectEvent((id: string) => {
     const storeState = store.get(conversationsAtom);
     const state = storeState[id];
     if (!state) return;
     if (state.messages.length === 0 && state.activeRunId === null) return;
 
-    // WHY: rewriting "streaming" runs to "canceled" prevents
-    // `normalizeRestoredConversation` from dropping a run's messages on
-    // next mount (leaving an empty row with a stale title). The live
-    // in-memory state keeps "streaming" until the stream actually ends.
-    const liveState = options.cancelStreamingRuns ? cancelStreamingRuns(state) : state;
-    const persistState = toPersistedState(liveState);
+    // WHY: persist the live snapshot as-is — including in-flight `streaming`
+    // checkpoints. Restore converts orphaned streaming runs to
+    // `interrupted`/`crash_recovery`. Do not rewrite streaming → canceled here;
+    // only an explicit user cancel produces `canceled`/`user`.
+    const persistState = toPersistedState(state);
 
     const title = computeConversationTitle(persistState);
     const data: SetConversationData = {
@@ -122,7 +121,7 @@ export function useConversationSaver({
     if (!conversationId) return;
 
     const scheduler = createSaveScheduler({
-      flush: (options) => flush(conversationId, options),
+      flush: () => flush(conversationId),
       throttleMs: STREAM_SAVE_THROTTLE_MS,
       debounceMs: IDLE_SAVE_DEBOUNCE_MS,
       isStreaming: () => store.get(conversationsAtom)[conversationId]?.activeRunId != null,
@@ -136,7 +135,7 @@ export function useConversationSaver({
 
     const unsub = store.sub(pendingSaveAtom, handler);
 
-    const handlePageHide = () => scheduler.flushNow({ cancelStreamingRuns: true });
+    const handlePageHide = () => scheduler.flushNow();
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("beforeunload", handlePageHide);
 

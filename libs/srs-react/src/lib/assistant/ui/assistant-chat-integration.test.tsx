@@ -619,7 +619,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(lastCall.id).toBe("B");
   });
 
-  it("throttled save during a streaming run persists the run as canceled, not streaming", async () => {
+  it("throttled save during a streaming run persists the run as streaming", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -675,14 +675,11 @@ describe("assistant chat integration (per-conversation state)", () => {
     const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(persisted.id).toBe("A");
 
-    // The throttled save's persisted state has the run as "canceled"
-    // (not "streaming") so that a later race between this mutation and
-    // a pagehide/cleanup mutation cannot resurrect a "streaming"
-    // snapshot that would cause normalizeRestoredConversation to drop
-    // the user/assistant messages on next mount.
+    // The throttled save persists a streaming checkpoint as-is. Restore
+    // later converts orphaned streaming runs to interrupted/crash_recovery.
     const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
     expect(persistedRunIds).toHaveLength(1);
-    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("streaming");
     expect(persisted.title).toBe("Hello from A");
 
     // The in-memory state was not touched by the persist transform.
@@ -695,7 +692,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     });
   });
 
-  it("pagehide during a streaming run persists the run as canceled, not streaming", async () => {
+  it("pagehide during a streaming run persists the run as streaming", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -746,7 +743,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
     // Simulate the user closing the tab. The save effect's pagehide
-    // listener should fire `flushNow` with `cancelStreamingRuns: true`.
+    // listener should flush the live streaming checkpoint.
     const callsBeforePagehide = wire.setConversationCalls.length;
     await act(async () => {
       window.dispatchEvent(new Event("pagehide"));
@@ -757,17 +754,16 @@ describe("assistant chat integration (per-conversation state)", () => {
     const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(persisted.id).toBe("A");
 
-    // The persisted state has the run as "canceled" (not "streaming"),
-    // and the title is derived from the user message (i.e. the
-    // user-message text is visible in the persisted title).
+    // The persisted state keeps the run as "streaming" (checkpoint),
+    // and the title is derived from the user message.
     const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
     expect(persistedRunIds).toHaveLength(1);
-    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("canceled");
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("streaming");
     expect(persisted.title).toBe("Hello from A");
 
     // Crucially: the in-memory run is still "streaming" — we only
-    // transformed the persist-time snapshot, not the live state. The
-    // background stream is still legitimately in flight.
+    // persisted a snapshot, not mutated live state. The background
+    // stream is still legitimately in flight.
     const afterState = store.get(conversationsAtom)["A"];
     expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
@@ -777,7 +773,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     });
   });
 
-  it("unmount during a streaming run persists the run as canceled (cleanup does not overwrite pagehide's 'canceled' save with 'streaming')", async () => {
+  it("unmount during a streaming run persists a streaming checkpoint (cleanup does not rewrite status)", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -828,30 +824,28 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
     // Simulate a hard close: pagehide fires, then React unmounts the
-    // tree. The order matters — pagehide must run before unmount for
-    // the bug to manifest, so we dispatch it explicitly.
+    // tree. The order matters — pagehide must run before unmount.
     await act(async () => {
       window.dispatchEvent(new Event("pagehide"));
     });
 
-    // Now unmount. The save effect's cleanup runs `flush({ cancelStreamingRuns: true })`.
+    // Now unmount. The save effect's cleanup flushes a pending timer if
+    // any; it does not rewrite streaming → canceled.
     await act(async () => {
       unmount();
     });
 
-    // The cleanup must dispatch its own save with "canceled" — NOT
-    // overwrite the pagehide save with "streaming". We assert that the
-    // very last persisted state for A has the run as "canceled".
+    // The last persisted state for A is a streaming checkpoint.
     const lastForA = [...wire.setConversationCalls].reverse().find((c) => c.id === "A");
     expect(lastForA).toBeDefined();
     const lastRunIds = Object.keys(lastForA?.state?.runs ?? {});
     expect(lastRunIds).toHaveLength(1);
-    expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("canceled");
+    expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("streaming");
     expect(lastForA?.title).toBe("Hello from A");
 
-    // WHY: Unmount aborts in-flight run controllers, so the live store
-    // also lands on cancelRun (distinct from the persist-only
-    // `cancelStreamingRuns` rewrite used by pagehide/cleanup flush).
+    // WHY: Unmount still aborts in-flight run controllers today, so the
+    // live store lands on cancelRun. Persist path no longer mirrors that
+    // as a canceled rewrite; engine/unmount independence is a later commit.
     const afterState = store.get(conversationsAtom)["A"];
     expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("canceled");
   });

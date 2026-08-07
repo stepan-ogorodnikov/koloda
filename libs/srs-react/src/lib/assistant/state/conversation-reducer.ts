@@ -344,7 +344,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
   }
 
   // WHY: Retry after restore may find the run dropped (normalize removes
-  // streaming / orphaned failed markers) while the assistant error message
+  // orphaned failed markers) while the assistant error message
   // remains — recreate the run and rewrite the error marker.
   draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
   const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));

@@ -144,8 +144,8 @@ export function useConversationRuns({
           dispatchToConversation(conversationId, ["completeRun", { runId }]);
           markReadIfCurrent(conversationId, runId);
           // WHY: Force a save with the post-completion state so a
-          // throttled save that fires during streaming cannot leave a
-          // successful run persisted as "canceled" with elapsedSeconds: 0.
+          // throttled streaming checkpoint cannot outlive the terminal
+          // success status on disk.
           touch();
           break;
         case "error":
@@ -153,10 +153,9 @@ export function useConversationRuns({
         case "aborted":
           dispatchToConversation(conversationId, ["cancelRun", { runId }]);
           markReadIfCurrent(conversationId, runId);
-          // WHY: Same rationale as success — the throttled save is still
-          // queued from run start and would otherwise persist a "canceled"
-          // snapshot derived from `cancelStreamingRuns` rather than the
-          // real cancelRun terminal state.
+          // WHY: Same rationale as success — schedule a save with the real
+          // cancelRun terminal state (`canceled`/`user`) rather than leaving
+          // only the last streaming checkpoint on disk.
           touch();
           break;
       }

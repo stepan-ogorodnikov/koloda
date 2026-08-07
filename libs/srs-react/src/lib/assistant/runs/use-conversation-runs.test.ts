@@ -252,11 +252,9 @@ describe("useConversationRuns", () => {
   it("bumps the pending save when a successful card generation run completes", async () => {
     // WHY: terminal-stream actions go through `dispatchToConversation` (per-id)
     // and therefore do NOT bump the pending-save counter on their own.
-    // Without an explicit bump, the throttled save scheduled at run
-    // start would fire during streaming and persist a successful run
-    // as "canceled" (via `cancelStreamingRuns`) before the real
-    // "success" status is ever saved — which is the
-    // `Interrupted after 0s` reload bug.
+    // Without an explicit bump, the throttled streaming checkpoint would
+    // remain the latest save and a successful terminal status would never
+    // be persisted.
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
@@ -287,8 +285,8 @@ describe("useConversationRuns", () => {
 
   it("bumps the pending save when an aborted card generation run is canceled", async () => {
     // WHY: same as the success case — a user-initiated cancel must
-    // also schedule a save with the real terminal state, not a
-    // `cancelStreamingRuns`-derived snapshot.
+    // also schedule a save with the real terminal state (`canceled`/`user`),
+    // not leave only a streaming checkpoint on disk.
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");

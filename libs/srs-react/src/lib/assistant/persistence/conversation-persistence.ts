@@ -1,7 +1,12 @@
 import { produce } from "immer";
 import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from "../state/assistant-messages";
-import { dropRuns, transitionRun } from "../state/conversation-reducer";
+import { transitionRun } from "../state/conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+
+/** Mirror `stampElapsed` without mutating the source run. */
+function elapsedSecondsSince(startedAt: Date): number {
+  return Math.floor((Date.now() - startedAt.getTime()) / 1000);
+}
 
 /**
  * DB-writable conversation fields.
@@ -22,16 +27,9 @@ export function fromPersistedState(persisted: PersistedConversation): Conversati
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {
   let normalizedAny = false;
   const runs: Record<string, GenerationRun> = {};
-  const droppedRunIds = new Set<string>();
   const failedRunIds = new Set<string>();
 
   for (const [runId, run] of Object.entries(state.runs)) {
-    if (run.status === "streaming") {
-      droppedRunIds.add(runId);
-      normalizedAny = true;
-      continue;
-    }
-
     if (run.status === "failed") {
       failedRunIds.add(runId);
       normalizedAny = true;
@@ -41,9 +39,24 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     let nextRun: GenerationRun = run;
     let runChanged = false;
 
+    // WHY: A persisted `streaming` checkpoint means the process died mid-run
+    // (crash / forced termination). Convert to terminal `interrupted` with
+    // `crash_recovery` and keep partial output for retry. Graceful
+    // `app_shutdown` is handled at save time in a later commit.
+    if (run.status === "streaming") {
+      nextRun = {
+        ...run,
+        status: "interrupted",
+        reason: "crash_recovery",
+        elapsedSeconds: elapsedSecondsSince(run.startedAt),
+      };
+      runChanged = true;
+      normalizedAny = true;
+    }
+
     let statusesChanged = false;
     const resetStatuses: Record<number, CardStatus> = {};
-    for (const [index, status] of Object.entries(run.cardStatuses)) {
+    for (const [index, status] of Object.entries(nextRun.cardStatuses)) {
       if (status === "pending") {
         resetStatuses[Number(index)] = "idle";
         statusesChanged = true;
@@ -54,20 +67,20 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     if (statusesChanged) {
       nextRun = { ...nextRun, cardStatuses: resetStatuses };
       runChanged = true;
+      normalizedAny = true;
     }
 
     if (runChanged) {
       runs[runId] = nextRun;
-      normalizedAny = true;
     } else {
       runs[runId] = run;
     }
   }
 
-  // WHY: Backfill before dropRuns so legacy user messages (runId only in
-  // `user-<id>` encoding) are still removed with their streaming run.
-  // Also re-stringify Date/`epoch-ms` createdAt values that Electron wire
-  // revival may have injected, and heal epoch timestamps from run.startedAt.
+  // WHY: Backfill so legacy user messages (runId only in `user-<id>`
+  // encoding) stay linked for failed-run message rewriting below, and
+  // re-stringify Date/`epoch-ms` createdAt values that Electron wire
+  // revival may have injected, healing epoch timestamps from run.startedAt.
   const startedAtByRunId: Record<string, Date> = {};
   for (const [runId, run] of Object.entries(state.runs)) {
     startedAtByRunId[runId] = run.startedAt;
@@ -85,8 +98,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     return null;
   }
 
-  const filtered = dropRuns({ ...state, messages: messagesWithRunIds }, droppedRunIds);
-  const messages = filtered.messages.map((m) => {
+  const messages = messagesWithRunIds.map((m) => {
     if (m.role !== "assistant") return m;
     const runId = getMessageRunId(m);
     if (!runId || !failedRunIds.has(runId)) return m;
@@ -106,9 +118,10 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     ...state,
     activeRunId: null,
     dismissedRunErrorId: null,
-    // WHY: If the run the user last read is about to be dropped, the
-    // pointer is stale. Clear it so the unread predicate correctly
-    // evaluates against the new latest run on next read.
+    // WHY: If the run the user last read is about to be dropped (failed),
+    // the pointer is stale. Clear it so the unread predicate correctly
+    // evaluates against the new latest run on next read. Interrupted
+    // crash-recovery runs survive, so their lastReadRunId is kept.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
     messages,

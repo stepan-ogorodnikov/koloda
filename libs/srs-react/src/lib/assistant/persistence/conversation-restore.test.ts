@@ -306,7 +306,7 @@ describe("coerceConversationState", () => {
 });
 
 describe("normalizeRestoredConversation", () => {
-  it("removes streaming runs and their messages", () => {
+  it("converts streaming runs to interrupted with crash_recovery and keeps messages", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -321,7 +321,7 @@ describe("normalizeRestoredConversation", () => {
         {
           id: "assistant-r1",
           role: "assistant",
-          parts: [{ type: "text", text: "" }],
+          parts: [{ type: "text", text: "partial reply" }],
           metadata: { kind: "chat-text", runId: "r1" },
         },
       ],
@@ -341,8 +341,11 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
-    expect(next.messages).toEqual([]);
+    expect(next.runs["r1"]?.status).toBe("interrupted");
+    expect(next.runs["r1"]?.reason).toBe("crash_recovery");
+    expect(next.runs["r1"]?.elapsedSeconds).toEqual(expect.any(Number));
+    expect(next.messages).toHaveLength(2);
+    expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply" }]);
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
   });
@@ -746,7 +749,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("clears lastReadRunId when the run it points to is dropped as streaming", () => {
+  it("preserves lastReadRunId when a streaming run is normalized to interrupted", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -768,8 +771,9 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
-    expect(next.lastReadRunId).toBeNull();
+    expect(next.runs["r1"]?.status).toBe("interrupted");
+    expect(next.runs["r1"]?.reason).toBe("crash_recovery");
+    expect(next.lastReadRunId).toBe("r1");
   });
 
   it("clears lastReadRunId when the run it points to is dropped as failed", () => {
