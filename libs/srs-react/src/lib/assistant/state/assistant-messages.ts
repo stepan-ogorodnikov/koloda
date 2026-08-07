@@ -11,14 +11,10 @@ export type AssistantMessageMetadata =
 
 export type UserMessageMetadata = { createdAt: string; runId: string };
 
-/** Unix epoch — used only when no real createdAt / run.startedAt is available. */
+// INVARIANT: Fallback only when no real createdAt / run.startedAt is available.
 const EPOCH_ISO = new Date(0).toISOString();
 
-/**
- * Coerce message metadata `createdAt` into an ISO string.
- * Accepts string / Date / epoch-ms number so Electron `fromWire` (which may
- * revive ISO strings into Dates) and legacy rows still round-trip.
- */
+// WHY: Accept string / Date / epoch-ms so Electron `fromWire` revival and legacy rows round-trip.
 function coerceCreatedAtToIso(value: unknown): string | null {
   if (typeof value === "string") {
     const date = new Date(value);
@@ -65,7 +61,6 @@ export function getAssistantMetadata(message: UIMessage) {
   return isAssistantMetadata(message.metadata) ? message.metadata : null;
 }
 
-/** Run id from message metadata (user or assistant). Null when missing or not a chat message. */
 export function getMessageRunId(message: UIMessage): string | null {
   if (message.role === "user") {
     if (!message.metadata || typeof message.metadata !== "object") return null;
@@ -78,14 +73,8 @@ export function getMessageRunId(message: UIMessage): string | null {
   return null;
 }
 
-/**
- * Stamp `runId` on legacy user messages that only encoded it in the id
- * (`user-<runId>`), and normalize `createdAt` to an ISO string when a Date /
- * epoch-ms slipped in (Electron wire revival). Returns the same array
- * reference when nothing changes.
- *
- * `startedAtByRunId` heals epoch / missing createdAt from the paired run.
- */
+// WHY: Stamp `runId` on legacy `user-<runId>` ids and normalize createdAt after Electron wire revival.
+// `startedAtByRunId` heals epoch / missing createdAt from the paired run. Returns the same array when unchanged.
 export function backfillUserMessageRunIds(
   messages: UIMessage[],
   startedAtByRunId?: Readonly<Record<string, Date>>,

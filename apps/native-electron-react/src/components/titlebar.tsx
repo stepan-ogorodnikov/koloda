@@ -78,7 +78,7 @@ export function Titlebar() {
 
     function updateOverlay(el: HTMLElement) {
       const rootStyle = getComputedStyle(document.documentElement);
-      // Electron titleBarOverlay only accepts rgba/hsla/hex — use dedicated hex tokens.
+      // WHY: Electron titleBarOverlay only accepts rgba/hsla/hex — use dedicated hex tokens.
       const color =
         toHexColor(rootStyle.getPropertyValue("--titlebar-overlay-color").trim()) ||
         cssVarToHex("--titlebar-overlay-color");

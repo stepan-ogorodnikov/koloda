@@ -129,11 +129,8 @@ function makeRun(
   };
 }
 
-/**
- * WHY: `cloneConversationAtom` and restore-time normalization both
- * need to drop a set of run ids together with their user/assistant
- * message pair. Linkage is via `runId` in message metadata.
- */
+// WHY: `cloneConversationAtom` and restore-time normalization both need to drop run ids
+// together with their user/assistant message pair. Linkage is via `runId` in message metadata.
 export function dropRuns(
   state: ConversationReducerState,
   droppedRunIds: ReadonlySet<string>,
@@ -163,7 +160,6 @@ export function resolveRunMode(state: ConversationReducerState, runId: string): 
   return null;
 }
 
-/** Latest failed run that has not been dismissed, or null. */
 export function findLatestErroredRun(state: ConversationReducerState): GenerationRun | null {
   const ids = Object.keys(state.runs);
   for (let i = ids.length - 1; i >= 0; i--) {
@@ -193,11 +189,8 @@ function stampElapsed(run: GenerationRun) {
   run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
 }
 
-/**
- * Applies a legal run lifecycle event in place.
- * Spec: streaming → success | failed | canceled; restart → streaming
- * (ASSISTANT-CHAT-CONVERSATIONS.md §Runs / §Retry).
- */
+// INVARIANT: Legal run lifecycle transitions (ASSISTANT-CHAT-CONVERSATIONS.md §Runs / §Retry):
+// streaming → success | failed | canceled; restart → streaming.
 export function transitionRun(draft: ConversationReducerState, runId: string, event: RunLifecycleEvent): boolean {
   const run = draft.runs[runId];
   if (!run) return false;

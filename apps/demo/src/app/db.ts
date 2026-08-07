@@ -11,7 +11,6 @@ const migrationsFiles: Record<string, { default: string }> = import.meta.glob(".
   eager: true,
 });
 
-// [filename-without-extenstion, { default: migrationSQL }][]
 export const migrations: [string, { default: string }][] = Object.entries(migrationsFiles).map(([k, v]) => {
   const full = k.split("/").pop() ?? "";
   const short = full.includes(".") ? full.slice(0, full.lastIndexOf(".")) : full;

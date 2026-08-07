@@ -25,6 +25,6 @@ export function writeUiPreferencesCache(prefs: UiPreferencesCache) {
     const current = readUiPreferencesCache() ?? {};
     localStorage.setItem(UI_PREFERENCES_STORAGE_KEY, JSON.stringify({ ...current, ...prefs }));
   } catch {
-    // ignore quota / private mode
+    // WHY: Quota / private-mode localStorage failures must not break prefs wiring.
   }
 }

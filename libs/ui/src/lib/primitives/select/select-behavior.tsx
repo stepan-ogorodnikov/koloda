@@ -9,7 +9,7 @@ import { dispatchKey, matchesAnyHotkey } from "../../core/hotkeys";
 
 export type SelectState = ReactAriaSelectState<unknown, "single" | "multiple"> | null;
 
-// Delegate for Select that preserves arrow navigation
+// WHY: RAC's default delegate does not match our Select list navigation — preserve arrow keys.
 export function createSelectKeyboardDelegate(stateRef: RefObject<SelectState>): KeyboardDelegate {
   const getState = () => stateRef.current;
 
@@ -33,7 +33,7 @@ export function createSelectKeyboardDelegate(stateRef: RefObject<SelectState>): 
   };
 }
 
-// Store Select state from context to build a keyboard delegate
+// WHY: Bridge SelectState from RAC context into a ref for the hotkey keyboard delegate.
 export function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
   const state = useContext(SelectStateContext);
 
@@ -58,9 +58,8 @@ export function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
     (isOpen ? disableScope : enableScope)("nav");
   }, [isOpen, disableScope, enableScope]);
 
-  // Capture-phase listener for the close hotkey. This fires before the Autocomplete's
-  // onKeyDown can call stopPropagation (which in React 19 also stops the native event),
-  // so the hotkey works even when focus is on the search input.
+  // WHY: Capture-phase close hotkey — Autocomplete onKeyDown may stopPropagation
+  // (React 19 also stops the native event), so this must run before the search input.
   useEffect(() => {
     if (!state?.isOpen) return;
 
@@ -70,7 +69,7 @@ export function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
         e.stopPropagation();
         state.close();
       } else if ((e.target as HTMLElement).tagName !== "INPUT") {
-        // Fix for hotkeys with 'Alt' modifier breaking selecting with 'Space'
+        // WORKAROUND: Alt-modifier hotkeys break Space-to-select on listbox items.
         if (e.key === " " || e.key === "Space") {
           const focusedKey = state.selectionManager.focusedKey;
           if (focusedKey) {

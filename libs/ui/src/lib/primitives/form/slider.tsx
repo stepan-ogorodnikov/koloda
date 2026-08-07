@@ -90,9 +90,7 @@ export type SliderThumbProps = ReactAriaSliderThumbProps;
 
 export function SliderThumb({ index = 0, children, style, ...props }: SliderThumbProps) {
   const canAnimate = useMotionSetting();
-  // Ease the thumb into place over the same duration/easing NumberFlow uses for the
-  // digits, so the thumb, its value bubble, and the animated number share one motion
-  // and a discrete value change lands them all on the same frame.
+  // WHY: Match thumb motion to NumberFlow's duration/easing so value bubble and digits land on the same frame.
   const transitionValue = canAnimate
     ? `left ${SLIDER_VALUE_TIMING.duration}ms ${SLIDER_VALUE_TIMING.easing}, top ${SLIDER_VALUE_TIMING.duration}ms ${SLIDER_VALUE_TIMING.easing}`
     : "none";

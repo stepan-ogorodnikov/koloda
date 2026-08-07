@@ -14,7 +14,7 @@ export type ConversationStore = Readonly<Record<string, ConversationReducerState
 
 export const conversationsAtom = atom<ConversationStore>({});
 
-/** Current conversation id. Exported for store-level actions (clone) that must switch without mark-as-read. */
+// INVARIANT: Exported for clone/store actions that switch current id without mark-as-read.
 export const currentConversationIdAtom = atom<string | null>(null);
 
 // INVARIANT: `newConversation` must NOT go through this helper — the reducer
@@ -33,9 +33,8 @@ function applyConversationUpdate(
       : conversationReducer(prev, update);
   if (next === prev) return prev;
 
-  // Only stamp `updatedAt` when a new run starts (startRun / restartRun).
-  // Function-form updaters are used by derived atoms and side-effects
-  // that should never bump the conversation's last-modified timestamp.
+  // INVARIANT: Only stamp `updatedAt` on run start (startRun / restartRun). Function-form
+  // updaters are used by derived atoms and side-effects that must not bump the timestamp.
   if (typeof update !== "function" && RUN_START_ACTIONS.has(update[0])) {
     return { ...next, updatedAt: new Date() };
   }
@@ -83,12 +82,8 @@ export function dispatchToConversation(
   };
 }
 
-/**
- * Marks a run as read when it finished in the conversation the user is
- * viewing. Call after terminal run dispatches (`completeRun` / `cancelRun` /
- * `runFailed`) from the stream hooks — see ASSISTANT-CHAT-CONVERSATIONS.md
- * §Unread Status. Background completions must stay unread.
- */
+// WHY: Mark a run read only when it finishes in the conversation the user is viewing.
+// Call after terminal run dispatches from stream hooks — background completions stay unread.
 export function markReadIfCurrent(id: string, runId: string): (get: Getter, set: Setter) => void {
   return (get, set) => {
     if (get(currentConversationIdAtom) !== id) return;
@@ -118,7 +113,7 @@ export const dismissSaveStatusAtom = atom(null, (_get, set) => {
   set(saveStatusAtom, (prev) => ({ ...prev, isDismissed: true }));
 });
 
-/** Per-conversation pending-save counters. Exported for remove/clone actions. */
+// INVARIANT: Per-conversation pending-save counters — exported for remove/clone actions.
 export const pendingSaveByConversationAtom = atom<Record<string, number>>({});
 
 export const pendingSaveAtom = atom((get) => {

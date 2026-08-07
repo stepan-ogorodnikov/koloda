@@ -192,7 +192,7 @@ function createWindow() {
     win.loadFile(join(__dirname, "../native-electron-react/index.html"));
   }
 
-  // Playwright page.route mocks break when session.webRequest hooks are installed
+  // WHY: Playwright page.route mocks break when session.webRequest hooks are installed
   // (status 0 / empty headers). Skip CORS rewrite hooks during e2e.
   if (!process.env.KOLODA_E2E) {
     win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {

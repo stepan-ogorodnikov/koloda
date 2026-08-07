@@ -13,8 +13,7 @@ import type { StreamRequestResult } from "./build-stream-request";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 
-// Private to session composition — not part of the UI / package surface.
-// UI talks to `RunController`; only `useAssistantSession` assembles these deps.
+// INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
 type UseRunOrchestrationOptions = {
   configRef: RefObject<AssistantConversationConfig>;
   readState: () => ConversationReducerState;
