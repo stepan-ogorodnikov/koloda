@@ -9,12 +9,6 @@ import { withUpdatedAt } from "./db";
 import { assertRow } from "./parse-rows";
 import { settings } from "./schema";
 
-/**
- * Retrieves settings by name from the database
- * @param db - The database instance
- * @param name - The name of the settings to retrieve
- * @returns The settings object if found, undefined otherwise
- */
 export async function getSettings<T extends SettingsName>(db: DB, name: SettingsName) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
@@ -23,8 +17,6 @@ export async function getSettings<T extends SettingsName>(db: DB, name: Settings
 
     const envelope = assertRow(settingsRowEnvelopeSchema, result[0]);
 
-    // validate to inject default values if value is missing
-    // e.g. after introducing a new setting default value is returned until explicitly set
     const { data, success } = allowedSettings[name].safeParse(envelope.content);
     if (!success) return null;
 
@@ -32,13 +24,6 @@ export async function getSettings<T extends SettingsName>(db: DB, name: Settings
   });
 }
 
-/**
- * Sets settings in the database, updating if already exist
- * @param db - The database instance
- * @param name - The name of the settings
- * @param content - The settings content to store
- * @returns The stored settings object
- */
 export async function setSettings<T extends SettingsName>(db: DB, { name, content }: SetSettingsData<T>) {
   return throwKnownError("db.update", async () => {
     const parsed = allowedSettings[name].parse(content);
@@ -53,13 +38,6 @@ export async function setSettings<T extends SettingsName>(db: DB, { name, conten
   });
 }
 
-/**
- * Patches existing settings by merging new content with existing content
- * @param db - The database instance
- * @param name - The name of the settings to patch
- * @param content - The partial settings content to merge
- * @returns The updated settings object
- */
 export async function patchSettings<T extends SettingsName>(db: DB, { name, content }: PatchSettingsData<T>) {
   return throwKnownError("db.update", async () => {
     const original = await db.select().from(settings).where(eq(settings.name, name)).limit(1);

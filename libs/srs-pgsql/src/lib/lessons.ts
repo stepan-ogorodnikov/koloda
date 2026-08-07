@@ -27,13 +27,6 @@ function sumLessonAmounts(decks: LessonDeck[]): LessonAmounts {
   );
 }
 
-/**
- * Retrieves lesson card counts ready to learn by type (untouched, learn, review, total) for decks
- * @param db - The database instance
- * @param dueAt - The timestamp to check card due status against
- * @param filters - Optional filters to apply to the query
- * @returns Totals across all decks plus per-deck counts
- */
 export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {}): Promise<LessonsResult> {
   return throwKnownError("db.get", async () => {
     const filtersSQL = filters.deckIds?.length
@@ -71,14 +64,6 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
   });
 }
 
-/**
- * Retrieves cards for a lesson based on due time, filters and amounts
- * @param db - The database instance
- * @param dueAt - The date to check card due status against
- * @param filters - Filters to apply to the query
- * @param amounts - The number of cards to retrieve for each lesson type
- * @returns Array of cards for the lesson
- */
 export async function getLessonCards(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
   return throwKnownError("db.get", async () => {
     const deckFilter = filters.deckIds?.length ? inArray(cards.deckId, filters.deckIds.map(Number)) : undefined;
@@ -109,12 +94,6 @@ export async function getLessonCards(db: DB, dueAt: Date, filters: LessonFilters
   });
 }
 
-/**
- * Retrieves the algorithms used by given decks
- * @param db - The database instance
- * @param deckIds - Array of deck IDs to retrieve algorithms for
- * @returns Array of algorithms used by the specified decks
- */
 export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
   return throwKnownError("db.get", async () => {
     if (!deckIds.length) return Promise.resolve([]);
@@ -133,12 +112,6 @@ export async function getLessonAlgorithms(db: DB, deckIds: Deck["id"][]) {
   });
 }
 
-/**
- * Retrieves the templates used by given decks
- * @param db - The database instance
- * @param deckIds - Array of deck IDs to retrieve templates for
- * @returns Array of templates used by the specified decks
- */
 export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
   return throwKnownError("db.get", async () => {
     if (!deckIds.length) return Promise.resolve([]);
@@ -158,14 +131,6 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
   });
 }
 
-/**
- * Retrieves all data needed for a lesson (cards, decks, templates, algorithms)
- * @param db - The database instance
- * @param dueAt - The timestamp to check card due status against
- * @param filters - Filters to apply to the query
- * @param amounts - The number of cards to retrieve for each lesson type
- * @returns Object containing lesson cards, decks, templates, and algorithms, or null if any are missing
- */
 export async function getLessonData(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
   const lessonCards = await getLessonCards(db, dueAt, filters, amounts);
   if (!lessonCards) return null;
@@ -188,13 +153,6 @@ export async function getLessonData(db: DB, dueAt: Date, filters: LessonFilters,
     : null;
 }
 
-/**
- * Submits a lesson result for a single card by updating card data and adding a review
- * @param db - The database instance
- * @param card - The card with updated data
- * @param review - The review data to insert
- * @returns The inserted review object
- */
 export async function submitLessonResult(db: DB, { card, review }: LessonResultData) {
   if (card.id !== review.cardId) throw new AppError("validation.lessons.result.card-review-mismatch");
 

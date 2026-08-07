@@ -10,12 +10,6 @@ import { assertRow, assertRowOrNull, assertRows } from "./parse-rows";
 import { decks } from "./schema";
 import { getTemplate } from "./templates";
 
-/**
- * Retrieves all decks from the database with optional filters
- * @param db - The database instance
- * @param filters - Optional SQL filters to apply
- * @returns Array of deck objects
- */
 export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(decks).where(filters).orderBy(decks.createdAt);
@@ -24,12 +18,6 @@ export async function getDecks(db: DB, filters: SQL | undefined = undefined) {
   });
 }
 
-/**
- * Retrieves a specific deck by ID
- * @param db - The database instance
- * @param id - The ID of the deck to retrieve
- * @returns The deck object if found, null otherwise
- */
 export async function getDeck(db: DB, id: Deck["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(decks).where(eq(decks.id, id)).limit(1);
@@ -38,12 +26,6 @@ export async function getDeck(db: DB, id: Deck["id"]) {
   });
 }
 
-/**
- * Adds a new deck to the database
- * @param db - The database instance
- * @param data - The deck data to insert
- * @returns The created deck object
- */
 export async function addDeck(db: DB, data: InsertDeckData) {
   return throwKnownError("db.add", async () => {
     const algorithm = await getAlgorithm(db, data.algorithmId);
@@ -57,13 +39,6 @@ export async function addDeck(db: DB, data: InsertDeckData) {
   });
 }
 
-/**
- * Updates an existing deck in the database
- * @param db - The database instance
- * @param id - The ID of the deck to update
- * @param values - The updated deck values
- * @returns The updated deck object
- */
 export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   return throwKnownError("db.update", async () => {
     const payload = updateDeckSchema.parse(values);
@@ -81,12 +56,6 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
   });
 }
 
-/**
- * Deletes a deck from the database
- * @param db - The database instance
- * @param id - The ID of the deck to delete
- * @returns The result of the database delete operation
- */
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
   return throwKnownError("db.delete", async () => {
     const result = await db.delete(decks).where(eq(decks.id, id));

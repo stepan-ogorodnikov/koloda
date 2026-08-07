@@ -13,12 +13,6 @@ import { assertRows, parseRow } from "./parse-rows";
 import { reviews } from "./schema";
 import { getSettings } from "./settings";
 
-/**
- * Retrieves all reviews for a specific card
- * @param db - The database instance
- * @param cardId - The ID of the card to retrieve reviews for
- * @returns Array of review objects
- */
 export async function getReviews(db: DB, { cardId }: GetReviewsData) {
   return throwKnownError("db.get", async () => {
     const result = await db
@@ -29,13 +23,6 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
   });
 }
 
-/**
- * Gets the totals of different types of reviews within a date range
- * @param db - The database instance
- * @param from - Start datetime for the query
- * @param to - End datetime for the query
- * @returns Review totals object containing counts for every lesson type + total
- */
 export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps) {
   return throwKnownError("db.get", async () => {
     const result = await db.execute(sql`
@@ -54,12 +41,6 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
   });
 }
 
-/**
- * Gets the review totals for the current learning day
- * @param db - The database instance
- * @returns Object containing daily limits, review totals, and metadata about limits
- * @throws {ZodError} If can't get learning settings or review totals
- */
 export async function getTodaysReviewTotals(db: DB) {
   return throwKnownError("db.get", async () => {
     const learningSettings = await getSettings(db, "learning");

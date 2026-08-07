@@ -17,12 +17,6 @@ import { assertRow, assertRowOrUndefined, assertRows } from "./parse-rows";
 import { cards, reviews } from "./schema";
 import { getTemplate, getTemplatesByIds } from "./templates";
 
-/**
- * Retrieves all cards from a specific deck
- * @param db - The database instance
- * @param deckId - The ID of the deck to retrieve cards from
- * @returns Array of card objects
- */
 export async function getCards(db: DB, { deckId }: GetCardsParams) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(cards).where(eq(cards.deckId, deckId)).orderBy(cards.createdAt);
@@ -31,12 +25,6 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
   });
 }
 
-/**
- * Retrieves a specific card by ID
- * @param db - The database instance
- * @param id - The ID of the card to retrieve
- * @returns The card object if found, undefined otherwise
- */
 async function getCard(db: DB, id: Card["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(cards).where(eq(cards.id, id)).limit(1);
@@ -45,12 +33,6 @@ async function getCard(db: DB, id: Card["id"]) {
   });
 }
 
-/**
- * Adds a new card to the database
- * @param db - The database instance
- * @param data - The card data to insert
- * @returns The created card object
- */
 export async function addCard(db: DB, data: InsertCardData) {
   return throwKnownError("db.add", async () => {
     const template = await getTemplate(db, data.templateId);
@@ -64,12 +46,6 @@ export async function addCard(db: DB, data: InsertCardData) {
   });
 }
 
-/**
- * Adds multiple cards to the database in a batch
- * @param db - The database instance
- * @param data - Array of card data to insert
- * @returns One result entry per input card (`{}` on success, `{ error }` on failure)
- */
 export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCardsResponse> {
   if (data.length === 0) return [];
 
@@ -98,13 +74,6 @@ export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCa
   return results;
 }
 
-/**
- * Updates an existing card in the database
- * @param db - The database instance
- * @param id - The ID of the card to update
- * @param values - The updated card values
- * @returns The updated card object
- */
 export async function updateCard(db: DB, { id, values }: UpdateCardData) {
   return throwKnownError("db.update", async () => {
     const card = await getCard(db, id);
@@ -120,12 +89,6 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
   });
 }
 
-/**
- * Deletes a card from the database
- * @param db - The database instance
- * @param id - The ID of the card to delete
- * @returns The result of the database delete operation
- */
 export async function deleteCard(db: DB, { id }: DeleteCardData) {
   return throwKnownError("db.delete", async () => {
     const result = await db.delete(cards).where(eq(cards.id, id));
@@ -133,12 +96,6 @@ export async function deleteCard(db: DB, { id }: DeleteCardData) {
   });
 }
 
-/**
- * Deletes multiple cards from the database
- * @param db - The database instance
- * @param data - Object that contains array of cards ids to delete
- * @returns The result of the database delete operation
- */
 export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
   if (ids.length === 0) return;
   return throwKnownError("db.delete", async () => {
@@ -147,12 +104,6 @@ export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
   });
 }
 
-/**
- * Resets the progress of a card, clearing its review history and resetting scheduling data
- * @param db - The database instance
- * @param id - The ID of the card to reset
- * @returns The updated card object with reset progress
- */
 export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
   return throwKnownError("db.update", async () => {
     const card = await getCard(db, id);

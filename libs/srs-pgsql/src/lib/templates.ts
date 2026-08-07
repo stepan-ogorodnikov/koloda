@@ -19,11 +19,6 @@ import { withUpdatedAt } from "./db";
 import { assertRow, assertRowOrNull, assertRows } from "./parse-rows";
 import { cards, decks, templates } from "./schema";
 
-/**
- * Retrieves all templates from the database
- * @param db - The database instance
- * @returns Array of Template objects
- */
 export async function getTemplates(db: DB) {
   return throwKnownError("db.get", async () => {
     const result = await db.select().from(templates).orderBy(templates.createdAt);
@@ -32,12 +27,6 @@ export async function getTemplates(db: DB) {
   });
 }
 
-/**
- * Retrieves a specific template by ID
- * @param db - The database instance
- * @param id - The ID of the template to retrieve
- * @returns The template object if found, null otherwise
- */
 export async function getTemplate(db: DB, id: Template["id"]) {
   return throwKnownError("db.get", async () => {
     const result = await db
@@ -55,12 +44,6 @@ export async function getTemplate(db: DB, id: Template["id"]) {
   });
 }
 
-/**
- * Fetches multiple templates by id in a single query (per-call cache)
- * @param db - The database instance
- * @param ids - The template ids to fetch
- * @returns Map of template id → Template
- */
 export async function getTemplatesByIds(db: DB, ids: Template["id"][]): Promise<Map<Template["id"], Template>> {
   if (ids.length === 0) return new Map();
 
@@ -80,12 +63,6 @@ export async function getTemplatesByIds(db: DB, ids: Template["id"][]): Promise<
   return new Map(parsed.map((t) => [t.id, t]));
 }
 
-/**
- * Adds a new template to the database
- * @param db - The database instance
- * @param data - The template data to insert
- * @returns The created Template object
- */
 export async function addTemplate(db: DB, data: InsertTemplateData) {
   return throwKnownError("db.add", async () => {
     const result = await db.insert(templates).values(data).returning();
@@ -94,13 +71,6 @@ export async function addTemplate(db: DB, data: InsertTemplateData) {
   });
 }
 
-/**
- * Updates an existing template in the database
- * @param db - The database instance
- * @param id - The ID of the template to update
- * @param values - The updated template values
- * @returns The updated template object
- */
 export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData) {
   return throwKnownError("db.update", async () => {
     const payload = updateTemplateSchema.parse(values);
@@ -121,13 +91,6 @@ export async function updateTemplate(db: DB, { id, values }: UpdateTemplateData)
   });
 }
 
-/**
- * Clones an existing template with a new title
- * @param db - The database instance
- * @param title - The new title for the cloned template
- * @param sourceId - The ID of the source template to clone
- * @returns The created template object
- */
 export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateData) {
   return throwKnownError("db.clone", async () => {
     const sourceTemplate = await getTemplate(db, sourceId);
@@ -137,12 +100,6 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
   });
 }
 
-/**
- * Deletes a template from the database
- * @param db - The database instance
- * @param id - The ID of the template to delete
- * @returns The result of the database delete operation
- */
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.delete", async () => {
     const template = await getTemplate(db, id);
@@ -155,12 +112,6 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   });
 }
 
-/**
- * Retrieves all decks associated with a specific template
- * @param db - The database instance
- * @param id - The ID of the template
- * @returns Array of decks with only ID and title
- */
 export async function getTemplateDecks(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.get", async () => {
     const result = await db.select({ id: decks.id, title: decks.title }).from(decks).where(eq(decks.templateId, id));
