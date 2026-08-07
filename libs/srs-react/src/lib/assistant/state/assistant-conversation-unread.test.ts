@@ -47,13 +47,15 @@ describe("unreadConversationIdsAtom", () => {
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
 
-  it("treats failed and canceled runs the same as success for the unread predicate", () => {
+  it("treats failed, canceled, and interrupted runs the same as success for the unread predicate", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { runs: { r1: makeRun("r1", "failed") } }));
     store.set(upsertConversationAtom, makeConversation("B", { runs: { r1: makeRun("r1", "canceled") } }));
+    store.set(upsertConversationAtom, makeConversation("C", { runs: { r1: makeRun("r1", "interrupted") } }));
     const unread = store.get(unreadConversationIdsAtom);
     expect(unread.has("A")).toBe(true);
     expect(unread.has("B")).toBe(true);
+    expect(unread.has("C")).toBe(true);
   });
 
   it("uses the last key in the runs map as the latest run id", () => {

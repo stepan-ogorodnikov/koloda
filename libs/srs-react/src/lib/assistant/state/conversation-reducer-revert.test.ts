@@ -229,7 +229,7 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
 // while the conversation is in a reverted state. See
 // ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
 describe("conversationReducer → commitRevert", () => {
-  function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" = "success") {
+  function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" | "interrupted" = "success") {
     return {
       id: runId,
       mode: "chat" as const,

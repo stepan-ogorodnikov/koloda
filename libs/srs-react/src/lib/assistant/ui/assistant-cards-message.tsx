@@ -17,6 +17,7 @@ export type AssistantCardsMessageProps = {
   canAdd: boolean;
   isGenerating: boolean;
   isCanceled: boolean;
+  isInterrupted?: boolean;
   isFailed: boolean;
   canRetry: boolean;
   onRetry: () => void;
@@ -36,6 +37,7 @@ export function AssistantCardsMessage({
   canAdd,
   isGenerating,
   isCanceled,
+  isInterrupted = false,
   isFailed,
   canRetry,
   onRetry,
@@ -47,6 +49,8 @@ export function AssistantCardsMessage({
 
   if (!template && !templateUnavailable) return null;
 
+  const isStopped = isCanceled || isInterrupted;
+
   return (
     <AIChatMessageLayout role="assistant">
       {isGenerating && <AIChatMessageStatus state="pending" startedAt={startedAt} />}
@@ -55,11 +59,16 @@ export function AssistantCardsMessage({
           {elapsedSeconds !== undefined && <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} />}
         </div>
       )}
+      {isInterrupted && (
+        <div className="flex flex-col gap-2">
+          {elapsedSeconds !== undefined && <AIChatMessageStatus state="interrupted" elapsedSeconds={elapsedSeconds} />}
+        </div>
+      )}
       {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
-      {!isGenerating && !isCanceled && !isFailed && templateUnavailable && (
+      {!isGenerating && !isStopped && !isFailed && templateUnavailable && (
         <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>
       )}
-      {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && cards.length > 0 && (
+      {!isGenerating && !isStopped && !isFailed && !templateUnavailable && template && cards.length > 0 && (
         <div className="flex flex-col gap-2">
           <AssistantCardsTable
             runId={runId}
@@ -76,7 +85,7 @@ export function AssistantCardsMessage({
           )}
         </div>
       )}
-      {!isGenerating && !isCanceled && !isFailed && !templateUnavailable && template && !cards.length && (
+      {!isGenerating && !isStopped && !isFailed && !templateUnavailable && template && !cards.length && (
         <p className="fg-level-3">{_(msg`assistant.generated-no-cards`)}</p>
       )}
     </AIChatMessageLayout>

@@ -172,12 +172,52 @@ describe("conversationReducer", () => {
   });
 
   describe("cancelRun", () => {
-    it("sets status to canceled and clears activeRunId", () => {
+    it("sets status to canceled with reason user and clears activeRunId", () => {
       let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
       state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
 
       expect(state.runs["r1"].status).toBe("canceled");
+      expect(state.runs["r1"].reason).toBe("user");
       expect(state.activeRunId).toBeNull();
+    });
+  });
+
+  describe("interruptRun", () => {
+    it("sets status to interrupted with the given reason and clears activeRunId", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(0);
+
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+
+      vi.setSystemTime(4000);
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+
+      expect(state.runs["r1"].status).toBe("interrupted");
+      expect(state.runs["r1"].reason).toBe("app_shutdown");
+      expect(state.runs["r1"].elapsedSeconds).toBe(4);
+      expect(state.activeRunId).toBeNull();
+
+      vi.useRealTimers();
+    });
+
+    it("records crash_recovery as the interruption reason", () => {
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+
+      expect(state.runs["r1"].status).toBe("interrupted");
+      expect(state.runs["r1"].reason).toBe("crash_recovery");
+    });
+
+    it("does not clear activeRunId when a different run is interrupted", () => {
+      let state = reduce([
+        { type: "startRun", runId: "r1", mode: "chat" },
+        { type: "startRun", runId: "r2", mode: "chat" },
+      ]);
+      expect(state.activeRunId).toBe("r2");
+
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      expect(state.runs["r1"].status).toBe("interrupted");
+      expect(state.activeRunId).toBe("r2");
     });
   });
 
@@ -194,9 +234,34 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
       state = conversationReducer(state, act({ type: "runFailed", runId: "r1", error: { message: "late" } }));
       state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
 
       expect(state.runs["r1"]).toEqual(afterFirst);
       vi.useRealTimers();
+    });
+
+    it("ignores terminal actions after cancel", () => {
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      const afterCancel = state.runs["r1"];
+
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+
+      expect(state.runs["r1"]).toEqual(afterCancel);
+      expect(afterCancel.reason).toBe("user");
+    });
+
+    it("ignores terminal actions after interrupt", () => {
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+      const afterInterrupt = state.runs["r1"];
+
+      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+
+      expect(state.runs["r1"]).toEqual(afterInterrupt);
+      expect(afterInterrupt.reason).toBe("crash_recovery");
     });
 
     it("ignores terminal actions for a missing runId", () => {
@@ -234,6 +299,7 @@ describe("conversationReducer", () => {
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].reason).toBeUndefined();
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
       expect(state.runs["r1"].templateFields).toBeNull();
@@ -244,6 +310,23 @@ describe("conversationReducer", () => {
       expect(state.activeRunId).toBe("r1");
 
       vi.useRealTimers();
+    });
+
+    it("clears termination reason when restarting a canceled or interrupted run", () => {
+      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      expect(state.runs["r1"].reason).toBe("user");
+
+      state = conversationReducer(state, act({ type: "restartRun", runId: "r1", templateFields: null, mode: "chat" }));
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].reason).toBeUndefined();
+
+      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      expect(state.runs["r1"].reason).toBe("app_shutdown");
+
+      state = conversationReducer(state, act({ type: "restartRun", runId: "r1", templateFields: null, mode: "chat" }));
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].reason).toBeUndefined();
     });
 
     it("creates a fresh run and rewrites the assistant error marker back to its original kind when the run is missing", () => {
@@ -461,6 +544,7 @@ describe("cancelStreamingRuns", () => {
     const next = cancelStreamingRuns(state);
 
     expect(next.runs["r1"]?.status).toBe("canceled");
+    expect(next.runs["r1"]?.reason).toBe("user");
     expect(next.runs["r1"]?.elapsedSeconds).toBe(30);
     expect(next.activeRunId).toBeNull();
   });
@@ -508,8 +592,10 @@ describe("cancelStreamingRuns", () => {
 
     expect(next.runs["r1"]).toBe(state.runs["r1"]);
     expect(next.runs["r2"]?.status).toBe("canceled");
+    expect(next.runs["r2"]?.reason).toBe("user");
     expect(next.runs["r2"]?.elapsedSeconds).toBe(20);
     expect(next.runs["r3"]?.status).toBe("canceled");
+    expect(next.runs["r3"]?.reason).toBe("user");
     expect(next.runs["r3"]?.elapsedSeconds).toBe(10);
     expect(next.activeRunId).toBeNull();
   });

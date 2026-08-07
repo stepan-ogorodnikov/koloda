@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { AiChatElapsedTimeDisplay } from "./ai-chat-elapsed-time";
 import { AiChatMessageStatusPending } from "./ai-chat-message-status-pending";
 
-export type AIChatMessageStatusState = "pending" | "success" | "canceled" | "failed";
+export type AIChatMessageStatusState = "pending" | "success" | "canceled" | "interrupted" | "failed";
 
 type AIChatMessageStatusSharedProps = {
   modelName?: string;
@@ -56,6 +56,18 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
       <div className="flex flex-row items-center gap-1 px-3">
         <p className="fg-level-4 flex flex-row items-center gap-1">
           {_(msg`ai.chat.message.status.canceled-in`)}
+          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
+        </p>
+        {actions}
+      </div>
+    );
+  }
+
+  if (state === "interrupted") {
+    return (
+      <div className="flex flex-row items-center gap-1 px-3">
+        <p className="fg-level-4 flex flex-row items-center gap-1">
+          {_(msg`ai.chat.message.status.interrupted-in`)}
           <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
         </p>
         {actions}

@@ -118,11 +118,18 @@ const errorField = z
       : undefined,
   );
 
+/** `reason`: absent/null/undefined → omit; known string → passthrough; else fail. */
+const terminationReasonField = z
+  .enum(["user", "app_shutdown", "crash_recovery"])
+  .nullish()
+  .transform((v) => v ?? undefined);
+
 const runSchema: z.ZodType<GenerationRun> = z
   .object({
     id: z.string(),
     mode: z.enum(["chat", "cards"]),
     status: z.string().transform((s) => s as RunStatus),
+    reason: terminationReasonField,
     cards: z.array(z.unknown()),
     cardStatuses: z.record(z.string(), z.unknown()),
     templateFields: templateFieldsField,
@@ -137,6 +144,7 @@ const runSchema: z.ZodType<GenerationRun> = z
       id: run.id,
       mode: run.mode,
       status: run.status,
+      reason: run.reason,
       cards: run.cards as GeneratedCard[],
       cardStatuses: run.cardStatuses as Record<number, CardStatus>,
       templateFields: (run.templateFields ?? null) as TemplateFields | null,

@@ -105,7 +105,7 @@ describe("cloneConversationAtom", () => {
     expect(clone.messages).toEqual(messages);
   });
 
-  it("copies completed runs (success, failed, canceled) into the clone", () => {
+  it("copies completed runs (success, failed, canceled, interrupted) into the clone", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -147,11 +147,24 @@ describe("cloneConversationAtom", () => {
             parts: [{ type: "text" as const, text: "A3" }],
             metadata: { kind: "chat-text", runId: "r3" },
           },
+          {
+            id: "user-r4",
+            role: "user" as const,
+            parts: [{ type: "text" as const, text: "Q4" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r4" },
+          },
+          {
+            id: "assistant-r4",
+            role: "assistant" as const,
+            parts: [{ type: "text" as const, text: "A4" }],
+            metadata: { kind: "chat-text", runId: "r4" },
+          },
         ],
         runs: {
           r1: makeRun("r1", "success"),
           r2: makeRun("r2", "failed"),
           r3: makeRun("r3", "canceled"),
+          r4: makeRun("r4", "interrupted"),
         },
       }),
     );
@@ -160,10 +173,11 @@ describe("cloneConversationAtom", () => {
     const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
     const clone = store.get(conversationsAtom)[newId];
 
-    expect(Object.keys(clone.runs).sort()).toEqual(["r1", "r2", "r3"]);
+    expect(Object.keys(clone.runs).sort()).toEqual(["r1", "r2", "r3", "r4"]);
     expect(clone.runs.r1.status).toBe("success");
     expect(clone.runs.r2.status).toBe("failed");
     expect(clone.runs.r3.status).toBe("canceled");
+    expect(clone.runs.r4.status).toBe("interrupted");
   });
 
   it("drops streaming runs and their messages from the clone", () => {

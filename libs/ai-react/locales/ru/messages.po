@@ -58,9 +58,13 @@ msgstr "Повторить"
 
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:54
 msgid "ai.chat.message.status.canceled-in"
-msgstr "Прервано через"
+msgstr "Отменено через"
 
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:64
+msgid "ai.chat.message.status.interrupted-in"
+msgstr "Прервано через"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:74
 msgid "ai.chat.message.status.failed"
 msgstr "Не удалось выполнить запрос"
 

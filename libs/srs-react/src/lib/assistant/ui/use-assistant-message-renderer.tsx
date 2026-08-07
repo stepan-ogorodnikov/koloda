@@ -130,6 +130,7 @@ function renderCardsMessage(options: {
       canAdd={run.cards.length > 0 && !isCurrentRun && deckId !== null}
       isGenerating={isCurrentRun}
       isCanceled={run.status === "canceled"}
+      isInterrupted={run.status === "interrupted"}
       isFailed={run.status === "failed"}
       canRetry={isTail && !!run}
       onRetry={() => handleRetry(runId)}
@@ -189,6 +190,15 @@ function renderChatMessage(options: {
       <div className="group flex flex-col gap-2 self-start w-full">
         {content}
         <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} actions={copyAction} />
+      </div>
+    );
+  }
+
+  if (run.status === "interrupted" && run.elapsedSeconds !== null) {
+    return (
+      <div className="group flex flex-col gap-2 self-start w-full">
+        {content}
+        <AIChatMessageStatus state="interrupted" elapsedSeconds={run.elapsedSeconds} actions={copyAction} />
       </div>
     );
   }

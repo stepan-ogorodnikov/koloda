@@ -15,12 +15,19 @@ import {
 
 export type CardStatus = "idle" | "pending" | "success" | "error";
 
-export type RunStatus = "streaming" | "success" | "failed" | "canceled";
+export type RunStatus = "streaming" | "success" | "failed" | "canceled" | "interrupted";
+
+/** Why a run ended as `canceled` (user request) or `interrupted` (non-user stop). */
+export type RunTerminationReason = "user" | "app_shutdown" | "crash_recovery";
+
+export type InterruptedReason = Exclude<RunTerminationReason, "user">;
 
 export type GenerationRun = {
   id: string;
   mode: AIChatMode;
   status: RunStatus;
+  /** Set for terminal `canceled` / `interrupted` only; absent otherwise. */
+  reason?: RunTerminationReason;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
   templateFields: TemplateFields | null;
@@ -83,6 +90,7 @@ const actions = {
   completeRun,
   runFailed,
   cancelRun,
+  interruptRun,
   restartRun,
   setUsage,
   setMode,
@@ -179,6 +187,7 @@ export type RunLifecycleEvent =
   | { type: "complete" }
   | { type: "fail"; error: { message: string } }
   | { type: "cancel" }
+  | { type: "interrupt"; reason: InterruptedReason }
   | {
       type: "restart";
       templateFields: TemplateFields | null;
@@ -189,14 +198,16 @@ function stampElapsed(run: GenerationRun) {
   run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
 }
 
-// INVARIANT: Legal run lifecycle transitions (ASSISTANT-CHAT-CONVERSATIONS.md §Runs / §Retry):
-// streaming → success | failed | canceled; restart → streaming.
+// INVARIANT: Legal run lifecycle transitions:
+// streaming → success | failed | canceled(reason:user) | interrupted(reason);
+// restart → streaming.
 export function transitionRun(draft: ConversationReducerState, runId: string, event: RunLifecycleEvent): boolean {
   const run = draft.runs[runId];
   if (!run) return false;
 
   if (event.type === "restart") {
     run.status = "streaming";
+    run.reason = undefined;
     run.cards = [];
     run.cardStatuses = {};
     run.templateFields = event.templateFields;
@@ -215,12 +226,18 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
 
   if (event.type === "complete") {
     run.status = "success";
+    run.reason = undefined;
     run.error = undefined;
   } else if (event.type === "fail") {
     run.status = "failed";
+    run.reason = undefined;
     run.error = event.error;
+  } else if (event.type === "interrupt") {
+    run.status = "interrupted";
+    run.reason = event.reason;
   } else {
     run.status = "canceled";
+    run.reason = "user";
   }
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
@@ -300,6 +317,12 @@ function runFailed(draft: ConversationReducerState, payload: RunFailedPayload) {
 
 function cancelRun(draft: ConversationReducerState, payload: RunIdPayload) {
   transitionRun(draft, payload.runId, { type: "cancel" });
+}
+
+type InterruptRunPayload = { runId: string; reason: InterruptedReason };
+
+function interruptRun(draft: ConversationReducerState, payload: InterruptRunPayload) {
+  transitionRun(draft, payload.runId, { type: "interrupt", reason: payload.reason });
 }
 
 type RestartRunPayload = {
