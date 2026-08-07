@@ -33,11 +33,6 @@ export type Card = z.input<typeof cardValidation> & z.infer<typeof timestampsVal
 
 export type GetCardsParams = { deckId: Card["deckId"] };
 
-/**
- * Creates content validation schema based on template fields
- * @param fields - Array of template fields to validate
- * @returns Object with content validation schema
- */
 export function getCardContentValidation(fields: TemplateFields) {
   const validation = fields.reduce(
     (acc, x) => ({
@@ -52,11 +47,6 @@ export function getCardContentValidation(fields: TemplateFields) {
   return { content: z.object(validation) };
 }
 
-/**
- * Creates an insert schema for a card based on a template
- * @param template - The template to base the schema on
- * @returns Zod schema for inserting cards
- */
 export function getInsertCardSchema(template: Template) {
   const contentValidation = getCardContentValidation(template.content.fields);
   return z.object({ ...insertCardSchema.shape, ...contentValidation });
@@ -68,11 +58,6 @@ export type InsertCardData = z.input<typeof insertCardSchema>;
 
 export type InsertCardsResponse = Array<{ error?: string }>;
 
-/**
- * Creates an update schema for a card based on a template
- * @param template - The template to base the schema on
- * @returns Zod schema for updating card content
- */
 export function getUpdateCardSchema(template: Template) {
   const contentValidation = getCardContentValidation(template.content.fields);
   return z.object(contentValidation);
@@ -93,12 +78,6 @@ export type CardGrade = {
   log: ReviewFSRS;
 };
 
-/**
- * Calculates card grades based on the algorithm
- * @param card - The card to grade
- * @param algorithm - The algorithm to use for grading
- * @returns Array of ts-fsrs grades in order: [Again, Hard, Good, Easy]
- */
 export function getCardGrades(card: Card, algorithm: Pick<Algorithm, "content"> | LessonAlgorithm) {
   const fsrsCard = createFSRSCard(card);
   const fsrsAlgorithm = createFSRSAlgorithm(algorithm.content);
@@ -113,12 +92,6 @@ const FSRS_CARD_PROPERTIES: ObjectPropertiesMapping<Card, CardFSRS> = {
   scheduledDays: "scheduled_days",
 } as const;
 
-/**
- * Creates a ts-fsrs card from a card
- * @param card - The card to convert
- * @param time - The time to use for card creation (defaults to current time)
- * @returns The ts-fsrs card object
- */
 function createFSRSCard(card: Card, time: DateInput = Date.now()): CardFSRS {
   return createEmptyCard(time, (handlerCard: CardFSRS) => {
     const mapped = mapObjectProperties(card, FSRS_CARD_PROPERTIES);
@@ -127,11 +100,6 @@ function createFSRSCard(card: Card, time: DateInput = Date.now()): CardFSRS {
   });
 }
 
-/**
- * Creates a card from a ts-fsrs card
- * @param input - The ts-fsrs card to convert
- * @returns The card object
- */
 export function createCardFromCardFSRS(input: CardFSRS) {
   return mapObjectPropertiesReverse(input, FSRS_CARD_PROPERTIES) as Card;
 }

@@ -89,12 +89,6 @@ export const DEFAULT_TEMPLATE_FIELD: TemplateField = {
   isRequired: true,
 };
 
-/**
- * Gets the title of a template field by its ID
- * @param fields - Array of template fields
- * @param id - The ID of the field to find
- * @returns The title of the field if found, undefined otherwise
- */
 export function getTemplateFieldTitleById(
   fields: Template["content"]["fields"],
   id: Template["content"]["fields"][number]["id"],
@@ -112,16 +106,9 @@ export type UpdateTemplateValues = z.input<typeof updateTemplateSchema>;
 
 export type UpdateTemplateData = UpdateData<Template, "id", UpdateTemplateValues>;
 
-/**
- * Validates that locked template fields have not been modified inappropriately
- * @param original - The original template fields
- * @param updated - The updated template fields
- * @returns Object containing validation result and any errors found
- */
 export function validateLockedTemplateFields(original: TemplateField[], updated: TemplateField[]) {
   const errors: string[] = [];
 
-  // check if all fields are present
   const updatedIds = new Set(updated.map((field) => field.id));
   const missingIds = original.map((field) => field.id).filter((id) => !updatedIds.has(id));
 
@@ -129,7 +116,6 @@ export function validateLockedTemplateFields(original: TemplateField[], updated:
     errors.push(`Missing fields: ${missingIds.join(", ")}`);
   }
 
-  // check if properties (except 'title') are not changed
   for (const originalField of original) {
     const updatedField = updated.find((f) => f.id === originalField.id);
     if (!updatedField) continue;

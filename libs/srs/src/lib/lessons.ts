@@ -82,9 +82,6 @@ export type LessonResultData = {
   review: InsertReviewData;
 };
 
-/**
- * Converts template to a LessonTemplate format for lesson and card preview
- */
 export function convertTemplateToLessonTemplate(
   template: Pick<Template, "id" | "content"> | LessonTemplateRow,
 ): LessonTemplate {

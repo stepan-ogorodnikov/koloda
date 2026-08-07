@@ -25,7 +25,6 @@ export const reviewValidation = z.object({
   createdAt: z.date(),
 });
 
-/** Full review row as stored / returned by Drizzle. */
 export const reviewRowSchema = reviewValidation;
 
 export type Review = z.input<typeof reviewValidation>;
@@ -36,12 +35,6 @@ export const insertReviewSchema = reviewValidation.omit({ id: true });
 
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
 
-/**
- * Calculates the datetime range for the current learning day based on the dayStartsAt from learning settings
- * @param dayStartsAt - Time in 'hh:mm' format when the learning day starts
- * @returns Object containing 'from' and 'to' timestamps in ISO string format
- * @throws {AppError} If dayStartsAt is not in 'hh:mm' format or out of range
- */
 export async function getCurrentLearningDayRange(dayStartsAt: string) {
   const { hours, minutes } = parseDayStartsAt(dayStartsAt);
 
@@ -82,12 +75,6 @@ export const reviewTotalsSchema = z.object({
   total: z.coerce.number(),
 }) satisfies z.ZodType<ReviewTotals>;
 
-/**
- * Gets the review totals for the current learning day
- * @param learningSettings - User's learning settings
- * @param reviewTotals - Review totals for current learning day
- * @returns Object containing daily limits, review totals, and metadata about limits
- */
 export async function calculateTodaysReviewTotals(
   learningSettings: AllowedSettings<"learning">["content"],
   reviewTotals: ReviewTotals,
@@ -125,11 +112,6 @@ const FSRS_REVIEW_PROPERTIES: ObjectPropertiesMapping<Review, ReviewFSRS> = {
   scheduledDays: "scheduled_days",
 } as const;
 
-/**
- * Creates a review object from an FSRS review object
- * @param input - The FSRS review object to convert
- * @returns The converted review object
- */
 export function createReviewFromReviewFSRS(input: ReviewFSRS) {
   return mapObjectPropertiesReverse(input, FSRS_REVIEW_PROPERTIES) as Omit<InsertReviewData, "cardId" | "isIgnored">;
 }
