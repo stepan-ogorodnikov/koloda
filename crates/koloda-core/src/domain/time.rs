@@ -1,3 +1,7 @@
+//! ISO-8601 ↔ epoch-ms serde helpers shared by domain DTOs.
+//!
+//! Wire JSON uses RFC3339 strings; SQLite stores integers. Do not mix shapes across layers.
+
 use serde::{de::Visitor, Deserializer, Serializer};
 
 pub fn default_now() -> i64 {

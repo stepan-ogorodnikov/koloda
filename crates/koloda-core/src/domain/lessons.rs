@@ -1,3 +1,5 @@
+//! Lesson query DTOs — mirrors `@koloda/srs` lesson types used by `repo::lessons` raw SQL.
+
 use serde::{Deserialize, Serialize};
 
 use super::templates::TemplateField;

@@ -1,3 +1,5 @@
+//! FSRS algorithm content JSON — mirrors `@koloda/srs` `algorithmFSRSValidation` / `ts-fsrs` parameters.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};

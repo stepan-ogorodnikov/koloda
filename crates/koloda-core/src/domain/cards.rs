@@ -1,3 +1,7 @@
+//! Card rows and FSRS progress fields — mirrors `@koloda/srs` `cardValidation`.
+//!
+//! `CardState` ints map to lesson/review SQL buckets (see `CardState` below).
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

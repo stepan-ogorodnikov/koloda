@@ -1,3 +1,5 @@
+//! `settings.hotkeys` slice — mirrors `@koloda/app` `settingsHotkeysValidation`.
+
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};

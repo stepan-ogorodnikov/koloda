@@ -1,3 +1,5 @@
+//! SRS algorithms — mirrors `@koloda/srs` `algorithmValidation`. Content shape is `AlgorithmFSRS`.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::AppError;

@@ -1,3 +1,7 @@
+//! Card templates — mirrors `@koloda/srs` `templateValidation`.
+//!
+//! `is_locked` is computed on read when cards reference the template; inserts omit it.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};

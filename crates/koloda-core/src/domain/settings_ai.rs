@@ -1,3 +1,7 @@
+//! `settings.ai` slice — mirrors `@koloda/ai` `aiSettingsValidation`.
+//!
+//! Profile-id uniqueness and assistant temperature bounds are enforced here and in TS `findDuplicateProfileId`.
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
@@ -66,10 +70,7 @@ impl AISettings {
         self.validate_invariants()
     }
 
-    /// Cross-profile invariants that apply in both input and storage contexts:
-    /// profile ids must be unique (otherwise `position`/`retain` lookups would
-    /// silently match the first duplicate), and `assistant.temperature` must be
-    /// finite and within the accepted range.
+    // INVARIANT: Profile ids must be unique; assistant.temperature must be finite and in range.
     fn validate_invariants(&self) -> Result<(), AppError> {
         let mut seen: HashSet<&str> = HashSet::with_capacity(self.profiles.len());
         for profile in &self.profiles {
@@ -84,8 +85,6 @@ impl AISettings {
         self.validate_assistant()
     }
 
-    /// Validates `assistant.temperature`: must be finite and within the accepted
-    /// range.
     fn validate_assistant(&self) -> Result<(), AppError> {
         if let Some(assistant) = &self.assistant {
             let temp = assistant.temperature;

@@ -1,3 +1,7 @@
+//! AI settings persistence — `settings.ai` JSON plus keyring secret redaction/reconstruction.
+//!
+//! Public reads never return usable API keys; main-process callers use `get_ai_profile_secrets_for_runtime`.
+
 use serde_json::Value;
 
 use crate::app::db::Database;

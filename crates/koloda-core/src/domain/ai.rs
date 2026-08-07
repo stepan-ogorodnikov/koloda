@@ -1,3 +1,7 @@
+//! AI profiles, provider secrets, and validation — mirrors `@koloda/ai` / `settings.ai`.
+//!
+//! Settings JSON stores redacted secrets (`apiKey: null`); real keys live in the keyring via `repo::ai`.
+
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::app::error::{error_codes, AppError};

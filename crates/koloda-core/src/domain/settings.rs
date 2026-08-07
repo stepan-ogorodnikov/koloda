@@ -1,3 +1,5 @@
+//! Settings table envelope — mirrors `@koloda/app` `allowedSettings` / `SettingsName`.
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use strum_macros::{Display, EnumString};

@@ -1,3 +1,7 @@
+//! Assistant chat rows — mirrors `@koloda/app` conversations API.
+//!
+//! `Conversation.state` is an opaque JSON blob owned by TS; do not interpret or reshape it here.
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

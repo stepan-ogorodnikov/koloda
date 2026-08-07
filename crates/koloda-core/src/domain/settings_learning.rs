@@ -1,3 +1,7 @@
+//! `settings.learning` slice — mirrors `@koloda/app` `learningSettingsValidation`.
+//!
+//! `day_starts_at` must use zero-padded `hh:mm`; keep in sync with TS `parseDayStartsAt`.
+
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::app::error::{error_codes, AppError};

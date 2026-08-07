@@ -1,3 +1,5 @@
+//! Review rows and learning-day totals — mirrors `@koloda/srs` `reviewValidation`.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};

@@ -1,3 +1,5 @@
+//! Conversation rows — opaque `state` json passes through unchanged (see `domain::conversations`).
+
 use rusqlite::{params, OptionalExtension};
 use serde::Deserialize;
 use serde_json::Value;

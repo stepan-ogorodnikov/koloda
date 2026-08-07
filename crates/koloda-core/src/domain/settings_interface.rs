@@ -1,3 +1,5 @@
+//! `settings.interface` slice — mirrors `@koloda/app` interface/theme preferences.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::{error_codes, AppError};

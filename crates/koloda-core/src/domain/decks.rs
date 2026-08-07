@@ -1,3 +1,5 @@
+//! Deck rows — mirrors `@koloda/srs` `deckValidation`.
+
 use serde::{Deserialize, Serialize};
 
 use crate::app::error::AppError;
