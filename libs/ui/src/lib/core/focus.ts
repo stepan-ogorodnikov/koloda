@@ -19,7 +19,7 @@ function dispatchTabNavigation(offset: 1 | -1) {
 function focusByOffset(offset: 1 | -1) {
   setInteractionModality("keyboard");
 
-  // Let composite widgets apply their own Tab behavior first (e.g. toolbars).
+  // WHY: Let composite widgets apply their own Tab behavior first (e.g. toolbars).
   if (dispatchTabNavigation(offset)) return;
 
   const root = document.body;
@@ -58,7 +58,6 @@ function moveFocusedTab(offset: 1 | -1) {
   const active = document.activeElement as HTMLElement | null;
   if (!active) return false;
 
-  // Try to find a tab first
   const tab = active.closest<HTMLElement>('[role="tab"]');
   if (tab) {
     const tabList = tab.closest<HTMLElement>('[role="tablist"]');
@@ -73,7 +72,6 @@ function moveFocusedTab(offset: 1 | -1) {
     }
   }
 
-  // Try to find a toggle group item (radio group)
   const radio = active.closest<HTMLElement>('[role="radio"]');
   if (radio) {
     const group = radio.closest<HTMLElement>('[role="radiogroup"]');
@@ -88,7 +86,6 @@ function moveFocusedTab(offset: 1 | -1) {
     }
   }
 
-  // Try to find a toggle group item (button group with aria-pressed/aria-checked)
   const toggleButton = active.closest<HTMLElement>('[role="button"][aria-pressed], [role="button"][aria-checked]');
   if (toggleButton) {
     const group = toggleButton.closest<HTMLElement>('[role="group"]');

@@ -39,7 +39,7 @@ export type LearningDailyLimitType = (typeof LEARNING_DAILY_LIMIT_TYPES)[number]
 
 export const learningDailyLimitValidation = z.object({
   value: z.number().min(0),
-  counts: z.boolean(), // Indicates if value is included when calculating total
+  counts: z.boolean(),
 });
 
 function createLearningDailyLimitValidation(defaultValue: number, defaultCounts: boolean) {

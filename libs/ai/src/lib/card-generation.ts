@@ -28,7 +28,8 @@ async function runCardGeneration(
   const chatMessages = getConversationMessages(messages, input.prompt);
   const model = wrapModelWithReasoningExtraction(modelFactory(input.modelId));
 
-  // Try structured output first (streaming)
+  // WORKAROUND: elementStream can finish with zero elements even when the model returned usable text.
+  // Prefer parsing result.text before falling through to generateText.
   try {
     let streamedError: unknown = null;
     const result = streamText({
@@ -52,7 +53,6 @@ async function runCardGeneration(
 
     if (cardsCount > 0) return;
 
-    // Structured stream returned nothing — try parsing the raw text
     const streamedText = await result.text;
     const streamedTextCards = parseGeneratedCardsText(streamedText, template.content.fields);
     if (streamedTextCards.length > 0) {
@@ -62,13 +62,10 @@ async function runCardGeneration(
 
     if (streamedError) throw streamedError;
   } catch (error) {
-    // Structured output failed (provider/model doesn't support it, etc.)
-    // Fall through to plain text completion below.
-    // If the error was an abort, re-throw immediately.
+    // WHY: Abort must not fall through to plain-text fallback; provider errors may.
     if (error instanceof DOMException && error.name === "AbortError") throw error;
   }
 
-  // Fallback: plain text generation + heuristic parsing
   const fallbackResult = await generateText({
     model,
     temperature,
@@ -82,10 +79,6 @@ async function runCardGeneration(
     onCard(card);
   }
 }
-
-/*
- * Provider-specific card generation
- */
 
 export function generateCardsWithOpenRouter(request: CardGenerationRequest, { apiKey }: { apiKey: string }) {
   return wrapAIError(async () => {

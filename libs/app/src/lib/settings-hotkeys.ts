@@ -120,7 +120,6 @@ export const hotkeysSettingsValidation = z
     ai: scopeSchema("ai").default(scopeDefault("ai")),
   })
   .superRefine((data, ctx) => {
-    // validate all scopes for duplicate hotkeys (within each scope)
     Object.entries(data).forEach(([scopeKey, scopeValue]) => {
       if (!areAllHotkeysUniqueInScope(scopeValue)) {
         getDuplicateHotkeyPaths(scopeValue).forEach(([field, index]) => {
@@ -133,7 +132,6 @@ export const hotkeysSettingsValidation = z
       }
     });
 
-    // validate ui scope hotkeys are unique across all scopes
     const uiHotkeys = Object.entries(data.ui).flatMap(([field, hotkeys]) =>
       hotkeys.map((hotkey) => [hotkey, field] as [string, string]),
     );

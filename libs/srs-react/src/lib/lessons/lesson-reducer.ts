@@ -34,59 +34,39 @@ export type LessonReducerState = {
     isOpen?: boolean;
     isTerminationRequested?: boolean;
     isError?: boolean;
-    // user submitted amounts of cards for this lesson, proceed to load LessonData
     isSubmitted?: boolean;
-    // all the LessonData is loaded and cards are ready to be displayed
     isStarted?: boolean;
-    // all the cards for this lesson are reviewed and submitted
     isFinished?: boolean;
-    // status: "init" | "started" | "ready" | "finished";
   };
   learnAheadLimit?: LearningSettings["learnAheadLimit"];
-  // values that define decks to study
   params?: LessonAtomValue;
-  // object to pass to lesson query based on params above
   filters?: LessonFilters;
-  // available amounts of cards to study of each type for each deck and all decks in total
   lessons?: LessonsResult;
-  // daily limits and review counts for current learning day
   todayReviewTotals?: TodaysReviewTotals;
-  // counts of cards for each type to study for this lesson
   amounts?: LessonAmounts;
-  // data required for a lesson (decks, cards, algorithms, templates)
   data?: LessonData;
-  // data related to the card that is being studied
   content?: {
-    // index of current card to study (in state.data.cards)
     index: number;
-    // timestamp when the card was first shown (for tracking review time)
     startedAt: number;
-    // form data for certain operations, e.g., 'type'
     form: {
       data: Record<number | string, string>;
-      // field id of the first field that should be autofocused
       firstInputFieldId?: number;
       isSubmitted: boolean;
     };
     card: Card;
     template: LessonTemplate;
-    // array of grades from ts-fsrs in order: [Again, Hard, Good, Easy]
     grades: CardGrade[];
   };
-  // counts of cards of each type that are studied | to study
   progress?: {
     done: LessonAmounts;
     pending: LessonAmounts;
   };
-  // data related to uploading results of studied cards
   upload: {
-    // array of records to upload
     queue: {
       index: number;
       card: Card;
       review: InsertReviewData;
     }[];
-    // results of upload operations
     log: Record<number, LessonResultUploadStatus>;
   };
 };
@@ -299,7 +279,7 @@ function moveToNextCard(draft: LessonReducerState) {
   const template = templates.find(({ id }) => id === deck.templateId);
   if (!template) return;
 
-  // if all the actions are 'display' there is nothing to submit and grades are shown right away
+  // WHY: display-only layouts have nothing to submit — show grades immediately.
   const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
   draft.content = {

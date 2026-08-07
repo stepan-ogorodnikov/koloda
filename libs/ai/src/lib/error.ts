@@ -111,9 +111,7 @@ export function getErrorDetails(error: unknown): string | undefined {
     try {
       const serialized = typeof record.data === "string" ? record.data : JSON.stringify(record.data);
       if (serialized) parts.push(truncate(serialized));
-    } catch {
-      // ignore non-serializable data
-    }
+    } catch {}
   }
 
   if (typeof record.url === "string" && record.url) {
