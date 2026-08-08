@@ -19,7 +19,12 @@ import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAIModel, createAIProfile, createTemplate } from "../../../test/test-helpers";
-import { conversationsAtom, setCurrentConversationIdAtom, upsertConversationAtom } from "../state/conversation-store";
+import {
+  conversationsAtom,
+  setCurrentConversationIdAtom,
+  touchConversationAtom,
+  upsertConversationAtom,
+} from "../state/conversation-store";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
 import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
@@ -515,6 +520,90 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(stateB.messages.find((m) => m.role === "assistant")).toBeUndefined();
   });
 
+  it("save host: dirtying A while viewing B schedules a save for A", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello from A" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
+      }),
+    );
+    store.set(
+      upsertConversationAtom,
+      makeConversation("B", {
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello from B" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
+      }),
+    );
+    store.set(setCurrentConversationIdAtom, "B");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+    queryClient.setQueryData(queryKeys.conversations.detail("B"), {
+      id: "B",
+      title: null,
+      state: { ...initialConversationState, id: "B", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const onConversationIdChange = vi.fn();
+    renderHook(() => useAssistantChatTestHarness({ conversationId: "B", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
+
+    // Allow restore's initial touch for B to settle, then clear save calls.
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    wire.setConversationCalls = [];
+
+    // Dirty A in the background while B is the viewed conversation.
+    await act(async () => {
+      store.set(touchConversationAtom, "A");
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const savesForA = wire.setConversationCalls.filter((c) => c.id === "A");
+    expect(savesForA.length).toBeGreaterThanOrEqual(1);
+    expect(wire.setConversationCalls.every((c) => c.id === "A")).toBe(true);
+  });
+
   it("save throttler: bumps on A do not trigger saves for B and vice-versa", async () => {
     setupTestHarness();
     const store = createStore();
@@ -587,6 +676,12 @@ describe("assistant chat integration (per-conversation state)", () => {
       },
     );
 
+    // Let restore settle, then isolate mode-bump saves.
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    wire.setConversationCalls = [];
+
     // Bump the save counter for A a few times.
     for (let i = 0; i < 3; i += 1) {
       await act(async () => {
@@ -597,26 +692,23 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Switch to B and bump its save counter.
     rerender({ conversationId: "B" });
     await act(async () => {
+      store.set(setCurrentConversationIdAtom, "B");
       result.current.controller.setMode("chat");
     });
 
-    // Allow the idle-save debounce to fire.
+    // Allow the idle-save debounce to fire for both queues.
     await act(async () => {
       vi.advanceTimersByTime(500);
     });
 
-    // B's save fired (its counter bumped). A's bumps did not produce a
-    // B save, and B's bump did not produce an A save. We assert the
-    // call list only contains the most recent save (per-conversation,
-    // not double-saved).
+    // Route-scoped host keeps both queues alive: A and B may both save, but
+    // never cross-contaminate ids.
     expect(wire.setConversationCalls.length).toBeGreaterThanOrEqual(1);
-    for (const call of wire.setConversationCalls) {
-      expect(["A", "B"]).toContain(call.id);
+    const ids = new Set(wire.setConversationCalls.map((c) => c.id));
+    for (const id of ids) {
+      expect(["A", "B"]).toContain(id);
     }
-    // The last call should be for B (the current conversation at the time
-    // of the bump).
-    const lastCall = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
-    expect(lastCall.id).toBe("B");
+    expect(wire.setConversationCalls.some((c) => c.id === "B")).toBe(true);
   });
 
   it("throttled save during a streaming run persists the run as streaming", async () => {

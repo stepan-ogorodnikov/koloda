@@ -2,8 +2,7 @@ import { queriesAtom } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useAtomCallback } from "jotai/utils";
-import { useEffect } from "react";
-import type { MutableRefObject } from "react";
+import { useEffect, useRef } from "react";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import type { AIProfileState } from "../state/ai-profile-state";
 import { normalizeRestoredConversation } from "./conversation-persistence";
@@ -31,11 +30,6 @@ function freshConversation(id: string, stored: AIProfileState | null): Conversat
 
 export type UseConversationRestoreOptions = {
   conversationId: string | undefined;
-  // WHY: shared with the saver so autosave stays gated until restore marks the
-  // id ready. Owned by the persistence composer — never create these inside
-  // restore alone or the saver will observe a different ref.
-  restoredIdRef: MutableRefObject<string | null>;
-  lastSavedIdRef: MutableRefObject<string | null>;
 };
 
 export type UseConversationRestoreReturn = {
@@ -46,10 +40,9 @@ export type UseConversationRestoreReturn = {
 
 export function useConversationRestore({
   conversationId,
-  restoredIdRef,
-  lastSavedIdRef,
 }: UseConversationRestoreOptions): UseConversationRestoreReturn {
   const store = useStore();
+  const restoredIdRef = useRef<string | null>(null);
   const { getConversationQuery } = useAtomValue(queriesAtom);
   const {
     data: conversationData,
@@ -82,15 +75,13 @@ export function useConversationRestore({
       upsertConversation(restored ?? freshConversation(conversationId, readLastUsed()));
     }
     restoredIdRef.current = conversationId;
-    // WHY: overwrite (never null) — see lastSavedIdRef's declaration WHY on the
-    // composer. This is the only writer; a switch does not clear it, only the
-    // next restore replaces it.
-    lastSavedIdRef.current = conversationId;
     // WHY: Setting the current id AFTER the conversation is in the store
     // lets `setCurrentConversationIdAtom`'s mark-read side effect find
     // the latest run id and dispatch a `markRead`. The pending-save bump
     // below persists the refreshed `lastReadRunId` on first restore, so
     // a freshly opened conversation is not shown as unread on next load.
+    // Autosave is owned by `useConversationSaveHost` (route-scoped), so this
+    // touch no longer depends on saver-before-restore effect registration.
     setCurrentConversationId(conversationId);
     touch();
   }, [
@@ -104,8 +95,6 @@ export function useConversationRestore({
     upsertConversation,
     touch,
     readLastUsed,
-    restoredIdRef,
-    lastSavedIdRef,
   ]);
 
   // WHY: A conversation just created via `newConversationAtom` or

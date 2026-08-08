@@ -15,14 +15,10 @@ import {
 } from "./conversation-store";
 
 // WHY: After a successful DB delete we must drop the conversation from the
-// in-memory store as well. Otherwise the pending-save effect in
-// `useConversationPersistence` keeps a reference to the deleted state and
-// its cleanup-time `flush` will upsert the row back into the database via
-// `setConversation`'s `onConflictDoUpdate` — making the conversation
-// reappear in the list as soon as the list query is invalidated. This only
-// affected the *active* conversation because that is the only one for
-// which `useConversationPersistence` is mounted, which matches the user
-// report of "only the first conversation reappears".
+// in-memory store as well. Otherwise the route-scoped save host can still
+// flush a queued snapshot and upsert the row back via `setConversation`'s
+// `onConflictDoUpdate`. Clearing the pending-save entry disposes that id's
+// queue; `write` also no-ops when the id is absent from the store.
 export const removeConversationAtom = atom(null, (_get, set, id: string) => {
   set(conversationsAtom, (prev) => {
     if (!(id in prev)) return prev;

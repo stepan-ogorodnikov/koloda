@@ -1,6 +1,7 @@
 import { useAssistantProfileSelection } from "../use-assistant-profile-selection";
 import { useAssistantSession } from "../runs/use-assistant-session";
 import { useConversationPersistence } from "../persistence/use-conversation-persistence";
+import { useConversationSaveHost } from "../persistence/use-conversation-save-host";
 
 export type UseAssistantChatTestHarnessOptions = {
   conversationId: string | undefined;
@@ -8,7 +9,7 @@ export type UseAssistantChatTestHarnessOptions = {
 };
 
 /**
- * Test-only stack of the same facades `AssistantChat` composes.
+ * Test-only stack of the same facades `AssistantChat` + the AI route compose.
  * Not a public API — do not export from the package or use in production UI.
  */
 export function useAssistantChatTestHarness({
@@ -17,7 +18,10 @@ export function useAssistantChatTestHarness({
 }: UseAssistantChatTestHarnessOptions) {
   const { profileId, modelId, modelName, modelParameters } = useAssistantProfileSelection();
 
-  // Mounted for save / pagehide / unmount coverage even when the suite
+  // Route-scoped autosave host (mirrors `AIRoute`).
+  useConversationSaveHost();
+
+  // Mounted for restore / save-error dismiss coverage even when the suite
   // only drives RunController.
   useConversationPersistence({ conversationId });
 
