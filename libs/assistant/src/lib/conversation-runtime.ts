@@ -4,7 +4,7 @@ import type { TemplateFields } from "@koloda/srs";
 import { AssistantEngineClosedError } from "./assistant-engine";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
-import type { RunControllerRegistry } from "./run-controller-registry";
+import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { runStream } from "./run-stream";
 import { createSerialQueue, QueueClosedError } from "./serial-queue";
 import type { QueueCancelReason } from "./serial-queue";
@@ -47,7 +47,7 @@ export function createConversationRuntime<TAction>(
   conversationId: string,
   callbacks: ConversationRuntimeCallbacks<TAction>,
   transports: ConversationRuntimeTransports,
-  controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has">,
+  controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has" | "takeAbortReason">,
   pendingRunRefs: {
     arm: (mode: AIChatMode, runId: string) => void;
     onComplete: (mode: AIChatMode, runId: string) => void;
@@ -60,16 +60,19 @@ export function createConversationRuntime<TAction>(
   // WHY: Distinguishes dequeued-not-yet-beginRun from post-abort (controller
   // already removed) so a second cancel cannot stamp cancelBeforeStart.
   let runAwaitingStart: string | null = null;
+  // WHY: AbortError catch must stash the registry cause before endRun/finally;
+  // handleStreamResult reads it to choose cancel vs interrupt.
+  const abortedRunReasons = new Map<string, RunAbortReason>();
 
   const applyQueuedCancel = (runId: string, reason: QueueCancelReason) => {
     if (!callbacks.isRunStreaming(conversationId, runId)) return;
-    if (reason === "app_shutdown") {
+    if (reason === "app_shutdown" || reason === "dispose") {
+      // WHY: dispose has no dedicated termination reason; treat as non-user
+      // interruption so AbortError/queue cancel cannot look like user cancel.
       callbacks.dispatchToConversation(conversationId, ["interruptRun", { runId, reason: "app_shutdown" }] as TAction);
       callbacks.touch(conversationId);
       return;
     }
-    // WHY: user + dispose use cancelRun until abort-provenance classification (#4)
-    // distinguishes dispose/shutdown from explicit user cancel on AbortError paths.
     callbacks.dispatchToConversation(conversationId, ["cancelRun", { runId }] as TAction);
     callbacks.markReadIfCurrent(conversationId, runId);
     callbacks.touch(conversationId);
@@ -80,6 +83,25 @@ export function createConversationRuntime<TAction>(
     if (reason === undefined) return undefined;
     cancelBeforeStart.delete(runId);
     return reason;
+  };
+
+  const classifyAbortError = (runId: string): StreamResult => {
+    const reason = controllerRegistry.takeAbortReason(runId);
+    if (reason === undefined) {
+      // WHY: Exception type is not evidence of user intent — providers and
+      // transports can abort internally without a requested termination cause.
+      callbacks.dispatchToConversation(conversationId, [
+        "runFailed",
+        {
+          runId,
+          error: { message: "Provider aborted the request" },
+        },
+      ] as TAction);
+      callbacks.markReadIfCurrent(conversationId, runId);
+      return "error";
+    }
+    abortedRunReasons.set(runId, reason);
+    return "aborted";
   };
 
   const handleStreamResult = (targetConversationId: string, result: StreamResult, runId: string) => {
@@ -100,17 +122,32 @@ export function createConversationRuntime<TAction>(
         callbacks.touch(targetConversationId);
         break;
       case "aborted": {
-        // WHY: Capture streaming-ness before cancelRun. Graceful shutdown
-        // interrupts to `interrupted`/`app_shutdown` before aborting; cancel
-        // is then a no-op and a blind touch would schedule a redundant second
-        // durable write of the same interrupted snapshot.
-        const shouldPersistCancel = callbacks.isRunStreaming(targetConversationId, runId);
+        const reason = abortedRunReasons.get(runId) ?? takeCancelBeforeStart(runId) ?? "user";
+        abortedRunReasons.delete(runId);
+        // WHY: Capture streaming-ness before the terminal dispatch. Graceful
+        // shutdown interrupts before aborting; a blind touch would schedule a
+        // redundant second durable write of the same interrupted snapshot.
+        const shouldPersist = callbacks.isRunStreaming(targetConversationId, runId);
+
+        if (reason === "app_shutdown" || reason === "dispose") {
+          if (!shouldPersist) break;
+          // WHY: dispose has no dedicated termination reason; treat as non-user
+          // interruption so AbortError cannot look like user cancel.
+          callbacks.dispatchToConversation(targetConversationId, [
+            "interruptRun",
+            { runId, reason: "app_shutdown" },
+          ] as TAction);
+          callbacks.touch(targetConversationId);
+          break;
+        }
+
+        // WHY: Always dispatch cancelRun on requested user abort — the reducer
+        // no-ops if already terminal; skipping when !streaming hid cancel from
+        // callers that observe the action stream (and matched prior AbortError
+        // classification).
         callbacks.dispatchToConversation(targetConversationId, ["cancelRun", { runId }] as TAction);
         callbacks.markReadIfCurrent(targetConversationId, runId);
-        if (shouldPersistCancel) {
-          // WHY: Same rationale as success — schedule a save with the real
-          // cancelRun terminal state (`canceled`/`user`) rather than leaving
-          // only the last streaming checkpoint on disk.
+        if (shouldPersist) {
           callbacks.touch(targetConversationId);
         }
         break;
@@ -131,7 +168,9 @@ export function createConversationRuntime<TAction>(
         mode: "chat",
         transport: async (req, onValue) => {
           // WHY: Last-chance gate for cancel that landed after dequeue.
-          if (takeCancelBeforeStart(runId) !== undefined) {
+          const gateReason = takeCancelBeforeStart(runId);
+          if (gateReason !== undefined) {
+            abortedRunReasons.set(runId, gateReason);
             return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
           }
           // INVARIANT: Leaving the awaiting-start gap before beginRun so a
@@ -148,10 +187,14 @@ export function createConversationRuntime<TAction>(
             );
             return { streamResult: "success" as const, usage: usage ?? null };
           } catch (e) {
-            // WHY: Only AbortError means intentional cancel. A real Error must
-            // surface even if the signal was also aborted.
+            // WHY: AbortError alone is not user cancel — classify from
+            // requested termination cause. A real Error must surface even if
+            // the signal was also aborted.
             if (isAbortError(e)) {
-              return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
+              return {
+                streamResult: classifyAbortError(runId),
+                usage: null as StreamUsage | null,
+              };
             }
             const error = e instanceof Error ? e : new Error(String(e));
             callbacks.dispatchToConversation(conversationId, [
@@ -210,7 +253,9 @@ export function createConversationRuntime<TAction>(
       {
         mode: "cards",
         transport: async (req, onValue) => {
-          if (takeCancelBeforeStart(runId) !== undefined) {
+          const gateReason = takeCancelBeforeStart(runId);
+          if (gateReason !== undefined) {
+            abortedRunReasons.set(runId, gateReason);
             return "aborted" as const;
           }
           if (runAwaitingStart === runId) runAwaitingStart = null;
@@ -225,7 +270,7 @@ export function createConversationRuntime<TAction>(
             );
             return "success" as const;
           } catch (e) {
-            if (isAbortError(e)) return "aborted" as const;
+            if (isAbortError(e)) return classifyAbortError(runId);
             const error = e instanceof Error ? e : new Error(String(e));
             callbacks.dispatchToConversation(conversationId, [
               "runFailed",
@@ -352,8 +397,8 @@ export function createConversationRuntime<TAction>(
       applyQueuedCancel(runId, reason);
     }
     // else: in-flight or already terminal — abort if present; AbortError path
-    // owns the terminal transition for live controllers.
-    controllerRegistry.cancel(runId);
+    // owns the terminal transition for live controllers using recorded provenance.
+    controllerRegistry.cancel(runId, reason);
   };
 
   const close = (reason: QueueCancelReason) => {

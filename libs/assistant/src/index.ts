@@ -25,7 +25,7 @@ export type { StreamResult } from "./lib/stream-result";
 export { createPendingRunRefs } from "./lib/pending-run-refs";
 export type { PendingRunRefs } from "./lib/pending-run-refs";
 export { createRunControllerRegistry } from "./lib/run-controller-registry";
-export type { RunControllerRegistry } from "./lib/run-controller-registry";
+export type { RunAbortReason, RunControllerRegistry } from "./lib/run-controller-registry";
 export { createSerialQueue, QueueClosedError } from "./lib/serial-queue";
 export type { QueueCancelReason, SerialQueue } from "./lib/serial-queue";
 export { runStream } from "./lib/run-stream";

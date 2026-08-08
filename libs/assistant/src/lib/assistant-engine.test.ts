@@ -460,4 +460,99 @@ describe("createAssistantEngine", () => {
     expect(engine.lifecycle).toBe("closed");
     expect(hostDispose).not.toHaveBeenCalled();
   });
+
+  it("does not classify unrequested AbortError as user cancellation", async () => {
+    chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
+      onChunk("partial");
+      throw new DOMException("Aborted", "AbortError");
+    });
+
+    await engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+
+    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
+    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    expect(cancelActions).toHaveLength(0);
+    expect(failedActions).toHaveLength(1);
+    expect(failedActions[0]?.id).toBe("conv-a");
+    expect((failedActions[0]?.action as [string, { runId: string; error: { message: string } }])[1]).toMatchObject({
+      runId: "run-1",
+      error: { message: "Provider aborted the request" },
+    });
+  });
+
+  it("classifies requested user cancel AbortError as cancelRun", async () => {
+    const signals: AbortSignal[] = [];
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+      signals.push(signal);
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    await Promise.resolve();
+    expect(signals).toHaveLength(1);
+
+    engine.cancel("conv-a", "run-1");
+    await expect(runPromise).resolves.toBeUndefined();
+
+    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
+    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    expect(cancelActions).toHaveLength(1);
+    expect((cancelActions[0]?.action as [string, { runId: string }])[1].runId).toBe("run-1");
+    expect(failedActions).toHaveLength(0);
+  });
+
+  it("does not classify shutdown AbortError as user cancellation", async () => {
+    const streaming = new Set(["run-1"]);
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+        const [type, payload] = action as [string, { runId?: string }];
+        if (
+          (type === "cancelRun" || type === "completeRun" || type === "interruptRun" || type === "runFailed") &&
+          payload.runId
+        ) {
+          streaming.delete(payload.runId);
+        }
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: (_conversationId, runId) => streaming.has(runId),
+      readConversationState,
+    });
+
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    await Promise.resolve();
+
+    await engine.shutdownGracefully({
+      interruptActiveRuns: () => {
+        for (const runId of [...streaming]) {
+          streaming.delete(runId);
+          dispatchToMap.push({
+            id: "conv-a",
+            action: ["interruptRun", { runId, reason: "app_shutdown" }],
+          });
+        }
+      },
+      flushTimeoutMs: 0,
+    });
+
+    await expect(runPromise).resolves.toBeUndefined();
+
+    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
+    const interruptActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "interruptRun");
+    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    expect(cancelActions).toHaveLength(0);
+    expect(failedActions).toHaveLength(0);
+    expect(interruptActions.some((e) => (e.action as [string, { reason: string }])[1].reason === "app_shutdown")).toBe(
+      true,
+    );
+  });
 });

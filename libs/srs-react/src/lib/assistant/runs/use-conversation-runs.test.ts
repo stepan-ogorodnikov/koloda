@@ -252,7 +252,7 @@ describe("useConversationRuns", () => {
     expect(stateB.messages).toHaveLength(0);
   });
 
-  it("an aborted chat stream dispatches cancelRun to the originating conversation", async () => {
+  it("an unrequested AbortError fails the originating conversation run", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
@@ -286,8 +286,10 @@ describe("useConversationRuns", () => {
     });
 
     const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
-    expect(cancelActions).toHaveLength(1);
-    expect(cancelActions[0].id).toBe("A");
+    const failedActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "runFailed");
+    expect(cancelActions).toHaveLength(0);
+    expect(failedActions).toHaveLength(1);
+    expect(failedActions[0].id).toBe("A");
   });
 
   it("bumps the pending save when a successful card generation run completes", async () => {
@@ -341,21 +343,27 @@ describe("useConversationRuns", () => {
       },
     ]);
 
-    harness.streamGenerator.mockImplementation(async () => {
-      throw new DOMException("Aborted", "AbortError");
+    harness.streamGenerator.mockImplementation(async (_request, _onCard, signal) => {
+      await holdUntilAborted(signal);
     });
 
     const { result } = renderRuns(harness);
 
-    await act(async () => {
+    const runPromise = act(async () => {
       await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
     });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      result.current.cancel("A", "run-A");
+    });
+    await runPromise;
 
     const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
     expect(cancelActions).toHaveLength(1);
     expect(cancelActions[0].id).toBe("A");
 
-    expect(harness.touch).toHaveBeenCalledTimes(1);
     expect(harness.touch).toHaveBeenCalledWith("A");
   });
 
@@ -408,17 +416,25 @@ describe("useConversationRuns", () => {
       { runId: "run-A", kind: "chat-text", text: "" },
     ]);
 
-    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
       onChunk("partial ");
       onChunk("text");
-      throw new DOMException("Aborted", "AbortError");
+      await holdUntilAborted(signal);
+      return undefined;
     });
 
     const { result } = renderRuns(harness);
 
-    await act(async () => {
+    const runPromise = act(async () => {
       await result.current.executeChatRun("A", "run-A", {} as ChatStreamRequest);
     });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      result.current.cancel("A", "run-A");
+    });
+    await runPromise;
 
     const textActions = harness.dispatchToMap
       .filter((e) => e.action[0] === "updateAssistantText")

@@ -119,7 +119,7 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
         runtime.cancel(runId, "user");
         return;
       }
-      controllerRegistry.cancel(runId);
+      controllerRegistry.cancel(runId, "user");
     },
     setPersistenceHost(host) {
       if (lifecycle === "closed") return;
@@ -133,8 +133,8 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
       closeRuntimes("app_shutdown");
       // 3. Transition active (and any still-streaming queued) runs.
       interruptActiveRuns();
-      // 4. Abort active controllers and seal beginRun.
-      controllerRegistry.dispose();
+      // 4. Abort active controllers with shutdown provenance and seal beginRun.
+      controllerRegistry.dispose("app_shutdown");
       // 5. Flush persistence.
       if (persistenceHost) {
         await persistenceHost.flushAllBounded(flushTimeoutMs);
@@ -149,7 +149,7 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
       if (lifecycle !== "running") return;
       lifecycle = "closing";
       closeRuntimes("dispose");
-      controllerRegistry.dispose();
+      controllerRegistry.dispose("dispose");
       persistenceHost?.dispose();
       persistenceHost = null;
       runtimes.clear();
