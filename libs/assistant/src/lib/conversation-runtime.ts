@@ -1,10 +1,13 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
+import { AssistantEngineClosedError } from "./assistant-engine";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
+import type { RunControllerRegistry } from "./run-controller-registry";
 import { runStream } from "./run-stream";
-import { createSerialQueue } from "./serial-queue";
+import { createSerialQueue, QueueClosedError } from "./serial-queue";
+import type { QueueCancelReason } from "./serial-queue";
 import type { StreamResult } from "./stream-result";
 
 export type ConversationRuntimeCallbacks<TAction> = {
@@ -36,22 +39,48 @@ export type ConversationRuntime<TAction> = {
     mode: AIChatMode,
     modelName?: string,
   ) => Promise<void>;
+  cancel: (runId: string, reason?: QueueCancelReason) => void;
+  close: (reason: QueueCancelReason) => void;
 };
 
 export function createConversationRuntime<TAction>(
   conversationId: string,
   callbacks: ConversationRuntimeCallbacks<TAction>,
   transports: ConversationRuntimeTransports,
-  controllerRegistry: {
-    beginRun: (runId: string) => AbortController;
-    endRun: (runId: string, controller: AbortController) => void;
-  },
+  controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has">,
   pendingRunRefs: {
     arm: (mode: AIChatMode, runId: string) => void;
     onComplete: (mode: AIChatMode, runId: string) => void;
   },
 ): ConversationRuntime<TAction> {
   const queue = createSerialQueue<void>();
+  // WHY: Cancel can win the race after a task dequeues but before beginRun;
+  // tracking provenance here blocks provider execution without a controller.
+  const cancelBeforeStart = new Map<string, QueueCancelReason>();
+  // WHY: Distinguishes dequeued-not-yet-beginRun from post-abort (controller
+  // already removed) so a second cancel cannot stamp cancelBeforeStart.
+  let runAwaitingStart: string | null = null;
+
+  const applyQueuedCancel = (runId: string, reason: QueueCancelReason) => {
+    if (!callbacks.isRunStreaming(conversationId, runId)) return;
+    if (reason === "app_shutdown") {
+      callbacks.dispatchToConversation(conversationId, ["interruptRun", { runId, reason: "app_shutdown" }] as TAction);
+      callbacks.touch(conversationId);
+      return;
+    }
+    // WHY: user + dispose use cancelRun until abort-provenance classification (#4)
+    // distinguishes dispose/shutdown from explicit user cancel on AbortError paths.
+    callbacks.dispatchToConversation(conversationId, ["cancelRun", { runId }] as TAction);
+    callbacks.markReadIfCurrent(conversationId, runId);
+    callbacks.touch(conversationId);
+  };
+
+  const takeCancelBeforeStart = (runId: string): QueueCancelReason | undefined => {
+    const reason = cancelBeforeStart.get(runId);
+    if (reason === undefined) return undefined;
+    cancelBeforeStart.delete(runId);
+    return reason;
+  };
 
   const handleStreamResult = (targetConversationId: string, result: StreamResult, runId: string) => {
     switch (result) {
@@ -89,11 +118,25 @@ export function createConversationRuntime<TAction>(
     }
   };
 
-  const runChatRun = (runId: string, request: ChatStreamRequest): Promise<void> =>
-    runStream(
+  const runChatRun = async (runId: string, request: ChatStreamRequest): Promise<void> => {
+    const earlyCancel = takeCancelBeforeStart(runId);
+    if (earlyCancel !== undefined) {
+      applyQueuedCancel(runId, earlyCancel);
+      pendingRunRefs.onComplete("chat", runId);
+      return;
+    }
+
+    return runStream(
       {
         mode: "chat",
         transport: async (req, onValue) => {
+          // WHY: Last-chance gate for cancel that landed after dequeue.
+          if (takeCancelBeforeStart(runId) !== undefined) {
+            return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
+          }
+          // INVARIANT: Leaving the awaiting-start gap before beginRun so a
+          // post-abort cancel cannot re-stamp cancelBeforeStart.
+          if (runAwaitingStart === runId) runAwaitingStart = null;
           const controller = controllerRegistry.beginRun(runId);
           try {
             const usage = await transports.getChatStreamGenerator()(
@@ -153,12 +196,24 @@ export function createConversationRuntime<TAction>(
       handleStreamResult,
       pendingRunRefs.onComplete,
     );
+  };
 
-  const runGenerateRun = (runId: string, request: CardGenerationStreamRequest): Promise<void> =>
-    runStream<CardGenerationStreamRequest, GeneratedCard, StreamResult, null>(
+  const runGenerateRun = async (runId: string, request: CardGenerationStreamRequest): Promise<void> => {
+    const earlyCancel = takeCancelBeforeStart(runId);
+    if (earlyCancel !== undefined) {
+      applyQueuedCancel(runId, earlyCancel);
+      pendingRunRefs.onComplete("cards", runId);
+      return;
+    }
+
+    return runStream<CardGenerationStreamRequest, GeneratedCard, StreamResult, null>(
       {
         mode: "cards",
         transport: async (req, onValue) => {
+          if (takeCancelBeforeStart(runId) !== undefined) {
+            return "aborted" as const;
+          }
+          if (runAwaitingStart === runId) runAwaitingStart = null;
           const controller = controllerRegistry.beginRun(runId);
           try {
             await transports.getStreamGenerator()(
@@ -198,39 +253,115 @@ export function createConversationRuntime<TAction>(
       handleStreamResult,
       pendingRunRefs.onComplete,
     );
+  };
+
+  const guardClosed = async (run: () => Promise<void>): Promise<void> => {
+    try {
+      await run();
+    } catch (error) {
+      if (error instanceof QueueClosedError) {
+        // WHY: Callers already handle AssistantEngineClosedError; do not resolve
+        // closed-queue races as success.
+        throw new AssistantEngineClosedError(
+          error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
+        );
+      }
+      throw error;
+    }
+  };
+
+  const withAwaitingStart = async (runId: string, run: () => Promise<void>): Promise<void> => {
+    runAwaitingStart = runId;
+    try {
+      await run();
+    } finally {
+      if (runAwaitingStart === runId) runAwaitingStart = null;
+    }
+  };
 
   const executeChatRun = (runId: string, request: ChatStreamRequest): Promise<void> =>
-    queue.enqueue(() => runChatRun(runId, request));
+    guardClosed(() =>
+      queue.enqueue(runId, async () => {
+        await withAwaitingStart(runId, () => runChatRun(runId, request));
+      }),
+    );
 
   const executeGenerateRun = (runId: string, request: CardGenerationStreamRequest): Promise<void> =>
-    queue.enqueue(() => runGenerateRun(runId, request));
+    guardClosed(() =>
+      queue.enqueue(runId, async () => {
+        await withAwaitingStart(runId, () => runGenerateRun(runId, request));
+      }),
+    );
 
-  const retryRun = async (
+  const retryRun = (
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName?: string,
   ): Promise<void> =>
-    queue.enqueue(async () => {
-      // INVARIANT: Restart/clear/stream ownership stays on this runtime's
-      // conversationId even if the UI-current conversation changed while
-      // this retry waited in the serial queue.
-      const run = callbacks.readConversationState(conversationId).runs[runId];
-      const effectiveMode: AIChatMode = run?.mode ?? mode;
+    guardClosed(() =>
+      queue.enqueue(runId, async () => {
+        await withAwaitingStart(runId, async () => {
+          const earlyCancel = takeCancelBeforeStart(runId);
+          if (earlyCancel !== undefined) {
+            // WHY: Do not restartRun after cancel/shutdown — that would revive a
+            // terminal run and then call the provider.
+            applyQueuedCancel(runId, earlyCancel);
+            return;
+          }
 
-      callbacks.dispatchToConversation(conversationId, [
-        "restartRun",
-        { runId, templateFields, mode: effectiveMode, modelName },
-      ] as TAction);
+          // INVARIANT: Restart/clear/stream ownership stays on this runtime's
+          // conversationId even if the UI-current conversation changed while
+          // this retry waited in the serial queue.
+          const run = callbacks.readConversationState(conversationId).runs[runId];
+          const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      if (effectiveMode === "chat") {
-        callbacks.dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: "" }] as TAction);
-        await runChatRun(runId, request as ChatStreamRequest);
-      } else {
-        await runGenerateRun(runId, request as CardGenerationStreamRequest);
-      }
-    });
+          callbacks.dispatchToConversation(conversationId, [
+            "restartRun",
+            { runId, templateFields, mode: effectiveMode, modelName },
+          ] as TAction);
+
+          if (effectiveMode === "chat") {
+            callbacks.dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: "" }] as TAction);
+            await runChatRun(runId, request as ChatStreamRequest);
+          } else {
+            await runGenerateRun(runId, request as CardGenerationStreamRequest);
+          }
+        });
+      }),
+    );
+
+  const cancel = (runId: string, reason: QueueCancelReason = "user") => {
+    const wasQueued = queue.cancel(runId, reason);
+    if (wasQueued) {
+      // WHY: Entry will never run — apply terminal state now and do not leave
+      // cancelBeforeStart stamped (a later retry of the same runId must proceed).
+      applyQueuedCancel(runId, reason);
+    } else if (
+      runAwaitingStart === runId &&
+      !controllerRegistry.has(runId) &&
+      callbacks.isRunStreaming(conversationId, runId)
+    ) {
+      // WHY: Dequeued but not yet beginRun — stamp so transport skips the
+      // provider, and transition immediately for UI responsiveness.
+      // INVARIANT: runAwaitingStart gates the stamp; a second cancel after the
+      // in-flight controller was removed must not leave cancelBeforeStart for
+      // a later retry that reuses the same runId.
+      cancelBeforeStart.set(runId, reason);
+      applyQueuedCancel(runId, reason);
+    }
+    // else: in-flight or already terminal — abort if present; AbortError path
+    // owns the terminal transition for live controllers.
+    controllerRegistry.cancel(runId);
+  };
+
+  const close = (reason: QueueCancelReason) => {
+    const canceledRunIds = queue.close(reason);
+    for (const runId of canceledRunIds) {
+      applyQueuedCancel(runId, reason);
+    }
+  };
 
   return {
     conversationId,
@@ -238,5 +369,7 @@ export function createConversationRuntime<TAction>(
     executeChatRun,
     executeGenerateRun,
     retryRun,
+    cancel,
+    close,
   };
 }

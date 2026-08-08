@@ -221,4 +221,243 @@ describe("createAssistantEngine", () => {
     const completes = dispatchToMap.filter((e) => (e.action as [string])[0] === "completeRun");
     expect(completes.map((e) => e.id).sort()).toEqual(["A", "B"]);
   });
+
+  it("cancel before dequeue prevents provider execution", async () => {
+    const streaming = new Set(["run-blocker", "run-queued"]);
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+        const [type, payload] = action as [string, { runId?: string }];
+        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
+          streaming.delete(payload.runId);
+        }
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: (_conversationId, runId) => streaming.has(runId),
+      readConversationState,
+    });
+
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const startedRunIds: string[] = [];
+
+    chatStreamGenerator.mockImplementation(async (req) => {
+      const runLabel = (req as { label?: string }).label ?? "unknown";
+      startedRunIds.push(runLabel);
+      if (runLabel === "blocker") {
+        await firstGate;
+      }
+      return undefined;
+    });
+
+    const firstRun = engine.executeChatRun("A", "run-blocker", { label: "blocker" } as ChatStreamRequest & {
+      label: string;
+    });
+    await Promise.resolve();
+
+    const queuedRun = engine.executeChatRun("A", "run-queued", { label: "queued" } as ChatStreamRequest & {
+      label: string;
+    });
+    await Promise.resolve();
+
+    engine.cancel("A", "run-queued");
+
+    releaseFirst();
+    await firstRun;
+    await queuedRun;
+
+    expect(startedRunIds).toEqual(["blocker"]);
+    expect(chatStreamGenerator).toHaveBeenCalledTimes(1);
+
+    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
+    expect(cancelActions.some((e) => (e.action as [string, { runId: string }])[1].runId === "run-queued")).toBe(true);
+  });
+
+  it("cancel in-flight twice then retry same runId still runs", async () => {
+    const streaming = new Set(["run-1"]);
+    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+        const [type, payload] = action as [string, { runId?: string }];
+        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
+          streaming.delete(payload.runId);
+        }
+        if (type === "restartRun" && payload.runId) {
+          streaming.add(payload.runId);
+        }
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: (_conversationId, runId) => streaming.has(runId),
+      readConversationState,
+    });
+
+    const signals: AbortSignal[] = [];
+    let providerCalls = 0;
+
+    chatStreamGenerator.mockImplementation(async (_req, onChunk, signal) => {
+      providerCalls += 1;
+      signals.push(signal);
+      if (providerCalls === 1) {
+        await holdUntilAborted(signal);
+        return undefined;
+      }
+      onChunk("retried");
+      return undefined;
+    });
+
+    const firstRun = engine.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    await Promise.resolve();
+    expect(signals).toHaveLength(1);
+
+    engine.cancel("A", "run-1");
+    engine.cancel("A", "run-1");
+    await expect(firstRun).resolves.toBeUndefined();
+    expect(streaming.has("run-1")).toBe(false);
+
+    await engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
+
+    expect(providerCalls).toBe(2);
+    const restartActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "restartRun");
+    expect(restartActions).toHaveLength(1);
+    expect((restartActions[0]?.action as [string, { runId: string }])[1].runId).toBe("run-1");
+
+    const retryChunks = dispatchToMap.filter(
+      (e) =>
+        (e.action as [string, { text?: string }])[0] === "updateAssistantText" &&
+        (e.action as [string, { text?: string }])[1]?.text === "retried",
+    );
+    expect(retryChunks).toHaveLength(1);
+  });
+
+  it("shutdownGracefully rejects new work and cancels queued work", async () => {
+    const streaming = new Set(["run-active", "run-queued"]);
+    const flushAllBounded = vi.fn(async () => undefined);
+
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+        const [type, payload] = action as [string, { runId?: string }];
+        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
+          streaming.delete(payload.runId);
+        }
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: (_conversationId, runId) => streaming.has(runId),
+      readConversationState,
+    });
+    engine.setPersistenceHost({
+      flushAllNow: vi.fn(),
+      flushAllBounded,
+      dispose: vi.fn(),
+    });
+
+    const signals: AbortSignal[] = [];
+    const startedRunIds: string[] = [];
+
+    chatStreamGenerator.mockImplementation(async (req, _onChunk, signal) => {
+      const label = (req as { label?: string }).label ?? "unknown";
+      startedRunIds.push(label);
+      signals.push(signal);
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const activeRun = engine.executeChatRun("A", "run-active", { label: "active" } as ChatStreamRequest & {
+      label: string;
+    });
+    await Promise.resolve();
+
+    const queuedRun = engine.executeChatRun("A", "run-queued", { label: "queued" } as ChatStreamRequest & {
+      label: string;
+    });
+    await Promise.resolve();
+
+    expect(startedRunIds).toEqual(["active"]);
+
+    await engine.shutdownGracefully({
+      interruptActiveRuns: () => {
+        for (const runId of [...streaming]) {
+          streaming.delete(runId);
+          dispatchToMap.push({
+            id: "A",
+            action: ["interruptRun", { runId, reason: "app_shutdown" }],
+          });
+        }
+      },
+      flushTimeoutMs: 0,
+    });
+
+    await expect(activeRun).resolves.toBeUndefined();
+    await expect(queuedRun).resolves.toBeUndefined();
+
+    expect(startedRunIds).toEqual(["active"]);
+    expect(signals[0]?.aborted).toBe(true);
+    expect(flushAllBounded).toHaveBeenCalled();
+    expect(engine.lifecycle).toBe("closed");
+
+    await expect(engine.executeChatRun("A", "run-after", {} as ChatStreamRequest)).rejects.toMatchObject({
+      name: "AssistantEngineClosedError",
+    });
+  });
+
+  it("dispose cannot be followed by beginRun via executeChatRun", async () => {
+    chatStreamGenerator.mockImplementation(async () => undefined);
+
+    engine.dispose();
+    expect(engine.lifecycle).toBe("closed");
+
+    await expect(engine.executeChatRun("A", "run-1", {} as ChatStreamRequest)).rejects.toMatchObject({
+      name: "AssistantEngineClosedError",
+    });
+    expect(chatStreamGenerator).not.toHaveBeenCalled();
+  });
+
+  it("dispose during shutdown flush does not dispose the persistence host", async () => {
+    let releaseFlush!: () => void;
+    const flushGate = new Promise<void>((resolve) => {
+      releaseFlush = resolve;
+    });
+    const flushAllBounded = vi.fn(async () => {
+      await flushGate;
+    });
+    const hostDispose = vi.fn();
+
+    engine.setPersistenceHost({
+      flushAllNow: vi.fn(),
+      flushAllBounded,
+      dispose: hostDispose,
+    });
+
+    const shutdownPromise = engine.shutdownGracefully({
+      interruptActiveRuns: () => undefined,
+      flushTimeoutMs: 60_000,
+    });
+
+    await Promise.resolve();
+    expect(engine.lifecycle).toBe("closing");
+    expect(flushAllBounded).toHaveBeenCalled();
+
+    engine.dispose();
+    expect(hostDispose).not.toHaveBeenCalled();
+    expect(engine.lifecycle).toBe("closing");
+
+    releaseFlush();
+    await shutdownPromise;
+
+    expect(engine.lifecycle).toBe("closed");
+    expect(hostDispose).not.toHaveBeenCalled();
+  });
 });

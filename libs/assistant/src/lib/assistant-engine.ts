@@ -11,6 +11,9 @@ import type {
 } from "./conversation-runtime";
 import { createPendingRunRefs } from "./pending-run-refs";
 import { createRunControllerRegistry } from "./run-controller-registry";
+import type { QueueCancelReason } from "./serial-queue";
+
+export type AssistantEngineLifecycle = "running" | "closing" | "closed";
 
 export type AssistantEngineOptions<TAction> = ConversationRuntimeCallbacks<TAction> & ConversationRuntimeTransports;
 
@@ -36,58 +39,121 @@ export type AssistantEngine<TAction> = {
   setPersistenceHost: (host: ConversationPersistenceHost) => void;
   shutdownGracefully: (options: AssistantEngineShutdownOptions) => Promise<void>;
   dispose: () => void;
+  readonly lifecycle: AssistantEngineLifecycle;
 };
+
+export class AssistantEngineClosedError extends Error {
+  readonly lifecycle: AssistantEngineLifecycle;
+
+  constructor(lifecycle: AssistantEngineLifecycle) {
+    super(`AssistantEngine is ${lifecycle}`);
+    this.name = "AssistantEngineClosedError";
+    this.lifecycle = lifecycle;
+  }
+}
 
 export function createAssistantEngine<TAction>(options: AssistantEngineOptions<TAction>): AssistantEngine<TAction> {
   const controllerRegistry = createRunControllerRegistry();
   const pendingRunRefs = createPendingRunRefs();
   const runtimes = new Map<string, ConversationRuntime<TAction>>();
   let persistenceHost: ConversationPersistenceHost | null = null;
+  let lifecycle: AssistantEngineLifecycle = "running";
+
+  const assertRunning = () => {
+    if (lifecycle !== "running") {
+      throw new AssistantEngineClosedError(lifecycle);
+    }
+  };
 
   const getRuntime = (conversationId: string): ConversationRuntime<TAction> => {
     let runtime = runtimes.get(conversationId);
     if (!runtime) {
+      assertRunning();
       runtime = createConversationRuntime(conversationId, options, options, controllerRegistry, pendingRunRefs);
       runtimes.set(conversationId, runtime);
     }
     return runtime;
   };
 
+  const closeRuntimes = (reason: QueueCancelReason) => {
+    for (const runtime of runtimes.values()) {
+      runtime.close(reason);
+    }
+  };
+
   return {
-    armPendingRun: pendingRunRefs.arm,
+    get lifecycle() {
+      return lifecycle;
+    },
+
+    armPendingRun(mode, runId) {
+      assertRunning();
+      pendingRunRefs.arm(mode, runId);
+    },
     executeChatRun(conversationId, runId, request) {
+      if (lifecycle !== "running") {
+        return Promise.reject(new AssistantEngineClosedError(lifecycle));
+      }
       return getRuntime(conversationId).executeChatRun(runId, request);
     },
     executeGenerateRun(conversationId, runId, request) {
+      if (lifecycle !== "running") {
+        return Promise.reject(new AssistantEngineClosedError(lifecycle));
+      }
       return getRuntime(conversationId).executeGenerateRun(runId, request);
     },
     retryRun(conversationId, runId, request, templateFields, mode, modelName) {
+      if (lifecycle !== "running") {
+        return Promise.reject(new AssistantEngineClosedError(lifecycle));
+      }
       // WHY: conversationId is caller-supplied — never inferred from UI-current
       // state, or a queued retry for A can restart/clear B after a switch.
       return getRuntime(conversationId).retryRun(runId, request, templateFields, mode, modelName);
     },
-    cancel(_conversationId, runId) {
-      // WHY: conversationId addresses the command; controllers remain keyed by
-      // runId until closable per-conversation queues land.
+    cancel(conversationId, runId) {
+      // WHY: Cancel remains allowed while closing so in-flight UI cancel can
+      // still abort; once closed there is nothing left to cancel.
+      if (lifecycle === "closed") return;
+      const runtime = runtimes.get(conversationId);
+      if (runtime) {
+        runtime.cancel(runId, "user");
+        return;
+      }
       controllerRegistry.cancel(runId);
     },
     setPersistenceHost(host) {
+      if (lifecycle === "closed") return;
       persistenceHost = host;
     },
     async shutdownGracefully({ interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS }) {
-      // WHY: interrupt before abort so reducer lands on `interrupted`/`app_shutdown`
-      // instead of the transport's user-cancel path (`canceled`/`user`).
+      if (lifecycle !== "running") return;
+      lifecycle = "closing";
+
+      // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
+      closeRuntimes("app_shutdown");
+      // 3. Transition active (and any still-streaming queued) runs.
       interruptActiveRuns();
+      // 4. Abort active controllers and seal beginRun.
       controllerRegistry.dispose();
+      // 5. Flush persistence.
       if (persistenceHost) {
         await persistenceHost.flushAllBounded(flushTimeoutMs);
       }
+      // 6. Closed — beginRun already sealed by registry dispose.
+      lifecycle = "closed";
+      runtimes.clear();
     },
     dispose() {
+      // INVARIANT: Mirror shutdown — ignore re-entry while closing so a dispose
+      // during flushAllBounded cannot tear down the persistence host mid-flush.
+      if (lifecycle !== "running") return;
+      lifecycle = "closing";
+      closeRuntimes("dispose");
       controllerRegistry.dispose();
       persistenceHost?.dispose();
       persistenceHost = null;
       runtimes.clear();
+      lifecycle = "closed";
     },
   };
 }

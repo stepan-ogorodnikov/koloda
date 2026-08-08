@@ -1,5 +1,10 @@
-export { createAssistantEngine } from "./lib/assistant-engine";
-export type { AssistantEngine, AssistantEngineOptions, AssistantEngineShutdownOptions } from "./lib/assistant-engine";
+export { createAssistantEngine, AssistantEngineClosedError } from "./lib/assistant-engine";
+export type {
+  AssistantEngine,
+  AssistantEngineLifecycle,
+  AssistantEngineOptions,
+  AssistantEngineShutdownOptions,
+} from "./lib/assistant-engine";
 export { createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "./lib/conversation-persistence-host";
 export type {
   ConversationPersistenceHost,
@@ -21,7 +26,8 @@ export { createPendingRunRefs } from "./lib/pending-run-refs";
 export type { PendingRunRefs } from "./lib/pending-run-refs";
 export { createRunControllerRegistry } from "./lib/run-controller-registry";
 export type { RunControllerRegistry } from "./lib/run-controller-registry";
-export { createSerialQueue } from "./lib/serial-queue";
+export { createSerialQueue, QueueClosedError } from "./lib/serial-queue";
+export type { QueueCancelReason, SerialQueue } from "./lib/serial-queue";
 export { runStream } from "./lib/run-stream";
 export type { RunExecution } from "./lib/run-stream";
 export { displayErrorMessage } from "./lib/display-error";
