@@ -9,7 +9,6 @@ import { useEffect } from "react";
 import { toPersistedState } from "../persistence/conversation-persistence";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
 import {
-  assistantConversationStateAtom,
   conversationsAtom,
   currentConversationIdAtom,
   dispatchToConversationOnStore,
@@ -50,11 +49,6 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine<Conv
   return createAssistantEngine<ConversationReducerAction>({
     getChatStreamGenerator: () => transportRef.chatStreamGenerator!,
     getStreamGenerator: () => transportRef.streamGenerator!,
-    dispatch: (action) => {
-      store.set(assistantConversationStateAtom, action);
-      const currentId = store.get(currentConversationIdAtom);
-      if (currentId) touchConversationOnStore(store, currentId);
-    },
     dispatchToConversation: (id, action) => {
       dispatchToConversationOnStore(store, id, action);
     },
@@ -66,7 +60,9 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine<Conv
     },
     isRunStreaming: (conversationId, runId) =>
       store.get(conversationsAtom)[conversationId]?.runs[runId]?.status === "streaming",
-    readState: () => store.get(assistantConversationStateAtom),
+    // WHY: Engine/runtime must address conversations by id — never UI-current
+    // `assistantConversationStateAtom` — so queued retry ownership cannot drift.
+    readConversationState: (conversationId) => store.get(conversationsAtom)[conversationId] ?? { runs: {} },
   });
 }
 

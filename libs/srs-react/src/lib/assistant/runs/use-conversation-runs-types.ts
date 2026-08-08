@@ -15,11 +15,12 @@ export type UseConversationRunsReturn = {
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
+    conversationId: string,
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName?: string,
   ) => Promise<void>;
-  cancel: (runId: string) => void;
+  cancel: (conversationId: string, runId: string) => void;
 };

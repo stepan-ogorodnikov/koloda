@@ -25,13 +25,14 @@ export type AssistantEngine<TAction> = {
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
+    conversationId: string,
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName?: string,
   ) => Promise<void>;
-  cancel: (runId: string) => void;
+  cancel: (conversationId: string, runId: string) => void;
   setPersistenceHost: (host: ConversationPersistenceHost) => void;
   shutdownGracefully: (options: AssistantEngineShutdownOptions) => Promise<void>;
   dispose: () => void;
@@ -60,11 +61,14 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
     executeGenerateRun(conversationId, runId, request) {
       return getRuntime(conversationId).executeGenerateRun(runId, request);
     },
-    retryRun(runId, request, templateFields, mode, modelName) {
-      const conversationId = options.readState().id;
+    retryRun(conversationId, runId, request, templateFields, mode, modelName) {
+      // WHY: conversationId is caller-supplied — never inferred from UI-current
+      // state, or a queued retry for A can restart/clear B after a switch.
       return getRuntime(conversationId).retryRun(runId, request, templateFields, mode, modelName);
     },
-    cancel(runId) {
+    cancel(_conversationId, runId) {
+      // WHY: conversationId addresses the command; controllers remain keyed by
+      // runId until closable per-conversation queues land.
       controllerRegistry.cancel(runId);
     },
     setPersistenceHost(host) {

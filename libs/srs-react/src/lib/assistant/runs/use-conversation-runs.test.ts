@@ -460,7 +460,7 @@ describe("useConversationRuns", () => {
     expect((setUsageActions[0].action[1] as { runId: string; usage: StreamUsage }).usage).toBe(usage);
   });
 
-  it("cancel(runId) aborts only that run, leaving a concurrent same-mode stream running", async () => {
+  it("cancel(conversationId, runId) aborts only that run, leaving a concurrent same-mode stream running", async () => {
     // WHY: two chats on different conversations must each own a controller.
     // Mode-scoped cancel was not enough — the singleton stream hook aborted both.
     const harness = createHarness();
@@ -491,7 +491,7 @@ describe("useConversationRuns", () => {
     expect(signals[1]?.aborted).toBe(false);
 
     await act(async () => {
-      result.current.cancel("run-A");
+      result.current.cancel("A", "run-A");
       await runA;
     });
 
@@ -503,14 +503,14 @@ describe("useConversationRuns", () => {
     expect(cancelActions[0]?.id).toBe("A");
 
     await act(async () => {
-      result.current.cancel("run-B");
+      result.current.cancel("B", "run-B");
       await runB;
     });
 
     expect(signals[1]?.aborted).toBe(true);
   });
 
-  it("cancel(runId) aborts only that run across chat + cards", async () => {
+  it("cancel(conversationId, runId) aborts only that run across chat + cards", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(upsertConversationAtom, makeConversation("B"));
@@ -541,7 +541,7 @@ describe("useConversationRuns", () => {
     });
 
     await act(async () => {
-      result.current.cancel("run-chat");
+      result.current.cancel("A", "run-chat");
       await chatRun;
     });
 
@@ -549,7 +549,7 @@ describe("useConversationRuns", () => {
     expect(cardSignals[0]?.aborted).toBe(false);
 
     await act(async () => {
-      result.current.cancel("run-cards");
+      result.current.cancel("B", "run-cards");
       await cardRun;
     });
 
@@ -592,6 +592,96 @@ describe("useConversationRuns", () => {
     const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
+  });
+
+  it("queued retry for A stays owned by A after UI switches to B", async () => {
+    const harness = createHarness();
+    harness.store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        runs: {
+          "run-a": {
+            id: "run-a",
+            mode: "chat",
+            status: "failed",
+            cards: [],
+            cardStatuses: {},
+            error: { message: "boom" },
+            startedAt: new Date(1),
+            elapsedSeconds: null,
+            modelName: "m",
+            templateFields: null,
+          },
+        },
+        messages: [
+          { id: "user-run-a", role: "user", parts: [{ type: "text", text: "hello" }] },
+          { id: "assistant-run-a", role: "assistant", parts: [{ type: "text", text: "old" }] },
+        ],
+      }),
+    );
+    harness.store.set(upsertConversationAtom, makeConversation("B"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let retryStarted = false;
+
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
+      if (!retryStarted) {
+        await firstGate;
+        return undefined;
+      }
+      onChunk("retried-a");
+      return undefined;
+    });
+
+    const { result } = renderRuns(harness);
+
+    let firstRun!: Promise<void>;
+    let retryPromise!: Promise<void>;
+    act(() => {
+      firstRun = result.current.executeChatRun("A", "run-blocker", {} as ChatStreamRequest);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, null, "chat", "m");
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // Switch UI current to B while A's retry is still queued behind the blocker.
+    harness.store.set(setCurrentConversationIdAtom, "B");
+
+    retryStarted = true;
+    await act(async () => {
+      releaseFirst();
+      await firstRun;
+      await retryPromise;
+    });
+
+    const restartActions = harness.dispatchToMap.filter((e) => e.action[0] === "restartRun");
+    expect(restartActions).toHaveLength(1);
+    expect(restartActions[0]?.id).toBe("A");
+
+    const clearActions = harness.dispatchToMap.filter(
+      (e) => e.action[0] === "updateAssistantText" && (e.action[1] as { text?: string }).text === "",
+    );
+    expect(clearActions.every((e) => e.id === "A")).toBe(true);
+
+    const chunkActions = harness.dispatchToMap.filter(
+      (e) => e.action[0] === "updateAssistantText" && (e.action[1] as { text?: string }).text === "retried-a",
+    );
+    expect(chunkActions).toHaveLength(1);
+    expect(chunkActions[0]?.id).toBe("A");
+
+    expect(harness.dispatchToMap.some((e) => e.id === "B" && e.action[0] === "restartRun")).toBe(false);
+    expect(harness.store.get(conversationsAtom)["B"]?.runs["run-a"]).toBeUndefined();
   });
 
   it("shutdownAssistantGracefully interrupts streaming runs with app_shutdown", async () => {

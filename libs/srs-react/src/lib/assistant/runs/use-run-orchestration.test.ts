@@ -147,13 +147,15 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     expect(rememberLastUsedAIProfile).toHaveBeenCalledWith(cfg.profileId, cfg.modelId);
 
     expect(retryRun).toHaveBeenCalledTimes(1);
-    const [runId, request, templateFields, mode, modelName] = retryRun.mock.calls[0] as [
+    const [conversationId, runId, request, templateFields, mode, modelName] = retryRun.mock.calls[0] as [
+      string,
       string,
       ChatStreamRequest | CardGenerationStreamRequest,
       TemplateFields | null,
       AIChatMode,
       string | undefined,
     ];
+    expect(conversationId).toBe("conv-1");
     expect(runId).toBe("run-1");
     expect(templateFields).toBeNull();
     expect(mode).toBe("chat");

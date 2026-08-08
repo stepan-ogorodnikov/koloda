@@ -92,7 +92,7 @@ export function useAssistantSession({
     setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
     // WHY: Abort only this run's controller. Other conversations can stream
     // concurrently (same or different mode); canceling must not kill them.
-    if (run) cancel(currentActiveRunId);
+    if (run) cancel(state.id, currentActiveRunId);
   }, [dispatch, cancel, readState, setConversationReducerAction]);
 
   const handleReset = useCallback(() => {

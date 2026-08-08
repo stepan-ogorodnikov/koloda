@@ -8,13 +8,15 @@ import { createSerialQueue } from "./serial-queue";
 import type { StreamResult } from "./stream-result";
 
 export type ConversationRuntimeCallbacks<TAction> = {
-  dispatch: (action: TAction) => void;
   dispatchToConversation: (id: string, action: TAction) => void;
   markReadIfCurrent: (id: string, runId: string) => void;
   touch: (conversationId: string) => void;
   /** True while the run can still accept a terminal cancel/complete transition. */
   isRunStreaming: (conversationId: string, runId: string) => boolean;
-  readState: () => { id: string; runs: Record<string, { mode?: AIChatMode }> };
+  // WHY: Retry must read the originating conversation's runs, not UI-current
+  // state — a queued retry for A must still see A's mode after the user
+  // switches to B.
+  readConversationState: (conversationId: string) => { runs: Record<string, { mode?: AIChatMode }> };
 };
 
 export type ConversationRuntimeTransports = {
@@ -183,7 +185,7 @@ export function createConversationRuntime<TAction>(
         initial: null,
         onValue: (_acc, card) => {
           callbacks.dispatchToConversation(conversationId, ["addCard", { runId, card }] as TAction);
-          // WHY: Card arrivals (and their idle cardStatuses) must dirty the
+          // WHY: Card arrivals (and their idle card statuses) must dirty the
           // originating conversation, not whatever is currently viewed.
           callbacks.touch(conversationId);
           return null;
@@ -211,13 +213,19 @@ export function createConversationRuntime<TAction>(
     modelName?: string,
   ): Promise<void> =>
     queue.enqueue(async () => {
-      const run = callbacks.readState().runs[runId];
+      // INVARIANT: Restart/clear/stream ownership stays on this runtime's
+      // conversationId even if the UI-current conversation changed while
+      // this retry waited in the serial queue.
+      const run = callbacks.readConversationState(conversationId).runs[runId];
       const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-      callbacks.dispatch(["restartRun", { runId, templateFields, mode: effectiveMode, modelName }] as TAction);
+      callbacks.dispatchToConversation(conversationId, [
+        "restartRun",
+        { runId, templateFields, mode: effectiveMode, modelName },
+      ] as TAction);
 
       if (effectiveMode === "chat") {
-        callbacks.dispatch(["updateAssistantText", { runId, text: "" }] as TAction);
+        callbacks.dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: "" }] as TAction);
         await runChatRun(runId, request as ChatStreamRequest);
       } else {
         await runGenerateRun(runId, request as CardGenerationStreamRequest);

@@ -27,6 +27,7 @@ type UseRunOrchestrationOptions = {
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
+    conversationId: string,
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
@@ -110,7 +111,9 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
-      await retryRun(runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
+      // WHY: Capture conversation id at request time so a later UI switch
+      // cannot retarget restart/stream ownership while retry is queued.
+      await retryRun(currentState.id, runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
     },
     [configRef, retryRun, readState, rememberLastUsedAIProfile, armPendingRun],
   );
