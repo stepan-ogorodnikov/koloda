@@ -16,6 +16,50 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("submitTurn", () => {
+    it("creates the user message, streaming run, and assistant placeholder in one action", () => {
+      const state = reduce([
+        {
+          type: "submitTurn",
+          runId: "r1",
+          text: "Hello",
+          mode: "chat",
+          kind: "chat-text",
+          assistantText: "",
+          modelName: "GPT-x",
+        },
+      ]);
+      expect(state.messages).toHaveLength(2);
+      expect(state.messages[0].role).toBe("user");
+      expect(state.messages[0].id).toBe("user-r1");
+      expect(state.messages[1].role).toBe("assistant");
+      expect(state.messages[1].id).toBe("assistant-r1");
+      expect(state.activeRunId).toBe("r1");
+      expect(state.runs.r1).toMatchObject({
+        id: "r1",
+        mode: "chat",
+        status: "streaming",
+        modelName: "GPT-x",
+      });
+    });
+
+    it("uses cards placeholder text and generated-cards kind for cards mode", () => {
+      const state = reduce([
+        {
+          type: "submitTurn",
+          runId: "r2",
+          text: "Make cards",
+          mode: "cards",
+          kind: "generated-cards",
+          assistantText: "pending…",
+        },
+      ]);
+      expect(state.messages[1]?.metadata).toMatchObject({ kind: "generated-cards", runId: "r2" });
+      expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "pending…" }]);
+      expect(state.runs.r2?.mode).toBe("cards");
+    });
+  });
+
   describe("addAssistantMessage", () => {
     it("appends an assistant message with chat-text metadata", () => {
       const state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "Hi there" }]);

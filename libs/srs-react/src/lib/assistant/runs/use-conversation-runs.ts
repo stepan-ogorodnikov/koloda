@@ -78,7 +78,7 @@ export type UseConversationRunsOptions = {
 };
 
 export type UseConversationRunsReturn = {
-  armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
+  armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
@@ -94,7 +94,7 @@ export type UseConversationRunsReturn = {
 
 /**
  * Wires chat/card stream transport to conversation run execution:
- * pending-run error routing, chunk/card dispatch, terminal status, retry.
+ * pending-run arm/complete tracking, chunk/card dispatch, terminal status, retry.
  *
  * INVARIANT: Each in-flight run owns its own AbortController keyed by runId.
  * Singleton stream hooks cannot express concurrent same-mode runs across
@@ -109,7 +109,7 @@ export function useConversationRuns({
   readState,
   touch,
 }: UseConversationRunsOptions): UseConversationRunsReturn {
-  const pendingRunRefs = usePendingRunRefs(dispatchToConversation, markReadIfCurrent);
+  const pendingRunRefs = usePendingRunRefs();
   const controllersRef = useRef(new Map<string, AbortController>());
   const chatStreamGeneratorRef = useRef(chatStreamGenerator);
   chatStreamGeneratorRef.current = chatStreamGenerator;

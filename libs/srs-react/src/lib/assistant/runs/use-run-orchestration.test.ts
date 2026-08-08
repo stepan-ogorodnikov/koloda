@@ -142,7 +142,7 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     expect(retryIdx).toBeGreaterThan(armIdx);
 
     expect(armPendingRun).toHaveBeenCalledTimes(1);
-    expect(armPendingRun).toHaveBeenCalledWith("chat", "conv-1", "run-1");
+    expect(armPendingRun).toHaveBeenCalledWith("chat", "run-1");
 
     expect(rememberLastUsedAIProfile).toHaveBeenCalledWith(cfg.profileId, cfg.modelId);
 
@@ -159,5 +159,77 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     expect(mode).toBe("chat");
     expect(modelName).toBe("GPT-x");
     expect(request).toBeTypeOf("object");
+  });
+});
+
+describe("useRunOrchestration — atomic submitTurn", () => {
+  let store: ReturnType<typeof createStore>;
+  let dispatch: (action: ConversationReducerAction) => void;
+  let readState: () => ConversationReducerState;
+  let dispatched: ConversationReducerAction[];
+  let executeChatRun: ReturnType<typeof vi.fn>;
+  let armPendingRun: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    dispatched = [];
+    store = createStore();
+    dispatch = (action) => {
+      dispatched.push(action);
+      store.set(assistantConversationStateAtom, action);
+    };
+    readState = () => store.get(assistantConversationStateAtom);
+    executeChatRun = vi.fn(async () => undefined);
+    armPendingRun = vi.fn();
+  });
+
+  it("handleGenerate dispatches a single submitTurn (not three separate actions)", async () => {
+    store.set(upsertConversationAtom, { ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
+    store.set(currentConversationIdAtom, "conv-1");
+
+    const cfg = makeConfig();
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        executeChatRun: executeChatRun as never,
+        executeGenerateRun: vi.fn(async () => undefined) as never,
+        retryRun: vi.fn(async () => undefined) as never,
+        ensureConversationId: () => "conv-1",
+        armPendingRun: armPendingRun as never,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleGenerate("Hello atomic");
+    });
+
+    const turnActions = dispatched.filter((a) => a[0] === "submitTurn");
+    expect(turnActions).toHaveLength(1);
+    expect(dispatched.some((a) => a[0] === "addUserMessage")).toBe(false);
+    expect(dispatched.some((a) => a[0] === "startRun")).toBe(false);
+    expect(dispatched.some((a) => a[0] === "addAssistantMessage")).toBe(false);
+
+    const payload = turnActions[0]![1] as {
+      text: string;
+      mode: string;
+      kind: string;
+      assistantText: string;
+    };
+    expect(payload).toMatchObject({
+      text: "Hello atomic",
+      mode: "chat",
+      kind: "chat-text",
+      assistantText: "",
+    });
+
+    const state = readState();
+    expect(state.messages).toHaveLength(2);
+    expect(state.activeRunId).not.toBeNull();
+    expect(executeChatRun).toHaveBeenCalledTimes(1);
   });
 });

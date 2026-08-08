@@ -532,6 +532,26 @@ describe("updatedAt stamping (only on run start)", () => {
     expect(after.updatedAt).not.toBeNull();
   });
 
+  it("submitTurn bumps updatedAt", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = seedUpdatedAt(store, "A");
+    advanceClock();
+
+    dispatchTo(store, "A", [
+      "submitTurn",
+      {
+        runId: "r1",
+        text: "Hi",
+        mode: "chat",
+        kind: "chat-text",
+        assistantText: "",
+      },
+    ]);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
+  });
+
   it("restartRun bumps updatedAt", () => {
     const store = createStore();
     store.set(

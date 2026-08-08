@@ -85,6 +85,7 @@ const actions = {
   addAssistantMessage,
   updateAssistantText,
   startRun,
+  submitTurn,
   addCard,
   setCardStatus,
   completeRun,
@@ -285,6 +286,34 @@ type StartRunPayload = {
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
   draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
+}
+
+type SubmitTurnPayload = {
+  runId: string;
+  text: string;
+  mode: AIChatMode;
+  kind: "chat-text" | "generated-cards";
+  assistantText: string;
+  templateFields?: TemplateFields | null;
+  modelName?: string;
+};
+
+// WHY: One dispatch creates user turn + run + assistant placeholder so
+// subscribers never observe the intermediate "user message without a run"
+// or "run without an assistant slot" states of three separate actions.
+function submitTurn(draft: ConversationReducerState, payload: SubmitTurnPayload) {
+  addUserMessage(draft, { runId: payload.runId, text: payload.text });
+  startRun(draft, {
+    runId: payload.runId,
+    mode: payload.mode,
+    templateFields: payload.templateFields,
+    modelName: payload.modelName,
+  });
+  addAssistantMessage(draft, {
+    runId: payload.runId,
+    kind: payload.kind,
+    text: payload.assistantText,
+  });
 }
 
 type AddCardPayload = { runId: string; card: GeneratedCard };

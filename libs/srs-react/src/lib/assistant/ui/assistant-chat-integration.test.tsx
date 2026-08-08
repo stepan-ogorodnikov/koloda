@@ -384,10 +384,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     });
     queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
 
-    // Hold the chat stream open so both runs stay in flight while we
-    // trigger the error. The mock returns a deferred promise so the
-    // chat completion callback is never invoked and the chat
-    // pending-failure ref (managed by `usePendingRunRefs`) stays set.
     wire.chatStream.keepInFlight = true;
 
     function TestWrapper({ children }: PropsWithChildren) {
@@ -426,9 +422,6 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Both streams were started.
     expect(wire.chatStream.started).toBe(2);
 
-    // Now reject the latest chat stream — this simulates a stream error for B.
-    // The error should be routed to B's run via the chat pending-failure
-    // ref managed by `usePendingRunRefs`.
     expect(wire.chatStream.rejectNext).not.toBeNull();
     await act(async () => {
       wire.chatStream.rejectNext!(new Error("stream blew up"));
@@ -748,9 +741,6 @@ describe("assistant chat integration (per-conversation state)", () => {
       wrapper: TestWrapper,
     });
 
-    // Start a streaming run. This dispatches addUserMessage + startRun +
-    // addAssistantMessage, each of which bumps the save counter and
-    // schedules the throttled save.
     await act(async () => {
       void result.current.controller.submit("Hello from A");
       await Promise.resolve();

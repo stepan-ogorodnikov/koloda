@@ -34,7 +34,7 @@ type UseRunOrchestrationOptions = {
     modelName?: string,
   ) => Promise<void>;
   ensureConversationId: () => string | undefined;
-  armPendingRun: (mode: AIChatMode, conversationId: string, runId: string) => void;
+  armPendingRun: (mode: AIChatMode, runId: string) => void;
 };
 
 type UseRunOrchestrationReturn = {
@@ -68,37 +68,6 @@ function prepareRunRequest(
   return { ...result, modelName: cfg.modelName };
 }
 
-/**
- * Dispatches the `startRun` + `addAssistantMessage` pair that opens a
- * freshly-generated run. The only chat-vs-cards difference is the
- * assistant placeholder text: "" for chat, the cards "pending" status
- * message otherwise.
- */
-function dispatchStartRun(
-  dispatch: (action: ConversationReducerAction) => void,
-  cfg: AssistantConversationConfig,
-  runId: string,
-  prepared: PreparedRun,
-) {
-  dispatch([
-    "startRun",
-    {
-      runId,
-      mode: prepared.kind,
-      templateFields: prepared.templateFields,
-      modelName: prepared.modelName,
-    },
-  ]);
-  dispatch([
-    "addAssistantMessage",
-    {
-      runId,
-      kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
-      text: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
-    },
-  ]);
-}
-
 export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
   const {
     configRef,
@@ -119,7 +88,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     async (runId: string) => {
       const cfg = configRef.current;
       const currentState = readState();
-      const conversationId = currentState.id;
       const mode = resolveRunMode(currentState, runId);
       if (!mode) return;
 
@@ -138,7 +106,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // a dangling error route armed whenever a retry was invalid (no
       // prompt/profile/model/template), since no stream would ever start to
       // clear the ref via `onComplete`. Prepare → arm → dispatch/execute.
-      armPendingRun(mode, conversationId, runId);
+      armPendingRun(mode, runId);
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
@@ -179,12 +147,24 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // WHY: After ensureConversationId(), the conversation is in the store.
       // Use the state's id rather than the prop (which may be undefined on cold start).
       const activeConversationId = readState().id;
-      armPendingRun(currentMode, activeConversationId, runId);
+      armPendingRun(currentMode, runId);
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
-      dispatch(["addUserMessage", { runId, text: promptText }]);
-      dispatchStartRun(dispatch, cfg, runId, prepared);
+      // WHY: Atomic submit — one command so the store never briefly holds a
+      // user message without its run, or a run without an assistant placeholder.
+      dispatch([
+        "submitTurn",
+        {
+          runId,
+          text: promptText,
+          mode: prepared.kind,
+          kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
+          assistantText: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
+          templateFields: prepared.templateFields,
+          modelName: prepared.modelName,
+        },
+      ]);
 
       if (prepared.kind === "chat") {
         await executeChatRun(activeConversationId, runId, prepared.request);

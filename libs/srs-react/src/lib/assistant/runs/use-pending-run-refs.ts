@@ -1,77 +1,40 @@
 import type { AIChatMode } from "@koloda/ai";
-import { isAppError } from "@koloda/app";
 import { useCallback, useRef } from "react";
-import type { DispatchToConversation } from "./use-conversation-runs";
 
 /**
- * Manages per-stream failure refs for routing stream errors back to the
- * originating conversation and run.
- *
- * We keep separate refs for chat and card streams (rather than a single
- * Map) because the underlying stream hooks in `@koloda/ai-react`
- * (`useChatStream` and `useAssistantCardGeneration`) are independent and
- * can each have an in-flight run on a different conversation. The error
- * callback for each hook only fires for *its* stream, so a single shared
- * ref + iterating lookup would route errors to the wrong conversation when
- * both streams are in flight.
+ * Tracks the latest armed runId per stream mode so `onComplete` can clear
+ * only a matching entry (a stale stream's cleanup must not clobber a newer
+ * stream's arm).
  *
  * ## Contract
  *
- * 1. **Arm** — Call `arm(mode, conversationId, runId)` *before* starting
- *    a stream so that if the stream fails, the error lands on the right
- *    conversation.
- * 2. **Error** — The stream hook's `onError` callback should call
- *    `handleError(mode, error)`. This dispatches `runFailed` to the
- *    originating conversation, marks the run read when that conversation
- *    is current, and clears the ref.
- * 3. **Complete** — The stream executor's `finally` block should call
+ * 1. **Arm** — Call `arm(mode, runId)` *before* starting a stream.
+ * 2. **Complete** — The stream executor's `finally` block should call
  *    `onComplete(mode, runId)`. This clears the ref *only* if the runId
- *    still matches — preventing a stale stream's cleanup from clobbering
- *    a newer stream's entry.
+ *    still matches.
+ *
+ * Stream failures are dispatched in `use-conversation-runs` transport
+ * catch blocks with the run's closed-over ids — not via a pending-ref
+ * error callback.
  */
 export type UsePendingRunRefsReturn = {
-  arm: (mode: AIChatMode, conversationId: string, runId: string) => void;
-  handleError: (mode: AIChatMode, error: Error) => void;
+  arm: (mode: AIChatMode, runId: string) => void;
   onComplete: (mode: AIChatMode, runId: string) => void;
 };
 
-// WHY: AppError.message is the code; the human-readable text is `.details`.
-function displayErrorMessage(error: Error): string {
-  if (isAppError(error) && error.details) return error.details;
-  return error.message || error.name || "unknown";
-}
+export function usePendingRunRefs(): UsePendingRunRefsReturn {
+  const chatRef = useRef<string | null>(null);
+  const cardRef = useRef<string | null>(null);
 
-export function usePendingRunRefs(
-  dispatchToConversation: DispatchToConversation,
-  markReadIfCurrent: (conversationId: string, runId: string) => void,
-): UsePendingRunRefsReturn {
-  const chatRef = useRef<{ id: string; runId: string } | null>(null);
-  const cardRef = useRef<{ id: string; runId: string } | null>(null);
-
-  const arm = useCallback((mode: AIChatMode, conversationId: string, runId: string) => {
+  const arm = useCallback((mode: AIChatMode, runId: string) => {
     const ref = mode === "chat" ? chatRef : cardRef;
-    ref.current = { id: conversationId, runId };
+    ref.current = runId;
   }, []);
-
-  const handleError = useCallback(
-    (mode: AIChatMode, error: Error) => {
-      const ref = mode === "chat" ? chatRef : cardRef;
-      const entry = ref.current;
-      if (!entry) return;
-      ref.current = null;
-      dispatchToConversation(entry.id, [
-        "runFailed",
-        { runId: entry.runId, error: { message: displayErrorMessage(error) } },
-      ]);
-      markReadIfCurrent(entry.id, entry.runId);
-    },
-    [dispatchToConversation, markReadIfCurrent],
-  );
 
   const onComplete = useCallback((mode: AIChatMode, runId: string) => {
     const ref = mode === "chat" ? chatRef : cardRef;
-    if (ref.current?.runId === runId) ref.current = null;
+    if (ref.current === runId) ref.current = null;
   }, []);
 
-  return { arm, handleError, onComplete };
+  return { arm, onComplete };
 }

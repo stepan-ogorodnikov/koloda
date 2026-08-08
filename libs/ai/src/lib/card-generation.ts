@@ -30,6 +30,7 @@ async function runCardGeneration(
 
   // WORKAROUND: elementStream can finish with zero elements even when the model returned usable text.
   // Prefer parsing result.text before falling through to generateText.
+  let cardsCount = 0;
   try {
     let streamedError: unknown = null;
     const result = streamText({
@@ -45,7 +46,6 @@ async function runCardGeneration(
       },
     });
 
-    let cardsCount = 0;
     for await (const card of result.elementStream) {
       cardsCount += 1;
       onCard(card as GeneratedCard);
@@ -64,6 +64,9 @@ async function runCardGeneration(
   } catch (error) {
     // WHY: Abort must not fall through to plain-text fallback; provider errors may.
     if (error instanceof DOMException && error.name === "AbortError") throw error;
+    // WHY: Partial structured cards already emitted via onCard — falling
+    // through would duplicate deliveries and burn a second provider call.
+    if (cardsCount > 0) throw error;
   }
 
   const fallbackResult = await generateText({
