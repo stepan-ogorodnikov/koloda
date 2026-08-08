@@ -12,6 +12,8 @@ export type ConversationRuntimeCallbacks<TAction> = {
   dispatchToConversation: (id: string, action: TAction) => void;
   markReadIfCurrent: (id: string, runId: string) => void;
   touch: (conversationId: string) => void;
+  /** True while the run can still accept a terminal cancel/complete transition. */
+  isRunStreaming: (conversationId: string, runId: string) => boolean;
   readState: () => { id: string; runs: Record<string, { mode?: AIChatMode }> };
 };
 
@@ -66,14 +68,22 @@ export function createConversationRuntime<TAction>(
         // status is scheduled for save.
         callbacks.touch(targetConversationId);
         break;
-      case "aborted":
+      case "aborted": {
+        // WHY: Capture streaming-ness before cancelRun. Graceful shutdown
+        // interrupts to `interrupted`/`app_shutdown` before aborting; cancel
+        // is then a no-op and a blind touch would schedule a redundant second
+        // durable write of the same interrupted snapshot.
+        const shouldPersistCancel = callbacks.isRunStreaming(targetConversationId, runId);
         callbacks.dispatchToConversation(targetConversationId, ["cancelRun", { runId }] as TAction);
         callbacks.markReadIfCurrent(targetConversationId, runId);
-        // WHY: Same rationale as success — schedule a save with the real
-        // cancelRun terminal state (`canceled`/`user`) rather than leaving
-        // only the last streaming checkpoint on disk.
-        callbacks.touch(targetConversationId);
+        if (shouldPersistCancel) {
+          // WHY: Same rationale as success — schedule a save with the real
+          // cancelRun terminal state (`canceled`/`user`) rather than leaving
+          // only the last streaming checkpoint on disk.
+          callbacks.touch(targetConversationId);
+        }
         break;
+      }
     }
   };
 

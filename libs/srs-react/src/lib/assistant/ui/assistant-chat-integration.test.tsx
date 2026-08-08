@@ -830,7 +830,9 @@ describe("assistant chat integration (per-conversation state)", () => {
       window.dispatchEvent(new Event("pagehide"));
     });
 
-    expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide + 1);
+    // INVARIANT: shutdown interrupts then aborts; abort must not re-dirty an
+    // already-terminal interrupted run, so pagehide produces one durable write.
+    expect(wire.setConversationCalls.length).toBeGreaterThan(callsBeforePagehide);
     const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(persisted.id).toBe("A");
 
@@ -843,6 +845,8 @@ describe("assistant chat integration (per-conversation state)", () => {
     const afterState = store.get(conversationsAtom)["A"];
     expect(afterState.runs[persistedRunIds[0]!]?.status).toBe("interrupted");
     expect(afterState.runs[persistedRunIds[0]!]?.reason).toBe("app_shutdown");
+    // INVARIANT: single durable shutdown write of the interrupted snapshot.
+    expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide + 1);
   });
 
   it("pagehide plus unmount during a streaming run persists interrupted app_shutdown", async () => {

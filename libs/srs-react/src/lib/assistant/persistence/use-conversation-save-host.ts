@@ -1,8 +1,13 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { useEffectEvent } from "react";
-import { buildWriteConversation, ensureAssistantPersistenceHost } from "../runs/use-assistant-engine-host";
+import { useEffect, useRef } from "react";
+import {
+  buildWriteConversation,
+  ensureAssistantPersistenceHost,
+  registerAssistantPersistenceWriteAdapter,
+} from "../runs/use-assistant-engine-host";
+import type { AssistantPersistenceWriteAdapter } from "../runs/use-assistant-engine-host";
 import { dismissSaveStatusAtom, saveStatusAtom } from "../state/conversation-store";
 
 export type UseConversationSaveHostReturn = {
@@ -12,7 +17,7 @@ export type UseConversationSaveHostReturn = {
 /**
  * Route-scoped persistence adapter. Scheduling and queue-map lifetime are
  * owned by the assistant engine (`ensureAssistantPersistenceHost`); this
- * hook only injects the React-side durable-write adapter.
+ * hook only registers the React-side durable-write adapter while mounted.
  */
 export function useConversationSaveHost(): UseConversationSaveHostReturn {
   const queryClient = useQueryClient();
@@ -22,30 +27,58 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
   const setSaveStatus = useSetAtom(saveStatusAtom);
   const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
 
-  // WHY: `ensureAssistantPersistenceHost` captures `writeConversation` once when
-  // wiring the singleton createWrite closure. useEffectEvent keeps that capture
-  // stable across renders while still reading fresh `setConversationFn` /
-  // queryClient on each write.
-  const writeConversation = useEffectEvent(async (id: string): Promise<boolean> => {
-    if (!setConversationFn) {
+  // WHY: Keep the latest React deps in a ref so the registered adapter stays
+  // a stable plain object (safe for the module singleton) while still reading
+  // fresh mutationFn / queryClient on each write. Do not use useEffectEvent —
+  // Effect Events must not escape into a host that outlives the component.
+  const depsRef = useRef({
+    store,
+    setConversationFn,
+    setSaveStatus,
+    queryClient,
+  });
+  depsRef.current = { store, setConversationFn, setSaveStatus, queryClient };
+
+  const adapterRef = useRef<AssistantPersistenceWriteAdapter>({
+    writeConversation: async () => {
+      throw new Error("Assistant persistence write adapter is not ready");
+    },
+  });
+  adapterRef.current.writeConversation = async (id: string): Promise<boolean> => {
+    const {
+      store: currentStore,
+      setConversationFn: currentSetConversationFn,
+      setSaveStatus: currentSetSaveStatus,
+      queryClient: currentQueryClient,
+    } = depsRef.current;
+    if (!currentSetConversationFn) {
       throw new Error("setConversationMutation is missing mutationFn");
     }
     return buildWriteConversation({
-      store,
+      store: currentStore,
       // WHY: TanStack `MutationFunction` requires `(variables, context)`; the
       // persistence host keeps a single-arg durable-write signature.
-      setConversationFn: (data) => setConversationFn(data, { client: queryClient, meta: undefined }),
-      setSaveStatus,
+      setConversationFn: (data) => currentSetConversationFn(data, { client: currentQueryClient, meta: undefined }),
+      setSaveStatus: currentSetSaveStatus,
       setQueryConversation: (rowId, row) => {
-        queryClient.setQueryData(queryKeys.conversations.detail(rowId), row);
+        currentQueryClient.setQueryData(queryKeys.conversations.detail(rowId), row);
       },
       invalidateConversations: () => {
-        queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+        currentQueryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       },
     })(id);
-  });
+  };
 
-  ensureAssistantPersistenceHost(store, { writeConversation });
+  ensureAssistantPersistenceHost(store);
+  // WHY: Register during render (same pattern as engine transports) so dirty
+  // flushes before useEffect can resolve the adapter slot.
+  registerAssistantPersistenceWriteAdapter(adapterRef.current);
+
+  useEffect(() => {
+    // INVARIANT: clear the module slot on unmount so the singleton never keeps
+    // a callback owned by an unmounted tree.
+    return registerAssistantPersistenceWriteAdapter(adapterRef.current);
+  }, []);
 
   return {
     handleDismissSave: dismissSaveStatus,

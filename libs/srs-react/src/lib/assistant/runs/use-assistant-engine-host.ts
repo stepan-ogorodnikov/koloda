@@ -3,7 +3,8 @@ import type { ChatStreamGenerator } from "@koloda/ai";
 import { createAssistantEngine, createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
 import type { AssistantEngine, CardGenerationExecutor, ConversationPersistenceHost } from "@koloda/assistant";
 import type { Conversation, SetConversationData } from "@koloda/app";
-import { createStore, useStore } from "jotai";
+import { useStore } from "jotai";
+import type { createStore } from "jotai";
 import { useEffect } from "react";
 import { toPersistedState } from "../persistence/conversation-persistence";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
@@ -25,7 +26,7 @@ export type AssistantEngineTransports = {
   streamGenerator: CardGenerationExecutor;
 };
 
-export type AssistantPersistenceHostDeps = {
+export type AssistantPersistenceWriteAdapter = {
   writeConversation: (conversationId: string) => Promise<boolean>;
 };
 
@@ -36,6 +37,11 @@ const transportRef: {
   chatStreamGenerator: null,
   streamGenerator: null,
 };
+
+// WHY: Persistence queues outlive any single React tree. The host keeps a
+// mutable write adapter slot that route hooks register while mounted and
+// clear on unmount — never an escaped Effect Event.
+let persistenceWriteAdapter: AssistantPersistenceWriteAdapter | null = null;
 
 let engineInstance: AssistantEngine<ConversationReducerAction> | null = null;
 let persistenceHostInstance: ConversationPersistenceHost | null = null;
@@ -58,6 +64,8 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine<Conv
     touch: (conversationId) => {
       touchConversationOnStore(store, conversationId);
     },
+    isRunStreaming: (conversationId, runId) =>
+      store.get(conversationsAtom)[conversationId]?.runs[runId]?.status === "streaming",
     readState: () => store.get(assistantConversationStateAtom),
   });
 }
@@ -93,16 +101,32 @@ export function registerAssistantEngineTransports(transports: AssistantEngineTra
 }
 
 /**
- * Idempotent: wires the engine-owned persistence queue map to the store's
- * dirty counters. I/O stays in the injected `writeConversation` adapter.
+ * Register the React-side durable-write adapter for the engine persistence host.
+ * Returns an unregister that clears the slot only if this registration is current.
  */
-export function ensureAssistantPersistenceHost(
-  store: AssistantJotaiStore,
-  deps: AssistantPersistenceHostDeps,
-): ConversationPersistenceHost {
+export function registerAssistantPersistenceWriteAdapter(adapter: AssistantPersistenceWriteAdapter): () => void {
+  persistenceWriteAdapter = adapter;
+  return () => {
+    if (persistenceWriteAdapter === adapter) {
+      persistenceWriteAdapter = null;
+    }
+  };
+}
+
+/**
+ * Idempotent: wires the engine-owned persistence queue map to the store's
+ * dirty counters. I/O goes through the registered write adapter slot.
+ */
+export function ensureAssistantPersistenceHost(store: AssistantJotaiStore): ConversationPersistenceHost {
   if (!persistenceHostInstance) {
     persistenceHostInstance = createConversationPersistenceHost({
-      createWrite: (conversationId) => () => deps.writeConversation(conversationId),
+      createWrite: (conversationId) => async () => {
+        const write = persistenceWriteAdapter?.writeConversation;
+        if (!write) {
+          throw new Error("Assistant persistence write adapter is not registered");
+        }
+        return write(conversationId);
+      },
       isStreaming: (conversationId) => store.get(conversationsAtom)[conversationId]?.activeRunId != null,
       getInitialPending: () => store.get(pendingSaveByConversationAtom),
       subscribePendingSaves: (listener) =>
@@ -129,6 +153,7 @@ export function resetAssistantEngineForTests(): void {
   engineInstance?.dispose();
   engineInstance = null;
   persistenceHostInstance = null;
+  persistenceWriteAdapter = null;
   transportRef.chatStreamGenerator = null;
   transportRef.streamGenerator = null;
 }

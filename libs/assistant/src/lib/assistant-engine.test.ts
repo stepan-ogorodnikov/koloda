@@ -33,6 +33,7 @@ describe("createAssistantEngine", () => {
       },
       markReadIfCurrent: vi.fn(),
       touch: vi.fn(),
+      isRunStreaming: () => true,
       readState: () => ({ id: "current", runs: {} }),
     });
   });
