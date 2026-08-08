@@ -17,6 +17,7 @@ import {
   ensureAssistantEngine,
   registerAssistantEngineTransports,
   resetAssistantEngineForTests,
+  shutdownAssistantGracefully,
 } from "./use-assistant-engine-host";
 import { useConversationRuns } from "./use-conversation-runs";
 
@@ -591,5 +592,38 @@ describe("useConversationRuns", () => {
     const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
+  });
+
+  it("shutdownAssistantGracefully interrupts streaming runs with app_shutdown", async () => {
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-1", mode: "chat" }]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      { runId: "run-1", kind: "chat-text", text: "" },
+    ]);
+
+    harness.chatStreamGenerator.mockImplementation(async (_request, _onChunk, signal) => {
+      await holdUntilAborted(signal);
+    });
+
+    const { result } = renderRuns(harness);
+
+    let runPromise!: Promise<void>;
+    act(() => {
+      runPromise = result.current.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      await shutdownAssistantGracefully(harness.store, 0);
+      await runPromise;
+    });
+
+    expect(harness.getState().runs["run-1"]?.status).toBe("interrupted");
+    expect(harness.getState().runs["run-1"]?.reason).toBe("app_shutdown");
   });
 });

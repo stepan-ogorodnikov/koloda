@@ -1,4 +1,5 @@
 import { useAssistantProfileSelection } from "../use-assistant-profile-selection";
+import { useAssistantEngineHost } from "../runs/use-assistant-engine-host";
 import { useAssistantSession } from "../runs/use-assistant-session";
 import { useConversationPersistence } from "../persistence/use-conversation-persistence";
 import { useConversationSaveHost } from "../persistence/use-conversation-save-host";
@@ -18,7 +19,8 @@ export function useAssistantChatTestHarness({
 }: UseAssistantChatTestHarnessOptions) {
   const { profileId, modelId, modelName, modelParameters } = useAssistantProfileSelection();
 
-  // Route-scoped autosave host (mirrors `AIRoute`).
+  // Route-scoped engine + autosave hosts (mirrors `AIRoute`).
+  useAssistantEngineHost();
   useConversationSaveHost();
 
   // Mounted for restore / save-error dismiss coverage even when the suite

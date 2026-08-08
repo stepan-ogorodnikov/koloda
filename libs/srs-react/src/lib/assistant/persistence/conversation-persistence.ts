@@ -42,7 +42,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // WHY: A persisted `streaming` checkpoint means the process died mid-run
     // (crash / forced termination). Convert to terminal `interrupted` with
     // `crash_recovery` and keep partial output for retry. Graceful
-    // `app_shutdown` is handled at save time in a later commit.
+    // `app_shutdown` is applied in-memory before the bounded final flush.
     if (run.status === "streaming") {
       nextRun = {
         ...run,

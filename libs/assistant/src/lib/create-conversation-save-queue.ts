@@ -18,6 +18,7 @@ export type ConversationSaveQueue = {
   flushNow: () => void;
   flushIfPending: () => void;
   isDirty: () => boolean;
+  waitUntilIdle: () => Promise<void>;
   dispose: () => void;
 };
 
@@ -62,8 +63,8 @@ export function createConversationSaveQueue({
           ackedGeneration = generation;
         }
       } catch {
-        // Stay dirty — ackedGeneration unchanged. Do not tight-loop retry; the
-        // next `notifyDirty` (or an already-queued N+1 below) schedules again.
+        // WHY: Stay dirty — ackedGeneration unchanged. Do not tight-loop retry;
+        // the next `notifyDirty` (or an already-queued N+1 below) schedules again.
       } finally {
         inFlight = null;
         // WHY: only auto-continue when a newer dirty landed during this write.
@@ -98,6 +99,14 @@ export function createConversationSaveQueue({
     scheduler.flushIfPending();
   };
 
+  const waitUntilIdle = (): Promise<void> => {
+    if (disposed) return Promise.resolve();
+    // WHY: only wait on the in-flight write. Dirty-without-in-flight (scheduled
+    // N+1 or a failed write) is driven by the caller via flushNow — polling
+    // dirty here would microtask-spin when nothing is executing.
+    return inFlight ?? Promise.resolve();
+  };
+
   const dispose = () => {
     if (disposed) return;
     // WHY: flush any coalesced timer before locking the queue. `write` must
@@ -107,5 +116,5 @@ export function createConversationSaveQueue({
     disposed = true;
   };
 
-  return { notifyDirty, flushNow, flushIfPending, isDirty, dispose };
+  return { notifyDirty, flushNow, flushIfPending, isDirty, waitUntilIdle, dispose };
 }

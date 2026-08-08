@@ -1,5 +1,14 @@
 export { createAssistantEngine } from "./lib/assistant-engine";
-export type { AssistantEngine, AssistantEngineOptions } from "./lib/assistant-engine";
+export type { AssistantEngine, AssistantEngineOptions, AssistantEngineShutdownOptions } from "./lib/assistant-engine";
+export { createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "./lib/conversation-persistence-host";
+export type {
+  ConversationPersistenceHost,
+  CreateConversationPersistenceHostOptions,
+} from "./lib/conversation-persistence-host";
+export { createConversationSaveQueue } from "./lib/create-conversation-save-queue";
+export type { ConversationSaveQueue, CreateConversationSaveQueueOptions } from "./lib/create-conversation-save-queue";
+export { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./lib/create-save-scheduler";
+export type { CreateSaveSchedulerOptions, SaveScheduler } from "./lib/create-save-scheduler";
 export { createConversationRuntime } from "./lib/conversation-runtime";
 export type {
   ConversationRuntime,

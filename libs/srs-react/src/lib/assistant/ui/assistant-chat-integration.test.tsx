@@ -27,6 +27,7 @@ import {
 } from "../state/conversation-store";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
+import { resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
 import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
 
 type PendingChat = {
@@ -362,11 +363,13 @@ function setupTestHarness(overrides: { profileId?: string; modelId?: string } = 
 
 beforeEach(() => {
   vi.useFakeTimers();
+  resetAssistantEngineForTests();
 });
 
 afterEach(() => {
   vi.useRealTimers();
   vi.clearAllMocks();
+  resetAssistantEngineForTests();
 });
 
 describe("assistant chat integration (per-conversation state)", () => {
@@ -491,7 +494,10 @@ describe("assistant chat integration (per-conversation state)", () => {
     let chatPromise!: Promise<void>;
     await act(async () => {
       chatPromise = result.current.controller.submit("Hello from A") as unknown as Promise<void>;
-      // Advance the mocked clock so the chunks fire.
+      await Promise.resolve();
+    });
+
+    await act(async () => {
       vi.advanceTimersByTime(150);
     });
 
@@ -774,7 +780,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     });
   });
 
-  it("pagehide during a streaming run persists the run as streaming", async () => {
+  it("pagehide during a streaming run interrupts runs and persists app_shutdown", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -802,8 +808,6 @@ describe("assistant chat integration (per-conversation state)", () => {
       );
     }
 
-    // Keep the chat stream in flight so the run stays in "streaming"
-    // status while we fire pagehide.
     wire.chatStream.keepInFlight = true;
 
     const onConversationIdChange = vi.fn();
@@ -811,51 +815,37 @@ describe("assistant chat integration (per-conversation state)", () => {
       wrapper: TestWrapper,
     });
 
-    // Fire and forget — the stream promise never resolves, so the
-    // generation run remains in "streaming" status.
     await act(async () => {
       void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 
-    // Sanity check: the in-memory run is streaming.
     const beforeState = store.get(conversationsAtom)["A"];
     const beforeRunIds = Object.keys(beforeState.runs);
     expect(beforeRunIds).toHaveLength(1);
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
-    // Simulate the user closing the tab. The save effect's pagehide
-    // listener should flush the live streaming checkpoint.
     const callsBeforePagehide = wire.setConversationCalls.length;
     await act(async () => {
       window.dispatchEvent(new Event("pagehide"));
     });
 
-    // A save was issued.
     expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide + 1);
     const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
     expect(persisted.id).toBe("A");
 
-    // The persisted state keeps the run as "streaming" (checkpoint),
-    // and the title is derived from the user message.
     const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
     expect(persistedRunIds).toHaveLength(1);
-    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("streaming");
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("interrupted");
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.reason).toBe("app_shutdown");
     expect(persisted.title).toBe("Hello from A");
 
-    // Crucially: the in-memory run is still "streaming" — we only
-    // persisted a snapshot, not mutated live state. The background
-    // stream is still legitimately in flight.
     const afterState = store.get(conversationsAtom)["A"];
-    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
-
-    // Cleanup: resolve the in-flight stream so the test exits cleanly.
-    await act(async () => {
-      wire.chatStream.resolveNext?.();
-    });
+    expect(afterState.runs[persistedRunIds[0]!]?.status).toBe("interrupted");
+    expect(afterState.runs[persistedRunIds[0]!]?.reason).toBe("app_shutdown");
   });
 
-  it("unmount during a streaming run persists a streaming checkpoint (cleanup does not rewrite status)", async () => {
+  it("pagehide plus unmount during a streaming run persists interrupted app_shutdown", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -893,42 +883,89 @@ describe("assistant chat integration (per-conversation state)", () => {
       },
     );
 
-    // Start a streaming run.
     await act(async () => {
       void result.current.controller.submit("Hello from A");
       await Promise.resolve();
     });
 
-    // The run is streaming in memory.
     const beforeState = store.get(conversationsAtom)["A"];
     const beforeRunIds = Object.keys(beforeState.runs);
     expect(beforeRunIds).toHaveLength(1);
     expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
 
-    // Simulate a hard close: pagehide fires, then React unmounts the
-    // tree. The order matters — pagehide must run before unmount.
     await act(async () => {
       window.dispatchEvent(new Event("pagehide"));
     });
 
-    // Now unmount. The save effect's cleanup flushes a pending timer if
-    // any; it does not rewrite streaming → canceled.
     await act(async () => {
       unmount();
     });
 
-    // The last persisted state for A is a streaming checkpoint.
     const lastForA = [...wire.setConversationCalls].reverse().find((c) => c.id === "A");
     expect(lastForA).toBeDefined();
     const lastRunIds = Object.keys(lastForA?.state?.runs ?? {});
     expect(lastRunIds).toHaveLength(1);
-    expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("streaming");
+    expect(lastForA?.state?.runs[lastRunIds[0]!]?.status).toBe("interrupted");
+    expect(lastForA?.state?.runs[lastRunIds[0]!]?.reason).toBe("app_shutdown");
     expect(lastForA?.title).toBe("Hello from A");
 
-    // WHY: Unmount still aborts in-flight run controllers today, so the
-    // live store lands on cancelRun. Persist path no longer mirrors that
-    // as a canceled rewrite; engine/unmount independence is a later commit.
     const afterState = store.get(conversationsAtom)["A"];
-    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("canceled");
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("interrupted");
+    expect(afterState.runs[beforeRunIds[0]!]?.reason).toBe("app_shutdown");
+  });
+
+  it("unmount without pagehide keeps an in-flight run streaming", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result, unmount } = renderHook(
+      () => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }),
+      {
+        wrapper: TestWrapper,
+      },
+    );
+
+    await act(async () => {
+      void result.current.controller.submit("Hello from A");
+      await Promise.resolve();
+    });
+
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    await act(async () => {
+      unmount();
+    });
+
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
   });
 });

@@ -83,4 +83,30 @@ describe("createAssistantEngine", () => {
     const updates = dispatchToMap.filter((e) => (e.action as [string])[0] === "updateAssistantText");
     expect(updates.some((e) => e.id === "conv-a")).toBe(true);
   });
+
+  it("shutdownGracefully interrupts active runs before aborting controllers", async () => {
+    const signals: AbortSignal[] = [];
+    const interrupted: string[] = [];
+
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+      signals.push(signal);
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    await Promise.resolve();
+    expect(signals[0]?.aborted).toBe(false);
+
+    await engine.shutdownGracefully({
+      interruptActiveRuns: () => {
+        interrupted.push("run-1");
+      },
+      flushTimeoutMs: 0,
+    });
+
+    expect(interrupted).toEqual(["run-1"]);
+    expect(signals[0]?.aborted).toBe(true);
+    await expect(runPromise).resolves.toBeUndefined();
+  });
 });
