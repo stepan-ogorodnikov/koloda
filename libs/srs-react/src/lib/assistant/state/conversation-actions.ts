@@ -8,6 +8,7 @@ import { assistantIsLockedAtom } from "./conversation-selectors";
 import {
   assistantConversationStateAtom,
   touchAtom,
+  touchConversationAtom,
   conversationsAtom,
   currentConversationIdAtom,
   pendingSaveByConversationAtom,
@@ -95,9 +96,12 @@ export const newConversationAtom = atom(null, (_get, set, payload: NewConversati
 
 export const setAssistantCardStatusAtom = atom(
   null,
-  (_get, set, payload: { runId: string; index: number; status: CardStatus }) => {
+  (get, set, payload: { runId: string; index: number; status: CardStatus }) => {
+    const id = get(currentConversationIdAtom);
     set(assistantConversationStateAtom, ["setCardStatus", payload]);
-    set(touchAtom);
+    // WHY: Card status edits are on the current conversation; touch by id so
+    // the dirty write shares the same path as background run events.
+    if (id) set(touchConversationAtom, id);
   },
 );
 

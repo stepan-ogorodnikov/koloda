@@ -12,6 +12,7 @@ import {
   dispatchToConversationOnStore,
   markReadIfCurrentOnStore,
   touchAtom,
+  touchConversationAtom,
 } from "../state/conversation-store";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
@@ -45,6 +46,7 @@ export function useAssistantSession({
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
   const touch = useSetAtom(touchAtom);
+  const touchConversation = useSetAtom(touchConversationAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const rememberLastUsedAIProfile = useRememberLastUsedAIProfile();
 
@@ -62,10 +64,10 @@ export function useAssistantSession({
   const store = useStore();
 
   // WHY: Keep three named helpers (dispatch / by-id / local) instead of
-  // one options-bag. Collapsing them makes it easy to touch() on stream
+  // one options-bag. Collapsing them makes it easy to touch on stream
   // chunks or persist in-memory revertState. `dispatchToConversation`
-  // never auto-touches — terminal success/abort calls touch() explicitly
-  // in useConversationRuns.
+  // never auto-touches — stream chunks and terminal success/failure/abort
+  // call `touch(conversationId)` explicitly in useConversationRuns.
   const dispatch = useCallback(
     (action: ConversationReducerAction) => {
       setConversationReducerAction(action);
@@ -102,7 +104,7 @@ export function useAssistantSession({
     dispatchToConversation,
     markReadIfCurrent,
     readState,
-    touch,
+    touch: touchConversation,
   });
 
   const handleCancel = useCallback(() => {

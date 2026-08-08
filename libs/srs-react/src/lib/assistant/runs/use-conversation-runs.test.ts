@@ -8,7 +8,9 @@ import {
   conversationsAtom,
   dispatchToConversationOnStore,
   markReadIfCurrentOnStore,
+  pendingSaveByConversationAtom,
   setCurrentConversationIdAtom,
+  touchConversationOnStore,
   upsertConversationAtom,
 } from "../state/conversation-store";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
@@ -48,7 +50,9 @@ function createHarness() {
   };
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);
-  const touch = vi.fn();
+  const touch = vi.fn((conversationId: string) => {
+    touchConversationOnStore(store, conversationId);
+  });
   const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
   const streamGenerator = vi.fn<CardGenerationExecutor>();
 
@@ -164,7 +168,50 @@ describe("useConversationRuns", () => {
     expect(stateB.messages).toHaveLength(0);
     expect(stateB.activeRunId).toBeNull();
 
-    expect(harness.touch).toHaveBeenCalled();
+    expect(harness.touch).toHaveBeenCalledWith("A");
+    expect(harness.touch).not.toHaveBeenCalledWith("B");
+  });
+
+  it("completing a background run on A while viewing B dirties only A", async () => {
+    // WHY: parameterless touch() used to dirty the currently viewed
+    // conversation. Background completion on A must bump A's pending-save
+    // counter and leave B clean.
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(upsertConversationAtom, makeConversation("B"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-1",
+        mode: "chat",
+      },
+    ]);
+    harness.store.set(assistantConversationStateAtom, [
+      "addAssistantMessage",
+      {
+        runId: "run-1",
+        kind: "chat-text",
+        text: "",
+      },
+    ]);
+
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
+      onChunk("done");
+      harness.store.set(setCurrentConversationIdAtom, "B");
+      return undefined;
+    });
+
+    const { result } = renderRuns(harness);
+
+    await act(async () => {
+      await result.current.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    });
+
+    const pending = harness.store.get(pendingSaveByConversationAtom);
+    expect(pending["A"] ?? 0).toBeGreaterThan(0);
+    expect(pending["B"] ?? 0).toBe(0);
+    expect(harness.touch.mock.calls.every(([id]) => id === "A")).toBe(true);
   });
 
   it("executeGenerateRun dispatches addCard via dispatchToConversation (per-id)", async () => {
@@ -280,7 +327,9 @@ describe("useConversationRuns", () => {
     expect(completeActions).toHaveLength(1);
     expect(completeActions[0].id).toBe("A");
 
-    expect(harness.touch).toHaveBeenCalledTimes(1);
+    // One touch for the card chunk + one for terminal success.
+    expect(harness.touch).toHaveBeenCalledTimes(2);
+    expect(harness.touch).toHaveBeenCalledWith("A");
   });
 
   it("bumps the pending save when an aborted card generation run is canceled", async () => {
@@ -313,6 +362,41 @@ describe("useConversationRuns", () => {
     expect(cancelActions[0].id).toBe("A");
 
     expect(harness.touch).toHaveBeenCalledTimes(1);
+    expect(harness.touch).toHaveBeenCalledWith("A");
+  });
+
+  it("bumps the pending save for the originating conversation when a run fails", async () => {
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+    harness.store.set(upsertConversationAtom, makeConversation("B"));
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.store.set(assistantConversationStateAtom, [
+      "startRun",
+      {
+        runId: "run-A",
+        mode: "chat",
+      },
+    ]);
+    harness.store.set(setCurrentConversationIdAtom, "B");
+
+    harness.chatStreamGenerator.mockImplementation(async () => {
+      throw new Error("provider blew up");
+    });
+
+    const { result } = renderRuns(harness);
+
+    await act(async () => {
+      await result.current.executeChatRun("A", "run-A", {} as ChatStreamRequest);
+    });
+
+    const failedActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "runFailed");
+    expect(failedActions).toHaveLength(1);
+    expect(failedActions[0].id).toBe("A");
+
+    const pending = harness.store.get(pendingSaveByConversationAtom);
+    expect(pending["A"] ?? 0).toBeGreaterThan(0);
+    expect(pending["B"] ?? 0).toBe(0);
+    expect(harness.touch).toHaveBeenCalledWith("A");
   });
 
   it("an aborted chat run re-dispatches the final accumulated text via finalize (A)", async () => {

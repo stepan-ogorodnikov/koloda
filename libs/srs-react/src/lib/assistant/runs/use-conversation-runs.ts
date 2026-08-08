@@ -73,7 +73,8 @@ export type UseConversationRunsOptions = {
   /** Mark a finished run read when `conversationId` is the current conversation. */
   markReadIfCurrent: (conversationId: string, runId: string) => void;
   readState: () => ConversationReducerState;
-  touch: () => void;
+  /** Dirty the originating conversation by id (not the currently viewed one). */
+  touch: (conversationId: string) => void;
 };
 
 export type UseConversationRunsReturn = {
@@ -145,10 +146,15 @@ export function useConversationRuns({
           markReadIfCurrent(conversationId, runId);
           // WHY: Force a save with the post-completion state so a
           // throttled streaming checkpoint cannot outlive the terminal
-          // success status on disk.
-          touch();
+          // success status on disk. Touch by originating id — viewing B
+          // must not dirty B when A's background run finishes.
+          touch(conversationId);
           break;
         case "error":
+          // WHY: `runFailed` was already dispatched in the transport catch;
+          // still dirty the originating conversation so the failed terminal
+          // status is scheduled for save.
+          touch(conversationId);
           break;
         case "aborted":
           dispatchToConversation(conversationId, ["cancelRun", { runId }]);
@@ -156,7 +162,7 @@ export function useConversationRuns({
           // WHY: Same rationale as success — schedule a save with the real
           // cancelRun terminal state (`canceled`/`user`) rather than leaving
           // only the last streaming checkpoint on disk.
-          touch();
+          touch(conversationId);
           break;
       }
     },
@@ -202,6 +208,9 @@ export function useConversationRuns({
           onValue: (text, chunk) => {
             const currentText = text + chunk;
             dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: currentText }]);
+            // WHY: Stream chunks must dirty the originating conversation so
+            // throttled streaming checkpoints save A while the user views B.
+            touch(conversationId);
             return currentText;
           },
           finalize: ({ streamResult, usage }, currentText) => {
@@ -222,7 +231,7 @@ export function useConversationRuns({
         pendingRunRefs.onComplete,
       );
     },
-    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs],
+    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs, touch],
   );
 
   const executeGenerateRun = useCallback(
@@ -257,6 +266,9 @@ export function useConversationRuns({
           initial: null,
           onValue: (_acc, card) => {
             dispatchToConversation(conversationId, ["addCard", { runId, card }]);
+            // WHY: Card arrivals (and their idle cardStatuses) must dirty the
+            // originating conversation, not whatever is currently viewed.
+            touch(conversationId);
             return null;
           },
           finalize: (result) => result,
@@ -268,7 +280,7 @@ export function useConversationRuns({
         pendingRunRefs.onComplete,
       );
     },
-    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs],
+    [beginRun, dispatchToConversation, endRun, handleStreamResult, markReadIfCurrent, pendingRunRefs, touch],
   );
 
   const retryRun = useCallback(

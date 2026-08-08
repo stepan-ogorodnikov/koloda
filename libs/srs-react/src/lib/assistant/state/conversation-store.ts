@@ -122,12 +122,25 @@ export const pendingSaveAtom = atom((get) => {
   return get(pendingSaveByConversationAtom)[id] ?? 0;
 });
 
-// INVARIANT: Sole write path that marks the *current* conversation dirty.
-// Non-current ids (clone) bump `pendingSaveByConversationAtom` directly.
+// INVARIANT: Marks a specific conversation dirty by id — used for background
+// run events so completion on A does not dirty currently-viewed B.
+export const touchConversationAtom = atom(null, (_get, set, conversationId: string) => {
+  set(pendingSaveByConversationAtom, (prev) => ({
+    ...prev,
+    [conversationId]: (prev[conversationId] ?? 0) + 1,
+  }));
+});
+
+export function touchConversationOnStore(store: Store, conversationId: string): void {
+  store.set(touchConversationAtom, conversationId);
+}
+
+// INVARIANT: Marks the *current* conversation dirty. Prefer
+// `touchConversationAtom` when the originating id is known (stream events).
 export const touchAtom = atom(null, (get, set) => {
   const id = get(currentConversationIdAtom);
   if (!id) return;
-  set(pendingSaveByConversationAtom, (prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+  set(touchConversationAtom, id);
 });
 
 export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | null) => {

@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   assistantConversationStateAtom,
   touchAtom,
+  touchConversationAtom,
   conversationsAtom,
   pendingSaveAtom,
+  pendingSaveByConversationAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
@@ -411,6 +413,22 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     // Switch back to A — its counter is still 2
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(pendingSaveAtom)).toBe(2);
+  });
+
+  it("touchConversationAtom dirties a specific id without depending on current", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(upsertConversationAtom, makeConversation("B"));
+    store.set(setCurrentConversationIdAtom, "B");
+
+    store.set(touchConversationAtom, "A");
+    store.set(touchConversationAtom, "A");
+
+    const pending = store.get(pendingSaveByConversationAtom);
+    expect(pending["A"]).toBe(2);
+    expect(pending["B"] ?? 0).toBe(0);
+    // Viewing B — derived pendingSave still reflects B only.
+    expect(store.get(pendingSaveAtom)).toBe(0);
   });
 
   it("write atoms (e.g. setAssistantModeAtom) bump the current conversation's counter", () => {
