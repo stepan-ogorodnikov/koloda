@@ -35,6 +35,9 @@
   ],
   "references": [
     {
+      "path": "../assistant/tsconfig.lib.json"
+    },
+    {
       "path": "../app/tsconfig.lib.json"
     },
     {

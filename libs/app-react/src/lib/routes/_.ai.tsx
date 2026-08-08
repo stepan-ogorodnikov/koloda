@@ -13,6 +13,7 @@ import {
   DeckPicker,
   newConversationAtom,
   setAssistantDeckAtom,
+  useAssistantEngineHost,
   useConversationSaveHost,
   useGlobalAIProfileState,
 } from "@koloda/srs-react";
@@ -61,6 +62,9 @@ function AIRoute() {
   // WHY: Autosave must outlive the viewed conversation mount so dirtying A
   // while viewing B still flushes A. Host owns the per-id save queue map.
   useConversationSaveHost();
+  // WHY: Run AbortControllers must outlive chat unmount so background streams
+  // on other conversations keep running when the user navigates away.
+  useAssistantEngineHost();
 
   useEffect(() => {
     if (conversationId) {

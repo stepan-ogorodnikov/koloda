@@ -1,19 +1,13 @@
 import type { ModelParameter } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import type { Template } from "@koloda/srs";
-import { useSetAtom, useStore } from "jotai";
+import { useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom, setAssistantModeAtom } from "../state/conversation-actions";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
-import {
-  assistantConversationStateAtom,
-  dispatchToConversationOnStore,
-  markReadIfCurrentOnStore,
-  touchAtom,
-  touchConversationAtom,
-} from "../state/conversation-store";
+import { assistantConversationStateAtom, touchAtom } from "../state/conversation-store";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
 import type { RunController } from "./run-controller";
@@ -46,7 +40,6 @@ export function useAssistantSession({
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
   const setMode = useSetAtom(setAssistantModeAtom);
   const touch = useSetAtom(touchAtom);
-  const touchConversation = useSetAtom(touchConversationAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const rememberLastUsedAIProfile = useRememberLastUsedAIProfile();
 
@@ -61,33 +54,18 @@ export function useAssistantSession({
 
   const readState = useAtomCallback((get) => get(assistantConversationStateAtom));
   const readLastUsed = useAtomCallback((get) => get(aiProfileStateAtom));
-  const store = useStore();
 
   // WHY: Keep three named helpers (dispatch / by-id / local) instead of
   // one options-bag. Collapsing them makes it easy to touch on stream
   // chunks or persist in-memory revertState. `dispatchToConversation`
   // never auto-touches — stream chunks and terminal success/failure/abort
-  // call `touch(conversationId)` explicitly in useConversationRuns.
+  // call `touch(conversationId)` explicitly in the assistant engine.
   const dispatch = useCallback(
     (action: ConversationReducerAction) => {
       setConversationReducerAction(action);
       touch();
     },
     [setConversationReducerAction, touch],
-  );
-
-  const dispatchToConversation = useCallback(
-    (id: string, action: ConversationReducerAction) => {
-      dispatchToConversationOnStore(store, id, action);
-    },
-    [store],
-  );
-
-  const markReadIfCurrent = useCallback(
-    (id: string, runId: string) => {
-      markReadIfCurrentOnStore(store, id, runId);
-    },
-    [store],
   );
 
   const dispatchLocal = useCallback(
@@ -100,11 +78,6 @@ export function useAssistantSession({
   const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
     streamGenerator: configRef.current.streamGenerator,
     chatStreamGenerator: configRef.current.chatStreamGenerator,
-    dispatch,
-    dispatchToConversation,
-    markReadIfCurrent,
-    readState,
-    touch: touchConversation,
   });
 
   const handleCancel = useCallback(() => {

@@ -1,6 +1,8 @@
 {
-  "name": "@koloda/srs-react",
+  "name": "@koloda/assistant",
   "version": "0.0.1",
+  "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -12,12 +14,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@koloda/app": "workspace:*",
     "@koloda/ai": "workspace:*",
-    "@koloda/ai-react": "workspace:*",
-    "@koloda/assistant": "workspace:*",
-    "@koloda/core-react": "workspace:*",
-    "@koloda/srs": "workspace:*",
-    "@koloda/ui": "workspace:*"
+    "@koloda/app": "workspace:*",
+    "@koloda/srs": "workspace:*"
   }
 }

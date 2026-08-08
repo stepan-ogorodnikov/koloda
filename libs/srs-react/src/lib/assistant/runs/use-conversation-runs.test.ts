@@ -1,24 +1,25 @@
 import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "@koloda/ai-react";
+import type { CardGenerationExecutor, CardGenerationStreamRequest } from "@koloda/assistant";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-reducer";
+import * as conversationStore from "../state/conversation-store";
 import {
   assistantConversationStateAtom,
   conversationsAtom,
-  dispatchToConversationOnStore,
-  markReadIfCurrentOnStore,
   pendingSaveByConversationAtom,
   setCurrentConversationIdAtom,
-  touchConversationOnStore,
   upsertConversationAtom,
 } from "../state/conversation-store";
-import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
-import { initialConversationState } from "../state/conversation-reducer";
+import {
+  ensureAssistantEngine,
+  registerAssistantEngineTransports,
+  resetAssistantEngineForTests,
+} from "./use-assistant-engine-host";
 import { useConversationRuns } from "./use-conversation-runs";
 
-type Dispatch = (action: ConversationReducerAction) => void;
-type DispatchToConversation = (id: string, action: ConversationReducerAction) => void;
 type GetState = () => ConversationReducerState;
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
@@ -33,38 +34,33 @@ function makeConversation(id: string, overrides: Partial<ConversationReducerStat
 function createHarness() {
   const store = createStore();
   const dispatchToMap: Array<{ id: string; action: ConversationReducerAction }> = [];
-  const dispatchToCurrent: Array<ConversationReducerAction> = [];
+  const touch = vi.fn();
 
-  const dispatch: Dispatch = (action) => {
-    dispatchToCurrent.push(action);
-    store.set(assistantConversationStateAtom, action);
-  };
+  const originalDispatch = conversationStore.dispatchToConversationOnStore;
+  const originalTouch = conversationStore.touchConversationOnStore;
 
-  const dispatchToConversation: DispatchToConversation = (id, action) => {
+  vi.spyOn(conversationStore, "dispatchToConversationOnStore").mockImplementation((s, id, action) => {
     dispatchToMap.push({ id, action });
-    dispatchToConversationOnStore(store, id, action);
-  };
-
-  const markReadIfCurrent = (id: string, runId: string) => {
-    markReadIfCurrentOnStore(store, id, runId);
-  };
-
-  const getState: GetState = () => store.get(assistantConversationStateAtom);
-  const touch = vi.fn((conversationId: string) => {
-    touchConversationOnStore(store, conversationId);
+    return originalDispatch(s, id, action);
   });
+  vi.spyOn(conversationStore, "touchConversationOnStore").mockImplementation((s, conversationId) => {
+    touch(conversationId);
+    return originalTouch(s, conversationId);
+  });
+
   const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
   const streamGenerator = vi.fn<CardGenerationExecutor>();
 
+  ensureAssistantEngine(store);
+  registerAssistantEngineTransports({ chatStreamGenerator, streamGenerator });
+
+  const getState: GetState = () => store.get(assistantConversationStateAtom);
+
   return {
     store,
-    dispatch,
-    dispatchToConversation,
-    markReadIfCurrent,
     getState,
     touch,
     dispatchToMap,
-    dispatchToCurrent,
     chatStreamGenerator,
     streamGenerator,
   };
@@ -75,11 +71,6 @@ function renderRuns(harness: ReturnType<typeof createHarness>) {
     useConversationRuns({
       streamGenerator: harness.streamGenerator,
       chatStreamGenerator: harness.chatStreamGenerator,
-      dispatch: harness.dispatch,
-      dispatchToConversation: harness.dispatchToConversation,
-      markReadIfCurrent: harness.markReadIfCurrent,
-      readState: harness.getState,
-      touch: harness.touch,
     }),
   );
 }
@@ -96,7 +87,9 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
 
 describe("useConversationRuns", () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.clearAllMocks();
+    resetAssistantEngineForTests();
   });
 
   it("executeChatRun dispatches updateAssistantText via dispatchToConversation (per-id) so background streams land on the originating conversation", async () => {
@@ -560,5 +553,43 @@ describe("useConversationRuns", () => {
     });
 
     expect(cardSignals[0]?.aborted).toBe(true);
+  });
+
+  it("unmounting the hook does not abort an in-flight run", async () => {
+    const harness = createHarness();
+    harness.store.set(upsertConversationAtom, makeConversation("A"));
+
+    const signals: AbortSignal[] = [];
+    let resolveStream!: () => void;
+    harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
+      signals.push(signal);
+      onChunk("chunk");
+      await new Promise<void>((resolve) => {
+        resolveStream = resolve;
+      });
+    });
+
+    const { result, unmount } = renderRuns(harness);
+
+    let runPromise!: Promise<void>;
+    act(() => {
+      runPromise = result.current.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    });
+
+    await act(async () => {
+      while (signals.length < 1) await Promise.resolve();
+    });
+
+    unmount();
+    expect(signals[0]?.aborted).toBe(false);
+
+    await act(async () => {
+      resolveStream();
+      await runPromise;
+    });
+
+    const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
+    expect(completeActions).toHaveLength(1);
+    expect(completeActions[0].id).toBe("A");
   });
 });

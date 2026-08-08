@@ -44,6 +44,9 @@
     },
     {
       "path": "./apps/native-electron-e2e"
+    },
+    {
+      "path": "./libs/assistant"
     }
   ],
   "compilerOptions": {

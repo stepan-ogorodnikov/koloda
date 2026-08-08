@@ -99,11 +99,9 @@
     "apps/native-electron": {
       "name": "@koloda/native-electron",
       "version": "0.0.1",
-      "dependencies": {
-        "@koloda/ai": "workspace:*",
-      },
       "devDependencies": {
-        "electron": "^35.2.0",
+        "@koloda/ai": "workspace:*",
+        "electron": "35.7.5",
         "electron-builder": "^25.1.8",
       },
     },
@@ -142,6 +140,15 @@
         "@koloda/ui": "workspace:*",
       },
     },
+    "libs/assistant": {
+      "name": "@koloda/assistant",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/srs": "workspace:*",
+      },
+    },
     "libs/core-react": {
       "name": "@koloda/core-react",
       "version": "0.0.1",
@@ -174,6 +181,7 @@
         "@koloda/ai": "workspace:*",
         "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/assistant": "workspace:*",
         "@koloda/core-react": "workspace:*",
         "@koloda/srs": "workspace:*",
         "@koloda/ui": "workspace:*",
@@ -590,6 +598,8 @@
     "@koloda/app": ["@koloda/app@workspace:libs/app"],
 
     "@koloda/app-react": ["@koloda/app-react@workspace:libs/app-react"],
+
+    "@koloda/assistant": ["@koloda/assistant@workspace:libs/assistant"],
 
     "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
 
