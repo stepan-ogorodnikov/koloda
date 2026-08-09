@@ -5,13 +5,28 @@ export type {
   AssistantEngineOptions,
   AssistantEngineShutdownOptions,
 } from "./lib/assistant-engine";
-export { createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "./lib/conversation-persistence-host";
+export {
+  createConversationPersistenceHost,
+  SHUTDOWN_FLUSH_TIMEOUT_MS,
+  SHUTDOWN_SAVE_MAX_ATTEMPTS,
+} from "./lib/conversation-persistence-host";
 export type {
   ConversationPersistenceHost,
   CreateConversationPersistenceHostOptions,
 } from "./lib/conversation-persistence-host";
-export { createConversationSaveQueue } from "./lib/create-conversation-save-queue";
-export type { ConversationSaveQueue, CreateConversationSaveQueueOptions } from "./lib/create-conversation-save-queue";
+export {
+  categorizeSaveError,
+  computeSaveRetryDelayMs,
+  createConversationSaveQueue,
+  SAVE_RETRY_BASE_DELAY_MS,
+  SAVE_RETRY_MAX_DELAY_MS,
+} from "./lib/create-conversation-save-queue";
+export type {
+  ConversationSaveQueue,
+  CreateConversationSaveQueueOptions,
+  SaveErrorCategory,
+  SaveFailureLog,
+} from "./lib/create-conversation-save-queue";
 export { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./lib/create-save-scheduler";
 export type { CreateSaveSchedulerOptions, SaveScheduler } from "./lib/create-save-scheduler";
 export { createConversationRuntime } from "./lib/conversation-runtime";

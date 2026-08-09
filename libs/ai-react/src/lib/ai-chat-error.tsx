@@ -1,4 +1,4 @@
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -14,9 +14,10 @@ export type AIChatErrorProps = {
   error?: string | null;
   isDismissed?: boolean;
   onDismiss?: () => void;
+  onRetry?: () => void;
 };
 
-export function AIChatError({ error, isDismissed, onDismiss }: AIChatErrorProps) {
+export function AIChatError({ error, isDismissed, onDismiss, onRetry }: AIChatErrorProps) {
   const { _ } = useLingui();
 
   return (
@@ -24,6 +25,15 @@ export function AIChatError({ error, isDismissed, onDismiss }: AIChatErrorProps)
       {error && !isDismissed && (
         <Fade className={aiChatError}>
           <em className="grow min-w-0 fg-error not-italic break-all">{error}</em>
+          {onRetry && (
+            <Button
+              variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover shrink-0" }}
+              onPress={onRetry}
+            >
+              <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Refresh04Icon} aria-hidden="true" />
+              {_(msg`ai.chat.error.retry-save`)}
+            </Button>
+          )}
           {onDismiss && (
             <Button
               variants={{ style: "ghost", size: "none", class: "self-start size-8 min-w-8 -mr-2" }}

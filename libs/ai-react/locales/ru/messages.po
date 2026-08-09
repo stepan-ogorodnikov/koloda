@@ -44,6 +44,10 @@ msgstr "с"
 msgid "ai.chat.error.close"
 msgstr "Скрыть ошибки"
 
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:28
+msgid "ai.chat.error.retry-save"
+msgstr "Повторить сохранение"
+
 #: ../../libs/ai-react/src/lib/ai-chat-prompt-input.tsx:39
 msgid "ai.chat.input.label"
 msgstr "Поле ввода сообщения"

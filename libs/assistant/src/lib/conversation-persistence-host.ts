@@ -1,8 +1,14 @@
-import { createConversationSaveQueue } from "./create-conversation-save-queue";
+import { createConversationSaveQueue, SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
 import type { ConversationSaveQueue } from "./create-conversation-save-queue";
 
 /** Best-effort ceiling for in-flight durable writes during graceful shutdown. */
 export const SHUTDOWN_FLUSH_TIMEOUT_MS = 2000;
+
+/**
+ * Max write attempts per conversation during `flushAllBounded`.
+ * Prevents a tight rejection loop when the store rejects instantly.
+ */
+export const SHUTDOWN_SAVE_MAX_ATTEMPTS = 3;
 
 export type CreateConversationPersistenceHostOptions = {
   createWrite: (conversationId: string) => () => Promise<boolean>;
@@ -14,6 +20,8 @@ export type CreateConversationPersistenceHostOptions = {
 export type ConversationPersistenceHost = {
   flushAllNow: () => void;
   flushAllBounded: (timeoutMs?: number) => Promise<void>;
+  /** Immediate save attempt for a conversation (cancels pending backoff). */
+  retrySave: (conversationId: string) => void;
   dispose: () => void;
 };
 
@@ -36,6 +44,7 @@ export function createConversationPersistenceHost({
     let queue = queues.get(id);
     if (!queue) {
       queue = createConversationSaveQueue({
+        conversationId: id,
         write: createWrite(id),
         isStreaming: () => isStreaming(id),
       });
@@ -76,13 +85,36 @@ export function createConversationPersistenceHost({
     }
   };
 
+  const retrySave = (conversationId: string) => {
+    if (disposed) return;
+    queues.get(conversationId)?.flushNow();
+  };
+
   const flushAllBounded = async (timeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS): Promise<void> => {
     if (disposed) return;
     const deadline = Date.now() + timeoutMs;
+    // WHY: count failures for this flushAllBounded call only — lifetime
+    // consecutiveFailures must not starve exit flushes after earlier autosave
+    // failures, and must not be used as a delta (it resets to 0 on ack, which
+    // would make the attempt cap and failure yield stop working after a
+    // mid-flush success with N+1 still dirty).
+    const flushFailures = new Map<string, number>();
+    const failuresDuringFlush = (id: string) => flushFailures.get(id) ?? 0;
+
     while (Date.now() < deadline) {
-      // WHY: kick scheduled N+1 flushes each iteration — waitUntilIdle only
+      // id → consecutiveFailures() immediately before flushNow for this round.
+      const preFlushConsecutive = new Map<string, number>();
+      // WHY: kick scheduled / backoff flushes each iteration — waitUntilIdle only
       // blocks on in-flight writes, not on dirty-without-in-flight.
-      flushAllNow();
+      for (const [id, queue] of queues.entries()) {
+        if (!queue.isDirty()) continue;
+        // INVARIANT: stop re-issuing writes for a conversation once it has
+        // failed SHUTDOWN_SAVE_MAX_ATTEMPTS times during this shutdown flush.
+        if (failuresDuringFlush(id) >= SHUTDOWN_SAVE_MAX_ATTEMPTS) continue;
+        preFlushConsecutive.set(id, queue.consecutiveFailures());
+        queue.flushNow();
+      }
+
       const waits = [...queues.values()].map((queue) => queue.waitUntilIdle());
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
@@ -92,8 +124,40 @@ export function createConversationPersistenceHost({
           setTimeout(resolve, remaining);
         }),
       ]);
-      const stillDirty = [...queues.values()].some((queue) => queue.isDirty());
-      if (!stillDirty) break;
+
+      for (const [id, before] of preFlushConsecutive) {
+        const queue = queues.get(id);
+        if (!queue) continue;
+        // WHY: consecutiveFailures resets to 0 on successful ack — only count
+        // this wait as a flush failure when the counter rose (write threw).
+        if (queue.consecutiveFailures() > before) flushFailures.set(id, failuresDuringFlush(id) + 1);
+      }
+
+      const stillRetrying = [...queues.entries()].some(
+        ([id, queue]) => queue.isDirty() && failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
+      );
+      // WHY: shutdown drives retries via this loop — cancel ordinary backoff so
+      // a timer cannot sneak an uncapped write during a failure yield, and so a
+      // capped/failed flush does not keep firing after we stop.
+      for (const queue of queues.values()) {
+        queue.cancelRetry();
+      }
+      if (!stillRetrying) break;
+
+      const needsFailureYield = [...queues.entries()].some(
+        ([id, queue]) =>
+          queue.isDirty() && failuresDuringFlush(id) > 0 && failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
+      );
+      // WHY: yield only after failures so a rejecting store cannot tight-loop;
+      // successful in-flight N with queued N+1 must flush on the next iteration
+      // without burning the shutdown deadline on backoff.
+      if (!needsFailureYield) continue;
+
+      const yieldMs = Math.min(SAVE_RETRY_BASE_DELAY_MS, deadline - Date.now());
+      if (yieldMs <= 0) break;
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, yieldMs);
+      });
     }
   };
 
@@ -107,5 +171,5 @@ export function createConversationPersistenceHost({
     queues.clear();
   };
 
-  return { flushAllNow, flushAllBounded, dispose };
+  return { flushAllNow, flushAllBounded, retrySave, dispose };
 }

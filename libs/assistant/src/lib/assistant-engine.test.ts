@@ -361,6 +361,7 @@ describe("createAssistantEngine", () => {
     engine.setPersistenceHost({
       flushAllNow: vi.fn(),
       flushAllBounded,
+      retrySave: vi.fn(),
       dispose: vi.fn(),
     });
 
@@ -438,6 +439,7 @@ describe("createAssistantEngine", () => {
     engine.setPersistenceHost({
       flushAllNow: vi.fn(),
       flushAllBounded,
+      retrySave: vi.fn(),
       dispose: hostDispose,
     });
 

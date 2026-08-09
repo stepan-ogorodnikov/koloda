@@ -99,7 +99,9 @@ export function AssistantChat({
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 
-  const { isRestoring, loadError, handleDismissSave, retryLoad } = useConversationPersistence({ conversationId });
+  const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad } = useConversationPersistence({
+    conversationId,
+  });
 
   const { controller, template, templateId } = useAssistantSession({
     conversationId,
@@ -197,7 +199,7 @@ export function AssistantChat({
             />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
             {generateErr && <AIChatError error={generateErr} onDismiss={controller.dismissGenerate} />}
-            {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} />}
+            {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} onRetry={retrySave} />}
             {revertState && <RevertBanner onRestore={handleRestore} />}
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />

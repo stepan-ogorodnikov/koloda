@@ -1,16 +1,36 @@
 import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
 
+/** Base delay for the first autosave retry after a failed write. */
+export const SAVE_RETRY_BASE_DELAY_MS = 250;
+/** Ceiling for exponential autosave retry delay (jitter applied below this). */
+export const SAVE_RETRY_MAX_DELAY_MS = 30_000;
+
+export type SaveErrorCategory = "aborted" | "network" | "storage" | "unknown";
+
+export type SaveFailureLog = {
+  conversationId: string;
+  generation: number;
+  attempt: number;
+  errorCategory: SaveErrorCategory;
+  message: string;
+};
+
 export type CreateConversationSaveQueueOptions = {
+  conversationId: string;
   /**
    * Perform the durable write for the latest snapshot.
    * Return `false` to skip (e.g. empty conversation) — that still counts as an ack
    * when no newer dirty arrived during the write.
-   * Throw to fail — dirty stays set so a later flush can retry.
+   * Throw to fail — dirty stays set and a bounded backoff retry is scheduled.
    */
   write: () => Promise<boolean>;
   isStreaming: () => boolean;
   throttleMs?: number;
   debounceMs?: number;
+  /** Injected for deterministic backoff tests. Defaults to `Math.random`. */
+  random?: () => number;
+  /** Injected for assertions; defaults to a structured `console.error`. */
+  logSaveFailure?: (entry: SaveFailureLog) => void;
 };
 
 export type ConversationSaveQueue = {
@@ -18,9 +38,38 @@ export type ConversationSaveQueue = {
   flushNow: () => void;
   flushIfPending: () => void;
   isDirty: () => boolean;
+  /** Consecutive failed writes since the last successful ack. */
+  consecutiveFailures: () => number;
+  /** Cancel a pending backoff retry without disposing the queue. */
+  cancelRetry: () => void;
   waitUntilIdle: () => Promise<void>;
   dispose: () => void;
 };
+
+/**
+ * Bounded exponential backoff with full-jitter for ordinary autosave retries.
+ * `attempt` is 1-based (first failure → attempt 1).
+ */
+export function computeSaveRetryDelayMs(attempt: number, random: () => number = Math.random): number {
+  const exp = Math.min(SAVE_RETRY_MAX_DELAY_MS, SAVE_RETRY_BASE_DELAY_MS * 2 ** Math.max(0, attempt - 1));
+  // WHY: full jitter (0.5–1.0×) spreads retries across clients without collapsing to zero delay.
+  const jitter = 0.5 + random() * 0.5;
+  return Math.floor(exp * jitter);
+}
+
+export function categorizeSaveError(error: unknown): SaveErrorCategory {
+  if (error instanceof Error) {
+    if (error.name === "AbortError") return "aborted";
+    const text = `${error.name} ${error.message}`;
+    if (/network|fetch|ECONN|ENOTFOUND|ETIMEDOUT|timeout/i.test(text)) return "network";
+    if (/quota|disk|SQLITE|PGlite|IndexedDB|storage/i.test(text)) return "storage";
+  }
+  return "unknown";
+}
+
+function defaultLogSaveFailure(entry: SaveFailureLog): void {
+  console.error("[assistant.save]", entry);
+}
 
 /**
  * Per-conversation serialized autosave queue.
@@ -32,21 +81,45 @@ export type ConversationSaveQueue = {
  *   advances (N+1) and a follow-up flush is required after G completes.
  * - Ack of G clears dirty only when `dirtyGeneration === G`. Ack of N must NOT
  *   clear dirty if N+1 is already queued.
+ * - A failed write stays dirty and schedules a bounded backoff retry; delete
+ *   disposes the queue and cancels that retry timer.
  *
  * Assumes one writer per profile/database — no DB CAS.
  */
 export function createConversationSaveQueue({
+  conversationId,
   write,
   isStreaming,
   throttleMs = STREAM_SAVE_THROTTLE_MS,
   debounceMs = IDLE_SAVE_DEBOUNCE_MS,
+  random = Math.random,
+  logSaveFailure = defaultLogSaveFailure,
 }: CreateConversationSaveQueueOptions): ConversationSaveQueue {
   let dirtyGeneration = 0;
   let ackedGeneration = 0;
   let inFlight: Promise<void> | null = null;
   let disposed = false;
+  let failureAttempt = 0;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isDirty = () => dirtyGeneration > ackedGeneration;
+  const consecutiveFailures = () => failureAttempt;
+
+  const clearRetryTimer = () => {
+    if (!retryTimer) return;
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  };
+
+  const scheduleRetry = () => {
+    if (disposed) return;
+    clearRetryTimer();
+    const delay = computeSaveRetryDelayMs(failureAttempt, random);
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      runFlush();
+    }, delay);
+  };
 
   const runFlush = () => {
     if (disposed) return;
@@ -62,14 +135,28 @@ export function createConversationSaveQueue({
         if (dirtyGeneration === generation) {
           ackedGeneration = generation;
         }
-      } catch {
-        // WHY: Stay dirty — ackedGeneration unchanged. Do not tight-loop retry;
-        // the next `notifyDirty` (or an already-queued N+1 below) schedules again.
+        failureAttempt = 0;
+        clearRetryTimer();
+      } catch (error) {
+        failureAttempt += 1;
+        logSaveFailure({
+          conversationId,
+          generation,
+          attempt: failureAttempt,
+          errorCategory: categorizeSaveError(error),
+          message: error instanceof Error ? error.message : String(error),
+        });
+        // WHY: Stay dirty — ackedGeneration unchanged. Retry via backoff rather
+        // than waiting for another mutation (idle users would otherwise never save).
+        if (!disposed && dirtyGeneration === generation) {
+          scheduleRetry();
+        }
       } finally {
         inFlight = null;
-        // WHY: only auto-continue when a newer dirty landed during this write.
-        // A failed write at G without N+1 waits for the next touch.
+        // WHY: a newer dirty during this write supersedes backoff — resume via
+        // the normal throttle/debounce scheduler.
         if (!disposed && dirtyGeneration > generation) {
+          clearRetryTimer();
           scheduler.schedule();
         }
       }
@@ -86,11 +173,16 @@ export function createConversationSaveQueue({
   const notifyDirty = () => {
     if (disposed) return;
     dirtyGeneration += 1;
+    // WHY: a fresh mutation cancels a pending backoff so the coalesced save
+    // follows throttle/debounce instead of an outdated retry delay.
+    clearRetryTimer();
     scheduler.schedule();
   };
 
   const flushNow = () => {
     if (disposed) return;
+    // WHY: manual retry and shutdown must not wait out the backoff timer.
+    clearRetryTimer();
     scheduler.flushNow();
   };
 
@@ -99,22 +191,39 @@ export function createConversationSaveQueue({
     scheduler.flushIfPending();
   };
 
+  const cancelRetry = () => {
+    clearRetryTimer();
+  };
+
   const waitUntilIdle = (): Promise<void> => {
     if (disposed) return Promise.resolve();
     // WHY: only wait on the in-flight write. Dirty-without-in-flight (scheduled
-    // N+1 or a failed write) is driven by the caller via flushNow — polling
-    // dirty here would microtask-spin when nothing is executing.
+    // N+1, backoff retry, or a failed write) is driven by timers / flushNow —
+    // polling dirty here would microtask-spin when nothing is executing.
     return inFlight ?? Promise.resolve();
   };
 
   const dispose = () => {
     if (disposed) return;
-    // WHY: flush any coalesced timer before locking the queue. `write` must
-    // no-op when the conversation was removed from the store so this cannot
-    // resurrect a deleted row.
+    // WHY: conversation delete removes this queue — cancel backoff so a late
+    // timer cannot start a write after the row is gone (#7). Full tombstone /
+    // in-flight write ordering is #8.
+    clearRetryTimer();
+    // WHY: flush any coalesced throttle/debounce timer before locking the queue.
+    // `write` must no-op when the conversation was removed from the store so
+    // this cannot resurrect a deleted row.
     scheduler.flushIfPending();
     disposed = true;
   };
 
-  return { notifyDirty, flushNow, flushIfPending, isDirty, waitUntilIdle, dispose };
+  return {
+    notifyDirty,
+    flushNow,
+    flushIfPending,
+    isDirty,
+    consecutiveFailures,
+    cancelRetry,
+    waitUntilIdle,
+    dispose,
+  };
 }
