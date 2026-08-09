@@ -66,6 +66,7 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
       invalidateConversations: () => {
         currentQueryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       },
+      isTombstoned: (conversationId) => ensureAssistantPersistenceHost(currentStore).isTombstoned(conversationId),
     })(id);
   };
 

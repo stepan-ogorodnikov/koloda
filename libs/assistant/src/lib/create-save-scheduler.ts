@@ -12,6 +12,8 @@ export type SaveScheduler = {
   schedule: () => void;
   flushNow: () => void;
   flushIfPending: () => void;
+  /** Drop a coalesced timer without flushing — used when delete tombstones a queue. */
+  cancel: () => void;
 };
 
 /**
@@ -88,5 +90,9 @@ export function createSaveScheduler({
     fire();
   };
 
-  return { schedule, flushNow, flushIfPending };
+  const cancel = () => {
+    clearTimer();
+  };
+
+  return { schedule, flushNow, flushIfPending, cancel };
 }

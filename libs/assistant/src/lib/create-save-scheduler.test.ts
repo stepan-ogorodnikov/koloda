@@ -92,6 +92,18 @@ describe("createSaveScheduler", () => {
     expect(flush).toHaveBeenCalledTimes(1);
   });
 
+  it("cancel drops a pending timer without flushing", () => {
+    const scheduler = makeScheduler();
+    scheduler.schedule();
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    flush.mockClear();
+    scheduler.schedule();
+    scheduler.cancel();
+    vi.advanceTimersByTime(IDLE_SAVE_DEBOUNCE_MS);
+    expect(flush).not.toHaveBeenCalled();
+  });
+
   it("clamps an idle-then-streaming reschedule into the throttle window", () => {
     const scheduler = makeScheduler();
     scheduler.schedule();

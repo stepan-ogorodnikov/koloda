@@ -22,6 +22,12 @@ export type ConversationPersistenceHost = {
   flushAllBounded: (timeoutMs?: number) => Promise<void>;
   /** Immediate save attempt for a conversation (cancels pending backoff). */
   retrySave: (conversationId: string) => void;
+  /**
+   * Tombstone + cancel queued writes + await in-flight for one conversation.
+   * Call before deleting the DB row so an upsert cannot resurrect it (#8).
+   */
+  prepareDelete: (conversationId: string) => Promise<void>;
+  isTombstoned: (conversationId: string) => boolean;
   dispose: () => void;
 };
 
@@ -37,15 +43,27 @@ export function createConversationPersistenceHost({
   subscribePendingSaves,
 }: CreateConversationPersistenceHostOptions): ConversationPersistenceHost {
   const queues = new Map<string, ConversationSaveQueue>();
+  // WHY: host-level tombstones block getQueue/notifyDirty after prepareDelete
+  // even when the queue entry was never created or was already disposed.
+  const tombstonedIds = new Set<string>();
   let prevPending: Record<string, number> = { ...getInitialPending() };
   let disposed = false;
 
-  const getQueue = (id: string): ConversationSaveQueue => {
+  const getQueue = (id: string): ConversationSaveQueue | null => {
+    if (tombstonedIds.has(id)) return null;
     let queue = queues.get(id);
     if (!queue) {
       queue = createConversationSaveQueue({
         conversationId: id,
-        write: createWrite(id),
+        // WHY: re-check tombstone around the durable write so a generation that
+        // started before prepareDelete still no-ops if delete won the race at
+        // the host boundary (queue-level prepareDelete also awaits in-flight).
+        write: async () => {
+          if (tombstonedIds.has(id)) return false;
+          const wrote = await createWrite(id)();
+          if (tombstonedIds.has(id)) return false;
+          return wrote;
+        },
         isStreaming: () => isStreaming(id),
       });
       queues.set(id, queue);
@@ -56,14 +74,14 @@ export function createConversationPersistenceHost({
   const syncFromPending = (next: Record<string, number>) => {
     if (disposed) return;
     for (const [id, count] of Object.entries(next)) {
-      if (count > (prevPending[id] ?? 0)) {
-        getQueue(id).notifyDirty();
-      }
+      if (tombstonedIds.has(id)) continue;
+      if (count > (prevPending[id] ?? 0)) getQueue(id)?.notifyDirty();
     }
     for (const id of Object.keys(prevPending)) {
       if (!(id in next)) {
         queues.get(id)?.dispose();
         queues.delete(id);
+        tombstonedIds.delete(id);
       }
     }
     prevPending = next;
@@ -73,7 +91,7 @@ export function createConversationPersistenceHost({
   // while the route was mounting). One notify per already-pending id is
   // enough — the queue always persists the latest snapshot.
   for (const [id, count] of Object.entries(prevPending)) {
-    if (count > 0) getQueue(id).notifyDirty();
+    if (count > 0) getQueue(id)?.notifyDirty();
   }
 
   const unsub = subscribePendingSaves(syncFromPending);
@@ -87,8 +105,24 @@ export function createConversationPersistenceHost({
 
   const retrySave = (conversationId: string) => {
     if (disposed) return;
+    if (tombstonedIds.has(conversationId)) return;
     queues.get(conversationId)?.flushNow();
   };
+
+  const prepareDelete = async (conversationId: string): Promise<void> => {
+    if (disposed) return;
+    // INVARIANT: mark tombstoned before awaiting so syncFromPending / retry
+    // cannot start a new write while we wait on in-flight (#8 steps 1–3).
+    tombstonedIds.add(conversationId);
+    const queue = queues.get(conversationId);
+    if (queue) {
+      await queue.prepareDelete();
+      return;
+    }
+    // WHY: no queue means nothing in flight; tombstone alone blocks late dirty.
+  };
+
+  const isTombstoned = (conversationId: string) => tombstonedIds.has(conversationId);
 
   const flushAllBounded = async (timeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS): Promise<void> => {
     if (disposed) return;
@@ -107,6 +141,7 @@ export function createConversationPersistenceHost({
       // WHY: kick scheduled / backoff flushes each iteration — waitUntilIdle only
       // blocks on in-flight writes, not on dirty-without-in-flight.
       for (const [id, queue] of queues.entries()) {
+        if (tombstonedIds.has(id)) continue;
         if (!queue.isDirty()) continue;
         // INVARIANT: stop re-issuing writes for a conversation once it has
         // failed SHUTDOWN_SAVE_MAX_ATTEMPTS times during this shutdown flush.
@@ -134,7 +169,8 @@ export function createConversationPersistenceHost({
       }
 
       const stillRetrying = [...queues.entries()].some(
-        ([id, queue]) => queue.isDirty() && failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
+        ([id, queue]) =>
+          !tombstonedIds.has(id) && queue.isDirty() && failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
       );
       // WHY: shutdown drives retries via this loop — cancel ordinary backoff so
       // a timer cannot sneak an uncapped write during a failure yield, and so a
@@ -146,7 +182,10 @@ export function createConversationPersistenceHost({
 
       const needsFailureYield = [...queues.entries()].some(
         ([id, queue]) =>
-          queue.isDirty() && failuresDuringFlush(id) > 0 && failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
+          !tombstonedIds.has(id) &&
+          queue.isDirty() &&
+          failuresDuringFlush(id) > 0 &&
+          failuresDuringFlush(id) < SHUTDOWN_SAVE_MAX_ATTEMPTS,
       );
       // WHY: yield only after failures so a rejecting store cannot tight-loop;
       // successful in-flight N with queued N+1 must flush on the next iteration
@@ -169,7 +208,8 @@ export function createConversationPersistenceHost({
       queue.dispose();
     }
     queues.clear();
+    tombstonedIds.clear();
   };
 
-  return { flushAllNow, flushAllBounded, retrySave, dispose };
+  return { flushAllNow, flushAllBounded, retrySave, prepareDelete, isTombstoned, dispose };
 }

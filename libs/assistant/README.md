@@ -14,7 +14,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 ## Architectural Map
 
 - Engine: `assistant-engine.ts` — `createAssistantEngine` / `AssistantEngine`. Lazy per-conversation runtimes; public API for arm / execute chat / execute generate / retry / cancel / `shutdownGracefully` / dispose.
-- Persistence: `conversation-persistence-host.ts`, `create-conversation-save-queue.ts`, `create-save-scheduler.ts` — engine-owned per-conversation serialized save queues; failed writes retry with bounded exponential backoff + jitter; `retrySave` for explicit recovery; `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000 ms) and `SHUTDOWN_SAVE_MAX_ATTEMPTS` (3) bound the best-effort final flush on graceful shutdown.
+- Persistence: `conversation-persistence-host.ts`, `create-conversation-save-queue.ts`, `create-save-scheduler.ts` — engine-owned per-conversation serialized save queues; failed writes retry with bounded exponential backoff + jitter; `retrySave` for explicit recovery; `prepareDelete` tombstones + cancels queued work + awaits in-flight writes before DB delete so upserts cannot resurrect rows; `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000 ms) and `SHUTDOWN_SAVE_MAX_ATTEMPTS` (3) bound the best-effort final flush on graceful shutdown.
 - Conversation runtime: `conversation-runtime.ts` — plain runtime with a serial command queue and chat/card/retry execution against injected transports + callbacks (`dispatch`, `dispatchToConversation`, `touch`, `markReadIfCurrent`, `readState`).
 - Controllers: `run-controller-registry.ts` — engine-owned `AbortController` map keyed by `runId` (cancel isolation; shutdown/dispose aborts all).
 - Pending refs: `pending-run-refs.ts` — arm / onComplete tracking for in-flight runs.

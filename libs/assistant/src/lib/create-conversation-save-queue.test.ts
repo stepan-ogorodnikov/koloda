@@ -223,6 +223,64 @@ describe("createConversationSaveQueue", () => {
     expect(write).toHaveBeenCalledTimes(1);
   });
 
+  it("prepareDelete tombstones, cancels queued work, and awaits the in-flight write", async () => {
+    const first = deferred<boolean>();
+    const write = vi.fn(() => first.promise);
+    const queue = createConversationSaveQueue({
+      conversationId: "A",
+      write,
+      isStreaming: () => false,
+    });
+
+    queue.notifyDirty();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(write).toHaveBeenCalledTimes(1);
+
+    // Queue N+1 while N is in flight — prepareDelete must drop it.
+    queue.notifyDirty();
+    expect(queue.isDirty()).toBe(true);
+
+    let prepareDone = false;
+    const prepare = queue.prepareDelete().then(() => {
+      prepareDone = true;
+    });
+    await Promise.resolve();
+    expect(queue.isTombstoned()).toBe(true);
+    expect(prepareDone).toBe(false);
+    expect(queue.isDirty()).toBe(false);
+
+    // New dirties after tombstone must not start writes.
+    queue.notifyDirty();
+    queue.flushNow();
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    expect(write).toHaveBeenCalledTimes(1);
+
+    first.resolve(true);
+    await first.promise;
+    await prepare;
+    expect(prepareDone).toBe(true);
+    expect(write).toHaveBeenCalledTimes(1);
+  });
+
+  it("dispose does not flush a pending coalesced save", async () => {
+    const write = vi.fn(async () => true);
+    const queue = createConversationSaveQueue({
+      conversationId: "A",
+      write,
+      isStreaming: () => false,
+    });
+
+    queue.notifyDirty();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(write).toHaveBeenCalledTimes(1);
+
+    queue.notifyDirty();
+    // Debounce pending — dispose must cancel, not flush.
+    queue.dispose();
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    expect(write).toHaveBeenCalledTimes(1);
+  });
+
   it("throttles while streaming", async () => {
     const write = vi.fn(async () => true);
     const queue = createConversationSaveQueue({

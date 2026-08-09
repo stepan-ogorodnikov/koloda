@@ -362,6 +362,8 @@ describe("createAssistantEngine", () => {
       flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
+      prepareDelete: vi.fn(async () => undefined),
+      isTombstoned: vi.fn(() => false),
       dispose: vi.fn(),
     });
 
@@ -426,6 +428,87 @@ describe("createAssistantEngine", () => {
     expect(chatStreamGenerator).not.toHaveBeenCalled();
   });
 
+  it("disposeConversation closes only that conversation runtime", async () => {
+    const streaming = new Set<string>(["run-a", "run-b"]);
+    conversationStates.A = { runs: { "run-a": { mode: "chat" } } };
+    conversationStates.B = { runs: { "run-b": { mode: "chat" } } };
+
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: (_conversationId, runId) => streaming.has(runId),
+      readConversationState,
+    });
+
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const runA = engine.executeChatRun("A", "run-a", {} as ChatStreamRequest);
+    const runB = engine.executeChatRun("B", "run-b", {} as ChatStreamRequest);
+    await Promise.resolve();
+
+    engine.disposeConversation("A");
+    streaming.delete("run-a");
+    await expect(runA).resolves.toBeUndefined();
+
+    expect(engine.lifecycle).toBe("running");
+    engine.cancel("B", "run-b");
+    streaming.delete("run-b");
+    await expect(runB).resolves.toBeUndefined();
+  });
+
+  it("disposeConversation aborts in-flight streams only while store still has run keys", async () => {
+    const signals: AbortSignal[] = [];
+    conversationStates.A = { runs: { "run-kept": { mode: "chat" } } };
+    conversationStates.B = { runs: { "run-cleared": { mode: "chat" } } };
+
+    engine = createAssistantEngine({
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      dispatchToConversation: (id, action) => {
+        dispatchToMap.push({ id, action });
+      },
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: () => true,
+      readConversationState,
+    });
+
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+      signals.push(signal);
+      await holdUntilAborted(signal);
+      return undefined;
+    });
+
+    const kept = engine.executeChatRun("A", "run-kept", {} as ChatStreamRequest);
+    const cleared = engine.executeChatRun("B", "run-cleared", {} as ChatStreamRequest);
+    await Promise.resolve();
+    expect(signals).toHaveLength(2);
+    expect(signals[0]?.aborted).toBe(false);
+    expect(signals[1]?.aborted).toBe(false);
+
+    // Regression: empty runs before dispose skips abort (wrong delete order).
+    conversationStates.B = { runs: {} };
+    engine.disposeConversation("B");
+    expect(signals[1]?.aborted).toBe(false);
+
+    // Correct order: dispose while store still has run keys, then clear.
+    engine.disposeConversation("A");
+    expect(signals[0]?.aborted).toBe(true);
+    delete conversationStates.A;
+
+    await expect(kept).resolves.toBeUndefined();
+    engine.cancel("B", "run-cleared");
+    await expect(cleared).resolves.toBeUndefined();
+  });
+
   it("dispose during shutdown flush does not dispose the persistence host", async () => {
     let releaseFlush!: () => void;
     const flushGate = new Promise<void>((resolve) => {
@@ -440,6 +523,8 @@ describe("createAssistantEngine", () => {
       flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
+      prepareDelete: vi.fn(async () => undefined),
+      isTombstoned: vi.fn(() => false),
       dispose: hostDispose,
     });
 

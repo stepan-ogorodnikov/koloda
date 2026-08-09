@@ -37,6 +37,7 @@ export type AssistantEngine<TAction> = {
   ) => Promise<void>;
   cancel: (conversationId: string, runId: string) => void;
   setPersistenceHost: (host: ConversationPersistenceHost) => void;
+  disposeConversation: (conversationId: string) => void;
   shutdownGracefully: (options: AssistantEngineShutdownOptions) => Promise<void>;
   dispose: () => void;
   readonly lifecycle: AssistantEngineLifecycle;
@@ -124,6 +125,19 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
     setPersistenceHost(host) {
       if (lifecycle === "closed") return;
       persistenceHost = host;
+    },
+    disposeConversation(conversationId) {
+      if (lifecycle === "closed") return;
+      const runtime = runtimes.get(conversationId);
+      if (!runtime) return;
+      // WHY: close only drops queued serial-queue tasks; cancel each known run
+      // so an in-flight AbortController aborts before we drop the runtime (#8).
+      const state = options.readConversationState(conversationId);
+      for (const runId of Object.keys(state.runs)) {
+        runtime.cancel(runId, "dispose");
+      }
+      runtime.close("dispose");
+      runtimes.delete(conversationId);
     },
     async shutdownGracefully({ interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS }) {
       if (lifecycle !== "running") return;

@@ -7,6 +7,7 @@ import { useStore } from "jotai";
 import type { createStore } from "jotai";
 import { useEffect } from "react";
 import { toPersistedState } from "../persistence/conversation-persistence";
+import { removeConversationAtom } from "../state/conversation-actions";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
 import {
   conversationsAtom,
@@ -184,6 +185,8 @@ export type BuildWriteConversationOptions = {
   setSaveStatus: (status: SaveStatus) => void;
   setQueryConversation: (id: string, row: Conversation) => void;
   invalidateConversations: () => void;
+  /** When true, skip the upsert — conversation is mid coordinated delete (#8). */
+  isTombstoned: (conversationId: string) => boolean;
 };
 
 /** Shared durable-write adapter for the engine persistence host. */
@@ -193,8 +196,10 @@ export function buildWriteConversation({
   setSaveStatus,
   setQueryConversation,
   invalidateConversations,
+  isTombstoned,
 }: BuildWriteConversationOptions): (conversationId: string) => Promise<boolean> {
   return async (id: string): Promise<boolean> => {
+    if (isTombstoned(id)) return false;
     const state = store.get(conversationsAtom)[id];
     if (!state) return false;
     if (state.messages.length === 0 && state.activeRunId === null) return false;
@@ -217,10 +222,13 @@ export function buildWriteConversation({
     };
 
     // WHY: re-check after cloning — a delete can land between snapshot and write.
-    if (!store.get(conversationsAtom)[id]) return false;
+    if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
 
     try {
       const row = await setConversationFn(data);
+      // WHY: coordinated delete may have finished while the upsert ran; do not
+      // push a resurrected row into the query cache or store timestamps.
+      if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
       const currentId = store.get(currentConversationIdAtom);
       if (currentId === row.id) {
         setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
@@ -249,4 +257,37 @@ export function buildWriteConversation({
       throw error;
     }
   };
+}
+
+export type DeleteAssistantConversationOptions = {
+  store: AssistantJotaiStore;
+  conversationId: string;
+  deleteFromDb: (id: string) => Promise<unknown>;
+  invalidateConversations: () => void;
+  removeConversationQuery: (id: string) => void;
+};
+
+/**
+ * Coordinated conversation delete (#8): tombstone → cancel queued → await
+ * in-flight write → DB delete → dispose runtime (while store still has runs) →
+ * drop store/query cache.
+ */
+export async function deleteAssistantConversation({
+  store,
+  conversationId,
+  deleteFromDb,
+  invalidateConversations,
+  removeConversationQuery,
+}: DeleteAssistantConversationOptions): Promise<void> {
+  const host = ensureAssistantPersistenceHost(store);
+  const engine = ensureAssistantEngine(store);
+
+  await host.prepareDelete(conversationId);
+  await deleteFromDb(conversationId);
+  // WHY: dispose while store still has run keys — cancel loop reads
+  // readConversationState; clearing first leaves empty runs and never aborts (#8).
+  engine.disposeConversation(conversationId);
+  store.set(removeConversationAtom, conversationId);
+  invalidateConversations();
+  removeConversationQuery(conversationId);
 }

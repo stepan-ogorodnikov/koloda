@@ -43,6 +43,12 @@ export type ConversationSaveQueue = {
   /** Cancel a pending backoff retry without disposing the queue. */
   cancelRetry: () => void;
   waitUntilIdle: () => Promise<void>;
+  /**
+   * Tombstone this conversation's save queue for coordinated delete:
+   * block new saves, cancel queued work, await the in-flight write.
+   */
+  prepareDelete: () => Promise<void>;
+  isTombstoned: () => boolean;
   dispose: () => void;
 };
 
@@ -82,7 +88,8 @@ function defaultLogSaveFailure(entry: SaveFailureLog): void {
  * - Ack of G clears dirty only when `dirtyGeneration === G`. Ack of N must NOT
  *   clear dirty if N+1 is already queued.
  * - A failed write stays dirty and schedules a bounded backoff retry; delete
- *   disposes the queue and cancels that retry timer.
+ *   tombstones via `prepareDelete` (cancel timers, await in-flight) before the
+ *   DB row is removed so an upsert cannot resurrect it (#8).
  *
  * Assumes one writer per profile/database — no DB CAS.
  */
@@ -99,11 +106,13 @@ export function createConversationSaveQueue({
   let ackedGeneration = 0;
   let inFlight: Promise<void> | null = null;
   let disposed = false;
+  let tombstoned = false;
   let failureAttempt = 0;
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isDirty = () => dirtyGeneration > ackedGeneration;
   const consecutiveFailures = () => failureAttempt;
+  const isTombstoned = () => tombstoned;
 
   const clearRetryTimer = () => {
     if (!retryTimer) return;
@@ -112,7 +121,7 @@ export function createConversationSaveQueue({
   };
 
   const scheduleRetry = () => {
-    if (disposed) return;
+    if (disposed || tombstoned) return;
     clearRetryTimer();
     const delay = computeSaveRetryDelayMs(failureAttempt, random);
     retryTimer = setTimeout(() => {
@@ -122,7 +131,7 @@ export function createConversationSaveQueue({
   };
 
   const runFlush = () => {
-    if (disposed) return;
+    if (disposed || tombstoned) return;
     if (inFlight) return;
     if (!isDirty()) return;
 
@@ -148,14 +157,12 @@ export function createConversationSaveQueue({
         });
         // WHY: Stay dirty — ackedGeneration unchanged. Retry via backoff rather
         // than waiting for another mutation (idle users would otherwise never save).
-        if (!disposed && dirtyGeneration === generation) {
-          scheduleRetry();
-        }
+        if (!disposed && !tombstoned && dirtyGeneration === generation) scheduleRetry();
       } finally {
         inFlight = null;
         // WHY: a newer dirty during this write supersedes backoff — resume via
         // the normal throttle/debounce scheduler.
-        if (!disposed && dirtyGeneration > generation) {
+        if (!disposed && !tombstoned && dirtyGeneration > generation) {
           clearRetryTimer();
           scheduler.schedule();
         }
@@ -171,7 +178,7 @@ export function createConversationSaveQueue({
   });
 
   const notifyDirty = () => {
-    if (disposed) return;
+    if (disposed || tombstoned) return;
     dirtyGeneration += 1;
     // WHY: a fresh mutation cancels a pending backoff so the coalesced save
     // follows throttle/debounce instead of an outdated retry delay.
@@ -180,14 +187,14 @@ export function createConversationSaveQueue({
   };
 
   const flushNow = () => {
-    if (disposed) return;
+    if (disposed || tombstoned) return;
     // WHY: manual retry and shutdown must not wait out the backoff timer.
     clearRetryTimer();
     scheduler.flushNow();
   };
 
   const flushIfPending = () => {
-    if (disposed) return;
+    if (disposed || tombstoned) return;
     scheduler.flushIfPending();
   };
 
@@ -203,16 +210,28 @@ export function createConversationSaveQueue({
     return inFlight ?? Promise.resolve();
   };
 
+  const prepareDelete = async (): Promise<void> => {
+    if (disposed) return;
+    // INVARIANT: tombstone first so notifyDirty / flush / retry cannot start
+    // a write that races the upcoming DB delete (#8).
+    tombstoned = true;
+    clearRetryTimer();
+    // WHY: drop coalesced work without flushing — a late upsert after delete
+    // would recreate the row via unconditional onConflictDoUpdate.
+    scheduler.cancel();
+    // WHY: clear dirty so an in-flight ack path cannot schedule N+1 after we
+    // finish waiting.
+    ackedGeneration = dirtyGeneration;
+    await (inFlight ?? Promise.resolve());
+  };
+
   const dispose = () => {
     if (disposed) return;
-    // WHY: conversation delete removes this queue — cancel backoff so a late
-    // timer cannot start a write after the row is gone (#7). Full tombstone /
-    // in-flight write ordering is #8.
+    // WHY: delete cancels via prepareDelete; host/engine dispose must not
+    // flushIfPending or a timer-fired write can resurrect a removed row.
     clearRetryTimer();
-    // WHY: flush any coalesced throttle/debounce timer before locking the queue.
-    // `write` must no-op when the conversation was removed from the store so
-    // this cannot resurrect a deleted row.
-    scheduler.flushIfPending();
+    scheduler.cancel();
+    tombstoned = true;
     disposed = true;
   };
 
@@ -224,6 +243,8 @@ export function createConversationSaveQueue({
     consecutiveFailures,
     cancelRetry,
     waitUntilIdle,
+    prepareDelete,
+    isTombstoned,
     dispose,
   };
 }

@@ -14,11 +14,10 @@ import {
   pendingSaveByConversationAtom,
 } from "./conversation-store";
 
-// WHY: After a successful DB delete we must drop the conversation from the
-// in-memory store as well. Otherwise the route-scoped save host can still
-// flush a queued snapshot and upsert the row back via `setConversation`'s
-// `onConflictDoUpdate`. Clearing the pending-save entry disposes that id's
-// queue; `write` also no-ops when the id is absent from the store.
+// WHY: Called after coordinated delete (`prepareDelete` → DB delete →
+// disposeConversation). Dropping the store entry and pending-save counter
+// disposes the tombstoned queue (#8). Do not clear before prepareDelete awaits
+// in-flight writes, or before disposeConversation reads run keys to abort.
 export const removeConversationAtom = atom(null, (_get, set, id: string) => {
   set(conversationsAtom, (prev) => {
     if (!(id in prev)) return prev;

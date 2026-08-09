@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useStore } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
-import { removeConversationAtom } from "../state/conversation-actions";
+import { deleteAssistantConversation } from "../runs/use-assistant-engine-host";
 
 type DeleteConversationButtonProps = {
   id: DeleteConversationData["id"];
@@ -23,8 +23,27 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
   const queryClient = useQueryClient();
   const store = useStore();
   const { deleteConversationMutation } = useAtomValue(queriesAtom);
-  const { mutate, error, reset } = useMutation(deleteConversationMutation());
   const [isOpen, setIsOpen] = useState(false);
+
+  const { mutate, error, reset, isPending } = useMutation({
+    mutationFn: async (data: DeleteConversationData) => {
+      const { mutationFn } = deleteConversationMutation();
+      if (!mutationFn) throw new Error("deleteConversationMutation is missing mutationFn");
+      // WHY: delete must run through the persistence coordinator so an
+      // in-flight upsert cannot recreate the row after DB delete (#8).
+      await deleteAssistantConversation({
+        store,
+        conversationId: data.id,
+        deleteFromDb: (conversationId) => mutationFn({ id: conversationId }, { client: queryClient, meta: undefined }),
+        invalidateConversations: () => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
+        },
+        removeConversationQuery: (conversationId) => {
+          queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(conversationId) });
+        },
+      });
+    },
+  });
 
   const handleOpenChange = (value: boolean) => {
     setIsOpen(value);
@@ -36,17 +55,7 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
       { id },
       {
         onSuccess: () => {
-          // WHY: Drop the in-memory conversation before any re-render driven
-          // by `onActiveDeleted` re-runs `useConversationPersistence` with
-          // a new id. That hook's effect cleanup unconditionally calls
-          // `flush` for the *previous* id when a debounce timer is pending,
-          // and `flush` would otherwise re-insert the row via
-          // `setConversation`'s upsert. Removing the state here makes
-          // `flush`'s `if (!state) return` short-circuit.
-          store.set(removeConversationAtom, id);
           setIsOpen(false);
-          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
-          queryClient.removeQueries({ queryKey: queryKeys.conversations.detail(id) });
           if (isActive) onActiveDeleted?.();
         },
       },
@@ -74,7 +83,7 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
               )}
             </AnimatePresence>
             <div className="flex flex-row items-center gap-4">
-              <Button variants={{ style: "primary" }} onPress={handleClick} isDisabled={!!error}>
+              <Button variants={{ style: "primary" }} onPress={handleClick} isDisabled={!!error || isPending}>
                 {_(msg`ai.conversation.delete.confirm`)}
               </Button>
               <Button variants={{ style: "ghost" }} slot="close" autoFocus>
