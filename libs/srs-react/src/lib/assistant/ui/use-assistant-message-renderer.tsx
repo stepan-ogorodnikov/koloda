@@ -189,7 +189,13 @@ function renderChatMessage(options: {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus state="canceled" elapsedSeconds={run.elapsedSeconds} actions={copyAction} />
+        <AIChatMessageStatus
+          state="canceled"
+          elapsedSeconds={run.elapsedSeconds}
+          canRetry={isTail}
+          onRetry={() => handleRetry(runId)}
+          actions={copyAction}
+        />
       </div>
     );
   }
@@ -198,7 +204,13 @@ function renderChatMessage(options: {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
         {content}
-        <AIChatMessageStatus state="interrupted" elapsedSeconds={run.elapsedSeconds} actions={copyAction} />
+        <AIChatMessageStatus
+          state="interrupted"
+          elapsedSeconds={run.elapsedSeconds}
+          canRetry={isTail}
+          onRetry={() => handleRetry(runId)}
+          actions={copyAction}
+        />
       </div>
     );
   }

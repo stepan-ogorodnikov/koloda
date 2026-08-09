@@ -350,7 +350,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("replaces failed runs with an assistant error marker and keeps the user message", () => {
+  it("preserves failed runs and assistant message parts, clearing dismissedRunErrorId", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -366,7 +366,7 @@ describe("normalizeRestoredConversation", () => {
         {
           id: "assistant-r1",
           role: "assistant",
-          parts: [{ type: "text", text: "" }],
+          parts: [{ type: "text", text: "partial reply before fail" }],
           metadata: { kind: "chat-text", runId: "r1" },
         },
       ],
@@ -387,29 +387,19 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
-    expect(next.messages).toEqual([
-      {
-        id: "user-r1",
-        role: "user",
-        parts: [{ type: "text", text: "Hello" }],
-        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-      },
-      {
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "error", runId: "r1", mode: "chat" },
-      },
-    ]);
+    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
+    expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply before fail" }]);
+    expect(next.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("rewrites assistant generated-cards messages from a failed run into an error marker", () => {
+  it("preserves failed card runs and generated-cards message metadata without rewriting", () => {
+    const cards = [{ content: { "1": { text: "A" } } }];
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
+      dismissedRunErrorId: "r1",
       messages: [
         {
           id: "user-r1",
@@ -430,8 +420,8 @@ describe("normalizeRestoredConversation", () => {
           mode: "cards",
           status: "failed",
           error: { message: "Provider error" },
-          cards: [],
-          cardStatuses: {},
+          cards,
+          cardStatuses: { 0: "idle" },
           templateFields: null,
           startedAt: new Date(1000),
           elapsedSeconds: 1,
@@ -441,21 +431,42 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
-    expect(next.messages).toEqual([
-      {
-        id: "user-r1",
-        role: "user",
-        parts: [{ type: "text", text: "Make cards" }],
-        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
+    expect(next.runs["r1"]?.cards).toEqual(cards);
+    expect(next.messages[1]?.metadata).toEqual({ kind: "generated-cards", runId: "r1" });
+    expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("returns null when a failed run needs no other restore normalization", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      dismissedRunErrorId: null,
+      messages: [
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "kept partial" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "failed",
+          error: { message: "Network error" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 2,
+        },
       },
-      {
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "error", runId: "r1", mode: "cards" },
-      },
-    ]);
+    };
+
+    expect(normalizeRestoredConversation(state)).toBeNull();
   });
 
   it("leaves successful runs unchanged and preserves their messages", () => {
@@ -632,12 +643,12 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"].status).toBe("success");
   });
 
-  it("removes only the failed run, keeps the successful run, and rewrites the failed assistant message into an error marker", () => {
+  it("keeps both successful and failed runs and preserves failed assistant parts", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
-      dismissedRunErrorId: null,
+      dismissedRunErrorId: "r2",
       messages: [
         {
           id: "user-r1",
@@ -660,7 +671,7 @@ describe("normalizeRestoredConversation", () => {
         {
           id: "assistant-r2",
           role: "assistant",
-          parts: [{ type: "text", text: "" }],
+          parts: [{ type: "text", text: "partial before fail" }],
           metadata: { kind: "chat-text", runId: "r2" },
         },
       ],
@@ -691,38 +702,14 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({ r1: state.runs["r1"] });
-    expect(next.messages).toEqual([
-      {
-        id: "user-r1",
-        role: "user",
-        parts: [{ type: "text", text: "First" }],
-        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-      },
-      {
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "Response 1" }],
-        metadata: { kind: "chat-text", runId: "r1" },
-      },
-      {
-        id: "user-r2",
-        role: "user",
-        parts: [{ type: "text", text: "Second" }],
-        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r2" },
-      },
-      {
-        id: "assistant-r2",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "error", runId: "r2", mode: "chat" },
-      },
-    ]);
+    expect(next.runs).toEqual(state.runs);
+    expect(next.messages[3]?.parts).toEqual([{ type: "text", text: "partial before fail" }]);
+    expect(next.messages[3]?.metadata).toEqual({ kind: "chat-text", runId: "r2" });
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("clears dismissedRunErrorId when all runs are removed", () => {
+  it("clears dismissedRunErrorId while keeping the failed run", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -745,7 +732,7 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
+    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
@@ -776,12 +763,13 @@ describe("normalizeRestoredConversation", () => {
     expect(next.lastReadRunId).toBe("r1");
   });
 
-  it("clears lastReadRunId when the run it points to is dropped as failed", () => {
+  it("preserves lastReadRunId when the run it points to is failed", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
       activeRunId: null,
       lastReadRunId: "r1",
+      dismissedRunErrorId: "r1",
       runs: {
         r1: {
           id: "r1",
@@ -799,8 +787,8 @@ describe("normalizeRestoredConversation", () => {
 
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs).toEqual({});
-    expect(next.lastReadRunId).toBeNull();
+    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
+    expect(next.lastReadRunId).toBe("r1");
   });
 
   it("preserves lastReadRunId when the run it points to survives normalization", () => {

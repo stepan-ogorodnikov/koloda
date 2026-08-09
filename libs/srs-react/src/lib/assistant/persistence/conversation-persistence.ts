@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { backfillUserMessageRunIds, getAssistantMetadata, getMessageRunId } from "../state/assistant-messages";
+import { backfillUserMessageRunIds } from "../state/assistant-messages";
 import { transitionRun } from "../state/conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 
@@ -27,15 +27,10 @@ export function fromPersistedState(persisted: PersistedConversation): Conversati
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {
   let normalizedAny = false;
   const runs: Record<string, GenerationRun> = {};
-  const failedRunIds = new Set<string>();
 
+  // INVARIANT: Failed (and all other) runs must not be dropped on restore so
+  // partial chat / cards remain and retry stays available.
   for (const [runId, run] of Object.entries(state.runs)) {
-    if (run.status === "failed") {
-      failedRunIds.add(runId);
-      normalizedAny = true;
-      continue;
-    }
-
     let nextRun: GenerationRun = run;
     let runChanged = false;
 
@@ -78,9 +73,9 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   }
 
   // WHY: Backfill so legacy user messages (runId only in `user-<id>`
-  // encoding) stay linked for failed-run message rewriting below, and
-  // re-stringify Date/`epoch-ms` createdAt values that Electron wire
-  // revival may have injected, healing epoch timestamps from run.startedAt.
+  // encoding) stay linked, and re-stringify Date/`epoch-ms` createdAt values
+  // that Electron wire revival may have injected, healing epoch timestamps
+  // from run.startedAt.
   const startedAtByRunId: Record<string, Date> = {};
   for (const [runId, run] of Object.entries(state.runs)) {
     startedAtByRunId[runId] = run.startedAt;
@@ -92,39 +87,20 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     !normalizedAny &&
     state.activeRunId === null &&
     state.dismissedRunErrorId === null &&
-    failedRunIds.size === 0 &&
     (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
   ) {
     return null;
   }
 
-  const messages = messagesWithRunIds.map((m) => {
-    if (m.role !== "assistant") return m;
-    const runId = getMessageRunId(m);
-    if (!runId || !failedRunIds.has(runId)) return m;
-    const run = state.runs[runId];
-    if (!run) return m;
-    const metadata = getAssistantMetadata(m);
-    if (!metadata) return m;
-
-    return {
-      ...m,
-      metadata: { kind: "error" as const, runId: metadata.runId, mode: run.mode },
-      parts: [{ type: "text" as const, text: "" }],
-    };
-  });
-
   return {
     ...state,
     activeRunId: null,
     dismissedRunErrorId: null,
-    // WHY: If the run the user last read is about to be dropped (failed),
-    // the pointer is stale. Clear it so the unread predicate correctly
-    // evaluates against the new latest run on next read. Interrupted
-    // crash-recovery runs survive, so their lastReadRunId is kept.
+    // WHY: lastReadRunId is only cleared when its run is actually gone.
+    // Failed runs are kept, so a pointer at a failed run survives restore.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
-    messages,
+    messages: messagesWithRunIds,
   };
 }
 

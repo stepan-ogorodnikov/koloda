@@ -10,7 +10,11 @@ vi.mock("@lingui/react", () => ({
 }));
 
 vi.mock("@koloda/ui", () => ({
-  Button: (props: { children: React.ReactNode }) => <button>{props.children}</button>,
+  Button: (props: { children: React.ReactNode; onPress?: () => void }) => (
+    <button type="button" onClick={props.onPress}>
+      {props.children}
+    </button>
+  ),
 }));
 
 describe("AIChatMessageStatus", () => {
@@ -46,6 +50,22 @@ describe("AIChatMessageStatus", () => {
 
       const status = screen.getByText(/5/).parentElement;
       expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
+    });
+  });
+
+  describe("retry on terminal states", () => {
+    it.each(["failed", "canceled", "interrupted"] as const)("exposes retry for %s when canRetry is true", (state) => {
+      const onRetry = vi.fn();
+      render(<AIChatMessageStatus state={state} elapsedSeconds={3} canRetry onRetry={onRetry} />);
+
+      screen.getByRole("button", { name: "ai.chat.message.retry" }).click();
+      expect(onRetry).toHaveBeenCalledOnce();
+    });
+
+    it.each(["failed", "canceled", "interrupted"] as const)("hides retry for %s when canRetry is false", (state) => {
+      render(<AIChatMessageStatus state={state} elapsedSeconds={3} canRetry={false} />);
+
+      expect(screen.queryByRole("button", { name: "ai.chat.message.retry" })).toBeNull();
     });
   });
 });

@@ -26,9 +26,26 @@ export type AIChatMessageStatusProps =
       elapsedSeconds?: number;
     });
 
+type RetryActionProps = {
+  canRetry?: boolean;
+  onRetry?: () => void;
+  label: string;
+};
+
+function RetryAction({ canRetry, onRetry, label }: RetryActionProps) {
+  if (!canRetry) return null;
+
+  return (
+    <Button variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }} onPress={onRetry}>
+      {label}
+    </Button>
+  );
+}
+
 export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
   const { state, elapsedSeconds, modelName, canRetry, onRetry, actions, startedAt } = props;
   const { _ } = useLingui();
+  const retryLabel = _(msg`ai.chat.message.retry`);
 
   if (state === "pending") {
     return <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} startedAt={startedAt} />;
@@ -53,11 +70,12 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
 
   if (state === "canceled") {
     return (
-      <div className="flex flex-row items-center gap-1 px-3">
+      <div className="flex flex-row flex-wrap items-center gap-2 px-3">
         <p className="fg-level-4 flex flex-row items-center gap-1">
           {_(msg`ai.chat.message.status.canceled-in`)}
           <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
         </p>
+        <RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />
         {actions}
       </div>
     );
@@ -65,11 +83,12 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
 
   if (state === "interrupted") {
     return (
-      <div className="flex flex-row items-center gap-1 px-3">
+      <div className="flex flex-row flex-wrap items-center gap-2 px-3">
         <p className="fg-level-4 flex flex-row items-center gap-1">
           {_(msg`ai.chat.message.status.interrupted-in`)}
           <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
         </p>
+        <RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />
         {actions}
       </div>
     );
@@ -78,11 +97,7 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
   return (
     <div className="flex flex-row flex-wrap items-center gap-2 px-3">
       <p className="fg-level-4">{_(msg`ai.chat.message.status.failed`)}</p>
-      {canRetry && (
-        <Button variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover" }} onPress={onRetry}>
-          {_(msg`ai.chat.message.retry`)}
-        </Button>
-      )}
+      <RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />
       {actions}
     </div>
   );
