@@ -29,7 +29,10 @@ export function createSaveScheduler({
   isStreaming,
 }: CreateSaveSchedulerOptions): SaveScheduler {
   let timer: ReturnType<typeof setTimeout> | null = null;
-  let lastFiredAt = 0;
+  // WHY: track the last *actual* flush time. The previous design stored a
+  // future scheduled fire time and cleared/rescheduled on every dirty bump,
+  // which starved checkpoints when chunks arrived faster than the throttle.
+  let lastFlushedAt = 0;
 
   const clearTimer = () => {
     if (!timer) return;
@@ -37,33 +40,52 @@ export function createSaveScheduler({
     timer = null;
   };
 
-  const flushNow = () => {
+  const fire = () => {
     clearTimer();
+    lastFlushedAt = Date.now();
     flush();
+  };
+
+  const flushNow = () => {
+    fire();
   };
 
   const schedule = () => {
     const now = Date.now();
     const wait = isStreaming() ? throttleMs : debounceMs;
-    // WHY: clamp to `wait`. Without it, a pending idle schedule (lastFiredAt in
-    // the future) plus a streaming bump computes delay > throttle window, so the
-    // save never fires inside the throttle. Clamping also resets idle debounce
-    // to a full `wait` from the latest bump.
-    const delay = Math.min(wait, Math.max(0, wait - (now - lastFiredAt)));
+    const elapsed = now - lastFlushedAt;
+
+    if (elapsed >= wait) {
+      // Leading edge (also covers never-flushed: lastFlushedAt === 0).
+      fire();
+      return;
+    }
+
+    if (isStreaming()) {
+      // INVARIANT: trailing save fires at lastFlushedAt + throttleMs.
+      // Clear + re-arm with remaining delay is safe (absolute fire time is
+      // unchanged) and drops any idle debounce timer from a mode switch.
+      clearTimer();
+      const delay = wait - elapsed;
+      timer = setTimeout(() => {
+        timer = null;
+        fire();
+      }, delay);
+      return;
+    }
+
+    // WHY: idle dirty bumps reset the debounce window from now so a quiet
+    // pause after the last edit still lands one trailing save.
     clearTimer();
     timer = setTimeout(() => {
       timer = null;
-      flush();
-    }, delay);
-    // WHY: track the scheduled fire time, not `now`, so back-to-back bumps
-    // measure relative to the next fire and coalesce instead of cascading.
-    lastFiredAt = now + delay;
+      fire();
+    }, wait);
   };
 
   const flushIfPending = () => {
     if (!timer) return;
-    clearTimer();
-    flush();
+    fire();
   };
 
   return { schedule, flushNow, flushIfPending };

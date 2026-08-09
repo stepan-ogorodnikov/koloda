@@ -54,6 +54,44 @@ describe("createSaveScheduler", () => {
     expect(flush).toHaveBeenCalledTimes(1);
   });
 
+  it("continuous chunks produce checkpoints at each throttle window", () => {
+    isStreaming.mockReturnValue(true);
+    const scheduler = makeScheduler();
+
+    scheduler.schedule();
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    const chunkIntervalMs = 50;
+    const windows = 3;
+    for (let t = chunkIntervalMs; t <= STREAM_SAVE_THROTTLE_MS * windows; t += chunkIntervalMs) {
+      vi.advanceTimersByTime(chunkIntervalMs);
+      scheduler.schedule();
+    }
+
+    // Leading + one trailing save per completed throttle window.
+    expect(flush).toHaveBeenCalledTimes(1 + windows);
+  });
+
+  it("terminal state forces the final save", () => {
+    isStreaming.mockReturnValue(true);
+    const scheduler = makeScheduler();
+
+    scheduler.schedule();
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    flush.mockClear();
+    scheduler.schedule();
+    vi.advanceTimersByTime(STREAM_SAVE_THROTTLE_MS / 2);
+    scheduler.schedule();
+    expect(flush).not.toHaveBeenCalled();
+
+    scheduler.flushNow();
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(STREAM_SAVE_THROTTLE_MS);
+    expect(flush).toHaveBeenCalledTimes(1);
+  });
+
   it("clamps an idle-then-streaming reschedule into the throttle window", () => {
     const scheduler = makeScheduler();
     scheduler.schedule();
@@ -61,11 +99,17 @@ describe("createSaveScheduler", () => {
     flush.mockClear();
 
     scheduler.schedule();
-    vi.advanceTimersByTime(100);
+    const idleElapsedMs = 100;
+    vi.advanceTimersByTime(idleElapsedMs);
     isStreaming.mockReturnValue(true);
     scheduler.schedule();
-    // Without the clamp, delay would be > throttleMs and miss the window.
-    vi.advanceTimersByTime(STREAM_SAVE_THROTTLE_MS);
+
+    // Must not flush at the leftover idle debounce (~150ms); only at
+    // lastFlushedAt + throttleMs (remaining = throttleMs - idleElapsedMs).
+    const remainingMs = STREAM_SAVE_THROTTLE_MS - idleElapsedMs;
+    vi.advanceTimersByTime(remainingMs - 1);
+    expect(flush).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
     expect(flush).toHaveBeenCalledTimes(1);
   });
 
@@ -87,6 +131,10 @@ describe("createSaveScheduler", () => {
     scheduler.flushIfPending();
     expect(flush).not.toHaveBeenCalled();
 
+    scheduler.schedule();
+    expect(flush).toHaveBeenCalledTimes(1);
+
+    flush.mockClear();
     scheduler.schedule();
     scheduler.flushIfPending();
     expect(flush).toHaveBeenCalledTimes(1);
