@@ -10,18 +10,24 @@ export type UseAssistantChatTestHarnessOptions = {
 };
 
 /**
- * Test-only stack of the same facades `AssistantChat` + the AI route compose.
- * Not a public API — do not export from the package or use in production UI.
+ * Application-shell hosts (mirrors `App` in `@koloda/app-react`). Mount above
+ * chat so AI-route unmount does not drop shutdown listeners or the write adapter.
  */
-export function useAssistantChatTestHarness({
+export function useAssistantAppShellHosts(): void {
+  useConversationSaveHost();
+  useAssistantEngineHost();
+}
+
+/**
+ * Chat-tree facades only (mirrors `AssistantChat` on the AI route). Does not
+ * mount engine/persistence hosts — pair with `useAssistantAppShellHosts` when
+ * simulating shell vs route lifetime.
+ */
+export function useAssistantChatSessionHarness({
   conversationId,
   onConversationIdChange,
 }: UseAssistantChatTestHarnessOptions) {
   const { profileId, modelId, modelName, modelParameters } = useAssistantProfileSelection();
-
-  // Route-scoped engine + autosave hosts (mirrors `AIRoute`).
-  useAssistantEngineHost();
-  useConversationSaveHost();
 
   // Mounted for restore / save-error dismiss coverage even when the suite
   // only drives RunController.
@@ -37,4 +43,17 @@ export function useAssistantChatTestHarness({
   });
 
   return { profileId, controller };
+}
+
+/**
+ * Test-only stack of the same facades `App` + AI route + `AssistantChat` compose.
+ * Not a public API — do not export from the package or use in production UI.
+ */
+export function useAssistantChatTestHarness({
+  conversationId,
+  onConversationIdChange,
+}: UseAssistantChatTestHarnessOptions) {
+  useAssistantAppShellHosts();
+
+  return useAssistantChatSessionHarness({ conversationId, onConversationIdChange });
 }

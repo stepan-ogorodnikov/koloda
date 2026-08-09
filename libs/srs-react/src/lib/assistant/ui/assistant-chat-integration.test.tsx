@@ -13,7 +13,7 @@ import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { act, render, renderHook } from "@testing-library/react";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import * as React from "react";
 import type { PropsWithChildren } from "react";
@@ -28,7 +28,12 @@ import {
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
 import { resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
-import { useAssistantChatTestHarness } from "./assistant-chat-test-harness";
+import {
+  useAssistantAppShellHosts,
+  useAssistantChatSessionHarness,
+  useAssistantChatTestHarness,
+} from "./assistant-chat-test-harness";
+import type { RunController } from "../runs/run-controller";
 
 type PendingChat = {
   resolve: (usage: StreamUsage | undefined) => void;
@@ -971,5 +976,172 @@ describe("assistant chat integration (per-conversation state)", () => {
 
     const afterState = store.get(conversationsAtom)["A"];
     expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+  });
+
+  it("switch-away from AI route keeps an in-flight run streaming", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+    const onConversationIdChange = vi.fn();
+    const controllerRef: { current: RunController | null } = { current: null };
+
+    function AppShell({ showAiRoute }: { showAiRoute: boolean }) {
+      // WHY: Shell hosts stay mounted when the AI route unmounts (mirrors App).
+      useAssistantAppShellHosts();
+      if (!showAiRoute) return null;
+      return <AiRouteChat />;
+    }
+
+    function AiRouteChat() {
+      const { controller } = useAssistantChatSessionHarness({
+        conversationId: "A",
+        onConversationIdChange,
+      });
+      controllerRef.current = controller;
+      return null;
+    }
+
+    const view = render(
+      <TestWrapper>
+        <AppShell showAiRoute />
+      </TestWrapper>,
+    );
+
+    await act(async () => {
+      void controllerRef.current!.submit("Hello from A");
+      await Promise.resolve();
+    });
+
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeRunIds).toHaveLength(1);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    await act(async () => {
+      view.rerender(
+        <TestWrapper>
+          <AppShell showAiRoute={false} />
+        </TestWrapper>,
+      );
+    });
+
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+  });
+
+  it("pagehide after leaving AI route still persists app_shutdown", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+    const onConversationIdChange = vi.fn();
+    const controllerRef: { current: RunController | null } = { current: null };
+
+    function AppShell({ showAiRoute }: { showAiRoute: boolean }) {
+      useAssistantAppShellHosts();
+      if (!showAiRoute) return null;
+      return <AiRouteChat />;
+    }
+
+    function AiRouteChat() {
+      const { controller } = useAssistantChatSessionHarness({
+        conversationId: "A",
+        onConversationIdChange,
+      });
+      controllerRef.current = controller;
+      return null;
+    }
+
+    const view = render(
+      <TestWrapper>
+        <AppShell showAiRoute />
+      </TestWrapper>,
+    );
+
+    await act(async () => {
+      void controllerRef.current!.submit("Hello from A");
+      await Promise.resolve();
+    });
+
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    await act(async () => {
+      view.rerender(
+        <TestWrapper>
+          <AppShell showAiRoute={false} />
+        </TestWrapper>,
+      );
+    });
+
+    // INVARIANT: leaving /ai must not remove shell unload listeners.
+    expect(store.get(conversationsAtom)["A"].runs[beforeRunIds[0]!]?.status).toBe("streaming");
+
+    const callsBeforePagehide = wire.setConversationCalls.length;
+    await act(async () => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    expect(wire.setConversationCalls.length).toBeGreaterThan(callsBeforePagehide);
+    const persisted = wire.setConversationCalls[wire.setConversationCalls.length - 1]!;
+    expect(persisted.id).toBe("A");
+    const persistedRunIds = Object.keys(persisted.state?.runs ?? {});
+    expect(persistedRunIds).toHaveLength(1);
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.status).toBe("interrupted");
+    expect(persisted.state?.runs[persistedRunIds[0]!]?.reason).toBe("app_shutdown");
+
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("interrupted");
+    expect(afterState.runs[beforeRunIds[0]!]?.reason).toBe("app_shutdown");
   });
 });

@@ -87,7 +87,7 @@ export function ensureAssistantEngine(store: AssistantJotaiStore): AssistantEngi
 
 export function getAssistantEngine(): AssistantEngine<ConversationReducerAction> {
   if (!engineInstance) {
-    throw new Error("AssistantEngine not initialized — mount useAssistantEngineHost at route scope");
+    throw new Error("AssistantEngine not initialized — mount useAssistantEngineHost at application-shell scope");
   }
   return engineInstance;
 }
@@ -156,9 +156,10 @@ export function resetAssistantEngineForTests(): void {
 }
 
 /**
- * Route-scoped engine host. Owns run AbortControllers, persistence scheduling,
- * and graceful shutdown so chat unmount does not abort background runs or
- * dispose save queues. Mount above `AssistantChat`.
+ * Application-shell engine host. Owns run AbortControllers, persistence
+ * scheduling, and best-effort unload listeners so leaving the AI route does
+ * not drop shutdown coordination or abort background runs. Mount on the app
+ * shell (e.g. `App`), not the AI route.
  */
 export function useAssistantEngineHost(): void {
   const store = useStore();
@@ -166,6 +167,9 @@ export function useAssistantEngineHost(): void {
   ensureAssistantEngine(store);
 
   useEffect(() => {
+    // WORKAROUND: Browser `pagehide`/`beforeunload` are best-effort — the
+    // platform does not await flush promises. Electron main-process close
+    // coordination is a separate host concern (#10).
     const onShutdown = () => {
       void shutdownAssistantGracefully(store);
     };
@@ -174,7 +178,7 @@ export function useAssistantEngineHost(): void {
     return () => {
       window.removeEventListener("pagehide", onShutdown);
       window.removeEventListener("beforeunload", onShutdown);
-      // INVARIANT: route/chat unmount must not dispose engine or persistence queues.
+      // INVARIANT: AI-route/chat unmount must not dispose engine or persistence queues.
     };
   }, [store]);
 }

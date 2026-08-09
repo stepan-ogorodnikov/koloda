@@ -5,7 +5,7 @@ No React, no Jotai, no TanStack Query, no UI, no repository I/O.
 
 ## Where it sits
 
-Consumed by `@koloda/srs-react` via a route-scoped engine host (`useAssistantEngineHost`) that injects store callbacks, AI transports, and a durable-write adapter for persistence.
+Consumed by `@koloda/srs-react` via an application-shell engine host (`useAssistantEngineHost`) that injects store callbacks, AI transports, and a durable-write adapter for persistence.
 Depends on `@koloda/ai` (stream/request types and generators), `@koloda/app` (abort/error helpers), and `@koloda/srs` (template fields for card runs).
 Conversation documents and reducer policy still live in `@koloda/srs-react`; this package owns run **execution lifetime**, **per-conversation save queue scheduling**, and **graceful shutdown** so chat unmount does not abort background streams or dispose pending flushes.
 
@@ -33,7 +33,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 ## Graceful shutdown
 
-On `pagehide` / `beforeunload`, the route-scoped host calls `shutdownGracefully`:
+On `pagehide` / `beforeunload`, the application-shell host calls `shutdownGracefully` (best-effort in browsers/demo — the platform does not await flush promises; Electron main-process close coordination is separate):
 
 1. Interrupt every `streaming` run in memory (`interrupted` / `app_shutdown`) and dirty the originating conversation.
 2. Abort all in-flight stream controllers.

@@ -18,8 +18,8 @@ export type UseConversationPersistenceReturn = {
 
 /**
  * Per-chat restore + save-error dismiss/retry. Autosave lives in
- * `useConversationSaveHost` at app/route scope so dirtying a background
- * conversation can flush without depending on this mount or on
+ * `useConversationSaveHost` at application-shell scope so dirtying a
+ * background conversation can flush without depending on this mount or on
  * saver-before-restore effect registration order.
  */
 export function useConversationPersistence({

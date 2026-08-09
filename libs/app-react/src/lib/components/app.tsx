@@ -7,6 +7,7 @@ import {
   Settings05Icon,
 } from "@hugeicons/core-free-icons";
 import { useHotkeysStatus } from "@koloda/core-react";
+import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/srs-react";
 import { Layout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";
@@ -27,6 +28,10 @@ export const secondaryMenu = [{ to: "/settings", t: msg`nav.settings`, icon: Set
 export function App({ children }: PropsWithChildren) {
   useGlobalSync();
   useAppHotkeys();
+  // WHY: Engine + persistence + shutdown listeners must outlive the AI route so
+  // closing the app from another route still records `app_shutdown` / flush.
+  useConversationSaveHost();
+  useAssistantEngineHost();
   const { enableScope } = useHotkeysStatus();
 
   useEffect(() => {

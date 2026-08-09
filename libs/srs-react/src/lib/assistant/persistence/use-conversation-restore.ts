@@ -80,8 +80,8 @@ export function useConversationRestore({
     // the latest run id and dispatch a `markRead`. The pending-save bump
     // below persists the refreshed `lastReadRunId` on first restore, so
     // a freshly opened conversation is not shown as unread on next load.
-    // Autosave is owned by `useConversationSaveHost` (route-scoped), so this
-    // touch no longer depends on saver-before-restore effect registration.
+    // Autosave is owned by `useConversationSaveHost` (application-shell), so
+    // this touch no longer depends on saver-before-restore effect registration.
     setCurrentConversationId(conversationId);
     touch();
   }, [

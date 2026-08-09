@@ -15,9 +15,10 @@ export type UseConversationSaveHostReturn = {
 };
 
 /**
- * Route-scoped persistence adapter. Scheduling and queue-map lifetime are
- * owned by the assistant engine (`ensureAssistantPersistenceHost`); this
- * hook only registers the React-side durable-write adapter while mounted.
+ * Application-shell persistence adapter. Scheduling and queue-map lifetime are
+ * owned by the assistant engine (`ensureAssistantPersistenceHost`); this hook
+ * only registers the React-side durable-write adapter while the shell is mounted.
+ * Mount on the app shell (with `useAssistantEngineHost`), not the AI route.
  */
 export function useConversationSaveHost(): UseConversationSaveHostReturn {
   const queryClient = useQueryClient();
