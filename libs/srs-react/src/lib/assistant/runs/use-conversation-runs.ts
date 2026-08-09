@@ -14,7 +14,6 @@ export function useConversationRuns({
   const engine = getAssistantEngine();
 
   return {
-    armPendingRun: engine.armPendingRun,
     executeChatRun: engine.executeChatRun,
     executeGenerateRun: engine.executeGenerateRun,
     retryRun: engine.retryRun,

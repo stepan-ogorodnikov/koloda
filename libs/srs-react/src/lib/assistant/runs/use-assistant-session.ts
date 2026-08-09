@@ -75,7 +75,7 @@ export function useAssistantSession({
     [setConversationReducerAction],
   );
 
-  const { armPendingRun, executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
+  const { executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
     streamGenerator: configRef.current.streamGenerator,
     chatStreamGenerator: configRef.current.chatStreamGenerator,
   });
@@ -130,7 +130,6 @@ export function useAssistantSession({
     executeGenerateRun,
     retryRun,
     ensureConversationId,
-    armPendingRun,
   };
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =
     useRunOrchestration(orchestrationOptions);

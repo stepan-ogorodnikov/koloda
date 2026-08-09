@@ -1,4 +1,5 @@
 import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
+import { logAssistantStructured } from "./assistant-observability";
 
 /** Base delay for the first autosave retry after a failed write. */
 export const SAVE_RETRY_BASE_DELAY_MS = 250;
@@ -29,7 +30,7 @@ export type CreateConversationSaveQueueOptions = {
   debounceMs?: number;
   /** Injected for deterministic backoff tests. Defaults to `Math.random`. */
   random?: () => number;
-  /** Injected for assertions; defaults to a structured `console.error`. */
+  /** Injected for assertions; defaults to structured `[assistant.transition]` logging. */
   logSaveFailure?: (entry: SaveFailureLog) => void;
 };
 
@@ -74,6 +75,13 @@ export function categorizeSaveError(error: unknown): SaveErrorCategory {
 }
 
 function defaultLogSaveFailure(entry: SaveFailureLog): void {
+  logAssistantStructured({
+    conversationId: entry.conversationId,
+    commandOrEvent: "saveFailed",
+    saveGeneration: entry.generation,
+    retryAttempt: entry.attempt,
+    errorCategory: entry.errorCategory,
+  });
   console.error("[assistant.save]", entry);
 }
 

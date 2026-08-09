@@ -24,12 +24,12 @@ One of the following indicators could be shown in the sidebar next to the conver
 A conversation is **working** when it has an active run that is still streaming.
 The working status indicator takes priority over the unread status indicator.
 The indicator is shown when the latest run is streaming.
-The working indicator is cleared when the run completes, fails, or is canceled.
+The working indicator is cleared when the run completes, fails, is canceled, or is interrupted.
 
 ### Unread Status
 
 A conversation is **unread** when its most recent run has finished and the user has not yet opened it since the run finished.
-A finished run is one whose status is success, failed, or canceled — never streaming.
+A finished run is one whose status is success, failed, canceled, or interrupted — never streaming.
 The indicator is shown when the latest run finished streaming and has not been read by the user.
 The unread indicator is cleared when the user opens the conversation.
 
@@ -71,7 +71,12 @@ A run represents a single AI request.
 It can be either a chat completion or a card generation.
 Each run goes through a lifecycle:
 
-**streaming** → **success** | **failed** | **canceled**
+**streaming** → **success** | **failed** | **canceled** (`reason: user`) | **interrupted** (`reason: app_shutdown` | `crash_recovery`)
+
+Only explicit user intent produces `canceled`.
+Graceful app shutdown produces `interrupted` / `app_shutdown`.
+A process crash (or forced termination) that left a streaming checkpoint produces `interrupted` / `crash_recovery` on restore.
+Success, failure, and streaming must not carry a termination reason.
 
 ### Starting a Run
 
@@ -107,6 +112,16 @@ The user can see what was generated up to that point.
 The user can cancel an active run at any time.
 For chat runs, the text accumulated so far is kept — the message shows the partial response.
 For card generation runs, cards received before cancellation are kept.
+Cancellation is recorded as `canceled` with `reason: user`.
+
+### Interruption
+
+A run can also end as `interrupted` without user cancel intent:
+
+- **app_shutdown** — graceful app close transitions active streaming runs before the final flush.
+- **crash_recovery** — a persisted streaming checkpoint found on restore means the previous process died mid-run.
+
+Partial chat text and cards received before the interruption remain visible and eligible for retry.
 
 ## Mode Switching
 
@@ -177,6 +192,8 @@ Once a profile exists, these empty states are no longer shown.
 
 Conversations are saved to the database automatically.
 The entire conversation state — messages, runs, mode, deck, and AI profile state — is saved as a single document.
+Each persisted document carries a `schemaVersion`. Unknown future versions fail restore explicitly rather than entering live state.
+Migrations for older versions are centralized at the persistence coerce boundary.
 
 The revert state is not saved — see the Revert section for details.
 
@@ -205,18 +222,17 @@ This allows the app to reopen the same conversation on reload.
 
 When a conversation is loaded from the database, it goes through validation and cleanup:
 
-- **Streaming runs are removed**: if the app crashed or closed mid-stream, any run that was still streaming is discarded along with its messages
-- **Failed runs are replaced with an error marker**: the run record itself is discarded, but the user message and the assistant message stay
-  The assistant message is rewritten to an error marker that preserves the run's mode, so the user can see what they tried, that the AI failed to answer, and can retry.
-  The conversation is never left empty as a result of a failed run.
+- **Schema version**: rows without `schemaVersion` migrate forward; rows with a future version fail and reset rather than loading into live state.
+- **Streaming runs become interrupted**: if the app crashed or was force-killed mid-stream, a persisted streaming checkpoint is converted to `interrupted` with `reason: crash_recovery`. Messages and partial output are kept so the user can retry.
+- **Failed, canceled, and interrupted runs are kept**: run records and assistant message parts (including partial chat text and cards) survive restore so retry remains available.
 - **Pending card statuses are reset**: cards that were mid-operation are reset to idle
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
 - **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
 
-This ensures a clean state on restore — no orphaned messages, no zombie streaming states, no leftover revert overlays.
+This ensures restore never leaves a zombie streaming state, while preserving terminal partial output.
 
-If the stored data is corrupted or invalid, the conversation is reset to a fresh empty state with the same ID and current timestamp.
+If the stored data is corrupted, invalid, or declares an unknown future schema version, the conversation is reset to a fresh empty state with the same ID and current timestamp.
 
 ## Error Handling
 
@@ -253,7 +269,7 @@ Save errors are dismissed separately and are cleared by a successful save.
 
 ## Retry
 
-The user can retry a failed or completed run.
+The user can retry a failed, canceled, interrupted, or completed run.
 Retry re-executes the same request against the AI provider.
 
 - The run ID is reused — the existing message pair is overwritten
@@ -282,7 +298,7 @@ The user can clone an existing conversation to create an independent copy.
 The following are copied into the new conversation:
 
 - All messages (user and assistant)
-- All completed runs (success, failed, or canceled) — streaming runs are not cloned
+- All completed runs (success, failed, canceled, or interrupted) — streaming runs are not cloned
 - AI profile state (profile, model, model parameters)
 - Deck selection and lock state
 - Current mode (chat or cards)
@@ -338,13 +354,13 @@ The clone is created from the underlying conversation data with all messages vis
 
 Only one run can be active at a time per conversation.
 If the user switches to a different conversation while a run is active, the run continues in the background.
-Its dispatches target the old conversation's state and have no effect.
-When the old conversation is later restored, the streaming run and its messages are removed by normalization.
+Stream chunks, terminal transitions, and persistence dirty notifications target the originating conversation by id — switching away does not abort the run and does not apply updates to the newly viewed conversation.
+Deleting a conversation evicts its runtime (cancels in-flight work, closes its serial queue) after coordinated delete/tombstone handling so a late upsert cannot resurrect the row.
 
 ## Edge Cases
 
 - A conversation with no user messages is named "Untitled" and never persisted to the database
-- A failed run from a previous session leaves the user message and an error assistant message behind on restore, so the conversation is never persisted as empty
+- A failed, canceled, or interrupted run from a previous session keeps its messages and run record on restore so partial output and retry survive reload
 - The "New Conversation" button is disabled when there are no messages and no active run — you can't create a second empty conversation
 - If the sidebar has no conversations, nothing is shown (not even an empty state message)
 - Card statuses are always idle when first generated — they only become pending or success through user interaction
@@ -353,5 +369,5 @@ When the old conversation is later restored, the streaming run and its messages 
 - Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar
 - Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
   The global last-used record is updated when the user changes the value or submits a prompt
-- When a conversation is loaded and its data is invalid, it's silently reset to empty rather than showing an error
+- When a conversation is loaded and its data is invalid or declares an unknown future schema version, it's silently reset to empty rather than showing an error
 - Revert never persists; reloading the app clears the revert state and the messages become visible again.

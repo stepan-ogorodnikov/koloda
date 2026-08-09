@@ -14,10 +14,8 @@ import {
 import type { TemplateFields } from "@koloda/srs";
 import { useRunOrchestration } from "./use-run-orchestration";
 
-// WHY: `handleRetry` had no coverage before this file. The B refactor
-// reorders retry from `arm → validate → dispatch` to `validate → arm →
-// dispatch` so an invalid retry no longer leaves a pending-run error
-// route armed with no stream to clear it. These tests pin that order.
+// WHY: `handleRetry` must validate before starting a stream so an invalid
+// retry (no prompt/profile/model/template) never reaches the engine.
 
 function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): AssistantConversationConfig {
   return {
@@ -38,9 +36,8 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
   };
 }
 
-describe("useRunOrchestration — handleRetry ordering (B)", () => {
+describe("useRunOrchestration — handleRetry ordering", () => {
   let calls: Array<{ fn: string; args: unknown[] }>;
-  let armPendingRun: ReturnType<typeof vi.fn>;
   let retryRun: ReturnType<typeof vi.fn>;
   let rememberLastUsedAIProfile: ReturnType<typeof vi.fn>;
   let dispatch: (action: ConversationReducerAction) => void;
@@ -49,7 +46,6 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
 
   beforeEach(() => {
     calls = [];
-    armPendingRun = vi.fn((...args: unknown[]) => calls.push({ fn: "arm", args }));
     retryRun = vi.fn(async (...args: unknown[]) => calls.push({ fn: "retryRun", args }));
     rememberLastUsedAIProfile = vi.fn((...args: unknown[]) => calls.push({ fn: "rememberLastUsedAIProfile", args }));
 
@@ -87,12 +83,11 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
         executeGenerateRun: vi.fn(async () => undefined) as never,
         retryRun: retryRun as never,
         ensureConversationId: () => "conv-1",
-        armPendingRun: armPendingRun as never,
       }),
     );
   }
 
-  it("an invalid retry (no profile) neither arms the pending ref nor starts a stream", async () => {
+  it("an invalid retry (no profile) does not start a stream", async () => {
     seedConversation("conv-1");
     addChatRun("run-1");
     const cfg = makeConfig({ profileId: "" });
@@ -103,14 +98,12 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
     });
 
     const names = calls.map((c) => c.fn);
-    expect(names).not.toContain("arm");
     expect(names).not.toContain("retryRun");
     expect(names).not.toContain("rememberLastUsedAIProfile");
-    expect(armPendingRun).not.toHaveBeenCalled();
     expect(retryRun).not.toHaveBeenCalled();
   });
 
-  it("an invalid retry (run missing the user message → empty prompt) neither arms nor starts a stream", async () => {
+  it("an invalid retry (run missing the user message → empty prompt) does not start a stream", async () => {
     seedConversation("conv-1");
     addChatRun("run-2", { withUserMessage: false });
     const cfg = makeConfig();
@@ -120,11 +113,10 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
       await result.current.handleRetry("run-2");
     });
 
-    expect(armPendingRun).not.toHaveBeenCalled();
     expect(retryRun).not.toHaveBeenCalled();
   });
 
-  it("a valid chat retry arms after validation, then dispatches retryRun", async () => {
+  it("a valid chat retry remembers profile then dispatches retryRun", async () => {
     seedConversation("conv-1");
     addChatRun("run-1");
     const cfg = makeConfig();
@@ -134,15 +126,9 @@ describe("useRunOrchestration — handleRetry ordering (B)", () => {
       await result.current.handleRetry("run-1");
     });
 
-    // WHY: arm must precede retryRun (the ordering the B refactor fixes).
     const order = calls.map((c) => c.fn);
-    const armIdx = order.indexOf("arm");
-    const retryIdx = order.indexOf("retryRun");
-    expect(armIdx).toBeGreaterThanOrEqual(0);
-    expect(retryIdx).toBeGreaterThan(armIdx);
-
-    expect(armPendingRun).toHaveBeenCalledTimes(1);
-    expect(armPendingRun).toHaveBeenCalledWith("chat", "run-1");
+    expect(order.indexOf("rememberLastUsedAIProfile")).toBeGreaterThanOrEqual(0);
+    expect(order.indexOf("retryRun")).toBeGreaterThan(order.indexOf("rememberLastUsedAIProfile"));
 
     expect(rememberLastUsedAIProfile).toHaveBeenCalledWith(cfg.profileId, cfg.modelId);
 
@@ -170,7 +156,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
   let readState: () => ConversationReducerState;
   let dispatched: ConversationReducerAction[];
   let executeChatRun: ReturnType<typeof vi.fn>;
-  let armPendingRun: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     dispatched = [];
@@ -181,7 +166,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     };
     readState = () => store.get(assistantConversationStateAtom);
     executeChatRun = vi.fn(async () => undefined);
-    armPendingRun = vi.fn();
   });
 
   it("handleGenerate dispatches a single submitTurn (not three separate actions)", async () => {
@@ -202,7 +186,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
         executeGenerateRun: vi.fn(async () => undefined) as never,
         retryRun: vi.fn(async () => undefined) as never,
         ensureConversationId: () => "conv-1",
-        armPendingRun: armPendingRun as never,
       }),
     );
 

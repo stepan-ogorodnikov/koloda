@@ -35,7 +35,6 @@ type UseRunOrchestrationOptions = {
     modelName?: string,
   ) => Promise<void>;
   ensureConversationId: () => string | undefined;
-  armPendingRun: (mode: AIChatMode, runId: string) => void;
 };
 
 type UseRunOrchestrationReturn = {
@@ -50,9 +49,9 @@ type PreparedRun = StreamRequestResult & { modelName: string | undefined };
 
 /**
  * Shared guard + request builder for a new run. Returns `null` when the
- * prompt/config is invalid, so callers early-return *before* arming a
- * pending-run ref or starting a stream. Centralizing the guard stack here
- * is what lets `handleRetry` arm only after validation (see comment there).
+ * prompt/config is invalid, so callers early-return *before* starting a
+ * stream. Centralizing the guard stack here is what lets `handleRetry`
+ * execute only after validation.
  */
 function prepareRunRequest(
   cfg: AssistantConversationConfig,
@@ -82,7 +81,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     executeGenerateRun,
     retryRun,
     ensureConversationId,
-    armPendingRun,
   } = options;
 
   const handleRetry = useCallback(
@@ -102,20 +100,13 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs);
       if (!prepared) return;
 
-      // WHY: Arm the pending-run ref only after validation. The ref routes
-      // a stream failure back to this runId; arming before the guards left
-      // a dangling error route armed whenever a retry was invalid (no
-      // prompt/profile/model/template), since no stream would ever start to
-      // clear the ref via `onComplete`. Prepare → arm → dispatch/execute.
-      armPendingRun(mode, runId);
-
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
       // WHY: Capture conversation id at request time so a later UI switch
       // cannot retarget restart/stream ownership while retry is queued.
       await retryRun(currentState.id, runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
     },
-    [configRef, retryRun, readState, rememberLastUsedAIProfile, armPendingRun],
+    [configRef, retryRun, readState, rememberLastUsedAIProfile],
   );
 
   const handleDismissGenerate = useCallback(() => {
@@ -150,7 +141,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // WHY: After ensureConversationId(), the conversation is in the store.
       // Use the state's id rather than the prop (which may be undefined on cold start).
       const activeConversationId = readState().id;
-      armPendingRun(currentMode, runId);
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
@@ -183,7 +173,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       executeGenerateRun,
       readState,
       rememberLastUsedAIProfile,
-      armPendingRun,
     ],
   );
 

@@ -1,4 +1,5 @@
 import type { AIChatMode, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
+import { logAssistantStructured } from "@koloda/assistant";
 import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
@@ -206,6 +207,8 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
   const run = draft.runs[runId];
   if (!run) return false;
 
+  const priorStatus = run.status;
+
   if (event.type === "restart") {
     run.status = "streaming";
     run.reason = undefined;
@@ -218,6 +221,13 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;
+    logAssistantStructured({
+      conversationId: draft.id,
+      runId,
+      commandOrEvent: "restart",
+      priorStatus,
+      nextStatus: "streaming",
+    });
     return true;
   }
 
@@ -225,6 +235,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
   // fail-after-cancel and similar illegal transitions.
   if (run.status !== "streaming") return false;
 
+  let terminationReason: RunTerminationReason | undefined;
   if (event.type === "complete") {
     run.status = "success";
     run.reason = undefined;
@@ -236,12 +247,22 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
   } else if (event.type === "interrupt") {
     run.status = "interrupted";
     run.reason = event.reason;
+    terminationReason = event.reason;
   } else {
     run.status = "canceled";
     run.reason = "user";
+    terminationReason = "user";
   }
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
+  logAssistantStructured({
+    conversationId: draft.id,
+    runId,
+    commandOrEvent: event.type,
+    priorStatus,
+    nextStatus: run.status,
+    terminationReason,
+  });
   return true;
 }
 

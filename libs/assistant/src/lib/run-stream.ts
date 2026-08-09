@@ -24,8 +24,7 @@ export type RunExecution<TRequest, TValue, TResult, TAcc> = {
 };
 
 /**
- * Shared run funnel: transport → finalize → `handleStreamResult`, with
- * `onComplete` always cleared in `finally`.
+ * Shared run funnel: transport → finalize → `handleStreamResult`.
  */
 export async function runStream<TRequest, TValue, TResult, TAcc>(
   exec: RunExecution<TRequest, TValue, TResult, TAcc>,
@@ -33,18 +32,11 @@ export async function runStream<TRequest, TValue, TResult, TAcc>(
   runId: string,
   request: TRequest,
   handleStreamResult: (conversationId: string, result: StreamResult, runId: string) => void,
-  onComplete: (mode: AIChatMode, runId: string) => void,
 ): Promise<void> {
   let acc = exec.initial;
-  try {
-    const result = await exec.transport(request, (v) => {
-      acc = exec.onValue(acc, v);
-    });
-    const streamResult = exec.finalize(result, acc);
-    handleStreamResult(conversationId, streamResult, runId);
-  } finally {
-    // WHY: Must clear even on abort/error. A stream aborted by a newer
-    // start still fires this — pending refs guard against stale runIds.
-    onComplete(exec.mode, runId);
-  }
+  const result = await exec.transport(request, (v) => {
+    acc = exec.onValue(acc, v);
+  });
+  const streamResult = exec.finalize(result, acc);
+  handleStreamResult(conversationId, streamResult, runId);
 }

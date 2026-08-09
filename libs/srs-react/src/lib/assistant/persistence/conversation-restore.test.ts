@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
+import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 
@@ -13,7 +14,9 @@ describe("toPersistedState / fromPersistedState", () => {
     };
     const persisted = toPersistedState(state);
     expect("revertState" in persisted).toBe(false);
+    expect(persisted.schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
     expect(fromPersistedState(persisted).revertState).toBeNull();
+    expect(fromPersistedState(persisted)).not.toHaveProperty("schemaVersion");
   });
 });
 
@@ -301,6 +304,98 @@ describe("coerceConversationState", () => {
       })!;
       // `?? null` defaulting: a present non-null value is kept as-is.
       expect(coerced.dismissedRunErrorId).toBe(7);
+    });
+  });
+
+  describe("schemaVersion and strict lifecycle validation", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "chat",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    it("migrates legacy rows missing schemaVersion to the current version", () => {
+      const coerced = coerceConversationState({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+      });
+      expect(coerced).not.toBeNull();
+      expect(toPersistedState(coerced!).schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
+    });
+
+    it("rejects unknown future schemaVersion instead of entering live state", () => {
+      expect(
+        coerceConversationState({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          schemaVersion: CONVERSATION_SCHEMA_VERSION + 1,
+        }),
+      ).toBeNull();
+    });
+
+    it("rejects an unknown run status string", () => {
+      expect(coerceConversationState(makeStateWithRun(baseRun({ status: "pending" })))).toBeNull();
+    });
+
+    it("rejects canceled without reason user after migration heal is skipped by explicit bad reason", () => {
+      expect(
+        coerceConversationState(makeStateWithRun(baseRun({ status: "canceled", reason: "app_shutdown" }))),
+      ).toBeNull();
+    });
+
+    it("accepts canceled with reason user", () => {
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "canceled", reason: "user" })))!;
+      expect(coerced.runs["r1"]?.status).toBe("canceled");
+      expect(coerced.runs["r1"]?.reason).toBe("user");
+    });
+
+    it("accepts interrupted with crash_recovery", () => {
+      const coerced = coerceConversationState(
+        makeStateWithRun(baseRun({ status: "interrupted", reason: "crash_recovery" })),
+      )!;
+      expect(coerced.runs["r1"]?.status).toBe("interrupted");
+      expect(coerced.runs["r1"]?.reason).toBe("crash_recovery");
+    });
+
+    it("rejects success carrying a termination reason on a current-schema row", () => {
+      expect(
+        coerceConversationState({
+          ...makeStateWithRun(baseRun({ status: "success", reason: "user" })),
+          schemaVersion: CONVERSATION_SCHEMA_VERSION,
+        }),
+      ).toBeNull();
+    });
+
+    it("strips a legacy success termination reason during v0→v1 migration", () => {
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "success", reason: "user" })))!;
+      expect(coerced.runs["r1"]?.status).toBe("success");
+      expect(coerced.runs["r1"]?.reason).toBeUndefined();
+    });
+
+    it("heals legacy canceled without reason during v0→v1 migration", () => {
+      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "canceled" })))!;
+      expect(coerced.runs["r1"]?.status).toBe("canceled");
+      expect(coerced.runs["r1"]?.reason).toBe("user");
     });
   });
 });

@@ -3,7 +3,14 @@ import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { PersistedConversation } from "./conversation-persistence";
 import { fromPersistedState } from "./conversation-persistence";
-import type { CardStatus, ConversationReducerState, GenerationRun, RunStatus } from "../state/conversation-reducer";
+import { CONVERSATION_SCHEMA_VERSION, migratePersistedConversation } from "./conversation-schema-version";
+import type {
+  CardStatus,
+  ConversationReducerState,
+  GenerationRun,
+  RunStatus,
+  RunTerminationReason,
+} from "../state/conversation-reducer";
 import { z } from "zod";
 
 /**
@@ -124,11 +131,15 @@ const terminationReasonField = z
   .nullish()
   .transform((v) => v ?? undefined);
 
+const runStatusField = z.enum(["streaming", "success", "failed", "canceled", "interrupted"]);
+
 const runSchema: z.ZodType<GenerationRun> = z
   .object({
     id: z.string(),
     mode: z.enum(["chat", "cards"]),
-    status: z.string().transform((s) => s as RunStatus),
+    // INVARIANT: status must be one of the five known values — never an
+    // arbitrary string cast to RunStatus.
+    status: runStatusField,
     reason: terminationReasonField,
     cards: z.array(z.unknown()),
     cardStatuses: z.record(z.string(), z.unknown()),
@@ -139,12 +150,46 @@ const runSchema: z.ZodType<GenerationRun> = z
     usage: passthroughField,
     error: errorField,
   })
-  .transform(
-    (run): GenerationRun => ({
+  .superRefine((run, ctx) => {
+    // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;
+    // success/failed/streaming must not carry a termination reason.
+    if (run.status === "canceled") {
+      if (run.reason !== "user") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["reason"],
+          message: 'canceled runs require reason "user"',
+        });
+      }
+      return;
+    }
+    if (run.status === "interrupted") {
+      if (run.reason !== "app_shutdown" && run.reason !== "crash_recovery") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["reason"],
+          message: 'interrupted runs require reason "app_shutdown" or "crash_recovery"',
+        });
+      }
+      return;
+    }
+    if (run.reason !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["reason"],
+        message: `${run.status} runs must not carry a termination reason`,
+      });
+    }
+  })
+  .transform((run): GenerationRun => {
+    const status = run.status as RunStatus;
+    const reason =
+      status === "canceled" || status === "interrupted" ? (run.reason as RunTerminationReason | undefined) : undefined;
+    return {
       id: run.id,
       mode: run.mode,
-      status: run.status,
-      reason: run.reason,
+      status,
+      reason,
       cards: run.cards as GeneratedCard[],
       cardStatuses: run.cardStatuses as Record<number, CardStatus>,
       templateFields: (run.templateFields ?? null) as TemplateFields | null,
@@ -153,8 +198,8 @@ const runSchema: z.ZodType<GenerationRun> = z
       modelName: run.modelName,
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
-    }),
-  );
+    };
+  });
 
 /**
  * The persisted conversation row schema. Shape is `PersistedConversation`
@@ -164,6 +209,7 @@ const runSchema: z.ZodType<GenerationRun> = z
  */
 const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
   .object({
+    schemaVersion: z.literal(CONVERSATION_SCHEMA_VERSION),
     id: z.string(),
     createdAt: dateField,
     updatedAt: nullableDateField,
@@ -180,6 +226,7 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
   })
   .transform(
     (state): PersistedConversation => ({
+      schemaVersion: state.schemaVersion,
       id: state.id,
       createdAt: state.createdAt,
       updatedAt: state.updatedAt,
@@ -198,10 +245,12 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
 
 /**
  * Coerce a persisted row into a `ConversationReducerState`, or `null` when the
- * row is absent or fails the compatibility schema. Drop-in replacement for the
- * hand-rolled `coerceConversationState` in `conversation-persistence.ts`.
+ * row is absent, declares an unknown future schemaVersion, or fails the
+ * compatibility schema. Migrations run at this boundary before validation.
  */
 export function coerceConversationState(value: unknown): ConversationReducerState | null {
-  const result = persistedConversationStateSchema.safeParse(value);
+  const migrated = migratePersistedConversation(value);
+  if (!migrated) return null;
+  const result = persistedConversationStateSchema.safeParse(migrated);
   return result.success ? fromPersistedState(result.data) : null;
 }

@@ -31,7 +31,6 @@ export type ConversationRuntimeTransports = {
 
 export type ConversationRuntime = {
   conversationId: string;
-  armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
@@ -50,10 +49,6 @@ export function createConversationRuntime(
   callbacks: ConversationRuntimeCallbacks,
   transports: ConversationRuntimeTransports,
   controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has" | "takeAbortReason">,
-  pendingRunRefs: {
-    arm: (mode: AIChatMode, runId: string) => void;
-    onComplete: (mode: AIChatMode, runId: string) => void;
-  },
 ): ConversationRuntime {
   const queue = createSerialQueue<void>();
   // WHY: Cancel can win the race after a task dequeues but before beginRun;
@@ -186,7 +181,6 @@ export function createConversationRuntime(
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
       applyQueuedCancel(runId, earlyCancel);
-      pendingRunRefs.onComplete("chat", runId);
       return;
     }
 
@@ -277,7 +271,6 @@ export function createConversationRuntime(
       runId,
       request,
       handleStreamResult,
-      pendingRunRefs.onComplete,
     );
   };
 
@@ -285,7 +278,6 @@ export function createConversationRuntime(
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
       applyQueuedCancel(runId, earlyCancel);
-      pendingRunRefs.onComplete("cards", runId);
       return;
     }
 
@@ -343,7 +335,6 @@ export function createConversationRuntime(
       runId,
       request,
       handleStreamResult,
-      pendingRunRefs.onComplete,
     );
   };
 
@@ -468,7 +459,6 @@ export function createConversationRuntime(
 
   return {
     conversationId,
-    armPendingRun: pendingRunRefs.arm,
     executeChatRun,
     executeGenerateRun,
     retryRun,

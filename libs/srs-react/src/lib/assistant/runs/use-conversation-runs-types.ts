@@ -11,7 +11,6 @@ export type UseConversationRunsOptions = {
 };
 
 export type UseConversationRunsReturn = {
-  armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (

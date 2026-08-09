@@ -2,6 +2,7 @@ import { produce } from "immer";
 import { backfillUserMessageRunIds } from "../state/assistant-messages";
 import { transitionRun } from "../state/conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
 /** Mirror `stampElapsed` without mutating the source run. */
 function elapsedSecondsSince(startedAt: Date): number {
@@ -12,16 +13,20 @@ function elapsedSecondsSince(startedAt: Date): number {
  * DB-writable conversation fields.
  * No `revertState` — revert is in-memory only
  * (ASSISTANT-CHAT-CONVERSATIONS.md §Revert / §Persistence).
+ * `schemaVersion` is persistence-boundary only (not live reducer state).
  */
-export type PersistedConversation = Omit<ConversationReducerState, "revertState">;
+export type PersistedConversation = Omit<ConversationReducerState, "revertState"> & {
+  schemaVersion: number;
+};
 
 export function toPersistedState(state: ConversationReducerState): PersistedConversation {
   const { revertState: _omit, ...persisted } = state;
-  return persisted;
+  return { ...persisted, schemaVersion: CONVERSATION_SCHEMA_VERSION };
 }
 
 export function fromPersistedState(persisted: PersistedConversation): ConversationReducerState {
-  return { ...persisted, revertState: null };
+  const { schemaVersion: _omitVersion, ...rest } = persisted;
+  return { ...rest, revertState: null };
 }
 
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {

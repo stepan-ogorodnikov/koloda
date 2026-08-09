@@ -28,8 +28,7 @@ export type AssistantCommand =
   | { type: "executeChat"; conversationId: string; input: ExecuteChatInput }
   | { type: "executeGenerate"; conversationId: string; input: ExecuteGenerateInput }
   | { type: "retry"; conversationId: string; input: RetryInput }
-  | { type: "cancel"; conversationId: string; runId: string }
-  | { type: "armPendingRun"; mode: AIChatMode; runId: string };
+  | { type: "cancel"; conversationId: string; runId: string };
 
 /** Snapshot carried on retry restart — identity + mode only; full run records stay in the store. */
 export type RunStartSnapshot = {

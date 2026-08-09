@@ -1,5 +1,6 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
+import { logAssistantStructured } from "./assistant-observability";
 import type { AssistantCommand } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
 import type { ConversationPersistenceHost } from "./conversation-persistence-host";
@@ -10,7 +11,6 @@ import type {
   ConversationRuntimeCallbacks,
   ConversationRuntimeTransports,
 } from "./conversation-runtime";
-import { createPendingRunRefs } from "./pending-run-refs";
 import { createRunControllerRegistry } from "./run-controller-registry";
 import type { QueueCancelReason } from "./serial-queue";
 
@@ -26,7 +26,6 @@ export type AssistantEngineShutdownOptions = {
 
 export type AssistantEngine = {
   dispatch: (command: AssistantCommand) => void | Promise<void>;
-  armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
   retryRun: (
@@ -57,7 +56,6 @@ export class AssistantEngineClosedError extends Error {
 
 export function createAssistantEngine(options: AssistantEngineOptions): AssistantEngine {
   const controllerRegistry = createRunControllerRegistry();
-  const pendingRunRefs = createPendingRunRefs();
   const runtimes = new Map<string, ConversationRuntime>();
   let persistenceHost: ConversationPersistenceHost | null = null;
   let lifecycle: AssistantEngineLifecycle = "running";
@@ -72,7 +70,7 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     let runtime = runtimes.get(conversationId);
     if (!runtime) {
       assertRunning();
-      runtime = createConversationRuntime(conversationId, options, options, controllerRegistry, pendingRunRefs);
+      runtime = createConversationRuntime(conversationId, options, options, controllerRegistry);
       runtimes.set(conversationId, runtime);
     }
     return runtime;
@@ -84,6 +82,10 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     }
   };
 
+  const logCommand = (commandOrEvent: string, conversationId: string, runId: string) => {
+    logAssistantStructured({ conversationId, runId, commandOrEvent });
+  };
+
   const engine: AssistantEngine = {
     get lifecycle() {
       return lifecycle;
@@ -91,8 +93,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
 
     dispatch(command) {
       switch (command.type) {
-        case "armPendingRun":
-          return engine.armPendingRun(command.mode, command.runId);
         case "executeChat":
           return engine.executeChatRun(command.conversationId, command.input.runId, command.input.request);
         case "executeGenerate":
@@ -111,20 +111,18 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       }
     },
 
-    armPendingRun(mode, runId) {
-      assertRunning();
-      pendingRunRefs.arm(mode, runId);
-    },
     executeChatRun(conversationId, runId, request) {
       if (lifecycle !== "running") {
         return Promise.reject(new AssistantEngineClosedError(lifecycle));
       }
+      logCommand("executeChat", conversationId, runId);
       return getRuntime(conversationId).executeChatRun(runId, request);
     },
     executeGenerateRun(conversationId, runId, request) {
       if (lifecycle !== "running") {
         return Promise.reject(new AssistantEngineClosedError(lifecycle));
       }
+      logCommand("executeGenerate", conversationId, runId);
       return getRuntime(conversationId).executeGenerateRun(runId, request);
     },
     retryRun(conversationId, runId, request, templateFields, mode, modelName) {
@@ -133,12 +131,14 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       }
       // WHY: conversationId is caller-supplied — never inferred from UI-current
       // state, or a queued retry for A can restart/clear B after a switch.
+      logCommand("retry", conversationId, runId);
       return getRuntime(conversationId).retryRun(runId, request, templateFields, mode, modelName);
     },
     cancel(conversationId, runId) {
       // WHY: Cancel remains allowed while closing so in-flight UI cancel can
       // still abort; once closed there is nothing left to cancel.
       if (lifecycle === "closed") return;
+      logCommand("cancel", conversationId, runId);
       const runtime = runtimes.get(conversationId);
       if (runtime) {
         runtime.cancel(runId, "user");
@@ -154,6 +154,10 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       if (lifecycle === "closed") return;
       const runtime = runtimes.get(conversationId);
       if (!runtime) return;
+      logAssistantStructured({
+        conversationId,
+        commandOrEvent: "disposeConversation",
+      });
       // WHY: close only drops queued serial-queue tasks; cancel each known run
       // so an in-flight AbortController aborts before we drop the runtime (#8).
       const state = options.readConversationState(conversationId);
@@ -166,6 +170,12 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     async shutdownGracefully({ interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS }) {
       if (lifecycle !== "running") return;
       lifecycle = "closing";
+      logAssistantStructured({
+        conversationId: "*",
+        commandOrEvent: "shutdown",
+        priorStatus: "running",
+        nextStatus: "closing",
+      });
 
       // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
       closeRuntimes("app_shutdown");
