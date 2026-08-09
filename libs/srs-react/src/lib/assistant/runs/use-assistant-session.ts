@@ -75,10 +75,7 @@ export function useAssistantSession({
     [setConversationReducerAction],
   );
 
-  const { executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns({
-    streamGenerator: configRef.current.streamGenerator,
-    chatStreamGenerator: configRef.current.chatStreamGenerator,
-  });
+  const { executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns();
 
   const handleCancel = useCallback(() => {
     const state = readState();

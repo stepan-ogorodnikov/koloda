@@ -1,5 +1,3 @@
-import type { ChatStreamGenerator } from "@koloda/ai";
-import type { CardGenerationExecutor } from "@koloda/ai-react";
 import type { Deck, Template } from "@koloda/srs";
 import type { I18nContext } from "@lingui/react";
 
@@ -11,8 +9,6 @@ export type AssistantConversationConfig = {
   reasoningEffort: string;
   deckId: Deck["id"];
   templateId: Template["id"];
-  streamGenerator: CardGenerationExecutor;
-  chatStreamGenerator: ChatStreamGenerator;
   template: Template | null | undefined;
   cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;

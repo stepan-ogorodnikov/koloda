@@ -3,11 +3,10 @@ import { queriesAtom } from "@koloda/core-react";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useRef } from "react";
 import type { RefObject } from "react";
+import { useRef } from "react";
 import type { AssistantConversationConfig } from "./state/assistant-conversation-config";
 import { assistantDeckIdAtom } from "./state/conversation-selectors";
-import { useAssistantClient } from "./use-assistant-client";
 
 export type UseAssistantRuntimeConfigOptions = {
   profileId: string;
@@ -47,8 +46,6 @@ export function useAssistantRuntimeConfig({
   });
   const template = templateQuery.data;
 
-  const { streamGenerator, chatStreamGenerator } = useAssistantClient({ profileId, template });
-
   const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
 
@@ -60,8 +57,6 @@ export function useAssistantRuntimeConfig({
     reasoningEffort,
     deckId: deckId!,
     templateId: templateId!,
-    streamGenerator,
-    chatStreamGenerator,
     template,
     cardsPromptTemplate,
     chatPromptTemplate,

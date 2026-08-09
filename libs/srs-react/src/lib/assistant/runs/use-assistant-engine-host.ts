@@ -1,13 +1,15 @@
+import type { CardGenerationRequest, ChatStreamRequest } from "@koloda/ai";
 import { computeConversationTitle } from "@koloda/ai";
-import type { ChatStreamGenerator } from "@koloda/ai";
-import { createAssistantEngine, createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
-import type { AssistantEngine, CardGenerationExecutor, ConversationPersistenceHost } from "@koloda/assistant";
 import type { Conversation, SetConversationData } from "@koloda/app";
-import { useStore } from "jotai";
+import type { AssistantEngine, AssistantExecutionPort, ConversationPersistenceHost } from "@koloda/assistant";
+import { createAssistantEngine, createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
+import { aiRuntimeAtom } from "@koloda/core-react";
 import type { createStore } from "jotai";
+import { useStore } from "jotai";
 import { useEffect } from "react";
 import { toPersistedState } from "../persistence/conversation-persistence";
 import { removeConversationAtom } from "../state/conversation-actions";
+import type { SaveStatus } from "../state/conversation-store";
 import {
   conversationsAtom,
   currentConversationIdAtom,
@@ -16,26 +18,12 @@ import {
   pendingSaveByConversationAtom,
   touchConversationOnStore,
 } from "../state/conversation-store";
-import type { SaveStatus } from "../state/conversation-store";
 import { assistantEventToReducerAction } from "./assistant-event-to-action";
 
 type AssistantJotaiStore = ReturnType<typeof createStore>;
 
-export type AssistantEngineTransports = {
-  chatStreamGenerator: ChatStreamGenerator;
-  streamGenerator: CardGenerationExecutor;
-};
-
 export type AssistantPersistenceWriteAdapter = {
   writeConversation: (conversationId: string) => Promise<boolean>;
-};
-
-const transportRef: {
-  chatStreamGenerator: ChatStreamGenerator | null;
-  streamGenerator: CardGenerationExecutor | null;
-} = {
-  chatStreamGenerator: null,
-  streamGenerator: null,
 };
 
 // WHY: Persistence queues outlive any single React tree. The host keeps a
@@ -48,8 +36,10 @@ let persistenceHostInstance: ConversationPersistenceHost | null = null;
 
 function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine {
   return createAssistantEngine({
-    getChatStreamGenerator: () => transportRef.chatStreamGenerator!,
-    getStreamGenerator: () => transportRef.streamGenerator!,
+    // INVARIANT: The port is fixed at the application-shell boundary. Each
+    // command supplies only immutable non-secret identity; this host resolves
+    // the current host-owned runtime and invokes it by that identity.
+    executionPort: createAssistantExecutionPort(store),
     // WHY: Engine emits typed events; this adapter alone knows reducer tuples.
     emit: (event) => {
       dispatchToConversationOnStore(store, event.conversationId, assistantEventToReducerAction(event));
@@ -66,6 +56,28 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine {
     // `assistantConversationStateAtom` — so queued retry ownership cannot drift.
     readConversationState: (conversationId) => store.get(conversationsAtom)[conversationId] ?? { runs: {} },
   });
+}
+
+function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExecutionPort {
+  return {
+    executeChat: (input, onChunk, signal) =>
+      store
+        .get(aiRuntimeAtom)
+        .chat(input.identity.profileId, structuredClone(input.request) as ChatStreamRequest, onChunk, signal),
+    executeGenerate: async (input, onCard, signal) => {
+      const template = input.identity.template;
+      if (!template) throw new Error("Card generation execution requires a template snapshot");
+
+      await store.get(aiRuntimeAtom).generateCards(input.identity.profileId, {
+        template: structuredClone(template) as unknown as CardGenerationRequest["template"],
+        input: structuredClone(input.request.input) as CardGenerationRequest["input"],
+        messages: structuredClone(input.request.messages) as CardGenerationRequest["messages"],
+        onCard,
+        abortSignal: signal,
+        systemPromptTemplate: input.request.systemPromptTemplate,
+      });
+    },
+  };
 }
 
 function interruptAllStreamingRuns(store: AssistantJotaiStore): void {
@@ -88,11 +100,6 @@ export function getAssistantEngine(): AssistantEngine {
   if (!engineInstance)
     throw new Error("AssistantEngine not initialized — mount useAssistantEngineHost at application-shell scope");
   return engineInstance;
-}
-
-export function registerAssistantEngineTransports(transports: AssistantEngineTransports): void {
-  transportRef.chatStreamGenerator = transports.chatStreamGenerator;
-  transportRef.streamGenerator = transports.streamGenerator;
 }
 
 /**
@@ -145,8 +152,6 @@ export function resetAssistantEngineForTests(): void {
   engineInstance = null;
   persistenceHostInstance = null;
   persistenceWriteAdapter = null;
-  transportRef.chatStreamGenerator = null;
-  transportRef.streamGenerator = null;
 }
 
 /**
@@ -229,7 +234,12 @@ export function buildWriteConversation({
       // push a resurrected row into the query cache or store timestamps.
       if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
       const currentId = store.get(currentConversationIdAtom);
-      if (currentId === row.id) setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
+      if (currentId === row.id)
+        setSaveStatus({
+          conversationId: row.id,
+          message: null,
+          isDismissed: false,
+        });
       setQueryConversation(row.id, row);
       invalidateConversations();
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;

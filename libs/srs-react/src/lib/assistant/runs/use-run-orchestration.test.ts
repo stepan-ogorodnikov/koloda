@@ -1,17 +1,17 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import type { CardGenerationStreamRequest } from "@koloda/ai-react";
+import type { TemplateFields } from "@koloda/srs";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
+import { initialConversationState } from "../state/conversation-reducer";
 import {
   assistantConversationStateAtom,
   currentConversationIdAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
-import type { TemplateFields } from "@koloda/srs";
 import { useRunOrchestration } from "./use-run-orchestration";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
@@ -26,8 +26,6 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
     reasoningEffort: "",
     deckId: 0,
     templateId: 0,
-    streamGenerator: vi.fn() as never,
-    chatStreamGenerator: vi.fn() as never,
     template: null,
     cardsPromptTemplate: null,
     chatPromptTemplate: null,
@@ -58,7 +56,11 @@ describe("useRunOrchestration — handleRetry ordering", () => {
   // state through the real write path so `readState`/`dispatch` see
   // the same shape production does.
   function seedConversation(id: string) {
-    store.set(upsertConversationAtom, { ...initialConversationState, id, createdAt: new Date(1) });
+    store.set(upsertConversationAtom, {
+      ...initialConversationState,
+      id,
+      createdAt: new Date(1),
+    });
     store.set(currentConversationIdAtom, id);
   }
 
@@ -169,7 +171,11 @@ describe("useRunOrchestration — atomic submitTurn", () => {
   });
 
   it("handleGenerate dispatches a single submitTurn (not three separate actions)", async () => {
-    store.set(upsertConversationAtom, { ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
+    store.set(upsertConversationAtom, {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+    });
     store.set(currentConversationIdAtom, "conv-1");
 
     const cfg = makeConfig();

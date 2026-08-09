@@ -1,5 +1,7 @@
-import type { ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "@koloda/assistant";
+import { aiRuntimeAtom } from "@koloda/core-react";
+import type { TemplateFields } from "@koloda/srs";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,7 +17,6 @@ import {
 } from "../state/conversation-store";
 import {
   ensureAssistantEngine,
-  registerAssistantEngineTransports,
   resetAssistantEngineForTests,
   shutdownAssistantGracefully,
 } from "./use-assistant-engine-host";
@@ -34,7 +35,10 @@ function makeConversation(id: string, overrides: Partial<ConversationReducerStat
 
 function createHarness() {
   const store = createStore();
-  const dispatchToMap: Array<{ id: string; action: ConversationReducerAction }> = [];
+  const dispatchToMap: Array<{
+    id: string;
+    action: ConversationReducerAction;
+  }> = [];
   const touch = vi.fn();
 
   const originalDispatch = conversationStore.dispatchToConversationOnStore;
@@ -51,9 +55,21 @@ function createHarness() {
 
   const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
   const streamGenerator = vi.fn<CardGenerationExecutor>();
+  const chatExecutionProfiles: string[] = [];
 
+  store.set(aiRuntimeAtom, {
+    listModels: vi.fn(),
+    chat: (profileId, request, onChunk, signal) => {
+      if (!profileId) throw new Error("Missing profile identity");
+      chatExecutionProfiles.push(profileId);
+      return chatStreamGenerator(request, onChunk, signal);
+    },
+    generateCards: (profileId, request) => {
+      if (!profileId) throw new Error("Missing profile identity");
+      return streamGenerator(request, request.onCard, request.abortSignal);
+    },
+  });
   ensureAssistantEngine(store);
-  registerAssistantEngineTransports({ chatStreamGenerator, streamGenerator });
 
   const getState: GetState = () => store.get(assistantConversationStateAtom);
 
@@ -64,16 +80,29 @@ function createHarness() {
     dispatchToMap,
     chatStreamGenerator,
     streamGenerator,
+    chatExecutionProfiles,
   };
 }
 
-function renderRuns(harness: ReturnType<typeof createHarness>) {
-  return renderHook(() =>
-    useConversationRuns({
-      streamGenerator: harness.streamGenerator,
-      chatStreamGenerator: harness.chatStreamGenerator,
-    }),
-  );
+function renderRuns(_harness: ReturnType<typeof createHarness>) {
+  return renderHook(() => {
+    const runs = useConversationRuns();
+    return {
+      ...runs,
+      executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) =>
+        runs.executeChatRun(conversationId, runId, request, chatExecution),
+      executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) =>
+        runs.executeGenerateRun(conversationId, runId, request, cardsExecution),
+      retryRun: (
+        conversationId: string,
+        runId: string,
+        request: ChatStreamRequest | CardGenerationStreamRequest,
+        templateFields: TemplateFields | null,
+        mode: AIChatMode,
+        modelName?: string,
+      ) => runs.retryRun(conversationId, runId, request, templateFields, mode, modelName, chatExecution),
+    };
+  });
 }
 
 function holdUntilAborted(signal: AbortSignal): Promise<never> {
@@ -85,6 +114,12 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
     signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
   });
 }
+
+const chatExecution = { profileId: "profile-chat" };
+const cardsExecution = {
+  profileId: "profile-cards",
+  template: { id: 1, content: { fields: [] } },
+};
 
 describe("useConversationRuns", () => {
   beforeEach(() => {
@@ -156,7 +191,10 @@ describe("useConversationRuns", () => {
     expect(completeActions[0].id).toBe("A");
 
     const stateA = harness.store.get(conversationsAtom)["A"];
-    expect(stateA.messages.at(-1)?.parts[0]).toEqual({ type: "text", text: "Hello world" });
+    expect(stateA.messages.at(-1)?.parts[0]).toEqual({
+      type: "text",
+      text: "Hello world",
+    });
 
     const stateB = harness.store.get(conversationsAtom)["B"];
     expect(stateB.messages).toHaveLength(0);
@@ -232,8 +270,12 @@ describe("useConversationRuns", () => {
     harness.store.set(setCurrentConversationIdAtom, "B");
 
     harness.streamGenerator.mockImplementation(async (_request, onCard) => {
-      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } } as GeneratedCard);
-      onCard({ content: { front: { text: "Q2" }, back: { text: "A2" } } } as GeneratedCard);
+      onCard({
+        content: { front: { text: "Q1" }, back: { text: "A1" } },
+      } as GeneratedCard);
+      onCard({
+        content: { front: { text: "Q2" }, back: { text: "A2" } },
+      } as GeneratedCard);
     });
 
     const { result } = renderRuns(harness);
@@ -310,7 +352,9 @@ describe("useConversationRuns", () => {
     ]);
 
     harness.streamGenerator.mockImplementation(async (_request, onCard) => {
-      onCard({ content: { front: { text: "Q1" }, back: { text: "A1" } } } as GeneratedCard);
+      onCard({
+        content: { front: { text: "Q1" }, back: { text: "A1" } },
+      } as GeneratedCard);
     });
 
     const { result } = renderRuns(harness);
@@ -458,7 +502,11 @@ describe("useConversationRuns", () => {
       { runId: "run-A", kind: "chat-text", text: "" },
     ]);
 
-    const usage: StreamUsage = { promptTokens: 10, completionTokens: 5, totalTokens: 15 };
+    const usage: StreamUsage = {
+      promptTokens: 10,
+      completionTokens: 5,
+      totalTokens: 15,
+    };
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       onChunk("hi");
       return usage;
@@ -630,8 +678,16 @@ describe("useConversationRuns", () => {
           },
         },
         messages: [
-          { id: "user-run-a", role: "user", parts: [{ type: "text", text: "hello" }] },
-          { id: "assistant-run-a", role: "assistant", parts: [{ type: "text", text: "old" }] },
+          {
+            id: "user-run-a",
+            role: "user",
+            parts: [{ type: "text", text: "hello" }],
+          },
+          {
+            id: "assistant-run-a",
+            role: "assistant",
+            parts: [{ type: "text", text: "old" }],
+          },
         ],
       }),
     );
@@ -698,6 +754,51 @@ describe("useConversationRuns", () => {
 
     expect(harness.dispatchToMap.some((e) => e.id === "B" && e.action[0] === "restartRun")).toBe(false);
     expect(harness.store.get(conversationsAtom)["B"]?.runs["run-a"]).toBeUndefined();
+  });
+
+  it("executes queued A with A's identity after React renders B", async () => {
+    const harness = createHarness();
+    let releaseBlocker!: () => void;
+    const blocker = new Promise<void>((resolve) => {
+      releaseBlocker = resolve;
+    });
+    harness.chatStreamGenerator.mockImplementation(async (request) => {
+      if (request.input.prompt === "blocker") await blocker;
+      return undefined;
+    });
+
+    const { result, rerender } = renderHook(
+      ({ profileId }: { profileId: string }) => {
+        const runs = useConversationRuns();
+        return { profileId, runs };
+      },
+      { initialProps: { profileId: "profile-a" } },
+    );
+
+    const blockerRun = result.current.runs.executeChatRun(
+      "A",
+      "blocker",
+      { input: { modelId: "model-a", prompt: "blocker" }, messages: [] },
+      { profileId: "profile-blocker" },
+    );
+    await Promise.resolve();
+
+    const queuedA = result.current.runs.executeChatRun(
+      "A",
+      "run-a",
+      { input: { modelId: "model-a", prompt: "queued-a" }, messages: [] },
+      { profileId: result.current.profileId },
+    );
+
+    // This mirrors the route/profile render that previously replaced the
+    // module-level transport closure while A waited in the serial queue.
+    rerender({ profileId: "profile-b" });
+    releaseBlocker();
+    await blockerRun;
+    await queuedA;
+
+    expect(harness.chatExecutionProfiles).toEqual(["profile-blocker", "profile-a"]);
+    expect(harness.chatExecutionProfiles).not.toContain("profile-b");
   });
 
   it("shutdownAssistantGracefully interrupts streaming runs with app_shutdown", async () => {

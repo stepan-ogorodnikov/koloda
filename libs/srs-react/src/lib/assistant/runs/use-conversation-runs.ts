@@ -1,16 +1,11 @@
-import type { UseConversationRunsOptions, UseConversationRunsReturn } from "./use-conversation-runs-types";
-import { getAssistantEngine, registerAssistantEngineTransports } from "./use-assistant-engine-host";
+import { getAssistantEngine } from "./use-assistant-engine-host";
+import type { UseConversationRunsReturn } from "./use-conversation-runs-types";
 
 /**
  * Thin React adapter over the route-scoped {@link AssistantEngine}.
  * Run lifetime and AbortControllers live in the engine — not in this hook.
  */
-export function useConversationRuns({
-  streamGenerator,
-  chatStreamGenerator,
-}: UseConversationRunsOptions): UseConversationRunsReturn {
-  registerAssistantEngineTransports({ chatStreamGenerator, streamGenerator });
-
+export function useConversationRuns(): UseConversationRunsReturn {
   const engine = getAssistantEngine();
 
   return {
@@ -21,8 +16,4 @@ export function useConversationRuns({
   };
 }
 
-export type {
-  DispatchToConversation,
-  UseConversationRunsOptions,
-  UseConversationRunsReturn,
-} from "./use-conversation-runs-types";
+export type { DispatchToConversation, UseConversationRunsReturn } from "./use-conversation-runs-types";

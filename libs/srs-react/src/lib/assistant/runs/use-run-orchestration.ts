@@ -2,16 +2,17 @@ import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
 import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
+import type { AssistantExecutionIdentity } from "@koloda/assistant";
 import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
-import { useCallback } from "react";
 import type { RefObject } from "react";
+import { useCallback } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { buildConversationMessages, getMessageRunId, userMessageId } from "../state/assistant-messages";
-import { buildStreamRequest } from "./build-stream-request";
-import type { StreamRequestResult } from "./build-stream-request";
-import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
+import type { StreamRequestResult } from "./build-stream-request";
+import { buildStreamRequest } from "./build-stream-request";
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
 type UseRunOrchestrationOptions = {
@@ -24,15 +25,26 @@ type UseRunOrchestrationOptions = {
   rememberLastUsedAIProfile: (profileId: string, modelId: string) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
-  executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
-  executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
+  executeChatRun: (
+    conversationId: string,
+    runId: string,
+    request: ChatStreamRequest,
+    execution: AssistantExecutionIdentity,
+  ) => Promise<void>;
+  executeGenerateRun: (
+    conversationId: string,
+    runId: string,
+    request: CardGenerationStreamRequest,
+    execution: AssistantExecutionIdentity,
+  ) => Promise<void>;
   retryRun: (
     conversationId: string,
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
-    modelName?: string,
+    modelName: string | undefined,
+    execution: AssistantExecutionIdentity,
   ) => Promise<void>;
   ensureConversationId: () => string | undefined;
 };
@@ -46,6 +58,23 @@ type UseRunOrchestrationReturn = {
 };
 
 type PreparedRun = StreamRequestResult & { modelName: string | undefined };
+
+function createExecutionIdentity(
+  cfg: AssistantConversationConfig,
+  kind: PreparedRun["kind"],
+): AssistantExecutionIdentity {
+  if (kind !== "cards") return { profileId: cfg.profileId };
+
+  const template = cfg.template;
+  if (!template) throw new Error("Card generation requires a template");
+  return {
+    profileId: cfg.profileId,
+    template: {
+      id: template.id,
+      content: { fields: template.content.fields },
+    },
+  };
+}
 
 /**
  * Shared guard + request builder for a new run. Returns `null` when the
@@ -99,12 +128,21 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs);
       if (!prepared) return;
+      const execution = createExecutionIdentity(cfg, prepared.kind);
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
       // WHY: Capture conversation id at request time so a later UI switch
       // cannot retarget restart/stream ownership while retry is queued.
-      await retryRun(currentState.id, runId, prepared.request, prepared.templateFields, mode, prepared.modelName);
+      await retryRun(
+        currentState.id,
+        runId,
+        prepared.request,
+        prepared.templateFields,
+        mode,
+        prepared.modelName,
+        execution,
+      );
     },
     [configRef, retryRun, readState, rememberLastUsedAIProfile],
   );
@@ -136,6 +174,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       const prepared = prepareRunRequest(cfg, currentMode, promptText, currentState.messages, currentState.runs);
       if (!prepared) return;
+      const execution = createExecutionIdentity(cfg, prepared.kind);
 
       const runId = generateUUID();
       // WHY: After ensureConversationId(), the conversation is in the store.
@@ -160,9 +199,9 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       ]);
 
       if (prepared.kind === "chat") {
-        await executeChatRun(activeConversationId, runId, prepared.request);
+        await executeChatRun(activeConversationId, runId, prepared.request, execution);
       } else {
-        await executeGenerateRun(activeConversationId, runId, prepared.request);
+        await executeGenerateRun(activeConversationId, runId, prepared.request, execution);
       }
     },
     [
@@ -191,7 +230,10 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       cancelActiveRun();
       dispatchLocal([
         "setRevertState",
-        { revertedToUserMessageId: userMessageId, preRevertInputText: currentInputText },
+        {
+          revertedToUserMessageId: userMessageId,
+          preRevertInputText: currentInputText,
+        },
       ]);
       // WHY: Mirror the mode of the target message so the prompt input
       // lines up with what the run was sent in. Use setMode (bumps save)
@@ -214,5 +256,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     return text;
   }, [readState, dispatchLocal]);
 
-  return { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore };
+  return {
+    handleGenerate,
+    handleRetry,
+    handleDismissGenerate,
+    handleRevert,
+    handleRestore,
+  };
 }
