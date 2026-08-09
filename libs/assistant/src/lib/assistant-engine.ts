@@ -1,5 +1,6 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
+import type { AssistantCommand } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
 import type { ConversationPersistenceHost } from "./conversation-persistence-host";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "./conversation-persistence-host";
@@ -15,7 +16,7 @@ import type { QueueCancelReason } from "./serial-queue";
 
 export type AssistantEngineLifecycle = "running" | "closing" | "closed";
 
-export type AssistantEngineOptions<TAction> = ConversationRuntimeCallbacks<TAction> & ConversationRuntimeTransports;
+export type AssistantEngineOptions = ConversationRuntimeCallbacks & ConversationRuntimeTransports;
 
 export type AssistantEngineShutdownOptions = {
   /** Transition in-flight runs to `interrupted`/`app_shutdown` before aborting streams. */
@@ -23,7 +24,8 @@ export type AssistantEngineShutdownOptions = {
   flushTimeoutMs?: number;
 };
 
-export type AssistantEngine<TAction> = {
+export type AssistantEngine = {
+  dispatch: (command: AssistantCommand) => void | Promise<void>;
   armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
   executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
@@ -53,10 +55,10 @@ export class AssistantEngineClosedError extends Error {
   }
 }
 
-export function createAssistantEngine<TAction>(options: AssistantEngineOptions<TAction>): AssistantEngine<TAction> {
+export function createAssistantEngine(options: AssistantEngineOptions): AssistantEngine {
   const controllerRegistry = createRunControllerRegistry();
   const pendingRunRefs = createPendingRunRefs();
-  const runtimes = new Map<string, ConversationRuntime<TAction>>();
+  const runtimes = new Map<string, ConversationRuntime>();
   let persistenceHost: ConversationPersistenceHost | null = null;
   let lifecycle: AssistantEngineLifecycle = "running";
 
@@ -66,7 +68,7 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
     }
   };
 
-  const getRuntime = (conversationId: string): ConversationRuntime<TAction> => {
+  const getRuntime = (conversationId: string): ConversationRuntime => {
     let runtime = runtimes.get(conversationId);
     if (!runtime) {
       assertRunning();
@@ -82,9 +84,31 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
     }
   };
 
-  return {
+  const engine: AssistantEngine = {
     get lifecycle() {
       return lifecycle;
+    },
+
+    dispatch(command) {
+      switch (command.type) {
+        case "armPendingRun":
+          return engine.armPendingRun(command.mode, command.runId);
+        case "executeChat":
+          return engine.executeChatRun(command.conversationId, command.input.runId, command.input.request);
+        case "executeGenerate":
+          return engine.executeGenerateRun(command.conversationId, command.input.runId, command.input.request);
+        case "retry":
+          return engine.retryRun(
+            command.conversationId,
+            command.input.runId,
+            command.input.request,
+            command.input.templateFields,
+            command.input.mode,
+            command.input.modelName,
+          );
+        case "cancel":
+          return engine.cancel(command.conversationId, command.runId);
+      }
     },
 
     armPendingRun(mode, runId) {
@@ -170,4 +194,6 @@ export function createAssistantEngine<TAction>(options: AssistantEngineOptions<T
       lifecycle = "closed";
     },
   };
+
+  return engine;
 }

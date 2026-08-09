@@ -5,6 +5,16 @@ export type {
   AssistantEngineOptions,
   AssistantEngineShutdownOptions,
 } from "./lib/assistant-engine";
+export type {
+  AssistantCommand,
+  AssistantEvent,
+  ExecuteChatInput,
+  ExecuteGenerateInput,
+  RetryInput,
+  RunChunk,
+  RunOutcome,
+  RunStartSnapshot,
+} from "./lib/assistant-protocol";
 export {
   createConversationPersistenceHost,
   SHUTDOWN_FLUSH_TIMEOUT_MS,

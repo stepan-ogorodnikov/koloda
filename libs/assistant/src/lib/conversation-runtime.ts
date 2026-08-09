@@ -2,6 +2,7 @@ import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard,
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantEngineClosedError } from "./assistant-engine";
+import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
@@ -10,8 +11,9 @@ import { createSerialQueue, QueueClosedError } from "./serial-queue";
 import type { QueueCancelReason } from "./serial-queue";
 import type { StreamResult } from "./stream-result";
 
-export type ConversationRuntimeCallbacks<TAction> = {
-  dispatchToConversation: (id: string, action: TAction) => void;
+export type ConversationRuntimeCallbacks = {
+  /** Engine emits typed events; adapters translate them into store actions. */
+  emit: (event: AssistantEvent) => void;
   markReadIfCurrent: (id: string, runId: string) => void;
   touch: (conversationId: string) => void;
   /** True while the run can still accept a terminal cancel/complete transition. */
@@ -27,7 +29,7 @@ export type ConversationRuntimeTransports = {
   getStreamGenerator: () => CardGenerationExecutor;
 };
 
-export type ConversationRuntime<TAction> = {
+export type ConversationRuntime = {
   conversationId: string;
   armPendingRun: (mode: AIChatMode, runId: string) => void;
   executeChatRun: (runId: string, request: ChatStreamRequest) => Promise<void>;
@@ -43,16 +45,16 @@ export type ConversationRuntime<TAction> = {
   close: (reason: QueueCancelReason) => void;
 };
 
-export function createConversationRuntime<TAction>(
+export function createConversationRuntime(
   conversationId: string,
-  callbacks: ConversationRuntimeCallbacks<TAction>,
+  callbacks: ConversationRuntimeCallbacks,
   transports: ConversationRuntimeTransports,
   controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has" | "takeAbortReason">,
   pendingRunRefs: {
     arm: (mode: AIChatMode, runId: string) => void;
     onComplete: (mode: AIChatMode, runId: string) => void;
   },
-): ConversationRuntime<TAction> {
+): ConversationRuntime {
   const queue = createSerialQueue<void>();
   // WHY: Cancel can win the race after a task dequeues but before beginRun;
   // tracking provenance here blocks provider execution without a controller.
@@ -64,16 +66,30 @@ export function createConversationRuntime<TAction>(
   // handleStreamResult reads it to choose cancel vs interrupt.
   const abortedRunReasons = new Map<string, RunAbortReason>();
 
+  const emit = (event: AssistantEvent) => {
+    callbacks.emit(event);
+  };
+
   const applyQueuedCancel = (runId: string, reason: QueueCancelReason) => {
     if (!callbacks.isRunStreaming(conversationId, runId)) return;
     if (reason === "app_shutdown" || reason === "dispose") {
       // WHY: dispose has no dedicated termination reason; treat as non-user
       // interruption so AbortError/queue cancel cannot look like user cancel.
-      callbacks.dispatchToConversation(conversationId, ["interruptRun", { runId, reason: "app_shutdown" }] as TAction);
+      emit({
+        type: "runTerminated",
+        conversationId,
+        runId,
+        outcome: { status: "interrupted", reason: "app_shutdown" },
+      });
       callbacks.touch(conversationId);
       return;
     }
-    callbacks.dispatchToConversation(conversationId, ["cancelRun", { runId }] as TAction);
+    emit({
+      type: "runTerminated",
+      conversationId,
+      runId,
+      outcome: { status: "canceled", reason: "user" },
+    });
     callbacks.markReadIfCurrent(conversationId, runId);
     callbacks.touch(conversationId);
   };
@@ -90,13 +106,12 @@ export function createConversationRuntime<TAction>(
     if (reason === undefined) {
       // WHY: Exception type is not evidence of user intent — providers and
       // transports can abort internally without a requested termination cause.
-      callbacks.dispatchToConversation(conversationId, [
-        "runFailed",
-        {
-          runId,
-          error: { message: "Provider aborted the request" },
-        },
-      ] as TAction);
+      emit({
+        type: "runTerminated",
+        conversationId,
+        runId,
+        outcome: { status: "failed", error: { message: "Provider aborted the request" } },
+      });
       callbacks.markReadIfCurrent(conversationId, runId);
       return "error";
     }
@@ -107,7 +122,12 @@ export function createConversationRuntime<TAction>(
   const handleStreamResult = (targetConversationId: string, result: StreamResult, runId: string) => {
     switch (result) {
       case "success":
-        callbacks.dispatchToConversation(targetConversationId, ["completeRun", { runId }] as TAction);
+        emit({
+          type: "runTerminated",
+          conversationId: targetConversationId,
+          runId,
+          outcome: { status: "success" },
+        });
         callbacks.markReadIfCurrent(targetConversationId, runId);
         // WHY: Force a save with the post-completion state so a
         // throttled streaming checkpoint cannot outlive the terminal
@@ -116,7 +136,7 @@ export function createConversationRuntime<TAction>(
         callbacks.touch(targetConversationId);
         break;
       case "error":
-        // WHY: `runFailed` was already dispatched in the transport catch;
+        // WHY: `runFailed` was already emitted in the transport catch;
         // still dirty the originating conversation so the failed terminal
         // status is scheduled for save.
         callbacks.touch(targetConversationId);
@@ -133,19 +153,26 @@ export function createConversationRuntime<TAction>(
           if (!shouldPersist) break;
           // WHY: dispose has no dedicated termination reason; treat as non-user
           // interruption so AbortError cannot look like user cancel.
-          callbacks.dispatchToConversation(targetConversationId, [
-            "interruptRun",
-            { runId, reason: "app_shutdown" },
-          ] as TAction);
+          emit({
+            type: "runTerminated",
+            conversationId: targetConversationId,
+            runId,
+            outcome: { status: "interrupted", reason: "app_shutdown" },
+          });
           callbacks.touch(targetConversationId);
           break;
         }
 
-        // WHY: Always dispatch cancelRun on requested user abort — the reducer
+        // WHY: Always emit cancel on requested user abort — the reducer
         // no-ops if already terminal; skipping when !streaming hid cancel from
         // callers that observe the action stream (and matched prior AbortError
         // classification).
-        callbacks.dispatchToConversation(targetConversationId, ["cancelRun", { runId }] as TAction);
+        emit({
+          type: "runTerminated",
+          conversationId: targetConversationId,
+          runId,
+          outcome: { status: "canceled", reason: "user" },
+        });
         callbacks.markReadIfCurrent(targetConversationId, runId);
         if (shouldPersist) {
           callbacks.touch(targetConversationId);
@@ -197,10 +224,12 @@ export function createConversationRuntime<TAction>(
               };
             }
             const error = e instanceof Error ? e : new Error(String(e));
-            callbacks.dispatchToConversation(conversationId, [
-              "runFailed",
-              { runId, error: { message: displayErrorMessage(error) } },
-            ] as TAction);
+            emit({
+              type: "runTerminated",
+              conversationId,
+              runId,
+              outcome: { status: "failed", error: { message: displayErrorMessage(error) } },
+            });
             callbacks.markReadIfCurrent(conversationId, runId);
             return { streamResult: "error" as const, usage: null as StreamUsage | null };
           } finally {
@@ -210,10 +239,12 @@ export function createConversationRuntime<TAction>(
         initial: "",
         onValue: (text, chunk) => {
           const currentText = text + chunk;
-          callbacks.dispatchToConversation(conversationId, [
-            "updateAssistantText",
-            { runId, text: currentText },
-          ] as TAction);
+          emit({
+            type: "runChunk",
+            conversationId,
+            runId,
+            chunk: { kind: "assistantText", text: currentText },
+          });
           // WHY: Stream chunks must dirty the originating conversation so
           // throttled streaming checkpoints save A while the user views B.
           callbacks.touch(conversationId);
@@ -221,15 +252,24 @@ export function createConversationRuntime<TAction>(
         },
         finalize: ({ streamResult, usage }, currentText) => {
           // WHY: On abort the stream stops calling onChunk mid-text;
-          // re-dispatch the final accumulated value so the persisted
+          // re-emit the final accumulated value so the persisted
           // assistant message reflects everything received.
           if (streamResult === "aborted") {
-            callbacks.dispatchToConversation(conversationId, [
-              "updateAssistantText",
-              { runId, text: currentText },
-            ] as TAction);
+            emit({
+              type: "runChunk",
+              conversationId,
+              runId,
+              chunk: { kind: "assistantText", text: currentText },
+            });
           }
-          if (usage) callbacks.dispatchToConversation(conversationId, ["setUsage", { runId, usage }] as TAction);
+          if (usage) {
+            emit({
+              type: "runChunk",
+              conversationId,
+              runId,
+              chunk: { kind: "usage", usage },
+            });
+          }
           return streamResult;
         },
       },
@@ -272,10 +312,12 @@ export function createConversationRuntime<TAction>(
           } catch (e) {
             if (isAbortError(e)) return classifyAbortError(runId);
             const error = e instanceof Error ? e : new Error(String(e));
-            callbacks.dispatchToConversation(conversationId, [
-              "runFailed",
-              { runId, error: { message: displayErrorMessage(error) } },
-            ] as TAction);
+            emit({
+              type: "runTerminated",
+              conversationId,
+              runId,
+              outcome: { status: "failed", error: { message: displayErrorMessage(error) } },
+            });
             callbacks.markReadIfCurrent(conversationId, runId);
             return "error" as const;
           } finally {
@@ -284,7 +326,12 @@ export function createConversationRuntime<TAction>(
         },
         initial: null,
         onValue: (_acc, card) => {
-          callbacks.dispatchToConversation(conversationId, ["addCard", { runId, card }] as TAction);
+          emit({
+            type: "runChunk",
+            conversationId,
+            runId,
+            chunk: { kind: "card", card },
+          });
           // WHY: Card arrivals (and their idle card statuses) must dirty the
           // originating conversation, not whatever is currently viewed.
           callbacks.touch(conversationId);
@@ -362,13 +409,24 @@ export function createConversationRuntime<TAction>(
           const run = callbacks.readConversationState(conversationId).runs[runId];
           const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-          callbacks.dispatchToConversation(conversationId, [
-            "restartRun",
-            { runId, templateFields, mode: effectiveMode, modelName },
-          ] as TAction);
+          emit({
+            type: "runStarted",
+            conversationId,
+            run: {
+              runId,
+              templateFields,
+              mode: effectiveMode,
+              modelName,
+            },
+          });
 
           if (effectiveMode === "chat") {
-            callbacks.dispatchToConversation(conversationId, ["updateAssistantText", { runId, text: "" }] as TAction);
+            emit({
+              type: "runChunk",
+              conversationId,
+              runId,
+              chunk: { kind: "assistantText", text: "" },
+            });
             await runChatRun(runId, request as ChatStreamRequest);
           } else {
             await runGenerateRun(runId, request as CardGenerationStreamRequest);

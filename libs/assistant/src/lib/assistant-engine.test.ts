@@ -1,6 +1,7 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAssistantEngine } from "./assistant-engine";
+import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor } from "./card-generation";
 
 type ConversationStateSnapshot = { runs: Record<string, { mode?: AIChatMode }> };
@@ -16,7 +17,7 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
 }
 
 describe("createAssistantEngine", () => {
-  const dispatchToMap: Array<{ id: string; action: unknown }> = [];
+  const events: AssistantEvent[] = [];
   const conversationStates: Record<string, ConversationStateSnapshot> = {};
   let chatStreamGenerator: ReturnType<typeof vi.fn<ChatStreamGenerator>>;
   let streamGenerator: ReturnType<typeof vi.fn<CardGenerationExecutor>>;
@@ -24,7 +25,7 @@ describe("createAssistantEngine", () => {
   let readConversationState: ReturnType<typeof vi.fn<(conversationId: string) => ConversationStateSnapshot>>;
 
   beforeEach(() => {
-    dispatchToMap.length = 0;
+    events.length = 0;
     for (const key of Object.keys(conversationStates)) delete conversationStates[key];
     chatStreamGenerator = vi.fn<ChatStreamGenerator>();
     streamGenerator = vi.fn<CardGenerationExecutor>();
@@ -35,8 +36,8 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
+      emit: (event) => {
+        events.push(event);
       },
       markReadIfCurrent: vi.fn(),
       touch: vi.fn(),
@@ -88,8 +89,8 @@ describe("createAssistantEngine", () => {
     resolveStream();
     await runPromise;
 
-    const updates = dispatchToMap.filter((e) => (e.action as [string])[0] === "updateAssistantText");
-    expect(updates.some((e) => e.id === "conv-a")).toBe(true);
+    const updates = events.filter((e) => e.type === "runChunk" && e.chunk.kind === "assistantText");
+    expect(updates.some((e) => e.conversationId === "conv-a")).toBe(true);
   });
 
   it("shutdownGracefully interrupts active runs before aborting controllers", async () => {
@@ -151,28 +152,24 @@ describe("createAssistantEngine", () => {
     await firstRun;
     await retryPromise;
 
-    const restartActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "restartRun");
+    const restartActions = events.filter((e) => e.type === "runStarted");
     expect(restartActions).toHaveLength(1);
-    expect(restartActions[0]?.id).toBe("A");
+    expect(restartActions[0]?.conversationId).toBe("A");
 
-    const clearActions = dispatchToMap.filter(
-      (e) =>
-        (e.action as [string, { runId?: string; text?: string }])[0] === "updateAssistantText" &&
-        (e.action as [string, { runId?: string; text?: string }])[1]?.text === "",
+    const clearActions = events.filter(
+      (e) => e.type === "runChunk" && e.chunk.kind === "assistantText" && e.chunk.text === "",
     );
-    expect(clearActions.some((e) => e.id === "A")).toBe(true);
-    expect(clearActions.some((e) => e.id === "B")).toBe(false);
+    expect(clearActions.some((e) => e.conversationId === "A")).toBe(true);
+    expect(clearActions.some((e) => e.conversationId === "B")).toBe(false);
 
-    const chunkUpdates = dispatchToMap.filter(
-      (e) =>
-        (e.action as [string, { text?: string }])[0] === "updateAssistantText" &&
-        (e.action as [string, { text?: string }])[1]?.text === "retried",
+    const chunkUpdates = events.filter(
+      (e) => e.type === "runChunk" && e.chunk.kind === "assistantText" && e.chunk.text === "retried",
     );
     expect(chunkUpdates).toHaveLength(1);
-    expect(chunkUpdates[0]?.id).toBe("A");
+    expect(chunkUpdates[0]?.conversationId).toBe("A");
 
     expect(readConversationState).toHaveBeenCalledWith("A");
-    expect(dispatchToMap.some((e) => e.id === "B")).toBe(false);
+    expect(events.some((e) => e.conversationId === "B")).toBe(false);
   });
 
   it("concurrent A/B chat runs do not cross-dispatch stream chunks", async () => {
@@ -206,11 +203,14 @@ describe("createAssistantEngine", () => {
     resolveB();
     await Promise.all([runA, runB]);
 
-    const textById = dispatchToMap
-      .filter((e) => (e.action as [string])[0] === "updateAssistantText")
+    const textById = events
+      .filter(
+        (e): e is Extract<AssistantEvent, { type: "runChunk" }> =>
+          e.type === "runChunk" && e.chunk.kind === "assistantText",
+      )
       .map((e) => ({
-        id: e.id,
-        text: (e.action as [string, { text: string }])[1].text,
+        id: e.conversationId,
+        text: e.chunk.kind === "assistantText" ? e.chunk.text : "",
       }));
 
     expect(textById.filter((e) => e.id === "A").every((e) => e.text.includes("from-a"))).toBe(true);
@@ -218,8 +218,8 @@ describe("createAssistantEngine", () => {
     expect(textById.some((e) => e.id === "A" && e.text.includes("from-b"))).toBe(false);
     expect(textById.some((e) => e.id === "B" && e.text.includes("from-a"))).toBe(false);
 
-    const completes = dispatchToMap.filter((e) => (e.action as [string])[0] === "completeRun");
-    expect(completes.map((e) => e.id).sort()).toEqual(["A", "B"]);
+    const completes = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "success");
+    expect(completes.map((e) => e.conversationId).sort()).toEqual(["A", "B"]);
   });
 
   it("cancel before dequeue prevents provider execution", async () => {
@@ -227,11 +227,10 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
-        const [type, payload] = action as [string, { runId?: string }];
-        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
-          streaming.delete(payload.runId);
+      emit: (event) => {
+        events.push(event);
+        if (event.type === "runTerminated") {
+          streaming.delete(event.runId);
         }
       },
       markReadIfCurrent: vi.fn(),
@@ -274,8 +273,11 @@ describe("createAssistantEngine", () => {
     expect(startedRunIds).toEqual(["blocker"]);
     expect(chatStreamGenerator).toHaveBeenCalledTimes(1);
 
-    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
-    expect(cancelActions.some((e) => (e.action as [string, { runId: string }])[1].runId === "run-queued")).toBe(true);
+    const cancelActions = events.filter(
+      (e): e is Extract<AssistantEvent, { type: "runTerminated" }> =>
+        e.type === "runTerminated" && e.outcome.status === "canceled",
+    );
+    expect(cancelActions.some((e) => e.runId === "run-queued")).toBe(true);
   });
 
   it("cancel in-flight twice then retry same runId still runs", async () => {
@@ -285,14 +287,13 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
-        const [type, payload] = action as [string, { runId?: string }];
-        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
-          streaming.delete(payload.runId);
+      emit: (event) => {
+        events.push(event);
+        if (event.type === "runTerminated") {
+          streaming.delete(event.runId);
         }
-        if (type === "restartRun" && payload.runId) {
-          streaming.add(payload.runId);
+        if (event.type === "runStarted") {
+          streaming.add(event.run.runId);
         }
       },
       markReadIfCurrent: vi.fn(),
@@ -327,14 +328,12 @@ describe("createAssistantEngine", () => {
     await engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
 
     expect(providerCalls).toBe(2);
-    const restartActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "restartRun");
+    const restartActions = events.filter((e) => e.type === "runStarted");
     expect(restartActions).toHaveLength(1);
-    expect((restartActions[0]?.action as [string, { runId: string }])[1].runId).toBe("run-1");
+    expect(restartActions[0]?.type === "runStarted" && restartActions[0].run.runId).toBe("run-1");
 
-    const retryChunks = dispatchToMap.filter(
-      (e) =>
-        (e.action as [string, { text?: string }])[0] === "updateAssistantText" &&
-        (e.action as [string, { text?: string }])[1]?.text === "retried",
+    const retryChunks = events.filter(
+      (e) => e.type === "runChunk" && e.chunk.kind === "assistantText" && e.chunk.text === "retried",
     );
     expect(retryChunks).toHaveLength(1);
   });
@@ -346,11 +345,10 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
-        const [type, payload] = action as [string, { runId?: string }];
-        if ((type === "cancelRun" || type === "completeRun" || type === "interruptRun") && payload.runId) {
-          streaming.delete(payload.runId);
+      emit: (event) => {
+        events.push(event);
+        if (event.type === "runTerminated") {
+          streaming.delete(event.runId);
         }
       },
       markReadIfCurrent: vi.fn(),
@@ -394,9 +392,11 @@ describe("createAssistantEngine", () => {
       interruptActiveRuns: () => {
         for (const runId of [...streaming]) {
           streaming.delete(runId);
-          dispatchToMap.push({
-            id: "A",
-            action: ["interruptRun", { runId, reason: "app_shutdown" }],
+          events.push({
+            type: "runTerminated",
+            conversationId: "A",
+            runId,
+            outcome: { status: "interrupted", reason: "app_shutdown" },
           });
         }
       },
@@ -436,8 +436,8 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
+      emit: (event) => {
+        events.push(event);
       },
       markReadIfCurrent: vi.fn(),
       touch: vi.fn(),
@@ -472,8 +472,8 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
+      emit: (event) => {
+        events.push(event);
       },
       markReadIfCurrent: vi.fn(),
       touch: vi.fn(),
@@ -556,14 +556,14 @@ describe("createAssistantEngine", () => {
 
     await engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
 
-    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
-    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    const cancelActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "canceled");
+    const failedActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "failed");
     expect(cancelActions).toHaveLength(0);
     expect(failedActions).toHaveLength(1);
-    expect(failedActions[0]?.id).toBe("conv-a");
-    expect((failedActions[0]?.action as [string, { runId: string; error: { message: string } }])[1]).toMatchObject({
+    expect(failedActions[0]?.conversationId).toBe("conv-a");
+    expect(failedActions[0]).toMatchObject({
       runId: "run-1",
-      error: { message: "Provider aborted the request" },
+      outcome: { status: "failed", error: { message: "Provider aborted the request" } },
     });
   });
 
@@ -582,10 +582,13 @@ describe("createAssistantEngine", () => {
     engine.cancel("conv-a", "run-1");
     await expect(runPromise).resolves.toBeUndefined();
 
-    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
-    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    const cancelActions = events.filter(
+      (e): e is Extract<AssistantEvent, { type: "runTerminated" }> =>
+        e.type === "runTerminated" && e.outcome.status === "canceled",
+    );
+    const failedActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "failed");
     expect(cancelActions).toHaveLength(1);
-    expect((cancelActions[0]?.action as [string, { runId: string }])[1].runId).toBe("run-1");
+    expect(cancelActions[0]?.runId).toBe("run-1");
     expect(failedActions).toHaveLength(0);
   });
 
@@ -594,14 +597,10 @@ describe("createAssistantEngine", () => {
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
-      dispatchToConversation: (id, action) => {
-        dispatchToMap.push({ id, action });
-        const [type, payload] = action as [string, { runId?: string }];
-        if (
-          (type === "cancelRun" || type === "completeRun" || type === "interruptRun" || type === "runFailed") &&
-          payload.runId
-        ) {
-          streaming.delete(payload.runId);
+      emit: (event) => {
+        events.push(event);
+        if (event.type === "runTerminated") {
+          streaming.delete(event.runId);
         }
       },
       markReadIfCurrent: vi.fn(),
@@ -622,9 +621,11 @@ describe("createAssistantEngine", () => {
       interruptActiveRuns: () => {
         for (const runId of [...streaming]) {
           streaming.delete(runId);
-          dispatchToMap.push({
-            id: "conv-a",
-            action: ["interruptRun", { runId, reason: "app_shutdown" }],
+          events.push({
+            type: "runTerminated",
+            conversationId: "conv-a",
+            runId,
+            outcome: { status: "interrupted", reason: "app_shutdown" },
           });
         }
       },
@@ -633,13 +634,15 @@ describe("createAssistantEngine", () => {
 
     await expect(runPromise).resolves.toBeUndefined();
 
-    const cancelActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "cancelRun");
-    const interruptActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "interruptRun");
-    const failedActions = dispatchToMap.filter((e) => (e.action as [string])[0] === "runFailed");
+    const cancelActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "canceled");
+    const interruptActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "interrupted");
+    const failedActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "failed");
     expect(cancelActions).toHaveLength(0);
     expect(failedActions).toHaveLength(0);
-    expect(interruptActions.some((e) => (e.action as [string, { reason: string }])[1].reason === "app_shutdown")).toBe(
-      true,
-    );
+    expect(
+      interruptActions.some(
+        (e) => e.type === "runTerminated" && e.outcome.status === "interrupted" && e.outcome.reason === "app_shutdown",
+      ),
+    ).toBe(true);
   });
 });

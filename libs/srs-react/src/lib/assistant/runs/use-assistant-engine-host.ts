@@ -8,7 +8,6 @@ import type { createStore } from "jotai";
 import { useEffect } from "react";
 import { toPersistedState } from "../persistence/conversation-persistence";
 import { removeConversationAtom } from "../state/conversation-actions";
-import type { ConversationReducerAction } from "../state/conversation-reducer";
 import {
   conversationsAtom,
   currentConversationIdAtom,
@@ -18,6 +17,7 @@ import {
   touchConversationOnStore,
 } from "../state/conversation-store";
 import type { SaveStatus } from "../state/conversation-store";
+import { assistantEventToReducerAction } from "./assistant-event-to-action";
 
 type AssistantJotaiStore = ReturnType<typeof createStore>;
 
@@ -43,15 +43,16 @@ const transportRef: {
 // clear on unmount — never an escaped Effect Event.
 let persistenceWriteAdapter: AssistantPersistenceWriteAdapter | null = null;
 
-let engineInstance: AssistantEngine<ConversationReducerAction> | null = null;
+let engineInstance: AssistantEngine | null = null;
 let persistenceHostInstance: ConversationPersistenceHost | null = null;
 
-function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine<ConversationReducerAction> {
-  return createAssistantEngine<ConversationReducerAction>({
+function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine {
+  return createAssistantEngine({
     getChatStreamGenerator: () => transportRef.chatStreamGenerator!,
     getStreamGenerator: () => transportRef.streamGenerator!,
-    dispatchToConversation: (id, action) => {
-      dispatchToConversationOnStore(store, id, action);
+    // WHY: Engine emits typed events; this adapter alone knows reducer tuples.
+    emit: (event) => {
+      dispatchToConversationOnStore(store, event.conversationId, assistantEventToReducerAction(event));
     },
     markReadIfCurrent: (id, runId) => {
       markReadIfCurrentOnStore(store, id, runId);
@@ -78,17 +79,14 @@ function interruptAllStreamingRuns(store: AssistantJotaiStore): void {
   }
 }
 
-export function ensureAssistantEngine(store: AssistantJotaiStore): AssistantEngine<ConversationReducerAction> {
-  if (!engineInstance) {
-    engineInstance = createEngineFromStore(store);
-  }
+export function ensureAssistantEngine(store: AssistantJotaiStore): AssistantEngine {
+  if (!engineInstance) engineInstance = createEngineFromStore(store);
   return engineInstance;
 }
 
-export function getAssistantEngine(): AssistantEngine<ConversationReducerAction> {
-  if (!engineInstance) {
+export function getAssistantEngine(): AssistantEngine {
+  if (!engineInstance)
     throw new Error("AssistantEngine not initialized — mount useAssistantEngineHost at application-shell scope");
-  }
   return engineInstance;
 }
 
@@ -104,9 +102,7 @@ export function registerAssistantEngineTransports(transports: AssistantEngineTra
 export function registerAssistantPersistenceWriteAdapter(adapter: AssistantPersistenceWriteAdapter): () => void {
   persistenceWriteAdapter = adapter;
   return () => {
-    if (persistenceWriteAdapter === adapter) {
-      persistenceWriteAdapter = null;
-    }
+    if (persistenceWriteAdapter === adapter) persistenceWriteAdapter = null;
   };
 }
 
@@ -119,9 +115,7 @@ export function ensureAssistantPersistenceHost(store: AssistantJotaiStore): Conv
     persistenceHostInstance = createConversationPersistenceHost({
       createWrite: (conversationId) => async () => {
         const write = persistenceWriteAdapter?.writeConversation;
-        if (!write) {
-          throw new Error("Assistant persistence write adapter is not registered");
-        }
+        if (!write) throw new Error("Assistant persistence write adapter is not registered");
         return write(conversationId);
       },
       isStreaming: (conversationId) => store.get(conversationsAtom)[conversationId]?.activeRunId != null,
@@ -235,9 +229,7 @@ export function buildWriteConversation({
       // push a resurrected row into the query cache or store timestamps.
       if (isTombstoned(id) || !store.get(conversationsAtom)[id]) return false;
       const currentId = store.get(currentConversationIdAtom);
-      if (currentId === row.id) {
-        setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
-      }
+      if (currentId === row.id) setSaveStatus({ conversationId: row.id, message: null, isDismissed: false });
       setQueryConversation(row.id, row);
       invalidateConversations();
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
