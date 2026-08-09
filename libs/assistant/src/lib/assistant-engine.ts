@@ -1,5 +1,10 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
+import type {
+  AssistantExecutionIdentity,
+  AssistantExecutionPort,
+  ImmutableExecutionValue,
+} from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
 import type { AssistantCommand } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
@@ -16,7 +21,15 @@ import type { QueueCancelReason } from "./serial-queue";
 
 export type AssistantEngineLifecycle = "running" | "closing" | "closed";
 
-export type AssistantEngineOptions = ConversationRuntimeCallbacks & ConversationRuntimeTransports;
+export type AssistantEngineOptions = ConversationRuntimeCallbacks &
+  ConversationRuntimeTransports & {
+    /**
+     * Fixed application-scoped boundary for commands carrying immutable
+     * execution identity. Legacy transport getters remain until the React
+     * adapter is migrated.
+     */
+    executionPort?: AssistantExecutionPort;
+  };
 
 export type AssistantEngineShutdownOptions = {
   /** Transition in-flight runs to `interrupted`/`app_shutdown` before aborting streams. */
@@ -26,15 +39,26 @@ export type AssistantEngineShutdownOptions = {
 
 export type AssistantEngine = {
   dispatch: (command: AssistantCommand) => void | Promise<void>;
-  executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) => Promise<void>;
-  executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) => Promise<void>;
+  executeChatRun: (
+    conversationId: string,
+    runId: string,
+    request: ImmutableExecutionValue<ChatStreamRequest>,
+    execution?: AssistantExecutionIdentity,
+  ) => Promise<void>;
+  executeGenerateRun: (
+    conversationId: string,
+    runId: string,
+    request: ImmutableExecutionValue<CardGenerationStreamRequest>,
+    execution?: AssistantExecutionIdentity,
+  ) => Promise<void>;
   retryRun: (
     conversationId: string,
     runId: string,
-    request: ChatStreamRequest | CardGenerationStreamRequest,
-    templateFields: TemplateFields | null,
+    request: ImmutableExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>,
+    templateFields: ImmutableExecutionValue<TemplateFields> | null,
     mode: AIChatMode,
     modelName?: string,
+    execution?: AssistantExecutionIdentity,
   ) => Promise<void>;
   cancel: (conversationId: string, runId: string) => void;
   setPersistenceHost: (host: ConversationPersistenceHost) => void;
@@ -52,6 +76,12 @@ export class AssistantEngineClosedError extends Error {
     this.name = "AssistantEngineClosedError";
     this.lifecycle = lifecycle;
   }
+}
+
+function captureExecutionValue<T>(value: ImmutableExecutionValue<T>): T {
+  // WHY: Queue closures must retain command-time data, not references that a
+  // later React render or mutable store update can rewrite before execution.
+  return structuredClone(value) as T;
 }
 
 export function createAssistantEngine(options: AssistantEngineOptions): AssistantEngine {
@@ -94,9 +124,19 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     dispatch(command) {
       switch (command.type) {
         case "executeChat":
-          return engine.executeChatRun(command.conversationId, command.input.runId, command.input.request);
+          return engine.executeChatRun(
+            command.conversationId,
+            command.input.runId,
+            command.input.request,
+            command.input.execution,
+          );
         case "executeGenerate":
-          return engine.executeGenerateRun(command.conversationId, command.input.runId, command.input.request);
+          return engine.executeGenerateRun(
+            command.conversationId,
+            command.input.runId,
+            command.input.request,
+            command.input.execution,
+          );
         case "retry":
           return engine.retryRun(
             command.conversationId,
@@ -105,34 +145,50 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
             command.input.templateFields,
             command.input.mode,
             command.input.modelName,
+            command.input.execution,
           );
         case "cancel":
           return engine.cancel(command.conversationId, command.runId);
       }
     },
 
-    executeChatRun(conversationId, runId, request) {
+    executeChatRun(conversationId, runId, request, execution) {
       if (lifecycle !== "running") {
         return Promise.reject(new AssistantEngineClosedError(lifecycle));
       }
       logCommand("executeChat", conversationId, runId);
-      return getRuntime(conversationId).executeChatRun(runId, request);
+      return getRuntime(conversationId).executeChatRun(
+        runId,
+        captureExecutionValue<ChatStreamRequest>(request),
+        execution ? captureExecutionValue(execution) : undefined,
+      );
     },
-    executeGenerateRun(conversationId, runId, request) {
+    executeGenerateRun(conversationId, runId, request, execution) {
       if (lifecycle !== "running") {
         return Promise.reject(new AssistantEngineClosedError(lifecycle));
       }
       logCommand("executeGenerate", conversationId, runId);
-      return getRuntime(conversationId).executeGenerateRun(runId, request);
+      return getRuntime(conversationId).executeGenerateRun(
+        runId,
+        captureExecutionValue<CardGenerationStreamRequest>(request),
+        execution ? captureExecutionValue(execution) : undefined,
+      );
     },
-    retryRun(conversationId, runId, request, templateFields, mode, modelName) {
+    retryRun(conversationId, runId, request, templateFields, mode, modelName, execution) {
       if (lifecycle !== "running") {
         return Promise.reject(new AssistantEngineClosedError(lifecycle));
       }
       // WHY: conversationId is caller-supplied — never inferred from UI-current
       // state, or a queued retry for A can restart/clear B after a switch.
       logCommand("retry", conversationId, runId);
-      return getRuntime(conversationId).retryRun(runId, request, templateFields, mode, modelName);
+      return getRuntime(conversationId).retryRun(
+        runId,
+        captureExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>(request),
+        templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
+        mode,
+        modelName,
+        execution ? captureExecutionValue(execution) : undefined,
+      );
     },
     cancel(conversationId, runId) {
       // WHY: Cancel remains allowed while closing so in-flight UI cancel can

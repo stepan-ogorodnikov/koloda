@@ -2,6 +2,7 @@ import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard,
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantEngineClosedError } from "./assistant-engine";
+import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
@@ -25,20 +26,29 @@ export type ConversationRuntimeCallbacks = {
 };
 
 export type ConversationRuntimeTransports = {
-  getChatStreamGenerator: () => ChatStreamGenerator;
-  getStreamGenerator: () => CardGenerationExecutor;
+  /** New application-scoped execution boundary for identity-bearing commands. */
+  executionPort?: AssistantExecutionPort;
+  /** @deprecated Compatibility transport removed by the React adapter migration. */
+  getChatStreamGenerator?: () => ChatStreamGenerator;
+  /** @deprecated Compatibility transport removed by the React adapter migration. */
+  getStreamGenerator?: () => CardGenerationExecutor;
 };
 
 export type ConversationRuntime = {
   conversationId: string;
-  executeChatRun: (runId: string, request: ChatStreamRequest) => Promise<void>;
-  executeGenerateRun: (runId: string, request: CardGenerationStreamRequest) => Promise<void>;
+  executeChatRun: (runId: string, request: ChatStreamRequest, execution?: AssistantExecutionIdentity) => Promise<void>;
+  executeGenerateRun: (
+    runId: string,
+    request: CardGenerationStreamRequest,
+    execution?: AssistantExecutionIdentity,
+  ) => Promise<void>;
   retryRun: (
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName?: string,
+    execution?: AssistantExecutionIdentity,
   ) => Promise<void>;
   cancel: (runId: string, reason?: QueueCancelReason) => void;
   close: (reason: QueueCancelReason) => void;
@@ -177,7 +187,11 @@ export function createConversationRuntime(
     }
   };
 
-  const runChatRun = async (runId: string, request: ChatStreamRequest): Promise<void> => {
+  const runChatRun = async (
+    runId: string,
+    request: ChatStreamRequest,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> => {
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
       applyQueuedCancel(runId, earlyCancel);
@@ -199,13 +213,31 @@ export function createConversationRuntime(
           if (runAwaitingStart === runId) runAwaitingStart = null;
           const controller = controllerRegistry.beginRun(runId);
           try {
-            const usage = await transports.getChatStreamGenerator()(
-              req,
-              (chunk) => {
-                if (!controller.signal.aborted) onValue(chunk);
-              },
-              controller.signal,
-            );
+            const onChunk = (chunk: string) => {
+              if (!controller.signal.aborted) onValue(chunk);
+            };
+            let usage: StreamUsage | undefined;
+            if (execution) {
+              if (!transports.executionPort) {
+                throw new Error("Assistant execution port is not configured");
+              }
+              usage = await transports.executionPort.executeChat(
+                {
+                  kind: "chat",
+                  conversationId,
+                  runId,
+                  identity: execution,
+                  request: req,
+                },
+                onChunk,
+                controller.signal,
+              );
+            } else {
+              if (!transports.getChatStreamGenerator) {
+                throw new Error("Assistant chat transport is not configured");
+              }
+              usage = await transports.getChatStreamGenerator()(req, onChunk, controller.signal);
+            }
             return { streamResult: "success" as const, usage: usage ?? null };
           } catch (e) {
             // WHY: AbortError alone is not user cancel — classify from
@@ -274,7 +306,11 @@ export function createConversationRuntime(
     );
   };
 
-  const runGenerateRun = async (runId: string, request: CardGenerationStreamRequest): Promise<void> => {
+  const runGenerateRun = async (
+    runId: string,
+    request: CardGenerationStreamRequest,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> => {
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
       applyQueuedCancel(runId, earlyCancel);
@@ -293,13 +329,30 @@ export function createConversationRuntime(
           if (runAwaitingStart === runId) runAwaitingStart = null;
           const controller = controllerRegistry.beginRun(runId);
           try {
-            await transports.getStreamGenerator()(
-              req,
-              (card) => {
-                if (!controller.signal.aborted) onValue(card);
-              },
-              controller.signal,
-            );
+            const onCard = (card: GeneratedCard) => {
+              if (!controller.signal.aborted) onValue(card);
+            };
+            if (execution) {
+              if (!transports.executionPort) {
+                throw new Error("Assistant execution port is not configured");
+              }
+              await transports.executionPort.executeGenerate(
+                {
+                  kind: "cards",
+                  conversationId,
+                  runId,
+                  identity: execution,
+                  request: req,
+                },
+                onCard,
+                controller.signal,
+              );
+            } else {
+              if (!transports.getStreamGenerator) {
+                throw new Error("Assistant card generation transport is not configured");
+              }
+              await transports.getStreamGenerator()(req, onCard, controller.signal);
+            }
             return "success" as const;
           } catch (e) {
             if (isAbortError(e)) return classifyAbortError(runId);
@@ -362,17 +415,25 @@ export function createConversationRuntime(
     }
   };
 
-  const executeChatRun = (runId: string, request: ChatStreamRequest): Promise<void> =>
+  const executeChatRun = (
+    runId: string,
+    request: ChatStreamRequest,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> =>
     guardClosed(() =>
       queue.enqueue(runId, async () => {
-        await withAwaitingStart(runId, () => runChatRun(runId, request));
+        await withAwaitingStart(runId, () => runChatRun(runId, request, execution));
       }),
     );
 
-  const executeGenerateRun = (runId: string, request: CardGenerationStreamRequest): Promise<void> =>
+  const executeGenerateRun = (
+    runId: string,
+    request: CardGenerationStreamRequest,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> =>
     guardClosed(() =>
       queue.enqueue(runId, async () => {
-        await withAwaitingStart(runId, () => runGenerateRun(runId, request));
+        await withAwaitingStart(runId, () => runGenerateRun(runId, request, execution));
       }),
     );
 
@@ -382,6 +443,7 @@ export function createConversationRuntime(
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName?: string,
+    execution?: AssistantExecutionIdentity,
   ): Promise<void> =>
     guardClosed(() =>
       queue.enqueue(runId, async () => {
@@ -418,9 +480,9 @@ export function createConversationRuntime(
               runId,
               chunk: { kind: "assistantText", text: "" },
             });
-            await runChatRun(runId, request as ChatStreamRequest);
+            await runChatRun(runId, request as ChatStreamRequest, execution);
           } else {
-            await runGenerateRun(runId, request as CardGenerationStreamRequest);
+            await runGenerateRun(runId, request as CardGenerationStreamRequest, execution);
           }
         });
       }),

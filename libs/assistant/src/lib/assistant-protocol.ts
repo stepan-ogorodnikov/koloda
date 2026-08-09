@@ -1,28 +1,32 @@
 import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
+import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import type { CardGenerationStreamRequest } from "./card-generation";
 
 /**
  * Typed commands the application layer may send into {@link AssistantEngine}.
  * Conversation ownership is always explicit — never inferred from UI-current state.
  */
-export type ExecuteChatInput = {
+export type ExecuteChatInput = ImmutableExecutionValue<{
   runId: string;
+  execution: AssistantExecutionIdentity;
   request: ChatStreamRequest;
-};
+}>;
 
-export type ExecuteGenerateInput = {
+export type ExecuteGenerateInput = ImmutableExecutionValue<{
   runId: string;
+  execution: AssistantExecutionIdentity;
   request: CardGenerationStreamRequest;
-};
+}>;
 
-export type RetryInput = {
+export type RetryInput = ImmutableExecutionValue<{
   runId: string;
+  execution: AssistantExecutionIdentity;
   request: ChatStreamRequest | CardGenerationStreamRequest;
   templateFields: TemplateFields | null;
   mode: AIChatMode;
   modelName?: string;
-};
+}>;
 
 export type AssistantCommand =
   | { type: "executeChat"; conversationId: string; input: ExecuteChatInput }

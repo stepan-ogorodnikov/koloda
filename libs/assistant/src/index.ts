@@ -6,6 +6,14 @@ export type {
   AssistantEngineShutdownOptions,
 } from "./lib/assistant-engine";
 export type {
+  AssistantChatExecutionInput,
+  AssistantExecutionIdentity,
+  AssistantExecutionPort,
+  AssistantGenerateExecutionInput,
+  AssistantTemplateSnapshot,
+  ImmutableExecutionValue,
+} from "./lib/assistant-execution-port";
+export type {
   AssistantCommand,
   AssistantEvent,
   ExecuteChatInput,

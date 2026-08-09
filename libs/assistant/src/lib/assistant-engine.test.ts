@@ -1,8 +1,9 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAssistantEngine } from "./assistant-engine";
+import type { AssistantExecutionPort, AssistantGenerateExecutionInput } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
-import type { CardGenerationExecutor } from "./card-generation";
+import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 
 type ConversationStateSnapshot = { runs: Record<string, { mode?: AIChatMode }> };
 
@@ -170,6 +171,105 @@ describe("createAssistantEngine", () => {
 
     expect(readConversationState).toHaveBeenCalledWith("A");
     expect(events.some((e) => e.conversationId === "B")).toBe(false);
+  });
+
+  it("captures immutable command input before queued execution reaches the application port", async () => {
+    let releaseBlocker!: () => void;
+    const blockerGate = new Promise<void>((resolve) => {
+      releaseBlocker = resolve;
+    });
+    const generateInputs: AssistantGenerateExecutionInput[] = [];
+    const executionPort: AssistantExecutionPort = {
+      executeChat: vi.fn(async (input) => {
+        if (input.runId === "run-blocker") await blockerGate;
+        return undefined;
+      }),
+      executeGenerate: vi.fn(async (input) => {
+        generateInputs.push(input);
+      }),
+    };
+
+    engine = createAssistantEngine({
+      executionPort,
+      // INVARIANT: Compatibility transports remain registered until the React adapter
+      // migration, but identity-bearing commands must not resolve through them.
+      getChatStreamGenerator: () => chatStreamGenerator,
+      getStreamGenerator: () => streamGenerator,
+      emit: (event) => events.push(event),
+      markReadIfCurrent: vi.fn(),
+      touch: vi.fn(),
+      isRunStreaming: () => true,
+      readConversationState,
+    });
+
+    const blocker = engine.dispatch({
+      type: "executeChat",
+      conversationId: "A",
+      input: {
+        runId: "run-blocker",
+        execution: { profileId: "profile-blocker" },
+        request: {
+          input: { modelId: "model-blocker", prompt: "block" },
+          messages: [{ role: "user", content: "block" }],
+        },
+      },
+    }) as Promise<void>;
+    await Promise.resolve();
+
+    const execution = {
+      profileId: "profile-a",
+      template: {
+        id: 1,
+        content: {
+          fields: [{ id: 1, title: "Front A", isRequired: true, type: "text" }],
+        },
+      },
+    };
+    const request: CardGenerationStreamRequest = {
+      input: { modelId: "model-a", prompt: "prompt-a", templateId: 1 },
+      messages: [{ role: "user", content: "history-a" }],
+      systemPromptTemplate: "system-a",
+    };
+
+    const queued = engine.dispatch({
+      type: "executeGenerate",
+      conversationId: "A",
+      input: { runId: "run-a", execution, request },
+    }) as Promise<void>;
+
+    execution.profileId = "profile-b";
+    execution.template.id = 2;
+    execution.template.content.fields[0]!.title = "Front B";
+    request.input.modelId = "model-b";
+    request.messages[0]!.content = "history-b";
+    request.systemPromptTemplate = "system-b";
+
+    releaseBlocker();
+    await blocker;
+    await queued;
+
+    expect(generateInputs).toHaveLength(1);
+    expect(generateInputs[0]).toMatchObject({
+      kind: "cards",
+      conversationId: "A",
+      runId: "run-a",
+      identity: {
+        profileId: "profile-a",
+        template: {
+          id: 1,
+          content: { fields: [{ title: "Front A" }] },
+        },
+      },
+      request: {
+        input: { modelId: "model-a", prompt: "prompt-a", templateId: 1 },
+        messages: [{ content: "history-a" }],
+        systemPromptTemplate: "system-a",
+      },
+    });
+    expect(generateInputs[0]?.identity).not.toBe(execution);
+    expect(generateInputs[0]?.request).not.toBe(request);
+    expect(chatStreamGenerator).not.toHaveBeenCalled();
+    expect(streamGenerator).not.toHaveBeenCalled();
   });
 
   it("concurrent A/B chat runs do not cross-dispatch stream chunks", async () => {
