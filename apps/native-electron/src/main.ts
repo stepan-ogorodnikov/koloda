@@ -4,6 +4,15 @@ import { createRequire } from "node:module";
 import os from "node:os";
 import { join } from "node:path";
 import { registerAiIpc } from "./ai-ipc";
+import {
+  APP_SHUTDOWN_ACK_CHANNEL,
+  APP_SHUTDOWN_REQUEST_CHANNEL,
+  createWindowCloseCoordinator,
+} from "./window-close-coordinator";
+import type { WindowCloseCoordinator } from "./window-close-coordinator";
+
+// WHY: Ack IPC is process-global; map webContents → coordinator per window.
+const windowCloseCoordinators = new Map<number, WindowCloseCoordinator>();
 
 const isDev = !app.isPackaged;
 const __dirname = import.meta.dirname!;
@@ -167,6 +176,7 @@ function createWindow() {
   win.on("maximize", () => win.webContents.send("window:maximize-changed", true));
   win.on("unmaximize", () => win.webContents.send("window:maximize-changed", false));
   win.on("close", () => saveWindowState(win));
+  attachWindowCloseCoordination(win);
 
   win.once("ready-to-show", () => {
     win.show();
@@ -252,7 +262,43 @@ function getWindowOverlayWidth(): number {
   return Math.round(base * scaleFactor);
 }
 
+function attachWindowCloseCoordination(win: BrowserWindow) {
+  const contentsId = win.webContents.id;
+  const coordinator = createWindowCloseCoordinator({
+    requestRendererShutdown: () => {
+      if (!win.isDestroyed() && !win.webContents.isDestroyed()) {
+        win.webContents.send(APP_SHUTDOWN_REQUEST_CHANNEL);
+      }
+    },
+    closeWindow: () => {
+      if (!win.isDestroyed()) win.close();
+    },
+    forceCloseWindow: () => {
+      if (win.isDestroyed()) return;
+      // WHY: destroy() may skip another `close` pass; persist bounds before teardown.
+      saveWindowState(win);
+      win.destroy();
+    },
+  });
+  windowCloseCoordinators.set(contentsId, coordinator);
+
+  win.on("close", (event) => {
+    // INVARIANT: `defer` means the handshake is in flight — must preventDefault.
+    if (coordinator.onCloseAttempt() === "defer") {
+      event.preventDefault();
+    }
+  });
+
+  win.on("closed", () => {
+    coordinator.dispose();
+    windowCloseCoordinators.delete(contentsId);
+  });
+}
+
 function registerWindowIpc() {
+  ipcMain.handle(APP_SHUTDOWN_ACK_CHANNEL, (event) => {
+    windowCloseCoordinators.get(event.sender.id)?.onShutdownAck();
+  });
   ipcMain.handle("window:minimize", (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize();
   });

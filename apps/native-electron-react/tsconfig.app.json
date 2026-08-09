@@ -34,10 +34,10 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../../libs/app-react/tsconfig.lib.json"
+      "path": "../../libs/ui/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/ui/tsconfig.lib.json"
+      "path": "../../libs/app-react/tsconfig.lib.json"
     },
     {
       "path": "../../libs/srs/tsconfig.lib.json"
@@ -46,10 +46,13 @@
       "path": "../../libs/core-react/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/ai/tsconfig.lib.json"
+      "path": "../../libs/srs-react/tsconfig.lib.json"
     },
     {
       "path": "../../libs/app/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/ai/tsconfig.lib.json"
     }
   ]
 }

@@ -11,7 +11,7 @@ export {
 export { AssistantNewConversationButton } from "./lib/assistant/ui/assistant-new-conversation-button";
 export { ConversationHeaderMenu } from "./lib/assistant/ui/conversation-header-menu";
 export { useConversationSaveHost } from "./lib/assistant/persistence/use-conversation-save-host";
-export { useAssistantEngineHost } from "./lib/assistant/runs/use-assistant-engine-host";
+export { shutdownAssistantGracefully, useAssistantEngineHost } from "./lib/assistant/runs/use-assistant-engine-host";
 export { useGlobalAIProfileState } from "./lib/assistant/use-global-ai-profile-state";
 export { assistantDeckIdAtom, assistantIsLockedAtom } from "./lib/assistant/state/conversation-selectors";
 export { newConversationAtom, setAssistantDeckAtom } from "./lib/assistant/state/conversation-actions";

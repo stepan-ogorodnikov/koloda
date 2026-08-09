@@ -168,8 +168,9 @@ export function useAssistantEngineHost(): void {
 
   useEffect(() => {
     // WORKAROUND: Browser `pagehide`/`beforeunload` are best-effort — the
-    // platform does not await flush promises. Electron main-process close
-    // coordination is a separate host concern (#10).
+    // platform does not await flush promises. Electron hosts also install a
+    // main-process close handshake (`installElectronCloseCoordination`) that
+    // awaits this same shutdown before allowing the window to close.
     const onShutdown = () => {
       void shutdownAssistantGracefully(store);
     };

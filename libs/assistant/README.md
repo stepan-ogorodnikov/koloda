@@ -33,7 +33,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 ## Graceful shutdown
 
-On `pagehide` / `beforeunload`, the application-shell host calls `shutdownGracefully` (best-effort in browsers/demo — the platform does not await flush promises; Electron main-process close coordination is separate):
+On `pagehide` / `beforeunload`, the application-shell host calls `shutdownGracefully` (best-effort in browsers/demo — the platform does not await flush promises). Electron additionally runs a main-process window-close handshake (`apps/native-electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`):
 
 1. Interrupt every `streaming` run in memory (`interrupted` / `app_shutdown`) and dirty the originating conversation.
 2. Abort all in-flight stream controllers.

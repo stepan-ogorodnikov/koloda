@@ -80,6 +80,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
+          "bunx vitest run --config apps/native-electron/vitest.config.mjs --configLoader runner",
           "bunx nx run native-electron-react:test",
           "bunx nx run native-electron-e2e:e2e"
         ],
@@ -88,6 +89,7 @@
       "configurations": {
         "unit": {
           "commands": [
+            "bunx vitest run --config apps/native-electron/vitest.config.mjs --configLoader runner",
             "bunx nx run native-electron-react:test"
           ]
         },

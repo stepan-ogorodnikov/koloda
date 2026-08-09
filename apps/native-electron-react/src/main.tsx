@@ -1,10 +1,17 @@
 import { AppProviders } from "@koloda/app-react";
 import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { installElectronCloseCoordination } from "./app/electron-close-coordination";
 import { activateLanguage, getLanguage } from "./app/i18n";
 import { store } from "./app/store";
 
 function NativeApp() {
+  useEffect(() => {
+    // WHY: Electron must await interrupt + flush before destroying the window;
+    // browser pagehide alone is not durable (see #10 / window-close-coordinator).
+    return installElectronCloseCoordination(store);
+  }, []);
+
   useEffect(() => {
     const api = window.electronAPI;
     if (!api) return;
