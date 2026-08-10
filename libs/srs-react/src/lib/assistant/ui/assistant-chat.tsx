@@ -22,6 +22,7 @@ import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode, RefObject } from "react";
 import { useCallback, useRef, useState } from "react";
+import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import { AssistantNoProfiles } from "./assistant-no-profiles";
 import { AssistantSettings } from "./assistant-settings";
 import {
@@ -49,6 +50,8 @@ export type RenderAddProfileDialogProps = {
 export type AssistantChatProps = {
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
+  /** Called when the active conversation is deleted so the route can navigate away. */
+  onActiveDeleted?: () => void;
   deckPickerRef?: RefObject<HTMLButtonElement | null>;
   onClearDeck?: () => void;
   onPrevConversation?: () => void;
@@ -59,6 +62,7 @@ export type AssistantChatProps = {
 export function AssistantChat({
   conversationId,
   onConversationIdChange,
+  onActiveDeleted,
   deckPickerRef,
   onClearDeck,
   onPrevConversation,
@@ -99,9 +103,8 @@ export function AssistantChat({
   const hasRequiredSecrets = missingSecretFieldLabels.length === 0;
   const contextLength = models.find((m) => m.id === modelId)?.context_length ?? 0;
 
-  const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad } = useConversationPersistence({
-    conversationId,
-  });
+  const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad, blockedRestore } =
+    useConversationPersistence({ conversationId });
 
   const { controller, template, templateId } = useAssistantSession({
     conversationId,
@@ -183,6 +186,14 @@ export function AssistantChat({
         ) : loadError ? (
           <Fade key="error" className="grow">
             <QueryError error={loadError} onRetry={retryLoad} />
+          </Fade>
+        ) : conversationId && blockedRestore ? (
+          <Fade key="recovery" className="grow">
+            <AssistantConversationRecovery
+              conversationId={conversationId}
+              blocked={blockedRestore}
+              onDeleted={onActiveDeleted}
+            />
           </Fade>
         ) : areSettingsOpen ? (
           <Fade key="settings" className="grow flex flex-col">

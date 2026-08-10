@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import type { Getter, Setter } from "jotai";
 import type { Store } from "jotai/vanilla/store";
+import type { RestoreIssue } from "../persistence/conversation-persistence-schema";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
@@ -13,6 +14,18 @@ export type SaveStatus = {
 export type ConversationStore = Readonly<Record<string, ConversationReducerState>>;
 
 export const conversationsAtom = atom<ConversationStore>({});
+
+// INVARIANT: A conversation whose persisted row cannot be restored
+// (unsupportedVersion / corrupt) is never inserted into `conversationsAtom`,
+// so no write path (autosave, touch, selection, engine events) can overwrite
+// the stored row. This atom is the only place recovery state lives; it is
+// cleared only by an explicit recovery action (reset/delete) or when a
+// restorable row is opened under the same id.
+export type BlockedConversationRestore =
+  | { status: "unsupportedVersion"; found: number; supported: number }
+  | { status: "corrupt"; issues: RestoreIssue[] };
+
+export const blockedConversationRestoreAtom = atom<Record<string, BlockedConversationRestore>>({});
 
 // INVARIANT: Exported for clone/store actions that switch current id without mark-as-read.
 export const currentConversationIdAtom = atom<string | null>(null);
@@ -167,3 +180,15 @@ export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | n
 export const upsertConversationAtom = atom(null, (_get, set, state: ConversationReducerState) => {
   set(conversationsAtom, (prev) => ({ ...prev, [state.id]: state }));
 });
+
+/** Drop a conversation's blocked-restore entry when one exists. */
+export function clearBlockedConversationRestore(
+  prev: Record<string, BlockedConversationRestore>,
+  id: string,
+): Record<string, BlockedConversationRestore> {
+  if (!(id in prev)) return prev;
+  const next = { ...prev };
+  delete next[id];
+
+  return next;
+}

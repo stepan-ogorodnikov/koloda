@@ -17,6 +17,8 @@ import {
   markReadIfCurrentOnStore,
   pendingSaveByConversationAtom,
   touchConversationOnStore,
+  blockedConversationRestoreAtom,
+  clearBlockedConversationRestore,
 } from "../state/conversation-store";
 import { assistantEventToReducerAction } from "./assistant-event-to-action";
 
@@ -295,6 +297,10 @@ export async function deleteAssistantConversation({
   // readConversationState; clearing first leaves empty runs and never aborts (#8).
   engine.disposeConversation(conversationId);
   store.set(removeConversationAtom, conversationId);
+  // WHY: A blocked row (unsupportedVersion/corrupt) is never in the store, so
+  // removeConversationAtom cannot clean it up — clear the recovery entry here
+  // so a deleted id cannot linger as blocked.
+  store.set(blockedConversationRestoreAtom, (prev) => clearBlockedConversationRestore(prev, conversationId));
   invalidateConversations();
   removeConversationQuery(conversationId);
 }

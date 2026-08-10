@@ -151,6 +151,7 @@ function AIRoute() {
           <AssistantChat
             conversationId={conversationId}
             onConversationIdChange={handleConversationIdChange}
+            onActiveDeleted={handleActiveConversationDeleted}
             deckPickerRef={deckPickerRef}
             onClearDeck={handleClearDeck}
             onPrevConversation={handlePrevConversation}

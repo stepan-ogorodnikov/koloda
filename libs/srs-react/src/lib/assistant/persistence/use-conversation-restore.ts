@@ -14,15 +14,10 @@ import {
   conversationsAtom,
   setCurrentConversationIdAtom,
   upsertConversationAtom,
+  blockedConversationRestoreAtom,
+  clearBlockedConversationRestore,
 } from "../state/conversation-store";
-
-function restoreFromData(loaded: unknown): ConversationReducerState | null {
-  const result = coerceConversationState(loaded);
-  if (result.status !== "ok") return null;
-  // WHY: fall back to the coerced state when normalize makes no changes so a row
-  // that is already clean round-trips verbatim.
-  return normalizeRestoredConversation(result.state) ?? result.state;
-}
+import type { BlockedConversationRestore } from "../state/conversation-store";
 
 function freshConversation(id: string, stored: AIProfileState | null): ConversationReducerState {
   return { ...initialConversationState, id, createdAt: new Date(), ...stored };
@@ -36,6 +31,7 @@ export type UseConversationRestoreReturn = {
   isRestoring: boolean;
   loadError: Error | null;
   retryLoad: () => Promise<unknown>;
+  blockedRestore: BlockedConversationRestore | null;
 };
 
 export function useConversationRestore({
@@ -44,6 +40,8 @@ export function useConversationRestore({
   const store = useStore();
   const restoredIdRef = useRef<string | null>(null);
   const { getConversationQuery } = useAtomValue(queriesAtom);
+  const blockedStore = useAtomValue(blockedConversationRestoreAtom);
+  const setBlockedConversationRestore = useSetAtom(blockedConversationRestoreAtom);
   const {
     data: conversationData,
     error: conversationError,
@@ -68,11 +66,35 @@ export function useConversationRestore({
     if (conversationError) return;
 
     // WHY: If the store already has state for this id (cold start or background
-    // run), keep it — overwriting from DB would kill in-flight streams.
-    const storeState = store.get(conversationsAtom);
-    if (!storeState[conversationId]) {
-      const restored = restoreFromData(conversationData?.state);
-      upsertConversation(restored ?? freshConversation(conversationId, readLastUsed()));
+    // run), keep it — overwriting from DB would kill in-flight streams. Live
+    // state and blocked recovery are mutually exclusive, so also clear any
+    // stale blocked entry for the id.
+    if (store.get(conversationsAtom)[conversationId]) {
+      setBlockedConversationRestore((prev) => clearBlockedConversationRestore(prev, conversationId));
+      restoredIdRef.current = conversationId;
+      setCurrentConversationId(conversationId);
+      touch();
+      return;
+    }
+
+    const result = coerceConversationState(conversationData?.state);
+    if (result.status === "ok") {
+      // WHY: fall back to the coerced state when normalize makes no changes so a row
+      // that is already clean round-trips verbatim.
+      upsertConversation(normalizeRestoredConversation(result.state) ?? result.state);
+      setBlockedConversationRestore((prev) => clearBlockedConversationRestore(prev, conversationId));
+    } else if (result.status === "missing") {
+      upsertConversation(freshConversation(conversationId, readLastUsed()));
+      setBlockedConversationRestore((prev) => clearBlockedConversationRestore(prev, conversationId));
+    } else {
+      // WHY: unsupportedVersion / corrupt rows must never become editable
+      // current-version state and must never be written back by autosave,
+      // touch, or any other write path. The stored row is left untouched; the
+      // recovery screen renders from this entry and an explicit reset/delete
+      // is the only way to clear it. No touch() below — dirtying the id would
+      // schedule a write (which the empty-store guard would no-op, but the
+      // blocked row must not even be scheduled).
+      setBlockedConversationRestore((prev) => ({ ...prev, [conversationId]: result }));
     }
     restoredIdRef.current = conversationId;
     // WHY: Setting the current id AFTER the conversation is in the store
@@ -83,7 +105,9 @@ export function useConversationRestore({
     // Autosave is owned by `useConversationSaveHost` (application-shell), so
     // this touch no longer depends on saver-before-restore effect registration.
     setCurrentConversationId(conversationId);
-    touch();
+    // WHY: Only editable restores (ok / missing) may dirty the conversation.
+    // Blocked rows must never reach the save queue.
+    if (result.status === "ok" || result.status === "missing") touch();
   }, [
     store,
     conversationId,
@@ -95,6 +119,7 @@ export function useConversationRestore({
     upsertConversation,
     touch,
     readLastUsed,
+    setBlockedConversationRestore,
   ]);
 
   // WHY: A conversation just created via `newConversationAtom` or
@@ -112,5 +137,6 @@ export function useConversationRestore({
       !store.get(conversationsAtom)[conversationId],
     loadError: conversationError ?? null,
     retryLoad: refetch,
+    blockedRestore: conversationId ? (blockedStore[conversationId] ?? null) : null,
   };
 }

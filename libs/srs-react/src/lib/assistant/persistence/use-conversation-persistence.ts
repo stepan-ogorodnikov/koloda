@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { ensureAssistantPersistenceHost } from "../runs/use-assistant-engine-host";
 import { useConversationRestore } from "./use-conversation-restore";
 import { dismissSaveStatusAtom } from "../state/conversation-store";
+import type { BlockedConversationRestore } from "../state/conversation-store";
 
 export type UseConversationPersistenceOptions = {
   conversationId: string | undefined;
@@ -14,6 +15,7 @@ export type UseConversationPersistenceReturn = {
   isRestoring: boolean;
   loadError: Error | null;
   retryLoad: () => Promise<unknown>;
+  blockedRestore: BlockedConversationRestore | null;
 };
 
 /**
@@ -27,7 +29,7 @@ export function useConversationPersistence({
 }: UseConversationPersistenceOptions): UseConversationPersistenceReturn {
   const store = useStore();
   const dismissSaveStatus = useSetAtom(dismissSaveStatusAtom);
-  const { isRestoring, loadError, retryLoad } = useConversationRestore({ conversationId });
+  const { isRestoring, loadError, retryLoad, blockedRestore } = useConversationRestore({ conversationId });
 
   const retrySave = useCallback(() => {
     if (!conversationId) return;
@@ -40,5 +42,6 @@ export function useConversationPersistence({
     isRestoring,
     loadError,
     retryLoad,
+    blockedRestore,
   };
 }

@@ -13,21 +13,24 @@ import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, renderHook } from "@testing-library/react";
-import { createStore, Provider as JotaiProvider } from "jotai";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { createStore, Provider as JotaiProvider, useAtomValue } from "jotai";
 import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createAIModel, createAIProfile, createTemplate } from "../../../test/test-helpers";
+import { CONVERSATION_SCHEMA_VERSION } from "../persistence/conversation-schema-version";
 import {
   conversationsAtom,
   setCurrentConversationIdAtom,
   touchConversationAtom,
   upsertConversationAtom,
+  blockedConversationRestoreAtom,
 } from "../state/conversation-store";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
 import { resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
+import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import {
   useAssistantAppShellHosts,
   useAssistantChatSessionHarness,
@@ -1143,5 +1146,453 @@ describe("assistant chat integration (per-conversation state)", () => {
     const afterState = store.get(conversationsAtom)["A"];
     expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("interrupted");
     expect(afterState.runs[beforeRunIds[0]!]?.reason).toBe("app_shutdown");
+  });
+});
+
+describe("assistant chat restore policy (blocked rows)", () => {
+  function makeBlockedRowState(id: string, schemaVersion: unknown) {
+    return {
+      ...initialConversationState,
+      id,
+      createdAt: new Date(1).toISOString(),
+      schemaVersion,
+    };
+  }
+
+  function makeRecoveryWrapper(options: { deleteCalls?: string[] }) {
+    const store = createStore();
+    const queries = buildQueries();
+    if (options.deleteCalls) {
+      queries.deleteConversationMutation = () => ({
+        mutationFn: async (data: { id: string }) => {
+          options.deleteCalls!.push(data.id);
+          return undefined;
+        },
+      });
+    }
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], queries);
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    return { store, queryClient, TestWrapper };
+  }
+
+  function RecoveryHarness({ conversationId, onDeleted }: { conversationId: string; onDeleted?: () => void }) {
+    useAssistantAppShellHosts();
+    useAssistantChatSessionHarness({ conversationId, onConversationIdChange: () => {} });
+    const blocked = useAtomValue(blockedConversationRestoreAtom)[conversationId] ?? null;
+    if (!blocked) return null;
+    return <AssistantConversationRecovery conversationId={conversationId} blocked={blocked} onDeleted={onDeleted} />;
+  }
+
+  it("restore: a future-version row is blocked and never written on selection, touch, or autosave", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("ok"), {
+      id: "ok",
+      title: null,
+      state: makeBlockedRowState("ok", CONVERSATION_SCHEMA_VERSION),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+    queryClient.setQueryData(queryKeys.conversations.detail("future"), {
+      id: "future",
+      title: null,
+      state: makeBlockedRowState("future", CONVERSATION_SCHEMA_VERSION + 1),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const onConversationIdChange = vi.fn();
+    const { rerender } = renderHook(
+      ({ conversationId }: { conversationId: string | undefined }) =>
+        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      {
+        wrapper: TestWrapper,
+        initialProps: { conversationId: "ok" as string | undefined },
+      },
+    );
+
+    // Let the ok restore (and its restore-touch autosave) settle.
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    wire.setConversationCalls = [];
+
+    // Selecting the future-version row must not produce editable state…
+    rerender({ conversationId: "future" });
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(store.get(conversationsAtom)["future"]).toBeUndefined();
+    expect(store.get(blockedConversationRestoreAtom)["future"]).toEqual({
+      status: "unsupportedVersion",
+      found: CONVERSATION_SCHEMA_VERSION + 1,
+      supported: CONVERSATION_SCHEMA_VERSION,
+    });
+    // …and never reach the write mutation: no restore touch, no autosave,
+    // no selection write.
+    expect(wire.setConversationCalls.filter((c) => c.id === "future")).toHaveLength(0);
+  });
+
+  it("restore: a corrupt row is blocked and preserved until an explicit recovery action", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    // malformed-version row: the version cannot be determined, so it is corrupt.
+    queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
+      id: "corrupt",
+      title: null,
+      state: makeBlockedRowState("corrupt", "2"),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const onConversationIdChange = vi.fn();
+    renderHook(() => useAssistantChatTestHarness({ conversationId: "corrupt", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(store.get(conversationsAtom)["corrupt"]).toBeUndefined();
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]).toEqual({
+      status: "corrupt",
+      issues: [
+        { path: "schemaVersion", kind: "invalid_type", message: "expected a non-negative integer schemaVersion" },
+      ],
+    });
+    // The stored row is preserved: no write mutation was ever called.
+    expect(wire.setConversationCalls).toHaveLength(0);
+  });
+
+  it("recovery reset: explicitly discards a corrupt row and starts a fresh conversation under the same id", async () => {
+    setupTestHarness();
+    const deleteCalls: string[] = [];
+    const { store, queryClient, TestWrapper } = makeRecoveryWrapper({ deleteCalls });
+    queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
+      id: "corrupt",
+      title: null,
+      state: makeBlockedRowState("corrupt", "2"),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    const view = render(
+      <TestWrapper>
+        <RecoveryHarness conversationId="corrupt" />
+      </TestWrapper>,
+    );
+
+    // The restore effect blocked the row and rendered the recovery screen.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]?.status).toBe("corrupt");
+    expect(store.get(conversationsAtom)["corrupt"]).toBeUndefined();
+    expect(wire.setConversationCalls).toHaveLength(0);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.trigger" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.confirm" }));
+    });
+
+    // The stored row was explicitly discarded through the delete mutation…
+    expect(deleteCalls).toEqual(["corrupt"]);
+    // …the blocked entry is gone…
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]).toBeUndefined();
+    // …and a fresh current-version conversation exists under the same id.
+    const state = store.get(conversationsAtom)["corrupt"];
+    expect(state).toBeDefined();
+    expect(state.id).toBe("corrupt");
+    expect(state.messages).toHaveLength(0);
+    expect(state.runs).toEqual({});
+    expect(state.updatedAt).toBeNull();
+
+    view.unmount();
+  });
+
+  it("recovery reset: the fresh conversation saves normally once content is added", async () => {
+    setupTestHarness();
+    const deleteCalls: string[] = [];
+    const { store, queryClient, TestWrapper } = makeRecoveryWrapper({ deleteCalls });
+    queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
+      id: "corrupt",
+      title: null,
+      state: makeBlockedRowState("corrupt", "2"),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    const controllerRef: { current: RunController | null } = { current: null };
+
+    function RecoveryHarnessWithController() {
+      useAssistantAppShellHosts();
+      const { controller } = useAssistantChatSessionHarness({
+        conversationId: "corrupt",
+        onConversationIdChange: () => {},
+      });
+      controllerRef.current = controller;
+      const blocked = useAtomValue(blockedConversationRestoreAtom)["corrupt"] ?? null;
+      if (!blocked) return null;
+      return <AssistantConversationRecovery conversationId="corrupt" blocked={blocked} />;
+    }
+
+    const view = render(
+      <TestWrapper>
+        <RecoveryHarnessWithController />
+      </TestWrapper>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.trigger" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.recovery.reset.confirm" }));
+    });
+
+    expect(deleteCalls).toEqual(["corrupt"]);
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]).toBeUndefined();
+
+    // The reset fresh state is editable: submitting a turn saves normally.
+    await act(async () => {
+      void controllerRef.current!.submit("Hello after reset");
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const savesForCorrupt = wire.setConversationCalls.filter((c) => c.id === "corrupt");
+    expect(savesForCorrupt.length).toBeGreaterThanOrEqual(1);
+    expect(savesForCorrupt[0]?.title).toBe("Hello after reset");
+
+    view.unmount();
+  });
+
+  it("recovery delete: explicitly removes the blocked row and notifies the route", async () => {
+    setupTestHarness();
+    const deleteCalls: string[] = [];
+    const { store, queryClient, TestWrapper } = makeRecoveryWrapper({ deleteCalls });
+    queryClient.setQueryData(queryKeys.conversations.detail("corrupt"), {
+      id: "corrupt",
+      title: null,
+      state: makeBlockedRowState("corrupt", "2"),
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    const onDeleted = vi.fn();
+    const view = render(
+      <TestWrapper>
+        <RecoveryHarness conversationId="corrupt" onDeleted={onDeleted} />
+      </TestWrapper>,
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]?.status).toBe("corrupt");
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.trigger" }));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.confirm" }));
+    });
+
+    expect(deleteCalls).toEqual(["corrupt"]);
+    expect(onDeleted).toHaveBeenCalledOnce();
+    expect(store.get(blockedConversationRestoreAtom)["corrupt"]).toBeUndefined();
+    expect(store.get(conversationsAtom)["corrupt"]).toBeUndefined();
+
+    view.unmount();
+  });
+
+  it("restore: an ok row is restored into the store and is not blocked", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("ok"), {
+      id: "ok",
+      title: null,
+      state: {
+        ...makeBlockedRowState("ok", CONVERSATION_SCHEMA_VERSION),
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hello from ok" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
+        runs: {
+          r1: {
+            id: "r1",
+            mode: "chat",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1).toISOString(),
+            elapsedSeconds: 1,
+          },
+        },
+      },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const onConversationIdChange = vi.fn();
+    renderHook(() => useAssistantChatTestHarness({ conversationId: "ok", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const state = store.get(conversationsAtom)["ok"];
+    expect(state).toBeDefined();
+    expect(state.messages).toHaveLength(1);
+    expect(state.messages[0]?.parts[0]).toEqual({ type: "text", text: "Hello from ok" });
+    expect(store.get(blockedConversationRestoreAtom)["ok"]).toBeUndefined();
+  });
+
+  it("restore: a missing row creates fresh state and saves normally", async () => {
+    setupTestHarness();
+    const store = createStore();
+    const queries = buildQueries();
+    // A row that does not exist resolves to null — restore must create fresh state.
+    queries.getConversationQuery = (id: string) => ({
+      queryKey: queryKeys.conversations.detail(id),
+      queryFn: async () => null,
+    });
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], queries);
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    const onConversationIdChange = vi.fn();
+    const controllerRef: { current: RunController | null } = { current: null };
+
+    function HarnessProbe() {
+      const { controller } = useAssistantChatTestHarness({
+        conversationId: "missing",
+        onConversationIdChange,
+      });
+      controllerRef.current = controller;
+      return null;
+    }
+
+    render(
+      <TestWrapper>
+        <HarnessProbe />
+      </TestWrapper>,
+    );
+
+    // WHY: flush microtasks first so the initial query fetch resolves and its
+    // notification timer is scheduled before advancing fake timers.
+    await act(async () => {
+      await Promise.resolve();
+      vi.advanceTimersByTime(0);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const state = store.get(conversationsAtom)["missing"];
+    expect(state).toBeDefined();
+    expect(state.id).toBe("missing");
+    expect(state.messages).toHaveLength(0);
+    expect(store.get(blockedConversationRestoreAtom)["missing"]).toBeUndefined();
+
+    // The fresh conversation is editable and saves like any other.
+    await act(async () => {
+      void controllerRef.current!.submit("Hello missing");
+      await Promise.resolve();
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+
+    const savesForMissing = wire.setConversationCalls.filter((c) => c.id === "missing");
+    expect(savesForMissing.length).toBeGreaterThanOrEqual(1);
+    expect(savesForMissing[0]?.title).toBe("Hello missing");
   });
 });
