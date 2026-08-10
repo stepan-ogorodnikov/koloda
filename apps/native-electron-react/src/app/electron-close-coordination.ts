@@ -15,7 +15,8 @@ type ElectronCloseApi = {
 /**
  * Electron-only: main sends `app:shutdown-request` on window close; renderer
  * runs `shutdownAssistantGracefully` then acks so main can allow close.
- * No-op when `window.electronAPI` is missing (demo/browser hosts).
+ * Awaits the engine single-flight promise, so an unload-started flush is joined
+ * before ack. No-op when `window.electronAPI` is missing (demo/browser hosts).
  */
 export function installElectronCloseCoordination(store: AssistantJotaiStore): () => void {
   const api = (globalThis as { window?: { electronAPI?: ElectronCloseApi } }).window?.electronAPI;

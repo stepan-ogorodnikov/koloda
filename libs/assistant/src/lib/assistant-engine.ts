@@ -89,6 +89,9 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
   const runtimes = new Map<string, ConversationRuntime>();
   let persistenceHost: ConversationPersistenceHost | null = null;
   let lifecycle: AssistantEngineLifecycle = "running";
+  // WHY: Unload (`pagehide`) and Electron IPC can both request shutdown. Returning
+  // early while `closing` would let IPC ack before the joined flush finishes.
+  let shutdownPromise: Promise<void> | null = null;
 
   const assertRunning = () => {
     if (lifecycle !== "running") {
@@ -223,29 +226,39 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       runtime.close("dispose");
       runtimes.delete(conversationId);
     },
-    async shutdownGracefully({ interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS }) {
-      if (lifecycle !== "running") return;
-      lifecycle = "closing";
-      logAssistantStructured({
-        conversationId: "*",
-        commandOrEvent: "shutdown",
-        priorStatus: "running",
-        nextStatus: "closing",
-      });
+    shutdownGracefully(shutdownOptions) {
+      // INVARIANT: Concurrent callers (browser unload + Electron IPC ack path)
+      // must share one promise so acknowledgement waits for the joined flush.
+      if (shutdownPromise) return shutdownPromise;
+      // WHY: `dispose()` can close without going through shutdown — do not start
+      // a second teardown after the engine is already sealed.
+      if (lifecycle !== "running") return Promise.resolve();
 
-      // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
-      closeRuntimes("app_shutdown");
-      // 3. Transition active (and any still-streaming queued) runs.
-      interruptActiveRuns();
-      // 4. Abort active controllers with shutdown provenance and seal beginRun.
-      controllerRegistry.dispose("app_shutdown");
-      // 5. Flush persistence.
-      if (persistenceHost) {
-        await persistenceHost.flushAllBounded(flushTimeoutMs);
-      }
-      // 6. Closed — beginRun already sealed by registry dispose.
-      lifecycle = "closed";
-      runtimes.clear();
+      const { interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS } = shutdownOptions;
+      shutdownPromise = (async () => {
+        lifecycle = "closing";
+        logAssistantStructured({
+          conversationId: "*",
+          commandOrEvent: "shutdown",
+          priorStatus: "running",
+          nextStatus: "closing",
+        });
+
+        // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
+        closeRuntimes("app_shutdown");
+        // 3. Transition active (and any still-streaming queued) runs.
+        interruptActiveRuns();
+        // 4. Abort active controllers with shutdown provenance and seal beginRun.
+        controllerRegistry.dispose("app_shutdown");
+        // 5. Flush persistence.
+        if (persistenceHost) {
+          await persistenceHost.flushAllBounded(flushTimeoutMs);
+        }
+        // 6. Closed — beginRun already sealed by registry dispose.
+        lifecycle = "closed";
+        runtimes.clear();
+      })();
+      return shutdownPromise;
     },
     dispose() {
       // INVARIANT: Mirror shutdown — ignore re-entry while closing so a dispose

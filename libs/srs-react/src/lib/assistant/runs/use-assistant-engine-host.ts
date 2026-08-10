@@ -171,7 +171,8 @@ export function useAssistantEngineHost(): void {
     // WORKAROUND: Browser `pagehide`/`beforeunload` are best-effort — the
     // platform does not await flush promises. Electron hosts also install a
     // main-process close handshake (`installElectronCloseCoordination`) that
-    // awaits this same shutdown before allowing the window to close.
+    // awaits this same `shutdownAssistantGracefully` (engine single-flight) so
+    // IPC acknowledgement joins an unload-started flush instead of acking early.
     const onShutdown = () => {
       void shutdownAssistantGracefully(store);
     };

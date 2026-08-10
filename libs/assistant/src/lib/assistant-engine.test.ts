@@ -650,6 +650,81 @@ describe("createAssistantEngine", () => {
     expect(hostDispose).not.toHaveBeenCalled();
   });
 
+  it("concurrent shutdownGracefully callers share one promise and wait for the joined flush", async () => {
+    let releaseFlush!: () => void;
+    const flushGate = new Promise<void>((resolve) => {
+      releaseFlush = resolve;
+    });
+    const flushAllBounded = vi.fn(async () => {
+      await flushGate;
+    });
+    const interruptActiveRuns = vi.fn();
+
+    engine.setPersistenceHost({
+      flushAllNow: vi.fn(),
+      flushAllBounded,
+      retrySave: vi.fn(),
+      beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
+      prepareDelete: vi.fn(async () => undefined),
+      isTombstoned: vi.fn(() => false),
+      dispose: vi.fn(),
+    });
+
+    // Simulate unload starting flush, then Electron IPC joining the same flight.
+    const unloadShutdown = engine.shutdownGracefully({
+      interruptActiveRuns,
+      flushTimeoutMs: 60_000,
+    });
+    const ipcShutdown = engine.shutdownGracefully({
+      interruptActiveRuns: () => {
+        throw new Error("second caller must not re-enter shutdown body");
+      },
+      flushTimeoutMs: 0,
+    });
+
+    expect(ipcShutdown).toBe(unloadShutdown);
+    expect(interruptActiveRuns).toHaveBeenCalledTimes(1);
+    expect(flushAllBounded).toHaveBeenCalledTimes(1);
+    expect(engine.lifecycle).toBe("closing");
+
+    let ipcAcked = false;
+    void ipcShutdown.then(() => {
+      ipcAcked = true;
+    });
+    await Promise.resolve();
+    expect(ipcAcked).toBe(false);
+
+    releaseFlush();
+    await expect(unloadShutdown).resolves.toBeUndefined();
+    await expect(ipcShutdown).resolves.toBeUndefined();
+    expect(ipcAcked).toBe(true);
+    expect(engine.lifecycle).toBe("closed");
+    expect(flushAllBounded).toHaveBeenCalledTimes(1);
+  });
+
+  it("shutdownGracefully after dispose is a no-op", async () => {
+    const flushAllBounded = vi.fn(async () => undefined);
+    engine.setPersistenceHost({
+      flushAllNow: vi.fn(),
+      flushAllBounded,
+      retrySave: vi.fn(),
+      beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
+      prepareDelete: vi.fn(async () => undefined),
+      isTombstoned: vi.fn(() => false),
+      dispose: vi.fn(),
+    });
+
+    engine.dispose();
+    await engine.shutdownGracefully({
+      interruptActiveRuns: () => {
+        throw new Error("must not interrupt after dispose");
+      },
+    });
+
+    expect(flushAllBounded).not.toHaveBeenCalled();
+    expect(engine.lifecycle).toBe("closed");
+  });
+
   it("does not classify unrequested AbortError as user cancellation", async () => {
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
       onChunk("partial");
