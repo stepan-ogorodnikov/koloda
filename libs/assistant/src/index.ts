@@ -40,6 +40,7 @@ export {
   SAVE_RETRY_MAX_DELAY_MS,
 } from "./lib/create-conversation-save-queue";
 export type {
+  ConversationDeletion,
   ConversationSaveQueue,
   CreateConversationSaveQueueOptions,
   SaveErrorCategory,

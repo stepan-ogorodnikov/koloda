@@ -1,5 +1,5 @@
 import { createConversationSaveQueue, SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
-import type { ConversationSaveQueue } from "./create-conversation-save-queue";
+import type { ConversationDeletion, ConversationSaveQueue } from "./create-conversation-save-queue";
 
 /** Best-effort ceiling for in-flight durable writes during graceful shutdown. */
 export const SHUTDOWN_FLUSH_TIMEOUT_MS = 2000;
@@ -23,8 +23,14 @@ export type ConversationPersistenceHost = {
   /** Immediate save attempt for a conversation (cancels pending backoff). */
   retrySave: (conversationId: string) => void;
   /**
-   * Tombstone + cancel queued writes + await in-flight for one conversation.
-   * Call before deleting the DB row so an upsert cannot resurrect it (#8).
+   * Begin transactional delete: host tombstone + queue beginDelete.
+   * Call `commit` after a successful DB delete, or `rollback` when it fails
+   * so dirty generations and autosave can resume.
+   */
+  beginDelete: (conversationId: string) => Promise<ConversationDeletion>;
+  /**
+   * Permanent tombstone shim: `beginDelete` then `commit`.
+   * Prefer `beginDelete` when the caller can roll back a failed DB delete (#6).
    */
   prepareDelete: (conversationId: string) => Promise<void>;
   isTombstoned: (conversationId: string) => boolean;
@@ -43,8 +49,9 @@ export function createConversationPersistenceHost({
   subscribePendingSaves,
 }: CreateConversationPersistenceHostOptions): ConversationPersistenceHost {
   const queues = new Map<string, ConversationSaveQueue>();
-  // WHY: host-level tombstones block getQueue/notifyDirty after prepareDelete
+  // WHY: host-level tombstones block getQueue/notifyDirty after beginDelete
   // even when the queue entry was never created or was already disposed.
+  // Rollback removes the id; commit leaves it permanent.
   const tombstonedIds = new Set<string>();
   let prevPending: Record<string, number> = { ...getInitialPending() };
   let disposed = false;
@@ -56,8 +63,8 @@ export function createConversationPersistenceHost({
       queue = createConversationSaveQueue({
         conversationId: id,
         // WHY: re-check tombstone around the durable write so a generation that
-        // started before prepareDelete still no-ops if delete won the race at
-        // the host boundary (queue-level prepareDelete also awaits in-flight).
+        // started before beginDelete still no-ops if delete won the race at
+        // the host boundary (queue-level beginDelete also awaits in-flight).
         write: async () => {
           if (tombstonedIds.has(id)) return false;
           const wrote = await createWrite(id)();
@@ -109,17 +116,38 @@ export function createConversationPersistenceHost({
     queues.get(conversationId)?.flushNow();
   };
 
-  const prepareDelete = async (conversationId: string): Promise<void> => {
-    if (disposed) return;
+  const beginDelete = async (conversationId: string): Promise<ConversationDeletion> => {
+    if (disposed) return { commit: () => {}, rollback: () => {} };
     // INVARIANT: mark tombstoned before awaiting so syncFromPending / retry
     // cannot start a new write while we wait on in-flight (#8 steps 1–3).
     tombstonedIds.add(conversationId);
     const queue = queues.get(conversationId);
-    if (queue) {
-      await queue.prepareDelete();
-      return;
-    }
-    // WHY: no queue means nothing in flight; tombstone alone blocks late dirty.
+    const queueDeletion = queue ? await queue.beginDelete() : null;
+
+    let settled = false;
+    return {
+      commit: () => {
+        if (settled || disposed) return;
+        settled = true;
+        queueDeletion?.commit();
+        // INVARIANT: host tombstone stays — getQueue/notifyDirty stay blocked.
+      },
+      rollback: () => {
+        if (settled || disposed) return;
+        settled = true;
+        // WHY: remove host tombstone before queue rollback so a scheduled
+        // resume (or a concurrent pending sync) can reach getQueue again.
+        tombstonedIds.delete(conversationId);
+        queueDeletion?.rollback();
+      },
+    };
+  };
+
+  const prepareDelete = async (conversationId: string): Promise<void> => {
+    // WHY: temporary shim until srs-react wires beginDelete + commit/rollback
+    // around deleteFromDb (#6). Same permanent tombstone as the pre-transactional API.
+    const deletion = await beginDelete(conversationId);
+    deletion.commit();
   };
 
   const isTombstoned = (conversationId: string) => tombstonedIds.has(conversationId);
@@ -211,5 +239,5 @@ export function createConversationPersistenceHost({
     tombstonedIds.clear();
   };
 
-  return { flushAllNow, flushAllBounded, retrySave, prepareDelete, isTombstoned, dispose };
+  return { flushAllNow, flushAllBounded, retrySave, beginDelete, prepareDelete, isTombstoned, dispose };
 }

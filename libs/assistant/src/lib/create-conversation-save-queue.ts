@@ -16,6 +16,15 @@ export type SaveFailureLog = {
   message: string;
 };
 
+/**
+ * Two-phase delete handle: `commit` after a successful DB delete, or `rollback`
+ * when the DB delete fails so autosave can resume with preserved dirty state.
+ */
+export type ConversationDeletion = {
+  commit: () => void;
+  rollback: () => void;
+};
+
 export type CreateConversationSaveQueueOptions = {
   conversationId: string;
   /**
@@ -45,8 +54,13 @@ export type ConversationSaveQueue = {
   cancelRetry: () => void;
   waitUntilIdle: () => Promise<void>;
   /**
-   * Tombstone this conversation's save queue for coordinated delete:
-   * block new saves, cancel queued work, await the in-flight write.
+   * Begin transactional delete: tombstone, cancel queued work, await in-flight.
+   * Preserves dirty generations until `commit` (drop) or `rollback` (restore).
+   */
+  beginDelete: () => Promise<ConversationDeletion>;
+  /**
+   * Permanent tombstone shim: `beginDelete` then `commit`.
+   * Prefer `beginDelete` when the caller can roll back a failed DB delete (#6).
    */
   prepareDelete: () => Promise<void>;
   isTombstoned: () => boolean;
@@ -85,6 +99,11 @@ function defaultLogSaveFailure(entry: SaveFailureLog): void {
   console.error("[assistant.save]", entry);
 }
 
+const noopDeletion = (): ConversationDeletion => ({
+  commit: () => {},
+  rollback: () => {},
+});
+
 /**
  * Per-conversation serialized autosave queue.
  *
@@ -96,8 +115,9 @@ function defaultLogSaveFailure(entry: SaveFailureLog): void {
  * - Ack of G clears dirty only when `dirtyGeneration === G`. Ack of N must NOT
  *   clear dirty if N+1 is already queued.
  * - A failed write stays dirty and schedules a bounded backoff retry; delete
- *   tombstones via `prepareDelete` (cancel timers, await in-flight) before the
- *   DB row is removed so an upsert cannot resurrect it (#8).
+ *   uses `beginDelete` (cancel timers, await in-flight, preserve dirty until
+ *   commit/rollback) before the DB row is removed so an upsert cannot
+ *   resurrect it (#8) and a failed DB delete can restore autosave.
  *
  * Assumes one writer per profile/database — no DB CAS.
  */
@@ -218,24 +238,53 @@ export function createConversationSaveQueue({
     return inFlight ?? Promise.resolve();
   };
 
-  const prepareDelete = async (): Promise<void> => {
-    if (disposed) return;
+  const beginDelete = async (): Promise<ConversationDeletion> => {
+    if (disposed) return noopDeletion();
     // INVARIANT: tombstone first so notifyDirty / flush / retry cannot start
-    // a write that races the upcoming DB delete (#8).
+    // a write that races the upcoming DB delete (#8). Do not ack dirty here —
+    // rollback must preserve outstanding generations; tombstone alone blocks
+    // scheduling until commit or rollback.
     tombstoned = true;
     clearRetryTimer();
     // WHY: drop coalesced work without flushing — a late upsert after delete
     // would recreate the row via unconditional onConflictDoUpdate.
     scheduler.cancel();
-    // WHY: clear dirty so an in-flight ack path cannot schedule N+1 after we
-    // finish waiting.
-    ackedGeneration = dirtyGeneration;
     await (inFlight ?? Promise.resolve());
+
+    let settled = false;
+    return {
+      commit: () => {
+        if (settled || disposed) return;
+        settled = true;
+        // WHY: permanent tombstone — clear dirty so a later host sync cannot
+        // revive writes from generations that belonged to a deleted row.
+        ackedGeneration = dirtyGeneration;
+        clearRetryTimer();
+        scheduler.cancel();
+      },
+      rollback: () => {
+        if (settled || disposed) return;
+        settled = true;
+        tombstoned = false;
+        // WHY: resume coalesced autosave only after the failed delete attempt
+        // has settled (caller invokes rollback in catch). Do not flushNow —
+        // beginDelete already awaited in-flight; scheduling avoids starting a
+        // write in the same turn as the failed delete rejection path.
+        if (isDirty()) scheduler.schedule();
+      },
+    };
+  };
+
+  const prepareDelete = async (): Promise<void> => {
+    // WHY: temporary shim until production wires beginDelete + commit/rollback
+    // around deleteFromDb (#6). Commits immediately — permanent tombstone.
+    const deletion = await beginDelete();
+    deletion.commit();
   };
 
   const dispose = () => {
     if (disposed) return;
-    // WHY: delete cancels via prepareDelete; host/engine dispose must not
+    // WHY: delete cancels via beginDelete; host/engine dispose must not
     // flushIfPending or a timer-fired write can resurrect a removed row.
     clearRetryTimer();
     scheduler.cancel();
@@ -251,6 +300,7 @@ export function createConversationSaveQueue({
     consecutiveFailures,
     cancelRetry,
     waitUntilIdle,
+    beginDelete,
     prepareDelete,
     isTombstoned,
     dispose,

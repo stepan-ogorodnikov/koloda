@@ -5,6 +5,7 @@ import {
   SHUTDOWN_SAVE_MAX_ATTEMPTS,
 } from "./conversation-persistence-host";
 import { SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
+import { IDLE_SAVE_DEBOUNCE_MS } from "./create-save-scheduler";
 
 describe("createConversationPersistenceHost", () => {
   beforeEach(() => {
@@ -346,6 +347,128 @@ describe("createConversationPersistenceHost", () => {
 
     pending = {};
     listener!(pending);
+    host.dispose();
+  });
+
+  it("beginDelete rollback restores autosave and preserves outstanding dirty", async () => {
+    const rows = new Map<string, string>();
+    let releaseWrite!: () => void;
+    const writeGate = new Promise<void>((resolve) => {
+      releaseWrite = resolve;
+    });
+    let pending: Record<string, number> = { A: 1 };
+    let listener: ((next: Record<string, number>) => void) | null = null;
+    let writeCount = 0;
+
+    const host = createConversationPersistenceHost({
+      createWrite: (id) => async () => {
+        await writeGate;
+        writeCount += 1;
+        rows.set(id, `v${writeCount}`);
+        return true;
+      },
+      isStreaming: () => false,
+      getInitialPending: () => ({ ...pending }),
+      subscribePendingSaves: (l) => {
+        listener = l;
+        return () => {
+          listener = null;
+        };
+      },
+    });
+
+    host.flushAllNow();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(writeCount).toBe(0);
+
+    // Queue N+1 while N is gated in flight.
+    pending = { A: 2 };
+    listener!(pending);
+
+    const begin = host.beginDelete("A");
+    await Promise.resolve();
+    expect(host.isTombstoned("A")).toBe(true);
+    // Tombstoned: further dirties / retry must not start writes yet.
+    pending = { A: 3 };
+    listener!(pending);
+    host.retrySave("A");
+    expect(writeCount).toBe(0);
+
+    releaseWrite();
+    const deletion = await begin;
+
+    expect(writeCount).toBe(1);
+    expect(rows.get("A")).toBe("v1");
+
+    // Simulate failed DB delete → rollback.
+    deletion.rollback();
+    expect(host.isTombstoned("A")).toBe(false);
+
+    // Outstanding dirty from before beginDelete must resume autosave.
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(writeCount).toBe(2);
+    expect(rows.get("A")).toBe("v2");
+
+    // Manual retry still works after rollback.
+    pending = { A: 4 };
+    listener!(pending);
+    host.retrySave("A");
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(writeCount).toBe(3);
+
+    // Later successful delete via commit.
+    const committed = await host.beginDelete("A");
+    committed.commit();
+    expect(host.isTombstoned("A")).toBe(true);
+    pending = { A: 5 };
+    listener!(pending);
+    host.retrySave("A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    expect(writeCount).toBe(3);
+
+    host.dispose();
+  });
+
+  it("beginDelete commit leaves a permanent host tombstone", async () => {
+    let writeCount = 0;
+    let pending: Record<string, number> = { A: 1 };
+    let listener: ((next: Record<string, number>) => void) | null = null;
+    const host = createConversationPersistenceHost({
+      createWrite: () => async () => {
+        writeCount += 1;
+        return true;
+      },
+      isStreaming: () => false,
+      getInitialPending: () => ({ ...pending }),
+      subscribePendingSaves: (l) => {
+        listener = l;
+        return () => {
+          listener = null;
+        };
+      },
+    });
+
+    host.flushAllNow();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    expect(writeCount).toBe(1);
+
+    const deletion = await host.beginDelete("A");
+    deletion.commit();
+    expect(host.isTombstoned("A")).toBe(true);
+
+    pending = { A: 2 };
+    listener!(pending);
+    host.retrySave("A");
+    host.flushAllNow();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    expect(writeCount).toBe(1);
+
     host.dispose();
   });
 
