@@ -3,18 +3,39 @@
  *
  * WHY: New lifecycle statuses/reasons made the persisted shape versioned.
  * Unknown future versions must fail at the coerce boundary rather than
- * silently entering live state (ASSISTANT-ARCHITECTURE-REWORK §Persistence).
+ * silently entering live state.
  */
 export const CONVERSATION_SCHEMA_VERSION = 1;
 
 export type PersistedSchemaVersion = typeof CONVERSATION_SCHEMA_VERSION;
 
 /**
- * Migrate a raw persisted row to {@link CONVERSATION_SCHEMA_VERSION}.
- * Returns `null` when the row is not an object or declares a future version.
+ * Outcome of migrating a raw persisted row to {@link CONVERSATION_SCHEMA_VERSION}.
+ *
+ * WHY: the restore boundary must tell "no row", "future version", and "corrupt
+ * row" apart instead of collapsing them into one rejection, so it can refuse
+ * to autosave over unsupported data.
  */
-export function migratePersistedConversation(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+export type PersistedMigrationResult =
+  | { status: "ok"; value: Record<string, unknown> }
+  | { status: "unsupportedVersion"; found: number }
+  | { status: "invalid"; reason: "not-an-object" | "malformed-version" };
+
+/**
+ * Migrate a raw persisted row to {@link CONVERSATION_SCHEMA_VERSION}.
+ *
+ * - `ok`: the row migrated (or is already current) and is ready for schema
+ *   validation.
+ * - `unsupportedVersion`: the row declares a version this build cannot load —
+ *   newer than {@link CONVERSATION_SCHEMA_VERSION}, or one with no migration
+ *   path. `found` carries the declared version.
+ * - `invalid`: the row is not an object or its `schemaVersion` is not a
+ *   non-negative integer, so the version cannot be determined.
+ */
+export function migratePersistedConversation(value: unknown): PersistedMigrationResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { status: "invalid", reason: "not-an-object" };
+  }
 
   const raw = value as Record<string, unknown>;
   const declared = raw.schemaVersion;
@@ -22,20 +43,22 @@ export function migratePersistedConversation(value: unknown): Record<string, unk
   // WHY: Pre-version rows omit schemaVersion — treat as v0 and migrate forward.
   let version = 0;
   if (declared !== undefined && declared !== null) {
-    if (typeof declared !== "number" || !Number.isInteger(declared) || declared < 0) return null;
+    if (typeof declared !== "number" || !Number.isInteger(declared) || declared < 0) {
+      return { status: "invalid", reason: "malformed-version" };
+    }
     // INVARIANT: Future writers must not silently load into live state.
-    if (declared > CONVERSATION_SCHEMA_VERSION) return null;
+    if (declared > CONVERSATION_SCHEMA_VERSION) return { status: "unsupportedVersion", found: declared };
     version = declared;
   }
 
   let current: Record<string, unknown> = raw;
   for (let from = version; from < CONVERSATION_SCHEMA_VERSION; from++) {
     const migrate = MIGRATIONS[from];
-    if (!migrate) return null;
+    if (!migrate) return { status: "unsupportedVersion", found: version };
     current = migrate(current);
   }
 
-  return { ...current, schemaVersion: CONVERSATION_SCHEMA_VERSION };
+  return { status: "ok", value: { ...current, schemaVersion: CONVERSATION_SCHEMA_VERSION } };
 }
 
 type SchemaMigration = (raw: Record<string, unknown>) => Record<string, unknown>;

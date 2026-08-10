@@ -16,8 +16,8 @@ import { z } from "zod";
 /**
  * Persistence/coercion schemas for restored conversation rows.
  *
- * WHY (ASSISTANT-CHAT-REFACTOR.md §C): persisted rows are a *compatibility
- * boundary*. The hand-rolled coercion in `conversation-persistence.ts`
+ * WHY: persisted rows are a *compatibility * boundary*.
+ * The hand-rolled coercion in `conversation-persistence.ts`
  * deliberately does three things a naive Zod port would lose:
  *   1. `toDate` — coerce ISO-string / epoch-number / Date timestamps into
  *      `Date`, failing the *whole row* on an unparseable required date.
@@ -244,13 +244,80 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
   );
 
 /**
- * Coerce a persisted row into a `ConversationReducerState`, or `null` when the
- * row is absent, declares an unknown future schemaVersion, or fails the
- * compatibility schema. Migrations run at this boundary before validation.
+ * A single validation failure on a corrupt persisted row. Carries enough
+ * structure (zod issue code + path + message) for a later commit to build
+ * recovery UX on it.
  */
-export function coerceConversationState(value: unknown): ConversationReducerState | null {
+export type RestoreIssue = {
+  /** Dot-joined zod issue path; `"(root)"` when the whole row failed. */
+  path: string;
+  /** Zod issue code (e.g. `"invalid_type"`, `"custom"`). */
+  kind: string;
+  /** Human-readable description of the failure. */
+  message: string;
+};
+
+/**
+ * Discriminated outcome of restoring a persisted conversation row.
+ *
+ * WHY: `null` collapsed "no row", "future version",
+ * and "corrupt" into one rejection, so restore treated unsupported
+ * data as missing and could autosave an empty current-version row over it.
+ * The statuses are deliberately separate user stories:
+ * - `missing`: no row existed — safe to create fresh state and save normally.
+ * - `unsupportedVersion`: the row declares a version this build cannot load —
+ *   upgrade/export/delete recovery, never an automatic overwrite.
+ * - `corrupt`: a row exists at a supported (or undeterminable) version but
+ *   fails parsing — explicit reset/export/delete recovery.
+ * - `ok`: normalized, validated live state.
+ */
+export type ConversationRestoreResult =
+  | { status: "ok"; state: ConversationReducerState }
+  | { status: "missing" }
+  | { status: "unsupportedVersion"; found: number; supported: number }
+  | { status: "corrupt"; issues: RestoreIssue[] };
+
+function toRestoreIssues(issues: z.core.$ZodIssue[]): RestoreIssue[] {
+  return issues.map((issue) => ({
+    path: issue.path.length > 0 ? issue.path.join(".") : "(root)",
+    kind: issue.code,
+    message: issue.message,
+  }));
+}
+
+/**
+ * Coerce a persisted row into a `ConversationRestoreResult`. Migrations run
+ * at this boundary before validation; the versioned-schema policy lives in
+ * `migratePersistedConversation` and is only re-read here for the
+ * `unsupportedVersion` `supported` number.
+ */
+export function coerceConversationState(value: unknown): ConversationRestoreResult {
+  // WHY: an absent row reaches this boundary as `undefined` (the restore
+  // query resolves `null` and the hook unwraps `conversationData?.state`).
+  // Any other non-object is a row that exists but cannot be parsed.
+  if (value === undefined) return { status: "missing" };
+
   const migrated = migratePersistedConversation(value);
-  if (!migrated) return null;
-  const result = persistedConversationStateSchema.safeParse(migrated);
-  return result.success ? fromPersistedState(result.data) : null;
+  if (migrated.status === "unsupportedVersion") {
+    return {
+      status: "unsupportedVersion",
+      found: migrated.found,
+      supported: CONVERSATION_SCHEMA_VERSION,
+    };
+  }
+  if (migrated.status === "invalid") {
+    return {
+      status: "corrupt",
+      issues:
+        migrated.reason === "not-an-object"
+          ? [{ path: "(root)", kind: "invalid_type", message: "expected a conversation object" }]
+          : [{ path: "schemaVersion", kind: "invalid_type", message: "expected a non-negative integer schemaVersion" }],
+    };
+  }
+
+  const result = persistedConversationStateSchema.safeParse(migrated.value);
+  if (!result.success) {
+    return { status: "corrupt", issues: toRestoreIssues(result.error.issues) };
+  }
+  return { status: "ok", state: fromPersistedState(result.data) };
 }

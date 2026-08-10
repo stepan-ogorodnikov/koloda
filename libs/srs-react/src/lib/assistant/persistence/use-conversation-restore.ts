@@ -17,11 +17,11 @@ import {
 } from "../state/conversation-store";
 
 function restoreFromData(loaded: unknown): ConversationReducerState | null {
-  const coerced = coerceConversationState(loaded);
-  if (!coerced) return null;
+  const result = coerceConversationState(loaded);
+  if (result.status !== "ok") return null;
   // WHY: fall back to the coerced state when normalize makes no changes so a row
   // that is already clean round-trips verbatim.
-  return normalizeRestoredConversation(coerced) ?? coerced;
+  return normalizeRestoredConversation(result.state) ?? result.state;
 }
 
 function freshConversation(id: string, stored: AIProfileState | null): ConversationReducerState {

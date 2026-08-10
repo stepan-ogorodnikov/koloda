@@ -1,9 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
+import type { RestoreIssue } from "./conversation-persistence-schema";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
+
+/** Returns the state of an `ok` restore result, failing the test otherwise. */
+function expectOk(value: unknown): ConversationReducerState {
+  const result = coerceConversationState(value);
+  if (result.status !== "ok") {
+    throw new Error(`expected restore result "ok", got ${JSON.stringify(result)}`);
+  }
+  return result.state;
+}
+
+/** Returns the issues of a `corrupt` restore result, failing the test otherwise. */
+function expectCorrupt(value: unknown): RestoreIssue[] {
+  const result = coerceConversationState(value);
+  if (result.status !== "corrupt") {
+    throw new Error(`expected restore result "corrupt", got ${JSON.stringify(result)}`);
+  }
+  return result.issues;
+}
 
 describe("toPersistedState / fromPersistedState", () => {
   it("omits revertState on the way out and restores it as null on the way in", () => {
@@ -27,75 +46,78 @@ describe("coerceConversationState", () => {
       id: "conv-1",
       createdAt: new Date(1),
     };
-    expect(coerceConversationState(state)).not.toBeNull();
+    expect(coerceConversationState(state).status).toBe("ok");
   });
 
-  it("rejects non-objects", () => {
-    expect(coerceConversationState(null)).toBeNull();
-    expect(coerceConversationState("string")).toBeNull();
-    expect(coerceConversationState(123)).toBeNull();
+  it("classifies an absent row (undefined) as missing", () => {
+    expect(coerceConversationState(undefined)).toEqual({ status: "missing" });
   });
 
-  it("rejects objects with wrong field types", () => {
-    expect(coerceConversationState({ ...initialConversationState, id: 123 })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, mode: "voice" })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, deckId: "5" })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, profileId: 5 })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, modelId: 7 })).toBeNull();
-    expect(coerceConversationState({ ...initialConversationState, modelParameters: "x" })).toBeNull();
+  it("classifies non-object rows as corrupt with non-empty issues", () => {
+    expect(expectCorrupt(null).length).toBeGreaterThan(0);
+    expect(expectCorrupt("string").length).toBeGreaterThan(0);
+    expect(expectCorrupt(123).length).toBeGreaterThan(0);
+    expect(expectCorrupt([]).length).toBeGreaterThan(0);
+  });
+
+  it("rejects objects with wrong field types as corrupt", () => {
+    expect(expectCorrupt({ ...initialConversationState, id: 123 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...initialConversationState, mode: "voice" }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...initialConversationState, deckId: "5" }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...initialConversationState, profileId: 5 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...initialConversationState, modelId: 7 }).length).toBeGreaterThan(0);
+    expect(expectCorrupt({ ...initialConversationState, modelParameters: "x" }).length).toBeGreaterThan(0);
     expect(
-      coerceConversationState({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }),
-    ).toBeNull();
+      expectCorrupt({ ...initialConversationState, modelParameters: { reasoning_effort: 5 } }).length,
+    ).toBeGreaterThan(0);
   });
 
   it("coerces ISO string createdAt into a Date", () => {
     const iso = "2024-01-01T00:00:00.000Z";
-    const coerced = coerceConversationState({
+    const coerced = expectOk({
       ...initialConversationState,
       id: "conv-1",
       createdAt: iso,
     });
-    expect(coerced).not.toBeNull();
-    expect(coerced!.createdAt).toBeInstanceOf(Date);
-    expect(coerced!.createdAt.toISOString()).toBe(iso);
+    expect(coerced.createdAt).toBeInstanceOf(Date);
+    expect(coerced.createdAt.toISOString()).toBe(iso);
   });
 
   it("coerces number createdAt into a Date", () => {
-    const coerced = coerceConversationState({
+    const coerced = expectOk({
       ...initialConversationState,
       id: "conv-1",
       createdAt: 1700000000000,
     });
-    expect(coerced).not.toBeNull();
-    expect(coerced!.createdAt).toBeInstanceOf(Date);
-    expect(coerced!.createdAt.getTime()).toBe(1700000000000);
+    expect(coerced.createdAt).toBeInstanceOf(Date);
+    expect(coerced.createdAt.getTime()).toBe(1700000000000);
   });
 
   it("accepts rows that omit the AI configuration fields", () => {
-    const coerced = coerceConversationState({ ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
-    expect(coerced).not.toBeNull();
+    const coerced = expectOk({ ...initialConversationState, id: "conv-1", createdAt: new Date(1) });
+    expect(coerced.id).toBe("conv-1");
   });
 
   it("defaults missing AI configuration fields to null and an empty map", () => {
-    const coerced = coerceConversationState({
+    const coerced = expectOk({
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date(1),
-    })!;
+    });
     expect(coerced.profileId).toBeNull();
     expect(coerced.modelId).toBeNull();
     expect(coerced.modelParameters).toEqual({});
   });
 
   it("preserves stored AI profile, model, and model parameters", () => {
-    const coerced = coerceConversationState({
+    const coerced = expectOk({
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date(1),
       profileId: "prof-1",
       modelId: "model-1",
       modelParameters: { reasoning_effort: "high" },
-    })!;
+    });
     expect(coerced.profileId).toBe("prof-1");
     expect(coerced.modelId).toBe("model-1");
     expect(coerced.modelParameters).toEqual({ reasoning_effort: "high" });
@@ -103,59 +125,59 @@ describe("coerceConversationState", () => {
 
   describe("lastReadRunId coercion", () => {
     it("defaults lastReadRunId to null when the field is missing", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
-      })!;
+      });
       expect(coerced.lastReadRunId).toBeNull();
     });
 
     it("accepts an explicit null lastReadRunId", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
         lastReadRunId: null,
-      })!;
+      });
       expect(coerced.lastReadRunId).toBeNull();
     });
 
     it("preserves a string lastReadRunId", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
         lastReadRunId: "r-42",
-      })!;
+      });
       expect(coerced.lastReadRunId).toBe("r-42");
     });
 
-    it("rejects a non-string, non-null lastReadRunId", () => {
+    it("rejects a non-string, non-null lastReadRunId as corrupt", () => {
       expect(
-        coerceConversationState({
+        expectCorrupt({
           ...initialConversationState,
           id: "conv-1",
           createdAt: new Date(1),
           lastReadRunId: 42,
-        }),
-      ).toBeNull();
+        }).length,
+      ).toBeGreaterThan(0);
       expect(
-        coerceConversationState({
+        expectCorrupt({
           ...initialConversationState,
           id: "conv-1",
           createdAt: new Date(1),
           lastReadRunId: true,
-        }),
-      ).toBeNull();
+        }).length,
+      ).toBeGreaterThan(0);
       expect(
-        coerceConversationState({
+        expectCorrupt({
           ...initialConversationState,
           id: "conv-1",
           createdAt: new Date(1),
           lastReadRunId: {},
-        }),
-      ).toBeNull();
+        }).length,
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -185,30 +207,28 @@ describe("coerceConversationState", () => {
     }
 
     it("preserves a string modelName on a run", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ modelName: "GPT-4" })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ modelName: "GPT-4" })));
       expect(coerced.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("defaults modelName to undefined when the field is missing", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun()))!;
+      const coerced = expectOk(makeStateWithRun(baseRun()));
       expect(coerced.runs["r1"].modelName).toBeUndefined();
     });
 
     it("accepts explicit null and coerces it to undefined", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ modelName: null })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ modelName: null })));
       expect(coerced.runs["r1"].modelName).toBeUndefined();
     });
 
-    it("rejects a non-string modelName", () => {
-      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: 5 })))).toBeNull();
-      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: true })))).toBeNull();
-      expect(coerceConversationState(makeStateWithRun(baseRun({ modelName: {} })))).toBeNull();
+    it("rejects a non-string modelName as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ modelName: 5 }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ modelName: true }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ modelName: {} }))).length).toBeGreaterThan(0);
     });
 
     it("strips legacy request from restored runs", () => {
-      const coerced = coerceConversationState(
-        makeStateWithRun(baseRun({ request: { messages: [{ role: "user", content: "hi" }] } })),
-      )!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ request: { messages: [{ role: "user", content: "hi" }] } })));
       expect(coerced.runs["r1"]).not.toHaveProperty("request");
     });
   });
@@ -248,60 +268,61 @@ describe("coerceConversationState", () => {
 
     it("accepts a TemplateFields array (cards-mode run survives restore)", () => {
       const fields = [{ id: 1, title: "Front", type: "text", isRequired: true }];
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ templateFields: fields })))!;
-      expect(coerced).not.toBeNull();
+      const coerced = expectOk(makeStateWithRun(baseRun({ templateFields: fields })));
       expect(coerced.runs["r1"].templateFields).toEqual(fields);
     });
 
     it("accepts null templateFields (chat-mode runs store null)", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ templateFields: null })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ templateFields: null })));
       expect(coerced.runs["r1"].templateFields).toBeNull();
     });
 
-    it("rejects a record-shaped templateFields (not a TemplateFields array)", () => {
-      expect(coerceConversationState(makeStateWithRun(baseRun({ templateFields: { "1": { text: "A" } } })))).toBeNull();
+    it("rejects a record-shaped templateFields as corrupt (not a TemplateFields array)", () => {
+      expect(
+        expectCorrupt(makeStateWithRun(baseRun({ templateFields: { "1": { text: "A" } } }))).length,
+      ).toBeGreaterThan(0);
     });
 
-    it("rejects a missing templateFields (a bad field fails the whole row)", () => {
+    it("rejects a missing templateFields as corrupt (a bad field fails the whole row)", () => {
       const { templateFields: _omit, ...withoutTemplateFields } = baseRun();
-      expect(coerceConversationState(makeStateWithRun(withoutTemplateFields))).toBeNull();
+      expect(expectCorrupt(makeStateWithRun(withoutTemplateFields)).length).toBeGreaterThan(0);
     });
   });
 
-  // WHY (ASSISTANT-CHAT-REFACTOR.md §C): persisted rows are a compat boundary.
+  // WHY: persisted rows are a compat boundary.
   // These pin the three behaviors a naive Zod port loses: `revertState` is
   // ignored even when present, an unparseable *present* `updatedAt` fails the
   // row, and `dismissedRunErrorId` (which had no pre-refactor validation gate)
   // is tolerated untyped rather than rejected.
-  describe("compatibility boundary (C port)", () => {
+  describe("compatibility boundary", () => {
     it("ignores a persisted revertState and rebuilds it as null", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
         revertState: { revertedToUserMessageId: "u-r1", preRevertInputText: "hi" },
-      })!;
+      });
       expect(coerced.revertState).toBeNull();
     });
 
-    it("fails the row when updatedAt is present but unparseable (not coerced to null)", () => {
+    it("fails the row as corrupt when updatedAt is present but unparseable (not coerced to null)", () => {
       expect(
-        coerceConversationState({
+        expectCorrupt({
           ...initialConversationState,
           id: "conv-1",
           createdAt: new Date(1),
           updatedAt: "not-a-date",
-        }),
-      ).toBeNull();
+        }).length,
+      ).toBeGreaterThan(0);
     });
 
     it("tolerates an untyped dismissedRunErrorId (no validation gate, pre-refactor behavior)", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
         dismissedRunErrorId: 7,
-      })!;
+      });
       // `?? null` defaulting: a present non-null value is kept as-is.
       expect(coerced.dismissedRunErrorId).toBe(7);
     });
@@ -333,16 +354,25 @@ describe("coerceConversationState", () => {
     }
 
     it("migrates legacy rows missing schemaVersion to the current version", () => {
-      const coerced = coerceConversationState({
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
         createdAt: new Date(1),
       });
-      expect(coerced).not.toBeNull();
-      expect(toPersistedState(coerced!).schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
+      expect(toPersistedState(coerced).schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
     });
 
-    it("rejects unknown future schemaVersion instead of entering live state", () => {
+    it("migrates a row declaring schemaVersion 0 forward to the current version", () => {
+      const coerced = expectOk({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        schemaVersion: 0,
+      });
+      expect(toPersistedState(coerced).schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
+    });
+
+    it("classifies a future schemaVersion row as unsupportedVersion with found and supported", () => {
       expect(
         coerceConversationState({
           ...initialConversationState,
@@ -350,50 +380,79 @@ describe("coerceConversationState", () => {
           createdAt: new Date(1),
           schemaVersion: CONVERSATION_SCHEMA_VERSION + 1,
         }),
-      ).toBeNull();
+      ).toEqual({
+        status: "unsupportedVersion",
+        found: CONVERSATION_SCHEMA_VERSION + 1,
+        supported: CONVERSATION_SCHEMA_VERSION,
+      });
     });
 
-    it("rejects an unknown run status string", () => {
-      expect(coerceConversationState(makeStateWithRun(baseRun({ status: "pending" })))).toBeNull();
+    it("classifies a row whose schemaVersion cannot be determined as corrupt", () => {
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          schemaVersion: "2",
+        }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          schemaVersion: 1.5,
+        }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          schemaVersion: -1,
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("rejects an unknown run status string as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ status: "pending" }))).length).toBeGreaterThan(0);
     });
 
     it("rejects canceled without reason user after migration heal is skipped by explicit bad reason", () => {
       expect(
-        coerceConversationState(makeStateWithRun(baseRun({ status: "canceled", reason: "app_shutdown" }))),
-      ).toBeNull();
+        expectCorrupt(makeStateWithRun(baseRun({ status: "canceled", reason: "app_shutdown" }))).length,
+      ).toBeGreaterThan(0);
     });
 
     it("accepts canceled with reason user", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "canceled", reason: "user" })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ status: "canceled", reason: "user" })));
       expect(coerced.runs["r1"]?.status).toBe("canceled");
       expect(coerced.runs["r1"]?.reason).toBe("user");
     });
 
     it("accepts interrupted with crash_recovery", () => {
-      const coerced = coerceConversationState(
-        makeStateWithRun(baseRun({ status: "interrupted", reason: "crash_recovery" })),
-      )!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ status: "interrupted", reason: "crash_recovery" })));
       expect(coerced.runs["r1"]?.status).toBe("interrupted");
       expect(coerced.runs["r1"]?.reason).toBe("crash_recovery");
     });
 
-    it("rejects success carrying a termination reason on a current-schema row", () => {
+    it("rejects success carrying a termination reason on a current-schema row as corrupt", () => {
       expect(
-        coerceConversationState({
+        expectCorrupt({
           ...makeStateWithRun(baseRun({ status: "success", reason: "user" })),
           schemaVersion: CONVERSATION_SCHEMA_VERSION,
-        }),
-      ).toBeNull();
+        }).length,
+      ).toBeGreaterThan(0);
     });
 
     it("strips a legacy success termination reason during v0→v1 migration", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "success", reason: "user" })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ status: "success", reason: "user" })));
       expect(coerced.runs["r1"]?.status).toBe("success");
       expect(coerced.runs["r1"]?.reason).toBeUndefined();
     });
 
     it("heals legacy canceled without reason during v0→v1 migration", () => {
-      const coerced = coerceConversationState(makeStateWithRun(baseRun({ status: "canceled" })))!;
+      const coerced = expectOk(makeStateWithRun(baseRun({ status: "canceled" })));
       expect(coerced.runs["r1"]?.status).toBe("canceled");
       expect(coerced.runs["r1"]?.reason).toBe("user");
     });
