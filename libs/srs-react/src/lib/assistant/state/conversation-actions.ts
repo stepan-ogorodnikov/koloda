@@ -14,9 +14,9 @@ import {
   pendingSaveByConversationAtom,
 } from "./conversation-store";
 
-// WHY: Called after coordinated delete (`prepareDelete` → DB delete →
+// WHY: Called after coordinated delete (`beginDelete` → DB delete → commit →
 // disposeConversation). Dropping the store entry and pending-save counter
-// disposes the tombstoned queue (#8). Do not clear before prepareDelete awaits
+// disposes the tombstoned queue (#8). Do not clear before beginDelete awaits
 // in-flight writes, or before disposeConversation reads run keys to abort.
 export const removeConversationAtom = atom(null, (_get, set, id: string) => {
   set(conversationsAtom, (prev) => {

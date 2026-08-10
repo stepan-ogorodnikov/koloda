@@ -65,14 +65,13 @@ export function AssistantConversationRecovery({
   }, [conversationId, deleteConversationMutation, queryClient, store]);
 
   // WHY: Reset keeps the conversation id, so it must NOT go through the
-  // coordinated delete: `prepareDelete` tombstones the id and the tombstone is
-  // only lifted when the pending-save counter disappears — a blocked row never
-  // had one, so the fresh same-id conversation would be unsaveable for the
-  // rest of the session. A blocked row has no queued/in-flight writes (it was
-  // never inserted into the store), so a plain DB delete cannot race an
-  // upsert. After the row is gone, create a fresh current-version conversation
-  // under the same id; it stays empty (and unwritten) until the user adds
-  // content.
+  // coordinated delete: `beginDelete`+`commit` leaves a permanent host
+  // tombstone for the session — a blocked row never had a pending-save queue,
+  // so the fresh same-id conversation would be unsaveable until restart. A
+  // blocked row has no queued/in-flight writes (it was never inserted into the
+  // store), so a plain DB delete cannot race an upsert. After the row is gone,
+  // create a fresh current-version conversation under the same id; it stays
+  // empty (and unwritten) until the user adds content.
   const {
     mutate: reset,
     isPending: isResetting,

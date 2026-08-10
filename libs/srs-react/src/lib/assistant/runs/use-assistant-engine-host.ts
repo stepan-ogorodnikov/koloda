@@ -277,9 +277,12 @@ export type DeleteAssistantConversationOptions = {
 };
 
 /**
- * Coordinated conversation delete (#8): tombstone → cancel queued → await
- * in-flight write → DB delete → dispose runtime (while store still has runs) →
- * drop store/query cache.
+ * Coordinated conversation delete (#8): provisional tombstone → cancel queued →
+ * await in-flight write → DB delete → commit tombstone → dispose runtime
+ * (while store still has runs) → drop store/query cache.
+ *
+ * On DB failure, rollback restores autosave so the conversation stays editable
+ * and a later delete can succeed (#6).
  */
 export async function deleteAssistantConversation({
   store,
@@ -291,10 +294,19 @@ export async function deleteAssistantConversation({
   const host = ensureAssistantPersistenceHost(store);
   const engine = ensureAssistantEngine(store);
 
-  await host.prepareDelete(conversationId);
-  await deleteFromDb(conversationId);
+  const deletion = await host.beginDelete(conversationId);
+  try {
+    await deleteFromDb(conversationId);
+    deletion.commit();
+  } catch (error) {
+    // WHY: failed DB delete must not leave a permanent host tombstone — the
+    // conversation stays in the store/UI and subsequent edits must autosave (#6).
+    deletion.rollback();
+    throw error;
+  }
   // WHY: dispose while store still has run keys — cancel loop reads
   // readConversationState; clearing first leaves empty runs and never aborts (#8).
+  // INVARIANT: only after successful commit — failure must not dispose/remove.
   engine.disposeConversation(conversationId);
   store.set(removeConversationAtom, conversationId);
   // WHY: A blocked row (unsupportedVersion/corrupt) is never in the store, so
