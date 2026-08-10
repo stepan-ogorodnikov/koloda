@@ -36,6 +36,7 @@ import {
   useAssistantChatSessionHarness,
   useAssistantChatTestHarness,
 } from "./assistant-chat-test-harness";
+import { useConversationPersistence } from "../persistence/use-conversation-persistence";
 import type { RunController } from "../runs/run-controller";
 
 type PendingChat = {
@@ -1230,9 +1231,19 @@ describe("assistant chat restore policy (blocked rows)", () => {
     }
 
     const onConversationIdChange = vi.fn();
+    const phases: Array<{ isRestoring: boolean; blocked: boolean; hasLive: boolean }> = [];
     const { rerender } = renderHook(
-      ({ conversationId }: { conversationId: string | undefined }) =>
-        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      ({ conversationId }: { conversationId: string | undefined }) => {
+        const result = useAssistantChatTestHarness({ conversationId, onConversationIdChange });
+        const persistence = useConversationPersistence({ conversationId });
+        const hasLive = conversationId ? !!useAtomValue(conversationsAtom)[conversationId] : false;
+        phases.push({
+          isRestoring: persistence.isRestoring,
+          blocked: persistence.blockedRestore != null,
+          hasLive,
+        });
+        return result;
+      },
       {
         wrapper: TestWrapper,
         initialProps: { conversationId: "ok" as string | undefined },
@@ -1244,6 +1255,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
       vi.advanceTimersByTime(500);
     });
     wire.setConversationCalls = [];
+    phases.length = 0;
 
     // Selecting the future-version row must not produce editable state…
     rerender({ conversationId: "future" });
@@ -1257,6 +1269,10 @@ describe("assistant chat restore policy (blocked rows)", () => {
       found: CONVERSATION_SCHEMA_VERSION + 1,
       supported: CONVERSATION_SCHEMA_VERSION,
     });
+    // INVARIANT: never leave the unresolved gap (not restoring, not blocked,
+    // no live state) that would flash the editable chat shell.
+    expect(phases.every((p) => p.isRestoring || p.blocked || p.hasLive)).toBe(true);
+    expect(phases.some((p) => p.blocked)).toBe(true);
     // …and never reach the write mutation: no restore touch, no autosave,
     // no selection write.
     expect(wire.setConversationCalls.filter((c) => c.id === "future")).toHaveLength(0);
@@ -1290,9 +1306,23 @@ describe("assistant chat restore policy (blocked rows)", () => {
     }
 
     const onConversationIdChange = vi.fn();
-    renderHook(() => useAssistantChatTestHarness({ conversationId: "corrupt", onConversationIdChange }), {
-      wrapper: TestWrapper,
-    });
+    const phases: Array<{ isRestoring: boolean; blocked: boolean; hasLive: boolean }> = [];
+    renderHook(
+      () => {
+        const result = useAssistantChatTestHarness({ conversationId: "corrupt", onConversationIdChange });
+        const persistence = useConversationPersistence({ conversationId: "corrupt" });
+        const hasLive = !!useAtomValue(conversationsAtom)["corrupt"];
+        phases.push({
+          isRestoring: persistence.isRestoring,
+          blocked: persistence.blockedRestore != null,
+          hasLive,
+        });
+        return result;
+      },
+      {
+        wrapper: TestWrapper,
+      },
+    );
 
     await act(async () => {
       vi.advanceTimersByTime(1000);
@@ -1305,6 +1335,9 @@ describe("assistant chat restore policy (blocked rows)", () => {
         { path: "schemaVersion", kind: "invalid_type", message: "expected a non-negative integer schemaVersion" },
       ],
     });
+    // INVARIANT: never leave the unresolved gap that would flash the editable chat shell.
+    expect(phases.every((p) => p.isRestoring || p.blocked || p.hasLive)).toBe(true);
+    expect(phases.some((p) => p.blocked)).toBe(true);
     // The stored row is preserved: no write mutation was ever called.
     expect(wire.setConversationCalls).toHaveLength(0);
   });

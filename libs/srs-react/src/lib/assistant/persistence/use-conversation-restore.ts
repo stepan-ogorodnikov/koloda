@@ -122,19 +122,22 @@ export function useConversationRestore({
     setBlockedConversationRestore,
   ]);
 
-  // WHY: A conversation just created via `newConversationAtom` or
-  // `cloneConversationAtom` is already in the store but its queryKey
-  // has never been fetched, so `isLoading: true` on the first render
-  // would briefly swap the chat branch for the restoring branch and
-  // remount the prompt panel. Skip restoring when the id is already
-  // in the store — the restore effect above uses the same condition
-  // to decide whether to load from DB.
+  // WHY: Stay on the restoring branch until an outcome is applied —
+  // live store entry (ok/missing) or blocked recovery entry
+  // (unsupportedVersion/corrupt). Tying isRestoring only to
+  // `isLoading` drops one paint after the query settles and before
+  // the effect writes blocked state, which would flash the editable
+  // chat shell for an unreadable row. Skip restoring when the id is
+  // already in the store (new/clone) so the prompt panel is not remounted.
+  const hasLiveState = !!conversationId && !!store.get(conversationsAtom)[conversationId];
+  const hasBlocked = !!conversationId && !!blockedStore[conversationId];
   return {
     isRestoring:
       !!conversationId &&
-      isLoading &&
+      !hasLiveState &&
+      !hasBlocked &&
       restoredIdRef.current !== conversationId &&
-      !store.get(conversationsAtom)[conversationId],
+      !conversationError,
     loadError: conversationError ?? null,
     retryLoad: refetch,
     blockedRestore: conversationId ? (blockedStore[conversationId] ?? null) : null,

@@ -83,27 +83,27 @@ msgstr "Retry"
 msgid "query-loading.message"
 msgstr "Loading"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:57
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:68
 msgid "table.pagination.buttons.first"
 msgstr "Go to first page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:79
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:90
 msgid "table.pagination.buttons.last"
 msgstr "Go to last page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:72
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:83
 msgid "table.pagination.buttons.next"
 msgstr "Go to next page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:64
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:75
 msgid "table.pagination.buttons.previous"
 msgstr "Go to previous page"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:98
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:109
 msgid "table.pagination.page-size.label"
 msgstr "Per page:"
 
-#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:50
+#: ../../libs/ui/src/lib/primitives/table/table-pagination.tsx:61
 msgid "table.pagination.records.label"
 msgstr "of"
 

@@ -16,7 +16,7 @@ import { z } from "zod";
 /**
  * Persistence/coercion schemas for restored conversation rows.
  *
- * WHY: persisted rows are a *compatibility * boundary*.
+ * WHY: persisted rows are a *compatibility boundary*.
  * The hand-rolled coercion in `conversation-persistence.ts`
  * deliberately does three things a naive Zod port would lose:
  *   1. `toDate` — coerce ISO-string / epoch-number / Date timestamps into
@@ -245,8 +245,8 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
 
 /**
  * A single validation failure on a corrupt persisted row. Carries enough
- * structure (zod issue code + path + message) for a later commit to build
- * recovery UX on it.
+ * structure (zod issue code + path + message) for recovery UX to show a
+ * short diagnostic list without exposing raw zod objects.
  */
 export type RestoreIssue = {
   /** Dot-joined zod issue path; `"(root)"` when the whole row failed. */

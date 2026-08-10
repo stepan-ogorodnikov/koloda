@@ -13,18 +13,18 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/demo-setup.tsx:49
+#: src/components/demo-setup.tsx:47
 msgid "demo.setup.header"
 msgstr "Запуск демо-версии"
 
-#: src/components/demo-setup.tsx:54
+#: src/components/demo-setup.tsx:51
 msgid "demo.setup.loading"
 msgstr "Заполнение базы данных"
 
-#: src/components/demo-setup.tsx:56
+#: src/components/demo-setup.tsx:53
 msgid "demo.setup.storage"
 msgstr "Все данные будут храниться локально в IndexedDB браузера."
 
-#: src/components/demo-setup.tsx:69
+#: src/components/demo-setup.tsx:66
 msgid "demo.setup.submit"
 msgstr "Начать работу"
