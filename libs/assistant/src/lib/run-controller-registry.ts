@@ -16,6 +16,21 @@ import type { QueueCancelReason } from "./serial-queue";
  */
 export type RunAbortReason = QueueCancelReason;
 
+/**
+ * Thrown when beginRun is attempted after dispose/close.
+ * Callers must convert this into a deterministic shutdown/dispose outcome —
+ * do not leave the run `streaming` or surface a bare rejection past transport handling.
+ */
+export class RunControllerRegistryClosedError extends Error {
+  readonly reason: RunAbortReason;
+
+  constructor(reason: RunAbortReason) {
+    super(`RunControllerRegistry is closed (${reason})`);
+    this.name = "RunControllerRegistryClosedError";
+    this.reason = reason;
+  }
+}
+
 export type RunControllerRegistry = {
   beginRun: (runId: string) => AbortController;
   endRun: (runId: string, controller: AbortController) => void;
@@ -33,6 +48,7 @@ export function createRunControllerRegistry(): RunControllerRegistry {
   // the requested cause after cancel()/dispose() delete the controller entry.
   const abortReasons = new Map<string, RunAbortReason>();
   let isClosed = false;
+  let closedReason: RunAbortReason | null = null;
 
   return {
     get isClosed() {
@@ -42,7 +58,7 @@ export function createRunControllerRegistry(): RunControllerRegistry {
     beginRun(runId) {
       // INVARIANT: closed registry must not mint controllers for post-shutdown work.
       if (isClosed) {
-        throw new Error("RunControllerRegistry is closed");
+        throw new RunControllerRegistryClosedError(closedReason ?? "dispose");
       }
       // WHY: Retry reuses runId; drop any leftover controller for that id first.
       // Do not stamp abort provenance — the new run has not been canceled.
@@ -78,9 +94,15 @@ export function createRunControllerRegistry(): RunControllerRegistry {
       return controllers.has(runId);
     },
     dispose(reason: RunAbortReason = "dispose") {
-      isClosed = true;
+      // WHY: Preserve the first close reason so a later dispose during shutdown
+      // cannot rewrite app_shutdown into dispose for beginRun races.
+      if (!isClosed) {
+        isClosed = true;
+        closedReason = reason;
+      }
+      const stamp = closedReason ?? reason;
       for (const [runId, controller] of controllers) {
-        abortReasons.set(runId, reason);
+        abortReasons.set(runId, stamp);
         controller.abort();
       }
       controllers.clear();

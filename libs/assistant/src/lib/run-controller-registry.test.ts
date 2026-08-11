@@ -1,16 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { createRunControllerRegistry } from "./run-controller-registry";
+import { createRunControllerRegistry, RunControllerRegistryClosedError } from "./run-controller-registry";
 
 describe("createRunControllerRegistry", () => {
-  it("dispose seals beginRun", () => {
+  it("dispose seals beginRun with a typed closed error", () => {
     const registry = createRunControllerRegistry();
     const controller = registry.beginRun("run-1");
     expect(controller.signal.aborted).toBe(false);
 
-    registry.dispose();
+    registry.dispose("app_shutdown");
     expect(registry.isClosed).toBe(true);
     expect(controller.signal.aborted).toBe(true);
-    expect(() => registry.beginRun("run-2")).toThrow(/closed/);
+    expect(() => registry.beginRun("run-2")).toThrow(RunControllerRegistryClosedError);
+    try {
+      registry.beginRun("run-2");
+    } catch (error) {
+      expect(error).toBeInstanceOf(RunControllerRegistryClosedError);
+      expect((error as RunControllerRegistryClosedError).reason).toBe("app_shutdown");
+    }
   });
 
   it("records abort provenance for cancel and dispose", () => {
@@ -34,5 +40,18 @@ describe("createRunControllerRegistry", () => {
     registry.cancel("run-1", "user");
     registry.beginRun("run-1");
     expect(registry.takeAbortReason("run-1")).toBeUndefined();
+  });
+
+  it("preserves the first dispose reason across re-entry", () => {
+    const registry = createRunControllerRegistry();
+    registry.dispose("app_shutdown");
+    registry.dispose("dispose");
+    try {
+      registry.beginRun("run-1");
+      expect.unreachable("beginRun should throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(RunControllerRegistryClosedError);
+      expect((error as RunControllerRegistryClosedError).reason).toBe("app_shutdown");
+    }
   });
 });

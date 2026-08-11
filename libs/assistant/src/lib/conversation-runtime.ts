@@ -7,6 +7,7 @@ import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
+import { RunControllerRegistryClosedError } from "./run-controller-registry";
 import { runStream } from "./run-stream";
 import { createSerialQueue, QueueClosedError } from "./serial-queue";
 import type { QueueCancelReason } from "./serial-queue";
@@ -128,6 +129,21 @@ export function createConversationRuntime(
     return "aborted";
   };
 
+  // WHY: beginRun sits outside the provider try/catch. A closed registry must
+  // settle through the same abort→interrupt path as dispose AbortError, not
+  // reject past transport handling and leave the run `streaming`.
+  const beginRunForTransport = (runId: string): AbortController | null => {
+    try {
+      return controllerRegistry.beginRun(runId);
+    } catch (error) {
+      if (error instanceof RunControllerRegistryClosedError) {
+        abortedRunReasons.set(runId, error.reason);
+        return null;
+      }
+      throw error;
+    }
+  };
+
   const handleStreamResult = (targetConversationId: string, result: StreamResult, runId: string) => {
     switch (result) {
       case "success":
@@ -215,7 +231,10 @@ export function createConversationRuntime(
           // INVARIANT: Leaving the awaiting-start gap before beginRun so a
           // post-abort cancel cannot re-stamp cancelBeforeStart.
           if (runAwaitingStart === runId) runAwaitingStart = null;
-          const controller = controllerRegistry.beginRun(runId);
+          const controller = beginRunForTransport(runId);
+          if (!controller) {
+            return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
+          }
           try {
             const onChunk = (chunk: string) => {
               if (!controller.signal.aborted) onValue(chunk);
@@ -331,7 +350,10 @@ export function createConversationRuntime(
             return "aborted" as const;
           }
           if (runAwaitingStart === runId) runAwaitingStart = null;
-          const controller = controllerRegistry.beginRun(runId);
+          const controller = beginRunForTransport(runId);
+          if (!controller) {
+            return "aborted" as const;
+          }
           try {
             const onCard = (card: GeneratedCard) => {
               if (!controller.signal.aborted) onValue(card);
@@ -402,6 +424,13 @@ export function createConversationRuntime(
       if (error instanceof QueueClosedError) {
         // WHY: Callers already handle AssistantEngineClosedError; do not resolve
         // closed-queue races as success.
+        throw new AssistantEngineClosedError(
+          error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
+        );
+      }
+      // WHY: Safety net if a closed-registry throw escapes transport conversion —
+      // still a typed engine-closed rejection, never a bare Error.
+      if (error instanceof RunControllerRegistryClosedError) {
         throw new AssistantEngineClosedError(
           error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
         );
