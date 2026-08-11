@@ -1,6 +1,6 @@
 import type { AIChatMode, ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
 import { generateCardsInputSchema } from "@koloda/ai";
-import type { CardGenerationStreamRequest } from "@koloda/ai-react";
+import type { CardGenerationStreamRequest } from "@koloda/assistant";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 

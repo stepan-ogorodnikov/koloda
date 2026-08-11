@@ -147,6 +147,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     expect(command.input.mode).toBe("chat");
     expect(command.input.modelName).toBe("GPT-x");
     expect(command.input.request).toBeTypeOf("object");
+    expect(command.input.execution).toEqual({ profileId: cfg.profileId });
   });
 });
 
@@ -219,8 +220,9 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     expect(state.activeRunId).not.toBeNull();
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({
-      type: "executeChat",
+      type: "submit",
       conversationId: "conv-1",
+      input: { kind: "chat" },
     });
   });
 });
@@ -252,7 +254,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 
-  it("same-tick double handleGenerate only starts one executeChat command", async () => {
+  it("same-tick double handleGenerate only starts one submit command", async () => {
     seedConversation("conv-1");
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {
@@ -290,7 +292,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
-    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "executeChat" });
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "submit" });
   });
 
   it("revert while submit in-flight: resubmit does not commitRevert until guard clears", async () => {
@@ -422,7 +424,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       releaseA = resolve;
     });
     const dispatchCommand = vi.fn<DispatchCommand>(async (command) => {
-      if (command.type === "executeChat" && command.conversationId === "A") await gateA;
+      if (command.type === "submit" && command.conversationId === "A") await gateA;
     });
 
     const cfg = makeConfig();
@@ -448,7 +450,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       await Promise.resolve();
     });
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
-    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "executeChat", conversationId: "A" });
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "submit", conversationId: "A" });
 
     store.set(currentConversationIdAtom, "B");
 
@@ -457,7 +459,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
 
     expect(dispatchCommand).toHaveBeenCalledTimes(2);
-    expect(dispatchCommand.mock.calls[1]![0]).toMatchObject({ type: "executeChat", conversationId: "B" });
+    expect(dispatchCommand.mock.calls[1]![0]).toMatchObject({ type: "submit", conversationId: "B" });
 
     await act(async () => {
       releaseA();
@@ -465,7 +467,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("swallows AssistantDuplicateRunError from executeChat command", async () => {
+  it("swallows AssistantDuplicateRunError from submit command", async () => {
     seedConversation("conv-1");
     const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new AssistantDuplicateRunError("conv-1", "run-new", "run-old");
@@ -518,7 +520,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("rethrows non-duplicate errors from executeChat command", async () => {
+  it("rethrows non-duplicate errors from submit command", async () => {
     seedConversation("conv-1");
     const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new Error("transport blew up");

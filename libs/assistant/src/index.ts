@@ -11,13 +11,12 @@ export type {
 export type {
   AssistantCommand,
   AssistantEvent,
-  ExecuteChatInput,
-  ExecuteGenerateInput,
   RetryInput,
   RunChunk,
   RunOutcome,
   RunStartSnapshot,
   ShutdownInput,
+  SubmitInput,
 } from "./lib/assistant-protocol";
 export {
   createConversationPersistenceHost,

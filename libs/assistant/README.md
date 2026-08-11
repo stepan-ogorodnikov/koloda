@@ -13,8 +13,8 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 ## Architectural Map
 
-- Engine: `assistant-engine.ts` — `createAssistantEngine` / `AssistantEngine`. Lazy per-conversation runtimes; typed `dispatch(command)` is the sole execution ingress (`executeChat` / `executeGenerate` / `retry` / `cancel` / `shutdown`). Non-execution lifecycle: `setPersistenceHost` / `disposeConversation` / `dispose`.
-- Protocol: `assistant-protocol.ts` — framework-free `AssistantCommand` (`executeChat` / `executeGenerate` / `retry` / `cancel` / `shutdown`) and `AssistantEvent` contracts. Store adapters (e.g. Jotai in `@koloda/srs-react`) translate events into reducer actions; the engine never emits reducer tuples.
+- Engine: `assistant-engine.ts` — `createAssistantEngine` / `AssistantEngine`. Lazy per-conversation runtimes; typed `dispatch(command)` is the sole execution ingress (`submit` / `retry` / `cancel` / `shutdown`). Non-execution lifecycle: `setPersistenceHost` / `disposeConversation` / `dispose`.
+- Protocol: `assistant-protocol.ts` — framework-free `AssistantCommand` (`submit` / `retry` / `cancel` / `shutdown`) and `AssistantEvent` contracts. Store adapters (e.g. Jotai in `@koloda/srs-react`) translate events into reducer actions; the engine never emits reducer tuples.
 - Observability: `assistant-observability.ts` — structured `[assistant.transition]` logs keyed by conversation/run ids, command/event, prior/next status, termination reason, and save generation/attempt.
 - Persistence: `conversation-persistence-host.ts`, `create-conversation-save-queue.ts`, `create-save-scheduler.ts` — engine-owned per-conversation serialized save queues; failed writes retry with bounded exponential backoff + jitter; `retrySave` for explicit recovery; `beginDelete` / `commit` / `rollback` for transactional deletion (tombstone + await in-flight, preserve dirty on rollback); `prepareDelete` remains a permanent-tombstone shim (`beginDelete` + `commit`) until production wires rollback (#6); `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000 ms) and `SHUTDOWN_SAVE_MAX_ATTEMPTS` (3) bound the best-effort final flush on graceful shutdown.
 - Conversation runtime: `conversation-runtime.ts` — plain runtime with a serial command queue and chat/card/retry execution against injected transports + by-id ports (`emit`, `touch`, `markReadIfCurrent`, `readConversationState`, `isRunStreaming`).
@@ -27,7 +27,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 - Conversation reducer, Jotai store, dirty tracking — `@koloda/srs-react` (`assistant/state/`)
 - Repository writes / TanStack Query cache updates — `@koloda/srs-react` (`useConversationSaveHost` write adapter)
-- `RunController` UI facade / submit orchestration — `@koloda/srs-react` (`assistant/runs/`)
+- `RunController` UI facade / submit orchestration — `@koloda/srs-react` (`assistant/runs/`; validation + request prep in `prepare-run-request.ts`)
 - Chat UI, cards table, settings screens — `@koloda/srs-react` (`assistant/ui/`)
 - Provider HTTP / `AIRuntime` host adapters — `@koloda/ai` + Electron/demo hosts
 - Generic presentational chat chrome — `@koloda/ai-react`

@@ -33,8 +33,8 @@ export type AssistantEngineOptions = ConversationRuntimeCallbacks &
 
 /**
  * Public engine surface: typed {@link dispatch} is the sole execution ingress
- * for submit (execute chat/generate), retry, cancel, and shutdown. Runtime
- * execute methods remain private implementation details.
+ * for submit, retry, cancel, and shutdown. Runtime execute methods remain
+ * private implementation details.
  */
 export type AssistantEngine = {
   dispatch: (command: AssistantCommand) => void | Promise<void>;
@@ -230,14 +230,15 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
 
     dispatch(command) {
       switch (command.type) {
-        case "executeChat":
-          return executeChatRun(
-            command.conversationId,
-            command.input.runId,
-            command.input.request,
-            command.input.execution,
-          );
-        case "executeGenerate":
+        case "submit":
+          if (command.input.kind === "chat") {
+            return executeChatRun(
+              command.conversationId,
+              command.input.runId,
+              command.input.request,
+              command.input.execution,
+            );
+          }
           return executeGenerateRun(
             command.conversationId,
             command.input.runId,

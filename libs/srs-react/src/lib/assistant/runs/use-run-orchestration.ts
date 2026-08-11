@@ -1,16 +1,16 @@
-import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
+import type { AIChatMode } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
-import { AssistantDuplicateRunError, type AssistantCommand, type AssistantExecutionIdentity } from "@koloda/assistant";
+import { AssistantDuplicateRunError } from "@koloda/assistant";
+import type { AssistantCommand } from "@koloda/assistant";
 import { msg } from "@lingui/core/macro";
 import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { buildConversationMessages, getMessageRunId, userMessageId } from "../state/assistant-messages";
-import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+import { getMessageRunId, userMessageId } from "../state/assistant-messages";
+import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
-import type { StreamRequestResult } from "./build-stream-request";
-import { buildStreamRequest } from "./build-stream-request";
+import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
 type UseRunOrchestrationOptions = {
@@ -23,7 +23,7 @@ type UseRunOrchestrationOptions = {
   rememberLastUsedAIProfile: (profileId: string, modelId: string) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
-  /** Sole engine ingress — execute/retry go through typed commands. */
+  /** Sole engine ingress — submit/retry go through typed commands. */
   dispatchCommand: (command: AssistantCommand) => void | Promise<void>;
   ensureConversationId: () => string | undefined;
 };
@@ -35,46 +35,6 @@ type UseRunOrchestrationReturn = {
   handleRevert: (userMessageId: string, currentInputText: string) => string | null;
   handleRestore: () => string | null;
 };
-
-type PreparedRun = StreamRequestResult & { modelName: string | undefined };
-
-function createExecutionIdentity(
-  cfg: AssistantConversationConfig,
-  kind: PreparedRun["kind"],
-): AssistantExecutionIdentity {
-  if (kind !== "cards") return { profileId: cfg.profileId };
-
-  const template = cfg.template;
-  if (!template) throw new Error("Card generation requires a template");
-  return {
-    profileId: cfg.profileId,
-    template: {
-      id: template.id,
-      content: { fields: template.content.fields },
-    },
-  };
-}
-
-/**
- * Shared guard + request builder for a new run. Returns `null` when the
- * prompt/config is invalid, so callers early-return *before* starting a
- * stream. Centralizing the guard stack here is what lets `handleRetry`
- * execute only after validation.
- */
-function prepareRunRequest(
-  cfg: AssistantConversationConfig,
-  mode: AIChatMode,
-  promptText: string,
-  messages: ConversationReducerState["messages"],
-  runs: Record<string, GenerationRun>,
-): PreparedRun | null {
-  if (!promptText || !cfg.profileId || !cfg.modelId) return null;
-  if (mode === "cards" && !cfg.template) return null;
-
-  const conversationMessages = buildConversationMessages(messages, runs, cfg.template);
-  const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
-  return { ...result, modelName: cfg.modelName };
-}
 
 export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRunOrchestrationReturn {
   const {
@@ -112,7 +72,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs);
       if (!prepared) return;
-      const execution = createExecutionIdentity(cfg, prepared.kind);
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
@@ -120,18 +79,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       try {
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        await dispatchCommand({
-          type: "retry",
-          conversationId,
-          input: {
-            runId,
-            request: prepared.request,
-            templateFields: prepared.templateFields,
-            mode,
-            modelName: prepared.modelName,
-            execution,
-          },
-        });
+        await dispatchCommand(toRetryCommand(conversationId, runId, mode, prepared));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
@@ -179,7 +127,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       const prepared = prepareRunRequest(cfg, currentMode, promptText, currentState.messages, currentState.runs);
       if (!prepared) return;
-      const execution = createExecutionIdentity(cfg, prepared.kind);
 
       const runId = generateUUID();
 
@@ -202,19 +149,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
           },
         ]);
 
-        if (prepared.kind === "chat") {
-          await dispatchCommand({
-            type: "executeChat",
-            conversationId: activeConversationId,
-            input: { runId, request: prepared.request as ChatStreamRequest, execution },
-          });
-        } else {
-          await dispatchCommand({
-            type: "executeGenerate",
-            conversationId: activeConversationId,
-            input: { runId, request: prepared.request, execution },
-          });
-        }
+        await dispatchCommand(toSubmitCommand(activeConversationId, runId, prepared));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;

@@ -92,15 +92,15 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
       dispatch,
       executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) =>
         dispatch({
-          type: "executeChat",
+          type: "submit",
           conversationId,
-          input: { runId, request, execution: chatExecution },
+          input: { kind: "chat", runId, request, execution: chatExecution },
         }) as Promise<void>,
       executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) =>
         dispatch({
-          type: "executeGenerate",
+          type: "submit",
           conversationId,
-          input: { runId, request, execution: cardsExecution },
+          input: { kind: "cards", runId, request, execution: cardsExecution },
         }) as Promise<void>,
       retryRun: (
         conversationId: string,
@@ -796,9 +796,9 @@ describe("useConversationRuns", () => {
             execution: { profileId: string },
           ) =>
             dispatch({
-              type: "executeChat",
+              type: "submit",
               conversationId,
-              input: { runId, request, execution },
+              input: { kind: "chat", runId, request, execution },
             }) as Promise<void>,
         };
       },

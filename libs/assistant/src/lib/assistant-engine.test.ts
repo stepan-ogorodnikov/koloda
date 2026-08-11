@@ -24,10 +24,10 @@ function dispatchChat(
   request: ChatStreamRequest,
 ): Promise<void> {
   return target.dispatch({
-    type: "executeChat",
+    type: "submit",
     conversationId,
     // WHY: Legacy-transport engine tests omit execution so getChatStreamGenerator is used.
-    input: { runId, request },
+    input: { kind: "chat", runId, request },
   }) as Promise<void>;
 }
 
@@ -248,9 +248,9 @@ describe("createAssistantEngine", () => {
     };
 
     const runPromise = engine.dispatch({
-      type: "executeGenerate",
+      type: "submit",
       conversationId: "A",
-      input: { runId: "run-a", execution, request },
+      input: { kind: "cards", runId: "run-a", execution, request },
     }) as Promise<void>;
 
     // WHY: Capture is sync at dispatch — mutate after accept to prove the port

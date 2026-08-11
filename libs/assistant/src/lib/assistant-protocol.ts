@@ -7,19 +7,22 @@ import type { CardGenerationStreamRequest } from "./card-generation";
  * Typed commands the application layer may send into {@link AssistantEngine}.
  * Conversation ownership is always explicit — never inferred from UI-current state.
  */
-export type ExecuteChatInput = ImmutableExecutionValue<{
-  runId: string;
-  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
-  execution?: AssistantExecutionIdentity;
-  request: ChatStreamRequest;
-}>;
-
-export type ExecuteGenerateInput = ImmutableExecutionValue<{
-  runId: string;
-  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
-  execution?: AssistantExecutionIdentity;
-  request: CardGenerationStreamRequest;
-}>;
+export type SubmitInput = ImmutableExecutionValue<
+  | {
+      kind: "chat";
+      runId: string;
+      /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
+      execution?: AssistantExecutionIdentity;
+      request: ChatStreamRequest;
+    }
+  | {
+      kind: "cards";
+      runId: string;
+      /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
+      execution?: AssistantExecutionIdentity;
+      request: CardGenerationStreamRequest;
+    }
+>;
 
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
@@ -39,11 +42,10 @@ export type ShutdownInput = {
 
 /**
  * Sole public execution ingress for {@link AssistantEngine.dispatch}.
- * Chat/generate keep `execute*` names until submit preparation moves (#12).
+ * Submit preparation lives outside the engine (framework-free service in the host adapter).
  */
 export type AssistantCommand =
-  | { type: "executeChat"; conversationId: string; input: ExecuteChatInput }
-  | { type: "executeGenerate"; conversationId: string; input: ExecuteGenerateInput }
+  | { type: "submit"; conversationId: string; input: SubmitInput }
   | { type: "retry"; conversationId: string; input: RetryInput }
   | { type: "cancel"; conversationId: string; runId: string }
   | { type: "shutdown"; input: ShutdownInput };
