@@ -84,15 +84,24 @@ function createHarness() {
   };
 }
 
+/** Test helpers wrap typed commands — production callers use `dispatch` only. */
 function renderRuns(_harness: ReturnType<typeof createHarness>) {
   return renderHook(() => {
-    const runs = useConversationRuns();
+    const { dispatch } = useConversationRuns();
     return {
-      ...runs,
+      dispatch,
       executeChatRun: (conversationId: string, runId: string, request: ChatStreamRequest) =>
-        runs.executeChatRun(conversationId, runId, request, chatExecution),
+        dispatch({
+          type: "executeChat",
+          conversationId,
+          input: { runId, request, execution: chatExecution },
+        }) as Promise<void>,
       executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) =>
-        runs.executeGenerateRun(conversationId, runId, request, cardsExecution),
+        dispatch({
+          type: "executeGenerate",
+          conversationId,
+          input: { runId, request, execution: cardsExecution },
+        }) as Promise<void>,
       retryRun: (
         conversationId: string,
         runId: string,
@@ -100,7 +109,22 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
         templateFields: TemplateFields | null,
         mode: AIChatMode,
         modelName?: string,
-      ) => runs.retryRun(conversationId, runId, request, templateFields, mode, modelName, chatExecution),
+      ) =>
+        dispatch({
+          type: "retry",
+          conversationId,
+          input: {
+            runId,
+            request,
+            templateFields,
+            mode,
+            modelName,
+            execution: chatExecution,
+          },
+        }) as Promise<void>,
+      cancel: (conversationId: string, runId: string) => {
+        dispatch({ type: "cancel", conversationId, runId });
+      },
     };
   });
 }
@@ -126,6 +150,13 @@ describe("useConversationRuns", () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     resetAssistantEngineForTests();
+  });
+
+  it("exposes only dispatch as the production execution ingress", () => {
+    createHarness();
+    const { result } = renderHook(() => useConversationRuns());
+    expect(Object.keys(result.current)).toEqual(["dispatch"]);
+    expect(typeof result.current.dispatch).toBe("function");
   });
 
   it("executeChatRun dispatches updateAssistantText via dispatchToConversation (per-id) so background streams land on the originating conversation", async () => {
@@ -755,14 +786,27 @@ describe("useConversationRuns", () => {
 
     const { result, rerender } = renderHook(
       ({ profileId }: { profileId: string }) => {
-        const runs = useConversationRuns();
-        return { profileId, runs };
+        const { dispatch } = useConversationRuns();
+        return {
+          profileId,
+          executeChatRun: (
+            conversationId: string,
+            runId: string,
+            request: ChatStreamRequest,
+            execution: { profileId: string },
+          ) =>
+            dispatch({
+              type: "executeChat",
+              conversationId,
+              input: { runId, request, execution },
+            }) as Promise<void>,
+        };
       },
       { initialProps: { profileId: "profile-a" } },
     );
 
     const identity = { profileId: result.current.profileId };
-    const runA = result.current.runs.executeChatRun(
+    const runA = result.current.executeChatRun(
       "A",
       "run-a",
       { input: { modelId: "model-a", prompt: "a" }, messages: [] },

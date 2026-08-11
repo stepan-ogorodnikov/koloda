@@ -143,10 +143,13 @@ export function shutdownAssistantGracefully(
   store: AssistantJotaiStore,
   flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS,
 ): Promise<void> {
-  return ensureAssistantEngine(store).shutdownGracefully({
-    interruptActiveRuns: () => interruptAllStreamingRuns(store),
-    flushTimeoutMs,
-  });
+  return ensureAssistantEngine(store).dispatch({
+    type: "shutdown",
+    input: {
+      interruptActiveRuns: () => interruptAllStreamingRuns(store),
+      flushTimeoutMs,
+    },
+  }) as Promise<void>;
 }
 
 export function resetAssistantEngineForTests(): void {

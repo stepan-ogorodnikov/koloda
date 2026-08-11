@@ -9,30 +9,44 @@ import type { CardGenerationStreamRequest } from "./card-generation";
  */
 export type ExecuteChatInput = ImmutableExecutionValue<{
   runId: string;
-  execution: AssistantExecutionIdentity;
+  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
+  execution?: AssistantExecutionIdentity;
   request: ChatStreamRequest;
 }>;
 
 export type ExecuteGenerateInput = ImmutableExecutionValue<{
   runId: string;
-  execution: AssistantExecutionIdentity;
+  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
+  execution?: AssistantExecutionIdentity;
   request: CardGenerationStreamRequest;
 }>;
 
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
-  execution: AssistantExecutionIdentity;
+  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
+  execution?: AssistantExecutionIdentity;
   request: ChatStreamRequest | CardGenerationStreamRequest;
   templateFields: TemplateFields | null;
   mode: AIChatMode;
   modelName?: string;
 }>;
 
+/** Host-supplied interrupt + flush budget for graceful engine teardown. */
+export type ShutdownInput = {
+  interruptActiveRuns: () => void;
+  flushTimeoutMs?: number;
+};
+
+/**
+ * Sole public execution ingress for {@link AssistantEngine.dispatch}.
+ * Chat/generate keep `execute*` names until submit preparation moves (#12).
+ */
 export type AssistantCommand =
   | { type: "executeChat"; conversationId: string; input: ExecuteChatInput }
   | { type: "executeGenerate"; conversationId: string; input: ExecuteGenerateInput }
   | { type: "retry"; conversationId: string; input: RetryInput }
-  | { type: "cancel"; conversationId: string; runId: string };
+  | { type: "cancel"; conversationId: string; runId: string }
+  | { type: "shutdown"; input: ShutdownInput };
 
 /** Snapshot carried on retry restart — identity + mode only; full run records stay in the store. */
 export type RunStartSnapshot = {

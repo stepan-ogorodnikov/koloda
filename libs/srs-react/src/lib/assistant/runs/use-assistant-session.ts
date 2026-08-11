@@ -75,7 +75,7 @@ export function useAssistantSession({
     [setConversationReducerAction],
   );
 
-  const { executeChatRun, executeGenerateRun, retryRun, cancel } = useConversationRuns();
+  const { dispatch: dispatchCommand } = useConversationRuns();
 
   const handleCancel = useCallback(() => {
     const state = readState();
@@ -89,8 +89,8 @@ export function useAssistantSession({
     setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
     // WHY: Abort only this run's controller. Other conversations can stream
     // concurrently (same or different mode); canceling must not kill them.
-    if (run) cancel(state.id, currentActiveRunId);
-  }, [dispatch, cancel, readState, setConversationReducerAction]);
+    if (run) dispatchCommand({ type: "cancel", conversationId: state.id, runId: currentActiveRunId });
+  }, [dispatch, dispatchCommand, readState, setConversationReducerAction]);
 
   const handleReset = useCallback(() => {
     const stored = readLastUsed();
@@ -123,9 +123,7 @@ export function useAssistantSession({
     rememberLastUsedAIProfile,
     cancelActiveRun: handleCancel,
     setMode,
-    executeChatRun,
-    executeGenerateRun,
-    retryRun,
+    dispatchCommand,
     ensureConversationId,
   };
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =

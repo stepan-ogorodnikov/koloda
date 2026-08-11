@@ -17,6 +17,47 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
   });
 }
 
+function dispatchChat(
+  target: ReturnType<typeof createAssistantEngine>,
+  conversationId: string,
+  runId: string,
+  request: ChatStreamRequest,
+): Promise<void> {
+  return target.dispatch({
+    type: "executeChat",
+    conversationId,
+    // WHY: Legacy-transport engine tests omit execution so getChatStreamGenerator is used.
+    input: { runId, request },
+  }) as Promise<void>;
+}
+
+function dispatchRetry(
+  target: ReturnType<typeof createAssistantEngine>,
+  conversationId: string,
+  runId: string,
+  request: ChatStreamRequest,
+  templateFields: null,
+  mode: AIChatMode,
+  modelName?: string,
+): Promise<void> {
+  return target.dispatch({
+    type: "retry",
+    conversationId,
+    input: { runId, request, templateFields, mode, modelName },
+  }) as Promise<void>;
+}
+
+function dispatchCancel(target: ReturnType<typeof createAssistantEngine>, conversationId: string, runId: string): void {
+  target.dispatch({ type: "cancel", conversationId, runId });
+}
+
+function dispatchShutdown(
+  target: ReturnType<typeof createAssistantEngine>,
+  input: { interruptActiveRuns: () => void; flushTimeoutMs?: number },
+): Promise<void> {
+  return target.dispatch({ type: "shutdown", input }) as Promise<void>;
+}
+
 describe("createAssistantEngine", () => {
   const events: AssistantEvent[] = [];
   const conversationStates: Record<string, ConversationStateSnapshot> = {};
@@ -47,7 +88,7 @@ describe("createAssistantEngine", () => {
     });
   });
 
-  it("cancel(conversationId, runId) aborts only the targeted run", async () => {
+  it("dispatch cancel aborts only the targeted run", async () => {
     const signals: AbortSignal[] = [];
 
     chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
@@ -56,21 +97,21 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runA = engine.executeChatRun("conv-a", "run-a", {} as ChatStreamRequest);
-    const runB = engine.executeChatRun("conv-b", "run-b", {} as ChatStreamRequest);
+    const runA = dispatchChat(engine, "conv-a", "run-a", {} as ChatStreamRequest);
+    const runB = dispatchChat(engine, "conv-b", "run-b", {} as ChatStreamRequest);
 
     await Promise.resolve();
     expect(signals).toHaveLength(2);
     expect(signals[0]?.aborted).toBe(false);
     expect(signals[1]?.aborted).toBe(false);
 
-    engine.cancel("conv-a", "run-a");
+    dispatchCancel(engine, "conv-a", "run-a");
     expect(signals[0]?.aborted).toBe(true);
     expect(signals[1]?.aborted).toBe(false);
 
     await expect(runA).resolves.toBeUndefined();
 
-    engine.cancel("conv-b", "run-b");
+    dispatchCancel(engine, "conv-b", "run-b");
     await expect(runB).resolves.toBeUndefined();
   });
 
@@ -84,7 +125,7 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    const runPromise = dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
     await Promise.resolve();
 
     resolveStream();
@@ -94,7 +135,7 @@ describe("createAssistantEngine", () => {
     expect(updates.some((e) => e.conversationId === "conv-a")).toBe(true);
   });
 
-  it("shutdownGracefully interrupts active runs before aborting controllers", async () => {
+  it("dispatch shutdown interrupts active runs before aborting controllers", async () => {
     const signals: AbortSignal[] = [];
     const interrupted: string[] = [];
 
@@ -104,11 +145,11 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    const runPromise = dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
     await Promise.resolve();
     expect(signals[0]?.aborted).toBe(false);
 
-    await engine.shutdownGracefully({
+    await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
         interrupted.push("run-1");
       },
@@ -135,7 +176,7 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const retryPromise = engine.retryRun("A", "run-a", {} as ChatStreamRequest, null, "chat", "model-a");
+    const retryPromise = dispatchRetry(engine, "A", "run-a", {} as ChatStreamRequest, null, "chat", "model-a");
     await Promise.resolve();
 
     // Simulate the UI switching to B while A's retry is still in flight.
@@ -270,8 +311,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runA = engine.executeChatRun("A", "run-a", { label: "a" } as ChatStreamRequest & { label: string });
-    const runB = engine.executeChatRun("B", "run-b", { label: "b" } as ChatStreamRequest & { label: string });
+    const runA = dispatchChat(engine, "A", "run-a", { label: "a" } as ChatStreamRequest & { label: string });
+    const runB = dispatchChat(engine, "B", "run-b", { label: "b" } as ChatStreamRequest & { label: string });
     await Promise.resolve();
     await Promise.resolve();
 
@@ -324,10 +365,8 @@ describe("createAssistantEngine", () => {
     });
 
     // WHY: Same-tick cancel after accept must settle occupancy without calling the provider.
-    const runPromise = engine.executeChatRun("A", "run-1", { label: "only" } as ChatStreamRequest & {
-      label: string;
-    });
-    engine.cancel("A", "run-1");
+    const runPromise = dispatchChat(engine, "A", "run-1", { label: "only" } as ChatStreamRequest & { label: string });
+    dispatchCancel(engine, "A", "run-1");
     await runPromise;
 
     expect(startedRunIds).toEqual([]);
@@ -353,8 +392,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const first = engine.executeChatRun("A", "run-1", {} as ChatStreamRequest);
-    const second = engine.executeChatRun("A", "run-2", {} as ChatStreamRequest);
+    const first = dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest);
+    const second = dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest);
 
     await expect(second).rejects.toBeInstanceOf(AssistantDuplicateRunError);
     await expect(second).rejects.toMatchObject({
@@ -386,8 +425,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const firstRetry = engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
-    const secondRetry = engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
+    const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
+    const secondRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
 
     await expect(secondRetry).rejects.toBeInstanceOf(AssistantDuplicateRunError);
     await expect(secondRetry).rejects.toMatchObject({
@@ -438,16 +477,16 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const firstRun = engine.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    const firstRun = dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest);
     await Promise.resolve();
     expect(signals).toHaveLength(1);
 
-    engine.cancel("A", "run-1");
-    engine.cancel("A", "run-1");
+    dispatchCancel(engine, "A", "run-1");
+    dispatchCancel(engine, "A", "run-1");
     await expect(firstRun).resolves.toBeUndefined();
     expect(streaming.has("run-1")).toBe(false);
 
-    await engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
 
     expect(providerCalls).toBe(2);
     const restartActions = events.filter((e) => e.type === "runStarted");
@@ -460,7 +499,7 @@ describe("createAssistantEngine", () => {
     expect(retryChunks).toHaveLength(1);
   });
 
-  it("shutdownGracefully rejects new work and interrupts the active run", async () => {
+  it("dispatch shutdown rejects new work and interrupts the active run", async () => {
     const streaming = new Set(["run-active"]);
     const flushAllBounded = vi.fn(async () => undefined);
 
@@ -499,20 +538,18 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const activeRun = engine.executeChatRun("A", "run-active", { label: "active" } as ChatStreamRequest & {
+    const activeRun = dispatchChat(engine, "A", "run-active", { label: "active" } as ChatStreamRequest & {
       label: string;
     });
     await Promise.resolve();
 
     await expect(
-      engine.executeChatRun("A", "run-duplicate", { label: "duplicate" } as ChatStreamRequest & {
-        label: string;
-      }),
+      dispatchChat(engine, "A", "run-duplicate", { label: "duplicate" } as ChatStreamRequest & { label: string }),
     ).rejects.toBeInstanceOf(AssistantDuplicateRunError);
 
     expect(startedRunIds).toEqual(["active"]);
 
-    await engine.shutdownGracefully({
+    await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
         for (const runId of [...streaming]) {
           streaming.delete(runId);
@@ -534,18 +571,18 @@ describe("createAssistantEngine", () => {
     expect(flushAllBounded).toHaveBeenCalled();
     expect(engine.lifecycle).toBe("closed");
 
-    await expect(engine.executeChatRun("A", "run-after", {} as ChatStreamRequest)).rejects.toMatchObject({
+    await expect(dispatchChat(engine, "A", "run-after", {} as ChatStreamRequest)).rejects.toMatchObject({
       name: "AssistantEngineClosedError",
     });
   });
 
-  it("dispose cannot be followed by beginRun via executeChatRun", async () => {
+  it("dispose cannot be followed by beginRun via dispatch executeChat", async () => {
     chatStreamGenerator.mockImplementation(async () => undefined);
 
     engine.dispose();
     expect(engine.lifecycle).toBe("closed");
 
-    await expect(engine.executeChatRun("A", "run-1", {} as ChatStreamRequest)).rejects.toMatchObject({
+    await expect(dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest)).rejects.toMatchObject({
       name: "AssistantEngineClosedError",
     });
     expect(chatStreamGenerator).not.toHaveBeenCalled();
@@ -573,8 +610,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runA = engine.executeChatRun("A", "run-a", {} as ChatStreamRequest);
-    const runB = engine.executeChatRun("B", "run-b", {} as ChatStreamRequest);
+    const runA = dispatchChat(engine, "A", "run-a", {} as ChatStreamRequest);
+    const runB = dispatchChat(engine, "B", "run-b", {} as ChatStreamRequest);
     await Promise.resolve();
 
     engine.disposeConversation("A");
@@ -582,7 +619,7 @@ describe("createAssistantEngine", () => {
     await expect(runA).resolves.toBeUndefined();
 
     expect(engine.lifecycle).toBe("running");
-    engine.cancel("B", "run-b");
+    dispatchCancel(engine, "B", "run-b");
     streaming.delete("run-b");
     await expect(runB).resolves.toBeUndefined();
   });
@@ -610,8 +647,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const kept = engine.executeChatRun("A", "run-kept", {} as ChatStreamRequest);
-    const cleared = engine.executeChatRun("B", "run-cleared", {} as ChatStreamRequest);
+    const kept = dispatchChat(engine, "A", "run-kept", {} as ChatStreamRequest);
+    const cleared = dispatchChat(engine, "B", "run-cleared", {} as ChatStreamRequest);
     await Promise.resolve();
     expect(signals).toHaveLength(2);
     expect(signals[0]?.aborted).toBe(false);
@@ -628,7 +665,7 @@ describe("createAssistantEngine", () => {
     delete conversationStates.A;
 
     await expect(kept).resolves.toBeUndefined();
-    engine.cancel("B", "run-cleared");
+    dispatchCancel(engine, "B", "run-cleared");
     await expect(cleared).resolves.toBeUndefined();
   });
 
@@ -652,7 +689,7 @@ describe("createAssistantEngine", () => {
       dispose: hostDispose,
     });
 
-    const shutdownPromise = engine.shutdownGracefully({
+    const shutdownPromise = dispatchShutdown(engine, {
       interruptActiveRuns: () => undefined,
       flushTimeoutMs: 60_000,
     });
@@ -672,7 +709,7 @@ describe("createAssistantEngine", () => {
     expect(hostDispose).not.toHaveBeenCalled();
   });
 
-  it("concurrent shutdownGracefully callers share one promise and wait for the joined flush", async () => {
+  it("concurrent shutdown dispatch callers share one promise and wait for the joined flush", async () => {
     let releaseFlush!: () => void;
     const flushGate = new Promise<void>((resolve) => {
       releaseFlush = resolve;
@@ -693,11 +730,11 @@ describe("createAssistantEngine", () => {
     });
 
     // Simulate unload starting flush, then Electron IPC joining the same flight.
-    const unloadShutdown = engine.shutdownGracefully({
+    const unloadShutdown = dispatchShutdown(engine, {
       interruptActiveRuns,
       flushTimeoutMs: 60_000,
     });
-    const ipcShutdown = engine.shutdownGracefully({
+    const ipcShutdown = dispatchShutdown(engine, {
       interruptActiveRuns: () => {
         throw new Error("second caller must not re-enter shutdown body");
       },
@@ -724,7 +761,7 @@ describe("createAssistantEngine", () => {
     expect(flushAllBounded).toHaveBeenCalledTimes(1);
   });
 
-  it("shutdownGracefully after dispose is a no-op", async () => {
+  it("dispatch shutdown after dispose is a no-op", async () => {
     const flushAllBounded = vi.fn(async () => undefined);
     engine.setPersistenceHost({
       flushAllNow: vi.fn(),
@@ -737,7 +774,7 @@ describe("createAssistantEngine", () => {
     });
 
     engine.dispose();
-    await engine.shutdownGracefully({
+    await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
         throw new Error("must not interrupt after dispose");
       },
@@ -753,7 +790,7 @@ describe("createAssistantEngine", () => {
       throw new DOMException("Aborted", "AbortError");
     });
 
-    await engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    await dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
 
     const cancelActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "canceled");
     const failedActions = events.filter((e) => e.type === "runTerminated" && e.outcome.status === "failed");
@@ -774,11 +811,11 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    const runPromise = dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
     await Promise.resolve();
     expect(signals).toHaveLength(1);
 
-    engine.cancel("conv-a", "run-1");
+    dispatchCancel(engine, "conv-a", "run-1");
     await expect(runPromise).resolves.toBeUndefined();
 
     const cancelActions = events.filter(
@@ -813,10 +850,10 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const runPromise = engine.executeChatRun("conv-a", "run-1", {} as ChatStreamRequest);
+    const runPromise = dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
     await Promise.resolve();
 
-    await engine.shutdownGracefully({
+    await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
         for (const runId of [...streaming]) {
           streaming.delete(runId);
@@ -843,5 +880,14 @@ describe("createAssistantEngine", () => {
         (e) => e.type === "runTerminated" && e.outcome.status === "interrupted" && e.outcome.reason === "app_shutdown",
       ),
     ).toBe(true);
+  });
+
+  it("exposes dispatch as the sole execution ingress on the public surface", () => {
+    expect(typeof engine.dispatch).toBe("function");
+    expect("executeChatRun" in engine).toBe(false);
+    expect("executeGenerateRun" in engine).toBe(false);
+    expect("retryRun" in engine).toBe(false);
+    expect("cancel" in engine).toBe(false);
+    expect("shutdownGracefully" in engine).toBe(false);
   });
 });

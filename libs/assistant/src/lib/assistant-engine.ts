@@ -6,7 +6,7 @@ import type {
   ImmutableExecutionValue,
 } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
-import type { AssistantCommand } from "./assistant-protocol";
+import type { AssistantCommand, ShutdownInput } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
 import type { ConversationPersistenceHost } from "./conversation-persistence-host";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "./conversation-persistence-host";
@@ -31,39 +31,15 @@ export type AssistantEngineOptions = ConversationRuntimeCallbacks &
     executionPort?: AssistantExecutionPort;
   };
 
-export type AssistantEngineShutdownOptions = {
-  /** Transition in-flight runs to `interrupted`/`app_shutdown` before aborting streams. */
-  interruptActiveRuns: () => void;
-  flushTimeoutMs?: number;
-};
-
+/**
+ * Public engine surface: typed {@link dispatch} is the sole execution ingress
+ * for submit (execute chat/generate), retry, cancel, and shutdown. Runtime
+ * execute methods remain private implementation details.
+ */
 export type AssistantEngine = {
   dispatch: (command: AssistantCommand) => void | Promise<void>;
-  executeChatRun: (
-    conversationId: string,
-    runId: string,
-    request: ImmutableExecutionValue<ChatStreamRequest>,
-    execution?: AssistantExecutionIdentity,
-  ) => Promise<void>;
-  executeGenerateRun: (
-    conversationId: string,
-    runId: string,
-    request: ImmutableExecutionValue<CardGenerationStreamRequest>,
-    execution?: AssistantExecutionIdentity,
-  ) => Promise<void>;
-  retryRun: (
-    conversationId: string,
-    runId: string,
-    request: ImmutableExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>,
-    templateFields: ImmutableExecutionValue<TemplateFields> | null,
-    mode: AIChatMode,
-    modelName?: string,
-    execution?: AssistantExecutionIdentity,
-  ) => Promise<void>;
-  cancel: (conversationId: string, runId: string) => void;
   setPersistenceHost: (host: ConversationPersistenceHost) => void;
   disposeConversation: (conversationId: string) => void;
-  shutdownGracefully: (options: AssistantEngineShutdownOptions) => Promise<void>;
   dispose: () => void;
   readonly lifecycle: AssistantEngineLifecycle;
 };
@@ -142,6 +118,111 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     logAssistantStructured({ conversationId, runId, commandOrEvent });
   };
 
+  const executeChatRun = (
+    conversationId: string,
+    runId: string,
+    request: ImmutableExecutionValue<ChatStreamRequest>,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> => {
+    if (lifecycle !== "running") {
+      return Promise.reject(new AssistantEngineClosedError(lifecycle));
+    }
+    logCommand("executeChat", conversationId, runId);
+    return getRuntime(conversationId).executeChatRun(
+      runId,
+      captureExecutionValue<ChatStreamRequest>(request),
+      execution ? captureExecutionValue(execution) : undefined,
+    );
+  };
+
+  const executeGenerateRun = (
+    conversationId: string,
+    runId: string,
+    request: ImmutableExecutionValue<CardGenerationStreamRequest>,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> => {
+    if (lifecycle !== "running") {
+      return Promise.reject(new AssistantEngineClosedError(lifecycle));
+    }
+    logCommand("executeGenerate", conversationId, runId);
+    return getRuntime(conversationId).executeGenerateRun(
+      runId,
+      captureExecutionValue<CardGenerationStreamRequest>(request),
+      execution ? captureExecutionValue(execution) : undefined,
+    );
+  };
+
+  const retryRun = (
+    conversationId: string,
+    runId: string,
+    request: ImmutableExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>,
+    templateFields: ImmutableExecutionValue<TemplateFields> | null,
+    mode: AIChatMode,
+    modelName?: string,
+    execution?: AssistantExecutionIdentity,
+  ): Promise<void> => {
+    if (lifecycle !== "running") {
+      return Promise.reject(new AssistantEngineClosedError(lifecycle));
+    }
+    // WHY: conversationId is caller-supplied — never inferred from UI-current
+    // state, or a queued retry for A can restart/clear B after a switch.
+    logCommand("retry", conversationId, runId);
+    return getRuntime(conversationId).retryRun(
+      runId,
+      captureExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>(request),
+      templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
+      mode,
+      modelName,
+      execution ? captureExecutionValue(execution) : undefined,
+    );
+  };
+
+  const cancel = (conversationId: string, runId: string): void => {
+    // WHY: Cancel remains allowed while closing so in-flight UI cancel can
+    // still abort; once closed there is nothing left to cancel.
+    if (lifecycle === "closed") return;
+    logCommand("cancel", conversationId, runId);
+    const runtime = runtimes.get(conversationId);
+    if (runtime) {
+      runtime.cancel(runId, "user");
+      return;
+    }
+    controllerRegistry.cancel(runId, "user");
+  };
+
+  const shutdownGracefully = (shutdownOptions: ShutdownInput): Promise<void> => {
+    // INVARIANT: Concurrent callers (browser unload + Electron IPC ack path)
+    // must share one promise so acknowledgement waits for the joined flush.
+    if (shutdownPromise) return shutdownPromise;
+    // WHY: `dispose()` can close without going through shutdown — do not start
+    // a second teardown after the engine is already sealed.
+    if (lifecycle !== "running") return Promise.resolve();
+
+    const { interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS } = shutdownOptions;
+    shutdownPromise = (async () => {
+      lifecycle = "closing";
+      logAssistantStructured({
+        conversationId: "*",
+        commandOrEvent: "shutdown",
+        priorStatus: "running",
+        nextStatus: "closing",
+      });
+
+      // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
+      closeRuntimes("app_shutdown");
+      // 3. Transition active (and any still-streaming queued) runs.
+      interruptActiveRuns();
+      // 4. Abort active controllers with shutdown provenance and seal beginRun.
+      controllerRegistry.dispose("app_shutdown");
+      // 5. Flush persistence.
+      if (persistenceHost) await persistenceHost.flushAllBounded(flushTimeoutMs);
+      // 6. Closed — beginRun already sealed by registry dispose.
+      lifecycle = "closed";
+      runtimes.clear();
+    })();
+    return shutdownPromise;
+  };
+
   const engine: AssistantEngine = {
     get lifecycle() {
       return lifecycle;
@@ -150,21 +231,21 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     dispatch(command) {
       switch (command.type) {
         case "executeChat":
-          return engine.executeChatRun(
+          return executeChatRun(
             command.conversationId,
             command.input.runId,
             command.input.request,
             command.input.execution,
           );
         case "executeGenerate":
-          return engine.executeGenerateRun(
+          return executeGenerateRun(
             command.conversationId,
             command.input.runId,
             command.input.request,
             command.input.execution,
           );
         case "retry":
-          return engine.retryRun(
+          return retryRun(
             command.conversationId,
             command.input.runId,
             command.input.request,
@@ -174,60 +255,12 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
             command.input.execution,
           );
         case "cancel":
-          return engine.cancel(command.conversationId, command.runId);
+          return cancel(command.conversationId, command.runId);
+        case "shutdown":
+          return shutdownGracefully(command.input);
       }
     },
 
-    executeChatRun(conversationId, runId, request, execution) {
-      if (lifecycle !== "running") {
-        return Promise.reject(new AssistantEngineClosedError(lifecycle));
-      }
-      logCommand("executeChat", conversationId, runId);
-      return getRuntime(conversationId).executeChatRun(
-        runId,
-        captureExecutionValue<ChatStreamRequest>(request),
-        execution ? captureExecutionValue(execution) : undefined,
-      );
-    },
-    executeGenerateRun(conversationId, runId, request, execution) {
-      if (lifecycle !== "running") {
-        return Promise.reject(new AssistantEngineClosedError(lifecycle));
-      }
-      logCommand("executeGenerate", conversationId, runId);
-      return getRuntime(conversationId).executeGenerateRun(
-        runId,
-        captureExecutionValue<CardGenerationStreamRequest>(request),
-        execution ? captureExecutionValue(execution) : undefined,
-      );
-    },
-    retryRun(conversationId, runId, request, templateFields, mode, modelName, execution) {
-      if (lifecycle !== "running") {
-        return Promise.reject(new AssistantEngineClosedError(lifecycle));
-      }
-      // WHY: conversationId is caller-supplied — never inferred from UI-current
-      // state, or a queued retry for A can restart/clear B after a switch.
-      logCommand("retry", conversationId, runId);
-      return getRuntime(conversationId).retryRun(
-        runId,
-        captureExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>(request),
-        templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
-        mode,
-        modelName,
-        execution ? captureExecutionValue(execution) : undefined,
-      );
-    },
-    cancel(conversationId, runId) {
-      // WHY: Cancel remains allowed while closing so in-flight UI cancel can
-      // still abort; once closed there is nothing left to cancel.
-      if (lifecycle === "closed") return;
-      logCommand("cancel", conversationId, runId);
-      const runtime = runtimes.get(conversationId);
-      if (runtime) {
-        runtime.cancel(runId, "user");
-        return;
-      }
-      controllerRegistry.cancel(runId, "user");
-    },
     setPersistenceHost(host) {
       if (lifecycle === "closed") return;
       persistenceHost = host;
@@ -248,40 +281,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       }
       runtime.close("dispose");
       runtimes.delete(conversationId);
-    },
-    shutdownGracefully(shutdownOptions) {
-      // INVARIANT: Concurrent callers (browser unload + Electron IPC ack path)
-      // must share one promise so acknowledgement waits for the joined flush.
-      if (shutdownPromise) return shutdownPromise;
-      // WHY: `dispose()` can close without going through shutdown — do not start
-      // a second teardown after the engine is already sealed.
-      if (lifecycle !== "running") return Promise.resolve();
-
-      const { interruptActiveRuns, flushTimeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS } = shutdownOptions;
-      shutdownPromise = (async () => {
-        lifecycle = "closing";
-        logAssistantStructured({
-          conversationId: "*",
-          commandOrEvent: "shutdown",
-          priorStatus: "running",
-          nextStatus: "closing",
-        });
-
-        // 1–2. Reject new commands (lifecycle) and cancel queued work with provenance.
-        closeRuntimes("app_shutdown");
-        // 3. Transition active (and any still-streaming queued) runs.
-        interruptActiveRuns();
-        // 4. Abort active controllers with shutdown provenance and seal beginRun.
-        controllerRegistry.dispose("app_shutdown");
-        // 5. Flush persistence.
-        if (persistenceHost) {
-          await persistenceHost.flushAllBounded(flushTimeoutMs);
-        }
-        // 6. Closed — beginRun already sealed by registry dispose.
-        lifecycle = "closed";
-        runtimes.clear();
-      })();
-      return shutdownPromise;
     },
     dispose() {
       // INVARIANT: Mirror shutdown — ignore re-entry while closing so a dispose

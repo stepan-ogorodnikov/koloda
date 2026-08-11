@@ -1,7 +1,5 @@
-import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
-import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { AssistantDuplicateRunError } from "@koloda/assistant";
-import type { TemplateFields } from "@koloda/srs";
+import type { AssistantCommand } from "@koloda/assistant";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,18 +34,24 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
   };
 }
 
+type DispatchCommand = (command: AssistantCommand) => void | Promise<void>;
+
 describe("useRunOrchestration — handleRetry ordering", () => {
   let calls: Array<{ fn: string; args: unknown[] }>;
-  let retryRun: ReturnType<typeof vi.fn>;
-  let rememberLastUsedAIProfile: ReturnType<typeof vi.fn>;
+  let dispatchCommand: ReturnType<typeof vi.fn<DispatchCommand>>;
+  let rememberLastUsedAIProfile: ReturnType<typeof vi.fn<(profileId: string, modelId: string) => void>>;
   let dispatch: (action: ConversationReducerAction) => void;
   let store: ReturnType<typeof createStore>;
   let readState: () => ConversationReducerState;
 
   beforeEach(() => {
     calls = [];
-    retryRun = vi.fn(async (...args: unknown[]) => calls.push({ fn: "retryRun", args }));
-    rememberLastUsedAIProfile = vi.fn((...args: unknown[]) => calls.push({ fn: "rememberLastUsedAIProfile", args }));
+    dispatchCommand = vi.fn<DispatchCommand>(async (command) => {
+      calls.push({ fn: command.type, args: [command] });
+    });
+    rememberLastUsedAIProfile = vi.fn<(profileId: string, modelId: string) => void>((profileId, modelId) => {
+      calls.push({ fn: "rememberLastUsedAIProfile", args: [profileId, modelId] });
+    });
 
     store = createStore();
     dispatch = (action) => store.set(assistantConversationStateAtom, action);
@@ -83,9 +87,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
         rememberLastUsedAIProfile,
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: vi.fn(async () => undefined) as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: retryRun as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -102,9 +104,9 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     });
 
     const names = calls.map((c) => c.fn);
-    expect(names).not.toContain("retryRun");
+    expect(names).not.toContain("retry");
     expect(names).not.toContain("rememberLastUsedAIProfile");
-    expect(retryRun).not.toHaveBeenCalled();
+    expect(dispatchCommand).not.toHaveBeenCalled();
   });
 
   it("an invalid retry (run missing the user message → empty prompt) does not start a stream", async () => {
@@ -117,10 +119,10 @@ describe("useRunOrchestration — handleRetry ordering", () => {
       await result.current.handleRetry("run-2");
     });
 
-    expect(retryRun).not.toHaveBeenCalled();
+    expect(dispatchCommand).not.toHaveBeenCalled();
   });
 
-  it("a valid chat retry remembers profile then dispatches retryRun", async () => {
+  it("a valid chat retry remembers profile then dispatches retry command", async () => {
     seedConversation("conv-1");
     addChatRun("run-1");
     const cfg = makeConfig();
@@ -132,25 +134,19 @@ describe("useRunOrchestration — handleRetry ordering", () => {
 
     const order = calls.map((c) => c.fn);
     expect(order.indexOf("rememberLastUsedAIProfile")).toBeGreaterThanOrEqual(0);
-    expect(order.indexOf("retryRun")).toBeGreaterThan(order.indexOf("rememberLastUsedAIProfile"));
+    expect(order.indexOf("retry")).toBeGreaterThan(order.indexOf("rememberLastUsedAIProfile"));
 
     expect(rememberLastUsedAIProfile).toHaveBeenCalledWith(cfg.profileId, cfg.modelId);
 
-    expect(retryRun).toHaveBeenCalledTimes(1);
-    const [conversationId, runId, request, templateFields, mode, modelName] = retryRun.mock.calls[0] as [
-      string,
-      string,
-      ChatStreamRequest | CardGenerationStreamRequest,
-      TemplateFields | null,
-      AIChatMode,
-      string | undefined,
-    ];
-    expect(conversationId).toBe("conv-1");
-    expect(runId).toBe("run-1");
-    expect(templateFields).toBeNull();
-    expect(mode).toBe("chat");
-    expect(modelName).toBe("GPT-x");
-    expect(request).toBeTypeOf("object");
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = dispatchCommand.mock.calls[0]![0] as Extract<AssistantCommand, { type: "retry" }>;
+    expect(command.type).toBe("retry");
+    expect(command.conversationId).toBe("conv-1");
+    expect(command.input.runId).toBe("run-1");
+    expect(command.input.templateFields).toBeNull();
+    expect(command.input.mode).toBe("chat");
+    expect(command.input.modelName).toBe("GPT-x");
+    expect(command.input.request).toBeTypeOf("object");
   });
 });
 
@@ -159,7 +155,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
   let dispatch: (action: ConversationReducerAction) => void;
   let readState: () => ConversationReducerState;
   let dispatched: ConversationReducerAction[];
-  let executeChatRun: ReturnType<typeof vi.fn>;
+  let dispatchCommand: ReturnType<typeof vi.fn<DispatchCommand>>;
 
   beforeEach(() => {
     dispatched = [];
@@ -169,7 +165,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
       store.set(assistantConversationStateAtom, action);
     };
     readState = () => store.get(assistantConversationStateAtom);
-    executeChatRun = vi.fn(async () => undefined);
+    dispatchCommand = vi.fn<DispatchCommand>(async () => undefined);
   });
 
   it("handleGenerate dispatches a single submitTurn (not three separate actions)", async () => {
@@ -190,9 +186,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -223,7 +217,11 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     const state = readState();
     expect(state.messages).toHaveLength(2);
     expect(state.activeRunId).not.toBeNull();
-    expect(executeChatRun).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({
+      type: "executeChat",
+      conversationId: "conv-1",
+    });
   });
 });
 
@@ -254,13 +252,13 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 
-  it("same-tick double handleGenerate only starts one executeChatRun", async () => {
+  it("same-tick double handleGenerate only starts one executeChat command", async () => {
     seedConversation("conv-1");
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const executeChatRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       await gate;
     });
 
@@ -274,9 +272,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -293,7 +289,8 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       await Promise.all([first, second]);
     });
 
-    expect(executeChatRun).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "executeChat" });
   });
 
   it("revert while submit in-flight: resubmit does not commitRevert until guard clears", async () => {
@@ -308,7 +305,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const executeChatRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       await gate;
     });
 
@@ -322,9 +319,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -336,7 +331,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(executeChatRun).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
 
     const activeRunId = readState().activeRunId;
     expect(activeRunId).not.toBeNull();
@@ -355,7 +350,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
 
     expect(dispatched.some((a) => a[0] === "commitRevert")).toBe(false);
     expect(readState().revertState).not.toBeNull();
-    expect(executeChatRun).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       release();
@@ -368,10 +363,10 @@ describe("useRunOrchestration — submit in-flight guard", () => {
 
     expect(dispatched.some((a) => a[0] === "commitRevert")).toBe(true);
     expect(readState().revertState).toBeNull();
-    expect(executeChatRun).toHaveBeenCalledTimes(2);
+    expect(dispatchCommand).toHaveBeenCalledTimes(2);
   });
 
-  it("same-tick double handleRetry only starts one retryRun", async () => {
+  it("same-tick double handleRetry only starts one retry command", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
 
@@ -379,7 +374,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    const retryRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       await gate;
     });
 
@@ -393,9 +388,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: vi.fn(async () => undefined) as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: retryRun as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -412,7 +405,8 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       await Promise.all([first, second]);
     });
 
-    expect(retryRun).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "retry" });
   });
 
   it("A streaming does not block submit on B", async () => {
@@ -427,8 +421,8 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     const gateA = new Promise<void>((resolve) => {
       releaseA = resolve;
     });
-    const executeChatRun = vi.fn(async (conversationId: string) => {
-      if (conversationId === "A") await gateA;
+    const dispatchCommand = vi.fn<DispatchCommand>(async (command) => {
+      if (command.type === "executeChat" && command.conversationId === "A") await gateA;
     });
 
     const cfg = makeConfig();
@@ -441,9 +435,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => store.get(currentConversationIdAtom) ?? undefined,
       }),
     );
@@ -455,8 +447,8 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(executeChatRun).toHaveBeenCalledTimes(1);
-    expect(executeChatRun.mock.calls[0]?.[0]).toBe("A");
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "executeChat", conversationId: "A" });
 
     store.set(currentConversationIdAtom, "B");
 
@@ -464,8 +456,8 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       await result.current.handleGenerate("from B");
     });
 
-    expect(executeChatRun).toHaveBeenCalledTimes(2);
-    expect(executeChatRun.mock.calls[1]?.[0]).toBe("B");
+    expect(dispatchCommand).toHaveBeenCalledTimes(2);
+    expect(dispatchCommand.mock.calls[1]![0]).toMatchObject({ type: "executeChat", conversationId: "B" });
 
     await act(async () => {
       releaseA();
@@ -473,9 +465,9 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("swallows AssistantDuplicateRunError from executeChatRun", async () => {
+  it("swallows AssistantDuplicateRunError from executeChat command", async () => {
     seedConversation("conv-1");
-    const executeChatRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new AssistantDuplicateRunError("conv-1", "run-new", "run-old");
     });
 
@@ -489,9 +481,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -501,10 +491,10 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("swallows AssistantDuplicateRunError from retryRun", async () => {
+  it("swallows AssistantDuplicateRunError from retry command", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
-    const retryRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new AssistantDuplicateRunError("conv-1", "run-1", "run-other");
     });
 
@@ -518,9 +508,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: vi.fn(async () => undefined) as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: retryRun as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -530,9 +518,9 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("rethrows non-duplicate errors from executeChatRun", async () => {
+  it("rethrows non-duplicate errors from executeChat command", async () => {
     seedConversation("conv-1");
-    const executeChatRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new Error("transport blew up");
     });
 
@@ -546,9 +534,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: executeChatRun as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: vi.fn(async () => undefined) as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );
@@ -558,10 +544,10 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("rethrows non-duplicate errors from retryRun", async () => {
+  it("rethrows non-duplicate errors from retry command", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
-    const retryRun = vi.fn(async () => {
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new Error("retry transport blew up");
     });
 
@@ -575,9 +561,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         rememberLastUsedAIProfile: vi.fn(),
         cancelActiveRun: vi.fn(),
         setMode: vi.fn(),
-        executeChatRun: vi.fn(async () => undefined) as never,
-        executeGenerateRun: vi.fn(async () => undefined) as never,
-        retryRun: retryRun as never,
+        dispatchCommand,
         ensureConversationId: () => "conv-1",
       }),
     );

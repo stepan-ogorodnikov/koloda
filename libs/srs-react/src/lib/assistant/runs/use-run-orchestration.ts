@@ -1,9 +1,7 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
-import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
-import { AssistantDuplicateRunError, type AssistantExecutionIdentity } from "@koloda/assistant";
-import type { TemplateFields } from "@koloda/srs";
+import { AssistantDuplicateRunError, type AssistantCommand, type AssistantExecutionIdentity } from "@koloda/assistant";
 import { msg } from "@lingui/core/macro";
 import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
@@ -25,27 +23,8 @@ type UseRunOrchestrationOptions = {
   rememberLastUsedAIProfile: (profileId: string, modelId: string) => void;
   cancelActiveRun: () => void;
   setMode: (mode: AIChatMode) => void;
-  executeChatRun: (
-    conversationId: string,
-    runId: string,
-    request: ChatStreamRequest,
-    execution: AssistantExecutionIdentity,
-  ) => Promise<void>;
-  executeGenerateRun: (
-    conversationId: string,
-    runId: string,
-    request: CardGenerationStreamRequest,
-    execution: AssistantExecutionIdentity,
-  ) => Promise<void>;
-  retryRun: (
-    conversationId: string,
-    runId: string,
-    request: ChatStreamRequest | CardGenerationStreamRequest,
-    templateFields: TemplateFields | null,
-    mode: AIChatMode,
-    modelName: string | undefined,
-    execution: AssistantExecutionIdentity,
-  ) => Promise<void>;
+  /** Sole engine ingress — execute/retry go through typed commands. */
+  dispatchCommand: (command: AssistantCommand) => void | Promise<void>;
   ensureConversationId: () => string | undefined;
 };
 
@@ -106,9 +85,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     rememberLastUsedAIProfile,
     cancelActiveRun,
     setMode,
-    executeChatRun,
-    executeGenerateRun,
-    retryRun,
+    dispatchCommand,
     ensureConversationId,
   } = options;
 
@@ -143,15 +120,18 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       try {
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        await retryRun(
+        await dispatchCommand({
+          type: "retry",
           conversationId,
-          runId,
-          prepared.request,
-          prepared.templateFields,
-          mode,
-          prepared.modelName,
-          execution,
-        );
+          input: {
+            runId,
+            request: prepared.request,
+            templateFields: prepared.templateFields,
+            mode,
+            modelName: prepared.modelName,
+            execution,
+          },
+        });
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
@@ -160,7 +140,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(conversationId);
       }
     },
-    [configRef, retryRun, readState, rememberLastUsedAIProfile],
+    [configRef, dispatchCommand, readState, rememberLastUsedAIProfile],
   );
 
   const handleDismissGenerate = useCallback(() => {
@@ -223,9 +203,17 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         ]);
 
         if (prepared.kind === "chat") {
-          await executeChatRun(activeConversationId, runId, prepared.request, execution);
+          await dispatchCommand({
+            type: "executeChat",
+            conversationId: activeConversationId,
+            input: { runId, request: prepared.request as ChatStreamRequest, execution },
+          });
         } else {
-          await executeGenerateRun(activeConversationId, runId, prepared.request, execution);
+          await dispatchCommand({
+            type: "executeGenerate",
+            conversationId: activeConversationId,
+            input: { runId, request: prepared.request, execution },
+          });
         }
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
@@ -235,15 +223,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
     },
-    [
-      configRef,
-      ensureConversationId,
-      dispatch,
-      executeChatRun,
-      executeGenerateRun,
-      readState,
-      rememberLastUsedAIProfile,
-    ],
+    [configRef, ensureConversationId, dispatch, dispatchCommand, readState, rememberLastUsedAIProfile],
   );
 
   const handleRevert = useCallback(

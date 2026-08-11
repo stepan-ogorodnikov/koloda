@@ -1,10 +1,5 @@
 export { createAssistantEngine, AssistantDuplicateRunError, AssistantEngineClosedError } from "./lib/assistant-engine";
-export type {
-  AssistantEngine,
-  AssistantEngineLifecycle,
-  AssistantEngineOptions,
-  AssistantEngineShutdownOptions,
-} from "./lib/assistant-engine";
+export type { AssistantEngine, AssistantEngineLifecycle, AssistantEngineOptions } from "./lib/assistant-engine";
 export type {
   AssistantChatExecutionInput,
   AssistantExecutionIdentity,
@@ -22,6 +17,7 @@ export type {
   RunChunk,
   RunOutcome,
   RunStartSnapshot,
+  ShutdownInput,
 } from "./lib/assistant-protocol";
 export {
   createConversationPersistenceHost,
