@@ -34,7 +34,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 ## Graceful shutdown
 
-On `pagehide` / `beforeunload`, the application-shell host calls `shutdownGracefully` (best-effort in browsers/demo — the platform does not await flush promises). Electron additionally runs a main-process window-close handshake (`apps/native-electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`). Concurrent unload + IPC callers share one engine shutdown promise (single-flight) so acknowledgement waits for the joined flush:
+On real unload `pagehide` / `beforeunload`, the application-shell host calls `shutdownGracefully` (best-effort in browsers/demo — the platform does not await flush promises). A bfcache `pagehide` (`PageTransitionEvent.persisted === true`) skips terminal shutdown so a later `pageshow` can reuse the same engine. Electron additionally runs a main-process window-close handshake (`apps/native-electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`). Concurrent unload + IPC callers share one engine shutdown promise (single-flight) so acknowledgement waits for the joined flush:
 
 1. Interrupt every `streaming` run in memory (`interrupted` / `app_shutdown`) and dirty the originating conversation.
 2. Abort all in-flight stream controllers.

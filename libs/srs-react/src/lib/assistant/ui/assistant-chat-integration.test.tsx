@@ -29,7 +29,7 @@ import {
 } from "../state/conversation-store";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
-import { resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
+import { getAssistantEngine, resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
 import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import {
   useAssistantAppShellHosts,
@@ -856,6 +856,91 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(afterState.runs[persistedRunIds[0]!]?.reason).toBe("app_shutdown");
     // INVARIANT: single durable shutdown write of the interrupted snapshot.
     expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide + 1);
+  });
+
+  it("persisted pagehide/pageshow keeps the assistant available for a new run", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
+
+    await act(async () => {
+      void result.current.controller.submit("Hello from A");
+      await Promise.resolve();
+    });
+
+    const beforeState = store.get(conversationsAtom)["A"];
+    const beforeRunIds = Object.keys(beforeState.runs);
+    expect(beforeRunIds).toHaveLength(1);
+    expect(beforeState.runs[beforeRunIds[0]!]?.status).toBe("streaming");
+    expect(wire.chatStream.started).toBe(1);
+
+    const callsBeforePagehide = wire.setConversationCalls.length;
+    await act(async () => {
+      window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: true }));
+    });
+
+    // INVARIANT: bfcache entry must not interrupt/persist app_shutdown or close the engine.
+    expect(wire.setConversationCalls).toHaveLength(callsBeforePagehide);
+    expect(store.get(conversationsAtom)["A"].runs[beforeRunIds[0]!]?.status).toBe("streaming");
+    expect(getAssistantEngine().lifecycle).toBe("running");
+
+    await act(async () => {
+      window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+    });
+
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+      await Promise.resolve();
+    });
+
+    expect(store.get(conversationsAtom)["A"].runs[beforeRunIds[0]!]?.status).toBe("success");
+    expect(getAssistantEngine().lifecycle).toBe("running");
+
+    await act(async () => {
+      void result.current.controller.submit("Hello again after bfcache");
+      await Promise.resolve();
+    });
+
+    expect(wire.chatStream.started).toBe(2);
+    const afterState = store.get(conversationsAtom)["A"];
+    const afterRunIds = Object.keys(afterState.runs);
+    expect(afterRunIds).toHaveLength(2);
+    expect(Object.values(afterState.runs).some((run) => run.status === "streaming")).toBe(true);
+
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+      await Promise.resolve();
+    });
   });
 
   it("pagehide plus unmount during a streaming run persists interrupted app_shutdown", async () => {

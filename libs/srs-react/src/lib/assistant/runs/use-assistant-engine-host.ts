@@ -173,7 +173,12 @@ export function useAssistantEngineHost(): void {
     // main-process close handshake (`installElectronCloseCoordination`) that
     // awaits this same `shutdownAssistantGracefully` (engine single-flight) so
     // IPC acknowledgement joins an unload-started flush instead of acking early.
-    const onShutdown = () => {
+    const onShutdown = (event: Event) => {
+      // WHY: bfcache freezes the page with the React tree and singleton engine
+      // intact (`pagehide` with `persisted === true`). Terminal shutdown would
+      // leave a closed engine that cannot accept new runs after `pageshow`.
+      // Real unload still uses plain Event / `persisted === false`.
+      if (event instanceof PageTransitionEvent && event.persisted) return;
       void shutdownAssistantGracefully(store);
     };
     window.addEventListener("pagehide", onShutdown);
