@@ -1,4 +1,4 @@
-export { createAssistantEngine, AssistantEngineClosedError } from "./lib/assistant-engine";
+export { createAssistantEngine, AssistantDuplicateRunError, AssistantEngineClosedError } from "./lib/assistant-engine";
 export type {
   AssistantEngine,
   AssistantEngineLifecycle,

@@ -2,11 +2,11 @@ import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
 import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { generateUUID } from "@koloda/app";
-import type { AssistantExecutionIdentity } from "@koloda/assistant";
+import { AssistantDuplicateRunError, type AssistantExecutionIdentity } from "@koloda/assistant";
 import type { TemplateFields } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import type { RefObject } from "react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { buildConversationMessages, getMessageRunId, userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
@@ -112,10 +112,17 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     ensureConversationId,
   } = options;
 
+  // WHY: Engine rejects duplicate runs, but same-tick double submit can still
+  // dispatch two submitTurn actions before React disables the button.
+  // Scoped per conversation so submitting on B is not blocked while A awaits.
+  const isSubmitInFlightByConversationRef = useRef(new Set<string>());
+
   const handleRetry = useCallback(
     async (runId: string) => {
       const cfg = configRef.current;
       const currentState = readState();
+      const conversationId = currentState.id;
+      if (isSubmitInFlightByConversationRef.current.has(conversationId)) return;
       const mode = resolveRunMode(currentState, runId);
       if (!mode) return;
 
@@ -132,17 +139,26 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
-      // WHY: Capture conversation id at request time so a later UI switch
-      // cannot retarget restart/stream ownership while retry is queued.
-      await retryRun(
-        currentState.id,
-        runId,
-        prepared.request,
-        prepared.templateFields,
-        mode,
-        prepared.modelName,
-        execution,
-      );
+      isSubmitInFlightByConversationRef.current.add(conversationId);
+      try {
+        // WHY: Capture conversation id at request time so a later UI switch
+        // cannot retarget restart/stream ownership while retry is queued.
+        await retryRun(
+          conversationId,
+          runId,
+          prepared.request,
+          prepared.templateFields,
+          mode,
+          prepared.modelName,
+          execution,
+        );
+      } catch (error) {
+        // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
+        if (error instanceof AssistantDuplicateRunError) return;
+        throw error;
+      } finally {
+        isSubmitInFlightByConversationRef.current.delete(conversationId);
+      }
     },
     [configRef, retryRun, readState, rememberLastUsedAIProfile],
   );
@@ -157,6 +173,15 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       ensureConversationId();
       const cfg = configRef.current;
       let currentState = readState();
+
+      // WHY: After ensureConversationId(), the conversation is in the store.
+      // Use the state's id rather than the prop (which may be undefined on cold start).
+      const activeConversationId = currentState.id;
+      // WHY: Guard before commitRevert. After revert cancels an active stream,
+      // the aborted execute* may still hold this conversation in the in-flight
+      // set until it settles. Committing revert then early-returning would
+      // permanently drop messages with no replacement run.
+      if (isSubmitInFlightByConversationRef.current.has(activeConversationId)) return;
 
       // WHY: Revert is visual until the user submits a new prompt. Commit
       // it now so the hidden messages and their runs are actually
@@ -177,31 +202,37 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const execution = createExecutionIdentity(cfg, prepared.kind);
 
       const runId = generateUUID();
-      // WHY: After ensureConversationId(), the conversation is in the store.
-      // Use the state's id rather than the prop (which may be undefined on cold start).
-      const activeConversationId = readState().id;
 
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
-      // WHY: Atomic submit — one command so the store never briefly holds a
-      // user message without its run, or a run without an assistant placeholder.
-      dispatch([
-        "submitTurn",
-        {
-          runId,
-          text: promptText,
-          mode: prepared.kind,
-          kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
-          assistantText: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
-          templateFields: prepared.templateFields,
-          modelName: prepared.modelName,
-        },
-      ]);
+      isSubmitInFlightByConversationRef.current.add(activeConversationId);
+      try {
+        // WHY: Atomic submit — one command so the store never briefly holds a
+        // user message without its run, or a run without an assistant placeholder.
+        dispatch([
+          "submitTurn",
+          {
+            runId,
+            text: promptText,
+            mode: prepared.kind,
+            kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
+            assistantText: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
+            templateFields: prepared.templateFields,
+            modelName: prepared.modelName,
+          },
+        ]);
 
-      if (prepared.kind === "chat") {
-        await executeChatRun(activeConversationId, runId, prepared.request, execution);
-      } else {
-        await executeGenerateRun(activeConversationId, runId, prepared.request, execution);
+        if (prepared.kind === "chat") {
+          await executeChatRun(activeConversationId, runId, prepared.request, execution);
+        } else {
+          await executeGenerateRun(activeConversationId, runId, prepared.request, execution);
+        }
+      } catch (error) {
+        // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
+        if (error instanceof AssistantDuplicateRunError) return;
+        throw error;
+      } finally {
+        isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
     },
     [

@@ -658,7 +658,7 @@ describe("useConversationRuns", () => {
     expect(completeActions[0].id).toBe("A");
   });
 
-  it("queued retry for A stays owned by A after UI switches to B", async () => {
+  it("in-flight retry for A stays owned by A after UI switches to B", async () => {
     const harness = createHarness();
     harness.store.set(
       upsertConversationAtom,
@@ -694,32 +694,20 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
 
-    let releaseFirst!: () => void;
-    const firstGate = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
+    let releaseRetry!: () => void;
+    const retryGate = new Promise<void>((resolve) => {
+      releaseRetry = resolve;
     });
-    let retryStarted = false;
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
-      if (!retryStarted) {
-        await firstGate;
-        return undefined;
-      }
       onChunk("retried-a");
+      await retryGate;
       return undefined;
     });
 
     const { result } = renderRuns(harness);
 
-    let firstRun!: Promise<void>;
     let retryPromise!: Promise<void>;
-    act(() => {
-      firstRun = result.current.executeChatRun("A", "run-blocker", {} as ChatStreamRequest);
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
-
     act(() => {
       retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, null, "chat", "m");
     });
@@ -727,13 +715,11 @@ describe("useConversationRuns", () => {
       await Promise.resolve();
     });
 
-    // Switch UI current to B while A's retry is still queued behind the blocker.
+    // Switch UI current to B while A's retry is still in flight.
     harness.store.set(setCurrentConversationIdAtom, "B");
 
-    retryStarted = true;
     await act(async () => {
-      releaseFirst();
-      await firstRun;
+      releaseRetry();
       await retryPromise;
     });
 
@@ -756,14 +742,14 @@ describe("useConversationRuns", () => {
     expect(harness.store.get(conversationsAtom)["B"]?.runs["run-a"]).toBeUndefined();
   });
 
-  it("executes queued A with A's identity after React renders B", async () => {
+  it("executes A with A's identity after React renders B", async () => {
     const harness = createHarness();
-    let releaseBlocker!: () => void;
-    const blocker = new Promise<void>((resolve) => {
-      releaseBlocker = resolve;
+    let releaseRun!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseRun = resolve;
     });
-    harness.chatStreamGenerator.mockImplementation(async (request) => {
-      if (request.input.prompt === "blocker") await blocker;
+    harness.chatStreamGenerator.mockImplementation(async () => {
+      await gate;
       return undefined;
     });
 
@@ -775,29 +761,22 @@ describe("useConversationRuns", () => {
       { initialProps: { profileId: "profile-a" } },
     );
 
-    const blockerRun = result.current.runs.executeChatRun(
-      "A",
-      "blocker",
-      { input: { modelId: "model-a", prompt: "blocker" }, messages: [] },
-      { profileId: "profile-blocker" },
-    );
-    await Promise.resolve();
-
-    const queuedA = result.current.runs.executeChatRun(
+    const identity = { profileId: result.current.profileId };
+    const runA = result.current.runs.executeChatRun(
       "A",
       "run-a",
-      { input: { modelId: "model-a", prompt: "queued-a" }, messages: [] },
-      { profileId: result.current.profileId },
+      { input: { modelId: "model-a", prompt: "a" }, messages: [] },
+      identity,
     );
 
     // This mirrors the route/profile render that previously replaced the
     // module-level transport closure while A waited in the serial queue.
     rerender({ profileId: "profile-b" });
-    releaseBlocker();
-    await blockerRun;
-    await queuedA;
+    identity.profileId = "profile-b";
+    releaseRun();
+    await runA;
 
-    expect(harness.chatExecutionProfiles).toEqual(["profile-blocker", "profile-a"]);
+    expect(harness.chatExecutionProfiles).toEqual(["profile-a"]);
     expect(harness.chatExecutionProfiles).not.toContain("profile-b");
   });
 

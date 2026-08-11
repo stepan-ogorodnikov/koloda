@@ -1,6 +1,6 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createAssistantEngine } from "./assistant-engine";
+import { AssistantDuplicateRunError, createAssistantEngine } from "./assistant-engine";
 import type { AssistantExecutionPort, AssistantGenerateExecutionInput } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
@@ -120,37 +120,28 @@ describe("createAssistantEngine", () => {
     await expect(runPromise).resolves.toBeUndefined();
   });
 
-  it("queued retry for A stays owned by A after UI-current switches to B", async () => {
+  it("in-flight retry for A stays owned by A after UI-current switches to B", async () => {
     conversationStates["A"] = { runs: { "run-a": { mode: "chat" } } };
     conversationStates["B"] = { runs: {} };
 
-    let releaseFirst!: () => void;
-    const firstGate = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
+    let releaseRetry!: () => void;
+    const retryGate = new Promise<void>((resolve) => {
+      releaseRetry = resolve;
     });
-    let retryStarted = false;
 
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
-      if (!retryStarted) {
-        await firstGate;
-        return undefined;
-      }
       onChunk("retried");
+      await retryGate;
       return undefined;
     });
-
-    const firstRun = engine.executeChatRun("A", "run-blocker", {} as ChatStreamRequest);
-    await Promise.resolve();
 
     const retryPromise = engine.retryRun("A", "run-a", {} as ChatStreamRequest, null, "chat", "model-a");
     await Promise.resolve();
 
-    // Simulate the UI switching to B while A's retry is still queued.
+    // Simulate the UI switching to B while A's retry is still in flight.
     conversationStates["B"] = { runs: { "run-b": { mode: "chat" } } };
 
-    retryStarted = true;
-    releaseFirst();
-    await firstRun;
+    releaseRetry();
     await retryPromise;
 
     const restartActions = events.filter((e) => e.type === "runStarted");
@@ -173,19 +164,17 @@ describe("createAssistantEngine", () => {
     expect(events.some((e) => e.conversationId === "B")).toBe(false);
   });
 
-  it("captures immutable command input before queued execution reaches the application port", async () => {
-    let releaseBlocker!: () => void;
-    const blockerGate = new Promise<void>((resolve) => {
-      releaseBlocker = resolve;
-    });
+  it("captures immutable command input before execution reaches the application port", async () => {
     const generateInputs: AssistantGenerateExecutionInput[] = [];
+    let releaseGenerate!: () => void;
+    const generateGate = new Promise<void>((resolve) => {
+      releaseGenerate = resolve;
+    });
     const executionPort: AssistantExecutionPort = {
-      executeChat: vi.fn(async (input) => {
-        if (input.runId === "run-blocker") await blockerGate;
-        return undefined;
-      }),
+      executeChat: vi.fn(async () => undefined),
       executeGenerate: vi.fn(async (input) => {
         generateInputs.push(input);
+        await generateGate;
       }),
     };
 
@@ -202,20 +191,6 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
 
-    const blocker = engine.dispatch({
-      type: "executeChat",
-      conversationId: "A",
-      input: {
-        runId: "run-blocker",
-        execution: { profileId: "profile-blocker" },
-        request: {
-          input: { modelId: "model-blocker", prompt: "block" },
-          messages: [{ role: "user", content: "block" }],
-        },
-      },
-    }) as Promise<void>;
-    await Promise.resolve();
-
     const execution = {
       profileId: "profile-a",
       template: {
@@ -231,12 +206,14 @@ describe("createAssistantEngine", () => {
       systemPromptTemplate: "system-a",
     };
 
-    const queued = engine.dispatch({
+    const runPromise = engine.dispatch({
       type: "executeGenerate",
       conversationId: "A",
       input: { runId: "run-a", execution, request },
     }) as Promise<void>;
 
+    // WHY: Capture is sync at dispatch — mutate after accept to prove the port
+    // sees the command-time snapshot, not live references.
     execution.profileId = "profile-b";
     execution.template.id = 2;
     execution.template.content.fields[0]!.title = "Front B";
@@ -244,9 +221,8 @@ describe("createAssistantEngine", () => {
     request.messages[0]!.content = "history-b";
     request.systemPromptTemplate = "system-b";
 
-    releaseBlocker();
-    await blocker;
-    await queued;
+    releaseGenerate();
+    await runPromise;
 
     expect(generateInputs).toHaveLength(1);
     expect(generateInputs[0]).toMatchObject({
@@ -322,8 +298,8 @@ describe("createAssistantEngine", () => {
     expect(completes.map((e) => e.conversationId).sort()).toEqual(["A", "B"]);
   });
 
-  it("cancel before dequeue prevents provider execution", async () => {
-    const streaming = new Set(["run-blocker", "run-queued"]);
+  it("cancel before provider start prevents provider execution", async () => {
+    const streaming = new Set(["run-1"]);
     engine = createAssistantEngine({
       getChatStreamGenerator: () => chatStreamGenerator,
       getStreamGenerator: () => streamGenerator,
@@ -339,45 +315,91 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
 
-    let releaseFirst!: () => void;
-    const firstGate = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
-    });
     const startedRunIds: string[] = [];
 
     chatStreamGenerator.mockImplementation(async (req) => {
       const runLabel = (req as { label?: string }).label ?? "unknown";
       startedRunIds.push(runLabel);
-      if (runLabel === "blocker") {
-        await firstGate;
-      }
       return undefined;
     });
 
-    const firstRun = engine.executeChatRun("A", "run-blocker", { label: "blocker" } as ChatStreamRequest & {
+    // WHY: Same-tick cancel after accept must settle occupancy without calling the provider.
+    const runPromise = engine.executeChatRun("A", "run-1", { label: "only" } as ChatStreamRequest & {
       label: string;
     });
-    await Promise.resolve();
+    engine.cancel("A", "run-1");
+    await runPromise;
 
-    const queuedRun = engine.executeChatRun("A", "run-queued", { label: "queued" } as ChatStreamRequest & {
-      label: string;
-    });
-    await Promise.resolve();
-
-    engine.cancel("A", "run-queued");
-
-    releaseFirst();
-    await firstRun;
-    await queuedRun;
-
-    expect(startedRunIds).toEqual(["blocker"]);
-    expect(chatStreamGenerator).toHaveBeenCalledTimes(1);
+    expect(startedRunIds).toEqual([]);
+    expect(chatStreamGenerator).not.toHaveBeenCalled();
 
     const cancelActions = events.filter(
       (e): e is Extract<AssistantEvent, { type: "runTerminated" }> =>
         e.type === "runTerminated" && e.outcome.status === "canceled",
     );
-    expect(cancelActions.some((e) => e.runId === "run-queued")).toBe(true);
+    expect(cancelActions.some((e) => e.runId === "run-1")).toBe(true);
+  });
+
+  it("same-tick duplicate execute rejects without a second provider call", async () => {
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let providerCalls = 0;
+
+    chatStreamGenerator.mockImplementation(async () => {
+      providerCalls += 1;
+      await firstGate;
+      return undefined;
+    });
+
+    const first = engine.executeChatRun("A", "run-1", {} as ChatStreamRequest);
+    const second = engine.executeChatRun("A", "run-2", {} as ChatStreamRequest);
+
+    await expect(second).rejects.toBeInstanceOf(AssistantDuplicateRunError);
+    await expect(second).rejects.toMatchObject({
+      name: "AssistantDuplicateRunError",
+      conversationId: "A",
+      rejectedRunId: "run-2",
+      activeOrQueuedRunId: "run-1",
+    });
+
+    releaseFirst();
+    await first;
+
+    expect(providerCalls).toBe(1);
+  });
+
+  it("repeated retry while active rejects without enqueueing another provider call", async () => {
+    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let providerCalls = 0;
+
+    chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
+      providerCalls += 1;
+      onChunk(`call-${providerCalls}`);
+      await firstGate;
+      return undefined;
+    });
+
+    const firstRetry = engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
+    const secondRetry = engine.retryRun("A", "run-1", {} as ChatStreamRequest, null, "chat");
+
+    await expect(secondRetry).rejects.toBeInstanceOf(AssistantDuplicateRunError);
+    await expect(secondRetry).rejects.toMatchObject({
+      rejectedRunId: "run-1",
+      activeOrQueuedRunId: "run-1",
+    });
+
+    releaseFirst();
+    await firstRetry;
+
+    expect(providerCalls).toBe(1);
+    expect(events.filter((e) => e.type === "runStarted")).toHaveLength(1);
   });
 
   it("cancel in-flight twice then retry same runId still runs", async () => {
@@ -438,8 +460,8 @@ describe("createAssistantEngine", () => {
     expect(retryChunks).toHaveLength(1);
   });
 
-  it("shutdownGracefully rejects new work and cancels queued work", async () => {
-    const streaming = new Set(["run-active", "run-queued"]);
+  it("shutdownGracefully rejects new work and interrupts the active run", async () => {
+    const streaming = new Set(["run-active"]);
     const flushAllBounded = vi.fn(async () => undefined);
 
     engine = createAssistantEngine({
@@ -482,10 +504,11 @@ describe("createAssistantEngine", () => {
     });
     await Promise.resolve();
 
-    const queuedRun = engine.executeChatRun("A", "run-queued", { label: "queued" } as ChatStreamRequest & {
-      label: string;
-    });
-    await Promise.resolve();
+    await expect(
+      engine.executeChatRun("A", "run-duplicate", { label: "duplicate" } as ChatStreamRequest & {
+        label: string;
+      }),
+    ).rejects.toBeInstanceOf(AssistantDuplicateRunError);
 
     expect(startedRunIds).toEqual(["active"]);
 
@@ -505,7 +528,6 @@ describe("createAssistantEngine", () => {
     });
 
     await expect(activeRun).resolves.toBeUndefined();
-    await expect(queuedRun).resolves.toBeUndefined();
 
     expect(startedRunIds).toEqual(["active"]);
     expect(signals[0]?.aborted).toBe(true);

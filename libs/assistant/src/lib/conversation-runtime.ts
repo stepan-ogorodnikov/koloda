@@ -1,7 +1,7 @@
 import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
-import { AssistantEngineClosedError } from "./assistant-engine";
+import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
 import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
@@ -70,6 +70,10 @@ export function createConversationRuntime(
   // WHY: AbortError catch must stash the registry cause before endRun/finally;
   // handleStreamResult reads it to choose cancel vs interrupt.
   const abortedRunReasons = new Map<string, RunAbortReason>();
+  // INVARIANT: At most one active or queued execute/retry per conversation.
+  // Occupancy is claimed synchronously so same-tick duplicate submit/retry
+  // rejects before a second serial-queue entry is created.
+  let outstandingRunId: string | null = null;
 
   const emit = (event: AssistantEvent) => {
     callbacks.emit(event);
@@ -415,27 +419,35 @@ export function createConversationRuntime(
     }
   };
 
+  // WHY: Reject (do not supersede) a second execute/retry while one is already
+  // active or queued — duplicate provider work must not enqueue silently.
+  const enqueueExclusive = (runId: string, task: () => Promise<void>): Promise<void> => {
+    if (outstandingRunId !== null) {
+      return Promise.reject(new AssistantDuplicateRunError(conversationId, runId, outstandingRunId));
+    }
+    outstandingRunId = runId;
+    return guardClosed(() => queue.enqueue(runId, task)).finally(() => {
+      if (outstandingRunId === runId) outstandingRunId = null;
+    });
+  };
+
   const executeChatRun = (
     runId: string,
     request: ChatStreamRequest,
     execution?: AssistantExecutionIdentity,
   ): Promise<void> =>
-    guardClosed(() =>
-      queue.enqueue(runId, async () => {
-        await withAwaitingStart(runId, () => runChatRun(runId, request, execution));
-      }),
-    );
+    enqueueExclusive(runId, async () => {
+      await withAwaitingStart(runId, () => runChatRun(runId, request, execution));
+    });
 
   const executeGenerateRun = (
     runId: string,
     request: CardGenerationStreamRequest,
     execution?: AssistantExecutionIdentity,
   ): Promise<void> =>
-    guardClosed(() =>
-      queue.enqueue(runId, async () => {
-        await withAwaitingStart(runId, () => runGenerateRun(runId, request, execution));
-      }),
-    );
+    enqueueExclusive(runId, async () => {
+      await withAwaitingStart(runId, () => runGenerateRun(runId, request, execution));
+    });
 
   const retryRun = (
     runId: string,
@@ -445,48 +457,46 @@ export function createConversationRuntime(
     modelName?: string,
     execution?: AssistantExecutionIdentity,
   ): Promise<void> =>
-    guardClosed(() =>
-      queue.enqueue(runId, async () => {
-        await withAwaitingStart(runId, async () => {
-          const earlyCancel = takeCancelBeforeStart(runId);
-          if (earlyCancel !== undefined) {
-            // WHY: Do not restartRun after cancel/shutdown — that would revive a
-            // terminal run and then call the provider.
-            applyQueuedCancel(runId, earlyCancel);
-            return;
-          }
+    enqueueExclusive(runId, async () => {
+      await withAwaitingStart(runId, async () => {
+        const earlyCancel = takeCancelBeforeStart(runId);
+        if (earlyCancel !== undefined) {
+          // WHY: Do not restartRun after cancel/shutdown — that would revive a
+          // terminal run and then call the provider.
+          applyQueuedCancel(runId, earlyCancel);
+          return;
+        }
 
-          // INVARIANT: Restart/clear/stream ownership stays on this runtime's
-          // conversationId even if the UI-current conversation changed while
-          // this retry waited in the serial queue.
-          const run = callbacks.readConversationState(conversationId).runs[runId];
-          const effectiveMode: AIChatMode = run?.mode ?? mode;
+        // INVARIANT: Restart/clear/stream ownership stays on this runtime's
+        // conversationId even if the UI-current conversation changed while
+        // this retry waited in the serial queue.
+        const run = callbacks.readConversationState(conversationId).runs[runId];
+        const effectiveMode: AIChatMode = run?.mode ?? mode;
 
-          emit({
-            type: "runStarted",
-            conversationId,
-            run: {
-              runId,
-              templateFields,
-              mode: effectiveMode,
-              modelName,
-            },
-          });
-
-          if (effectiveMode === "chat") {
-            emit({
-              type: "runChunk",
-              conversationId,
-              runId,
-              chunk: { kind: "assistantText", text: "" },
-            });
-            await runChatRun(runId, request as ChatStreamRequest, execution);
-          } else {
-            await runGenerateRun(runId, request as CardGenerationStreamRequest, execution);
-          }
+        emit({
+          type: "runStarted",
+          conversationId,
+          run: {
+            runId,
+            templateFields,
+            mode: effectiveMode,
+            modelName,
+          },
         });
-      }),
-    );
+
+        if (effectiveMode === "chat") {
+          emit({
+            type: "runChunk",
+            conversationId,
+            runId,
+            chunk: { kind: "assistantText", text: "" },
+          });
+          await runChatRun(runId, request as ChatStreamRequest, execution);
+        } else {
+          await runGenerateRun(runId, request as CardGenerationStreamRequest, execution);
+        }
+      });
+    });
 
   const cancel = (runId: string, reason: QueueCancelReason = "user") => {
     const wasQueued = queue.cancel(runId, reason);

@@ -78,6 +78,29 @@ export class AssistantEngineClosedError extends Error {
   }
 }
 
+/**
+ * Rejected when a conversation already has an active or queued run.
+ * UI disable-submit is not sufficient for same-tick or programmatic duplicates.
+ */
+export class AssistantDuplicateRunError extends Error {
+  readonly conversationId: string;
+  readonly rejectedRunId: string;
+  /** Run id currently occupying the conversation, when known. */
+  readonly activeOrQueuedRunId: string | null;
+
+  constructor(conversationId: string, rejectedRunId: string, activeOrQueuedRunId: string | null = null) {
+    super(
+      activeOrQueuedRunId
+        ? `Conversation ${conversationId} already has an active or queued run (${activeOrQueuedRunId})`
+        : `Conversation ${conversationId} already has an active or queued run`,
+    );
+    this.name = "AssistantDuplicateRunError";
+    this.conversationId = conversationId;
+    this.rejectedRunId = rejectedRunId;
+    this.activeOrQueuedRunId = activeOrQueuedRunId;
+  }
+}
+
 function captureExecutionValue<T>(value: ImmutableExecutionValue<T>): T {
   // WHY: Queue closures must retain command-time data, not references that a
   // later React render or mutable store update can rewrite before execution.
