@@ -70,10 +70,10 @@ export function AssistantCardsMessage({
           isGenerating={isGenerating}
         />
       )}
-      {isCanceled && elapsedSeconds !== undefined && (
+      {isCanceled && (
         <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} canRetry={canRetry} onRetry={onRetry} />
       )}
-      {isInterrupted && elapsedSeconds !== undefined && (
+      {isInterrupted && (
         <AIChatMessageStatus
           state="interrupted"
           elapsedSeconds={elapsedSeconds}

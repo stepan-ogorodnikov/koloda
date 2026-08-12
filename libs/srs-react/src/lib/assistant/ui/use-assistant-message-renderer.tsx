@@ -185,13 +185,13 @@ function renderChatMessage(options: {
     );
   }
 
-  if (run.status === "canceled" && run.elapsedSeconds !== null) {
+  if (run.status === "canceled") {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
         {content}
         <AIChatMessageStatus
           state="canceled"
-          elapsedSeconds={run.elapsedSeconds}
+          elapsedSeconds={run.elapsedSeconds ?? undefined}
           canRetry={isTail}
           onRetry={() => handleRetry(runId)}
           actions={copyAction}
@@ -200,13 +200,13 @@ function renderChatMessage(options: {
     );
   }
 
-  if (run.status === "interrupted" && run.elapsedSeconds !== null) {
+  if (run.status === "interrupted") {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
         {content}
         <AIChatMessageStatus
           state="interrupted"
-          elapsedSeconds={run.elapsedSeconds}
+          elapsedSeconds={run.elapsedSeconds ?? undefined}
           canRetry={isTail}
           onRetry={() => handleRetry(runId)}
           actions={copyAction}

@@ -83,4 +83,16 @@ describe("AssistantCardsMessage", () => {
     expect(screen.queryByTestId("cards-table")).toBeNull();
     expect(screen.getByTestId("status-failed")).toBeTruthy();
   });
+
+  it.each([
+    { label: "canceled", props: { isCanceled: true } },
+    { label: "interrupted", props: { isInterrupted: true } },
+  ])("shows $label status and retry when elapsedSeconds is missing", ({ label, props }) => {
+    const onRetry = vi.fn();
+    render(<AssistantCardsMessage {...baseProps} {...props} elapsedSeconds={undefined} onRetry={onRetry} />);
+
+    expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
+    screen.getByRole("button", { name: "retry" }).click();
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
 });
