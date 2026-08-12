@@ -133,6 +133,8 @@ const terminationReasonField = z
 
 const runStatusField = z.enum(["streaming", "success", "failed", "canceled", "interrupted"]);
 
+const cardStatusField = z.enum(["idle", "pending", "success", "error"]);
+
 const runSchema: z.ZodType<GenerationRun> = z
   .object({
     id: z.string(),
@@ -142,7 +144,9 @@ const runSchema: z.ZodType<GenerationRun> = z
     status: runStatusField,
     reason: terminationReasonField,
     cards: z.array(z.unknown()),
-    cardStatuses: z.record(z.string(), z.unknown()),
+    // INVARIANT: each card status must be one of the four known values — never an
+    // arbitrary string cast to CardStatus.
+    cardStatuses: z.record(z.string(), cardStatusField),
     templateFields: templateFieldsField,
     startedAt: dateField,
     elapsedSeconds: nullableNumberField,

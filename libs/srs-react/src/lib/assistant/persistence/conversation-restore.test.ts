@@ -457,6 +457,58 @@ describe("coerceConversationState", () => {
       expect(coerced.runs["r1"]?.reason).toBe("user");
     });
   });
+
+  describe("run cardStatuses coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "cards",
+        status: "success",
+        cards: [{ content: { "1": { text: "A" } } }],
+        cardStatuses: { 0: "success" },
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    it("accepts all valid CardStatus values", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            cardStatuses: { 0: "idle", 1: "pending", 2: "success", 3: "error" },
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"].cardStatuses).toEqual({
+        0: "idle",
+        1: "pending",
+        2: "success",
+        3: "error",
+      });
+    });
+
+    it("rejects an unknown card status string as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ cardStatuses: { 0: "generating" } }))).length).toBeGreaterThan(0);
+    });
+
+    it("rejects non-string card status values as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ cardStatuses: { 0: 1 } }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ cardStatuses: { 0: {} } }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ cardStatuses: { 0: true } }))).length).toBeGreaterThan(0);
+    });
+  });
 });
 
 describe("normalizeRestoredConversation", () => {
