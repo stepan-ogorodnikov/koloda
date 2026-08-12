@@ -105,7 +105,8 @@ The run transitions to canceled status.
 
 ### Retrying a Run
 
-The user can retry a failed or completed run.
+The user can retry a failed, canceled, or interrupted run.
+Completed (success) runs are not retryable in the UI unless a separate regenerate feature is introduced.
 Retry is only available on the most recent message pair.
 An older run cannot be retried.
 
@@ -182,7 +183,7 @@ Non-text parts are ignored.
 - An empty placeholder assistant message is created at run start, before any content arrives
 - Partial content from a failed or canceled run is preserved and visible to the user
 - Error marker messages have empty text but preserve the run's mode for correct rendering
-- When restoring from database, streaming runs and their messages are removed entirely
+- When restoring from database, persisted streaming checkpoints become `interrupted` with `reason: crash_recovery`; messages and partial output are kept so the user can retry (see ASSISTANT-CHAT-CONVERSATIONS.md §Restore)
 - Failed runs leave behind the user message and an error assistant message, so the conversation is never empty
 - Pending card statuses are reset to idle on restore, allowing the user to try adding them again
 - If a template no longer exists when restoring, a synthetic template is created from stored field data so the card table can still render

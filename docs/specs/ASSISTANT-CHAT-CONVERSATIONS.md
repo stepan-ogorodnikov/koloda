@@ -269,7 +269,8 @@ Save errors are dismissed separately and are cleared by a successful save.
 
 ## Retry
 
-The user can retry a failed, canceled, interrupted, or completed run.
+The user can retry a failed, canceled, or interrupted run.
+Completed (success) runs are not retryable in the UI unless a separate regenerate feature is introduced.
 Retry re-executes the same request against the AI provider.
 
 - The run ID is reused — the existing message pair is overwritten

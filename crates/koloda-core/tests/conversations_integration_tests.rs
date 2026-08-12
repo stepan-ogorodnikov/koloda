@@ -524,6 +524,104 @@ fn delete_conversation_only_removes_targeted_row() {
     assert!(!ids.contains(&"conv-2".to_string()));
 }
 
+#[test]
+fn unconditional_upsert_recreates_row_after_delete() {
+    let db = test_db();
+    let id = "conv-upsert-after-delete";
+    let state = json!({
+        "id": id,
+        "createdAt": 1_700_000_000_000_i64,
+        "messages": [{
+            "id": "msg-1",
+            "role": "user",
+            "parts": [{ "type": "text", "text": "hello" }]
+        }],
+        "runs": {},
+        "activeRunId": null,
+        "mode": "chat",
+        "deckId": null,
+    });
+
+    set(&db, id, state.clone()).expect("initial set should succeed");
+    repo::delete_conversation(&db, id).expect("delete should succeed");
+    assert!(
+        repo::get_conversation(&db, id).expect("query should succeed").is_none(),
+        "row should be gone after delete"
+    );
+
+    // WHY: both PGlite and SQLite repos use unconditional on-conflict upsert.
+    // A save that passed an in-memory existence check can recreate the row
+    // after delete unless the persistence coordinator tombstones/awaits first.
+    set(&db, id, state).expect("upsert after delete should succeed");
+    assert!(
+        repo::get_conversation(&db, id).expect("query should succeed").is_some(),
+        "unconditional upsert recreates the row"
+    );
+}
+
+#[test]
+fn delayed_write_that_respects_tombstone_after_delete_does_not_resurrect_row() {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::mpsc::sync_channel;
+    use std::sync::Arc;
+
+    let db = test_db();
+    let id = "conv-delayed-write-delete";
+    let state_v1 = json!({
+        "id": id,
+        "createdAt": 1_700_000_000_000_i64,
+        "messages": [{
+            "id": "msg-1",
+            "role": "user",
+            "parts": [{ "type": "text", "text": "v1" }]
+        }],
+        "runs": {},
+        "activeRunId": null,
+        "mode": "chat",
+        "deckId": null,
+    });
+    let state_v2 = json!({
+        "id": id,
+        "createdAt": 1_700_000_000_000_i64,
+        "messages": [{
+            "id": "msg-1",
+            "role": "user",
+            "parts": [{ "type": "text", "text": "v2" }]
+        }],
+        "runs": {},
+        "activeRunId": null,
+        "mode": "chat",
+        "deckId": null,
+    });
+
+    set(&db, id, state_v1).expect("initial set should succeed");
+
+    let (release_tx, release_rx) = sync_channel::<()>(0);
+    let tombstoned = Arc::new(AtomicBool::new(false));
+    let tombstoned_for_write = Arc::clone(&tombstoned);
+    let db_for_write = db.clone();
+    let id_owned = id.to_string();
+
+    // WHY: mirrors prepareDelete ordering — tombstone, delete, then resume a
+    // write that already passed the in-memory existence check.
+    let delayed = std::thread::spawn(move || {
+        release_rx.recv().expect("gate should release");
+        if !tombstoned_for_write.load(Ordering::SeqCst) {
+            set(&db_for_write, &id_owned, state_v2).expect("delayed set should succeed");
+        }
+    });
+
+    tombstoned.store(true, Ordering::SeqCst);
+    repo::delete_conversation(&db, id).expect("delete should succeed");
+    release_tx.send(()).expect("gate should open");
+    delayed.join().expect("delayed write thread should finish");
+
+    assert!(
+        repo::get_conversation(&db, id).expect("query should succeed").is_none(),
+        "tombstoned delayed write must not resurrect the row"
+    );
+}
+
 // ============================================================================
 // REPO RETURN TYPE SHAPE
 // ============================================================================

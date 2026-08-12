@@ -1,3 +1,4 @@
+import { logAssistantStructured } from "./assistant-observability";
 import { createConversationSaveQueue, SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
 import type { ConversationDeletion, ConversationSaveQueue } from "./create-conversation-save-queue";
 
@@ -118,6 +119,10 @@ export function createConversationPersistenceHost({
 
   const beginDelete = async (conversationId: string): Promise<ConversationDeletion> => {
     if (disposed) return { commit: () => {}, rollback: () => {} };
+    logAssistantStructured({
+      conversationId,
+      commandOrEvent: "deleteBegin",
+    });
     // INVARIANT: mark tombstoned before awaiting so syncFromPending / retry
     // cannot start a new write while we wait on in-flight (#8 steps 1–3).
     tombstonedIds.add(conversationId);
@@ -130,6 +135,10 @@ export function createConversationPersistenceHost({
         if (settled || disposed) return;
         settled = true;
         queueDeletion?.commit();
+        logAssistantStructured({
+          conversationId,
+          commandOrEvent: "deleteCommit",
+        });
         // INVARIANT: host tombstone stays — getQueue/notifyDirty stay blocked.
       },
       rollback: () => {
@@ -139,6 +148,10 @@ export function createConversationPersistenceHost({
         // resume (or a concurrent pending sync) can reach getQueue again.
         tombstonedIds.delete(conversationId);
         queueDeletion?.rollback();
+        logAssistantStructured({
+          conversationId,
+          commandOrEvent: "deleteRollback",
+        });
       },
     };
   };

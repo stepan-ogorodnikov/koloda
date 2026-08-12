@@ -164,10 +164,20 @@ export function createConversationSaveQueue({
     if (!isDirty()) return;
 
     const generation = dirtyGeneration;
+    logAssistantStructured({
+      conversationId,
+      commandOrEvent: "saveStart",
+      saveGeneration: generation,
+    });
 
     inFlight = (async () => {
       try {
         await write();
+        logAssistantStructured({
+          conversationId,
+          commandOrEvent: "saveAck",
+          saveGeneration: generation,
+        });
         // WHY: ack of N must not clear dirty when N+1 was queued during the write.
         if (dirtyGeneration === generation) {
           ackedGeneration = generation;
