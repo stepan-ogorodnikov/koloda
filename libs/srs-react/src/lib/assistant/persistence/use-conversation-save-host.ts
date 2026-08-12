@@ -1,7 +1,7 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import {
   buildWriteConversation,
   ensureAssistantPersistenceHost,
@@ -32,12 +32,7 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
   // a stable plain object (safe for the module singleton) while still reading
   // fresh mutationFn / queryClient on each write. Do not use useEffectEvent —
   // Effect Events must not escape into a host that outlives the component.
-  const depsRef = useRef({
-    store,
-    setConversationFn,
-    setSaveStatus,
-    queryClient,
-  });
+  const depsRef = useRef({ store, setConversationFn, setSaveStatus, queryClient });
   depsRef.current = { store, setConversationFn, setSaveStatus, queryClient };
 
   const adapterRef = useRef<AssistantPersistenceWriteAdapter>({
@@ -52,9 +47,7 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
       setSaveStatus: currentSetSaveStatus,
       queryClient: currentQueryClient,
     } = depsRef.current;
-    if (!currentSetConversationFn) {
-      throw new Error("setConversationMutation is missing mutationFn");
-    }
+    if (!currentSetConversationFn) throw new Error("setConversationMutation is missing mutationFn");
     return buildWriteConversation({
       store: currentStore,
       // WHY: TanStack `MutationFunction` requires `(variables, context)`; the
@@ -71,18 +64,14 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
     })(id);
   };
 
-  ensureAssistantPersistenceHost(store);
-  // WHY: Register during render (same pattern as engine transports) so dirty
-  // flushes before useEffect can resolve the adapter slot.
-  registerAssistantPersistenceWriteAdapter(adapterRef.current);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // WHY: commit registration in layout effect so an abandoned concurrent render
+    // cannot replace the module slot without running cleanup.
+    ensureAssistantPersistenceHost(store);
     // INVARIANT: clear the module slot on unmount so the singleton never keeps
     // a callback owned by an unmounted tree.
     return registerAssistantPersistenceWriteAdapter(adapterRef.current);
-  }, []);
+  }, [store]);
 
-  return {
-    handleDismissSave: dismissSaveStatus,
-  };
+  return { handleDismissSave: dismissSaveStatus };
 }

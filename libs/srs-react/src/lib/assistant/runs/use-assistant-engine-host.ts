@@ -104,6 +104,11 @@ export function getAssistantEngine(): AssistantEngine {
   return engineInstance;
 }
 
+/** Whether the application-shell persistence write adapter is registered. */
+export function isAssistantPersistenceWriteAdapterReady(): boolean {
+  return persistenceWriteAdapter != null;
+}
+
 /**
  * Register the React-side durable-write adapter for the engine persistence host.
  * Returns an unregister that clears the slot only if this registration is current.
@@ -123,9 +128,12 @@ export function ensureAssistantPersistenceHost(store: AssistantJotaiStore): Conv
   if (!persistenceHostInstance) {
     persistenceHostInstance = createConversationPersistenceHost({
       createWrite: (conversationId) => async () => {
-        const write = persistenceWriteAdapter?.writeConversation;
-        if (!write) throw new Error("Assistant persistence write adapter is not registered");
-        return write(conversationId);
+        if (!isAssistantPersistenceWriteAdapterReady()) {
+          // WHY: the shell registers in useLayoutEffect — reject until committed so
+          // the save queue retries instead of acking a skipped write.
+          throw new Error("Assistant persistence write adapter is not ready");
+        }
+        return persistenceWriteAdapter!.writeConversation(conversationId);
       },
       isStreaming: (conversationId) => store.get(conversationsAtom)[conversationId]?.activeRunId != null,
       getInitialPending: () => store.get(pendingSaveByConversationAtom),
