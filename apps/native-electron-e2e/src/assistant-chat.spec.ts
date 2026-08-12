@@ -3,6 +3,9 @@ import {
   addLmStudioProfile,
   conversationLog,
   createDeckAndOpenAssistant,
+  dispatchGracefulShutdown,
+  getConversationIdFromUrl,
+  openAssistantWithConversation,
   sendAssistantMessage,
   sendCardsAssistantMessage,
   setupApp,
@@ -57,7 +60,75 @@ test("cancels an in-flight stream", async ({ page }) => {
 
     await page.getByRole("button", { name: "Cancel request" }).click();
 
+    await expect(log.getByText("Canceled after")).toBeVisible();
+    await expect(log.getByRole("button", { name: "Retry" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
+  } finally {
+    mock.release();
+    await mock.dispose();
+  }
+});
+
+test("interrupts an in-flight stream on graceful shutdown", async ({ page }) => {
+  const mock = await mockOpenAICompatibleProvider({
+    defaultCompletion: { hold: true },
+  });
+
+  try {
+    await setupApp(page);
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
+    await createDeckAndOpenAssistant(page);
+    await waitForAssistantReady(page);
+
+    await sendAssistantMessage(page, "Please hang");
+
+    const log = conversationLog(page);
+    await expect(log.getByText("Working")).toBeVisible();
+    await expect(log.getByText("Please hang")).toBeVisible();
+
+    await dispatchGracefulShutdown(page);
+
     await expect(log.getByText("Interrupted after")).toBeVisible();
+    await expect(log.getByRole("button", { name: "Retry" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
+  } finally {
+    mock.release();
+    await mock.dispose();
+  }
+});
+
+test("restores an interrupted stream after crash recovery", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  const mock = await mockOpenAICompatibleProvider({
+    defaultCompletion: { hold: true },
+  });
+
+  try {
+    await setupApp(page);
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
+    await createDeckAndOpenAssistant(page);
+    await waitForAssistantReady(page);
+
+    await sendAssistantMessage(page, "Please hang");
+
+    const log = conversationLog(page);
+    await expect(log.getByText("Working")).toBeVisible();
+    await expect(log.getByText("Please hang")).toBeVisible();
+
+    // STREAM_SAVE_THROTTLE_MS is 1000ms — wait for a streaming checkpoint to persist.
+    await page.waitForTimeout(1_500);
+
+    const conversationId = getConversationIdFromUrl(page);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await openAssistantWithConversation(page, conversationId);
+    await waitForAssistantReady(page);
+
+    const logAfter = conversationLog(page);
+    await expect(logAfter.getByText("Please hang")).toBeVisible();
+    await expect(logAfter.getByText("Interrupted after")).toBeVisible();
+    await expect(logAfter.getByRole("button", { name: "Retry" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
   } finally {
     mock.release();

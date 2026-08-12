@@ -398,10 +398,29 @@ export async function addLmStudioProfile(page: Page, options: { title?: string; 
  * store conversation, so profile/model writes no-op and Send stays disabled.
  * `/ai?deckId=` is the existing route path that creates a conversation.
  */
+export function getConversationIdFromUrl(page: Page): string {
+  const match = page.url().match(/conversationId=([^&]+)/);
+  if (!match?.[1]) throw new Error(`Could not parse conversation id from ${page.url()}`);
+  return decodeURIComponent(match[1]);
+}
+
+export async function openAssistantWithConversation(page: Page, conversationId: string) {
+  await page.goto(`/ai?conversationId=${encodeURIComponent(conversationId)}`);
+  await expect(page).toHaveURL(new RegExp(`/ai\\?conversationId=${encodeURIComponent(conversationId)}`));
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+}
+
 export async function openAssistantWithDeck(page: Page, deckId: number) {
   await page.goto(`/ai?deckId=${deckId}`);
   await expect(page).toHaveURL(/\/ai\?conversationId=/);
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+}
+
+/** Simulate graceful app shutdown (`pagehide` with `persisted: false`). */
+export async function dispatchGracefulShutdown(page: Page) {
+  await page.evaluate(() => {
+    window.dispatchEvent(new PageTransitionEvent("pagehide", { persisted: false }));
+  });
 }
 
 export async function createDeckAndOpenAssistant(page: Page, deckTitle = "E2E Assistant Deck") {
