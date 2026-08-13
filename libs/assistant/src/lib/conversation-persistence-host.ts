@@ -30,8 +30,8 @@ export type ConversationPersistenceHost = {
    */
   beginDelete: (conversationId: string) => Promise<ConversationDeletion>;
   /**
-   * Permanent tombstone shim: `beginDelete` then `commit`.
-   * Prefer `beginDelete` when the caller can roll back a failed DB delete (#6).
+   * Permanent tombstone: `beginDelete` then `commit`.
+   * Callers that can roll back a failed DB delete should use `beginDelete`.
    */
   prepareDelete: (conversationId: string) => Promise<void>;
   isTombstoned: (conversationId: string) => boolean;
@@ -157,8 +157,8 @@ export function createConversationPersistenceHost({
   };
 
   const prepareDelete = async (conversationId: string): Promise<void> => {
-    // WHY: temporary shim until srs-react wires beginDelete + commit/rollback
-    // around deleteFromDb (#6). Same permanent tombstone as the pre-transactional API.
+    // WHY: convenience for tests and callers that cannot roll back. Production
+    // delete uses beginDelete + commit/rollback around deleteFromDb.
     const deletion = await beginDelete(conversationId);
     deletion.commit();
   };

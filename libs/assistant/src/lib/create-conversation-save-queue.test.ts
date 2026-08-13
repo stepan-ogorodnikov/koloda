@@ -312,7 +312,7 @@ describe("createConversationSaveQueue", () => {
     expect(queue.isDirty()).toBe(false);
   });
 
-  it("prepareDelete shims beginDelete + commit (permanent tombstone)", async () => {
+  it("prepareDelete permanently tombstones via beginDelete + commit", async () => {
     const first = deferred<boolean>();
     const write = vi.fn(() => first.promise);
     const queue = createConversationSaveQueue({

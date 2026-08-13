@@ -59,8 +59,8 @@ export type ConversationSaveQueue = {
    */
   beginDelete: () => Promise<ConversationDeletion>;
   /**
-   * Permanent tombstone shim: `beginDelete` then `commit`.
-   * Prefer `beginDelete` when the caller can roll back a failed DB delete (#6).
+   * Permanent tombstone: `beginDelete` then `commit`.
+   * Callers that can roll back a failed DB delete should use `beginDelete`.
    */
   prepareDelete: () => Promise<void>;
   isTombstoned: () => boolean;
@@ -286,8 +286,8 @@ export function createConversationSaveQueue({
   };
 
   const prepareDelete = async (): Promise<void> => {
-    // WHY: temporary shim until production wires beginDelete + commit/rollback
-    // around deleteFromDb (#6). Commits immediately — permanent tombstone.
+    // WHY: convenience for tests and callers that cannot roll back. Commits
+    // immediately — permanent tombstone; no rollback.
     const deletion = await beginDelete();
     deletion.commit();
   };
