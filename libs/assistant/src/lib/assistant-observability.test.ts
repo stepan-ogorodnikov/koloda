@@ -123,4 +123,23 @@ describe("assistant structured observability", () => {
     logAssistantStructured({ conversationId: "probe", commandOrEvent: "probe" });
     expect(entries).toEqual([{ conversationId: "probe", commandOrEvent: "probe" }]);
   });
+
+  it("records streamStart with requestId and no payload fields", () => {
+    logAssistantStructured({
+      conversationId: "conv-stream",
+      runId: "run-1",
+      requestId: "req-ipc-1",
+      commandOrEvent: "streamStart",
+    });
+    expect(entries).toEqual([
+      {
+        conversationId: "conv-stream",
+        runId: "run-1",
+        requestId: "req-ipc-1",
+        commandOrEvent: "streamStart",
+      },
+    ]);
+    expect(entries[0]).not.toHaveProperty("chunk");
+    expect(JSON.stringify(entries[0])).not.toMatch(/apiKey|secret/i);
+  });
 });

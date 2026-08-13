@@ -11,6 +11,13 @@ export type AIRuntime = {
     request: ChatStreamRequest,
     onChunk: (chunk: string) => void,
     abortSignal: AbortSignal,
+    /** Host correlation id; Electron uses this for IPC when provided. */
+    requestId?: string,
   ) => Promise<StreamUsage | undefined>;
-  generateCards: (profileId: string, request: CardGenerationRequest) => Promise<void>;
+  generateCards: (
+    profileId: string,
+    request: CardGenerationRequest,
+    /** Host correlation id; Electron uses this for IPC when provided. */
+    requestId?: string,
+  ) => Promise<void>;
 };

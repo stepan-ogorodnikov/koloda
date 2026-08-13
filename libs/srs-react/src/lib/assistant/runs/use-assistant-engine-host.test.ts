@@ -1,4 +1,6 @@
-import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
+import type { AssistantStructuredLog } from "@koloda/assistant";
+import { IDLE_SAVE_DEBOUNCE_MS, resetAssistantStructuredLogger, setAssistantStructuredLogger } from "@koloda/assistant";
+import { aiRuntimeAtom } from "@koloda/core-react";
 import { createStore } from "jotai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initialConversationState } from "../state/conversation-reducer";
@@ -192,5 +194,106 @@ describe("registerAssistantPersistenceWriteAdapter", () => {
     await Promise.resolve();
     expect(writes).toEqual(["A"]);
     vi.useRealTimers();
+  });
+});
+
+describe("execution port streamStart requestId", () => {
+  const entries: AssistantStructuredLog[] = [];
+
+  beforeEach(() => {
+    entries.length = 0;
+    resetAssistantEngineForTests();
+    setAssistantStructuredLogger((entry) => {
+      entries.push(entry);
+    });
+  });
+
+  afterEach(() => {
+    resetAssistantStructuredLogger();
+    resetAssistantEngineForTests();
+  });
+
+  it("logs streamStart and passes the same requestId into chat", async () => {
+    const store = createStore();
+    const chat = vi.fn(async () => undefined);
+    store.set(aiRuntimeAtom, {
+      listModels: async () => [],
+      chat,
+      generateCards: async () => undefined,
+    });
+
+    const engine = ensureAssistantEngine(store);
+    await engine.dispatch({
+      type: "submit",
+      conversationId: "conv-1",
+      input: {
+        kind: "chat",
+        runId: "run-1",
+        request: { messages: [], input: { modelId: "m", prompt: "hi" } },
+        execution: { profileId: "profile-1" },
+      },
+    });
+
+    const streamStart = entries.find((entry) => entry.commandOrEvent === "streamStart");
+    expect(streamStart).toEqual(
+      expect.objectContaining({
+        conversationId: "conv-1",
+        runId: "run-1",
+        commandOrEvent: "streamStart",
+        requestId: expect.any(String),
+      }),
+    );
+    expect(streamStart?.requestId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    expect(chat).toHaveBeenCalledWith(
+      "profile-1",
+      { messages: [], input: { modelId: "m", prompt: "hi" } },
+      expect.any(Function),
+      expect.any(AbortSignal),
+      streamStart?.requestId,
+    );
+    expect(JSON.stringify(streamStart)).not.toMatch(/prompt|chunk|apiKey|secret/i);
+  });
+
+  it("logs streamStart and passes the same requestId into generateCards", async () => {
+    const store = createStore();
+    const generateCards = vi.fn(async () => undefined);
+    store.set(aiRuntimeAtom, {
+      listModels: async () => [],
+      chat: async () => undefined,
+      generateCards,
+    });
+
+    const engine = ensureAssistantEngine(store);
+    await engine.dispatch({
+      type: "submit",
+      conversationId: "conv-2",
+      input: {
+        kind: "cards",
+        runId: "run-2",
+        request: { input: { modelId: "m", prompt: "hi" }, messages: [] },
+        execution: {
+          profileId: "profile-1",
+          template: { id: 1, content: { fields: [] } },
+        },
+      },
+    });
+
+    const streamStart = entries.find((entry) => entry.commandOrEvent === "streamStart");
+    expect(streamStart).toEqual(
+      expect.objectContaining({
+        conversationId: "conv-2",
+        runId: "run-2",
+        commandOrEvent: "streamStart",
+        requestId: expect.any(String),
+      }),
+    );
+    expect(generateCards).toHaveBeenCalledWith(
+      "profile-1",
+      expect.objectContaining({
+        input: { modelId: "m", prompt: "hi" },
+        messages: [],
+      }),
+      streamStart?.requestId,
+    );
   });
 });

@@ -126,8 +126,9 @@ export function createElectronAIRuntime(): AIRuntime {
       }
     },
 
-    chat: async (profileId, request: ChatStreamRequest, onChunk, abortSignal) => {
-      const requestId = crypto.randomUUID();
+    chat: async (profileId, request: ChatStreamRequest, onChunk, abortSignal, correlationId) => {
+      // WHY: Prefer the host-minted id so structured streamStart logs match IPC.
+      const requestId = correlationId ?? crypto.randomUUID();
       // INVARIANT: Attach the stream listener before invoke so early chunks/errors are not missed.
       const waiter = waitForStream({ requestId, abortSignal, onChunk });
       // WHY: Abort before start would leave an orphan provider stream if we still invoke.
@@ -148,8 +149,9 @@ export function createElectronAIRuntime(): AIRuntime {
       return waiter.promise;
     },
 
-    generateCards: async (profileId, request: CardGenerationRequest) => {
-      const requestId = crypto.randomUUID();
+    generateCards: async (profileId, request: CardGenerationRequest, correlationId) => {
+      // WHY: Prefer the host-minted id so structured streamStart logs match IPC.
+      const requestId = correlationId ?? crypto.randomUUID();
       const abortSignal = request.abortSignal ?? new AbortController().signal;
       // INVARIANT: Attach the stream listener before invoke so early cards/errors are not missed.
       const waiter = waitForStream({ requestId, abortSignal, onCard: request.onCard });

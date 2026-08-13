@@ -8,7 +8,7 @@
 export type AssistantStructuredLog = {
   conversationId: string;
   runId?: string;
-  /** Host IPC / transport correlation id when available (optional at engine layer). */
+  /** Host IPC / transport correlation id (Electron stream id). Optional when the host has no transport. */
   requestId?: string;
   commandOrEvent: string;
   priorStatus?: string;

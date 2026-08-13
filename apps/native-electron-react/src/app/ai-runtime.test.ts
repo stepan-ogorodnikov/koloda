@@ -91,6 +91,58 @@ describe("createElectronAIRuntime", () => {
     expect(usage).toEqual({ promptTokens: 1, completionTokens: 2, totalTokens: 3 });
   });
 
+  it("uses a provided requestId for chat IPC", async () => {
+    invokeMock.mockImplementation(async (cmd, args) => {
+      if (cmd !== "cmd_ai_chat_stream") return undefined;
+      const { requestId } = args as { requestId: string };
+      queueMicrotask(() => {
+        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
+      });
+    });
+
+    const runtime = createElectronAIRuntime();
+    await runtime.chat(
+      "profile-1",
+      { messages: [], input: { modelId: "m", prompt: "hi" } },
+      () => {},
+      new AbortController().signal,
+      "host-req-chat",
+    );
+
+    expect(invokeMock).toHaveBeenCalledWith("cmd_ai_chat_stream", {
+      requestId: "host-req-chat",
+      profileId: "profile-1",
+      request: { messages: [], input: { modelId: "m", prompt: "hi" } },
+    });
+  });
+
+  it("uses a provided requestId for generate-cards IPC", async () => {
+    invokeMock.mockImplementation(async (cmd, args) => {
+      if (cmd !== "cmd_ai_generate_cards") return undefined;
+      const { requestId } = args as { requestId: string };
+      queueMicrotask(() => {
+        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
+      });
+    });
+
+    const runtime = createElectronAIRuntime();
+    await runtime.generateCards(
+      "profile-1",
+      {
+        template: { content: { fields: [] } },
+        input: { modelId: "m", prompt: "hi" },
+        onCard: () => {},
+        abortSignal: new AbortController().signal,
+      },
+      "host-req-cards",
+    );
+
+    expect(invokeMock).toHaveBeenCalledWith(
+      "cmd_ai_generate_cards",
+      expect.objectContaining({ requestId: "host-req-cards", profileId: "profile-1" }),
+    );
+  });
+
   it("forwards generated cards over the stream channel", async () => {
     invokeMock.mockImplementation(async (cmd, args) => {
       if (cmd !== "cmd_ai_generate_cards") return undefined;
@@ -137,14 +189,15 @@ describe("createElectronAIRuntime", () => {
       { messages: [], input: { modelId: "m", prompt: "hi" } },
       () => {},
       controller.signal,
+      "host-req-chat",
     );
 
     await Promise.resolve();
     controller.abort();
 
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
-    expect(seenAbortId).toEqual(expect.any(String));
-    expect(invokeMock).toHaveBeenCalledWith("cmd_ai_abort", { requestId: seenAbortId });
+    expect(seenAbortId).toBe("host-req-chat");
+    expect(invokeMock).toHaveBeenCalledWith("cmd_ai_abort", { requestId: "host-req-chat" });
   });
 
   it("does not start chat IPC when signal is already aborted", async () => {

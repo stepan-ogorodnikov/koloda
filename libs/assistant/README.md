@@ -23,8 +23,9 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
   `ConversationRuntimeTransports.executionPort` is **required**.
   The host port resolves credentials from `profileId` at call time.
   There are no `getChatStreamGenerator` / `getStreamGenerator` getters and no mutable transport slot.
-- Observability: `assistant-observability.ts` — structured `[assistant.transition]` logs keyed by conversation/run ids, command/event, prior/next status, termination reason, and save generation/attempt.
+- Observability: `assistant-observability.ts` — structured `[assistant.transition]` logs keyed by conversation/run ids, optional host `requestId`, command/event, prior/next status, termination reason, and save generation/attempt.
   Low-volume persistence events: `saveStart`/`saveAck`/`saveFailed`, `deleteBegin`/`deleteCommit`/`deleteRollback`; engine commands and `shutdown` are logged in `assistant-engine.ts`.
+  Stream start (`streamStart` + `requestId`) is logged at the host execution port; Electron IPC uses the same `requestId`. Do not log token chunks, card payloads, or secrets.
 - Persistence: `conversation-persistence-host.ts`, `create-conversation-save-queue.ts`, `create-save-scheduler.ts` — engine-owned per-conversation serialized save queues; failed writes retry with bounded exponential backoff + jitter; `retrySave` for explicit recovery.
   Production delete is transactional: `beginDelete` (tombstone + cancel queued + await in-flight) → DB delete → `commit`, or `rollback` (clear tombstone, preserve dirty, resume autosave).
   `prepareDelete` is a convenience that permanently tombstones (`beginDelete` then `commit`) for callers that cannot roll back; production uses `beginDelete` + commit/rollback.

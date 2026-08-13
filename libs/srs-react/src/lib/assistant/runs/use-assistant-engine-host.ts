@@ -2,7 +2,12 @@ import type { CardGenerationRequest, ChatStreamRequest } from "@koloda/ai";
 import { computeConversationTitle } from "@koloda/ai";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import type { AssistantEngine, AssistantExecutionPort, ConversationPersistenceHost } from "@koloda/assistant";
-import { createAssistantEngine, createConversationPersistenceHost, SHUTDOWN_FLUSH_TIMEOUT_MS } from "@koloda/assistant";
+import {
+  createAssistantEngine,
+  createConversationPersistenceHost,
+  logAssistantStructured,
+  SHUTDOWN_FLUSH_TIMEOUT_MS,
+} from "@koloda/assistant";
 import { aiRuntimeAtom } from "@koloda/core-react";
 import type { createStore } from "jotai";
 import { useStore } from "jotai";
@@ -60,24 +65,50 @@ function createEngineFromStore(store: AssistantJotaiStore): AssistantEngine {
   });
 }
 
+function createStreamRequestId(): string {
+  return crypto.randomUUID();
+}
+
+function logStreamStart(conversationId: string, runId: string, requestId: string): void {
+  // WHY: One correlation id per stream, minted at the host/AIRuntime boundary
+  // so Electron IPC and structured logs share the same requestId. Never log
+  // chunks, cards, message bodies, or profile secrets.
+  logAssistantStructured({ conversationId, runId, requestId, commandOrEvent: "streamStart" });
+}
+
 function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExecutionPort {
   return {
-    executeChat: (input, onChunk, signal) =>
-      store
+    executeChat: (input, onChunk, signal) => {
+      const requestId = createStreamRequestId();
+      logStreamStart(input.conversationId, input.runId, requestId);
+      return store
         .get(aiRuntimeAtom)
-        .chat(input.identity.profileId, structuredClone(input.request) as ChatStreamRequest, onChunk, signal),
+        .chat(
+          input.identity.profileId,
+          structuredClone(input.request) as ChatStreamRequest,
+          onChunk,
+          signal,
+          requestId,
+        );
+    },
     executeGenerate: async (input, onCard, signal) => {
       const template = input.identity.template;
       if (!template) throw new Error("Card generation execution requires a template snapshot");
 
-      await store.get(aiRuntimeAtom).generateCards(input.identity.profileId, {
-        template: structuredClone(template) as unknown as CardGenerationRequest["template"],
-        input: structuredClone(input.request.input) as CardGenerationRequest["input"],
-        messages: structuredClone(input.request.messages) as CardGenerationRequest["messages"],
-        onCard,
-        abortSignal: signal,
-        systemPromptTemplate: input.request.systemPromptTemplate,
-      });
+      const requestId = createStreamRequestId();
+      logStreamStart(input.conversationId, input.runId, requestId);
+      await store.get(aiRuntimeAtom).generateCards(
+        input.identity.profileId,
+        {
+          template: structuredClone(template) as unknown as CardGenerationRequest["template"],
+          input: structuredClone(input.request.input) as CardGenerationRequest["input"],
+          messages: structuredClone(input.request.messages) as CardGenerationRequest["messages"],
+          onCard,
+          abortSignal: signal,
+          systemPromptTemplate: input.request.systemPromptTemplate,
+        },
+        requestId,
+      );
     },
   };
 }
