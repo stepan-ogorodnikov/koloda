@@ -5,6 +5,7 @@ import type { AiProvider } from "./provider-catalog";
 import type { AISecrets, SecretField } from "./provider-secrets";
 import { lmstudioProviderEntry } from "./providers/lmstudio";
 import { ollamaProviderEntry } from "./providers/ollama";
+import { ollamaCloudProviderEntry } from "./providers/ollama-cloud";
 import { opencodeGoProviderEntry } from "./providers/opencode-go";
 import { opencodeZenProviderEntry } from "./providers/opencode-zen";
 import { fetchOpenRouterModels, openrouterProviderEntry } from "./providers/openrouter";
@@ -30,6 +31,7 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
   lmstudio: lmstudioProviderEntry,
   opencodeGo: opencodeGoProviderEntry,
   opencodeZen: opencodeZenProviderEntry,
+  ollamaCloud: ollamaCloudProviderEntry,
 };
 
 export function getProviderConfig(provider: AiProvider): AIProviderEntry {

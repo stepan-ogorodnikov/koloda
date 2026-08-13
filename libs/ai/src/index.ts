@@ -10,6 +10,7 @@ export * from "./lib/provider-catalog";
 export * from "./lib/provider-registry";
 export * from "./lib/provider-secrets";
 export * from "./lib/providers/ollama";
+export * from "./lib/providers/ollama-cloud";
 export * from "./lib/providers/openai-compatible";
 export * from "./lib/providers/opencode-go";
 export * from "./lib/providers/opencode-zen";

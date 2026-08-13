@@ -160,6 +160,47 @@ fn test_ai_secrets_opencode_zen_deserialize_api_key_alias() {
 }
 
 #[test]
+fn test_ollama_cloud_validate_ok_with_api_key() {
+    let secrets = AISecrets::OllamaCloud {
+        api_key: Some("cloud-secret".to_string()),
+    };
+
+    secrets.validate().unwrap();
+    assert_eq!(secrets.provider(), "ollamaCloud");
+    assert_eq!(secrets.api_key(), Some("cloud-secret"));
+}
+
+#[test]
+fn test_ollama_cloud_validate_empty_api_key_fails() {
+    let secrets = AISecrets::OllamaCloud { api_key: None };
+
+    let result = secrets.validate();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
+fn test_ollama_cloud_validate_whitespace_api_key_fails() {
+    let secrets = AISecrets::OllamaCloud {
+        api_key: Some("  ".to_string()),
+    };
+
+    let result = secrets.validate();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
+fn test_ai_secrets_ollama_cloud_deserialize_api_key_alias() {
+    let json = r#"{
+        "provider": "ollamaCloud",
+        "api_key": "alias-key"
+    }"#;
+
+    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
+    assert_eq!(secrets.provider(), "ollamaCloud");
+    assert_eq!(secrets.api_key(), Some("alias-key"));
+}
+
+#[test]
 fn test_ai_secrets_invalid_provider_fails() {
     let json = r#"{
         "provider": "unknown",

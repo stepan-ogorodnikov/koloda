@@ -40,6 +40,7 @@ fn redact_secrets(secrets: &AISecrets) -> AISecrets {
         },
         AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: None },
         AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: None },
+        AISecrets::OllamaCloud { .. } => AISecrets::OllamaCloud { api_key: None },
     }
 }
 
@@ -56,6 +57,7 @@ fn reconstruct_secrets(secrets: &AISecrets, api_key: String) -> AISecrets {
         },
         AISecrets::OpencodeGo { .. } => AISecrets::OpencodeGo { api_key: Some(api_key) },
         AISecrets::OpencodeZen { .. } => AISecrets::OpencodeZen { api_key: Some(api_key) },
+        AISecrets::OllamaCloud { .. } => AISecrets::OllamaCloud { api_key: Some(api_key) },
     }
 }
 

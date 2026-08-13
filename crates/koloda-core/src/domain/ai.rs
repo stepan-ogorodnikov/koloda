@@ -7,7 +7,14 @@ use serde::{Deserialize, Deserializer, Serialize};
 use crate::app::error::{error_codes, AppError};
 use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
-pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"];
+pub const AI_PROVIDERS: &[&str] = &[
+    "openrouter",
+    "ollama",
+    "lmstudio",
+    "opencodeGo",
+    "opencodeZen",
+    "ollamaCloud",
+];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -76,6 +83,11 @@ pub enum AISecrets {
         #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
+    #[serde(rename = "ollamaCloud")]
+    OllamaCloud {
+        #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
+        api_key: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +124,7 @@ impl AISecrets {
             AISecrets::LmStudio { .. } => "lmstudio",
             AISecrets::OpencodeGo { .. } => "opencodeGo",
             AISecrets::OpencodeZen { .. } => "opencodeZen",
+            AISecrets::OllamaCloud { .. } => "ollamaCloud",
         }
     }
 
@@ -120,6 +133,7 @@ impl AISecrets {
             AISecrets::OpenRouter { api_key }
             | AISecrets::OpencodeGo { api_key }
             | AISecrets::OpencodeZen { api_key }
+            | AISecrets::OllamaCloud { api_key }
             | AISecrets::Ollama { api_key, .. }
             | AISecrets::LmStudio { api_key, .. } => api_key.as_deref(),
         }
@@ -173,6 +187,7 @@ impl AISecrets {
             }
             AISecrets::OpencodeGo { api_key } => Self::require_api_key_for_input(api_key, "opencodeGo"),
             AISecrets::OpencodeZen { api_key } => Self::require_api_key_for_input(api_key, "opencodeZen"),
+            AISecrets::OllamaCloud { api_key } => Self::require_api_key_for_input(api_key, "ollamaCloud"),
         }
     }
 
@@ -202,6 +217,7 @@ impl AISecrets {
             }
             AISecrets::OpencodeGo { api_key } => Self::reject_stored_api_key(api_key, "opencodeGo"),
             AISecrets::OpencodeZen { api_key } => Self::reject_stored_api_key(api_key, "opencodeZen"),
+            AISecrets::OllamaCloud { api_key } => Self::reject_stored_api_key(api_key, "ollamaCloud"),
         }
     }
 }

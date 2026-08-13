@@ -7,7 +7,7 @@ import type { StreamUsage } from "./models";
 import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
-import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
 async function runChatStream(
@@ -87,6 +87,19 @@ export function streamChatWithOllama(
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
     return runChatStream((modelId) => ollama(modelId), "ollama", request, onChunk, abortSignal);
+  });
+}
+
+export function streamChatWithOllamaCloud(
+  request: ChatStreamRequest,
+  onChunk: (chunk: string) => void,
+  abortSignal: AbortSignal,
+  { apiKey }: { apiKey: string },
+) {
+  return wrapAIError(async () => {
+    const { createOllama } = await import("ai-sdk-ollama");
+    const ollama = createOllama({ baseURL: OLLAMA_CLOUD_BASE_URL, apiKey });
+    return runChatStream((modelId) => ollama(modelId), "ollamaCloud", request, onChunk, abortSignal);
   });
 }
 

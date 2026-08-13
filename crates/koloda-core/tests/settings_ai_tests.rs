@@ -143,6 +143,26 @@ fn test_valid_ai_settings_with_opencode_zen_profile_redacted() {
     settings.validate().unwrap();
 }
 
+#[test]
+fn test_valid_ai_settings_with_ollama_cloud_profile_redacted() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-6",
+                "title": "Ollama Cloud",
+                "secrets": {
+                    "provider": "ollamaCloud",
+                    "apiKey": null
+                },
+                "createdAt": "2026-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    settings.validate().unwrap();
+}
+
 // ============================================================================
 // MISSING FIELDS
 // ============================================================================

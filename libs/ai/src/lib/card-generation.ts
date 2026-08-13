@@ -7,7 +7,7 @@ import type { CardGenerationRequest, GeneratedCard } from "./generation";
 import { compilePromptTemplate } from "./prompts";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
-import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
 async function runCardGeneration(
@@ -99,6 +99,14 @@ export function generateCardsWithOllama(
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
     return runCardGeneration((modelId) => ollama(modelId, { structuredOutputs: true }), "ollama", request);
+  });
+}
+
+export function generateCardsWithOllamaCloud(request: CardGenerationRequest, { apiKey }: { apiKey: string }) {
+  return wrapAIError(async () => {
+    const { createOllama } = await import("ai-sdk-ollama");
+    const ollama = createOllama({ baseURL: OLLAMA_CLOUD_BASE_URL, apiKey });
+    return runCardGeneration((modelId) => ollama(modelId, { structuredOutputs: true }), "ollamaCloud", request);
   });
 }
 

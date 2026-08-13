@@ -23,12 +23,17 @@ export const opencodeZenSecretsValidation = z.object({
   apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
 });
 
+export const ollamaCloudSecretsValidation = z.object({
+  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+});
+
 export type AIPrompterSecrets =
   | z.infer<typeof openRouterSecretsValidation>
   | z.infer<typeof ollamaSecretsValidation>
   | z.infer<typeof lmstudioSecretsValidation>
   | z.infer<typeof opencodeGoSecretsValidation>
-  | z.infer<typeof opencodeZenSecretsValidation>;
+  | z.infer<typeof opencodeZenSecretsValidation>
+  | z.infer<typeof ollamaCloudSecretsValidation>;
 
 // WHY: Settings / profile wire format uses `null` for redacted or absent keys.
 // Legacy `""` from older rows normalizes to `null` so missing-secret checks stay explicit.
@@ -50,6 +55,7 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
   }),
   z.object({ provider: z.literal("opencodeGo"), apiKey: storedApiKey }),
   z.object({ provider: z.literal("opencodeZen"), apiKey: storedApiKey }),
+  z.object({ provider: z.literal("ollamaCloud"), apiKey: storedApiKey }),
 ]);
 
 export type AISecrets = z.infer<typeof aiSecretsValidation>;

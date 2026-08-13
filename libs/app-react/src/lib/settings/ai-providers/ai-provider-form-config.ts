@@ -1,6 +1,7 @@
 import {
   aiProfileValidation,
   lmstudioSecretsValidation,
+  ollamaCloudSecretsValidation,
   ollamaSecretsValidation,
   opencodeGoSecretsValidation,
   opencodeZenSecretsValidation,
@@ -39,7 +40,7 @@ const titleField: AIProfileProviderField = {
 };
 
 function apiKeyOnlyConfig(
-  provider: "openrouter" | "opencodeGo" | "opencodeZen",
+  provider: "openrouter" | "opencodeGo" | "opencodeZen" | "ollamaCloud",
   secretsSchema: typeof openRouterSecretsValidation,
 ): AIProviderFormConfig {
   return {
@@ -89,6 +90,7 @@ export const AI_PROVIDER_FORM_CONFIG: Record<AiProvider, AIProviderFormConfig> =
   openrouter: apiKeyOnlyConfig("openrouter", openRouterSecretsValidation),
   opencodeGo: apiKeyOnlyConfig("opencodeGo", opencodeGoSecretsValidation),
   opencodeZen: apiKeyOnlyConfig("opencodeZen", opencodeZenSecretsValidation),
+  ollamaCloud: apiKeyOnlyConfig("ollamaCloud", ollamaCloudSecretsValidation),
   ollama: baseUrlConfig("ollama", ollamaSecretsValidation, "http://localhost:11434"),
   lmstudio: baseUrlConfig("lmstudio", lmstudioSecretsValidation, "http://localhost:1234/v1"),
 };

@@ -18,4 +18,9 @@ describe("provider-secrets", () => {
     const parsed = aiSecretsValidation.parse({ provider: "openrouter", apiKey: null });
     expect(parsed).toEqual({ provider: "openrouter", apiKey: null });
   });
+
+  it("accepts ollamaCloud api-key-only secrets on the wire schema", () => {
+    const parsed = aiSecretsValidation.parse({ provider: "ollamaCloud", apiKey: "cloud-key" });
+    expect(parsed).toEqual({ provider: "ollamaCloud", apiKey: "cloud-key" });
+  });
 });

@@ -26,6 +26,6 @@ store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 
 store.set(aiRuntimeAtom as WritableAtom<AIRuntime, [AIRuntime], unknown>, aiRuntime);
 
-store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen"]);
+store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "ollamaCloud"]);
 
 store.set(appEntryAtom, { component: AppEntry });

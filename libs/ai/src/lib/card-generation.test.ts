@@ -2,13 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import {
   generateCardsWithLMStudio,
   generateCardsWithOllama,
+  generateCardsWithOllamaCloud,
   generateCardsWithOpencodeGo,
   generateCardsWithOpencodeZen,
 } from "./card-generation";
 import { getCardContentSchema } from "./card-parsing";
 import type { CardGenerationFields } from "./generation";
 import { buildSystemPromptForProvider } from "./prompts";
-import { OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
+import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 
 function createFields(): CardGenerationFields {
   return [
@@ -42,6 +43,8 @@ describe("card-generation", () => {
     expect(buildSystemPromptForProvider(fields, "opencodeGo")).toContain("**Front**: <value>");
     expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain("Provider-specific format instructions:");
     expect(buildSystemPromptForProvider(fields, "opencodeZen")).toContain("**Front**: <value>");
+    expect(buildSystemPromptForProvider(fields, "ollamaCloud")).toContain("Provider-specific format instructions:");
+    expect(buildSystemPromptForProvider(fields, "ollamaCloud")).toContain("**Front**: <value>");
   });
 
   it("validates required and optional generated card content", () => {
@@ -323,5 +326,39 @@ describe("card-generation", () => {
     };
     expect(body.model).toBe("openrouter/gpt-5-mini");
     expect(body.messages[0]?.role).toBe("system");
+  });
+
+  it("parses fenced json card output from Ollama Cloud responses", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            message: {
+              content: ["```json", '[{"content":{"1":{"text":"Question"},"2":{"text":"Answer"}}}]', "```"].join("\n"),
+            },
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const request = createRequest();
+
+    await generateCardsWithOllamaCloud(request, { apiKey: "test-key" });
+
+    expect(request.onCard).toHaveBeenCalledTimes(1);
+    expect(request.onCard).toHaveBeenCalledWith({
+      content: {
+        "1": { text: "Question" },
+        "2": { text: "Answer" },
+      },
+    });
+    const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(call?.[0]?.toString()).toContain(OLLAMA_CLOUD_BASE_URL);
+    const init = call?.[1];
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+    expect(headers["Authorization"] ?? headers["authorization"]).toBe("Bearer test-key");
   });
 });

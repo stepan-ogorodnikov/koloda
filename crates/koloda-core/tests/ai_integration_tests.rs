@@ -296,6 +296,37 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
 }
 
 #[test]
+fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("Ollama Cloud".to_string()),
+        Some(AISecrets::OllamaCloud {
+            api_key: Some("cloud-secret-key".to_string()),
+        }),
+    )
+    .expect("profile should be added");
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+
+    assert!(retrieved.has_secrets);
+    match retrieved.secrets.as_ref() {
+        Some(AISecrets::OllamaCloud { api_key }) => assert!(api_key.is_none()),
+        other => panic!("expected OllamaCloud secrets, got {:?}", other),
+    }
+
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("cloud-secret-key"));
+
+    test_store::teardown(_guard);
+}
+
+#[test]
 fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
     let _guard = test_store::setup();
     let db = test_db();
