@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AssistantStructuredLog } from "./assistant-observability";
 import {
   logAssistantStructured,
   resetAssistantStructuredLogger,
   setAssistantStructuredLogger,
-  type AssistantStructuredLog,
 } from "./assistant-observability";
 import { createConversationPersistenceHost } from "./conversation-persistence-host";
 import { createConversationSaveQueue } from "./create-conversation-save-queue";

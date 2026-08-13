@@ -12,7 +12,7 @@
     var prefs = {};
     try {
       prefs = JSON.parse(localStorage.getItem(KEY) || "{}") || {};
-    } catch (_) {}
+    } catch {}
 
     var scheme = prefs.scheme || "system";
     var lightTheme = prefs.lightTheme || "atom-one-light";
@@ -35,5 +35,5 @@
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var motionOn = reduceMotion ? motion === "on" : motion !== "off";
     root.classList.toggle("motion", motionOn);
-  } catch (_) {}
+  } catch {}
 })();

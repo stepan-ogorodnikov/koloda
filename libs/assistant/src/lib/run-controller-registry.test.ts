@@ -10,13 +10,7 @@ describe("createRunControllerRegistry", () => {
     registry.dispose("app_shutdown");
     expect(registry.isClosed).toBe(true);
     expect(controller.signal.aborted).toBe(true);
-    expect(() => registry.beginRun("run-2")).toThrow(RunControllerRegistryClosedError);
-    try {
-      registry.beginRun("run-2");
-    } catch (error) {
-      expect(error).toBeInstanceOf(RunControllerRegistryClosedError);
-      expect((error as RunControllerRegistryClosedError).reason).toBe("app_shutdown");
-    }
+    expect(() => registry.beginRun("run-2")).toThrow(new RunControllerRegistryClosedError("app_shutdown"));
   });
 
   it("records abort provenance for cancel and dispose", () => {
@@ -46,12 +40,6 @@ describe("createRunControllerRegistry", () => {
     const registry = createRunControllerRegistry();
     registry.dispose("app_shutdown");
     registry.dispose("dispose");
-    try {
-      registry.beginRun("run-1");
-      expect.unreachable("beginRun should throw");
-    } catch (error) {
-      expect(error).toBeInstanceOf(RunControllerRegistryClosedError);
-      expect((error as RunControllerRegistryClosedError).reason).toBe("app_shutdown");
-    }
+    expect(() => registry.beginRun("run-1")).toThrow(new RunControllerRegistryClosedError("app_shutdown"));
   });
 });

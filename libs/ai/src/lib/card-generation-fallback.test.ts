@@ -1,9 +1,10 @@
 import { generateText, streamText } from "ai";
+import type * as AiSdk from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateCardsWithOllama } from "./card-generation";
 
 vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
+  const actual = await importOriginal<typeof AiSdk>();
   return {
     ...actual,
     streamText: vi.fn(),

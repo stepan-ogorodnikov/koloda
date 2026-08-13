@@ -422,17 +422,9 @@ describe("createAssistantEngine", () => {
     });
 
     const first = dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest);
-    expect(() => dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest)).toThrow(AssistantDuplicateRunError);
-    try {
-      dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest);
-    } catch (error) {
-      expect(error).toMatchObject({
-        name: "AssistantDuplicateRunError",
-        conversationId: "A",
-        rejectedRunId: "run-2",
-        activeOrQueuedRunId: "run-1",
-      });
-    }
+    expect(() => dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest)).toThrow(
+      new AssistantDuplicateRunError("A", "run-2", "run-1"),
+    );
 
     releaseFirst();
     await first;
@@ -458,16 +450,8 @@ describe("createAssistantEngine", () => {
 
     const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
     expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat")).toThrow(
-      AssistantDuplicateRunError,
+      new AssistantDuplicateRunError("A", "run-1", "run-1"),
     );
-    try {
-      dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
-    } catch (error) {
-      expect(error).toMatchObject({
-        rejectedRunId: "run-1",
-        activeOrQueuedRunId: "run-1",
-      });
-    }
 
     releaseFirst();
     await firstRetry;
@@ -584,7 +568,7 @@ describe("createAssistantEngine", () => {
 
     await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
-        for (const runId of [...streaming]) {
+        for (const runId of streaming) {
           streaming.delete(runId);
           events.push({
             type: "runTerminated",
@@ -881,7 +865,7 @@ describe("createAssistantEngine", () => {
 
     await dispatchShutdown(engine, {
       interruptActiveRuns: () => {
-        for (const runId of [...streaming]) {
+        for (const runId of streaming) {
           streaming.delete(runId);
           events.push({
             type: "runTerminated",
