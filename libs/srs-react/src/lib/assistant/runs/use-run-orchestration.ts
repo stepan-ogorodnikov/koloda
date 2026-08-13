@@ -133,8 +133,12 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
+      let submittedRunId: string | null = null;
       try {
-        // WHY: Atomic submit — one command so the store never briefly holds a
+        // WHY: Accept the engine command first. A sync reject (duplicate/closed)
+        // must not leave a streaming placeholder in the document.
+        const pending = dispatchCommand(toSubmitCommand(activeConversationId, runId, prepared));
+        // WHY: Atomic submit — one action so the store never briefly holds a
         // user message without its run, or a run without an assistant placeholder.
         dispatch([
           "submitTurn",
@@ -148,9 +152,10 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
             modelName: prepared.modelName,
           },
         ]);
-
-        await dispatchCommand(toSubmitCommand(activeConversationId, runId, prepared));
+        submittedRunId = runId;
+        await pending;
       } catch (error) {
+        if (submittedRunId) dispatch(["rollbackSubmitTurn", { runId: submittedRunId }]);
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
         throw error;

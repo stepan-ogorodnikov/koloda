@@ -87,6 +87,7 @@ const actions = {
   updateAssistantText,
   startRun,
   submitTurn,
+  rollbackSubmitTurn,
   addCard,
   setCardStatus,
   completeRun,
@@ -335,6 +336,22 @@ function submitTurn(draft: ConversationReducerState, payload: SubmitTurnPayload)
     kind: payload.kind,
     text: payload.assistantText,
   });
+}
+
+type RollbackSubmitTurnPayload = { runId: string };
+
+// WHY: Safety net if the engine accepted then the returned promise rejects
+// while the turn is still streaming — a late rejection must not delete a
+// terminal success/failed/canceled/interrupted turn.
+function rollbackSubmitTurn(draft: ConversationReducerState, payload: RollbackSubmitTurnPayload) {
+  const run = draft.runs[payload.runId];
+  if (!run || run.status !== "streaming") return;
+  const dropped = dropRuns(draft, new Set([payload.runId]));
+  draft.messages = dropped.messages;
+  draft.runs = dropped.runs;
+  clearActiveIfRun(draft, payload.runId);
+  if (draft.lastReadRunId === payload.runId) draft.lastReadRunId = null;
+  if (draft.dismissedRunErrorId === payload.runId) draft.dismissedRunErrorId = null;
 }
 
 type AddCardPayload = { runId: string; card: GeneratedCard };

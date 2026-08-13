@@ -1,10 +1,6 @@
 import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
-import type {
-  AssistantExecutionIdentity,
-  AssistantExecutionPort,
-  ImmutableExecutionValue,
-} from "./assistant-execution-port";
+import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
 import type { AssistantCommand, ShutdownInput } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
@@ -21,15 +17,7 @@ import type { QueueCancelReason } from "./serial-queue";
 
 export type AssistantEngineLifecycle = "running" | "closing" | "closed";
 
-export type AssistantEngineOptions = ConversationRuntimeCallbacks &
-  ConversationRuntimeTransports & {
-    /**
-     * Fixed application-scoped boundary for commands carrying immutable
-     * execution identity. Legacy transport getters remain until the React
-     * adapter is migrated.
-     */
-    executionPort?: AssistantExecutionPort;
-  };
+export type AssistantEngineOptions = ConversationRuntimeCallbacks & ConversationRuntimeTransports;
 
 /**
  * Public engine surface: typed {@link dispatch} is the sole execution ingress
@@ -93,9 +81,9 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
   let shutdownPromise: Promise<void> | null = null;
 
   const assertRunning = () => {
-    if (lifecycle !== "running") {
-      throw new AssistantEngineClosedError(lifecycle);
-    }
+    // WHY: Reject-before-start must throw synchronously so UI can apply
+    // submitTurn only after dispatch has accepted the command.
+    if (lifecycle !== "running") throw new AssistantEngineClosedError(lifecycle);
   };
 
   const getRuntime = (conversationId: string): ConversationRuntime => {
@@ -122,16 +110,14 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     conversationId: string,
     runId: string,
     request: ImmutableExecutionValue<ChatStreamRequest>,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> => {
-    if (lifecycle !== "running") {
-      return Promise.reject(new AssistantEngineClosedError(lifecycle));
-    }
+    assertRunning();
     logCommand("executeChat", conversationId, runId);
     return getRuntime(conversationId).executeChatRun(
       runId,
       captureExecutionValue<ChatStreamRequest>(request),
-      execution ? captureExecutionValue(execution) : undefined,
+      captureExecutionValue(execution),
     );
   };
 
@@ -139,16 +125,14 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     conversationId: string,
     runId: string,
     request: ImmutableExecutionValue<CardGenerationStreamRequest>,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> => {
-    if (lifecycle !== "running") {
-      return Promise.reject(new AssistantEngineClosedError(lifecycle));
-    }
+    assertRunning();
     logCommand("executeGenerate", conversationId, runId);
     return getRuntime(conversationId).executeGenerateRun(
       runId,
       captureExecutionValue<CardGenerationStreamRequest>(request),
-      execution ? captureExecutionValue(execution) : undefined,
+      captureExecutionValue(execution),
     );
   };
 
@@ -158,12 +142,10 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     request: ImmutableExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>,
     templateFields: ImmutableExecutionValue<TemplateFields> | null,
     mode: AIChatMode,
-    modelName?: string,
-    execution?: AssistantExecutionIdentity,
+    modelName: string | undefined,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> => {
-    if (lifecycle !== "running") {
-      return Promise.reject(new AssistantEngineClosedError(lifecycle));
-    }
+    assertRunning();
     // WHY: conversationId is caller-supplied — never inferred from UI-current
     // state, or a queued retry for A can restart/clear B after a switch.
     logCommand("retry", conversationId, runId);
@@ -173,7 +155,7 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
       mode,
       modelName,
-      execution ? captureExecutionValue(execution) : undefined,
+      captureExecutionValue(execution),
     );
   };
 

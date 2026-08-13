@@ -49,6 +49,6 @@ describe("createSerialQueue", () => {
     await second;
     expect(pendingTask).not.toHaveBeenCalled();
 
-    await expect(queue.enqueue("c", async () => undefined)).rejects.toBeInstanceOf(QueueClosedError);
+    expect(() => queue.enqueue("c", async () => undefined)).toThrow(QueueClosedError);
   });
 });

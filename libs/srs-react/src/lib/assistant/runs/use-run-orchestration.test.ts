@@ -1,4 +1,4 @@
-import { AssistantDuplicateRunError } from "@koloda/assistant";
+import { AssistantDuplicateRunError, AssistantEngineClosedError } from "@koloda/assistant";
 import type { AssistantCommand } from "@koloda/assistant";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
@@ -157,16 +157,22 @@ describe("useRunOrchestration — atomic submitTurn", () => {
   let readState: () => ConversationReducerState;
   let dispatched: ConversationReducerAction[];
   let dispatchCommand: ReturnType<typeof vi.fn<DispatchCommand>>;
+  let callOrder: string[];
 
   beforeEach(() => {
     dispatched = [];
+    callOrder = [];
     store = createStore();
     dispatch = (action) => {
       dispatched.push(action);
+      if (action[0] === "submitTurn") callOrder.push("submitTurn");
       store.set(assistantConversationStateAtom, action);
     };
     readState = () => store.get(assistantConversationStateAtom);
-    dispatchCommand = vi.fn<DispatchCommand>(async () => undefined);
+    dispatchCommand = vi.fn<DispatchCommand>(() => {
+      callOrder.push("command");
+      return Promise.resolve();
+    });
   });
 
   it("handleGenerate dispatches a single submitTurn (not three separate actions)", async () => {
@@ -198,6 +204,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
 
     const turnActions = dispatched.filter((a) => a[0] === "submitTurn");
     expect(turnActions).toHaveLength(1);
+    expect(callOrder).toEqual(["command", "submitTurn"]);
     expect(dispatched.some((a) => a[0] === "addUserMessage")).toBe(false);
     expect(dispatched.some((a) => a[0] === "startRun")).toBe(false);
     expect(dispatched.some((a) => a[0] === "addAssistantMessage")).toBe(false);
@@ -491,6 +498,78 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     await act(async () => {
       await expect(result.current.handleGenerate("dup")).resolves.toBeUndefined();
     });
+
+    const state = readState();
+    expect(state.messages).toHaveLength(0);
+    expect(state.runs).toEqual({});
+    expect(state.activeRunId).toBeNull();
+  });
+
+  it("sync AssistantDuplicateRunError does not dispatch submitTurn", async () => {
+    seedConversation("conv-1");
+    const dispatchCommand = vi.fn<DispatchCommand>(() => {
+      throw new AssistantDuplicateRunError("conv-1", "run-new", "run-old");
+    });
+    const dispatched: ConversationReducerAction[] = [];
+    const trackingDispatch = (action: ConversationReducerAction) => {
+      dispatched.push(action);
+      dispatch(action);
+    };
+
+    const cfg = makeConfig();
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch: trackingDispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+      }),
+    );
+
+    await act(async () => {
+      await expect(result.current.handleGenerate("dup-sync")).resolves.toBeUndefined();
+    });
+
+    expect(dispatched.some((a) => a[0] === "submitTurn")).toBe(false);
+    expect(readState().messages).toHaveLength(0);
+    expect(readState().activeRunId).toBeNull();
+  });
+
+  it("closed-engine submit does not leave a streaming placeholder", async () => {
+    seedConversation("conv-1");
+    const dispatchCommand = vi.fn<DispatchCommand>(() => {
+      throw new AssistantEngineClosedError("closed");
+    });
+
+    const cfg = makeConfig();
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+      }),
+    );
+
+    await act(async () => {
+      await expect(result.current.handleGenerate("closed")).rejects.toMatchObject({
+        name: "AssistantEngineClosedError",
+      });
+    });
+
+    expect(readState().messages).toHaveLength(0);
+    expect(readState().runs).toEqual({});
+    expect(readState().activeRunId).toBeNull();
   });
 
   it("swallows AssistantDuplicateRunError from retry command", async () => {
@@ -544,6 +623,10 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     await act(async () => {
       await expect(result.current.handleGenerate("fail")).rejects.toThrow("transport blew up");
     });
+
+    expect(readState().messages).toHaveLength(0);
+    expect(readState().runs).toEqual({});
+    expect(readState().activeRunId).toBeNull();
   });
 
   it("rethrows non-duplicate errors from retry command", async () => {

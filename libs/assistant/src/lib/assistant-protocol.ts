@@ -11,23 +11,20 @@ export type SubmitInput = ImmutableExecutionValue<
   | {
       kind: "chat";
       runId: string;
-      /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
-      execution?: AssistantExecutionIdentity;
+      execution: AssistantExecutionIdentity;
       request: ChatStreamRequest;
     }
   | {
       kind: "cards";
       runId: string;
-      /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
-      execution?: AssistantExecutionIdentity;
+      execution: AssistantExecutionIdentity;
       request: CardGenerationStreamRequest;
     }
 >;
 
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
-  /** Present for production identity-bearing commands; omitted only for legacy transport tests. */
-  execution?: AssistantExecutionIdentity;
+  execution: AssistantExecutionIdentity;
   request: ChatStreamRequest | CardGenerationStreamRequest;
   templateFields: TemplateFields | null;
   mode: AIChatMode;

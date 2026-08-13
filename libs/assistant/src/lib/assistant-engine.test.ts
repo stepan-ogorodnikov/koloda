@@ -1,9 +1,26 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest } from "@koloda/ai";
+import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AssistantDuplicateRunError, createAssistantEngine } from "./assistant-engine";
-import type { AssistantExecutionPort, AssistantGenerateExecutionInput } from "./assistant-execution-port";
+import { AssistantDuplicateRunError, AssistantEngineClosedError, createAssistantEngine } from "./assistant-engine";
+import type {
+  AssistantChatExecutionInput,
+  AssistantExecutionIdentity,
+  AssistantExecutionPort,
+  AssistantGenerateExecutionInput,
+} from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
+import type { CardGenerationStreamRequest } from "./card-generation";
+
+type TestChatTransport = (
+  request: AssistantChatExecutionInput["request"],
+  onChunk: (chunk: string) => void,
+  signal: AbortSignal,
+) => Promise<StreamUsage | undefined>;
+
+type TestGenerateTransport = (
+  request: AssistantGenerateExecutionInput["request"],
+  onCard: (card: GeneratedCard) => void,
+  signal: AbortSignal,
+) => Promise<void>;
 
 type ConversationStateSnapshot = { runs: Record<string, { mode?: AIChatMode }> };
 
@@ -17,6 +34,18 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
   });
 }
 
+const TEST_EXECUTION: AssistantExecutionIdentity = { profileId: "test-profile" };
+
+function portFromGenerators(
+  chatStreamGenerator: TestChatTransport,
+  streamGenerator: TestGenerateTransport,
+): AssistantExecutionPort {
+  return {
+    executeChat: (input, onChunk, signal) => chatStreamGenerator(input.request, onChunk, signal),
+    executeGenerate: (input, onCard, signal) => streamGenerator(input.request, onCard, signal),
+  };
+}
+
 function dispatchChat(
   target: ReturnType<typeof createAssistantEngine>,
   conversationId: string,
@@ -26,8 +55,7 @@ function dispatchChat(
   return target.dispatch({
     type: "submit",
     conversationId,
-    // WHY: Legacy-transport engine tests omit execution so getChatStreamGenerator is used.
-    input: { kind: "chat", runId, request },
+    input: { kind: "chat", runId, request, execution: TEST_EXECUTION },
   }) as Promise<void>;
 }
 
@@ -43,7 +71,14 @@ function dispatchRetry(
   return target.dispatch({
     type: "retry",
     conversationId,
-    input: { runId, request, templateFields, mode, modelName },
+    input: {
+      runId,
+      request,
+      templateFields,
+      mode,
+      ...(modelName === undefined ? {} : { modelName }),
+      execution: TEST_EXECUTION,
+    },
   }) as Promise<void>;
 }
 
@@ -61,23 +96,22 @@ function dispatchShutdown(
 describe("createAssistantEngine", () => {
   const events: AssistantEvent[] = [];
   const conversationStates: Record<string, ConversationStateSnapshot> = {};
-  let chatStreamGenerator: ReturnType<typeof vi.fn<ChatStreamGenerator>>;
-  let streamGenerator: ReturnType<typeof vi.fn<CardGenerationExecutor>>;
+  let chatStreamGenerator: ReturnType<typeof vi.fn<TestChatTransport>>;
+  let streamGenerator: ReturnType<typeof vi.fn<TestGenerateTransport>>;
   let engine: ReturnType<typeof createAssistantEngine>;
   let readConversationState: ReturnType<typeof vi.fn<(conversationId: string) => ConversationStateSnapshot>>;
 
   beforeEach(() => {
     events.length = 0;
     for (const key of Object.keys(conversationStates)) delete conversationStates[key];
-    chatStreamGenerator = vi.fn<ChatStreamGenerator>();
-    streamGenerator = vi.fn<CardGenerationExecutor>();
+    chatStreamGenerator = vi.fn<TestChatTransport>();
+    streamGenerator = vi.fn<TestGenerateTransport>();
     readConversationState = vi.fn<(conversationId: string) => ConversationStateSnapshot>(
       (conversationId) => conversationStates[conversationId] ?? { runs: {} },
     );
 
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
       },
@@ -221,10 +255,6 @@ describe("createAssistantEngine", () => {
 
     engine = createAssistantEngine({
       executionPort,
-      // INVARIANT: Compatibility transports remain registered until the React adapter
-      // migration, but identity-bearing commands must not resolve through them.
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
       emit: (event) => events.push(event),
       markReadIfCurrent: vi.fn(),
       touch: vi.fn(),
@@ -342,8 +372,7 @@ describe("createAssistantEngine", () => {
   it("cancel before provider start prevents provider execution", async () => {
     const streaming = new Set(["run-1"]);
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
         if (event.type === "runTerminated") {
@@ -393,15 +422,17 @@ describe("createAssistantEngine", () => {
     });
 
     const first = dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest);
-    const second = dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest);
-
-    await expect(second).rejects.toBeInstanceOf(AssistantDuplicateRunError);
-    await expect(second).rejects.toMatchObject({
-      name: "AssistantDuplicateRunError",
-      conversationId: "A",
-      rejectedRunId: "run-2",
-      activeOrQueuedRunId: "run-1",
-    });
+    expect(() => dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest)).toThrow(AssistantDuplicateRunError);
+    try {
+      dispatchChat(engine, "A", "run-2", {} as ChatStreamRequest);
+    } catch (error) {
+      expect(error).toMatchObject({
+        name: "AssistantDuplicateRunError",
+        conversationId: "A",
+        rejectedRunId: "run-2",
+        activeOrQueuedRunId: "run-1",
+      });
+    }
 
     releaseFirst();
     await first;
@@ -426,13 +457,17 @@ describe("createAssistantEngine", () => {
     });
 
     const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
-    const secondRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
-
-    await expect(secondRetry).rejects.toBeInstanceOf(AssistantDuplicateRunError);
-    await expect(secondRetry).rejects.toMatchObject({
-      rejectedRunId: "run-1",
-      activeOrQueuedRunId: "run-1",
-    });
+    expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat")).toThrow(
+      AssistantDuplicateRunError,
+    );
+    try {
+      dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
+    } catch (error) {
+      expect(error).toMatchObject({
+        rejectedRunId: "run-1",
+        activeOrQueuedRunId: "run-1",
+      });
+    }
 
     releaseFirst();
     await firstRetry;
@@ -446,8 +481,7 @@ describe("createAssistantEngine", () => {
     conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
 
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
         if (event.type === "runTerminated") {
@@ -504,8 +538,7 @@ describe("createAssistantEngine", () => {
     const flushAllBounded = vi.fn(async () => undefined);
 
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
         if (event.type === "runTerminated") {
@@ -543,9 +576,9 @@ describe("createAssistantEngine", () => {
     });
     await Promise.resolve();
 
-    await expect(
+    expect(() =>
       dispatchChat(engine, "A", "run-duplicate", { label: "duplicate" } as ChatStreamRequest & { label: string }),
-    ).rejects.toBeInstanceOf(AssistantDuplicateRunError);
+    ).toThrow(AssistantDuplicateRunError);
 
     expect(startedRunIds).toEqual(["active"]);
 
@@ -571,9 +604,7 @@ describe("createAssistantEngine", () => {
     expect(flushAllBounded).toHaveBeenCalled();
     expect(engine.lifecycle).toBe("closed");
 
-    await expect(dispatchChat(engine, "A", "run-after", {} as ChatStreamRequest)).rejects.toMatchObject({
-      name: "AssistantEngineClosedError",
-    });
+    expect(() => dispatchChat(engine, "A", "run-after", {} as ChatStreamRequest)).toThrow(AssistantEngineClosedError);
   });
 
   it("dispose cannot be followed by beginRun via dispatch executeChat", async () => {
@@ -582,9 +613,7 @@ describe("createAssistantEngine", () => {
     engine.dispose();
     expect(engine.lifecycle).toBe("closed");
 
-    await expect(dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest)).rejects.toMatchObject({
-      name: "AssistantEngineClosedError",
-    });
+    expect(() => dispatchChat(engine, "A", "run-1", {} as ChatStreamRequest)).toThrow(AssistantEngineClosedError);
     expect(chatStreamGenerator).not.toHaveBeenCalled();
   });
 
@@ -594,8 +623,7 @@ describe("createAssistantEngine", () => {
     conversationStates.B = { runs: { "run-b": { mode: "chat" } } };
 
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
       },
@@ -630,8 +658,7 @@ describe("createAssistantEngine", () => {
     conversationStates.B = { runs: { "run-cleared": { mode: "chat" } } };
 
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
       },
@@ -831,8 +858,7 @@ describe("createAssistantEngine", () => {
   it("does not classify shutdown AbortError as user cancellation", async () => {
     const streaming = new Set(["run-1"]);
     engine = createAssistantEngine({
-      getChatStreamGenerator: () => chatStreamGenerator,
-      getStreamGenerator: () => streamGenerator,
+      executionPort: portFromGenerators(chatStreamGenerator, streamGenerator),
       emit: (event) => {
         events.push(event);
         if (event.type === "runTerminated") {

@@ -60,6 +60,42 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("rollbackSubmitTurn", () => {
+    it("removes a still-streaming submit turn and clears activeRunId", () => {
+      const state = reduce([
+        {
+          type: "submitTurn",
+          runId: "r1",
+          text: "Hello",
+          mode: "chat",
+          kind: "chat-text",
+          assistantText: "",
+        },
+        { type: "rollbackSubmitTurn", runId: "r1" },
+      ]);
+      expect(state.messages).toHaveLength(0);
+      expect(state.runs).toEqual({});
+      expect(state.activeRunId).toBeNull();
+    });
+
+    it("is a no-op when the run has already left streaming", () => {
+      const state = reduce([
+        {
+          type: "submitTurn",
+          runId: "r1",
+          text: "Hello",
+          mode: "chat",
+          kind: "chat-text",
+          assistantText: "",
+        },
+        { type: "completeRun", runId: "r1" },
+        { type: "rollbackSubmitTurn", runId: "r1" },
+      ]);
+      expect(state.messages).toHaveLength(2);
+      expect(state.runs.r1?.status).toBe("success");
+    });
+  });
+
   describe("addAssistantMessage", () => {
     it("appends an assistant message with chat-text metadata", () => {
       const state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "Hi there" }]);

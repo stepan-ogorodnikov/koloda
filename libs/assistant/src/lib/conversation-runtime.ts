@@ -1,10 +1,10 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "./card-generation";
+import type { CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
@@ -27,29 +27,25 @@ export type ConversationRuntimeCallbacks = {
 };
 
 export type ConversationRuntimeTransports = {
-  /** New application-scoped execution boundary for identity-bearing commands. */
-  executionPort?: AssistantExecutionPort;
-  /** @deprecated Compatibility transport removed by the React adapter migration. */
-  getChatStreamGenerator?: () => ChatStreamGenerator;
-  /** @deprecated Compatibility transport removed by the React adapter migration. */
-  getStreamGenerator?: () => CardGenerationExecutor;
+  /** Application-scoped provider boundary for identity-bearing commands. */
+  executionPort: AssistantExecutionPort;
 };
 
 export type ConversationRuntime = {
   conversationId: string;
-  executeChatRun: (runId: string, request: ChatStreamRequest, execution?: AssistantExecutionIdentity) => Promise<void>;
+  executeChatRun: (runId: string, request: ChatStreamRequest, execution: AssistantExecutionIdentity) => Promise<void>;
   executeGenerateRun: (
     runId: string,
     request: CardGenerationStreamRequest,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ) => Promise<void>;
   retryRun: (
     runId: string,
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
-    modelName?: string,
-    execution?: AssistantExecutionIdentity,
+    modelName: string | undefined,
+    execution: AssistantExecutionIdentity,
   ) => Promise<void>;
   cancel: (runId: string, reason?: QueueCancelReason) => void;
   close: (reason: QueueCancelReason) => void;
@@ -210,7 +206,7 @@ export function createConversationRuntime(
   const runChatRun = async (
     runId: string,
     request: ChatStreamRequest,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> => {
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
@@ -239,28 +235,17 @@ export function createConversationRuntime(
             const onChunk = (chunk: string) => {
               if (!controller.signal.aborted) onValue(chunk);
             };
-            let usage: StreamUsage | undefined;
-            if (execution) {
-              if (!transports.executionPort) {
-                throw new Error("Assistant execution port is not configured");
-              }
-              usage = await transports.executionPort.executeChat(
-                {
-                  kind: "chat",
-                  conversationId,
-                  runId,
-                  identity: execution,
-                  request: req,
-                },
-                onChunk,
-                controller.signal,
-              );
-            } else {
-              if (!transports.getChatStreamGenerator) {
-                throw new Error("Assistant chat transport is not configured");
-              }
-              usage = await transports.getChatStreamGenerator()(req, onChunk, controller.signal);
-            }
+            const usage = await transports.executionPort.executeChat(
+              {
+                kind: "chat",
+                conversationId,
+                runId,
+                identity: execution,
+                request: req,
+              },
+              onChunk,
+              controller.signal,
+            );
             return { streamResult: "success" as const, usage: usage ?? null };
           } catch (e) {
             // WHY: AbortError alone is not user cancel — classify from
@@ -332,7 +317,7 @@ export function createConversationRuntime(
   const runGenerateRun = async (
     runId: string,
     request: CardGenerationStreamRequest,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> => {
     const earlyCancel = takeCancelBeforeStart(runId);
     if (earlyCancel !== undefined) {
@@ -358,27 +343,17 @@ export function createConversationRuntime(
             const onCard = (card: GeneratedCard) => {
               if (!controller.signal.aborted) onValue(card);
             };
-            if (execution) {
-              if (!transports.executionPort) {
-                throw new Error("Assistant execution port is not configured");
-              }
-              await transports.executionPort.executeGenerate(
-                {
-                  kind: "cards",
-                  conversationId,
-                  runId,
-                  identity: execution,
-                  request: req,
-                },
-                onCard,
-                controller.signal,
-              );
-            } else {
-              if (!transports.getStreamGenerator) {
-                throw new Error("Assistant card generation transport is not configured");
-              }
-              await transports.getStreamGenerator()(req, onCard, controller.signal);
-            }
+            await transports.executionPort.executeGenerate(
+              {
+                kind: "cards",
+                conversationId,
+                runId,
+                identity: execution,
+                request: req,
+              },
+              onCard,
+              controller.signal,
+            );
             return "success" as const;
           } catch (e) {
             if (isAbortError(e)) return classifyAbortError(runId);
@@ -417,17 +392,18 @@ export function createConversationRuntime(
     );
   };
 
+  const mapQueueClosed = (error: QueueClosedError): AssistantEngineClosedError =>
+    new AssistantEngineClosedError(
+      error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
+    );
+
   const guardClosed = async (run: () => Promise<void>): Promise<void> => {
     try {
       await run();
     } catch (error) {
-      if (error instanceof QueueClosedError) {
-        // WHY: Callers already handle AssistantEngineClosedError; do not resolve
-        // closed-queue races as success.
-        throw new AssistantEngineClosedError(
-          error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
-        );
-      }
+      // WHY: Callers already handle AssistantEngineClosedError; do not resolve
+      // closed-queue races as success.
+      if (error instanceof QueueClosedError) throw mapQueueClosed(error);
       // WHY: Safety net if a closed-registry throw escapes transport conversion —
       // still a typed engine-closed rejection, never a bare Error.
       if (error instanceof RunControllerRegistryClosedError) {
@@ -450,12 +426,19 @@ export function createConversationRuntime(
 
   // WHY: Reject (do not supersede) a second execute/retry while one is already
   // active or queued — duplicate provider work must not enqueue silently.
+  // INVARIANT: Duplicate/closed fail synchronously so UI can apply submitTurn
+  // only after the command is accepted. Do not claim occupancy unless enqueue succeeded.
   const enqueueExclusive = (runId: string, task: () => Promise<void>): Promise<void> => {
-    if (outstandingRunId !== null) {
-      return Promise.reject(new AssistantDuplicateRunError(conversationId, runId, outstandingRunId));
+    if (outstandingRunId !== null) throw new AssistantDuplicateRunError(conversationId, runId, outstandingRunId);
+    let pending: Promise<void>;
+    try {
+      pending = queue.enqueue(runId, task);
+    } catch (error) {
+      if (error instanceof QueueClosedError) throw mapQueueClosed(error);
+      throw error;
     }
     outstandingRunId = runId;
-    return guardClosed(() => queue.enqueue(runId, task)).finally(() => {
+    return guardClosed(() => pending).finally(() => {
       if (outstandingRunId === runId) outstandingRunId = null;
     });
   };
@@ -463,7 +446,7 @@ export function createConversationRuntime(
   const executeChatRun = (
     runId: string,
     request: ChatStreamRequest,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, () => runChatRun(runId, request, execution));
@@ -472,7 +455,7 @@ export function createConversationRuntime(
   const executeGenerateRun = (
     runId: string,
     request: CardGenerationStreamRequest,
-    execution?: AssistantExecutionIdentity,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, () => runGenerateRun(runId, request, execution));
@@ -483,8 +466,8 @@ export function createConversationRuntime(
     request: ChatStreamRequest | CardGenerationStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
-    modelName?: string,
-    execution?: AssistantExecutionIdentity,
+    modelName: string | undefined,
+    execution: AssistantExecutionIdentity,
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, async () => {

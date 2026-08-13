@@ -55,9 +55,8 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
     },
 
     enqueue(runId, task) {
-      if (closed != null) {
-        return Promise.reject(new QueueClosedError(closed));
-      }
+      // WHY: Closed must fail before the caller treats the command as accepted.
+      if (closed != null) throw new QueueClosedError(closed);
 
       const entryKey = `${runId}:${entrySeq++}`;
 
