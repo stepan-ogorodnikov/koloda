@@ -11,7 +11,7 @@ describe("ai-error", () => {
   it("maps structured, network, invalid-response, and abort errors", () => {
     expect(toAIAppError({ status: 503, responseBody: "gateway timeout" })).toMatchObject({
       code: "ai.http.503",
-      details: "gateway timeout",
+      details: "503 — gateway timeout",
     });
     expect(toAIAppError(new TypeError("network down"))).toMatchObject({
       code: "ai.network",
