@@ -79,7 +79,7 @@ msgstr "Провайдер вернул некорректный ответ"
 
 #: ../../libs/app/src/lib/error.ts:11
 msgid "ai.network"
-msgstr "Ошибка сети при обращении к провайдеру"
+msgstr "Не удалось связаться с провайдером (ошибка сети или блокировка CORS в браузере)"
 
 #: ../../libs/app/src/lib/error.ts:27
 msgid "db.add"

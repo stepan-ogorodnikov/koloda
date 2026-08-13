@@ -1,6 +1,7 @@
 import { AIError } from "./error";
 import type { ChatStreamGenerator, GenerateCardsFunction } from "./generation";
 import type { AIModel } from "./models";
+import { AI_PROVIDERS } from "./provider-catalog";
 import type { AiProvider } from "./provider-catalog";
 import type { AISecrets, SecretField } from "./provider-secrets";
 import { lmstudioProviderEntry } from "./providers/lmstudio";
@@ -19,6 +20,8 @@ export type AIGenerationClient = {
 
 export type AIProviderEntry = {
   id: AiProvider;
+  /** Whether page-origin `fetch` can call this API (CORS). Electron ignores this. */
+  worksInBrowser: boolean;
   createClient: (secrets: AISecrets) => AIGenerationClient;
   fetchModels: (secrets: AISecrets) => Promise<AIModel[]>;
   getMissingSecretFields: (secrets: AISecrets) => SecretField[];
@@ -39,6 +42,10 @@ export function getProviderConfig(provider: AiProvider): AIProviderEntry {
   if (!entry) throw new AIError("unknown", `Unsupported provider: ${provider}`);
 
   return entry;
+}
+
+export function listProvidersThatWorkInBrowser(): AiProvider[] {
+  return AI_PROVIDERS.filter((id) => getProviderConfig(id).worksInBrowser);
 }
 
 export function createAIGenerationClient(secretsInput: AISecrets | string): AIGenerationClient {

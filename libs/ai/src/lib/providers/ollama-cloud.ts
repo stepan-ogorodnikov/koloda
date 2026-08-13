@@ -27,6 +27,7 @@ function createOllamaCloudClient(secrets: Extract<AISecrets, { provider: "ollama
 
 export const ollamaCloudProviderEntry: AIProviderEntry = {
   id: "ollamaCloud",
+  worksInBrowser: false,
   createClient: (secrets) => createOllamaCloudClient(secrets as Extract<AISecrets, { provider: "ollamaCloud" }>),
   fetchModels: async (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "ollamaCloud" }>;

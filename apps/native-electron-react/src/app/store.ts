@@ -1,3 +1,4 @@
+import { AI_PROVIDERS } from "@koloda/ai";
 import type { AIRuntime } from "@koloda/ai";
 import { aiProvidersAtom, aiRuntimeAtom, appEntryAtom, langAtom, queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
@@ -26,6 +27,6 @@ store.set(queriesAtom as WritableAtom<Queries, [Queries], unknown>, queries);
 
 store.set(aiRuntimeAtom as WritableAtom<AIRuntime, [AIRuntime], unknown>, aiRuntime);
 
-store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "ollamaCloud"]);
+store.set(aiProvidersAtom, [...AI_PROVIDERS]);
 
 store.set(appEntryAtom, { component: AppEntry });

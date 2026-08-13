@@ -18,6 +18,7 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
 
 export const lmstudioProviderEntry: AIProviderEntry = {
   id: "lmstudio",
+  worksInBrowser: true,
   createClient: (secrets) => createLmStudioClient(secrets as Extract<AISecrets, { provider: "lmstudio" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "lmstudio" }>;

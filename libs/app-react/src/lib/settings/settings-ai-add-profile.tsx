@@ -1,7 +1,7 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AiProvider, AISecrets } from "@koloda/ai";
-import { AI_PROVIDER_LABELS } from "@koloda/ai";
+import { AI_PROVIDER_LABELS, AI_PROVIDERS } from "@koloda/ai";
 import { aiProvidersAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog, Select } from "@koloda/ui";
@@ -84,8 +84,13 @@ export function SettingsAIAddProfile({
                 if (key) setProvider(key.toString() as AiProvider);
               }}
             >
-              {providerIds.map((id) => (
-                <Select.ListBoxItem id={id} textValue={AI_PROVIDER_LABELS[id]} key={id}>
+              {AI_PROVIDERS.map((id) => (
+                <Select.ListBoxItem
+                  id={id}
+                  textValue={AI_PROVIDER_LABELS[id]}
+                  key={id}
+                  isDisabled={!providerIds.includes(id)}
+                >
                   {AI_PROVIDER_LABELS[id]}
                 </Select.ListBoxItem>
               ))}

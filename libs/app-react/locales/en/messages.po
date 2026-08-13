@@ -115,6 +115,14 @@ msgstr "Add"
 msgid "settings.ai.add.title"
 msgstr "Add AI Profile"
 
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:24
+msgid "settings.ai.browser-cors.note"
+msgstr "Some providers are disabled due to platform limitations."
+
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:48
+msgid "settings.ai.browser-cors.profile"
+msgstr "This provider cannot be used in the browser."
+
 #: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:52
 msgid "settings.ai.delete.cancel"
 msgstr "Cancel"
@@ -151,7 +159,7 @@ msgstr "Base URL"
 msgid "settings.ai.profiles.delete.trigger"
 msgstr "Delete profile"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:21
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:26
 msgid "settings.ai.profiles.empty"
 msgstr "No profiles"
 
@@ -163,7 +171,7 @@ msgstr "Provider"
 msgid "settings.ai.profiles.replace"
 msgstr "Replace with a new value"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:17
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:21
 msgid "settings.ai.profiles.title"
 msgstr "AI Profiles"
 
@@ -172,7 +180,7 @@ msgid "settings.ai.profiles.title.label"
 msgstr "Title"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:33
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:36
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Untitled"
 

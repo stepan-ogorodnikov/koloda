@@ -29,6 +29,7 @@ function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "openco
 
 export const opencodeZenProviderEntry: AIProviderEntry = {
   id: "opencodeZen",
+  worksInBrowser: false,
   createClient: (secrets) => createOpencodeZenClient(secrets as Extract<AISecrets, { provider: "opencodeZen" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;

@@ -49,7 +49,7 @@ const selectListBoxItem = tv({
     "flex flex-row items-center justify-between gap-2 mx-1 py-2 px-2",
     "outline-none rounded-lg cursor-default select-none truncate",
     "cursor-default select-none focus:bg-picker-item-hover",
-    "disabled:fg-level-3 disabled:focus:bg-transparent",
+    "disabled:fg-disabled disabled:focus:bg-transparent",
   ],
 });
 

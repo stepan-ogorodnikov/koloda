@@ -79,7 +79,7 @@ msgstr "AI provider returned an invalid response"
 
 #: ../../libs/app/src/lib/error.ts:11
 msgid "ai.network"
-msgstr "Network error"
+msgstr "Could not reach the AI provider (network error or browser CORS block)"
 
 #: ../../libs/app/src/lib/error.ts:27
 msgid "db.add"

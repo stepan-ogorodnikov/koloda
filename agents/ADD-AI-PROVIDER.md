@@ -133,6 +133,8 @@ function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvi
 
 export const myProviderEntry: AIProviderEntry = {
   id: "myProvider",
+  // true if page-origin fetch can call this API (CORS). Otherwise false (Electron only).
+  worksInBrowser: true,
   createClient: (secrets) => createMyProviderClient(secrets as Extract<AISecrets, { provider: "myProvider" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
@@ -312,16 +314,11 @@ const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> 
 };
 ```
 
-### 9. Register in App Stores
+### 9. Host enablement
 
-Add provider to all app stores:
+Do not edit app stores. Desktop uses `AI_PROVIDERS`; demo uses `listProvidersThatWorkInBrowser()`.
 
-- `apps/demo/src/app/store.ts`
-- `apps/native-electron-react/src/app/store.ts`
-
-```typescript
-store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "myProvider"]);
-```
+Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and Electron, and is listed but disabled in demo’s add-profile picker.
 
 ### 10. Add Tests
 
@@ -344,4 +341,4 @@ store.set(aiProvidersAtom, ["openrouter", "ollama", "lmstudio", "myProvider"]);
 | Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-*.tsx` | Add profile UI |
 | Edit Form | `libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-*.tsx` | Edit profile UI |
 | Settings | `libs/app-react/src/lib/settings/settings-ai-*-profile.tsx` | Form registration |
-| App Stores | `apps/*/src/app/store.ts` | Provider enablement |
+| App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Demo: `listProvidersThatWorkInBrowser()` |

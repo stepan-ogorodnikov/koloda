@@ -29,6 +29,7 @@ function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencod
 
 export const opencodeGoProviderEntry: AIProviderEntry = {
   id: "opencodeGo",
+  worksInBrowser: false,
   createClient: (secrets) => createOpencodeGoClient(secrets as Extract<AISecrets, { provider: "opencodeGo" }>),
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "opencodeGo" }>;

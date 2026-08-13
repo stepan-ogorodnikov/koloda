@@ -61,6 +61,7 @@ function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrou
 
 export const openrouterProviderEntry: AIProviderEntry = {
   id: "openrouter",
+  worksInBrowser: true,
   createClient: (secrets) => createOpenRouterClient(secrets as Extract<AISecrets, { provider: "openrouter" }>),
   fetchModels: () => fetchOpenRouterModels(),
   getMissingSecretFields: (secrets) => {
