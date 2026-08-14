@@ -220,6 +220,7 @@ fn test_ai_profile_validate_for_input_ok_with_secrets() {
             api_key: Some("key-123".to_string()),
         }),
         has_secrets: true,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -235,6 +236,7 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
             api_key: Some("key-123".to_string()),
         }),
         has_secrets: true,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -249,6 +251,7 @@ fn test_ai_profile_validate_ok_without_secrets() {
         title: None,
         secrets: None,
         has_secrets: false,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -262,6 +265,7 @@ fn test_ai_profile_validate_empty_id_fails() {
         title: Some("Profile".to_string()),
         secrets: None,
         has_secrets: false,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -276,6 +280,7 @@ fn test_ai_profile_validate_title_too_long_fails() {
         title: Some("a".repeat(129)),
         secrets: None,
         has_secrets: false,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -290,6 +295,7 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
         title: Some("Profile".to_string()),
         secrets: Some(AISecrets::OpenRouter { api_key: None }),
         has_secrets: false,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -318,6 +324,7 @@ fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
         title: None,
         secrets: None,
         has_secrets: false,
+        whitelist_model_ids: None,
         created_at: TEST_CREATED_AT,
     };
 
@@ -342,4 +349,97 @@ fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
 
     let profile: AIProfile = serde_json::from_value(data).expect("ISO string for createdAt should deserialize");
     assert_eq!(profile.created_at, TEST_CREATED_AT);
+    assert_eq!(profile.whitelist_model_ids, None);
+}
+
+#[test]
+fn test_ai_profile_serialization_omits_unset_whitelist() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: None,
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let serialized = serde_json::to_value(&profile).expect("profile should serialize");
+    assert!(
+        serialized.get("whitelistModelIds").is_none(),
+        "unset whitelist must be omitted so older rows stay unchanged"
+    );
+}
+
+#[test]
+fn test_ai_profile_serialization_keeps_empty_whitelist() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: None,
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: Some(vec![]),
+        created_at: TEST_CREATED_AT,
+    };
+
+    let serialized = serde_json::to_value(&profile).expect("profile should serialize");
+    assert_eq!(
+        serialized.get("whitelistModelIds"),
+        Some(&serde_json::json!([])),
+        "empty allowlist is distinct from unset"
+    );
+}
+
+#[test]
+fn test_ai_profile_validate_ok_with_whitelist() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: None,
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: Some(vec!["openai/gpt-4".to_string()]),
+        created_at: TEST_CREATED_AT,
+    };
+
+    profile.validate().unwrap();
+}
+
+#[test]
+fn test_ai_profile_validate_empty_whitelist_model_id_fails() {
+    let profile = AIProfile {
+        id: "profile-1".to_string(),
+        title: None,
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: Some(vec!["".to_string()]),
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate();
+    assert_eq!(
+        result.unwrap_err().code,
+        "validation.settings-ai.profiles.whitelist-model-ids"
+    );
+}
+
+#[test]
+fn test_update_profile_data_whitelist_patch_states() {
+    use koloda_core::domain::ai::UpdateProfileData;
+
+    let omitted: UpdateProfileData =
+        serde_json::from_value(serde_json::json!({ "id": "profile-1" })).expect("omitted whitelist should deserialize");
+    assert_eq!(omitted.whitelist_model_ids, None);
+
+    let cleared: UpdateProfileData = serde_json::from_value(serde_json::json!({
+        "id": "profile-1",
+        "whitelistModelIds": null
+    }))
+    .expect("null whitelist should deserialize");
+    assert_eq!(cleared.whitelist_model_ids, Some(None));
+
+    let set: UpdateProfileData = serde_json::from_value(serde_json::json!({
+        "id": "profile-1",
+        "whitelistModelIds": ["openai/gpt-4"]
+    }))
+    .expect("array whitelist should deserialize");
+    assert_eq!(set.whitelist_model_ids, Some(Some(vec!["openai/gpt-4".to_string()])));
 }

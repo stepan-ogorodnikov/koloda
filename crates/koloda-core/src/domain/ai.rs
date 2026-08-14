@@ -27,6 +27,10 @@ pub struct AIProfile {
     // the real value when returning profiles (key may exist while `apiKey` is redacted).
     #[serde(default)]
     pub has_secrets: bool,
+    // WHY: Unset = all models. A present array is the allowlist (`[]` means none).
+    // Omitted on older settings rows so they keep showing every model.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub whitelist_model_ids: Option<Vec<String>>,
     #[serde(serialize_with = "serialize_timestamp", deserialize_with = "deserialize_timestamp")]
     pub created_at: i64,
 }
@@ -100,6 +104,17 @@ pub struct ApiKeySecret {
 pub struct AddProfileData {
     pub title: Option<String>,
     pub secrets: Option<AISecrets>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub whitelist_model_ids: Option<Vec<String>>,
+}
+
+/// Patch for an optional stored field: missing = leave unchanged, `null` = clear, value = set.
+fn deserialize_optional_patch<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Ok(Some(Option::deserialize(deserializer)?))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,6 +123,10 @@ pub struct UpdateProfileData {
     pub id: String,
     pub title: Option<String>,
     pub secrets: Option<AISecrets>,
+    // WHY: `undefined` leaves the stored allowlist unchanged; `null` clears it
+    // (show all models); an array replaces it (`[]` is an empty allowlist).
+    #[serde(default, deserialize_with = "deserialize_optional_patch")]
+    pub whitelist_model_ids: Option<Option<Vec<String>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -243,6 +262,8 @@ impl AIProfile {
             secrets.validate_for_input()?;
         }
 
+        Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
+
         Ok(())
     }
 
@@ -259,6 +280,23 @@ impl AIProfile {
 
         if let Some(secrets) = &self.secrets {
             secrets.validate_for_storage()?;
+        }
+
+        Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
+
+        Ok(())
+    }
+
+    fn validate_whitelist_model_ids(ids: Option<&[String]>) -> Result<(), AppError> {
+        let Some(ids) = ids else {
+            return Ok(());
+        };
+
+        if ids.iter().any(|id| id.is_empty()) {
+            return Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_AI_PROFILES_WHITELIST_MODEL_IDS,
+                None,
+            ));
         }
 
         Ok(())

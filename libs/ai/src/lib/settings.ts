@@ -9,6 +9,8 @@ export const aiProfileValidation = z.object({
   // WHY: Default so stored settings without the field still parse; hosts set the
   // real value when returning profiles (key may exist while `apiKey` is redacted).
   hasSecrets: z.boolean().default(false),
+  // WHY: Unset = all models. A present array is the allowlist (`[]` means none).
+  whitelistModelIds: z.array(z.string().min(1, "validation.settings-ai.profiles.whitelist-model-ids")).optional(),
   createdAt: z.iso.datetime(),
 });
 
@@ -57,6 +59,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = aiSettingsValidation.parse({
 export type AddAIProfileData = {
   title?: string;
   secrets?: AISecrets;
+  whitelistModelIds?: string[];
 };
 
 export type RemoveAIProfileData = {
@@ -67,4 +70,7 @@ export type UpdateAIProfileData = {
   id: string;
   title?: string;
   secrets?: AISecrets;
+  // WHY: `undefined` leaves the stored allowlist unchanged; `null` clears it
+  // (show all models); an array replaces it (`[]` is an empty allowlist).
+  whitelistModelIds?: string[] | null;
 };

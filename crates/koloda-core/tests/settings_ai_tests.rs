@@ -163,6 +163,51 @@ fn test_valid_ai_settings_with_ollama_cloud_profile_redacted() {
     settings.validate().unwrap();
 }
 
+#[test]
+fn test_valid_ai_settings_with_whitelist_model_ids() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-1",
+                "title": "OpenRouter",
+                "secrets": {
+                    "provider": "openrouter",
+                    "apiKey": null
+                },
+                "whitelistModelIds": ["openai/gpt-4", "anthropic/claude"],
+                "createdAt": "2026-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    settings.validate().unwrap();
+    assert_eq!(
+        settings.profiles[0].whitelist_model_ids,
+        Some(vec!["openai/gpt-4".to_string(), "anthropic/claude".to_string()])
+    );
+}
+
+#[test]
+fn test_ai_settings_empty_whitelist_model_id_fails() {
+    let json = r#"{
+        "profiles": [
+            {
+                "id": "profile-1",
+                "whitelistModelIds": [""],
+                "createdAt": "2026-01-01T00:00:00Z"
+            }
+        ]
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("Should deserialize");
+    let result = settings.validate();
+    assert_eq!(
+        result.expect_err("Empty whitelist model id must fail").code,
+        "validation.settings-ai.profiles.whitelist-model-ids"
+    );
+}
+
 // ============================================================================
 // MISSING FIELDS
 // ============================================================================

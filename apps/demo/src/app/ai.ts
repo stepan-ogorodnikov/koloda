@@ -32,6 +32,7 @@ function toPublicProfile(profile: {
   title?: string;
   secrets?: AISecrets;
   hasSecrets?: boolean;
+  whitelistModelIds?: string[];
   createdAt: string;
 }): AIProfile {
   // WHY: `hasSecrets` from stored key presence — not from a redacted `apiKey: null`.
@@ -65,6 +66,7 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
     title: data.title,
     secrets: data.secrets,
     hasSecrets: profileHasSecrets(data.secrets),
+    whitelistModelIds: data.whitelistModelIds,
     createdAt: now,
   };
 
@@ -94,6 +96,13 @@ export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promis
       const profile = draft.profiles.find((p) => p.id === data.id);
       if (profile) {
         if (data.title !== undefined) profile.title = data.title;
+        if (data.whitelistModelIds !== undefined) {
+          if (data.whitelistModelIds === null) {
+            delete profile.whitelistModelIds;
+          } else {
+            profile.whitelistModelIds = data.whitelistModelIds;
+          }
+        }
         if (data.secrets !== undefined) {
           const previous = profile.secrets;
           const providerChanged = previous?.provider !== data.secrets.provider;

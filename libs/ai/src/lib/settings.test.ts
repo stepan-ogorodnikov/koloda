@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiSettingsValidation, findDuplicateProfileId } from "./settings";
+import { aiProfileValidation, aiSettingsValidation, findDuplicateProfileId } from "./settings";
 import type { AISettings } from "./settings";
 
 describe("findDuplicateProfileId", () => {
@@ -40,5 +40,28 @@ describe("findDuplicateProfileId", () => {
       ],
     });
     expect(findDuplicateProfileId(parsed)).toBe(dup);
+  });
+});
+
+describe("aiProfileValidation whitelistModelIds", () => {
+  const base = { id: "00000000-0000-0000-0000-000000000000", createdAt: "2026-01-01T00:00:00Z" };
+
+  it("leaves the field unset when omitted", () => {
+    const parsed = aiProfileValidation.parse(base);
+    expect(parsed.whitelistModelIds).toBeUndefined();
+  });
+
+  it("accepts a list of model ids", () => {
+    const parsed = aiProfileValidation.parse({ ...base, whitelistModelIds: ["openai/gpt-4"] });
+    expect(parsed.whitelistModelIds).toEqual(["openai/gpt-4"]);
+  });
+
+  it("accepts an empty list", () => {
+    const parsed = aiProfileValidation.parse({ ...base, whitelistModelIds: [] });
+    expect(parsed.whitelistModelIds).toEqual([]);
+  });
+
+  it("rejects empty model ids", () => {
+    expect(() => aiProfileValidation.parse({ ...base, whitelistModelIds: [""] })).toThrow();
   });
 });

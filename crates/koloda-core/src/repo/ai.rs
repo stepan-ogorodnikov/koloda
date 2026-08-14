@@ -145,7 +145,12 @@ pub fn get_ai_profile_secrets(db: &Database, profile_id: &str) -> Result<Option<
     })
 }
 
-pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISecrets>) -> Result<AIProfile, AppError> {
+pub fn add_ai_profile(
+    db: &Database,
+    title: Option<String>,
+    secrets: Option<AISecrets>,
+    whitelist_model_ids: Option<Vec<String>>,
+) -> Result<AIProfile, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         let mut settings = get_ai_settings_or_default(db)?;
         let now = get_current_timestamp()?;
@@ -162,6 +167,7 @@ pub fn add_ai_profile(db: &Database, title: Option<String>, secrets: Option<AISe
             title,
             secrets: secrets_for_db,
             has_secrets,
+            whitelist_model_ids,
             created_at: now,
         };
 
@@ -192,6 +198,7 @@ pub fn update_ai_profile(
     id: &str,
     title: Option<String>,
     secrets: Option<AISecrets>,
+    whitelist_model_ids: Option<Option<Vec<String>>>,
 ) -> Result<AIProfile, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         let mut settings = get_ai_settings_or_default(db)?;
@@ -222,6 +229,10 @@ pub fn update_ai_profile(
 
         if title.is_some() {
             existing_profile.title = title;
+        }
+
+        if let Some(whitelist_model_ids) = whitelist_model_ids {
+            existing_profile.whitelist_model_ids = whitelist_model_ids;
         }
 
         let updated_profile = existing_profile.clone();

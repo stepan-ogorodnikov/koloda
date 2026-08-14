@@ -345,15 +345,15 @@ msgstr "Toggle sidebar"
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/app/src/lib/error.ts:61
+#: ../../libs/app/src/lib/error.ts:62
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Failed to generate unique profile id"
 
-#: ../../libs/app/src/lib/error.ts:62
+#: ../../libs/app/src/lib/error.ts:63
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Temperature must be between 0 and 2"
 
-#: ../../libs/app/src/lib/error.ts:67
+#: ../../libs/app/src/lib/error.ts:68
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
@@ -368,6 +368,10 @@ msgstr "Amount can't be negative"
 #: ../../libs/app/src/lib/error.ts:55
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "Card id and review card id don't match"
+
+#: ../../libs/app/src/lib/error.ts:61
+msgid "validation.settings-ai.profiles.whitelist-model-ids"
+msgstr "Model id can't be empty"
 
 #: ../../libs/app/src/lib/error.ts:58
 msgid "validation.settings-ai.providers.apiKey"
@@ -409,18 +413,18 @@ msgstr "Hours must be between 0 and 48"
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:66
+#: ../../libs/app/src/lib/error.ts:67
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/app/src/lib/error.ts:63
+#: ../../libs/app/src/lib/error.ts:64
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/app/src/lib/error.ts:64
+#: ../../libs/app/src/lib/error.ts:65
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/app/src/lib/error.ts:65
+#: ../../libs/app/src/lib/error.ts:66
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"

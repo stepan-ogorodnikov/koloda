@@ -146,23 +146,23 @@ msgstr "Загрузка"
 msgid "ai.conversation.clone.action"
 msgstr "Клонировать"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:202
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:201
 #: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:90
 msgid "ai.conversation.delete.cancel"
 msgstr "Отмена"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:199
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:198
 #: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:87
 msgid "ai.conversation.delete.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:190
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:189
 #: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:82
 msgid "ai.conversation.delete.message"
 msgstr "Удалить этот диалог? Действие нельзя отменить."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:149
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:152
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:148
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:151
 #: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:71
 msgid "ai.conversation.delete.trigger"
 msgstr "Удалить диалог"
@@ -171,38 +171,38 @@ msgstr "Удалить диалог"
 msgid "ai.conversation.menu.trigger"
 msgstr "Действия с диалогом"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:127
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:126
 msgid "ai.conversation.recovery.corrupt"
 msgstr "Сохранённые данные этого диалога повреждены и не могут быть открыты."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:175
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:174
 msgid "ai.conversation.recovery.reset.cancel"
 msgstr "Отмена"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:172
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:171
 msgid "ai.conversation.recovery.reset.confirm"
 msgstr "Сбросить"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:161
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:160
 msgid "ai.conversation.recovery.reset.failed"
 msgstr "Не удалось сбросить диалог. Попробуйте ещё раз."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:163
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:162
 msgid "ai.conversation.recovery.reset.message"
 msgstr "Сбросить этот диалог? Сохранённые данные будут удалены без возможности восстановления."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:142
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:145
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:141
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:144
 msgid "ai.conversation.recovery.reset.trigger"
 msgstr "Сбросить диалог"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:123
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:122
 msgid "ai.conversation.recovery.title"
 msgstr "Не удалось открыть диалог"
 
 #. placeholder {0}: blocked.found
 #. placeholder {1}: blocked.supported
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:126
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:125
 msgid "ai.conversation.recovery.unsupported {0} {1}"
 msgstr "Этот диалог сохранён в формате версии {0}, а это приложение поддерживает версии до {1}."
 
@@ -296,7 +296,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/runs/use-run-orchestration.ts:195
+#: ../../libs/srs-react/src/lib/assistant/runs/use-run-orchestration.ts:150
 msgid "assistant.chat.message.status.pending"
 msgstr "Обработка"
 

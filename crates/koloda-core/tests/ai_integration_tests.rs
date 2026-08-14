@@ -182,6 +182,7 @@ fn ai_profiles_add_get_and_remove() {
             base_url: "http://localhost:11434".to_string(),
             api_key: None,
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -211,6 +212,7 @@ fn ai_profile_api_key_is_stored_in_secret_store() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -244,6 +246,7 @@ fn ai_profile_opencode_go_round_trips_via_secret_store() {
         Some(AISecrets::OpencodeGo {
             api_key: Some("go-secret-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -275,6 +278,7 @@ fn ai_profile_opencode_zen_round_trips_via_secret_store() {
         Some(AISecrets::OpencodeZen {
             api_key: Some("zen-secret-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -306,6 +310,7 @@ fn ai_profile_ollama_cloud_round_trips_via_secret_store() {
         Some(AISecrets::OllamaCloud {
             api_key: Some("cloud-secret-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -337,6 +342,7 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
     let store_key = format!("ai-profile-{}", added.id);
@@ -358,6 +364,7 @@ fn update_ai_profile_clears_stale_keyring_key_when_new_secrets_have_no_key() {
             base_url: "http://localhost:11434".to_string(),
             api_key: None,
         }),
+        None,
     )
     .expect("profile should be updated");
 
@@ -405,6 +412,7 @@ fn update_ai_profile_keeps_keyring_when_same_provider_omits_api_key() {
             base_url: "http://localhost:11434".to_string(),
             api_key: Some("local-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -416,6 +424,7 @@ fn update_ai_profile_keeps_keyring_when_same_provider_omits_api_key() {
             base_url: "http://127.0.0.1:11434".to_string(),
             api_key: None,
         }),
+        None,
     )
     .expect("profile should be updated");
 
@@ -447,6 +456,7 @@ fn get_ai_profiles_propagates_keyring_error_instead_of_swallowing_it() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added under working store");
     test_store::teardown(guard);
@@ -471,6 +481,7 @@ fn add_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-secret-key".to_string()),
         }),
+        None,
     )
     .expect_err("add must fail when keyring set fails");
     assert_eq!(err.code, "keyring");
@@ -492,6 +503,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -504,6 +516,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-new-key".to_string()),
         }),
+        None,
     )
     .expect_err("update must fail when keyring set fails");
     assert_eq!(err.code, "keyring");
@@ -538,6 +551,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         Some(AISecrets::OpenRouter {
             api_key: Some("sk-original-key".to_string()),
         }),
+        None,
     )
     .expect("profile should be added");
 
@@ -551,6 +565,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
             base_url: "http://localhost:11434".to_string(),
             api_key: None,
         }),
+        None,
     )
     .expect_err("update must fail when keyring remove fails");
     assert_eq!(err.code, "keyring");
@@ -572,4 +587,88 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     assert_eq!(secrets.api_key(), Some("sk-original-key"));
 
     test_store::teardown(guard);
+}
+
+#[test]
+fn add_ai_profile_persists_whitelist_model_ids() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        }),
+        Some(vec!["openai/gpt-4".to_string(), "anthropic/claude".to_string()]),
+    )
+    .expect("profile should be added");
+
+    assert_eq!(
+        added.whitelist_model_ids,
+        Some(vec!["openai/gpt-4".to_string(), "anthropic/claude".to_string()])
+    );
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+    assert_eq!(retrieved.whitelist_model_ids, added.whitelist_model_ids);
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn update_ai_profile_sets_clears_and_preserves_whitelist_model_ids() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+    assert_eq!(added.whitelist_model_ids, None);
+
+    let set = ai::update_ai_profile(&db, &added.id, None, None, Some(Some(vec!["openai/gpt-4".to_string()])))
+        .expect("whitelist should be set");
+    assert_eq!(set.whitelist_model_ids, Some(vec!["openai/gpt-4".to_string()]));
+
+    let preserved = ai::update_ai_profile(&db, &added.id, Some("Renamed".to_string()), None, None)
+        .expect("title-only update should preserve whitelist");
+    assert_eq!(preserved.title, Some("Renamed".to_string()));
+    assert_eq!(preserved.whitelist_model_ids, Some(vec!["openai/gpt-4".to_string()]));
+
+    let cleared = ai::update_ai_profile(&db, &added.id, None, None, Some(None)).expect("whitelist should clear");
+    assert_eq!(cleared.whitelist_model_ids, None);
+
+    let all = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = all.iter().find(|p| p.id == added.id).expect("profile should exist");
+    assert_eq!(retrieved.whitelist_model_ids, None);
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn add_ai_profile_rejects_empty_whitelist_model_id() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let err = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        }),
+        Some(vec!["".to_string()]),
+    )
+    .expect_err("empty model id must fail");
+    assert_eq!(err.code, "validation.settings-ai.profiles.whitelist-model-ids");
+
+    let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
+    assert!(profiles.is_empty(), "failed add must not leave a profile in settings");
+
+    test_store::teardown(_guard);
 }

@@ -383,7 +383,8 @@ impl KolodaDb {
     pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
         let data: koloda_core::domain::ai::AddProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
-        let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets).map_err(to_napi_error)?;
+        let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets, data.whitelist_model_ids)
+            .map_err(to_napi_error)?;
         to_value(&profile)
     }
 
@@ -392,7 +393,8 @@ impl KolodaDb {
         let data: koloda_core::domain::ai::UpdateProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         let profile =
-            repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets).map_err(to_napi_error)?;
+            repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets, data.whitelist_model_ids)
+                .map_err(to_napi_error)?;
         to_value(&profile)
     }
 
