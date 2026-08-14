@@ -15,6 +15,7 @@ export * from "./lib/ai-chat-submit";
 export * from "./lib/ai-model-parameters";
 export * from "./lib/ai-model-profile-key";
 export * from "./lib/ai-model-profile-picker";
+export * from "./lib/filter-profile-models";
 export * from "./lib/use-ai-chat-input";
 export * from "./lib/use-ai-chat-validation";
 export * from "./lib/use-ai-models";

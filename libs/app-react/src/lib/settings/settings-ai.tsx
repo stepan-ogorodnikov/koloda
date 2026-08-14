@@ -7,6 +7,7 @@ import { useAtomValue } from "jotai";
 import { SettingsAIAddProfile } from "./settings-ai-add-profile";
 import { SettingsAIDeleteProfile } from "./settings-ai-delete-profile";
 import { SettingsAIEditProfile } from "./settings-ai-edit-profile";
+import { SettingsAIProfileModels } from "./settings-ai-profile-models";
 
 export type SettingsAiProps = { data: AIProfile[] };
 
@@ -39,6 +40,9 @@ export function SettingsAi({ data }: SettingsAiProps) {
                   <div className="flex flex-row gap-1">
                     <div>
                       <SettingsAIEditProfile profile={profile} />
+                    </div>
+                    <div>
+                      <SettingsAIProfileModels profile={profile} />
                     </div>
                     <div>
                       <SettingsAIDeleteProfile profile={profile} />

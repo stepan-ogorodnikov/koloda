@@ -11,6 +11,7 @@ export * from "./lib/settings/settings-ai";
 export * from "./lib/settings/settings-ai-add-profile";
 export * from "./lib/settings/settings-ai-delete-profile";
 export * from "./lib/settings/settings-ai-edit-profile";
+export * from "./lib/settings/settings-ai-profile-models";
 export * from "./lib/settings/settings-hotkeys";
 export * from "./lib/settings/settings-hotkeys-hotkey";
 export * from "./lib/settings/settings-interface";

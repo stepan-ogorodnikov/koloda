@@ -115,47 +115,52 @@ msgstr "Settings"
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:145
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:173
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:140
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:143
+msgid "ai.model-picker.empty-models"
+msgstr "No models"
+
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:160
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:188
 msgid "ai.model-picker.error.label"
 msgstr "Error"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:150
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:153
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:165
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:168
 msgid "ai.model-picker.error.retry"
 msgstr "Retry"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:97
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:102
 msgid "ai.model-picker.label"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:84
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:144
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:169
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:89
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:159
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:184
 msgid "ai.model-picker.loading.label"
 msgstr "Loading"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:115
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:120
 msgid "ai.model-picker.no-profiles.add"
 msgstr "Add profile"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:114
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:119
 msgid "ai.model-picker.no-profiles.empty"
 msgstr "No AI profiles"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:86
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:91
 msgid "ai.model-picker.not-selected"
 msgstr "Not selected"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:87
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:92
 msgid "ai.model-picker.placeholder"
 msgstr "Select a model"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:99
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:104
 msgid "ai.model-picker.search.label"
 msgstr "Search models"
 
-#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:100
+#: ../../libs/ai-react/src/lib/ai-model-profile-picker.tsx:105
 msgid "ai.model-picker.search.placeholder"
 msgstr "Search models"
 

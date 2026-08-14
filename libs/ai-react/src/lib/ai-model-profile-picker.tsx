@@ -9,6 +9,7 @@ import { AnimatePresence } from "motion/react";
 import type { RefObject } from "react";
 import { useMemo, useState } from "react";
 import { decodeAIModelProfileKey, encodeAIModelProfileKey } from "./ai-model-profile-key";
+import { filterProfileModelsForPicker } from "./filter-profile-models";
 import { useAIProfilesModels } from "./use-ai-profiles-models";
 
 export type AIModelProfileChange = {
@@ -61,7 +62,11 @@ export function AIModelProfilePicker({
         const state = byProfileId[profile.id];
         const providerLabel = profile.secrets ? AI_PROVIDER_LABELS[profile.secrets.provider] : "";
         const status = state?.isError ? "error" : state?.isLoading ? "loading" : "ready";
-        const models = (state?.models ?? []).map((model) => ({
+        const models = filterProfileModelsForPicker({
+          models: state?.models ?? [],
+          whitelistModelIds: profile.whitelistModelIds,
+          selectedModelId: profile.id === profileId ? modelId : null,
+        }).map((model) => ({
           ...model,
           key: encodeAIModelProfileKey(profile.id, model.id),
         }));
@@ -75,7 +80,7 @@ export function AIModelProfilePicker({
           refetch: state?.refetch ?? (() => undefined),
         };
       }),
-    [profiles, byProfileId],
+    [profiles, byProfileId, profileId, modelId],
   );
 
   const selectValue = profileId && modelId && !selectedIsError ? encodeAIModelProfileKey(profileId, modelId) : null;
@@ -129,13 +134,23 @@ export function AIModelProfilePicker({
               </div>
             </Select.Header>
             {section.status === "ready" ? (
-              <Select.Collection items={section.models}>
-                {(item) => (
-                  <Select.ListBoxItem id={item.key} textValue={item.name} key={item.key}>
-                    {item.name}
-                  </Select.ListBoxItem>
-                )}
-              </Select.Collection>
+              section.models.length === 0 ? (
+                <Select.ListBoxItem
+                  id={`empty-${section.id}`}
+                  textValue={_(msg`ai.model-picker.empty-models`)}
+                  isDisabled
+                >
+                  <span className="fg-level-3">{_(msg`ai.model-picker.empty-models`)}</span>
+                </Select.ListBoxItem>
+              ) : (
+                <Select.Collection items={section.models}>
+                  {(item) => (
+                    <Select.ListBoxItem id={item.key} textValue={item.name} key={item.key}>
+                      {item.name}
+                    </Select.ListBoxItem>
+                  )}
+                </Select.Collection>
+              )
             ) : (
               <Select.ListBoxItem
                 id={`status-${section.id}`}

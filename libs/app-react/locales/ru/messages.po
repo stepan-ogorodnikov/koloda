@@ -115,11 +115,11 @@ msgstr "Добавить"
 msgid "settings.ai.add.title"
 msgstr "Добавить ИИ профиль"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:24
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:25
 msgid "settings.ai.browser-cors.note"
 msgstr "Некоторые провайдеры отключены из-за ограничений платформы."
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:48
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:52
 msgid "settings.ai.browser-cors.profile"
 msgstr "Этот провайдер нельзя использовать в браузере."
 
@@ -136,6 +136,7 @@ msgid "settings.ai.delete.message"
 msgstr "Вы уверены, что хотите удалить этот профиль?"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:149
 msgid "settings.ai.edit.submit"
 msgstr "Сохранить"
 
@@ -146,6 +147,51 @@ msgstr "Редактировать ИИ профиль"
 #: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:47
 msgid "settings.ai.edit.trigger"
 msgstr "Редактировать профиль"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:127
+msgid "settings.ai.models.empty"
+msgstr "Нет моделей"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:111
+msgid "settings.ai.models.error"
+msgstr "Ошибка"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:108
+msgid "settings.ai.models.loading"
+msgstr "Загрузка"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:104
+msgid "settings.ai.models.mode.all"
+msgstr "Все"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:95
+msgid "settings.ai.models.mode.label"
+msgstr "Список моделей"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:105
+msgid "settings.ai.models.mode.selected"
+msgstr "Выбранные"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:114
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:123
+msgid "settings.ai.models.retry"
+msgstr "Обновить"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:83
+msgid "settings.ai.models.search.label"
+msgstr "Поиск по моделям"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:90
+msgid "settings.ai.models.search.placeholder"
+msgstr "Поиск по моделям"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:76
+msgid "settings.ai.models.title"
+msgstr "Модели"
+
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:68
+msgid "settings.ai.models.trigger"
+msgstr "Модели"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:43
 msgid "settings.ai.profiles.api-key.label"
@@ -159,7 +205,7 @@ msgstr "Базовый URL"
 msgid "settings.ai.profiles.delete.trigger"
 msgstr "Удалить профиль"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:26
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
 msgid "settings.ai.profiles.empty"
 msgstr "Нет профилей"
 
@@ -171,7 +217,7 @@ msgstr "Провайдер"
 msgid "settings.ai.profiles.replace"
 msgstr "Заменить"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:21
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:22
 msgid "settings.ai.profiles.title"
 msgstr "Профили ИИ"
 
@@ -180,7 +226,7 @@ msgid "settings.ai.profiles.title.label"
 msgstr "Название"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:33
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:36
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:37
 msgid "settings.ai.profiles.title.placeholder"
 msgstr "Без названия"
 
