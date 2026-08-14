@@ -7,7 +7,7 @@ import { I18nProvider } from "@lingui/react";
 import type { I18nProviderProps } from "@lingui/react";
 import { I18nProvider as ReactAriaI18nProvider } from "@react-aria/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { createHashHistory, createRouter, RouterProvider } from "@tanstack/react-router";
 import { Provider as JotaiProvider, useAtom } from "jotai";
 import type { createStore } from "jotai";
 import { StrictMode, useEffect, useState } from "react";
@@ -18,14 +18,21 @@ type Store = ReturnType<typeof createStore>;
 export type AppProvidersProps = {
   store: Store;
   basepath?: string;
+  history?: ReturnType<typeof createHashHistory>;
   activateLanguage: (locale: string) => Promise<void>;
   getLanguage: () => string;
 };
 
-function createAppRouter(store: Store, queryClient: QueryClient, basepath?: string) {
+function createAppRouter(
+  store: Store,
+  queryClient: QueryClient,
+  basepath?: string,
+  history?: ReturnType<typeof createHashHistory>,
+) {
   return createRouter({
     routeTree,
     basepath,
+    history,
     context: {
       queryClient,
       queries: store.get(queriesAtom) as Queries,
@@ -36,7 +43,7 @@ function createAppRouter(store: Store, queryClient: QueryClient, basepath?: stri
   });
 }
 
-export function AppProviders({ store, basepath, activateLanguage, getLanguage }: AppProvidersProps) {
+export function AppProviders({ store, basepath, history, activateLanguage, getLanguage }: AppProvidersProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -47,7 +54,7 @@ export function AppProviders({ store, basepath, activateLanguage, getLanguage }:
         },
       }),
   );
-  const [router] = useState(() => createAppRouter(store, queryClient, basepath));
+  const [router] = useState(() => createAppRouter(store, queryClient, basepath, history));
 
   return (
     <StrictMode>

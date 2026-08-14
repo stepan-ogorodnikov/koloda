@@ -199,7 +199,8 @@ function createWindow() {
   if (isDev) {
     win.loadURL("http://localhost:3000");
   } else {
-    win.loadFile(join(__dirname, "../native-electron-react/index.html"));
+    // WHY: Hash `/` so TanStack starts on the index route under file:// (see native-electron-react main.tsx).
+    win.loadFile(join(__dirname, "../native-electron-react/index.html"), { hash: "/" });
   }
 
   // WHY: Playwright page.route mocks break when session.webRequest hooks are installed
