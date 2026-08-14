@@ -162,13 +162,7 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
         for card_data in data.into_iter() {
             if !decks.contains_key(&card_data.deck_id) {
                 results.push(AddCardsItemResult {
-                    error: Some(format!(
-                        "{}",
-                        AppError::new(
-                            error_codes::NOT_FOUND_CARDS_ADD_DECK,
-                            Some(format!("Deck id: {}", card_data.deck_id)),
-                        )
-                    )),
+                    error: Some(error_codes::NOT_FOUND_CARDS_ADD_DECK.to_string()),
                 });
                 continue;
             }
@@ -181,13 +175,7 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
                     }),
                 },
                 None => results.push(AddCardsItemResult {
-                    error: Some(format!(
-                        "{}",
-                        AppError::new(
-                            error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
-                            Some(format!("Template id: {}", card_data.template_id)),
-                        )
-                    )),
+                    error: Some(error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE.to_string()),
                 }),
             }
         }

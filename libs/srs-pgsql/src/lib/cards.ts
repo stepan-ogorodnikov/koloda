@@ -58,7 +58,7 @@ export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCa
     const card = data[i];
     const template = templates.get(card.templateId);
     if (!template) {
-      results.push({ error: new AppError("not-found.cards.add.template", `Template id: ${card.templateId}`).message });
+      results.push({ error: "not-found.cards.add.template" });
       continue;
     }
     try {
