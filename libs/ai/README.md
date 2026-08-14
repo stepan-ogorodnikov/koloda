@@ -30,9 +30,9 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 ### Does NOT own (prevent scope creep)
 
 - Conversation / run lifecycle state — `libs/srs-react/.../assistant`
-- Persistence schema & secrets storage — `drizzle/` + `crates/koloda-core/repo`
+- Persistence schema & secrets storage — `drizzle/` + `crates/koloda-core/src/repo`
 - UI rendering / streaming hooks — `libs/ai-react`
-- The canonical provider enum — Rust (`crates/koloda-core/domain/ai.rs`) is source of truth; this lib mirrors it
+- The canonical provider enum — Rust (`crates/koloda-core/src/domain/ai.rs`) is source of truth; this lib mirrors it
 
 ## Read next
 

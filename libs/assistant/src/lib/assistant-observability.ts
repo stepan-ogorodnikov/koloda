@@ -3,7 +3,6 @@
  *
  * WHY: Correlate command/event transitions and save retries across
  * conversations without relying on ad-hoc console strings
- * (ASSISTANT-ARCHITECTURE-REWORK §Documentation and observability).
  */
 export type AssistantStructuredLog = {
   conversationId: string;

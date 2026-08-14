@@ -75,4 +75,3 @@ Orphaned `streaming` checkpoints left on disk after a crash are normalized to `i
 - `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — run lifecycle and streaming rules
 - `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md` — card generation behavior
-- `ASSISTANT-ARCHITECTURE-REWORK.md` — completed engine extraction record (repo root)
