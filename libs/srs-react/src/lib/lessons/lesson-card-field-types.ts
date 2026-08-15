@@ -1,9 +1,7 @@
 import type { TemplateFieldType, TemplateOperation } from "@koloda/srs";
-import type { ActionDispatch, ComponentType } from "react";
-import type { CardPreviewReducerAction } from "../cards/card-preview-reducer";
+import type { ComponentType } from "react";
 import { LessonCardFieldMarkdown } from "./lesson-card-field-markdown";
 import { LessonCardFieldText } from "./lesson-card-field-text";
-import type { LessonReducerAction } from "./lesson-reducer";
 
 export type FieldComponentProps = {
   value: string;
@@ -13,7 +11,8 @@ export type FieldComponentProps = {
   userValue: string;
   isSubmitted: boolean;
   isFirstInput: boolean;
-  dispatch: ActionDispatch<[action: LessonReducerAction]> | ActionDispatch<[action: CardPreviewReducerAction]>;
+  onFormChange: (value: string) => void;
+  onSubmit: () => void;
 };
 
 export type FieldTypeComponentsMap = Record<TemplateFieldType, ComponentType<FieldComponentProps>>;

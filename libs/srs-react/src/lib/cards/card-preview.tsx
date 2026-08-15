@@ -46,7 +46,13 @@ export function CardPreview({ isOpen, onOpenChange, card, templateId }: PreviewC
             <div className={lessonContent} key={card.id}>
               <div className={lessonStudying}>
                 {(state.content?.template.layout || []).map((item, i) => (
-                  <LessonCardField params={item} content={state.content!} dispatch={dispatch} key={i} />
+                  <LessonCardField
+                    params={item}
+                    content={state.content!}
+                    onFormChange={(key, value) => dispatch(["cardFormUpdated", { key, value }])}
+                    onSubmit={() => dispatch(["cardSubmitted"])}
+                    key={i}
+                  />
                 ))}
               </div>
             </div>

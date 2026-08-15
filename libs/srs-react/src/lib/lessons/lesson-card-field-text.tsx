@@ -8,12 +8,12 @@ const lessonCardFieldValue = "break-all whitespace-pre-wrap text-center";
 export function LessonCardFieldText({
   value,
   operation,
-  fieldId,
   fieldTitle,
   userValue,
   isSubmitted,
   isFirstInput,
-  dispatch,
+  onFormChange,
+  onSubmit,
 }: FieldComponentProps) {
   if (operation === "type") {
     return (
@@ -27,12 +27,12 @@ export function LessonCardFieldText({
             <TextField
               aria-label={fieldTitle}
               value={userValue}
-              onChange={(val) => dispatch(["cardFormUpdated", { key: fieldId, value: val }])}
+              onChange={onFormChange}
               autoFocus={isFirstInput}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                   e.preventDefault();
-                  dispatch(["cardSubmitted"]);
+                  onSubmit();
                 }
                 e.continuePropagation();
               }}
