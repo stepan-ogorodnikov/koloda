@@ -23,15 +23,15 @@ export function LessonInitAmountInput({ state, dispatch, type }: LessonInitAmoun
   const { _ } = useLingui();
   const { type: currentlessonType } = useAtomValue(lessonAtom) || {};
 
-  if (!state.lessons || !state.amounts) return null;
+  if (!state.setup) return null;
 
   return (
     <NumberField
       variants={{ class: "w-32 me-4" }}
       aria-label={_(LABELS[type])}
-      value={state.amounts?.[type]}
+      value={state.setup.amounts[type]}
       minValue={0}
-      maxValue={state.lessons.total[type]}
+      maxValue={state.setup.available[type]}
       onChange={(e) => {
         dispatch(["amountUpdated", { type, value: e }]);
       }}

@@ -2,7 +2,7 @@ import type { LessonTemplateLayoutItem } from "@koloda/srs";
 import { LayoutGroup } from "motion/react";
 import { tv } from "tailwind-variants";
 import { fieldTypeComponents } from "./lesson-card-field-types";
-import type { LessonReducerState } from "./lesson-reducer";
+import type { LessonContent } from "./lesson-reducer";
 
 const lessonCardContentField = tv({
   base: "flex flex-col w-full prose wd:prose-xl",
@@ -17,7 +17,7 @@ const lessonCardContentField = tv({
 
 type LessonCardFieldProps = {
   params: LessonTemplateLayoutItem;
-  content: LessonReducerState["content"];
+  content: LessonContent | null | undefined;
   onFormChange: (key: number | string, value: string) => void;
   onSubmit: () => void;
 };

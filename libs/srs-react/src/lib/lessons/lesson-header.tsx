@@ -16,22 +16,24 @@ type LessonHeaderProps = {
 export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
-  const { isSubmitted, isStarted, isFinished } = state.meta;
+  const isSetupPhase = state.phase === "preparing" || state.phase === "configuring";
+  const hasSession = !!state.session;
+  const shouldRequestTermination = state.phase === "loading-cards" || state.phase === "studying";
 
   return (
     <LessonHeaderLayout>
       <Dialog.Close
         variants={{ class: "absolute top-0 right-0" }}
         onClick={() => {
-          if (isSubmitted && !isFinished) {
+          if (shouldRequestTermination) {
             dispatch(["terminationRequested", true]);
           } else {
-            dispatch(["isOpenUpdated", false]);
+            dispatch(["close"]);
           }
         }}
       />
       <AnimatePresence mode="wait">
-        {!isSubmitted && (
+        {isSetupPhase && (
           <motion.div
             className="place-self-center"
             initial={{ opacity: 1 }}
@@ -44,8 +46,8 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      {isStarted && <LessonProgressAmounts state={state} key="progress-amounts" />}
-      {isStarted && <LessonProgressDots state={state} key="progress-dots" />}
+      {hasSession && <LessonProgressAmounts state={state} key="progress-amounts" />}
+      {hasSession && <LessonProgressDots state={state} key="progress-dots" />}
       <LessonUploader state={state} dispatch={dispatch} />
     </LessonHeaderLayout>
   );

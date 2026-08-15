@@ -3,12 +3,12 @@ import { dispatchReducerAction } from "@koloda/core-react";
 import type { Card, Template } from "@koloda/srs";
 import { convertTemplateToLessonTemplate } from "@koloda/srs";
 import { produce } from "immer";
-import type { LessonReducerState } from "../lessons/lesson-reducer";
+import type { LessonContent } from "../lessons/lesson-reducer";
 
 export type CardPreviewReducerState = {
   card?: Card;
   template?: Template;
-  content?: LessonReducerState["content"];
+  content?: LessonContent;
 };
 
 export const cardPreviewReducerDefault: CardPreviewReducerState = {};

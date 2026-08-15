@@ -29,38 +29,48 @@ const MAX_REVIEW_TIME_MS = 60 * 60 * 1000;
 
 type LessonResultUploadStatus = "success" | "error";
 
+export type LessonPhase = "closed" | "preparing" | "configuring" | "loading-cards" | "studying" | "finished";
+
+export type LessonContent = {
+  index: number;
+  startedAt: number;
+  form: {
+    data: Record<number | string, string>;
+    firstInputFieldId?: number;
+    isSubmitted: boolean;
+  };
+  card: Card;
+  template: LessonTemplate;
+  grades: CardGrade[];
+};
+
+export type LessonProgress = {
+  done: LessonAmounts;
+  pending: LessonAmounts;
+};
+
+export type LessonSetup = {
+  filters: LessonFilters;
+  available: LessonsResult["total"];
+  reviewTotals: TodaysReviewTotals["reviewTotals"];
+  dailyLimits: TodaysReviewTotals["dailyLimits"];
+  amounts: LessonAmounts;
+  learnAheadLimit: LearningSettings["learnAheadLimit"] | undefined;
+};
+
+export type LessonSession = {
+  learnAheadLimit: LearningSettings["learnAheadLimit"] | undefined;
+  data: LessonData;
+  content: LessonContent | null;
+  progress: LessonProgress;
+};
+
 export type LessonReducerState = {
-  meta: {
-    isOpen?: boolean;
-    isTerminationRequested?: boolean;
-    isError?: boolean;
-    isSubmitted?: boolean;
-    isStarted?: boolean;
-    isFinished?: boolean;
-  };
-  learnAheadLimit?: LearningSettings["learnAheadLimit"];
-  params?: LessonAtomValue;
-  filters?: LessonFilters;
-  lessons?: LessonsResult;
-  todayReviewTotals?: TodaysReviewTotals;
-  amounts?: LessonAmounts;
-  data?: LessonData;
-  content?: {
-    index: number;
-    startedAt: number;
-    form: {
-      data: Record<number | string, string>;
-      firstInputFieldId?: number;
-      isSubmitted: boolean;
-    };
-    card: Card;
-    template: LessonTemplate;
-    grades: CardGrade[];
-  };
-  progress?: {
-    done: LessonAmounts;
-    pending: LessonAmounts;
-  };
+  phase: LessonPhase;
+  request: LessonAtomValue | null;
+  setup: LessonSetup | null;
+  session: LessonSession | null;
+  isTerminationRequested: boolean;
   upload: {
     queue: {
       index: number;
@@ -74,7 +84,11 @@ export type LessonReducerState = {
 export type LessonAmounts = Record<LessonType, number>;
 
 export const lessonReducerDefault: LessonReducerState = {
-  meta: {},
+  phase: "closed",
+  request: null,
+  setup: null,
+  session: null,
+  isTerminationRequested: false,
   upload: {
     queue: [],
     log: {},
@@ -82,79 +96,63 @@ export const lessonReducerDefault: LessonReducerState = {
 };
 
 const actions = {
-  isOpenUpdated,
-  terminationRequested,
-  learnAheadLimitReceived,
-  paramsSet,
-  todayReviewTotalsReceived,
-  lessonsReceived,
+  open,
+  initialize,
   amountUpdated,
-  lessonSubmitted,
+  setupSubmitted,
   lessonDataReceived,
   cardSubmitted,
   cardFormUpdated,
   gradeSelected,
+  terminationRequested,
+  close,
   resultUploaded,
 };
 
-/**
- * Controls open/closed state for lesson modal
- * Since root lesson components stays mounted resets reducer state on close
- */
-function isOpenUpdated(draft: LessonReducerState, payload: boolean) {
-  draft.meta.isOpen = payload;
-  if (payload === false) {
-    draft.meta.isSubmitted = undefined;
-    draft.meta.isStarted = undefined;
-    draft.meta.isFinished = undefined;
-    draft.params = undefined;
-    draft.lessons = undefined;
-    draft.todayReviewTotals = undefined;
-    draft.amounts = undefined;
-    draft.data = undefined;
-    draft.content = undefined;
-    draft.meta.isTerminationRequested = false;
-    draft.upload.queue = [];
-    draft.upload.log = {};
-  }
+function doesRequestMatch(left: LessonAtomValue, right: LessonAtomValue) {
+  return left.type === right.type && left.deckId === right.deckId;
 }
 
-/**
- * Sets termination request status for close dialog
- */
-function terminationRequested(draft: LessonReducerState, payload: boolean) {
-  draft.meta.isTerminationRequested = payload;
+function filtersFromRequest(request: LessonAtomValue): LessonFilters {
+  return { deckIds: request.deckId ? [request.deckId] : [] };
 }
 
-/**
- * Sets the learn ahead limit received from settings
- */
-function learnAheadLimitReceived(draft: LessonReducerState, payload: LearningSettings["learnAheadLimit"]) {
-  draft.learnAheadLimit = payload;
+function open(draft: LessonReducerState, payload: LessonAtomValue) {
+  // INVARIANT: open only starts a closed lesson; repeated opens while active are no-ops.
+  if (draft.phase !== "closed") return;
+
+  draft.phase = "preparing";
+  draft.request = { ...payload };
 }
 
-/**
- * Sets lesson params received from lesson init form
- * Makes filters for lesson query based on these params
- */
-function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
-  if (!draft.meta.isOpen) {
-    draft.meta.isOpen = true;
-    draft.params = { ...payload };
-    draft.filters = { deckIds: draft.params.deckId ? [draft.params.deckId] : [] };
-    setupInitData(draft);
-  }
-}
+type InitializePayload = {
+  request: LessonAtomValue;
+  learnAheadLimit: LearningSettings["learnAheadLimit"] | undefined;
+  lessons: LessonsResult;
+  todayReviewTotals: TodaysReviewTotals;
+};
 
-function setupInitData(draft: LessonReducerState) {
-  const { params, lessons, todayReviewTotals, amounts } = draft;
-  if (!params || !lessons || !todayReviewTotals || amounts) return;
-  draft.amounts = calculateInitialLessonAmounts({
-    type: params.type,
-    available: lessons.total,
-    dailyLimits: todayReviewTotals.dailyLimits,
-    reviewTotals: todayReviewTotals.reviewTotals,
-  });
+function initialize(draft: LessonReducerState, payload: InitializePayload) {
+  // INVARIANT: initialize only applies during preparing for the active request.
+  if (draft.phase !== "preparing" || !draft.request) return;
+  if (!doesRequestMatch(payload.request, draft.request)) return;
+  // WHY: Strict Mode and stale query results must not reset amounts the user already edited.
+  if (draft.setup) return;
+
+  draft.setup = {
+    filters: filtersFromRequest(draft.request),
+    available: payload.lessons.total,
+    reviewTotals: payload.todayReviewTotals.reviewTotals,
+    dailyLimits: payload.todayReviewTotals.dailyLimits,
+    amounts: calculateInitialLessonAmounts({
+      type: draft.request.type,
+      available: payload.lessons.total,
+      dailyLimits: payload.todayReviewTotals.dailyLimits,
+      reviewTotals: payload.todayReviewTotals.reviewTotals,
+    }),
+    learnAheadLimit: payload.learnAheadLimit,
+  };
+  draft.phase = "configuring";
 }
 
 export type CalculateInitialLessonAmountsOptions = {
@@ -208,71 +206,53 @@ function getLessonCardsAmount(available: number, diff: number, remainder: number
   return available > Math.min(diff, remainder) ? Math.min(diff, remainder) : available;
 }
 
-/**
- * Sets review totals for today received from storage
- */
-function todayReviewTotalsReceived(draft: LessonReducerState, payload: TodaysReviewTotals) {
-  draft.todayReviewTotals = payload;
-  setupInitData(draft);
-}
-
-/**
- * Sets lessons data received from storage
- */
-function lessonsReceived(draft: LessonReducerState, payload: LessonsResult) {
-  draft.lessons = payload;
-  setupInitData(draft);
-}
-
 type AmountUpdatedPayload = {
   type: Exclude<LessonType, "total">;
   value: number;
 };
 
-/**
- * Updates the lesson card amount for a specific type and recalculates total
- */
 function amountUpdated(draft: LessonReducerState, { type, value }: AmountUpdatedPayload) {
-  if (draft.amounts) {
-    draft.amounts[type] = value;
-    const { untouched, learn, review } = draft.amounts;
-    draft.amounts.total = Number(untouched) + Number(learn) + Number(review);
-  }
+  if (draft.phase !== "configuring" || !draft.setup) return;
+
+  draft.setup.amounts[type] = value;
+  const { untouched, learn, review } = draft.setup.amounts;
+  draft.setup.amounts.total = Number(untouched) + Number(learn) + Number(review);
 }
 
-/**
- * Marks lesson as submitted to start loading LessonData
- */
-function lessonSubmitted(draft: LessonReducerState) {
-  draft.meta.isSubmitted = true;
+function setupSubmitted(draft: LessonReducerState) {
+  // INVARIANT: setup can only start loading when configuring with a nonzero total.
+  if (draft.phase !== "configuring" || !draft.setup?.amounts.total) return;
+
+  draft.phase = "loading-cards";
 }
 
-/**
- * Sets data required for current lesson (decks, cards, algorithms, templates)
- * Marks lesson as started since data is loaded
- */
 function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
-  if (draft.content) return;
-  draft.data = payload;
+  // INVARIANT: card data becomes the session snapshot once, during loading-cards.
+  if (draft.phase !== "loading-cards") return;
+  if (draft.session) return;
+
+  draft.session = {
+    learnAheadLimit: draft.setup?.learnAheadLimit,
+    data: payload,
+    content: null,
+    progress: {
+      done: { untouched: 0, learn: 0, review: 0, total: 0 },
+      pending: { untouched: 0, learn: 0, review: 0, total: 0 },
+    },
+  };
   moveToNextCard(draft);
-  draft.meta.isStarted = true;
+  if (draft.phase === "loading-cards") draft.phase = "studying";
 }
 
-/**
- * Increments index of currently studied card (sets to 0 on the first call)
- * Sets 'content' state with data related to that card
- * Updates lesson progress data
- * If there are no more cards, sets the lesson status to 'finished'
- */
 function moveToNextCard(draft: LessonReducerState) {
-  if (!draft.data) return;
+  if (!draft.session) return;
 
-  const { cards, decks, templates, algorithms } = draft.data;
-  const index = typeof draft.content?.index === "number" ? draft.content.index + 1 : 0;
+  const { cards, decks, templates, algorithms } = draft.session.data;
+  const index = typeof draft.session.content?.index === "number" ? draft.session.content.index + 1 : 0;
 
   if (index && index >= cards.length) {
-    if (typeof draft.content?.index === "number") draft.content.index++;
-    draft.meta.isFinished = true;
+    if (typeof draft.session.content?.index === "number") draft.session.content.index++;
+    draft.phase = "finished";
     updateProgressAmounts(draft);
     return;
   }
@@ -292,7 +272,7 @@ function moveToNextCard(draft: LessonReducerState) {
   // WHY: display-only layouts have nothing to submit — show grades immediately.
   const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
 
-  draft.content = {
+  draft.session.content = {
     index,
     startedAt: Date.now(),
     form: {
@@ -307,11 +287,9 @@ function moveToNextCard(draft: LessonReducerState) {
   updateProgressAmounts(draft);
 }
 
-/**
- * Marks current card as submitted
- */
 function cardSubmitted(draft: LessonReducerState) {
-  if (draft.content && !draft.content?.form.isSubmitted) draft.content.form.isSubmitted = true;
+  if (draft.phase !== "studying") return;
+  if (draft.session?.content && !draft.session.content.form.isSubmitted) draft.session.content.form.isSubmitted = true;
 }
 
 type CardFormUpdatedPayload = {
@@ -319,63 +297,49 @@ type CardFormUpdatedPayload = {
   value: string;
 };
 
-/**
- * Updates value for a single field in form data for current card
- */
 function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpdatedPayload) {
-  if (draft.content) draft.content.form.data[key] = value;
+  if (draft.phase !== "studying") return;
+  if (draft.session?.content) draft.session.content.form.data[key] = value;
 }
 
-/**
- * Submits grade for current card
- * Adds card and review to the upload queue
- * Proceeds to next card if any
- */
 function gradeSelected(draft: LessonReducerState, payload: number) {
-  if (draft.content && draft.data) {
-    const grade = draft.content.grades[payload];
-    const time = Math.min(Date.now() - draft.content.startedAt, MAX_REVIEW_TIME_MS);
-    const review = {
-      ...createReviewFromReviewFSRS(grade.log),
-      cardId: draft.content.card.id,
-      isIgnored: false,
-      time,
-    };
-    const card = createCardFromCardFSRS(grade.card);
+  if (draft.phase !== "studying") return;
+  if (!draft.session?.content) return;
 
-    const { index } = draft.content;
-    draft.upload.queue.push({ index, card, review });
+  const grade = draft.session.content.grades[payload];
+  const time = Math.min(Date.now() - draft.session.content.startedAt, MAX_REVIEW_TIME_MS);
+  const review = {
+    ...createReviewFromReviewFSRS(grade.log),
+    cardId: draft.session.content.card.id,
+    isIgnored: false,
+    time,
+  };
+  const card = createCardFromCardFSRS(grade.card);
 
-    if (doesLearnAheadMatch(draft, card)) draft.data.cards.push(card);
-    moveToNextCard(draft);
-  }
+  const { index } = draft.session.content;
+  draft.upload.queue.push({ index, card, review });
+
+  if (doesLearnAheadMatch(draft, card)) draft.session.data.cards.push(card);
+  moveToNextCard(draft);
 }
 
-/**
- * Checks if a card's due is over the learn ahead limit
- * @param draft The lesson reducer state
- * @param card The card to check
- * @returns true if card's due is sooner than the learn ahead limit, false if it's later
- */
 function doesLearnAheadMatch(draft: LessonReducerState, card: Card) {
-  if (!draft.learnAheadLimit || !card.dueAt) return false;
+  const learnAheadLimit = draft.session?.learnAheadLimit;
+  if (!learnAheadLimit || !card.dueAt) return false;
 
-  const [hours, minutes] = draft.learnAheadLimit;
+  const [hours, minutes] = learnAheadLimit;
   const limitTimestamp = addMinutes(addHours(new Date(), hours), minutes);
 
   return new Date(card.dueAt) < limitTimestamp;
 }
 
-/**
- * Updates the progress data for every lesson type
- */
 function updateProgressAmounts(draft: LessonReducerState) {
-  if (!draft?.data?.cards || !draft.content) return;
-  const index = draft?.content?.index || 0;
+  if (!draft.session?.data.cards || !draft.session.content) return;
+  const index = draft.session.content.index || 0;
   const done = { untouched: 0, learn: 0, review: 0, total: 0 };
   const pending = { untouched: 0, learn: 0, review: 0, total: 0 };
 
-  draft.data.cards.forEach(({ state }, i) => {
+  draft.session.data.cards.forEach(({ state }, i) => {
     const type = LESSON_PROGRESS_STATES[state as keyof typeof LESSON_PROGRESS_STATES];
     if (type) {
       if (i < index) {
@@ -387,7 +351,22 @@ function updateProgressAmounts(draft: LessonReducerState) {
       }
     }
   });
-  draft.progress = { done, pending };
+  draft.session.progress = { done, pending };
+}
+
+function terminationRequested(draft: LessonReducerState, payload: boolean) {
+  if (draft.phase === "closed") return;
+  draft.isTerminationRequested = payload;
+}
+
+function close(draft: LessonReducerState) {
+  const next = structuredClone(lessonReducerDefault);
+  draft.phase = next.phase;
+  draft.request = next.request;
+  draft.setup = next.setup;
+  draft.session = next.session;
+  draft.isTerminationRequested = next.isTerminationRequested;
+  draft.upload = next.upload;
 }
 
 type ResultUploadedPayload = {
@@ -395,11 +374,9 @@ type ResultUploadedPayload = {
   status: LessonResultUploadStatus;
 };
 
-/**
- * Updates the upload queue and log when a review result has been uploaded
- * Removes the entry from the queue and adds result of upload operation to log
- */
 function resultUploaded(draft: LessonReducerState, payload: ResultUploadedPayload) {
+  if (draft.phase === "closed") return;
+
   const queueIndex = draft.upload.queue.findIndex(({ index }) => index === payload.index);
   if (queueIndex !== -1) {
     draft.upload.queue.splice(queueIndex, 1);
@@ -409,7 +386,8 @@ function resultUploaded(draft: LessonReducerState, payload: ResultUploadedPayloa
 
 export type LessonReducerAction = ReducerAction<typeof actions, LessonReducerState>;
 
-export const lessonReducer = produce((draft: LessonReducerState, action: LessonReducerAction) => {
-  dispatchReducerAction(draft, actions, action);
-  return draft;
-});
+export function lessonReducer(state: LessonReducerState, action: LessonReducerAction) {
+  return produce(state, (draft) => {
+    dispatchReducerAction(draft, actions, action);
+  });
+}

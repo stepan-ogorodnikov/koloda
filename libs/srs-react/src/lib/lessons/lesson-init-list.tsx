@@ -14,9 +14,9 @@ type LessonInitListProps = {
 
 export function LessonInitList({ state, dispatch }: LessonInitListProps) {
   const { _ } = useLingui();
-  if (!state.lessons || !state.todayReviewTotals) return null;
-  const available = state.lessons.total;
-  const { reviewTotals, dailyLimits } = state.todayReviewTotals;
+  const setup = state.setup;
+  if (!setup) return null;
+  const { available, reviewTotals, dailyLimits } = setup;
 
   return (
     <div className="self-stretch flex flex-col gap-6">
@@ -31,7 +31,7 @@ export function LessonInitList({ state, dispatch }: LessonInitListProps) {
           </div>
           <div className="flex flex-row items-center justify-between">
             {type === "total" ? (
-              <Number className="flex flex-row items-center numbers-text" value={state?.amounts?.total || 0} />
+              <Number className="flex flex-row items-center numbers-text" value={setup.amounts.total || 0} />
             ) : (
               <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
             )}

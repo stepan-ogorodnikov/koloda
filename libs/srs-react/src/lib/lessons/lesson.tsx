@@ -1,11 +1,11 @@
 import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/core-react";
-import type { Deck, LessonType } from "@koloda/srs";
+import type { Deck, LessonFilters, LessonType } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { LessonCompletion } from "./lesson-completion";
 import { LessonFooter } from "./lesson-footer";
 import { LessonHeader } from "./lesson-header";
@@ -23,26 +23,46 @@ export const lessonAtom = atom<LessonAtomValue | null>(null);
 
 export const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
+function filtersFromRequest(request: LessonAtomValue): LessonFilters {
+  return { deckIds: request.deckId ? [request.deckId] : [] };
+}
+
 export function Lesson() {
   const queryClient = useQueryClient();
   const { disableScope, enableScope } = useHotkeysStatus();
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
-  const { getSettingsQuery } = useAtomValue(queriesAtom);
-  const { data: learningSettings } = useQuery(getSettingsQuery("learning"));
-  const { isOpen, isSubmitted, isFinished } = state.meta;
+  const { getSettingsQuery, getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
+  const { data: learningSettings, isFetched: hasFetchedLearningSettings } = useQuery(getSettingsQuery("learning"));
+  const isOpen = state.phase !== "closed";
+  const lastFiltersRef = useRef<LessonFilters | undefined>(undefined);
+  const lessonFilters = state.request ? filtersFromRequest(state.request) : undefined;
+  const { data: todayReviewTotals } = useQuery({
+    ...getTodayReviewTotalsQuery(),
+    enabled: isOpen,
+  });
+  const { data: lessons } = useQuery({
+    ...getLessonsQuery(lessonFilters),
+    enabled: isOpen && !!lessonFilters,
+  });
+
+  // WHY: capture filters on render while request is still set. Close nulls
+  // request/setup, so the closed effect cannot read them.
+  if (lessonFilters) lastFiltersRef.current = lessonFilters;
 
   useEffect(() => {
-    if (!isOpen) setAtomValue(null);
-  }, [isOpen, setAtomValue]);
+    if (state.phase === "closed") setAtomValue(null);
+  }, [state.phase, setAtomValue]);
 
   useEffect(() => {
-    if (!isOpen) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all(state.filters) });
+    // INVARIANT: depend only on phase. Putting request/setup filters in deps
+    // would drop the deck-scoped lessons.all(filters) invalidation after close.
+    if (state.phase === "closed") {
+      queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all(lastFiltersRef.current) });
       queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
     }
-  }, [isOpen, queryClient, state.filters]);
+  }, [state.phase, queryClient]);
 
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("nav");
@@ -50,21 +70,35 @@ export function Lesson() {
   }, [isOpen, disableScope, enableScope]);
 
   useEffect(() => {
-    if (atomValue) dispatch(["paramsSet", atomValue]);
+    // WHY: depend only on atomValue. After close the atom is still set until the
+    // following effect; including phase would re-open the just-closed lesson.
+    if (atomValue) dispatch(["open", atomValue]);
   }, [atomValue]);
 
   useEffect(() => {
-    if (learningSettings?.content.learnAheadLimit) {
-      dispatch(["learnAheadLimitReceived", learningSettings.content.learnAheadLimit]);
-    }
-  }, [learningSettings]);
+    if (state.phase !== "preparing" || !state.request) return;
+    if (!hasFetchedLearningSettings || !lessons || !todayReviewTotals) return;
+
+    dispatch([
+      "initialize",
+      {
+        request: state.request,
+        learnAheadLimit: learningSettings?.content.learnAheadLimit,
+        lessons,
+        todayReviewTotals,
+      },
+    ]);
+  }, [state.phase, state.request, hasFetchedLearningSettings, learningSettings, lessons, todayReviewTotals]);
 
   const handleIsOpenChange = (value: boolean) => {
-    dispatch(["isOpenUpdated", value]);
+    if (!value) dispatch(["close"]);
   };
 
+  const isSetupPhase = state.phase === "preparing" || state.phase === "configuring";
+  const isSessionPhase = state.phase === "loading-cards" || state.phase === "studying";
+
   return (
-    <Dialog.Overlay isOpen={state.meta.isOpen} onOpenChange={handleIsOpenChange} isKeyboardDismissDisabled>
+    <Dialog.Overlay isOpen={isOpen} onOpenChange={handleIsOpenChange} isKeyboardDismissDisabled>
       <Dialog.Modal variants={{ size: "main" }} isKeyboardDismissDisabled>
         <Dialog.Body>
           <form
@@ -72,23 +106,23 @@ export function Lesson() {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              dispatch(["lessonSubmitted"]);
+              dispatch(["setupSubmitted"]);
             }}
           >
             <LessonHeader state={state} dispatch={dispatch} />
             <AnimatePresence mode="wait">
-              {!isSubmitted && (
+              {isSetupPhase && (
                 <Fade className={lessonContent} initial={{ opacity: 1 }} key="init">
                   <LessonInit state={state} dispatch={dispatch} />
                 </Fade>
               )}
-              {isSubmitted && !isFinished && (
+              {isSessionPhase && (
                 <Fade className={lessonContent} key="content">
                   <LessonStudying state={state} dispatch={dispatch} />
                   <LessonTermination state={state} dispatch={dispatch} />
                 </Fade>
               )}
-              {isFinished && (
+              {state.phase === "finished" && (
                 <Fade className={lessonContent} key="finish">
                   <LessonCompletion state={state} dispatch={dispatch} />
                 </Fade>

@@ -12,7 +12,7 @@ type LessonCompletionProps = {
 export function LessonCompletion({ dispatch }: LessonCompletionProps) {
   const { _ } = useLingui();
 
-  useAppHotkey(["Escape"], () => dispatch(["isOpenUpdated", false]), "lesson");
+  useAppHotkey(["Escape"], () => dispatch(["close"]), "lesson");
 
   return <div className="text-xl font-semibold">{_(msg`lesson.completion.message`)}</div>;
 }

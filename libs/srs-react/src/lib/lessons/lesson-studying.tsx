@@ -18,7 +18,7 @@ type LessonStudyingProps = {
 export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   const { getLessonDataQuery } = useAtomValue(queriesAtom);
   const { grades, ui } = useHotkeysSettings();
-  const { data } = useQuery(getLessonDataQuery({ amounts: state.amounts!, filters: state.filters! }));
+  const { data } = useQuery(getLessonDataQuery({ amounts: state.setup!.amounts, filters: state.setup!.filters }));
 
   useAppHotkey(grades.again, () => dispatch(["gradeSelected", 0]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.hard, () => dispatch(["gradeSelected", 1]), "lesson", { eventType: "keyup" });
@@ -39,15 +39,16 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
     if (data) dispatch(["lessonDataReceived", data]);
   }, [dispatch, data]);
 
-  if (!state.content) return null;
+  const content = state.session?.content;
+  if (!content) return null;
 
   return (
     <AnimatePresence mode="wait">
-      <Fade className={lessonStudying} key={state.content.index}>
-        {state.content.template.layout.map((item, i) => (
+      <Fade className={lessonStudying} key={content.index}>
+        {content.template.layout.map((item, i) => (
           <LessonCardField
             params={item}
-            content={state.content!}
+            content={content}
             onFormChange={(key, value) => dispatch(["cardFormUpdated", { key, value }])}
             onSubmit={() => dispatch(["cardSubmitted"])}
             key={i}

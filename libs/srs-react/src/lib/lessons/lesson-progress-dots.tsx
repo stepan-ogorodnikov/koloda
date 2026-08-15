@@ -26,8 +26,8 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const { index } = state.content || { index: 0 };
-  const total = state.data?.cards.length || 0;
+  const { index } = state.session?.content || { index: 0 };
+  const total = state.session?.data.cards.length || 0;
 
   return (
     <motion.div
@@ -48,7 +48,7 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
         animate={{ x: -0.5 * rem() - index * 1.5 * rem() }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        {state.data?.cards.map((card, i) => {
+        {state.session?.data.cards.map((card, i) => {
           const isCurrent = i === index;
           const type = LESSON_PROGRESS_STATES[card.state as keyof typeof LESSON_PROGRESS_STATES] || "untouched";
           const status = state.upload.log[i];

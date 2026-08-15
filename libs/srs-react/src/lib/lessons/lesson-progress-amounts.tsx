@@ -8,9 +8,9 @@ type LessonProgressAmountsProps = { state: LessonReducerState };
 
 export function LessonProgressAmounts({ state }: LessonProgressAmountsProps) {
   const isMotionOn = useMotionSetting();
-  if (!state.progress) return null;
+  if (!state.session?.progress) return null;
 
-  const { done, pending } = state.progress;
+  const { done, pending } = state.session.progress;
 
   return (
     <motion.div className="h-8 numbers-text leading-8" transition={{ duration: 0 }} key="progress-amounts">

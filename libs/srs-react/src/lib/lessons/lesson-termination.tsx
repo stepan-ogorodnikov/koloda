@@ -21,7 +21,7 @@ export function LessonTermination({ state, dispatch }: LessonTerminationProps) {
 
   return (
     <AnimatePresence>
-      {state.meta.isTerminationRequested && (
+      {state.isTerminationRequested && (
         <Fade className={terminationDialogOverlay} key="termination">
           <FocusScope contain autoFocus>
             <Button variants={{ style: "ghost" }} onClick={() => dispatch(["terminationRequested", false])}>
@@ -30,7 +30,7 @@ export function LessonTermination({ state, dispatch }: LessonTerminationProps) {
             <Button
               variants={{ style: "primary" }}
               onClick={() => {
-                dispatch(["isOpenUpdated", false]);
+                dispatch(["close"]);
               }}
             >
               {_(msg`lesson.content.termination.accept`)}

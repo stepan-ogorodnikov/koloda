@@ -16,9 +16,9 @@ type LessonInitTableProps = {
 
 export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
   const { _ } = useLingui();
-  if (!state.lessons || !state.todayReviewTotals) return null;
-  const available = state.lessons.total;
-  const { reviewTotals, dailyLimits } = state.todayReviewTotals;
+  const setup = state.setup;
+  if (!setup) return null;
+  const { available, reviewTotals, dailyLimits } = setup;
 
   return (
     <table className="mb-4">
@@ -36,7 +36,7 @@ export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
             <LessonInitLabel>{_(LESSON_TYPE_LABELS[type])}</LessonInitLabel>
             {type === "total" ? (
               <LessonInitTd>
-                <LessonInitAmount amount={state?.amounts?.total || 0} />
+                <LessonInitAmount amount={setup.amounts.total || 0} />
               </LessonInitTd>
             ) : (
               <LessonInitTd>

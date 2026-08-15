@@ -16,34 +16,36 @@ type LessonFooterProps = {
 export function LessonFooter({ state, dispatch }: LessonFooterProps) {
   const { _ } = useLingui();
   const submitRef = useRef<HTMLButtonElement>(null);
-  const { isSubmitted, isStarted, isFinished } = state.meta;
+  const isSetupPhase = state.phase === "preparing" || state.phase === "configuring";
+  const isStudying = state.phase === "studying" && !!state.session;
+  const content = state.session?.content;
 
   useEffect(() => {
-    if (!state?.content?.form?.firstInputFieldId && state?.content?.form?.isSubmitted === false) {
+    if (!content?.form?.firstInputFieldId && content?.form?.isSubmitted === false) {
       submitRef?.current?.focus();
     }
-  }, [state?.content?.form?.firstInputFieldId, state?.content?.form?.isSubmitted]);
+  }, [content?.form?.firstInputFieldId, content?.form?.isSubmitted]);
 
   return (
     <LessonFooterLayout>
       <AnimatePresence mode="wait">
-        {!isSubmitted && (
+        {isSetupPhase && (
           <Fade key="submit">
             <Button
               variants={{ style: "primary" }}
               type="submit"
-              isDisabled={!state?.amounts?.total}
-              onClick={() => dispatch(["lessonSubmitted"])}
+              isDisabled={!state.setup?.amounts.total}
+              onClick={() => dispatch(["setupSubmitted"])}
             >
               {_(msg`lesson.init.submit`)}
             </Button>
           </Fade>
         )}
-        {isStarted && !isFinished && (
+        {isStudying && (
           <AnimatePresence mode="wait">
-            {state.content?.form.isSubmitted ? (
+            {content?.form.isSubmitted ? (
               <Fade key="grades">
-                <LessonCardGrades grades={state.content.grades} dispatch={dispatch} />
+                <LessonCardGrades grades={content.grades} dispatch={dispatch} />
               </Fade>
             ) : (
               <Fade key="submit">
@@ -59,16 +61,16 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
             )}
           </AnimatePresence>
         )}
-        {isFinished && (
+        {state.phase === "finished" && (
           <Fade key="close">
-            <Button variants={{ style: "primary" }} onClick={() => dispatch(["isOpenUpdated", false])} autoFocus>
+            <Button variants={{ style: "primary" }} onClick={() => dispatch(["close"])} autoFocus>
               {_(msg`lesson.completion.close`)}
             </Button>
           </Fade>
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {state.meta.isTerminationRequested && <Fade className={terminationDialogOverlay} key="overlay" />}
+        {state.isTerminationRequested && <Fade className={terminationDialogOverlay} key="overlay" />}
       </AnimatePresence>
     </LessonFooterLayout>
   );
