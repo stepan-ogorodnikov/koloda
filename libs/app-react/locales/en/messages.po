@@ -136,7 +136,7 @@ msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:149
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:153
 msgid "settings.ai.edit.submit"
 msgstr "Save"
 
@@ -148,11 +148,11 @@ msgstr "Edit AI profile"
 msgid "settings.ai.edit.trigger"
 msgstr "Edit profile"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:127
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:129
 msgid "settings.ai.models.empty"
 msgstr "No models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:111
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:112
 msgid "settings.ai.models.error"
 msgstr "Error"
 
@@ -160,36 +160,36 @@ msgstr "Error"
 msgid "settings.ai.models.loading"
 msgstr "Loading"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:104
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:102
 msgid "settings.ai.models.mode.all"
 msgstr "All"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:95
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:93
 msgid "settings.ai.models.mode.label"
 msgstr "Model list"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:105
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:103
 msgid "settings.ai.models.mode.selected"
 msgstr "Selected"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:114
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:123
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:115
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:124
 msgid "settings.ai.models.retry"
 msgstr "Retry"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:83
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:80
 msgid "settings.ai.models.search.label"
 msgstr "Search models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:90
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:87
 msgid "settings.ai.models.search.placeholder"
 msgstr "Search models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:76
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:73
 msgid "settings.ai.models.title"
 msgstr "Models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:68
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:66
 msgid "settings.ai.models.trigger"
 msgstr "Models"
 

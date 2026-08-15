@@ -13,18 +13,26 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/demo-setup.tsx:47
+#: src/components/demo-setup.tsx:62
+msgid "demo.setup.browser"
+msgstr "For the best experience, use a recent Chromium-based browser (Chrome, Edge, Brave, Arc, or Opera)."
+
+#: src/components/demo-setup.tsx:51
 msgid "demo.setup.header"
 msgstr "Setting up a demo"
 
-#: src/components/demo-setup.tsx:51
+#: src/components/demo-setup.tsx:55
 msgid "demo.setup.loading"
 msgstr "Initializing the database"
 
-#: src/components/demo-setup.tsx:53
+#: src/components/demo-setup.tsx:58
 msgid "demo.setup.storage"
-msgstr "All the data will be stored locally in IndexedDB browser storage."
+msgstr "All data stays on this device, in IndexedDB browser storage."
 
-#: src/components/demo-setup.tsx:66
+#: src/components/demo-setup.tsx:84
 msgid "demo.setup.submit"
 msgstr "Get started"
+
+#: src/components/demo-setup.tsx:68
+msgid "demo.setup.unsupported"
+msgstr "This demo needs IndexedDB and WebAssembly. Please switch to a recent Chromium-based browser."

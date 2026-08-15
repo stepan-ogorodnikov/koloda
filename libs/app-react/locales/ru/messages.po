@@ -136,7 +136,7 @@ msgid "settings.ai.delete.message"
 msgstr "Вы уверены, что хотите удалить этот профиль?"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:149
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:153
 msgid "settings.ai.edit.submit"
 msgstr "Сохранить"
 
@@ -148,11 +148,11 @@ msgstr "Редактировать ИИ профиль"
 msgid "settings.ai.edit.trigger"
 msgstr "Редактировать профиль"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:127
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:129
 msgid "settings.ai.models.empty"
 msgstr "Нет моделей"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:111
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:112
 msgid "settings.ai.models.error"
 msgstr "Ошибка"
 
@@ -160,36 +160,36 @@ msgstr "Ошибка"
 msgid "settings.ai.models.loading"
 msgstr "Загрузка"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:104
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:102
 msgid "settings.ai.models.mode.all"
 msgstr "Все"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:95
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:93
 msgid "settings.ai.models.mode.label"
 msgstr "Список моделей"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:105
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:103
 msgid "settings.ai.models.mode.selected"
 msgstr "Выбранные"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:114
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:123
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:115
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:124
 msgid "settings.ai.models.retry"
 msgstr "Обновить"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:83
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:80
 msgid "settings.ai.models.search.label"
 msgstr "Поиск по моделям"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:90
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:87
 msgid "settings.ai.models.search.placeholder"
 msgstr "Поиск по моделям"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:76
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:73
 msgid "settings.ai.models.title"
 msgstr "Модели"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:68
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:66
 msgid "settings.ai.models.trigger"
 msgstr "Модели"
 
