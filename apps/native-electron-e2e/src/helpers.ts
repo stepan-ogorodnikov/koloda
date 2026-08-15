@@ -7,7 +7,7 @@ export async function setupPageDefaults(page: Page) {
     window.localStorage.setItem("lang", "en");
     window.localStorage.setItem(
       "koloda-ui-prefs",
-      JSON.stringify({ scheme: "light", motion: "off", lightTheme: "atom-one-light", darkTheme: "atom-one-dark" }),
+      JSON.stringify({ scheme: "light", motion: "off", lightTheme: "github-light", darkTheme: "github-dark" }),
     );
   });
   await page.reload({ waitUntil: "domcontentloaded" });

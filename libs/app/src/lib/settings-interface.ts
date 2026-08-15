@@ -41,8 +41,8 @@ export const MOTION_SETTINGS: Record<string, MessageDescriptor> = {
 export const interfaceSettingsValidation = z.object({
   language: z.enum(LOCALES).default("en"),
   scheme: z.enum(Object.keys(SCHEMES)).default("system"),
-  lightTheme: z.enum(Object.keys(LIGHT_THEMES)).default("atom-one-light"),
-  darkTheme: z.enum(Object.keys(DARK_THEMES)).default("atom-one-dark"),
+  lightTheme: z.enum(Object.keys(LIGHT_THEMES)).default("github-light"),
+  darkTheme: z.enum(Object.keys(DARK_THEMES)).default("github-dark"),
   motion: z.enum(Object.keys(MOTION_SETTINGS)).default("system"),
 });
 

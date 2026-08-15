@@ -20,7 +20,7 @@ fn e2e_seed_and_review_workflow() {
             },
             template: simple_template(),
             settings: SeedSettings {
-                interface: json!({"language": "en", "scheme": "system", "lightTheme": "atom-one-light", "darkTheme": "atom-one-dark", "motion": "system"}),
+                interface: json!({"language": "en", "scheme": "system", "lightTheme": "github-light", "darkTheme": "github-dark", "motion": "system"}),
                 learning: json!({
                     "defaults": {},
                     "dailyLimits": {

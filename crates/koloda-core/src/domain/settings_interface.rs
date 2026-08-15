@@ -11,11 +11,11 @@ pub const DARK_THEMES: &[&str] = &["atom-one-dark", "github-dark"];
 pub const MOTION_SETTINGS: &[&str] = &["on", "off", "system"];
 
 fn default_light_theme() -> String {
-    "atom-one-light".to_string()
+    "github-light".to_string()
 }
 
 fn default_dark_theme() -> String {
-    "atom-one-dark".to_string()
+    "github-dark".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

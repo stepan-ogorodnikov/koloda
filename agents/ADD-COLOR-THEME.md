@@ -3,7 +3,7 @@
 **Input REQUIRED from user**: scheme (light or dark), theme id (kebab-case), display name, palette source or hex values
 
 Themes are usually added as a light/dark pair.
-Each half is a separate theme id (for example `github-light` and `github-dark`).
+Each half is a separate theme id (for example `my-light` and `my-dark`).
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Use `oklch(from … calc(l ± N) …)` and tune per theme.
 
 Create `libs/ui/src/lib/styles/themes/<id>.css`.
 
-Copy an existing theme close to the new look (`atom-one-*.css` or `github-*.css`).
+Copy an existing theme close to the new look.
 
 **Light selector:**
 
@@ -48,7 +48,7 @@ Copy an existing theme close to the new look (`atom-one-*.css` or `github-*.css`
 ```
 
 Do not attach a new theme to bare `:root` or `:root.dark`.
-Those selectors are the Atom One fallbacks only.
+Those selectors are the default theme fallbacks only.
 
 ### 2. Fill the required palette
 
@@ -88,7 +88,7 @@ Required in the theme file (not the scheme):
 
 Light themes usually lighten accents for lesson-type backgrounds (`l + N`).
 Dark themes usually darken them (`l - N`).
-Selected switch/checkbox may use green (Atom One) or accent blue (GitHub).
+Selected switch/checkbox may use green or accent blue.
 Match the source design system when there is one.
 
 Start from a sibling theme’s ΔL values, then adjust visually.
@@ -162,7 +162,7 @@ Zod and Rust validation both reject unknown theme ids.
 No picker code changes are needed.
 `LightThemePicker` / `DarkThemePicker` read `LIGHT_THEMES` / `DARK_THEMES`.
 
-Defaults stay Atom One unless the user asks to change them.
+Do not change the default theme unless the user asks.
 Do not change app `store.ts` seed values unless that is requested.
 
 ## What Not To Change
@@ -187,8 +187,7 @@ Do not change app `store.ts` seed values unless that is requested.
 
 ## References
 
-- `libs/ui/src/lib/styles/themes/atom-one-light.css` / `atom-one-dark.css`
-- `libs/ui/src/lib/styles/themes/github-light.css` / `github-dark.css`
+- `libs/ui/src/lib/styles/themes/<id>.css`
 - `libs/ui/src/lib/styles/scheme-light.css` / `scheme-dark.css`
 - `libs/app/src/lib/settings-interface.ts`
 - `crates/koloda-core/src/domain/settings_interface.rs`

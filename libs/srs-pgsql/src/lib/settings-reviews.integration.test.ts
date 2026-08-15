@@ -78,8 +78,8 @@ describe("settings and review totals integration", () => {
     expect(result?.content).toEqual({
       language: "ru",
       scheme: "system",
-      lightTheme: "atom-one-light",
-      darkTheme: "atom-one-dark",
+      lightTheme: "github-light",
+      darkTheme: "github-dark",
       motion: "system",
     });
   });

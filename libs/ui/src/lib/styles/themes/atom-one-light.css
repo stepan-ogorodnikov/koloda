@@ -1,4 +1,3 @@
-:root,
 :root.light[data-light-theme="atom-one-light"],
 :root:not(.dark)[data-light-theme="atom-one-light"] {
   --color-bg: #fafafa;

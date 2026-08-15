@@ -22,8 +22,8 @@ export function wireUiPreferences(store: Store, options: WireUiPreferencesOption
   const cached = readUiPreferencesCache();
   const {
     scheme = cached?.scheme ?? "system",
-    lightTheme = cached?.lightTheme ?? "atom-one-light",
-    darkTheme = cached?.darkTheme ?? "atom-one-dark",
+    lightTheme = cached?.lightTheme ?? "github-light",
+    darkTheme = cached?.darkTheme ?? "github-dark",
     motion = cached?.motion ?? "system",
   } = options;
 

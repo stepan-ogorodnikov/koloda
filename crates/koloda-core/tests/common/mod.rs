@@ -88,8 +88,8 @@ pub fn interface_settings(language: &str, scheme: &str, motion: &str) -> serde_j
     json!({
         "language": language,
         "scheme": scheme,
-        "lightTheme": "atom-one-light",
-        "darkTheme": "atom-one-dark",
+        "lightTheme": "github-light",
+        "darkTheme": "github-dark",
         "motion": motion,
     })
 }

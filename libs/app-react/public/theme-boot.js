@@ -15,8 +15,8 @@
     } catch {}
 
     var scheme = prefs.scheme || "system";
-    var lightTheme = prefs.lightTheme || "atom-one-light";
-    var darkTheme = prefs.darkTheme || "atom-one-dark";
+    var lightTheme = prefs.lightTheme || "github-light";
+    var darkTheme = prefs.darkTheme || "github-dark";
     var motion = prefs.motion || "system";
 
     var isDark = scheme === "dark" || (scheme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -29,7 +29,7 @@
     root.style.colorScheme = isDark ? "dark" : "light";
 
     var themeId = isDark ? darkTheme : lightTheme;
-    var surface = SURFACE[themeId] || (isDark ? "#282c34" : "#fafafa");
+    var surface = SURFACE[themeId] || (isDark ? "#0d1117" : "#ffffff");
     root.style.backgroundColor = surface;
 
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

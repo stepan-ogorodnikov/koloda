@@ -20,6 +20,20 @@ fn test_valid_interface_settings_full() {
 }
 
 #[test]
+fn test_missing_themes_default_to_github() {
+    let json = r#"{
+        "language": "en",
+        "scheme": "system",
+        "motion": "system"
+    }"#;
+
+    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
+    assert_eq!(settings.light_theme, "github-light");
+    assert_eq!(settings.dark_theme, "github-dark");
+    settings.validate().unwrap();
+}
+
+#[test]
 fn test_valid_language_en() {
     let json = r#"{
         "language": "en",

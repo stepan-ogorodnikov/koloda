@@ -23,13 +23,13 @@ test("changes language and scheme via Settings > Interface", async ({ page }) =>
   await darkToggle.click();
   await expect(darkToggle).toBeChecked();
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await expect(page.locator("html")).toHaveAttribute("data-dark-theme", "atom-one-dark");
+  await expect(page.locator("html")).toHaveAttribute("data-dark-theme", "github-dark");
 
   // Switch back to Light scheme
   await lightToggle.click();
   await expect(lightToggle).toBeChecked();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
-  await expect(page.locator("html")).toHaveAttribute("data-light-theme", "atom-one-light");
+  await expect(page.locator("html")).toHaveAttribute("data-light-theme", "github-light");
 
   // Open language picker
   const languageButton = page.getByRole("button", { name: "English Language" }).last();
