@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
-import { act } from "./conversation-reducer.fixtures";
 
 // WHY: See ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
 // Revert is now a visual overlay (setRevertState) backed by an explicit
@@ -17,7 +16,7 @@ describe("conversationReducer → setRevertState", () => {
       createdAt: new Date("2026-07-01T11:00:00Z"),
       revertState,
     };
-    const next = conversationReducer(state, act({ type: "setRevertState", revertState }));
+    const next = conversationReducer(state, ["setRevertState", revertState]);
     expect(next).toBe(state);
   });
 
@@ -75,13 +74,10 @@ describe("conversationReducer → setRevertState", () => {
         },
       },
     };
-    const next = conversationReducer(
-      state,
-      act({
-        type: "setRevertState",
-        revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
-      }),
-    );
+    const next = conversationReducer(state, [
+      "setRevertState",
+      { revertedToUserMessageId: "user-r2", preRevertInputText: "draft" },
+    ]);
     // WHY: Visual revert only — data is untouched.
     expect(next.messages).toBe(state.messages);
     expect(next.runs).toBe(state.runs);
@@ -122,7 +118,7 @@ describe("conversationReducer → setRevertState", () => {
       },
       revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "draft" },
     };
-    const next = conversationReducer(state, act({ type: "setRevertState", revertState: null }));
+    const next = conversationReducer(state, ["setRevertState", null]);
     expect(next.revertState).toBeNull();
     // WHY: Restore is purely visual — messages and runs are intact.
     expect(next.messages).toBe(state.messages);
@@ -211,13 +207,10 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
       },
       revertState: { revertedToUserMessageId: "user-r3", preRevertInputText: "draft-3" },
     };
-    const next = conversationReducer(
-      state,
-      act({
-        type: "setRevertState",
-        revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" },
-      }),
-    );
+    const next = conversationReducer(state, [
+      "setRevertState",
+      { revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" },
+    ]);
     expect(next.revertState).toEqual({ revertedToUserMessageId: "user-r2", preRevertInputText: "draft-2" });
     expect(next.messages).toBe(state.messages);
     expect(Object.keys(next.runs).sort()).toEqual(["r1", "r2", "r3"]);
@@ -265,7 +258,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: null,
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
     expect(next).toBe(state);
   });
 
@@ -320,7 +313,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
 
     expect(next.messages).toEqual([
       {
@@ -381,7 +374,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
 
     expect(next.lastReadRunId).toBeNull();
     expect(Object.keys(next.runs)).toEqual(["r1"]);
@@ -426,7 +419,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: { revertedToUserMessageId: "user-r2", preRevertInputText: "" },
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
 
     expect(next.lastReadRunId).toBe("r1");
     expect(Object.keys(next.runs)).toEqual(["r1"]);
@@ -456,7 +449,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: { revertedToUserMessageId: "user-r1", preRevertInputText: "" },
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
 
     expect(next.dismissedRunErrorId).toBeNull();
   });
@@ -478,7 +471,7 @@ describe("conversationReducer → commitRevert", () => {
       revertState: { revertedToUserMessageId: "user-nonexistent", preRevertInputText: "" },
     };
 
-    const next = conversationReducer(state, act({ type: "commitRevert" }));
+    const next = conversationReducer(state, ["commitRevert"]);
 
     // WHY: Stale revert state should be cleared, messages untouched.
     expect(next.revertState).toBeNull();

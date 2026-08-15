@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
-import { act, reduce } from "./conversation-reducer.fixtures";
+import { reduce } from "./conversation-reducer.fixtures";
 
 describe("conversationReducer", () => {
   describe("addUserMessage", () => {
     it("appends a user message to the messages array", () => {
-      const state = reduce([{ type: "addUserMessage", runId: "r1", text: "Hello" }]);
+      const state = reduce([["addUserMessage", { runId: "r1", text: "Hello" }]]);
       expect(state.messages).toHaveLength(1);
       expect(state.messages[0].role).toBe("user");
       expect(state.messages[0].id).toBe("user-r1");
@@ -19,15 +19,17 @@ describe("conversationReducer", () => {
   describe("submitTurn", () => {
     it("creates the user message, streaming run, and assistant placeholder in one action", () => {
       const state = reduce([
-        {
-          type: "submitTurn",
-          runId: "r1",
-          text: "Hello",
-          mode: "chat",
-          kind: "chat-text",
-          assistantText: "",
-          modelName: "GPT-x",
-        },
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "Hello",
+            mode: "chat",
+            kind: "chat-text",
+            assistantText: "",
+            modelName: "GPT-x",
+          },
+        ],
       ]);
       expect(state.messages).toHaveLength(2);
       expect(state.messages[0].role).toBe("user");
@@ -45,14 +47,16 @@ describe("conversationReducer", () => {
 
     it("uses cards placeholder text and generated-cards kind for cards mode", () => {
       const state = reduce([
-        {
-          type: "submitTurn",
-          runId: "r2",
-          text: "Make cards",
-          mode: "cards",
-          kind: "generated-cards",
-          assistantText: "pending…",
-        },
+        [
+          "submitTurn",
+          {
+            runId: "r2",
+            text: "Make cards",
+            mode: "cards",
+            kind: "generated-cards",
+            assistantText: "pending…",
+          },
+        ],
       ]);
       expect(state.messages[1]?.metadata).toMatchObject({ kind: "generated-cards", runId: "r2" });
       expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "pending…" }]);
@@ -63,15 +67,17 @@ describe("conversationReducer", () => {
   describe("rollbackSubmitTurn", () => {
     it("removes a still-streaming submit turn and clears activeRunId", () => {
       const state = reduce([
-        {
-          type: "submitTurn",
-          runId: "r1",
-          text: "Hello",
-          mode: "chat",
-          kind: "chat-text",
-          assistantText: "",
-        },
-        { type: "rollbackSubmitTurn", runId: "r1" },
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "Hello",
+            mode: "chat",
+            kind: "chat-text",
+            assistantText: "",
+          },
+        ],
+        ["rollbackSubmitTurn", { runId: "r1" }],
       ]);
       expect(state.messages).toHaveLength(0);
       expect(state.runs).toEqual({});
@@ -80,16 +86,18 @@ describe("conversationReducer", () => {
 
     it("is a no-op when the run has already left streaming", () => {
       const state = reduce([
-        {
-          type: "submitTurn",
-          runId: "r1",
-          text: "Hello",
-          mode: "chat",
-          kind: "chat-text",
-          assistantText: "",
-        },
-        { type: "completeRun", runId: "r1" },
-        { type: "rollbackSubmitTurn", runId: "r1" },
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "Hello",
+            mode: "chat",
+            kind: "chat-text",
+            assistantText: "",
+          },
+        ],
+        ["completeRun", { runId: "r1" }],
+        ["rollbackSubmitTurn", { runId: "r1" }],
       ]);
       expect(state.messages).toHaveLength(2);
       expect(state.runs.r1?.status).toBe("success");
@@ -98,7 +106,7 @@ describe("conversationReducer", () => {
 
   describe("addAssistantMessage", () => {
     it("appends an assistant message with chat-text metadata", () => {
-      const state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "Hi there" }]);
+      const state = reduce([["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "Hi there" }]]);
       expect(state.messages).toHaveLength(1);
       expect(state.messages[0].role).toBe("assistant");
       expect(state.messages[0].id).toBe("assistant-r1");
@@ -107,69 +115,46 @@ describe("conversationReducer", () => {
 
   describe("updateAssistantText", () => {
     it("updates the text of the matching assistant message in-place", () => {
-      let state = reduce([{ type: "addAssistantMessage", runId: "r1", kind: "chat-text", text: "..." }]);
-      state = conversationReducer(
-        state,
-        act({
-          type: "updateAssistantText",
-          runId: "r1",
-          text: "Done",
-        }),
-      );
+      let state = reduce([["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "..." }]]);
+      state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
       expect(state.messages[0].parts).toEqual([{ type: "text", text: "Done" }]);
     });
 
     it("does nothing when no message matches the runId", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "updateAssistantText",
-          runId: "missing",
-          text: "Nope",
-        }),
-      );
+      const state = conversationReducer(initialConversationState, [
+        "updateAssistantText",
+        { runId: "missing", text: "Nope" },
+      ]);
       expect(state.messages).toEqual([]);
     });
   });
   describe("setMode", () => {
     it("changes the conversation mode", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setMode",
-          mode: "cards",
-        }),
-      );
+      const state = conversationReducer(initialConversationState, ["setMode", { mode: "cards" }]);
       expect(state.mode).toBe("cards");
     });
   });
 
   describe("setDeck", () => {
     it("sets the deck when the conversation is not locked", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setDeck",
-          deckId: 5,
-        }),
-      );
+      const state = conversationReducer(initialConversationState, ["setDeck", { deckId: 5 }]);
       expect(state.deckId).toBe(5);
     });
 
     it("is allowed after a user message but before any successful generated-cards run", () => {
-      let state = reduce([{ type: "addUserMessage", runId: "r1", text: "Hi" }]);
-      state = conversationReducer(state, act({ type: "setDeck", deckId: 5 }));
+      let state = reduce([["addUserMessage", { runId: "r1", text: "Hi" }]]);
+      state = conversationReducer(state, ["setDeck", { deckId: 5 }]);
       expect(state.deckId).toBe(5);
     });
 
     it("stays unlocked when a generated-cards run is still streaming or failed", () => {
       let state = reduce([
-        { type: "addUserMessage", runId: "r1", text: "Hi" },
-        { type: "startRun", runId: "r1", mode: "cards" },
-        { type: "addAssistantMessage", runId: "r1", kind: "generated-cards", text: "" },
-        { type: "runFailed", runId: "r1", error: { message: "failed" } },
+        ["addUserMessage", { runId: "r1", text: "Hi" }],
+        ["startRun", { runId: "r1", mode: "cards" }],
+        ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }],
+        ["runFailed", { runId: "r1", error: { message: "failed" } }],
       ]);
-      state = conversationReducer(state, act({ type: "setDeck", deckId: 7 }));
+      state = conversationReducer(state, ["setDeck", { deckId: 7 }]);
       expect(state.deckId).toBe(7);
     });
   });
@@ -177,10 +162,10 @@ describe("conversationReducer", () => {
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "cards" },
-        { type: "addCard", runId: "r1", card: { content: {} } },
+        ["startRun", { runId: "r1", mode: "cards" }],
+        ["addCard", { runId: "r1", card: { content: {} } }],
       ]);
-      state = conversationReducer(state, act({ type: "setCardStatus", runId: "r1", index: 0, status: "success" }));
+      state = conversationReducer(state, ["setCardStatus", { runId: "r1", index: 0, status: "success" }]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "success" });
     });
   });
@@ -207,25 +192,25 @@ describe("conversationReducer", () => {
 
     it("sets lastReadRunId to the action's runId", () => {
       const state = withRun(initialConversationState, "r1");
-      const next = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
+      const next = conversationReducer(state, ["markRead", { runId: "r1" }]);
       expect(next.lastReadRunId).toBe("r1");
     });
 
     it("replaces the previous lastReadRunId when the run id changes", () => {
       let state = withRun(initialConversationState, "r1");
-      state = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
+      state = conversationReducer(state, ["markRead", { runId: "r1" }]);
       expect(state.lastReadRunId).toBe("r1");
 
       state = withRun(state, "r2");
-      const next = conversationReducer(state, act({ type: "markRead", runId: "r2" }));
+      const next = conversationReducer(state, ["markRead", { runId: "r2" }]);
       expect(next.lastReadRunId).toBe("r2");
     });
 
     it("is idempotent on the same run id (returns the same state reference)", () => {
       let state = withRun(initialConversationState, "r1");
-      state = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
+      state = conversationReducer(state, ["markRead", { runId: "r1" }]);
 
-      const next = conversationReducer(state, act({ type: "markRead", runId: "r1" }));
+      const next = conversationReducer(state, ["markRead", { runId: "r1" }]);
       // WHY: Returning the same reference lets `applyConversationUpdate`
       // skip the updatedAt stamp on idempotent markRead dispatches.
       expect(next).toBe(state);
@@ -233,7 +218,7 @@ describe("conversationReducer", () => {
 
     it("ignores an unknown run id (no pointer to update)", () => {
       const state = withRun(initialConversationState, "r1");
-      const next = conversationReducer(state, act({ type: "markRead", runId: "missing" }));
+      const next = conversationReducer(state, ["markRead", { runId: "missing" }]);
       expect(next).toBe(state);
       expect(next.lastReadRunId).toBeNull();
     });
@@ -243,14 +228,14 @@ describe("conversationReducer", () => {
     it("resets to a fresh conversation with the provided id and createdAt", () => {
       const createdAt = new Date(1234);
       let state = reduce([
-        { type: "addUserMessage", runId: "r1", text: "Hi" },
-        { type: "startRun", runId: "r1", mode: "chat" },
-        { type: "setDeck", deckId: 3 },
-        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
-        { type: "setAIModel", modelId: "m2", modelParameters: { reasoning_effort: "low" } },
-        { type: "setAIModelParameter", paramType: "reasoning_effort", value: "medium" },
+        ["addUserMessage", { runId: "r1", text: "Hi" }],
+        ["startRun", { runId: "r1", mode: "chat" }],
+        ["setDeck", { deckId: 3 }],
+        ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
+        ["setAIModel", { modelId: "m2", modelParameters: { reasoning_effort: "low" } }],
+        ["setAIModelParameter", { paramType: "reasoning_effort", value: "medium" }],
       ]);
-      state = conversationReducer(state, act({ type: "newConversation", id: "new-id", createdAt }));
+      state = conversationReducer(state, ["newConversation", { id: "new-id", createdAt }]);
 
       expect(state).toEqual({
         id: "new-id",
@@ -274,24 +259,23 @@ describe("conversationReducer", () => {
   describe("setAIProfile", () => {
     it("sets the profile, model, and clears parameters by default", () => {
       let state = reduce([
-        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+        ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
       ]);
-      state = conversationReducer(state, act({ type: "setAIProfile", profileId: "p2", modelId: "m2" }));
+      state = conversationReducer(state, ["setAIProfile", { profileId: "p2", modelId: "m2" }]);
       expect(state.profileId).toBe("p2");
       expect(state.modelId).toBe("m2");
       expect(state.modelParameters).toEqual({});
     });
 
     it("preserves provided parameters", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setAIProfile",
+      const state = conversationReducer(initialConversationState, [
+        "setAIProfile",
+        {
           profileId: "p1",
           modelId: "m1",
           modelParameters: { reasoning_effort: "low" },
-        }),
-      );
+        },
+      ]);
       expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
     });
   });
@@ -299,9 +283,9 @@ describe("conversationReducer", () => {
   describe("setAIModel", () => {
     it("sets the model and clears parameters by default", () => {
       let state = reduce([
-        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+        ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
       ]);
-      state = conversationReducer(state, act({ type: "setAIModel", modelId: "m2" }));
+      state = conversationReducer(state, ["setAIModel", { modelId: "m2" }]);
       expect(state.modelId).toBe("m2");
       expect(state.modelParameters).toEqual({});
     });
@@ -313,87 +297,78 @@ describe("conversationReducer", () => {
     // helper against accidentally zeroing profile on a model change.
     it("preserves the existing profileId (does not reset profile)", () => {
       let state = reduce([
-        { type: "setAIProfile", profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } },
+        ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
       ]);
-      state = conversationReducer(state, act({ type: "setAIModel", modelId: "m2" }));
+      state = conversationReducer(state, ["setAIModel", { modelId: "m2" }]);
       expect(state.profileId).toBe("p1");
     });
 
     it("preserves provided parameters", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setAIModel",
+      const state = conversationReducer(initialConversationState, [
+        "setAIModel",
+        {
           modelId: "m2",
           modelParameters: { reasoning_effort: "low" },
-        }),
-      );
+        },
+      ]);
       expect(state.modelParameters).toEqual({ reasoning_effort: "low" });
     });
   });
 
   describe("setAIModelParameter", () => {
     it("sets a single parameter value", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setAIModelParameter",
+      const state = conversationReducer(initialConversationState, [
+        "setAIModelParameter",
+        {
           paramType: "reasoning_effort",
           value: "high",
-        }),
-      );
+        },
+      ]);
       expect(state.modelParameters).toEqual({ reasoning_effort: "high" });
     });
 
     it("removes the parameter when value is null", () => {
-      let state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setAIModelParameter",
+      let state = conversationReducer(initialConversationState, [
+        "setAIModelParameter",
+        {
           paramType: "reasoning_effort",
           value: "high",
-        }),
-      );
-      state = conversationReducer(
-        state,
-        act({
-          type: "setAIModelParameter",
+        },
+      ]);
+      state = conversationReducer(state, [
+        "setAIModelParameter",
+        {
           paramType: "reasoning_effort",
           value: null,
-        }),
-      );
+        },
+      ]);
       expect(state.modelParameters).toEqual({});
     });
 
     it("removes the parameter when value is empty string", () => {
-      let state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "setAIModelParameter",
+      let state = conversationReducer(initialConversationState, [
+        "setAIModelParameter",
+        {
           paramType: "reasoning_effort",
           value: "high",
-        }),
-      );
-      state = conversationReducer(
-        state,
-        act({
-          type: "setAIModelParameter",
+        },
+      ]);
+      state = conversationReducer(state, [
+        "setAIModelParameter",
+        {
           paramType: "reasoning_effort",
           value: "",
-        }),
-      );
+        },
+      ]);
       expect(state.modelParameters).toEqual({});
     });
   });
 
   describe("unknown action", () => {
     it("returns the current state unchanged", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "nonexistent",
-        }) as unknown as Parameters<typeof conversationReducer>[1],
-      );
+      const state = conversationReducer(initialConversationState, ["nonexistent"] as unknown as Parameters<
+        typeof conversationReducer
+      >[1]);
       expect(state).toBe(initialConversationState);
     });
   });

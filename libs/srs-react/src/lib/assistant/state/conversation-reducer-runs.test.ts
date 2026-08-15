@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cancelStreamingRuns } from "../persistence/conversation-persistence";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
-import { act, reduce } from "./conversation-reducer.fixtures";
+import { reduce } from "./conversation-reducer.fixtures";
 
 describe("conversationReducer", () => {
   describe("startRun", () => {
@@ -10,14 +10,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(1000);
 
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "startRun",
-          runId: "r1",
-          mode: "chat",
-        }),
-      );
+      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1", mode: "chat" }]);
 
       expect(state.activeRunId).toBe("r1");
       expect(state.runs["r1"]).toMatchObject({
@@ -37,42 +30,33 @@ describe("conversationReducer", () => {
     it("stamps templateFields for cards runs when provided", () => {
       const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
 
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "startRun",
+      const state = conversationReducer(initialConversationState, [
+        "startRun",
+        {
           runId: "r1",
           mode: "cards",
           templateFields: fields,
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].templateFields).toEqual(fields);
     });
 
     it("stamps modelName on the new run when provided", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "startRun",
+      const state = conversationReducer(initialConversationState, [
+        "startRun",
+        {
           runId: "r1",
           mode: "chat",
           modelName: "GPT-4",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("leaves modelName undefined when not provided", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "startRun",
-          runId: "r1",
-          mode: "chat",
-        }),
-      );
+      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1", mode: "chat" }]);
 
       expect(state.runs["r1"].modelName).toBeUndefined();
     });
@@ -80,15 +64,14 @@ describe("conversationReducer", () => {
 
   describe("addCard", () => {
     it("adds a card to the run's cards array and seeds idle status", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "cards" }]);
-      state = conversationReducer(
-        state,
-        act({
-          type: "addCard",
+      let state = reduce([["startRun", { runId: "r1", mode: "cards" }]]);
+      state = conversationReducer(state, [
+        "addCard",
+        {
           runId: "r1",
           card: { content: { "1": { text: "Front" } } },
-        }),
-      );
+        },
+      ]);
       expect(state.runs["r1"].cards).toHaveLength(1);
       expect(state.runs["r1"].cards[0].content["1"].text).toBe("Front");
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
@@ -100,10 +83,10 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
 
       vi.setSystemTime(5000);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("success");
       expect(state.runs["r1"].elapsedSeconds).toBe(5);
@@ -115,12 +98,12 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run completes", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat" },
-        { type: "startRun", runId: "r2", mode: "chat" },
+        ["startRun", { runId: "r1", mode: "chat" }],
+        ["startRun", { runId: "r2", mode: "chat" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       expect(state.runs["r1"].status).toBe("success");
       expect(state.activeRunId).toBe("r2");
     });
@@ -131,17 +114,16 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
 
       vi.setSystemTime(3000);
-      state = conversationReducer(
-        state,
-        act({
-          type: "runFailed",
+      state = conversationReducer(state, [
+        "runFailed",
+        {
           runId: "r1",
           error: { message: "Network error" },
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.runs["r1"].error).toEqual({ message: "Network error" });
@@ -153,19 +135,18 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run fails", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat" },
-        { type: "startRun", runId: "r2", mode: "chat" },
+        ["startRun", { runId: "r1", mode: "chat" }],
+        ["startRun", { runId: "r2", mode: "chat" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(
-        state,
-        act({
-          type: "runFailed",
+      state = conversationReducer(state, [
+        "runFailed",
+        {
           runId: "r1",
           error: { message: "Other error" },
-        }),
-      );
+        },
+      ]);
       expect(state.runs["r1"].status).toBe("failed");
       expect(state.activeRunId).toBe("r2");
     });
@@ -173,8 +154,8 @@ describe("conversationReducer", () => {
 
   describe("cancelRun", () => {
     it("sets status to canceled with reason user and clears activeRunId", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("canceled");
       expect(state.runs["r1"].reason).toBe("user");
@@ -187,10 +168,10 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
 
       vi.setSystemTime(4000);
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
 
       expect(state.runs["r1"].status).toBe("interrupted");
       expect(state.runs["r1"].reason).toBe("app_shutdown");
@@ -201,8 +182,8 @@ describe("conversationReducer", () => {
     });
 
     it("records crash_recovery as the interruption reason", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
 
       expect(state.runs["r1"].status).toBe("interrupted");
       expect(state.runs["r1"].reason).toBe("crash_recovery");
@@ -210,12 +191,12 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run is interrupted", () => {
       let state = reduce([
-        { type: "startRun", runId: "r1", mode: "chat" },
-        { type: "startRun", runId: "r2", mode: "chat" },
+        ["startRun", { runId: "r1", mode: "chat" }],
+        ["startRun", { runId: "r2", mode: "chat" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
       expect(state.runs["r1"].status).toBe("interrupted");
       expect(state.activeRunId).toBe("r2");
     });
@@ -225,48 +206,48 @@ describe("conversationReducer", () => {
     it("ignores completeRun after the run already finished", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
       vi.setSystemTime(2000);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       const afterFirst = state.runs["r1"];
 
       vi.setSystemTime(9000);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
-      state = conversationReducer(state, act({ type: "runFailed", runId: "r1", error: { message: "late" } }));
-      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "late" } }]);
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
 
       expect(state.runs["r1"]).toEqual(afterFirst);
       vi.useRealTimers();
     });
 
     it("ignores terminal actions after cancel", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       const afterCancel = state.runs["r1"];
 
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
 
       expect(state.runs["r1"]).toEqual(afterCancel);
       expect(afterCancel.reason).toBe("user");
     });
 
     it("ignores terminal actions after interrupt", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "crash_recovery" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
       const afterInterrupt = state.runs["r1"];
 
-      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       expect(state.runs["r1"]).toEqual(afterInterrupt);
       expect(afterInterrupt.reason).toBe("crash_recovery");
     });
 
     it("ignores terminal actions for a missing runId", () => {
-      const state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      const next = conversationReducer(state, act({ type: "completeRun", runId: "missing" }));
+      const state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      const next = conversationReducer(state, ["completeRun", { runId: "missing" }]);
       expect(next).toEqual(state);
     });
   });
@@ -277,26 +258,27 @@ describe("conversationReducer", () => {
       vi.setSystemTime(0);
 
       let state = reduce([
-        {
-          type: "startRun",
-          runId: "r1",
-          mode: "cards",
-          templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
-        },
-        { type: "addCard", runId: "r1", card: { content: {} } },
+        [
+          "startRun",
+          {
+            runId: "r1",
+            mode: "cards",
+            templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+          },
+        ],
+        ["addCard", { runId: "r1", card: { content: {} } }],
       ]);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       vi.setSystemTime(10_000);
-      state = conversationReducer(
-        state,
-        act({
-          type: "restartRun",
+      state = conversationReducer(state, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: null,
           mode: "cards",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
@@ -313,18 +295,18 @@ describe("conversationReducer", () => {
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
-      state = conversationReducer(state, act({ type: "cancelRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       expect(state.runs["r1"].reason).toBe("user");
 
-      state = conversationReducer(state, act({ type: "restartRun", runId: "r1", templateFields: null, mode: "chat" }));
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
 
-      state = conversationReducer(state, act({ type: "interruptRun", runId: "r1", reason: "app_shutdown" }));
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
       expect(state.runs["r1"].reason).toBe("app_shutdown");
 
-      state = conversationReducer(state, act({ type: "restartRun", runId: "r1", templateFields: null, mode: "chat" }));
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
     });
@@ -348,12 +330,14 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        act({
-          type: "restartRun",
-          runId: "r1",
-          templateFields: null,
-          mode: "chat",
-        }),
+        [
+          "restartRun",
+          {
+            runId: "r1",
+            templateFields: null,
+            mode: "chat",
+          },
+        ],
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -386,12 +370,14 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        act({
-          type: "restartRun",
-          runId: "r1",
-          templateFields: null,
-          mode: "cards",
-        }),
+        [
+          "restartRun",
+          {
+            runId: "r1",
+            templateFields: null,
+            mode: "cards",
+          },
+        ],
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -407,93 +393,90 @@ describe("conversationReducer", () => {
 
     it("updates templateFields on retry", () => {
       let state = reduce([
-        {
-          type: "startRun",
-          runId: "r1",
-          mode: "cards",
-          templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
-        },
+        [
+          "startRun",
+          {
+            runId: "r1",
+            mode: "cards",
+            templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+          },
+        ],
       ]);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       const nextFields = [{ id: 2, title: "Back", type: "text" as const, isRequired: false }];
-      state = conversationReducer(
-        state,
-        act({
-          type: "restartRun",
+      state = conversationReducer(state, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: nextFields,
           mode: "cards",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].templateFields).toEqual(nextFields);
     });
 
     it("overwrites modelName when a new value is provided", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
-      state = conversationReducer(
-        state,
-        act({
-          type: "restartRun",
+      state = conversationReducer(state, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: null,
           mode: "chat",
           modelName: "Claude",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
 
     it("preserves the existing modelName when restartRun omits it", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
-      state = conversationReducer(
-        state,
-        act({
-          type: "restartRun",
+      state = conversationReducer(state, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: null,
           mode: "chat",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat", modelName: "GPT-4" }]);
-      state = conversationReducer(state, act({ type: "completeRun", runId: "r1" }));
+      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
-      state = conversationReducer(
-        state,
-        act({
-          type: "restartRun",
+      state = conversationReducer(state, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: null,
           mode: "chat",
           modelName: undefined,
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
     it("uses the action's modelName when the run is missing", () => {
-      const state = conversationReducer(
-        initialConversationState,
-        act({
-          type: "restartRun",
+      const state = conversationReducer(initialConversationState, [
+        "restartRun",
+        {
           runId: "r1",
           templateFields: null,
           mode: "chat",
           modelName: "Claude",
-        }),
-      );
+        },
+      ]);
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
@@ -501,9 +484,9 @@ describe("conversationReducer", () => {
 
   describe("setUsage", () => {
     it("sets usage on the specified run", () => {
-      let state = reduce([{ type: "startRun", runId: "r1", mode: "chat" }]);
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
       const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
-      state = conversationReducer(state, act({ type: "setUsage", runId: "r1", usage }));
+      state = conversationReducer(state, ["setUsage", { runId: "r1", usage }]);
       expect(state.runs["r1"].usage).toEqual(usage);
     });
   });
