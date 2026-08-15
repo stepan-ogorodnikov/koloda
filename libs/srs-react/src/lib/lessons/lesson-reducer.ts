@@ -6,6 +6,7 @@ import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } fro
 import type {
   Card,
   CardGrade,
+  Deck,
   InsertReviewData,
   LessonData,
   LessonFilters,
@@ -16,7 +17,11 @@ import type {
 } from "@koloda/srs";
 import { addHours, addMinutes } from "date-fns";
 import { produce } from "immer";
-import type { LessonAtomValue } from "./lesson";
+
+export type LessonAtomValue = {
+  type: LessonType;
+  deckId?: Deck["id"] | null;
+};
 
 export const LESSON_PROGRESS_STATES = {
   0: "untouched",
@@ -125,7 +130,7 @@ function open(draft: LessonReducerState, payload: LessonAtomValue) {
   draft.request = { ...payload };
 }
 
-type InitializePayload = {
+export type InitializePayload = {
   request: LessonAtomValue;
   learnAheadLimit: LearningSettings["learnAheadLimit"] | undefined;
   lessons: LessonsResult;

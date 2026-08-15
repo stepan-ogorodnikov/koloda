@@ -1,25 +1,22 @@
 import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/core-react";
-import type { Deck, LessonFilters, LessonType } from "@koloda/srs";
+import type { LessonFilters } from "@koloda/srs";
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { atom, useAtom } from "jotai";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useReducer, useRef } from "react";
+import { lessonAtom } from "./lesson-actions";
 import { LessonCompletion } from "./lesson-completion";
 import { LessonFooter } from "./lesson-footer";
 import { LessonHeader } from "./lesson-header";
 import { LessonInit } from "./lesson-init";
+import type { LessonAtomValue } from "./lesson-reducer";
 import { lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 import { LessonStudying } from "./lesson-studying";
 import { LessonTermination } from "./lesson-termination";
 
-export type LessonAtomValue = {
-  type: LessonType;
-  deckId?: Deck["id"] | null;
-};
-
-export const lessonAtom = atom<LessonAtomValue | null>(null);
+export type { LessonAtomValue } from "./lesson-reducer";
+export { lessonAtom };
 
 export const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
@@ -30,6 +27,9 @@ function filtersFromRequest(request: LessonAtomValue): LessonFilters {
 export function Lesson() {
   const queryClient = useQueryClient();
   const { disableScope, enableScope } = useHotkeysStatus();
+  // INVARIANT: Local reducer is the UI write path until Phase 4. Do not replace
+  // useReducer with the Jotai store here. Clearing lessonAtom on closed runs
+  // close on the store (full reset), not merely dropping a launch request.
   const [state, dispatch] = useReducer(lessonReducer, lessonReducerDefault);
   const [atomValue, setAtomValue] = useAtom(lessonAtom);
   const { getSettingsQuery, getTodayReviewTotalsQuery, getLessonsQuery } = useAtomValue(queriesAtom);
