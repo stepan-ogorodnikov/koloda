@@ -1,33 +1,27 @@
 import { queriesAtom } from "@koloda/core-react";
 import { useMutation } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useEffectEvent } from "react";
-import type { ActionDispatch } from "react";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { settleLessonUploadAtom } from "./lesson-actions";
+import { lessonUploadHeadAtom } from "./lesson-selectors";
 
-type LessonUploaderProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
-};
-
-export function LessonUploader({ state, dispatch }: LessonUploaderProps) {
-  const {
-    queue: [result],
-  } = state.upload;
+export function useLessonUploader() {
+  const result = useAtomValue(lessonUploadHeadAtom);
+  const settle = useSetAtom(settleLessonUploadAtom);
   const { index, card, review } = result || {};
   const { submitLessonResultMutation } = useAtomValue(queriesAtom);
   const { mutate } = useMutation(submitLessonResultMutation());
 
   const upload = useEffectEvent((index: number | undefined) => {
-    if (index !== undefined && index === result.index) {
+    if (index !== undefined && result && index === result.index) {
       mutate(
         { card, review },
         {
           onSuccess: () => {
-            dispatch(["resultUploaded", { index, status: "success" }]);
+            settle({ index, status: "success" });
           },
           onError: () => {
-            dispatch(["resultUploaded", { index, status: "error" }]);
+            settle({ index, status: "error" });
           },
         },
       );
@@ -37,6 +31,4 @@ export function LessonUploader({ state, dispatch }: LessonUploaderProps) {
   useEffect(() => {
     upload(index);
   }, [index]); // oxlint-disable-line react/exhaustive-deps
-
-  return null;
 }

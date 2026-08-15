@@ -118,7 +118,7 @@ function doesRequestMatch(left: LessonAtomValue, right: LessonAtomValue) {
   return left.type === right.type && left.deckId === right.deckId;
 }
 
-function filtersFromRequest(request: LessonAtomValue): LessonFilters {
+export function filtersFromRequest(request: LessonAtomValue): LessonFilters {
   return { deckIds: request.deckId ? [request.deckId] : [] };
 }
 

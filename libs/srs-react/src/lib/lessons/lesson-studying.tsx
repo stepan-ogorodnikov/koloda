@@ -1,9 +1,6 @@
-import { queriesAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Fade } from "@koloda/ui";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { useEffect } from "react";
 import type { ActionDispatch } from "react";
 import { LessonCardField } from "./lesson-card-field";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
@@ -16,9 +13,7 @@ type LessonStudyingProps = {
 };
 
 export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
-  const { getLessonDataQuery } = useAtomValue(queriesAtom);
   const { grades, ui } = useHotkeysSettings();
-  const { data } = useQuery(getLessonDataQuery({ amounts: state.setup!.amounts, filters: state.setup!.filters }));
 
   useAppHotkey(grades.again, () => dispatch(["gradeSelected", 0]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.hard, () => dispatch(["gradeSelected", 1]), "lesson", { eventType: "keyup" });
@@ -34,10 +29,6 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
     "lesson",
     { ignoreInputs: false, conflictBehavior: "allow" },
   );
-
-  useEffect(() => {
-    if (data) dispatch(["lessonDataReceived", data]);
-  }, [dispatch, data]);
 
   const content = state.session?.content;
   if (!content) return null;

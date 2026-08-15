@@ -6,7 +6,6 @@ import type { ActionDispatch, PropsWithChildren } from "react";
 import { LessonProgressAmounts } from "./lesson-progress-amounts";
 import { LessonProgressDots } from "./lesson-progress-dots";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
-import { LessonUploader } from "./lesson-uploader";
 
 type LessonHeaderProps = {
   state: LessonReducerState;
@@ -48,7 +47,6 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
       </AnimatePresence>
       {hasSession && <LessonProgressAmounts state={state} key="progress-amounts" />}
       {hasSession && <LessonProgressDots state={state} key="progress-dots" />}
-      <LessonUploader state={state} dispatch={dispatch} />
     </LessonHeaderLayout>
   );
 }
