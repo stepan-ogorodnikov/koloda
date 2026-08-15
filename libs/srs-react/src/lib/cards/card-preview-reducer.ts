@@ -55,17 +55,18 @@ type CardFormUpdatedPayload = {
   value: string;
 };
 
-function cardFormUpdated(draft: LessonReducerState, { key, value }: CardFormUpdatedPayload) {
+function cardFormUpdated(draft: CardPreviewReducerState, { key, value }: CardFormUpdatedPayload) {
   if (draft.content) draft.content.form.data[key] = value;
 }
 
-function cardSubmitted(draft: LessonReducerState) {
+function cardSubmitted(draft: CardPreviewReducerState) {
   if (draft.content && !draft.content?.form.isSubmitted) draft.content.form.isSubmitted = true;
 }
 
 export type CardPreviewReducerAction = ReducerAction<typeof actions, CardPreviewReducerState>;
 
-export const cardPreviewReducer = produce((draft: CardPreviewReducerState, action: CardPreviewReducerAction) => {
-  dispatchReducerAction(draft, actions, action);
-  return draft;
-});
+export function cardPreviewReducer(state: CardPreviewReducerState, action: CardPreviewReducerAction) {
+  return produce(state, (draft) => {
+    dispatchReducerAction(draft, actions, action);
+  });
+}
