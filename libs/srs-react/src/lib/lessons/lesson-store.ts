@@ -4,6 +4,8 @@ import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
 const lessonStateBaseAtom = atom<LessonReducerState>(lessonReducerDefault);
 
+// INVARIANT: Single write path — lesson mutations dispatch through this atom
+// into the reducer. Do not write lessonStateBaseAtom from elsewhere.
 export const lessonStateAtom = atom(
   (get) => get(lessonStateBaseAtom),
   (get, set, action: LessonReducerAction) => {

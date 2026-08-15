@@ -17,6 +17,7 @@ export { lessonAtom };
 export const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 
 export function Lesson() {
+  // INVARIANT: This is the only mount of useLessonSession.
   const { closeLesson } = useLessonSession();
   const isOpen = useAtomValue(lessonIsOpenAtom);
   const phase = useAtomValue(lessonPhaseAtom);

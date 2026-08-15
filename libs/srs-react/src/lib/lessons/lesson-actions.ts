@@ -58,8 +58,10 @@ export const settleLessonUploadAtom = atom(
   },
 );
 
-// INVARIANT: Compatibility atom — read request; write request → open; write
-// null → close. Not a second open-state atom.
+// INVARIANT: Compatibility launch atom over store request — not a second open
+// state. Write request → open; write null → closeLessonStateAtom (reset only,
+// no query invalidation). The atom cannot call React Query; do not fold
+// useLessonClose into it.
 export const lessonAtom = atom(
   (get) => get(lessonRequestAtom),
   (_get, set, value: LessonAtomValue | null) => {

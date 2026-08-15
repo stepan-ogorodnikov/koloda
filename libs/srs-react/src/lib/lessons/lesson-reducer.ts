@@ -70,6 +70,9 @@ export type LessonSession = {
   progress: LessonProgress;
 };
 
+// INVARIANT: request is the only open source of truth. setup is a per-open
+// query snapshot; session is the in-memory study sequence. Do not add a
+// parallel open flag or cache query results outside these snapshots.
 export type LessonReducerState = {
   phase: LessonPhase;
   request: LessonAtomValue | null;
