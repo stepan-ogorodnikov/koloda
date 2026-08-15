@@ -1,7 +1,9 @@
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { Fade } from "@koloda/ui";
+import { useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { ActionDispatch } from "react";
+import { submitLessonCardAtom, updateLessonCardFormAtom } from "./lesson-actions";
 import { LessonCardField } from "./lesson-card-field";
 import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
 
@@ -14,6 +16,8 @@ type LessonStudyingProps = {
 
 export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
   const { grades, ui } = useHotkeysSettings();
+  const updateCardForm = useSetAtom(updateLessonCardFormAtom);
+  const submitCard = useSetAtom(submitLessonCardAtom);
 
   useAppHotkey(grades.again, () => dispatch(["gradeSelected", 0]), "lesson", { eventType: "keyup" });
   useAppHotkey(grades.hard, () => dispatch(["gradeSelected", 1]), "lesson", { eventType: "keyup" });
@@ -40,8 +44,8 @@ export function LessonStudying({ state, dispatch }: LessonStudyingProps) {
           <LessonCardField
             params={item}
             content={content}
-            onFormChange={(key, value) => dispatch(["cardFormUpdated", { key, value }])}
-            onSubmit={() => dispatch(["cardSubmitted"])}
+            onFormChange={(key, value) => updateCardForm({ key, value })}
+            onSubmit={() => submitCard()}
             key={i}
           />
         ))}

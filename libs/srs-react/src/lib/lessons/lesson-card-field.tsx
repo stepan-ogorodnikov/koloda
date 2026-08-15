@@ -15,7 +15,7 @@ const lessonCardContentField = tv({
   },
 });
 
-type LessonCardFieldProps = {
+export type LessonCardFieldProps = {
   params: LessonTemplateLayoutItem;
   content: LessonContent | null | undefined;
   onFormChange: (key: number | string, value: string) => void;

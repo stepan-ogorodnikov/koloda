@@ -2,10 +2,9 @@ import type { LessonType } from "@koloda/srs";
 import { NumberField } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useAtomValue } from "jotai";
-import type { ActionDispatch } from "react";
-import { lessonAtom } from "./lesson";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { useAtomValue, useSetAtom } from "jotai";
+import { updateLessonAmountAtom } from "./lesson-actions";
+import { lessonAmountsAtom, lessonAvailableAtom, lessonRequestAtom } from "./lesson-selectors";
 
 const LABELS = {
   untouched: msg`lesson.init.amount-input.untouched`,
@@ -13,29 +12,31 @@ const LABELS = {
   review: msg`lesson.init.amount-input.review`,
 };
 
-type LessonInitAmountInputProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
+export type LessonInitAmountInputProps = {
   type: Exclude<LessonType, "total">;
 };
 
-export function LessonInitAmountInput({ state, dispatch, type }: LessonInitAmountInputProps) {
+export function LessonInitAmountInput({ type }: LessonInitAmountInputProps) {
   const { _ } = useLingui();
-  const { type: currentlessonType } = useAtomValue(lessonAtom) || {};
+  const request = useAtomValue(lessonRequestAtom);
+  const amounts = useAtomValue(lessonAmountsAtom);
+  const available = useAtomValue(lessonAvailableAtom);
+  const updateAmount = useSetAtom(updateLessonAmountAtom);
+  const currentLessonType = request?.type;
 
-  if (!state.setup) return null;
+  if (!amounts || !available) return null;
 
   return (
     <NumberField
       variants={{ class: "w-32 me-4" }}
       aria-label={_(LABELS[type])}
-      value={state.setup.amounts[type]}
+      value={amounts[type]}
       minValue={0}
-      maxValue={state.setup.available[type]}
+      maxValue={available[type]}
       onChange={(e) => {
-        dispatch(["amountUpdated", { type, value: e }]);
+        updateAmount({ type, value: e });
       }}
-      autoFocus={currentlessonType === type || (currentlessonType === "total" && type === "untouched")}
+      autoFocus={currentLessonType === type || (currentLessonType === "total" && type === "untouched")}
     >
       <NumberField.Group />
     </NumberField>

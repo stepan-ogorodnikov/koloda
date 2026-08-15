@@ -3,10 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useAtomValue } from "jotai";
 import { motion } from "motion/react";
 import { tv } from "tailwind-variants";
-import type { LessonReducerState } from "./lesson-reducer";
 import { LESSON_PROGRESS_STATES } from "./lesson-reducer";
+import { lessonContentAtom, lessonSessionCardsAtom, lessonUploadLogAtom } from "./lesson-selectors";
 
 const lessonProgressCardDot = tv({
   base: "flex items-center justify-center size-4 rounded-full animate-colors",
@@ -20,14 +21,14 @@ const lessonProgressCardDot = tv({
   },
 });
 
-type LessonProgressDotsProps = { state: LessonReducerState };
-
-export function LessonProgressDots({ state }: LessonProgressDotsProps) {
+export function LessonProgressDots() {
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
   const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
-  const { index } = state.session?.content || { index: 0 };
-  const total = state.session?.data.cards.length || 0;
+  const { index } = useAtomValue(lessonContentAtom) || { index: 0 };
+  const cards = useAtomValue(lessonSessionCardsAtom);
+  const uploadLog = useAtomValue(lessonUploadLogAtom);
+  const total = cards?.length || 0;
 
   return (
     <motion.div
@@ -48,10 +49,10 @@ export function LessonProgressDots({ state }: LessonProgressDotsProps) {
         animate={{ x: -0.5 * rem() - index * 1.5 * rem() }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        {state.session?.data.cards.map((card, i) => {
+        {cards?.map((card, i) => {
           const isCurrent = i === index;
           const type = LESSON_PROGRESS_STATES[card.state as keyof typeof LESSON_PROGRESS_STATES] || "untouched";
-          const status = state.upload.log[i];
+          const status = uploadLog[i];
 
           return (
             <div className={lessonProgressCardDot({ isCurrent, type })} key={i} aria-hidden="true">

@@ -45,8 +45,8 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
           </motion.div>
         )}
       </AnimatePresence>
-      {hasSession && <LessonProgressAmounts state={state} key="progress-amounts" />}
-      {hasSession && <LessonProgressDots state={state} key="progress-dots" />}
+      {hasSession && <LessonProgressAmounts key="progress-amounts" />}
+      {hasSession && <LessonProgressDots key="progress-dots" />}
     </LessonHeaderLayout>
   );
 }

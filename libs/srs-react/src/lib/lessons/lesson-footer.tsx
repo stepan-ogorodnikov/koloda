@@ -45,7 +45,7 @@ export function LessonFooter({ state, dispatch }: LessonFooterProps) {
           <AnimatePresence mode="wait">
             {content?.form.isSubmitted ? (
               <Fade key="grades">
-                <LessonCardGrades grades={content.grades} dispatch={dispatch} />
+                <LessonCardGrades grades={content.grades} />
               </Fade>
             ) : (
               <Fade key="submit">

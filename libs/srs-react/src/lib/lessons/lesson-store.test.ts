@@ -11,11 +11,13 @@ import {
 import { lessonReducerDefault } from "./lesson-reducer";
 import {
   lessonAmountsAtom,
+  lessonAvailableAtom,
   lessonContentAtom,
   lessonIsOpenAtom,
   lessonPhaseAtom,
   lessonProgressAtom,
   lessonRequestAtom,
+  lessonSessionCardsAtom,
   lessonSetupAtom,
   lessonTerminationRequestedAtom,
   lessonUploadHeadAtom,
@@ -180,7 +182,9 @@ describe("lesson selectors", () => {
       learnAheadLimit: [0, 30],
     });
     expect(store.get(lessonAmountsAtom)).toEqual(TOTAL_EXPECTED_AMOUNTS);
+    expect(store.get(lessonAvailableAtom)).toEqual(TOTAL_LESSONS.total);
     expect(store.get(lessonContentAtom)).toBeUndefined();
+    expect(store.get(lessonSessionCardsAtom)).toBeUndefined();
     expect(store.get(lessonProgressAtom)).toBeUndefined();
     expect(store.get(lessonTerminationRequestedAtom)).toBe(false);
     expect(store.get(lessonUploadHeadAtom)).toBeUndefined();

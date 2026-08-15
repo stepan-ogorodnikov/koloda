@@ -11,7 +11,11 @@ export const lessonSetupAtom = atom((get) => get(lessonStateAtom).setup);
 
 export const lessonAmountsAtom = atom((get) => get(lessonSetupAtom)?.amounts);
 
+export const lessonAvailableAtom = atom((get) => get(lessonSetupAtom)?.available);
+
 export const lessonContentAtom = atom((get) => get(lessonStateAtom).session?.content);
+
+export const lessonSessionCardsAtom = atom((get) => get(lessonStateAtom).session?.data.cards);
 
 export const lessonProgressAtom = atom((get) => get(lessonStateAtom).session?.progress);
 

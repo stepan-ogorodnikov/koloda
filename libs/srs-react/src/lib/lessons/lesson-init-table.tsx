@@ -14,7 +14,7 @@ type LessonInitTableProps = {
   dispatch: (action: LessonReducerAction) => void;
 };
 
-export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
+export function LessonInitTable({ state }: LessonInitTableProps) {
   const { _ } = useLingui();
   const setup = state.setup;
   if (!setup) return null;
@@ -40,7 +40,7 @@ export function LessonInitTable({ state, dispatch }: LessonInitTableProps) {
               </LessonInitTd>
             ) : (
               <LessonInitTd>
-                <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
+                <LessonInitAmountInput type={type} />
               </LessonInitTd>
             )}
             <LessonInitTd>

@@ -12,7 +12,7 @@ type LessonInitListProps = {
   dispatch: ActionDispatch<[action: LessonReducerAction]>;
 };
 
-export function LessonInitList({ state, dispatch }: LessonInitListProps) {
+export function LessonInitList({ state }: LessonInitListProps) {
   const { _ } = useLingui();
   const setup = state.setup;
   if (!setup) return null;
@@ -33,7 +33,7 @@ export function LessonInitList({ state, dispatch }: LessonInitListProps) {
             {type === "total" ? (
               <Number className="flex flex-row items-center numbers-text" value={setup.amounts.total || 0} />
             ) : (
-              <LessonInitAmountInput state={state} dispatch={dispatch} type={type} />
+              <LessonInitAmountInput type={type} />
             )}
             <div className="flex flex-row gap-2">
               <div className="font-medium">{_(msg`lesson.init.list.labels.available`)}</div>

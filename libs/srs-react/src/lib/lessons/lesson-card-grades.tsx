@@ -2,17 +2,17 @@ import { FSRS_GRADES } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { useLingui } from "@lingui/react";
 import { formatDistanceStrict } from "date-fns";
-import type { ActionDispatch } from "react";
+import { useSetAtom } from "jotai";
 import type { RecordLogItem } from "ts-fsrs";
-import type { LessonReducerAction } from "./lesson-reducer";
+import { selectLessonGradeAtom } from "./lesson-actions";
 
-type LessonCardGradesProps = {
+export type LessonCardGradesProps = {
   grades: RecordLogItem[];
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
 };
 
-export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
+export function LessonCardGrades({ grades }: LessonCardGradesProps) {
   const { _ } = useLingui();
+  const selectGrade = useSetAtom(selectLessonGradeAtom);
 
   return (
     <div className="flex flex-row gap-1 wd:gap-2">
@@ -21,7 +21,7 @@ export function LessonCardGrades({ grades, dispatch }: LessonCardGradesProps) {
           <div className="text-xs wd:text-sm">{formatDistanceStrict(card.due, log.review)}</div>
           <Button
             variants={{ style: "primary", class: "self-stretch max-wd:text-sm" }}
-            onClick={() => dispatch(["gradeSelected", i])}
+            onClick={() => selectGrade(i)}
             autoFocus={i === 2}
           >
             {_(FSRS_GRADES[i])}
