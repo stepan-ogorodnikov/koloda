@@ -1,7 +1,7 @@
 import type * as KolodaSrsModule from "@koloda/srs";
 import { describe, expect, it, vi } from "vitest";
 import { createCard, createLessonData, createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
-import { lessonReducer, lessonReducerDefault } from "./lesson-reducer";
+import { calculateInitialLessonAmounts, lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 
 const { getCardGradesMock, createCardFromCardFSRSMock, createReviewFromReviewFSRSMock } = vi.hoisted(() => ({
   getCardGradesMock: vi.fn(),
@@ -237,6 +237,78 @@ describe("lessonReducer", () => {
     expect(state.upload).toEqual({
       queue: [],
       log: {},
+    });
+  });
+});
+
+describe("calculateInitialLessonAmounts", () => {
+  it("calculates total lesson amounts from per-type and total limits", () => {
+    const todayReviewTotals = createTodaysReviewTotals({
+      dailyLimits: {
+        total: 6,
+        untouched: { value: 3, counts: true },
+        learn: { value: 2, counts: true },
+        review: { value: 4, counts: false },
+      },
+      reviewTotals: {
+        untouched: 1,
+        learn: 1,
+        review: 3,
+      },
+    });
+    const lessons = createLessonsResult({
+      total: {
+        untouched: 5,
+        learn: 4,
+        review: 8,
+        total: 17,
+      },
+    });
+
+    expect(
+      calculateInitialLessonAmounts({
+        type: "total",
+        available: lessons.total,
+        dailyLimits: todayReviewTotals.dailyLimits,
+        reviewTotals: todayReviewTotals.reviewTotals,
+      }),
+    ).toEqual({
+      untouched: 2,
+      learn: 1,
+      review: 1,
+      total: 4,
+    });
+  });
+
+  it("clamps a single lesson type by the remaining total allowance", () => {
+    const todayReviewTotals = createTodaysReviewTotals({
+      dailyLimits: {
+        total: 2,
+        review: { value: 10, counts: true },
+      },
+      reviewTotals: {
+        review: 1,
+      },
+    });
+    const lessons = createLessonsResult({
+      total: {
+        review: 5,
+        total: 5,
+      },
+    });
+
+    expect(
+      calculateInitialLessonAmounts({
+        type: "review",
+        available: lessons.total,
+        dailyLimits: todayReviewTotals.dailyLimits,
+        reviewTotals: todayReviewTotals.reviewTotals,
+      }),
+    ).toEqual({
+      untouched: 0,
+      learn: 0,
+      review: 1,
+      total: 1,
     });
   });
 });

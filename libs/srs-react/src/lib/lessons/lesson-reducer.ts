@@ -146,15 +146,30 @@ function paramsSet(draft: LessonReducerState, payload: LessonAtomValue) {
   }
 }
 
-/**
- * Calculates initial amounts of cards of each type for lesson init form
- */
 function setupInitData(draft: LessonReducerState) {
   const { params, lessons, todayReviewTotals, amounts } = draft;
   if (!params || !lessons || !todayReviewTotals || amounts) return;
-  const { dailyLimits, reviewTotals } = todayReviewTotals;
-  const { type } = params;
-  const available = lessons.total;
+  draft.amounts = calculateInitialLessonAmounts({
+    type: params.type,
+    available: lessons.total,
+    dailyLimits: todayReviewTotals.dailyLimits,
+    reviewTotals: todayReviewTotals.reviewTotals,
+  });
+}
+
+export type CalculateInitialLessonAmountsOptions = {
+  type: LessonType;
+  available: LessonsResult["total"];
+  dailyLimits: TodaysReviewTotals["dailyLimits"];
+  reviewTotals: TodaysReviewTotals["reviewTotals"];
+};
+
+export function calculateInitialLessonAmounts({
+  type,
+  available,
+  dailyLimits,
+  reviewTotals,
+}: CalculateInitialLessonAmountsOptions): LessonAmounts {
   const countedReviewTotal = LEARNING_DAILY_LIMIT_TYPES.reduce(
     (total, limitType) => (dailyLimits[limitType].counts ? total + reviewTotals[limitType] : total),
     0,
@@ -166,34 +181,29 @@ function setupInitData(draft: LessonReducerState) {
     total: Math.max((dailyLimits.total || Infinity) - countedReviewTotal, 0),
   };
 
-  if (params.type === "total") {
+  if (type === "total") {
     let remainder = diffs.total;
-    let amounts: LessonAmounts = { untouched: 0, learn: 0, review: 0, total: 0 };
+    const amounts: LessonAmounts = { untouched: 0, learn: 0, review: 0, total: 0 };
     LEARNING_DAILY_LIMIT_TYPES.forEach((x) => {
       const amount = getLessonCardsAmount(available[x], diffs[x], dailyLimits[x].counts ? remainder : Infinity);
       amounts[x] = amount;
       if (dailyLimits[x].counts) remainder = remainder - amount;
     });
     amounts.total = Number(amounts.untouched) + Number(amounts.learn) + Number(amounts.review);
-    draft.amounts = amounts;
-  } else {
-    const limitType = type as Exclude<LessonType, "total">;
-    const amount = getLessonCardsAmount(
-      available[limitType],
-      diffs[limitType],
-      dailyLimits[limitType].counts ? diffs.total : Infinity,
-    );
-    draft.amounts = { untouched: 0, learn: 0, review: 0, total: amount, [limitType]: amount };
+
+    return amounts;
   }
+
+  const limitType = type;
+  const amount = getLessonCardsAmount(
+    available[limitType],
+    diffs[limitType],
+    dailyLimits[limitType].counts ? diffs.total : Infinity,
+  );
+
+  return { untouched: 0, learn: 0, review: 0, total: amount, [limitType]: amount };
 }
 
-/**
- * Calculates the number of lesson cards based on available cards and daily limits
- * @param available - The number of available cards of a specific type
- * @param diff - The difference between daily limit and currently available cards
- * @param remainder - The remainder of available total spots for cards
- * @returns The calculated amount of cards to add to the lesson
- */
 function getLessonCardsAmount(available: number, diff: number, remainder: number) {
   return available > Math.min(diff, remainder) ? Math.min(diff, remainder) : available;
 }
