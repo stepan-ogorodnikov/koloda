@@ -1,19 +1,20 @@
-import { queriesAtom, queryKeys, useHotkeysStatus } from "@koloda/core-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useSetAtom, useStore } from "jotai";
-import { useCallback, useEffect } from "react";
-import { closeLessonStateAtom, initializeLessonAtom, receiveLessonDataAtom } from "./lesson-actions";
+import { queriesAtom, useHotkeysStatus } from "@koloda/core-react";
+import { useQuery } from "@tanstack/react-query";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useEffect } from "react";
+import { initializeLessonAtom, receiveLessonDataAtom } from "./lesson-actions";
 import { filtersFromRequest } from "./lesson-reducer";
 import { lessonIsOpenAtom, lessonPhaseAtom, lessonRequestAtom, lessonSetupAtom } from "./lesson-selectors";
 import { useLessonUploader } from "./lesson-uploader";
+import { useLessonClose } from "./use-lesson-close";
 
 export type UseLessonSessionResult = {
   closeLesson: () => void;
 };
 
+// INVARIANT: Mount once from Lesson(). A second mount duplicates queries,
+// initialize effects, uploader, and hotkey-scope effects.
 export function useLessonSession(): UseLessonSessionResult {
-  const store = useStore();
-  const queryClient = useQueryClient();
   const { disableScope, enableScope } = useHotkeysStatus();
   const phase = useAtomValue(lessonPhaseAtom);
   const request = useAtomValue(lessonRequestAtom);
@@ -21,7 +22,7 @@ export function useLessonSession(): UseLessonSessionResult {
   const isOpen = useAtomValue(lessonIsOpenAtom);
   const initialize = useSetAtom(initializeLessonAtom);
   const receiveLessonData = useSetAtom(receiveLessonDataAtom);
-  const closeLessonState = useSetAtom(closeLessonStateAtom);
+  const { closeLesson } = useLessonClose();
   const { getSettingsQuery, getTodayReviewTotalsQuery, getLessonsQuery, getLessonDataQuery } =
     useAtomValue(queriesAtom);
 
@@ -78,18 +79,6 @@ export function useLessonSession(): UseLessonSessionResult {
   }, [isOpen, disableScope, enableScope]);
 
   useLessonUploader();
-
-  const closeLesson = useCallback(() => {
-    // WHY: close nulls request/setup; capture filters before reset so deck-scoped
-    // lessons.all(filters) still invalidates.
-    const activeRequest = store.get(lessonRequestAtom);
-    const activeSetup = store.get(lessonSetupAtom);
-    const activeFilters = activeSetup?.filters ?? (activeRequest ? filtersFromRequest(activeRequest) : undefined);
-    closeLessonState();
-    queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all(activeFilters) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
-    queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
-  }, [closeLessonState, queryClient, store]);
 
   return { closeLesson };
 }

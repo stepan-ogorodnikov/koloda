@@ -24,8 +24,8 @@ export function Lesson() {
   // state/dispatch until Phase 4 UI migration.
   const state = useAtomValue(lessonStateAtom);
   const setLessonState = useSetAtom(lessonStateAtom);
-  // WHY: Views still dispatch ["close"]; intercept here so invalidation runs
-  // without migrating every child this commit.
+  // WHY: Header/footer still dispatch ["close"]; intercept here so invalidation
+  // runs until chrome migrates.
   const dispatch = useCallback(
     (action: LessonReducerAction) => {
       if (action[0] === "close") {
@@ -61,18 +61,18 @@ export function Lesson() {
             <AnimatePresence mode="wait">
               {isSetupPhase && (
                 <Fade className={lessonContent} initial={{ opacity: 1 }} key="init">
-                  <LessonInit state={state} dispatch={dispatch} />
+                  <LessonInit />
                 </Fade>
               )}
               {isSessionPhase && (
                 <Fade className={lessonContent} key="content">
-                  <LessonStudying state={state} dispatch={dispatch} />
-                  <LessonTermination state={state} dispatch={dispatch} />
+                  <LessonStudying />
+                  <LessonTermination />
                 </Fade>
               )}
               {state.phase === "finished" && (
                 <Fade className={lessonContent} key="finish">
-                  <LessonCompletion state={state} dispatch={dispatch} />
+                  <LessonCompletion />
                 </Fade>
               )}
             </AnimatePresence>

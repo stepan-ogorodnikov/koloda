@@ -2,19 +2,14 @@ import { LESSON_TYPE_LABELS, LESSON_TYPES } from "@koloda/srs";
 import { Number } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { ActionDispatch } from "react";
+import { useAtomValue } from "jotai";
 import { LessonInitAmountInput } from "./lesson-init-amount-input";
 import { LessonInitLearnedToday } from "./lesson-init-learned-today";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { lessonSetupAtom } from "./lesson-selectors";
 
-type LessonInitListProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
-};
-
-export function LessonInitList({ state }: LessonInitListProps) {
+export function LessonInitList() {
   const { _ } = useLingui();
-  const setup = state.setup;
+  const setup = useAtomValue(lessonSetupAtom);
   if (!setup) return null;
   const { available, reviewTotals, dailyLimits } = setup;
 

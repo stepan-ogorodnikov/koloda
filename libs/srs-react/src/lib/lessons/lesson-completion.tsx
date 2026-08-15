@@ -1,18 +1,13 @@
 import { useAppHotkey } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import type { ActionDispatch } from "react";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { useLessonClose } from "./use-lesson-close";
 
-type LessonCompletionProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
-};
-
-export function LessonCompletion({ dispatch }: LessonCompletionProps) {
+export function LessonCompletion() {
   const { _ } = useLingui();
+  const { closeLesson } = useLessonClose();
 
-  useAppHotkey(["Escape"], () => dispatch(["close"]), "lesson");
+  useAppHotkey(["Escape"], () => closeLesson(), "lesson");
 
   return <div className="text-xl font-semibold">{_(msg`lesson.completion.message`)}</div>;
 }

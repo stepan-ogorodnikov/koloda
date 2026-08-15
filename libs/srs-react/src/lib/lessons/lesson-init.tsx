@@ -1,36 +1,32 @@
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { getCSSVar } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
-import type { ActionDispatch } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { submitLessonSetupAtom } from "./lesson-actions";
 import { LessonInitList } from "./lesson-init-list";
 import { LessonInitTable } from "./lesson-init-table";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { lessonSetupAtom } from "./lesson-selectors";
+import { useLessonClose } from "./use-lesson-close";
 
-type LessonInitProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
-};
-
-export function LessonInit({ state, dispatch }: LessonInitProps) {
+export function LessonInit() {
   const { ui } = useHotkeysSettings();
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
+  const setup = useAtomValue(lessonSetupAtom);
+  const submitSetup = useSetAtom(submitLessonSetupAtom);
+  const { closeLesson } = useLessonClose();
 
-  useAppHotkey(["Escape"], () => dispatch(["close"]), "lesson", { ignoreInputs: false });
+  useAppHotkey(["Escape"], () => closeLesson(), "lesson", { ignoreInputs: false });
 
   useAppHotkey(
     ui.submit,
     () => {
-      if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) dispatch(["setupSubmitted"]);
+      if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) submitSetup();
     },
     "lesson",
     { ignoreInputs: false, conflictBehavior: "allow" },
   );
 
-  if (!state.setup) return null;
+  if (!setup) return null;
 
-  return isMobile ? (
-    <LessonInitList state={state} dispatch={dispatch} />
-  ) : (
-    <LessonInitTable state={state} dispatch={dispatch} />
-  );
+  return isMobile ? <LessonInitList /> : <LessonInitTable />;
 }
