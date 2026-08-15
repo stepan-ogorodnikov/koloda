@@ -1,16 +1,14 @@
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { useCallback } from "react";
-import { lessonAtom } from "./lesson-actions";
+import { lessonAtom, submitLessonSetupAtom } from "./lesson-actions";
 import { LessonCompletion } from "./lesson-completion";
 import { LessonFooter } from "./lesson-footer";
 import { LessonHeader } from "./lesson-header";
 import { LessonInit } from "./lesson-init";
-import type { LessonReducerAction } from "./lesson-reducer";
 import { LessonStudying } from "./lesson-studying";
 import { LessonTermination } from "./lesson-termination";
-import { lessonStateAtom } from "./lesson-store";
+import { lessonIsOpenAtom, lessonPhaseAtom } from "./lesson-selectors";
 import { useLessonSession } from "./use-lesson-session";
 
 export type { LessonAtomValue } from "./lesson-reducer";
@@ -20,30 +18,16 @@ export const lessonContent = overlayFrameContent({ class: "relative items-center
 
 export function Lesson() {
   const { closeLesson } = useLessonSession();
-  // INVARIANT: The store is the only write path. Children still receive
-  // state/dispatch until Phase 4 UI migration.
-  const state = useAtomValue(lessonStateAtom);
-  const setLessonState = useSetAtom(lessonStateAtom);
-  // WHY: Header/footer still dispatch ["close"]; intercept here so invalidation
-  // runs until chrome migrates.
-  const dispatch = useCallback(
-    (action: LessonReducerAction) => {
-      if (action[0] === "close") {
-        closeLesson();
-        return;
-      }
-      setLessonState(action);
-    },
-    [closeLesson, setLessonState],
-  );
+  const isOpen = useAtomValue(lessonIsOpenAtom);
+  const phase = useAtomValue(lessonPhaseAtom);
+  const submitSetup = useSetAtom(submitLessonSetupAtom);
 
   const handleIsOpenChange = (value: boolean) => {
     if (!value) closeLesson();
   };
 
-  const isOpen = state.phase !== "closed";
-  const isSetupPhase = state.phase === "preparing" || state.phase === "configuring";
-  const isSessionPhase = state.phase === "loading-cards" || state.phase === "studying";
+  const isSetupPhase = phase === "preparing" || phase === "configuring";
+  const isSessionPhase = phase === "loading-cards" || phase === "studying";
 
   return (
     <Dialog.Overlay isOpen={isOpen} onOpenChange={handleIsOpenChange} isKeyboardDismissDisabled>
@@ -54,10 +38,10 @@ export function Lesson() {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              dispatch(["setupSubmitted"]);
+              submitSetup();
             }}
           >
-            <LessonHeader state={state} dispatch={dispatch} />
+            <LessonHeader />
             <AnimatePresence mode="wait">
               {isSetupPhase && (
                 <Fade className={lessonContent} initial={{ opacity: 1 }} key="init">
@@ -70,13 +54,13 @@ export function Lesson() {
                   <LessonTermination />
                 </Fade>
               )}
-              {state.phase === "finished" && (
+              {phase === "finished" && (
                 <Fade className={lessonContent} key="finish">
                   <LessonCompletion />
                 </Fade>
               )}
             </AnimatePresence>
-            <LessonFooter state={state} dispatch={dispatch} />
+            <LessonFooter />
           </form>
         </Dialog.Body>
       </Dialog.Modal>

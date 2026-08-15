@@ -1,23 +1,26 @@
 import { Dialog, useMotionSetting } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
-import type { ActionDispatch, PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
+import { requestLessonTerminationAtom } from "./lesson-actions";
 import { LessonProgressAmounts } from "./lesson-progress-amounts";
 import { LessonProgressDots } from "./lesson-progress-dots";
-import type { LessonReducerAction, LessonReducerState } from "./lesson-reducer";
+import { lessonHasSessionAtom, lessonPhaseAtom } from "./lesson-selectors";
+import { useLessonClose } from "./use-lesson-close";
 
-type LessonHeaderProps = {
-  state: LessonReducerState;
-  dispatch: ActionDispatch<[action: LessonReducerAction]>;
-};
-
-export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
+export function LessonHeader() {
+  // INVARIANT: Do not call useLessonSession() from header; it would remount queries/effects.
   const { _ } = useLingui();
   const isMotionOn = useMotionSetting();
-  const isSetupPhase = state.phase === "preparing" || state.phase === "configuring";
-  const hasSession = !!state.session;
-  const shouldRequestTermination = state.phase === "loading-cards" || state.phase === "studying";
+  const phase = useAtomValue(lessonPhaseAtom);
+  // INVARIANT: Session remains through finished; do not gate progress on studying only.
+  const hasSession = useAtomValue(lessonHasSessionAtom);
+  const requestTermination = useSetAtom(requestLessonTerminationAtom);
+  const { closeLesson } = useLessonClose();
+  const isSetupPhase = phase === "preparing" || phase === "configuring";
+  const shouldRequestTermination = phase === "loading-cards" || phase === "studying";
 
   return (
     <LessonHeaderLayout>
@@ -25,9 +28,9 @@ export function LessonHeader({ state, dispatch }: LessonHeaderProps) {
         variants={{ class: "absolute top-0 right-0" }}
         onClick={() => {
           if (shouldRequestTermination) {
-            dispatch(["terminationRequested", true]);
+            requestTermination();
           } else {
-            dispatch(["close"]);
+            closeLesson();
           }
         }}
       />

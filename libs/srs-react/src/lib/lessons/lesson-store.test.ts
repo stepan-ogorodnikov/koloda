@@ -1,11 +1,13 @@
 import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
-import { createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
+import { createLessonData, createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
 import {
   closeLessonStateAtom,
   initializeLessonAtom,
   lessonAtom,
   openLessonAtom,
+  receiveLessonDataAtom,
+  submitLessonSetupAtom,
   updateLessonAmountAtom,
 } from "./lesson-actions";
 import { lessonReducerDefault } from "./lesson-reducer";
@@ -13,6 +15,7 @@ import {
   lessonAmountsAtom,
   lessonAvailableAtom,
   lessonContentAtom,
+  lessonHasSessionAtom,
   lessonIsOpenAtom,
   lessonPhaseAtom,
   lessonProgressAtom,
@@ -185,9 +188,24 @@ describe("lesson selectors", () => {
     expect(store.get(lessonAvailableAtom)).toEqual(TOTAL_LESSONS.total);
     expect(store.get(lessonContentAtom)).toBeUndefined();
     expect(store.get(lessonSessionCardsAtom)).toBeUndefined();
+    expect(store.get(lessonHasSessionAtom)).toBe(false);
     expect(store.get(lessonProgressAtom)).toBeUndefined();
     expect(store.get(lessonTerminationRequestedAtom)).toBe(false);
     expect(store.get(lessonUploadHeadAtom)).toBeUndefined();
     expect(store.get(lessonUploadLogAtom)).toEqual({});
+  });
+
+  it("reports session presence after lesson data is received", () => {
+    const store = createStore();
+    store.set(openLessonAtom, REQUEST);
+    store.set(initializeLessonAtom, initializePayload());
+    expect(store.get(lessonHasSessionAtom)).toBe(false);
+
+    store.set(submitLessonSetupAtom);
+    expect(store.get(lessonHasSessionAtom)).toBe(false);
+
+    store.set(receiveLessonDataAtom, createLessonData());
+    expect(store.get(lessonHasSessionAtom)).toBe(true);
+    expect(store.get(lessonPhaseAtom)).toBe("studying");
   });
 });
