@@ -10,6 +10,7 @@ import type { AssistantConversationConfig } from "../state/assistant-conversatio
 import { getMessageRunId, userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
+import type { ResolveDataAccess } from "./data-access";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
@@ -26,6 +27,7 @@ type UseRunOrchestrationOptions = {
   /** Sole engine ingress — submit/retry go through typed commands. */
   dispatchCommand: (command: AssistantCommand) => void | Promise<void>;
   ensureConversationId: () => string | undefined;
+  resolveDataAccess: ResolveDataAccess;
 };
 
 type UseRunOrchestrationReturn = {
@@ -47,6 +49,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     setMode,
     dispatchCommand,
     ensureConversationId,
+    resolveDataAccess,
   } = options;
 
   // WHY: Engine rejects duplicate runs, but same-tick double submit can still
@@ -125,16 +128,28 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       const promptText = (value ?? "").trim();
 
-      const prepared = prepareRunRequest(cfg, currentMode, promptText, currentState.messages, currentState.runs);
-      if (!prepared) return;
-
-      const runId = generateUUID();
-
-      rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
-
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;
       try {
+        // WHY: Resolve data access exactly once per submit, inside the
+        // in-flight guard — the await would otherwise re-open the same-tick
+        // double-submit window the guard closes. The same snapshot feeds the
+        // request (via prepareRunRequest) and the run record (via submitTurn).
+        const dataAccess = await resolveDataAccess(currentMode, currentState.deckId);
+        const prepared = prepareRunRequest(
+          cfg,
+          currentMode,
+          promptText,
+          currentState.messages,
+          currentState.runs,
+          dataAccess,
+        );
+        if (!prepared) return;
+
+        const runId = generateUUID();
+
+        rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
+
         // WHY: Accept the engine command first. A sync reject (duplicate/closed)
         // must not leave a streaming placeholder in the document.
         const pending = dispatchCommand(toSubmitCommand(activeConversationId, runId, prepared));
@@ -150,6 +165,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
             assistantText: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
             templateFields: prepared.templateFields,
             modelName: prepared.modelName,
+            dataAccess,
           },
         ]);
         submittedRunId = runId;
@@ -163,7 +179,15 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
     },
-    [configRef, ensureConversationId, dispatch, dispatchCommand, readState, rememberLastUsedAIProfile],
+    [
+      configRef,
+      ensureConversationId,
+      dispatch,
+      dispatchCommand,
+      readState,
+      rememberLastUsedAIProfile,
+      resolveDataAccess,
+    ],
   );
 
   const handleRevert = useCallback(

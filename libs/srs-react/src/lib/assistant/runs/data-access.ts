@@ -1,3 +1,4 @@
+import type { AIChatMode } from "@koloda/ai";
 import type { Card, Deck, Template, TemplateField } from "@koloda/srs";
 
 // WHY: hard card cap bounds serialization work and prompt growth before character
@@ -49,6 +50,18 @@ export type DataAccessManifest = {
   /** Null on chat runs — chat never includes card contents. */
   writeTarget: DataAccessWriteTarget | null;
 };
+
+/** Resolved at submit: the context text sent to the model plus its manifest. */
+export type DataAccessSnapshot = {
+  context: string;
+  manifest: DataAccessManifest;
+};
+
+/**
+ * Async resolution owned by React land (the resolver hook). Framework-free
+ * request prep only receives the produced snapshot — it never resolves itself.
+ */
+export type ResolveDataAccess = (mode: AIChatMode, deckId: Deck["id"] | null) => Promise<DataAccessSnapshot>;
 
 export type SerializedDeckSummaries = {
   context: string;

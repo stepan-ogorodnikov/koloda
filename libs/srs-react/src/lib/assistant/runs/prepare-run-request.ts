@@ -5,6 +5,7 @@ import { buildConversationMessages } from "../state/assistant-messages";
 import type { ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 import type { StreamRequestResult } from "./build-stream-request";
 import { buildStreamRequest } from "./build-stream-request";
+import type { DataAccessSnapshot } from "./data-access";
 
 /**
  * Framework-free submit/retry preparation: validate config + prompt, build the
@@ -38,6 +39,9 @@ export function createExecutionIdentity(
  * prompt/config is invalid, so callers early-return *before* starting a
  * stream. Centralizing the guard stack here is what lets `handleRetry`
  * execute only after validation.
+ *
+ * `dataAccess` is the submit-time snapshot resolved by React land; this
+ * framework-free prep only embeds it into the request — it never resolves.
  */
 export function prepareRunRequest(
   cfg: AssistantConversationConfig,
@@ -45,12 +49,13 @@ export function prepareRunRequest(
   promptText: string,
   messages: ConversationReducerState["messages"],
   runs: Record<string, GenerationRun>,
+  dataAccess?: DataAccessSnapshot,
 ): PreparedRun | null {
   if (!promptText || !cfg.profileId || !cfg.modelId) return null;
   if (mode === "cards" && !cfg.template) return null;
 
   const conversationMessages = buildConversationMessages(messages, runs, cfg.template);
-  const result = buildStreamRequest(cfg, mode, promptText, conversationMessages);
+  const result = buildStreamRequest(cfg, mode, promptText, conversationMessages, dataAccess);
   return {
     ...result,
     modelName: cfg.modelName,

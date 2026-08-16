@@ -3,6 +3,7 @@ import { logAssistantStructured } from "@koloda/assistant";
 import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
+import type { DataAccessSnapshot } from "../runs/data-access";
 import type { UIMessage } from "ai";
 import { produce } from "immer";
 import {
@@ -37,6 +38,8 @@ export type GenerationRun = {
   elapsedSeconds: number | null;
   modelName?: string;
   usage?: StreamUsage;
+  /** Submit-time data access snapshot: the context text sent and its manifest. */
+  dataAccess?: DataAccessSnapshot;
 };
 
 export type RevertState = {
@@ -126,6 +129,7 @@ function makeRun(
   mode: AIChatMode,
   templateFields: TemplateFields | null | undefined,
   modelName?: string,
+  dataAccess?: DataAccessSnapshot,
 ): GenerationRun {
   return {
     id: runId,
@@ -137,6 +141,7 @@ function makeRun(
     startedAt: new Date(),
     elapsedSeconds: null,
     modelName,
+    dataAccess,
   };
 }
 
@@ -303,11 +308,18 @@ type StartRunPayload = {
   mode: AIChatMode;
   templateFields?: TemplateFields | null;
   modelName?: string;
+  dataAccess?: DataAccessSnapshot;
 };
 
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
+  draft.runs[payload.runId] = makeRun(
+    payload.runId,
+    payload.mode,
+    payload.templateFields,
+    payload.modelName,
+    payload.dataAccess,
+  );
 }
 
 type SubmitTurnPayload = {
@@ -318,6 +330,7 @@ type SubmitTurnPayload = {
   assistantText: string;
   templateFields?: TemplateFields | null;
   modelName?: string;
+  dataAccess?: DataAccessSnapshot;
 };
 
 // WHY: One dispatch creates user turn + run + assistant placeholder so
@@ -330,6 +343,7 @@ function submitTurn(draft: ConversationReducerState, payload: SubmitTurnPayload)
     mode: payload.mode,
     templateFields: payload.templateFields,
     modelName: payload.modelName,
+    dataAccess: payload.dataAccess,
   });
   addAssistantMessage(draft, {
     runId: payload.runId,

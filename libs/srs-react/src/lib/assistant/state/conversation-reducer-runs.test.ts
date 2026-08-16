@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cancelStreamingRuns } from "../persistence/conversation-persistence";
+import type { DataAccessSnapshot } from "../runs/data-access";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
@@ -59,6 +60,47 @@ describe("conversationReducer", () => {
       const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1", mode: "chat" }]);
 
       expect(state.runs["r1"].modelName).toBeUndefined();
+    });
+  });
+
+  describe("submitTurn", () => {
+    it("stores the data access snapshot on the created run", () => {
+      const dataAccess: DataAccessSnapshot = {
+        context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
+        manifest: {
+          decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
+          writeTarget: null,
+        },
+      };
+
+      const state = conversationReducer(initialConversationState, [
+        "submitTurn",
+        {
+          runId: "r1",
+          text: "hello",
+          mode: "chat",
+          kind: "chat-text",
+          assistantText: "",
+          dataAccess,
+        },
+      ]);
+
+      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
+    });
+
+    it("leaves dataAccess undefined when submitTurn carries no snapshot", () => {
+      const state = conversationReducer(initialConversationState, [
+        "submitTurn",
+        {
+          runId: "r1",
+          text: "hello",
+          mode: "chat",
+          kind: "chat-text",
+          assistantText: "",
+        },
+      ]);
+
+      expect(state.runs["r1"].dataAccess).toBeUndefined();
     });
   });
 

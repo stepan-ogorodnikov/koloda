@@ -4,6 +4,7 @@ import { createTemplate } from "../../../test/test-helpers";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { createTextMessage, userMessageId } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
+import type { DataAccessSnapshot } from "./data-access";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): AssistantConversationConfig {
@@ -85,6 +86,45 @@ describe("prepareRunRequest", () => {
         content: { fields: template.content.fields },
       },
     });
+  });
+});
+
+describe("prepareRunRequest — data access", () => {
+  const dataAccess: DataAccessSnapshot = {
+    context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
+    manifest: {
+      decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
+      writeTarget: null,
+    },
+  };
+
+  it("embeds the resolved context as dataContext on a chat request", () => {
+    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {}, dataAccess);
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.dataContext).toBe(dataAccess.context);
+  });
+
+  it("embeds the resolved context as dataContext on a cards request", () => {
+    const template = createTemplate({ id: 42 });
+    const prepared = prepareRunRequest(
+      makeConfig({ template, templateId: 42, deckId: 1 }),
+      "cards",
+      "make cards",
+      [],
+      {},
+      dataAccess,
+    );
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.dataContext).toBe(dataAccess.context);
+  });
+
+  it("omits dataContext when no data access snapshot is passed (retry path)", () => {
+    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.dataContext).toBeUndefined();
   });
 });
 

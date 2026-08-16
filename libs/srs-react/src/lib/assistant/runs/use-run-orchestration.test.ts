@@ -3,6 +3,7 @@ import type { AssistantCommand } from "@koloda/assistant";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createTemplate } from "../../../test/test-helpers";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
@@ -12,10 +13,17 @@ import {
   currentConversationIdAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
+import type { DataAccessSnapshot } from "./data-access";
 import { useRunOrchestration } from "./use-run-orchestration";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
 // retry (no prompt/profile/model/template) never reaches the engine.
+
+const emptySnapshot: DataAccessSnapshot = { context: "", manifest: { decks: [], writeTarget: null } };
+
+// WHY: plain promise (not a spy) — these suites don't assert resolver calls;
+// the data-access describe below uses per-test fakes for that.
+const resolveNoDataAccess = () => Promise.resolve(emptySnapshot);
 
 function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): AssistantConversationConfig {
   return {
@@ -89,6 +97,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
   }
@@ -195,6 +204,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -231,6 +241,161 @@ describe("useRunOrchestration — atomic submitTurn", () => {
       conversationId: "conv-1",
       input: { kind: "chat" },
     });
+  });
+});
+
+describe("useRunOrchestration — data access resolution", () => {
+  let store: ReturnType<typeof createStore>;
+  let dispatch: (action: ConversationReducerAction) => void;
+  let readState: () => ConversationReducerState;
+  let dispatchCommand: ReturnType<typeof vi.fn<DispatchCommand>>;
+
+  beforeEach(() => {
+    store = createStore();
+    dispatch = (action) => store.set(assistantConversationStateAtom, action);
+    readState = () => store.get(assistantConversationStateAtom);
+    dispatchCommand = vi.fn<DispatchCommand>(() => Promise.resolve());
+  });
+
+  function seedConversation(id: string) {
+    store.set(upsertConversationAtom, {
+      ...initialConversationState,
+      id,
+      createdAt: new Date(1),
+    });
+    store.set(currentConversationIdAtom, id);
+  }
+
+  function orchestrate(cfg: AssistantConversationConfig, resolveDataAccess: () => Promise<DataAccessSnapshot>) {
+    return renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+        resolveDataAccess,
+      }),
+    );
+  }
+
+  it("chat submit resolves once with the state mode and deck, embeds the record, and stores it on the run", async () => {
+    seedConversation("conv-1");
+    const record: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
+      manifest: {
+        decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
+        writeTarget: null,
+      },
+    };
+    const resolveDataAccess = vi.fn(async () => record);
+
+    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    await act(async () => {
+      await result.current.handleGenerate("hello");
+    });
+
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+    expect(resolveDataAccess).toHaveBeenCalledWith("chat", null);
+
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = dispatchCommand.mock.calls[0]![0] as Extract<AssistantCommand, { type: "submit" }>;
+    expect(command.input.kind).toBe("chat");
+    expect(command.input.request.dataContext).toBe(record.context);
+
+    const runId = readState().activeRunId;
+    expect(runId).not.toBeNull();
+    // WHY: identity, not toEqual — the run must store the same snapshot object
+    // the request embedded, not a re-resolved copy.
+    expect(readState().runs[runId!].dataAccess).toBe(record);
+  });
+
+  it("cards submit resolves with the write-target deck and carries its context", async () => {
+    seedConversation("conv-1");
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
+    const record: DataAccessSnapshot = {
+      context: [
+        "User decks:\n- Deck: Kanji — 2 cards — Template: Default (Front, Back)",
+        "Existing cards in deck Kanji (2 total):\n1. Front: 犬 | Back: dog",
+      ].join("\n\n"),
+      manifest: {
+        decks: [{ deckId: 7, title: "Kanji", cardCount: 2, templateTitle: "Default" }],
+        writeTarget: {
+          isMissing: false,
+          deckId: 7,
+          title: "Kanji",
+          totalCards: 2,
+          listedCards: 2,
+          fullFieldCards: 2,
+          isCapped: false,
+          isTruncated: false,
+        },
+      },
+    };
+    const resolveDataAccess = vi.fn(async () => record);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
+
+    const { result } = orchestrate(cfg, resolveDataAccess);
+    await act(async () => {
+      await result.current.handleGenerate("make cards");
+    });
+
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+    expect(resolveDataAccess).toHaveBeenCalledWith("cards", 7);
+
+    const command = dispatchCommand.mock.calls[0]![0] as Extract<AssistantCommand, { type: "submit" }>;
+    expect(command.input.kind).toBe("cards");
+    expect(command.input.request.dataContext).toBe(record.context);
+
+    const runId = readState().activeRunId;
+    expect(readState().runs[runId!].dataAccess).toBe(record);
+  });
+
+  it("same-tick double submit resolves once — the in-flight guard covers the resolve await", async () => {
+    seedConversation("conv-1");
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const dispatchCommandGated = vi.fn<DispatchCommand>(async () => {
+      await gate;
+    });
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
+
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: makeConfig() },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        dispatchCommand: dispatchCommandGated,
+        ensureConversationId: () => "conv-1",
+        resolveDataAccess,
+      }),
+    );
+
+    let first!: Promise<void>;
+    let second!: Promise<void>;
+    act(() => {
+      first = result.current.handleGenerate("one");
+      second = result.current.handleGenerate("two");
+    });
+
+    await act(async () => {
+      release();
+      await Promise.all([first, second]);
+    });
+
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+    expect(dispatchCommandGated).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -283,6 +448,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -330,6 +496,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -399,6 +566,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -446,6 +614,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => store.get(currentConversationIdAtom) ?? undefined,
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -492,6 +661,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -528,6 +698,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -558,6 +729,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -591,6 +763,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -617,6 +790,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 
@@ -648,6 +822,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
         setMode: vi.fn(),
         dispatchCommand,
         ensureConversationId: () => "conv-1",
+        resolveDataAccess: resolveNoDataAccess,
       }),
     );
 

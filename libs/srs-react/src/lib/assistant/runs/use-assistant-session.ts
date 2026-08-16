@@ -8,6 +8,7 @@ import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom, setAssistantModeAtom } from "../state/conversation-actions";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
 import { assistantConversationStateAtom, touchAtom } from "../state/conversation-store";
+import { useAssistantDataAccess } from "../use-assistant-data-access";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
 import type { RunController } from "./run-controller";
@@ -76,6 +77,7 @@ export function useAssistantSession({
   );
 
   const { dispatch: dispatchCommand } = useConversationRuns();
+  const { resolve: resolveDataAccess } = useAssistantDataAccess();
 
   const handleCancel = useCallback(() => {
     const state = readState();
@@ -125,6 +127,7 @@ export function useAssistantSession({
     setMode,
     dispatchCommand,
     ensureConversationId,
+    resolveDataAccess,
   };
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =
     useRunOrchestration(orchestrationOptions);
