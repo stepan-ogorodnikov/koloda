@@ -3,9 +3,9 @@ import type { ToolSet } from "ai";
 import { z } from "zod";
 
 /**
- * Assistant chat tool registry — specs and binder only, no I/O (layer map: libs/ai
- * owns the contract; hosts bind executors per tool name). Adding a tool is one
- * entry here plus one executor in each host.
+ * Assistant chat tool registry — specs, binder, and pure output shaping, no I/O
+ * (layer map: libs/ai owns the contract; hosts bind executors per tool name).
+ * Adding a tool is one entry here plus one executor in each host.
  */
 
 /** Deck summary row returned by `list_decks`. */
@@ -24,9 +24,44 @@ export type ListDecksOutput = {
 export type GetDeckCardsOutput = {
   deckTitle: string;
   totalCards: number;
-  /** True when the card list was truncated at the per-deck cap owned by executors. */
+  /** True when fewer cards are returned than the deck holds (per-deck cap or char budget). */
   isCapped: boolean;
   cards: Array<{ fields: Record<string, string> }>;
+};
+
+// WHY: hard card cap bounds serialization work and prompt growth before character
+// accounting starts; `totalCards` keeps the true deck size visible to the model.
+export const ASSISTANT_TOOL_MAX_CARDS_PER_DECK = 200;
+
+// WHY: character ceiling keeps the serialized card list near ~2k tokens, so a tool
+// result never crowds out the conversation in smaller context windows.
+export const ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET = 8_000;
+
+/** Structural deck row subset for `list_decks`; the host resolves `cardCount` (per-deck card reads). */
+export type AssistantDeckSummarySource = {
+  id: number;
+  title: string;
+  templateId: number;
+  cardCount: number;
+};
+
+/** Structural template subset — field titles map card content keys to output keys. */
+export type AssistantToolTemplate = {
+  id: number;
+  title: string;
+  content: { fields: Array<{ id: number; title: string }> };
+};
+
+/** Structural deck + template subset for `get_deck_cards`. */
+export type AssistantDeckCardsSource = {
+  id: number;
+  title: string;
+  template: AssistantToolTemplate;
+};
+
+/** Structural card subset — only content is serialized; FSRS state never leaves the host. */
+export type AssistantToolCard = {
+  content: Record<string, { text: string }>;
 };
 
 export type AssistantToolSpec = {
@@ -90,4 +125,65 @@ export function bindAssistantTools({ names, execute }: BindAssistantToolsOptions
     });
   }
   return bound;
+}
+
+/**
+ * Shape `list_decks` output from deck rows, template rows, and host-resolved card
+ * counts. A deck whose template is not among the rows keeps a null `templateTitle`
+ * and no field titles — never a silent drop.
+ */
+export function shapeListDecksOutput(
+  decks: AssistantDeckSummarySource[],
+  templates: AssistantToolTemplate[],
+): ListDecksOutput {
+  return {
+    decks: decks.map((deck) => {
+      const template = templates.find((row) => row.id === deck.templateId) ?? null;
+      return {
+        deckId: deck.id,
+        title: deck.title,
+        cardCount: deck.cardCount,
+        templateTitle: template?.title ?? null,
+        fieldTitles: template ? template.content.fields.map((field) => field.title) : [],
+      };
+    }),
+  };
+}
+
+/**
+ * Shape `get_deck_cards` output, applying the per-deck cap and the serialized-char
+ * budget; `totalCards`/`isCapped` always report the deck's real size.
+ */
+export function shapeGetDeckCardsOutput(
+  deck: AssistantDeckCardsSource,
+  cards: AssistantToolCard[],
+): GetDeckCardsOutput {
+  const fields = deck.template.content.fields;
+  const capped = cards.slice(0, ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
+  const listed: GetDeckCardsOutput["cards"] = [];
+  let usedChars = 0;
+  for (const card of capped) {
+    const entry = { fields: shapeCardFields(card, fields) };
+    // WHY: the model consumes tool output as JSON, so the budget is spent on what is
+    // actually serialized (entry length plus array separator), not a parallel rendering.
+    const cost = JSON.stringify(entry).length + (listed.length > 0 ? 1 : 0);
+    if (usedChars + cost > ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET) break;
+    usedChars += cost;
+    listed.push(entry);
+  }
+
+  return {
+    deckTitle: deck.title,
+    totalCards: cards.length,
+    isCapped: listed.length < cards.length,
+    cards: listed,
+  };
+}
+
+/** Field ids are the card content keys; the output is keyed by field title. */
+function shapeCardFields(
+  card: AssistantToolCard,
+  fields: Array<{ id: number; title: string }>,
+): Record<string, string> {
+  return Object.fromEntries(fields.map((field) => [field.title, card.content[String(field.id)]?.text ?? ""]));
 }

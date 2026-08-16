@@ -1,4 +1,11 @@
-import type { AIRuntime, CardGenerationRequest, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type {
+  AIRuntime,
+  CardGenerationRequest,
+  ChatStreamRequest,
+  GeneratedCard,
+  OnToolEvent,
+  StreamUsage,
+} from "@koloda/ai";
 import { AIError, isAIError } from "@koloda/ai";
 import { isAppError } from "@koloda/app";
 import { invoke } from "./electron";
@@ -8,6 +15,8 @@ export const AI_STREAM_CHANNEL = "ai:stream";
 export type AiStreamEvent =
   | { requestId: string; type: "chunk"; chunk: string }
   | { requestId: string; type: "card"; card: GeneratedCard }
+  | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
+  | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
   | { requestId: string; type: "error"; code: string; message: string };
 
@@ -35,6 +44,7 @@ type WaitForStreamOptions = {
   abortSignal: AbortSignal;
   onChunk?: (chunk: string) => void;
   onCard?: (card: GeneratedCard) => void;
+  onToolEvent?: OnToolEvent;
 };
 
 type StreamWaiter = {
@@ -43,7 +53,7 @@ type StreamWaiter = {
   dispose: () => void;
 };
 
-function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStreamOptions): StreamWaiter {
+function waitForStream({ requestId, abortSignal, onChunk, onCard, onToolEvent }: WaitForStreamOptions): StreamWaiter {
   let isSettled = false;
   let unsubscribe = () => {};
   let removeAbortListener = () => {};
@@ -71,6 +81,12 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard }: WaitForStrea
           return;
         case "card":
           onCard?.(event.card);
+          return;
+        case "toolCall":
+          onToolEvent?.({ kind: "toolCall", call: event.call });
+          return;
+        case "toolResult":
+          onToolEvent?.({ kind: "toolResult", callId: event.callId, output: event.output, error: event.error });
           return;
         case "done":
           settle(() => resolve(event.usage));
@@ -130,13 +146,25 @@ export function createElectronAIRuntime(): AIRuntime {
       // WHY: Prefer the host-minted id so structured streamStart logs match IPC.
       const requestId = correlationId ?? crypto.randomUUID();
       // INVARIANT: Attach the stream listener before invoke so early chunks/errors are not missed.
-      const waiter = waitForStream({ requestId, abortSignal, onChunk });
+      const waiter = waitForStream({ requestId, abortSignal, onChunk, onToolEvent: request.onToolEvent });
       // WHY: Abort before start would leave an orphan provider stream if we still invoke.
       if (abortSignal.aborted) {
         return waiter.promise;
       }
       try {
-        await invoke("cmd_ai_chat_stream", { requestId, profileId, request });
+        // WHY: Callbacks / executors are not IPC-serializable — strip them; main
+        // recreates the executor from `tools` and streams tool events back.
+        await invoke("cmd_ai_chat_stream", {
+          requestId,
+          profileId,
+          request: {
+            messages: request.messages,
+            input: request.input,
+            template: request.template,
+            systemPromptTemplate: request.systemPromptTemplate,
+            tools: request.tools,
+          },
+        });
       } catch (error) {
         // WHY: Dispose (don't reject) — throwing below is the single rejection path.
         waiter.dispose();

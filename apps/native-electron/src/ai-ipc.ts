@@ -1,10 +1,23 @@
-import type { AISecrets, CardGenerationRequest, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type {
+  AISecrets,
+  AssistantToolCard,
+  AssistantToolEvent,
+  AssistantToolExecutor,
+  AssistantToolTemplate,
+  CardGenerationRequest,
+  ChatStreamRequest,
+  GeneratedCard,
+  StreamUsage,
+} from "@koloda/ai";
 import {
   AIError,
   aiSecretsValidation,
+  ASSISTANT_TOOL_SPECS,
   createAIGenerationClient,
   fetchModels,
   isAIError,
+  shapeGetDeckCardsOutput,
+  shapeListDecksOutput,
   toAIError,
   wrapAIError,
 } from "@koloda/ai";
@@ -16,6 +29,8 @@ export const AI_STREAM_CHANNEL = "ai:stream";
 export type AiStreamEvent =
   | { requestId: string; type: "chunk"; chunk: string }
   | { requestId: string; type: "card"; card: GeneratedCard }
+  | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
+  | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
   | { requestId: string; type: "error"; code: string; message: string };
 
@@ -37,6 +52,9 @@ type AiAbortArgs = { requestId: string };
 
 type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
+  getDecks: () => Array<{ id: number; title: string; templateId: number }>;
+  getTemplates: () => AssistantToolTemplate[];
+  getCards: (params: { deckId: number }) => AssistantToolCard[];
 };
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.
@@ -109,6 +127,71 @@ function endRequest(requestId: string, controller: AbortController) {
   }
 }
 
+// WHY: a raw Error does not survive structured clone — tool errors cross IPC as text.
+function toToolErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+// INVARIANT: main-side executor over the NAPI KolodaDb surface; NAPI reads are
+// synchronous. Shaping and budgets live in @koloda/ai.
+function createChatToolExecutor(db: KolodaDb): AssistantToolExecutor {
+  return async (name, input) => {
+    if (name === "list_decks") {
+      const decks = db.getDecks();
+      const templates = db.getTemplates();
+      const cardCounts = decks.map((deck) => db.getCards({ deckId: deck.id }).length);
+      return shapeListDecksOutput(
+        decks.map((deck, index) => ({
+          id: deck.id,
+          title: deck.title,
+          templateId: deck.templateId,
+          cardCount: cardCounts[index],
+        })),
+        templates,
+      );
+    }
+    if (name === "get_deck_cards") {
+      const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);
+      const deck = db.getDecks().find((row) => row.id === deckId);
+      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
+      const template = db.getTemplates().find((row) => row.id === deck.templateId);
+      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+      return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, db.getCards({ deckId }));
+    }
+    throw new Error(`Unknown assistant tool: ${name}`);
+  };
+}
+
+function sendToolEvent(sender: WebContents, requestId: string, toolEvent: AssistantToolEvent) {
+  if (toolEvent.kind === "toolCall") {
+    sendStreamEvent(sender, { requestId, type: "toolCall", call: toolEvent.call });
+    return;
+  }
+  sendStreamEvent(sender, {
+    requestId,
+    type: "toolResult",
+    callId: toolEvent.callId,
+    ...(toolEvent.output !== undefined ? { output: toolEvent.output } : {}),
+    ...(toolEvent.error !== undefined ? { error: toToolErrorMessage(toolEvent.error) } : {}),
+  });
+}
+
+// WHY: functions do not cross IPC — the renderer strips them; main recreates the
+// executor over KolodaDb and streams tool events back on the existing channel.
+function bindChatTools(
+  db: KolodaDb,
+  sender: WebContents,
+  requestId: string,
+  request: ChatStreamRequest,
+): ChatStreamRequest {
+  if (request.tools == null || request.tools.length === 0) return request;
+  return {
+    ...request,
+    executeTool: createChatToolExecutor(db),
+    onToolEvent: (toolEvent) => sendToolEvent(sender, requestId, toolEvent),
+  };
+}
+
 export function registerAiIpc(db: KolodaDb) {
   ipcMain.handle("cmd_ai_list_models", async (_event, args: AiListModelsArgs) => {
     try {
@@ -143,7 +226,7 @@ export function registerAiIpc(db: KolodaDb) {
       try {
         const client = createAIGenerationClient(secrets);
         const usage = await client.chat(
-          request,
+          bindChatTools(db, sender, requestId, request),
           (chunk) => {
             sendStreamEvent(sender, { requestId, type: "chunk", chunk });
           },

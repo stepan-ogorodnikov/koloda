@@ -2,8 +2,9 @@ import { simulateReadableStream } from "ai";
 import { MockLanguageModelV3 } from "ai/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as AiSdkOllama from "ai-sdk-ollama";
-import { ASSISTANT_TOOL_SPECS, bindAssistantTools } from "./assistant-tools";
-import type { AssistantToolEvent } from "./assistant-tools";
+import { ASSISTANT_TOOL_MAX_CARDS_PER_DECK, ASSISTANT_TOOL_SPECS, bindAssistantTools } from "./assistant-tools";
+import type { AssistantToolCard, AssistantToolEvent } from "./assistant-tools";
+import { shapeGetDeckCardsOutput, shapeListDecksOutput } from "./assistant-tools";
 import { streamChatWithOllama } from "./chat-stream";
 import type { ChatStreamRequest } from "./generation";
 
@@ -125,6 +126,116 @@ describe("assistant-tools binder", () => {
 
   it("rejects unknown tool names at bind time", () => {
     expect(() => bindAssistantTools({ names: ["nope"], execute: vi.fn() })).toThrow(/Unknown assistant tool/);
+  });
+});
+
+describe("tool output shaping", () => {
+  const templates = [
+    {
+      id: 1,
+      title: "Basic",
+      content: {
+        fields: [
+          { id: 10, title: "Front" },
+          { id: 11, title: "Back" },
+        ],
+      },
+    },
+    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text" }] } },
+  ];
+  const deck = { id: 5, title: "Spanish verbs", template: templates[0] };
+
+  /** Card content is keyed by field id as a string, mirroring the persisted shape. */
+  function card(texts: Record<number, string>): AssistantToolCard {
+    return {
+      content: Object.fromEntries(Object.entries(texts).map(([id, text]) => [id, { text }])),
+    };
+  }
+
+  it("maps deck rows to list_decks output with template titles and field titles", () => {
+    const output = shapeListDecksOutput(
+      [
+        { id: 5, title: "Spanish verbs", templateId: 1, cardCount: 12 },
+        { id: 6, title: "Orphan", templateId: 99, cardCount: 0 },
+      ],
+      templates,
+    );
+
+    expect(output).toEqual({
+      decks: [
+        { deckId: 5, title: "Spanish verbs", cardCount: 12, templateTitle: "Basic", fieldTitles: ["Front", "Back"] },
+        { deckId: 6, title: "Orphan", cardCount: 0, templateTitle: null, fieldTitles: [] },
+      ],
+    });
+  });
+
+  it("returns an empty deck list for empty inputs", () => {
+    expect(shapeListDecksOutput([], templates)).toEqual({ decks: [] });
+  });
+
+  it("lists every card of a small deck and maps field ids to titles", () => {
+    const cards = [card({ 10: "hola", 11: "hello" }), card({ 10: "gato", 11: "cat" })];
+
+    expect(shapeGetDeckCardsOutput(deck, cards)).toEqual({
+      deckTitle: "Spanish verbs",
+      totalCards: 2,
+      isCapped: false,
+      cards: [{ fields: { Front: "hola", Back: "hello" } }, { fields: { Front: "gato", Back: "cat" } }],
+    });
+  });
+
+  it("maps a field missing from card content to empty text", () => {
+    expect(shapeGetDeckCardsOutput(deck, [card({ 10: "hola" })])).toEqual({
+      deckTitle: "Spanish verbs",
+      totalCards: 1,
+      isCapped: false,
+      cards: [{ fields: { Front: "hola", Back: "" } }],
+    });
+  });
+
+  it("returns no cards for an empty deck without flagging it capped", () => {
+    expect(shapeGetDeckCardsOutput(deck, [])).toEqual({
+      deckTitle: "Spanish verbs",
+      totalCards: 0,
+      isCapped: false,
+      cards: [],
+    });
+  });
+
+  it(`caps the card list at ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK} while reporting the true total`, () => {
+    // WHY: single short field keeps every entry far under the char budget, so the
+    // only truncation source in this test is the per-deck cap.
+    const cappedDeck = { id: 7, title: "Numbers", template: templates[1] };
+    const cards = Array.from({ length: ASSISTANT_TOOL_MAX_CARDS_PER_DECK + 5 }, (_unused, index) =>
+      card({ 20: `n${index}` }),
+    );
+
+    const output = shapeGetDeckCardsOutput(cappedDeck, cards);
+
+    expect(output.totalCards).toBe(ASSISTANT_TOOL_MAX_CARDS_PER_DECK + 5);
+    expect(output.cards).toHaveLength(ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
+    expect(output.cards[0]).toEqual({ fields: { Text: "n0" } });
+    expect(output.cards[ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1]).toEqual({
+      fields: { Text: `n${ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1}` },
+    });
+    expect(output.isCapped).toBe(true);
+  });
+
+  it("truncates within the serialized char budget before the cap is reached", () => {
+    // WHY: each entry serializes to ~7.1k chars, so the second never fits the
+    // 8k budget — truncation comes from the budget, not the 200-card cap.
+    const bigText = "x".repeat(3_500);
+    const cards = [
+      card({ 10: bigText, 11: bigText }),
+      card({ 10: bigText, 11: bigText }),
+      card({ 10: "small", 11: "tiny" }),
+    ];
+
+    const output = shapeGetDeckCardsOutput(deck, cards);
+
+    expect(output.totalCards).toBe(3);
+    expect(output.cards).toEqual([{ fields: { Front: bigText, Back: bigText } }]);
+    expect(output.isCapped).toBe(true);
   });
 });
 

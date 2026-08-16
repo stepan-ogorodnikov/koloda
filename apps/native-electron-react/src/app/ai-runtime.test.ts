@@ -1,4 +1,4 @@
-import type { AIRuntime } from "@koloda/ai";
+import type { AIRuntime, AssistantToolEvent } from "@koloda/ai";
 import { AIError } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -114,6 +114,76 @@ describe("createElectronAIRuntime", () => {
       profileId: "profile-1",
       request: { messages: [], input: { modelId: "m", prompt: "hi" } },
     });
+  });
+
+  it("forwards tool names and strips non-serializable callbacks from the chat payload", async () => {
+    invokeMock.mockImplementation(async (cmd, args) => {
+      if (cmd !== "cmd_ai_chat_stream") return undefined;
+      const { requestId } = args as { requestId: string };
+      queueMicrotask(() => {
+        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
+      });
+    });
+
+    const runtime = createElectronAIRuntime();
+    await runtime.chat(
+      "profile-1",
+      {
+        messages: [],
+        input: { modelId: "m", prompt: "hi" },
+        tools: ["list_decks"],
+        onToolEvent: () => {},
+      },
+      () => {},
+      new AbortController().signal,
+      "host-req-chat",
+    );
+
+    expect(invokeMock).toHaveBeenCalledWith("cmd_ai_chat_stream", {
+      requestId: "host-req-chat",
+      profileId: "profile-1",
+      request: { messages: [], input: { modelId: "m", prompt: "hi" }, tools: ["list_decks"] },
+    });
+  });
+
+  it("maps tool stream events onto onToolEvent", async () => {
+    invokeMock.mockImplementation(async (cmd, args) => {
+      if (cmd !== "cmd_ai_chat_stream") return undefined;
+      const { requestId } = args as { requestId: string };
+      queueMicrotask(() => {
+        emit(AI_STREAM_CHANNEL, {
+          requestId,
+          type: "toolCall",
+          call: { id: "call-1", name: "list_decks", input: {} },
+        });
+        emit(AI_STREAM_CHANNEL, { requestId, type: "toolResult", callId: "call-1", output: { decks: [] } });
+        emit(AI_STREAM_CHANNEL, { requestId, type: "toolResult", callId: "call-2", error: "Deck not found: 9" });
+        emit(AI_STREAM_CHANNEL, { requestId, type: "chunk", chunk: "ok" });
+        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
+      });
+    });
+
+    const runtime = createElectronAIRuntime();
+    const events: AssistantToolEvent[] = [];
+    const chunks: string[] = [];
+    await runtime.chat(
+      "profile-1",
+      {
+        messages: [],
+        input: { modelId: "m", prompt: "hi" },
+        tools: ["list_decks"],
+        onToolEvent: (event) => events.push(event),
+      },
+      (chunk) => chunks.push(chunk),
+      new AbortController().signal,
+    );
+
+    expect(events).toEqual([
+      { kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } },
+      { kind: "toolResult", callId: "call-1", output: { decks: [] } },
+      { kind: "toolResult", callId: "call-2", error: "Deck not found: 9" },
+    ]);
+    expect(chunks).toEqual(["ok"]);
   });
 
   it("uses a provided requestId for generate-cards IPC", async () => {

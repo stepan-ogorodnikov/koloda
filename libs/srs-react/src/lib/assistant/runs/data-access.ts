@@ -1,13 +1,13 @@
+import { ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET, ASSISTANT_TOOL_MAX_CARDS_PER_DECK } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai";
 import type { Card, Deck, Template, TemplateField } from "@koloda/srs";
 
-// WHY: hard card cap bounds serialization work and prompt growth before character
-// accounting starts; the count line keeps the true deck size visible to the model.
-export const DATA_ACCESS_MAX_CARDS_PER_DECK = 200;
-
-// WHY: character ceiling keeps the injected card list near ~2k tokens, so data access
-// never crowds out the conversation in smaller context windows.
-export const DATA_ACCESS_CARD_LIST_CHAR_BUDGET = 8_000;
+// WHY: budgets moved to @koloda/ai — tool executors are the data-access path now.
+// The v1 names stay aliased for the injection bridge until that path retires.
+export {
+  ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET as DATA_ACCESS_CARD_LIST_CHAR_BUDGET,
+  ASSISTANT_TOOL_MAX_CARDS_PER_DECK as DATA_ACCESS_MAX_CARDS_PER_DECK,
+};
 
 /** Structural template subset; field order matters — the first field is the card front. */
 export type DataAccessTemplate = Pick<Template, "id" | "title"> & {
@@ -114,7 +114,7 @@ export function serializeDeckCards(
   if (!deck) return { context: "", writeTarget: { isMissing: true } };
 
   const fields = deck.template.content.fields;
-  const capped = cards.slice(0, DATA_ACCESS_MAX_CARDS_PER_DECK);
+  const capped = cards.slice(0, ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
   const isCapped = cards.length > capped.length;
 
   const frontLines = capped.map((card) => getCardFront(card, fields[0]));
