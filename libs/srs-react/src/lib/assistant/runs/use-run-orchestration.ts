@@ -73,16 +73,26 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
       const promptText = userMessage ? getTextMessageContent(userMessage) : "";
 
-      const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs);
-      if (!prepared) return;
-
-      rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
-
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
+        // WHY: Retry replays the run's submit-time snapshot unchanged — deck
+        // edits or deletions since submit must not leak into the retried
+        // request. Runs without one (restored pre-feature conversations)
+        // resolve fresh with the original run's mode and the conversation's
+        // deck, mirroring submit. Like handleGenerate, the fallback's await
+        // sits inside the in-flight guard so it cannot re-open the same-tick
+        // double-retry window the guard closes.
+        const dataAccess = currentState.runs[runId]?.dataAccess ?? (await resolveDataAccess(mode, currentState.deckId));
+        const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs, dataAccess);
+        if (!prepared) return;
+
+        rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
+
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        await dispatchCommand(toRetryCommand(conversationId, runId, mode, prepared));
+        // The snapshot rides the command so the restart stores it on the run
+        // record — later retries replay it instead of resolving again.
+        await dispatchCommand(toRetryCommand(conversationId, runId, mode, prepared, dataAccess));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
@@ -91,7 +101,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(conversationId);
       }
     },
-    [configRef, dispatchCommand, readState, rememberLastUsedAIProfile],
+    [configRef, dispatchCommand, readState, rememberLastUsedAIProfile, resolveDataAccess],
   );
 
   const handleDismissGenerate = useCallback(() => {

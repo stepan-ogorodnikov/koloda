@@ -15,6 +15,19 @@ describe("assistantEventToReducerAction", () => {
     ]);
   });
 
+  it("maps runStarted dataAccess through to restartRun, keeping identity", () => {
+    const dataAccess = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+    const event: AssistantEvent = {
+      type: "runStarted",
+      conversationId: "c1",
+      run: { runId: "r1", mode: "chat", templateFields: null, modelName: "m", dataAccess },
+    };
+    const action = assistantEventToReducerAction(event);
+    expect(action[0]).toBe("restartRun");
+    // WHY: identity — the replayed snapshot must reach the run record unchanged.
+    expect(action[1].dataAccess).toBe(dataAccess);
+  });
+
   it("maps text/card/usage chunks", () => {
     expect(
       assistantEventToReducerAction({

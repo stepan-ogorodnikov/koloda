@@ -773,6 +773,53 @@ describe("useConversationRuns", () => {
     expect(harness.store.get(conversationsAtom)["B"]?.runs["run-a"]).toBeUndefined();
   });
 
+  it("stores the retry's data access snapshot on the restarted run, keeping identity", async () => {
+    const harness = createHarness();
+    harness.store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        runs: {
+          "run-a": {
+            id: "run-a",
+            mode: "chat",
+            status: "failed",
+            cards: [],
+            cardStatuses: {},
+            error: { message: "boom" },
+            startedAt: new Date(1),
+            elapsedSeconds: null,
+            modelName: "m",
+            templateFields: null,
+          },
+        },
+      }),
+    );
+    harness.store.set(setCurrentConversationIdAtom, "A");
+    harness.chatStreamGenerator.mockImplementation(async () => undefined);
+
+    const dataAccess = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+    const { result } = renderRuns(harness);
+
+    await act(async () => {
+      await result.current.dispatch({
+        type: "retry",
+        conversationId: "A",
+        input: {
+          runId: "run-a",
+          request: {} as ChatStreamRequest,
+          templateFields: null,
+          mode: "chat",
+          execution: chatExecution,
+          dataAccess,
+        },
+      });
+    });
+
+    // WHY: full chain (command → engine event → store adapter → reducer) —
+    // the restarted run must carry the exact snapshot object by identity.
+    expect(harness.getState().runs["run-a"].dataAccess).toBe(dataAccess);
+  });
+
   it("executes A with A's identity after React renders B", async () => {
     const harness = createHarness();
     let releaseRun!: () => void;

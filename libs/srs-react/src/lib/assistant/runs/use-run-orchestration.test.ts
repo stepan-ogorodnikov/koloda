@@ -399,6 +399,160 @@ describe("useRunOrchestration — data access resolution", () => {
   });
 });
 
+describe("useRunOrchestration — retry data access replay", () => {
+  let store: ReturnType<typeof createStore>;
+  let dispatch: (action: ConversationReducerAction) => void;
+  let readState: () => ConversationReducerState;
+  let dispatchCommand: ReturnType<typeof vi.fn<DispatchCommand>>;
+
+  beforeEach(() => {
+    store = createStore();
+    dispatch = (action) => store.set(assistantConversationStateAtom, action);
+    readState = () => store.get(assistantConversationStateAtom);
+    dispatchCommand = vi.fn(() => Promise.resolve());
+  });
+
+  function seedConversation(id: string) {
+    store.set(upsertConversationAtom, {
+      ...initialConversationState,
+      id,
+      createdAt: new Date(1),
+    });
+    store.set(currentConversationIdAtom, id);
+  }
+
+  function addFailedChatRun(runId: string, dataAccess?: DataAccessSnapshot) {
+    dispatch(["addUserMessage", { runId, text: "hello" }]);
+    dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
+    dispatch(["startRun", { runId, mode: "chat", dataAccess }]);
+    dispatch(["runFailed", { runId, error: { message: "boom" } }]);
+  }
+
+  function orchestrate(cfg: AssistantConversationConfig, resolveDataAccess: () => Promise<DataAccessSnapshot>) {
+    return renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        setMode: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+        resolveDataAccess,
+      }),
+    );
+  }
+
+  function retryCommand(index = 0): Extract<AssistantCommand, { type: "retry" }> {
+    return dispatchCommand.mock.calls[index]![0] as Extract<AssistantCommand, { type: "retry" }>;
+  }
+
+  it("retry with a stored snapshot does not resolve and replays the exact stored record", async () => {
+    seedConversation("conv-1");
+    const stored: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
+      manifest: { decks: [{ deckId: 1, title: "Old", cardCount: 1, templateTitle: "Default" }], writeTarget: null },
+    };
+    addFailedChatRun("run-1", stored);
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
+
+    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).not.toHaveBeenCalled();
+
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = retryCommand();
+    // WHY: identity, not toEqual — the retry must send the run's stored
+    // snapshot object unchanged, never a re-resolved or copied record.
+    expect(command.input.dataAccess).toBe(stored);
+    expect(command.input.request.dataContext).toBe(stored.context);
+    expect(readState().runs["run-1"].dataAccess).toBe(stored);
+  });
+
+  it("retry without a snapshot (pre-feature run) resolves fresh with the original run's mode and deck", async () => {
+    seedConversation("conv-1");
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
+    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
+    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
+    dispatch(["startRun", { runId: "run-1", mode: "cards" }]);
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
+
+    const resolved: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Kanji — 2 cards — Template: Default (Front, Back)",
+      manifest: { decks: [], writeTarget: null },
+    };
+    const resolveDataAccess = vi.fn(async () => resolved);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
+
+    const { result } = orchestrate(cfg, resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+    expect(resolveDataAccess).toHaveBeenCalledWith("cards", 7);
+
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = retryCommand();
+    expect(command.input.dataAccess).toBe(resolved);
+    expect(command.input.request.dataContext).toBe(resolved.context);
+  });
+
+  it("a second retry after the fallback snapshot was stored does not resolve again", async () => {
+    seedConversation("conv-1");
+    addFailedChatRun("run-1");
+    const resolved: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Late resolve — 1 card — Template: Default (Front, Back)",
+      manifest: { decks: [], writeTarget: null },
+    };
+    const resolveDataAccess = vi.fn(async () => resolved);
+
+    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+
+    // WHY: mimic what the real engine does for the first retry — runStarted
+    // restarts the run and stores the snapshot the command carried.
+    dispatch([
+      "restartRun",
+      { runId: "run-1", templateFields: null, mode: "chat", modelName: "GPT-x", dataAccess: resolved },
+    ]);
+    expect(readState().runs["run-1"].dataAccess).toBe(resolved);
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom again" } }]);
+
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
+    expect(dispatchCommand).toHaveBeenCalledTimes(2);
+    expect(retryCommand(1).input.dataAccess).toBe(resolved);
+  });
+
+  it("a replayed empty-context snapshot keeps dataContext absent from the retry request", async () => {
+    seedConversation("conv-1");
+    addFailedChatRun("run-1", emptySnapshot);
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
+
+    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).not.toHaveBeenCalled();
+    const command = retryCommand();
+    expect(command.input.request.dataContext).toBeUndefined();
+  });
+});
+
 describe("useRunOrchestration — submit in-flight guard", () => {
   let store: ReturnType<typeof createStore>;
   let dispatch: (action: ConversationReducerAction) => void;

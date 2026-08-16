@@ -195,6 +195,30 @@ describe("createAssistantEngine", () => {
     await expect(runPromise).resolves.toBeUndefined();
   });
 
+  it("replays the retry's data access snapshot on runStarted by reference", async () => {
+    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+    chatStreamGenerator.mockImplementation(async () => undefined);
+
+    const dataAccess = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+    await engine.dispatch({
+      type: "retry",
+      conversationId: "A",
+      input: {
+        runId: "run-1",
+        request: {} as ChatStreamRequest,
+        templateFields: null,
+        mode: "chat",
+        execution: TEST_EXECUTION,
+        dataAccess,
+      },
+    });
+
+    const restart = events.find((e) => e.type === "runStarted");
+    // WHY: by reference, not toEqual — the engine must not clone the snapshot;
+    // the restart's run record keeps identity with what the request carried.
+    expect(restart?.type === "runStarted" && restart.run.dataAccess).toBe(dataAccess);
+  });
+
   it("in-flight retry for A stays owned by A after UI-current switches to B", async () => {
     conversationStates["A"] = { runs: { "run-a": { mode: "chat" } } };
     conversationStates["B"] = { runs: {} };

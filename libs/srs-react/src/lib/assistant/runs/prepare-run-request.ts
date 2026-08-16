@@ -89,12 +89,18 @@ export function toSubmitCommand(conversationId: string, runId: string, prepared:
   };
 }
 
-/** Build the typed engine retry command from a prepared run. */
+/**
+ * Build the typed engine retry command from a prepared run. `dataAccess` is
+ * the snapshot the retry replays (stored on the run, or freshly resolved for
+ * a pre-feature run) — it rides the command so the restart stores it on the
+ * run record, mirroring how `submitTurn` stores the submit-time snapshot.
+ */
 export function toRetryCommand(
   conversationId: string,
   runId: string,
   mode: AIChatMode,
   prepared: PreparedRun,
+  dataAccess?: DataAccessSnapshot,
 ): AssistantCommand {
   return {
     type: "retry",
@@ -106,6 +112,7 @@ export function toRetryCommand(
       mode,
       modelName: prepared.modelName,
       execution: prepared.execution,
+      dataAccess,
     },
   };
 }

@@ -3,7 +3,7 @@ import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
-import type { AssistantEvent } from "./assistant-protocol";
+import type { AssistantEvent, RunDataAccessSnapshot } from "./assistant-protocol";
 import type { CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
@@ -46,6 +46,7 @@ export type ConversationRuntime = {
     mode: AIChatMode,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
+    dataAccess: RunDataAccessSnapshot | undefined,
   ) => Promise<void>;
   cancel: (runId: string, reason?: QueueCancelReason) => void;
   close: (reason: QueueCancelReason) => void;
@@ -468,6 +469,7 @@ export function createConversationRuntime(
     mode: AIChatMode,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
+    dataAccess: RunDataAccessSnapshot | undefined,
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, async () => {
@@ -493,6 +495,7 @@ export function createConversationRuntime(
             templateFields,
             mode: effectiveMode,
             modelName,
+            dataAccess,
           },
         });
 

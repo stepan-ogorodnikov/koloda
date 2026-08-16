@@ -522,6 +522,42 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
+
+    it("stores the replayed data access snapshot on restart, keeping identity", () => {
+      const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+
+      state = conversationReducer(state, [
+        "restartRun",
+        { runId: "r1", templateFields: null, mode: "chat", dataAccess },
+      ]);
+
+      // WHY: identity, not toEqual — the restarted run must carry the exact
+      // snapshot object the retry replayed, so later retries replay it too.
+      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
+    });
+
+    it("keeps the stored data access snapshot when the restart carries none", () => {
+      const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+      let state = reduce([["startRun", { runId: "r1", mode: "chat", dataAccess }]]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+
+      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
+    });
+
+    it("carries the data access snapshot when recreating a dropped run", () => {
+      const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
+
+      const state = conversationReducer(initialConversationState, [
+        "restartRun",
+        { runId: "r1", templateFields: null, mode: "chat", dataAccess },
+      ]);
+
+      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
+    });
   });
 
   describe("setUsage", () => {

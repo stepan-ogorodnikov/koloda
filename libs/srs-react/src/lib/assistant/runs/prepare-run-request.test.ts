@@ -160,4 +160,22 @@ describe("toSubmitCommand / toRetryCommand", () => {
       },
     });
   });
+
+  it("builds a retry command carrying the replayed data access snapshot", () => {
+    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+    expect(prepared).not.toBeNull();
+    const dataAccess: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
+      manifest: {
+        decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
+        writeTarget: null,
+      },
+    };
+
+    const command = toRetryCommand("conv-1", "run-1", "chat", prepared!, dataAccess);
+
+    // WHY: identity — the command must carry the exact snapshot object so the
+    // restart stores it on the run record unchanged.
+    expect(command.input.dataAccess).toBe(dataAccess);
+  });
 });

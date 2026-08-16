@@ -200,6 +200,7 @@ export type RunLifecycleEvent =
       type: "restart";
       templateFields: TemplateFields | null;
       modelName?: string;
+      dataAccess?: DataAccessSnapshot;
     };
 
 function stampElapsed(run: GenerationRun) {
@@ -224,6 +225,10 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.startedAt = new Date();
     run.elapsedSeconds = null;
     run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
+    // WHY: retry replays the snapshot recorded at submit; a fresh resolution
+    // (pre-feature run) rides the same restart so later retries replay it.
+    // Absent keeps the stored record authoritative.
+    run.dataAccess = event.dataAccess !== undefined ? event.dataAccess : run.dataAccess;
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;
@@ -411,6 +416,7 @@ type RestartRunPayload = {
   templateFields: TemplateFields | null;
   mode: AIChatMode;
   modelName?: string;
+  dataAccess?: DataAccessSnapshot;
 };
 
 function restartRun(draft: ConversationReducerState, payload: RestartRunPayload) {
@@ -419,6 +425,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
       type: "restart",
       templateFields: payload.templateFields,
       modelName: payload.modelName,
+      dataAccess: payload.dataAccess,
     })
   ) {
     return;
@@ -427,7 +434,13 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
   // WHY: Retry after restore may find the run dropped (normalize removes
   // orphaned failed markers) while the assistant error message
   // remains — recreate the run and rewrite the error marker.
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.mode, payload.templateFields, payload.modelName);
+  draft.runs[payload.runId] = makeRun(
+    payload.runId,
+    payload.mode,
+    payload.templateFields,
+    payload.modelName,
+    payload.dataAccess,
+  );
   const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
   if (msg) {
     const metadata = getAssistantMetadata(msg);

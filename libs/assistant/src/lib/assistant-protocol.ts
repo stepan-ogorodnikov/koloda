@@ -22,6 +22,16 @@ export type SubmitInput = ImmutableExecutionValue<
     }
 >;
 
+/**
+ * Data access snapshot replayed by retry: the context text sent with the
+ * request plus its manifest. Opaque to the engine — carried to the
+ * `runStarted` event untouched; the store adapter owns the manifest type.
+ */
+export type RunDataAccessSnapshot = {
+  context: string;
+  manifest: unknown;
+};
+
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
   execution: AssistantExecutionIdentity;
@@ -29,6 +39,7 @@ export type RetryInput = ImmutableExecutionValue<{
   templateFields: TemplateFields | null;
   mode: AIChatMode;
   modelName?: string;
+  dataAccess?: RunDataAccessSnapshot;
 }>;
 
 /** Host-supplied interrupt + flush budget for graceful engine teardown. */
@@ -47,12 +58,13 @@ export type AssistantCommand =
   | { type: "cancel"; conversationId: string; runId: string }
   | { type: "shutdown"; input: ShutdownInput };
 
-/** Snapshot carried on retry restart — identity + mode only; full run records stay in the store. */
+/** Snapshot carried on retry restart — identity, mode, and replayed data access; full run records stay in the store. */
 export type RunStartSnapshot = {
   runId: string;
   mode: AIChatMode;
   templateFields: TemplateFields | null;
   modelName?: string;
+  dataAccess?: RunDataAccessSnapshot;
 };
 
 export type RunChunk =
