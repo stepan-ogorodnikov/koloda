@@ -212,107 +212,57 @@ export function generateCardsWithMyProvider(
 }
 ```
 
-### 7. UI Forms (`libs/app-react/src/lib/settings/ai-providers/`)
+### 7. UI Form Config (`libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts`)
 
-Create add and edit form components:
+The add and edit profile forms are generic.
+`AddAIProfileForm` and `EditAIProfileForm` look up a declarative `AIProviderFormConfig` in `AI_PROVIDER_FORM_CONFIG`.
+They render its `fields` via `AIProfileFormFields`.
+Do not create per-provider form components — add one entry to the config record.
 
-**add-ai-profile-my-provider.tsx**:
-```tsx
-import { aiProfileValidation, myProviderSecretsValidation } from "@koloda/ai";
-import type { AddAIProfileFormProps } from "./ai-profile-form-props";
-import type { ZodIssue } from "@koloda/app";
-import { toFormErrors } from "@koloda/app";
-import { Button, Dialog, Label, TextField, useAppForm } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
-import type { z } from "zod";
+Most providers reuse a helper (extend the helper's provider union type if needed):
 
-const formSchema = myProviderSecretsValidation.extend({
-  title: aiProfileValidation.shape.title,
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-const defaultValues: FormValues = {
-  title: "",
-  apiKey: "",
-};
-
-export function AddAIProfileMyProvider({ onSubmit, isPending, error }: AddAIProfileFormProps) {
-  const { _ } = useLingui();
-
-  const form = useAppForm({
-    defaultValues,
-    validators: { onSubmit: formSchema },
-    onSubmit: async ({ value }) => {
-      onSubmit({
-        title: value.title || undefined,
-        secrets: { provider: "myProvider", apiKey: value.apiKey },
-      });
-    },
-  });
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); form.handleSubmit(); }}>
-      <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
-        <form.Field name="title">
-          {(field) => (
-            <TextField value={field.state.value} onBlur={field.handleBlur} onChange={field.handleChange}>
-              <Label>{_(msg`settings.ai.profiles.title.label`)}</Label>
-              <TextField.Input placeholder={_(msg`settings.ai.profiles.title.placeholder`)} />
-              {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
-            </TextField>
-          )}
-        </form.Field>
-        <form.Field name="apiKey">
-          {(field) => (
-            <TextField type="password" value={field.state.value} onBlur={field.handleBlur} onChange={field.handleChange} isRequired>
-              <Label>{_(msg`settings.ai.profiles.api-key.label`)}</Label>
-              <TextField.Input />
-              {!field.state.meta.isValid && <TextField.Errors errors={field.state.meta.errors as ZodIssue[]} />}
-            </TextField>
-          )}
-        </form.Field>
-        {error && <form.Errors errors={toFormErrors(error)} />}
-      </Dialog.Content>
-      <Dialog.Footer>
-        <div className="grow" />
-        <form.Subscribe selector={(state) => [state.canSubmit]}>
-          {([canSubmit]) => (
-            <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isPending}>
-              {_(msg`settings.ai.add.submit`)}
-            </Button>
-          )}
-        </form.Subscribe>
-      </Dialog.Footer>
-    </form>
-  );
-}
-```
-
-**edit-ai-profile-my-provider.tsx** follows the same pattern but uses `EditAIProfileFormProps` and `AIProfileSecretsField`.
-
-### 8. Register UI Forms
-
-**`libs/app-react/src/lib/settings/settings-ai-add-profile.tsx`**:
 ```typescript
-import { AddAIProfileMyProvider } from "./ai-providers/add-ai-profile-my-provider";
+// API-key-only provider:
+myProvider: apiKeyOnlyConfig("myProvider", myProviderSecretsValidation),
 
-const PROVIDER_FORMS: Record<AiProvider, ComponentType<AddAIProfileFormProps>> = {
-  // ...
-  myProvider: AddAIProfileMyProvider,
-};
+// Base-URL provider (baseUrl required, API key optional):
+myProvider: baseUrlConfig("myProvider", myProviderSecretsValidation, "https://api.myprovider.com/v1"),
 ```
 
-**`libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx`**:
+The helpers require the secrets schema from step 1 to match their shape:
+API key only, or baseUrl plus an optional API key.
+Anything else needs a hand-written entry:
+
 ```typescript
-import { EditAIProfileMyProvider } from "./ai-providers/edit-ai-profile-my-provider";
-
-const PROVIDER_FORMS: Record<AiProvider, ComponentType<EditAIProfileFormProps>> = {
-  // ...
-  myProvider: EditAIProfileMyProvider,
-};
+myProvider: {
+  fields: [
+    { type: "title", isRequired: false, defaultValue: "" },
+    { type: "apiKey", isRequired: true, defaultValue: "" },
+  ],
+  schema: myProviderSecretsValidation.extend({
+    title: aiProfileValidation.shape.title,
+  }),
+  toSecrets: (values) => ({ provider: "myProvider", apiKey: values.apiKey ?? "" }),
+  fromSecrets: (secrets) => ({
+    apiKey: secrets?.provider === "myProvider" ? (secrets.apiKey ?? "") : "",
+  }),
+},
 ```
+
+Field types are `title`, `baseUrl`, and `apiKey`.
+`AIProfileFormFields` supplies the labels, placeholders, and edit-mode secret masking for these.
+No new locale strings are needed.
+If the provider needs a different field, extend `AIProfileFieldType`.
+Teach `AIProfileFormFields` to render it, and add its label string.
+
+### 8. Verify Dialog Wiring
+
+There is no per-provider registration step.
+`settings-ai-add-profile.tsx` passes the picker selection to the generic `AddAIProfileForm`.
+The picker lists whatever the host store enables (see step 9).
+`settings-ai-edit-profile.tsx` derives the provider from `profile.secrets?.provider` and renders `EditAIProfileForm`.
+Both resolve the entry added in step 7.
+Check that the add dialog renders the new fields and the edit dialog prefills them via `fromSecrets`.
 
 ### 9. Host enablement
 
@@ -338,7 +288,8 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 | Registry | `libs/ai/src/lib/providers/<provider>.ts` + `provider-registry.ts` | Per-provider client/fetch; types + wiring table |
 | Streaming | `libs/ai/src/lib/chat-stream.ts` | Chat stream implementation |
 | Generation | `libs/ai/src/lib/card-generation.ts` | Card generation implementation |
-| Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-*.tsx` | Add profile UI |
-| Edit Form | `libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-*.tsx` | Edit profile UI |
-| Settings | `libs/app-react/src/lib/settings/settings-ai-*-profile.tsx` | Form registration |
+| Form Config | `libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts` | Per-provider fields, schema, secrets mapping |
+| Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
+| Edit Form | `libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |
+| Settings | `libs/app-react/src/lib/settings/settings-ai-*-profile.tsx` | Add/edit dialogs (provider picker, wiring) |
 | App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Demo: `listProvidersThatWorkInBrowser()` |
