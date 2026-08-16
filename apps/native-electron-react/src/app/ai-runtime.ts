@@ -170,6 +170,7 @@ export function createElectronAIRuntime(): AIRuntime {
             input: request.input,
             messages: request.messages,
             systemPromptTemplate: request.systemPromptTemplate,
+            dataContext: request.dataContext,
           },
         });
       } catch (error) {

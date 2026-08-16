@@ -5,6 +5,7 @@ import { wrapAIError } from "./error";
 import type { ChatStreamRequest, Message } from "./generation";
 import type { StreamUsage } from "./models";
 import { compilePromptTemplate } from "./prompts";
+import { appendDataContext } from "./prompts";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
@@ -23,11 +24,14 @@ async function runChatStream(
     model: wrapModelWithReasoningExtraction(modelFactory(request.input.modelId)),
 
     temperature: resolveGenerationTemperature(request.input.temperature),
-    system: compilePromptTemplate(
-      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-      request.template?.content.fields ?? [],
-      providerLabel,
-      "chat",
+    system: appendDataContext(
+      compilePromptTemplate(
+        request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
+        request.template?.content.fields ?? [],
+        providerLabel,
+        "chat",
+      ),
+      request.dataContext,
     ),
     messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     abortSignal,

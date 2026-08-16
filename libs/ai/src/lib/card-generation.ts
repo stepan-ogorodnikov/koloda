@@ -5,6 +5,7 @@ import { getConversationMessages } from "./chat-stream";
 import { wrapAIError } from "./error";
 import type { CardGenerationRequest, GeneratedCard } from "./generation";
 import { compilePromptTemplate } from "./prompts";
+import { appendDataContext } from "./prompts";
 import { DEFAULT_GENERATION_PROMPT_TEMPLATE } from "./prompts";
 import type { AiProvider } from "./provider-catalog";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
@@ -16,14 +17,17 @@ async function runCardGeneration(
   request: CardGenerationRequest,
   providerOptions?: ProviderOptions,
 ): Promise<void> {
-  const { template, input, messages = [], onCard, abortSignal, systemPromptTemplate } = request;
+  const { template, input, messages = [], onCard, abortSignal, systemPromptTemplate, dataContext } = request;
   const elementSchema = getCardContentSchema(template.content.fields);
   const temperature = resolveGenerationTemperature(input.temperature);
-  const systemPrompt = compilePromptTemplate(
-    systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
-    template.content.fields,
-    providerLabel,
-    "generation",
+  const systemPrompt = appendDataContext(
+    compilePromptTemplate(
+      systemPromptTemplate ?? DEFAULT_GENERATION_PROMPT_TEMPLATE,
+      template.content.fields,
+      providerLabel,
+      "generation",
+    ),
+    dataContext,
   );
   const chatMessages = getConversationMessages(messages, input.prompt);
   const model = wrapModelWithReasoningExtraction(modelFactory(input.modelId));

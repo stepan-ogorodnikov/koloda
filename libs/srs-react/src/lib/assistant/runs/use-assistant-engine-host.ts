@@ -106,6 +106,7 @@ function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExec
           onCard,
           abortSignal: signal,
           systemPromptTemplate: input.request.systemPromptTemplate,
+          dataContext: input.request.dataContext,
         },
         requestId,
       );

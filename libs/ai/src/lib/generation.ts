@@ -28,6 +28,8 @@ export type ChatStreamRequest = {
   input: GenerateCardsInput;
   template?: { content: { fields: CardGenerationFields } };
   systemPromptTemplate?: string;
+  /** Always-on data context appended after the compiled system prompt. */
+  dataContext?: string;
 };
 
 export type ChatStreamGenerator = (
@@ -43,6 +45,8 @@ export type CardGenerationRequest = {
   onCard: OnCardGenerated;
   abortSignal?: AbortSignal;
   systemPromptTemplate?: string;
+  /** Always-on data context appended after the compiled system prompt. */
+  dataContext?: string;
 };
 
 export type GenerateCardsFunction = (request: CardGenerationRequest) => Promise<void>;

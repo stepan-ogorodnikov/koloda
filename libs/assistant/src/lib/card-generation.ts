@@ -5,6 +5,8 @@ export type CardGenerationStreamRequest = {
   input: GenerateCardsInput;
   messages: Message[];
   systemPromptTemplate?: string;
+  /** Always-on data context appended after the compiled system prompt. */
+  dataContext?: string;
 };
 
 export type CardGenerationExecutor = (

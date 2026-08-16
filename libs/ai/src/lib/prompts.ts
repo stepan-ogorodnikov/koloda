@@ -126,3 +126,14 @@ export function compilePromptTemplate(
     .replace(/{{provider}}/g, providerFormatText)
     .trim();
 }
+
+/**
+ * Append always-on data context after the compiled system prompt. Deliberately
+ * not a `{{placeholder}}`: data access is not user-positionable and settings
+ * templates stay untouched. Absent or empty context returns the compiled
+ * prompt unchanged.
+ */
+export function appendDataContext(systemPrompt: string, dataContext: string | undefined): string {
+  if (!dataContext) return systemPrompt;
+  return `${systemPrompt}\n\n${dataContext}`;
+}
