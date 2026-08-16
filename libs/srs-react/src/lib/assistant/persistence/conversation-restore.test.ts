@@ -3,6 +3,7 @@ import { fromPersistedState, normalizeRestoredConversation, toPersistedState } f
 import { coerceConversationState } from "./conversation-persistence-schema";
 import type { RestoreIssue } from "./conversation-persistence-schema";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
+import type { DataAccessSnapshot } from "../runs/data-access";
 import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 
@@ -286,6 +287,226 @@ describe("coerceConversationState", () => {
     it("rejects a missing templateFields as corrupt (a bad field fails the whole row)", () => {
       const { templateFields: _omit, ...withoutTemplateFields } = baseRun();
       expect(expectCorrupt(makeStateWithRun(withoutTemplateFields)).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("run dataAccess coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "cards",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    const fullSnapshot: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Spanish — 12 cards — Template: Basic (Front, Back)",
+      manifest: {
+        decks: [
+          { deckId: 3, title: "Spanish", cardCount: 12, templateTitle: "Basic" },
+          { deckId: 7, title: "Kanji", cardCount: 40, templateTitle: null },
+        ],
+        writeTarget: {
+          isMissing: false,
+          deckId: 3,
+          title: "Spanish",
+          totalCards: 12,
+          listedCards: 10,
+          fullFieldCards: 4,
+          isCapped: false,
+          isTruncated: true,
+        },
+      },
+    };
+
+    it("keeps dataAccess intact across a save→restore roundtrip (JSON wire shape)", () => {
+      const state: ConversationReducerState = {
+        ...initialConversationState,
+        id: "conv-1",
+        runs: {
+          r1: {
+            id: "r1",
+            mode: "cards",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1000),
+            elapsedSeconds: 1,
+            dataAccess: fullSnapshot,
+          },
+        },
+      };
+      // WHY: JSON round-trip simulates the wire — Dates leave as ISO strings,
+      // so asserting a restored Date instance proves the row was coerced, not
+      // passed through.
+      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+      const restored = expectOk(persisted);
+      expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
+      expect(restored.runs["r1"]?.startedAt.getTime()).toBe(1000);
+      expect(restored.runs["r1"]?.dataAccess).toEqual(fullSnapshot);
+    });
+
+    it("restores rows saved before data access unchanged (no dataAccess snapshot)", () => {
+      const coerced = expectOk(makeStateWithRun(baseRun()));
+      expect(coerced.runs["r1"].dataAccess).toBeUndefined();
+    });
+
+    it("rejects a wrong-typed dataAccess value as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: "yes" }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: null }))).length).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(baseRun({ dataAccess: { context: 5, manifest: { decks: [], writeTarget: null } } })),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              dataAccess: {
+                ...fullSnapshot,
+                manifest: {
+                  ...fullSnapshot.manifest,
+                  decks: [{ deckId: 3, title: "Spanish", cardCount: "12", templateTitle: "Basic" }],
+                },
+              },
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              dataAccess: {
+                ...fullSnapshot,
+                manifest: {
+                  ...fullSnapshot.manifest,
+                  decks: [{ deckId: 3, title: "Spanish", cardCount: 12, templateTitle: 7 }],
+                },
+              },
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              dataAccess: {
+                ...fullSnapshot,
+                manifest: {
+                  ...fullSnapshot.manifest,
+                  writeTarget: { ...(fullSnapshot.manifest.writeTarget as object), isCapped: "no" },
+                },
+              },
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("rejects a manifest with a missing required field as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: { context: "x" } }))).length).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              dataAccess: {
+                context: "x",
+                manifest: { decks: [{ deckId: 3, title: "Spanish", cardCount: 12 }], writeTarget: null },
+              },
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              dataAccess: {
+                context: "x",
+                manifest: {
+                  decks: [],
+                  writeTarget: {
+                    isMissing: false,
+                    deckId: 3,
+                    title: "Spanish",
+                    listedCards: 10,
+                    fullFieldCards: 4,
+                    isCapped: false,
+                    isTruncated: true,
+                  },
+                },
+              },
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("rejects a writeTarget whose isMissing flag does not match its record as corrupt", () => {
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({ dataAccess: { context: "x", manifest: { decks: [], writeTarget: { isMissing: false } } } }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({ dataAccess: { context: "x", manifest: { decks: [], writeTarget: { isMissing: "true" } } } }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("accepts legal edge shapes: empty context, empty decks, null writeTarget, missing-deck marker", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({ mode: "chat", dataAccess: { context: "", manifest: { decks: [], writeTarget: null } } }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.dataAccess).toEqual({ context: "", manifest: { decks: [], writeTarget: null } });
+
+      const marker = expectOk(
+        makeStateWithRun(
+          baseRun({ dataAccess: { context: "", manifest: { decks: [], writeTarget: { isMissing: true } } } }),
+        ),
+      );
+      expect(marker.runs["r1"]?.dataAccess?.manifest.writeTarget).toEqual({ isMissing: true });
+    });
+
+    it("strips unknown extra keys inside the manifest instead of failing the row", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            dataAccess: {
+              context: "x",
+              manifest: { decks: [], writeTarget: null, futureField: 1 },
+            },
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.dataAccess?.manifest).toEqual({ decks: [], writeTarget: null });
     });
   });
 
