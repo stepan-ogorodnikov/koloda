@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { AssistantToolExecutor, OnToolEvent } from "./assistant-tools";
 import type { StreamUsage } from "./models";
 
 export const generateCardsInputSchema = z.object({
@@ -28,8 +29,12 @@ export type ChatStreamRequest = {
   input: GenerateCardsInput;
   template?: { content: { fields: CardGenerationFields } };
   systemPromptTemplate?: string;
-  /** Always-on data context appended after the compiled system prompt. */
-  dataContext?: string;
+  /** Tool names the model may call; names only so the request stays IPC-serializable. */
+  tools?: string[];
+  /** Host-supplied dispatcher for the tool names above; required when `tools` is non-empty. */
+  executeTool?: AssistantToolExecutor;
+  /** Streams tool activity back to the caller; stripped and recreated at the IPC boundary like `onCard`. */
+  onToolEvent?: OnToolEvent;
 };
 
 export type ChatStreamGenerator = (
