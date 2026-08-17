@@ -61,6 +61,7 @@ Prefer these over hand-rolled equivalents. Defined in `libs/ui/src/lib/styles/ut
 
 - `focus-ring` — the only sanctioned focus ring. Composes `data-focus-visible` so it only shows on keyboard nav. Variants: `group-focus-ring` (ring on the group's focused child), `drag-focus-ring` (ring while dragging), `error-ring` (error-colored ring), `no-focus-ring` (suppress).
 - `animate-colors` — the shared color transition (`transition-colors duration-250 ease-in-out`). Put it in a recipe's `base` so hover/press shifts stay consistent; don't write ad-hoc transitions.
+- `animate-shimmer` — mask sweep for mixed icon+text rows. Use `animate-shimmer-text--fg-level-4/fg-level-1` for text-only (pending labels).
 - `numbers-text` — shared "large number" label style.
 
 Reference: `libs/ui/src/lib/primitives/form/button.tsx` (tokens + `focus-ring` + `animate-colors`), `scheme-light.css` (scheme shape).

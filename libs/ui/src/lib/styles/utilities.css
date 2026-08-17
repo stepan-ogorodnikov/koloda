@@ -86,9 +86,13 @@
 @keyframes shimmer-text {
   0% {
     background-position: 200% 50%;
+    -webkit-mask-position: 200% 50%;
+    mask-position: 200% 50%;
   }
   100% {
     background-position: -200% 50%;
+    -webkit-mask-position: -200% 50%;
+    mask-position: -200% 50%;
   }
 }
 
@@ -103,5 +107,15 @@
     --value(--color-*) 70%
   );
   background-size: 200% 100%;
+  animation: shimmer-text 2.5s linear infinite;
+}
+
+@utility animate-shimmer {
+  -webkit-mask-image: linear-gradient(110deg, black 30%, rgb(0 0 0 / 0.35) 50%, black 70%);
+  mask-image: linear-gradient(110deg, black 30%, rgb(0 0 0 / 0.35) 50%, black 70%);
+  -webkit-mask-size: 200% 100%;
+  mask-size: 200% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   animation: shimmer-text 2.5s linear infinite;
 }
