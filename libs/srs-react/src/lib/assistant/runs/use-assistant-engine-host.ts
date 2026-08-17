@@ -78,18 +78,28 @@ function logStreamStart(conversationId: string, runId: string, requestId: string
 
 function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExecutionPort {
   return {
-    executeChat: (input, onChunk, signal) => {
+    executeChat: (input, onChunk, onToolEvent, signal) => {
       const requestId = createStreamRequestId();
       logStreamStart(input.conversationId, input.runId, requestId);
-      return store
-        .get(aiRuntimeAtom)
-        .chat(
-          input.identity.profileId,
-          structuredClone(input.request) as ChatStreamRequest,
-          onChunk,
-          signal,
-          requestId,
-        );
+      // WHY: request callbacks (`onToolEvent` / `executeTool`) are functions —
+      // they do not survive structuredClone. Pick the serializable fields, then
+      // re-attach the engine-level tool callback; hosts bind `executeTool` themselves.
+      const request = structuredClone({
+        messages: input.request.messages,
+        input: input.request.input,
+        template: input.request.template,
+        systemPromptTemplate: input.request.systemPromptTemplate,
+        tools: input.request.tools,
+      }) as ChatStreamRequest;
+      return store.get(aiRuntimeAtom).chat(
+        input.identity.profileId,
+        // WHY: attach only when the run lists tools — a tool-less request
+        // stays identical to the pre-tool path.
+        request.tools?.length ? { ...request, onToolEvent } : request,
+        onChunk,
+        signal,
+        requestId,
+      );
     },
     executeGenerate: async (input, onCard, signal) => {
       const template = input.identity.template;

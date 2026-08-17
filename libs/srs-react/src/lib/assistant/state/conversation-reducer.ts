@@ -24,6 +24,21 @@ export type RunTerminationReason = "user" | "app_shutdown" | "crash_recovery";
 
 export type InterruptedReason = Exclude<RunTerminationReason, "user">;
 
+export type ToolCallStatus = "running" | "success" | "error";
+
+/**
+ * Tool activity recorded on the run — mirrors `cards`/`cardStatuses`, not
+ * message parts, because `updateAssistantText` replaces message parts wholesale.
+ */
+export type RunToolCall = {
+  id: string;
+  name: string;
+  input: unknown;
+  status: ToolCallStatus;
+  output?: unknown;
+  error?: unknown;
+};
+
 export type GenerationRun = {
   id: string;
   mode: AIChatMode;
@@ -32,6 +47,10 @@ export type GenerationRun = {
   reason?: RunTerminationReason;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
+  // WHY: optional until the persistence schema validates tool calls — restored
+  // runs keep no tool history in the interim; runs created live always carry
+  // the field (`makeRun` initializes it).
+  toolCalls?: RunToolCall[];
   templateFields: TemplateFields | null;
   error?: { message: string };
   startedAt: Date;
@@ -93,6 +112,8 @@ const actions = {
   rollbackSubmitTurn,
   addCard,
   setCardStatus,
+  addToolCall,
+  setToolCallResult,
   completeRun,
   runFailed,
   cancelRun,
@@ -137,6 +158,7 @@ function makeRun(
     status: "streaming",
     cards: [],
     cardStatuses: {},
+    toolCalls: [],
     templateFields: templateFields ?? null,
     startedAt: new Date(),
     elapsedSeconds: null,
@@ -221,6 +243,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.reason = undefined;
     run.cards = [];
     run.cardStatuses = {};
+    run.toolCalls = [];
     run.templateFields = event.templateFields;
     run.startedAt = new Date();
     run.elapsedSeconds = null;
@@ -387,6 +410,37 @@ type SetCardStatusPayload = { runId: string; index: number; status: CardStatus }
 function setCardStatus(draft: ConversationReducerState, payload: SetCardStatusPayload) {
   const run = draft.runs[payload.runId];
   if (run) run.cardStatuses[payload.index] = payload.status;
+}
+
+type AddToolCallPayload = { runId: string; call: Pick<RunToolCall, "id" | "name" | "input"> };
+
+// WHY: duplicate ids are skipped idempotently — a provider replaying a tool
+// call must not double-record it on the run.
+function addToolCall(draft: ConversationReducerState, payload: AddToolCallPayload) {
+  const run = draft.runs[payload.runId];
+  if (!run) return;
+  // WHY: runs restored before persistence carried the field lack the array.
+  if (!run.toolCalls) run.toolCalls = [];
+  if (run.toolCalls.some((call) => call.id === payload.call.id)) return;
+  run.toolCalls.push({ ...payload.call, status: "running" });
+}
+
+type SetToolCallResultPayload = { runId: string; callId: string; output?: unknown; error?: unknown };
+
+// WHY: an unmatched callId is a no-op — a result racing a restart-cleared run
+// must not resurrect tool traffic.
+function setToolCallResult(draft: ConversationReducerState, payload: SetToolCallResultPayload) {
+  const run = draft.runs[payload.runId];
+  if (!run) return;
+  const call = run.toolCalls?.find((entry) => entry.id === payload.callId);
+  if (!call) return;
+  if (payload.error !== undefined) {
+    call.status = "error";
+    call.error = payload.error;
+    return;
+  }
+  call.status = "success";
+  call.output = payload.output;
 }
 
 type RunIdPayload = { runId: string };

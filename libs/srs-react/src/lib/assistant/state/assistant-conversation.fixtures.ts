@@ -10,6 +10,7 @@ export function makeRun(id: string, status: GenerationRun["status"]): Generation
     status,
     cards: [],
     cardStatuses: {},
+    toolCalls: [],
     templateFields: null,
     startedAt: new Date(1),
     elapsedSeconds: status === "streaming" ? null : 1,

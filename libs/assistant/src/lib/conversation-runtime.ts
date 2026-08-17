@@ -1,4 +1,4 @@
-import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
@@ -236,6 +236,11 @@ export function createConversationRuntime(
             const onChunk = (chunk: string) => {
               if (!controller.signal.aborted) onValue(chunk);
             };
+            // WHY: same abort gate as text — a cancel mid-tool must not record
+            // partial tool traffic on the run.
+            const onToolEvent = (event: AssistantToolEvent) => {
+              if (!controller.signal.aborted) onValue(event);
+            };
             const usage = await transports.executionPort.executeChat(
               {
                 kind: "chat",
@@ -245,6 +250,7 @@ export function createConversationRuntime(
                 request: req,
               },
               onChunk,
+              onToolEvent,
               controller.signal,
             );
             return { streamResult: "success" as const, usage: usage ?? null };
@@ -272,7 +278,22 @@ export function createConversationRuntime(
           }
         },
         initial: "",
-        onValue: (text, chunk) => {
+        onValue: (text: string, chunk: string | AssistantToolEvent) => {
+          // WHY: tool traffic records on the run only — it never enters the
+          // accumulated text that becomes follow-up request history
+          // (card-outputs precedent).
+          if (typeof chunk !== "string") {
+            emit({
+              type: "runChunk",
+              conversationId,
+              runId,
+              chunk,
+            });
+            // WHY: tool arrivals must dirty the originating conversation, like
+            // card arrivals, so streaming checkpoints save A while viewing B.
+            callbacks.touch(conversationId);
+            return text;
+          }
           const currentText = text + chunk;
           emit({
             type: "runChunk",

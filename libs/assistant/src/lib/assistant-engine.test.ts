@@ -1,4 +1,4 @@
-import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssistantDuplicateRunError, AssistantEngineClosedError, createAssistantEngine } from "./assistant-engine";
 import type {
@@ -13,6 +13,7 @@ import type { CardGenerationStreamRequest } from "./card-generation";
 type TestChatTransport = (
   request: AssistantChatExecutionInput["request"],
   onChunk: (chunk: string) => void,
+  onToolEvent: (event: AssistantToolEvent) => void,
   signal: AbortSignal,
 ) => Promise<StreamUsage | undefined>;
 
@@ -41,7 +42,8 @@ function portFromGenerators(
   streamGenerator: TestGenerateTransport,
 ): AssistantExecutionPort {
   return {
-    executeChat: (input, onChunk, signal) => chatStreamGenerator(input.request, onChunk, signal),
+    executeChat: (input, onChunk, onToolEvent, signal) =>
+      chatStreamGenerator(input.request, onChunk, onToolEvent, signal),
     executeGenerate: (input, onCard, signal) => streamGenerator(input.request, onCard, signal),
   };
 }
@@ -125,7 +127,7 @@ describe("createAssistantEngine", () => {
   it("dispatch cancel aborts only the targeted run", async () => {
     const signals: AbortSignal[] = [];
 
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       signals.push(signal);
       await holdUntilAborted(signal);
       return undefined;
@@ -173,7 +175,7 @@ describe("createAssistantEngine", () => {
     const signals: AbortSignal[] = [];
     const interrupted: string[] = [];
 
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       signals.push(signal);
       await holdUntilAborted(signal);
       return undefined;
@@ -508,7 +510,7 @@ describe("createAssistantEngine", () => {
     const signals: AbortSignal[] = [];
     let providerCalls = 0;
 
-    chatStreamGenerator.mockImplementation(async (_req, onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, onChunk, _onToolEvent, signal) => {
       providerCalls += 1;
       signals.push(signal);
       if (providerCalls === 1) {
@@ -571,7 +573,7 @@ describe("createAssistantEngine", () => {
     const signals: AbortSignal[] = [];
     const startedRunIds: string[] = [];
 
-    chatStreamGenerator.mockImplementation(async (req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (req, _onChunk, _onToolEvent, signal) => {
       const label = (req as { label?: string }).label ?? "unknown";
       startedRunIds.push(label);
       signals.push(signal);
@@ -641,7 +643,7 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
 
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       await holdUntilAborted(signal);
       return undefined;
     });
@@ -676,7 +678,7 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
 
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       signals.push(signal);
       await holdUntilAborted(signal);
       return undefined;
@@ -840,7 +842,7 @@ describe("createAssistantEngine", () => {
 
   it("classifies requested user cancel AbortError as cancelRun", async () => {
     const signals: AbortSignal[] = [];
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       signals.push(signal);
       await holdUntilAborted(signal);
       return undefined;
@@ -879,7 +881,7 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
 
-    chatStreamGenerator.mockImplementation(async (_req, _onChunk, signal) => {
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
       await holdUntilAborted(signal);
       return undefined;
     });

@@ -59,6 +59,36 @@ describe("assistantEventToReducerAction", () => {
     ).toEqual(["setUsage", { runId: "r1", usage }]);
   });
 
+  it("maps toolCall/toolResult chunks to tool actions", () => {
+    const call = { id: "call-1", name: "list_decks", input: {} };
+    expect(
+      assistantEventToReducerAction({
+        type: "runChunk",
+        conversationId: "c1",
+        runId: "r1",
+        chunk: { kind: "toolCall", call },
+      }),
+    ).toEqual(["addToolCall", { runId: "r1", call }]);
+
+    expect(
+      assistantEventToReducerAction({
+        type: "runChunk",
+        conversationId: "c1",
+        runId: "r1",
+        chunk: { kind: "toolResult", callId: "call-1", output: { decks: [] } },
+      }),
+    ).toEqual(["setToolCallResult", { runId: "r1", callId: "call-1", output: { decks: [] } }]);
+
+    expect(
+      assistantEventToReducerAction({
+        type: "runChunk",
+        conversationId: "c1",
+        runId: "r1",
+        chunk: { kind: "toolResult", callId: "call-1", error: "boom" },
+      }),
+    ).toEqual(["setToolCallResult", { runId: "r1", callId: "call-1", error: "boom" }]);
+  });
+
   it("maps runTerminated outcomes", () => {
     expect(
       assistantEventToReducerAction({

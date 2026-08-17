@@ -1,4 +1,10 @@
-import type { CardGenerationFields, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type {
+  AssistantToolEvent,
+  CardGenerationFields,
+  ChatStreamRequest,
+  GeneratedCard,
+  StreamUsage,
+} from "@koloda/ai";
 import type { CardGenerationStreamRequest } from "./card-generation";
 
 /** Recursively read-only data safe to retain across an asynchronous execution queue. */
@@ -56,6 +62,7 @@ export type AssistantExecutionPort = {
   executeChat: (
     input: AssistantChatExecutionInput,
     onChunk: (chunk: string) => void,
+    onToolEvent: (event: AssistantToolEvent) => void,
     signal: AbortSignal,
   ) => Promise<StreamUsage | undefined>;
   executeGenerate: (

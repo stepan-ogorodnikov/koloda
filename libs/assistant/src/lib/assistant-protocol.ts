@@ -1,4 +1,4 @@
-import type { AIChatMode, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import type { CardGenerationStreamRequest } from "./card-generation";
@@ -67,10 +67,13 @@ export type RunStartSnapshot = {
   dataAccess?: RunDataAccessSnapshot;
 };
 
+// WHY: the tool kinds are `@koloda/ai`'s AssistantToolEvent verbatim so hosts
+// forward streamed tool activity into run chunks without adaptation.
 export type RunChunk =
   | { kind: "assistantText"; text: string }
   | { kind: "card"; card: GeneratedCard }
-  | { kind: "usage"; usage: StreamUsage };
+  | { kind: "usage"; usage: StreamUsage }
+  | AssistantToolEvent;
 
 export type RunOutcome =
   | { status: "success" }

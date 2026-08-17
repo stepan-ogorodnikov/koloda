@@ -120,6 +120,80 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("addToolCall", () => {
+    it("appends a tool call with running status", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      expect(state.runs["r1"].toolCalls).toEqual([{ id: "call-1", name: "list_decks", input: {}, status: "running" }]);
+    });
+
+    it("skips a duplicate tool call id idempotently", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+
+      expect(state.runs["r1"].toolCalls).toHaveLength(1);
+    });
+  });
+
+  describe("setToolCallResult", () => {
+    it("resolves a running tool call to success with its output", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", output: { decks: [] } },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        id: "call-1",
+        status: "success",
+        output: { decks: [] },
+      });
+    });
+
+    it("resolves a running tool call to error with the error payload", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", error: "Deck not found: 9" },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        id: "call-1",
+        status: "error",
+        error: "Deck not found: 9",
+      });
+    });
+
+    it("no-ops on an unmatched callId", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      const next = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "missing", output: {} }]);
+
+      expect(next).toEqual(state);
+    });
+  });
+
   describe("completeRun", () => {
     it("sets status to success, computes elapsedSeconds, and clears activeRunId", () => {
       vi.useFakeTimers();
@@ -334,6 +408,24 @@ describe("conversationReducer", () => {
       expect(state.activeRunId).toBe("r1");
 
       vi.useRealTimers();
+    });
+
+    it("clears recorded tool calls on restart", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", output: { decks: [] } },
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+
+      // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
+      expect(state.runs["r1"].toolCalls).toEqual([]);
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {

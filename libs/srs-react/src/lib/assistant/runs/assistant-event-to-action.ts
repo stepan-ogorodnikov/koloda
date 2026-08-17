@@ -22,6 +22,10 @@ export function assistantEventToReducerAction(event: AssistantEvent): Conversati
       const { chunk, runId } = event;
       if (chunk.kind === "assistantText") return ["updateAssistantText", { runId, text: chunk.text }];
       if (chunk.kind === "card") return ["addCard", { runId, card: chunk.card }];
+      if (chunk.kind === "toolCall") return ["addToolCall", { runId, call: chunk.call }];
+      if (chunk.kind === "toolResult") {
+        return ["setToolCallResult", { runId, callId: chunk.callId, output: chunk.output, error: chunk.error }];
+      }
       return ["setUsage", { runId, usage: chunk.usage }];
     }
     case "runTerminated": {

@@ -1,4 +1,4 @@
-import type { ChatStreamRequest } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamRequest } from "@koloda/ai";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionPort } from "./assistant-execution-port";
@@ -150,5 +150,116 @@ describe("createConversationRuntime command acceptance", () => {
     expect(() => runtime.executeChatRun("run-1", {} as ChatStreamRequest, TEST_EXECUTION)).toThrow(
       AssistantEngineClosedError,
     );
+  });
+});
+
+describe("createConversationRuntime chat tool events", () => {
+  it("forwards tool events as runChunk emissions and drops them after abort", async () => {
+    const events: AssistantEvent[] = [];
+    const touch = vi.fn();
+    const registry = createRunControllerRegistry();
+    const executionPort: AssistantExecutionPort = {
+      executeChat: async (_input, onChunk, onToolEvent, _signal) => {
+        onChunk("Hel");
+        onToolEvent({ kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } });
+        // WHY: abort mid-stream like a user cancel — everything after the gate
+        // (text and tool traffic alike) must not be recorded.
+        registry.cancel("run-tool", "user");
+        onChunk("lo");
+        onToolEvent({ kind: "toolResult", callId: "call-1", output: { decks: [] } });
+        throw new DOMException("Aborted", "AbortError");
+      },
+      executeGenerate: vi.fn(async () => undefined),
+    };
+
+    const runtime = createConversationRuntime(
+      "conv-a",
+      {
+        emit: (event) => events.push(event),
+        markReadIfCurrent: vi.fn(),
+        touch,
+        isRunStreaming: () => true,
+        readConversationState: () => ({ runs: {} }),
+      },
+      { executionPort },
+      registry,
+    );
+
+    await runtime.executeChatRun("run-tool", {} as ChatStreamRequest, TEST_EXECUTION);
+
+    expect(events).toContainEqual({
+      type: "runChunk",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      chunk: { kind: "assistantText", text: "Hel" },
+    });
+    expect(events).toContainEqual({
+      type: "runChunk",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      chunk: { kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } },
+    });
+    // WHY: post-abort text and tool results must never reach the run record.
+    expect(events).not.toContainEqual(
+      expect.objectContaining({ chunk: { kind: "toolResult", callId: "call-1", output: { decks: [] } } }),
+    );
+    expect(events).not.toContainEqual(expect.objectContaining({ chunk: { kind: "assistantText", text: "Hello" } }));
+    expect(events).toContainEqual({
+      type: "runTerminated",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      outcome: { status: "canceled", reason: "user" },
+    });
+    expect(touch).toHaveBeenCalledWith("conv-a");
+  });
+
+  it("forwards tool results untouched on success", async () => {
+    const events: AssistantEvent[] = [];
+    const executionPort: AssistantExecutionPort = {
+      executeChat: async (_input, _onChunk, onToolEvent) => {
+        const call: AssistantToolEvent = {
+          kind: "toolCall",
+          call: { id: "call-1", name: "get_deck_cards", input: { deckId: 3 } },
+        };
+        onToolEvent(call);
+        onToolEvent({ kind: "toolResult", callId: "call-1", error: "Deck not found: 3" });
+        return undefined;
+      },
+      executeGenerate: vi.fn(async () => undefined),
+    };
+
+    const runtime = createConversationRuntime(
+      "conv-a",
+      {
+        emit: (event) => events.push(event),
+        markReadIfCurrent: vi.fn(),
+        touch: vi.fn(),
+        isRunStreaming: () => true,
+        readConversationState: () => ({ runs: {} }),
+      },
+      { executionPort },
+      createRunControllerRegistry(),
+    );
+
+    await runtime.executeChatRun("run-tool", {} as ChatStreamRequest, TEST_EXECUTION);
+
+    expect(events).toContainEqual({
+      type: "runChunk",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      chunk: { kind: "toolCall", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 3 } } },
+    });
+    expect(events).toContainEqual({
+      type: "runChunk",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      chunk: { kind: "toolResult", callId: "call-1", error: "Deck not found: 3" },
+    });
+    expect(events).toContainEqual({
+      type: "runTerminated",
+      conversationId: "conv-a",
+      runId: "run-tool",
+      outcome: { status: "success" },
+    });
   });
 });
