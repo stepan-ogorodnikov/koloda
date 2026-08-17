@@ -47,9 +47,9 @@ export type GenerationRun = {
   reason?: RunTerminationReason;
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
-  // WHY: optional until the persistence schema validates tool calls — restored
-  // runs keep no tool history in the interim; runs created live always carry
-  // the field (`makeRun` initializes it).
+  // WHY: optional so rows saved before tool activity restore unchanged; live
+  // runs always initialize the field (`makeRun`). When present, persistence
+  // validates the array — a malformed payload fails the row as corrupt.
   toolCalls?: RunToolCall[];
   templateFields: TemplateFields | null;
   error?: { message: string };

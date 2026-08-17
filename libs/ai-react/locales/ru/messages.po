@@ -111,6 +111,36 @@ msgstr "К последнему сообщению"
 msgid "ai.chat.settings.toggle"
 msgstr "Настройки"
 
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:113
+msgid "ai.chat.tool-activity.cards {0}"
+msgstr "{0} карт"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:109
+msgid "ai.chat.tool-activity.decks {0}"
+msgstr "{0} колод"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:65
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:80
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
+msgid "ai.chat.tool-activity.failed"
+msgstr "ошибка"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
+msgid "ai.chat.tool-activity.input"
+msgstr "Ввод"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:29
+msgid "ai.chat.tool-activity.label"
+msgstr "Вызовы инструментов"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:79
+msgid "ai.chat.tool-activity.output"
+msgstr "Результат"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:58
+msgid "ai.chat.tool-activity.running"
+msgstr "Выполняется"
+
 #: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Интеллект"

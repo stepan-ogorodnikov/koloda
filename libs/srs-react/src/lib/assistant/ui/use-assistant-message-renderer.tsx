@@ -1,5 +1,5 @@
 import { getTextMessageContent } from "@koloda/ai";
-import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import { AIChatMessageLayout, AIChatMessageStatus, AIToolActivity } from "@koloda/ai-react";
 import type { Template, TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
@@ -160,10 +160,20 @@ function renderChatMessage(options: {
   const { message, content, run, runId, isTail, handleRetry } = options;
   const text = getTextMessageContent(message);
   const copyAction = text ? <CopyMessageButton text={text} /> : null;
+  // WHY: tool traffic lives on the run, not message parts — updateAssistantText
+  // replaces parts wholesale, so the widget must read `run.toolCalls`.
+  const toolActivity = run.toolCalls && run.toolCalls.length > 0 ? <AIToolActivity calls={run.toolCalls} /> : null;
 
   if (run.status === "streaming") {
+    if (toolActivity) {
+      return (
+        <div className="group flex flex-col gap-2 self-start w-full">
+          {toolActivity}
+          {text ? content : null}
+        </div>
+      );
+    }
     if (text) return content;
-
     return (
       <AIChatMessageLayout role="assistant">
         <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
@@ -174,6 +184,7 @@ function renderChatMessage(options: {
   if (run.status === "success" && run.elapsedSeconds !== null) {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
+        {toolActivity}
         {content}
         <AIChatMessageStatus
           state="success"
@@ -188,6 +199,7 @@ function renderChatMessage(options: {
   if (run.status === "canceled") {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
+        {toolActivity}
         {content}
         <AIChatMessageStatus
           state="canceled"
@@ -203,6 +215,7 @@ function renderChatMessage(options: {
   if (run.status === "interrupted") {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
+        {toolActivity}
         {content}
         <AIChatMessageStatus
           state="interrupted"
@@ -218,6 +231,7 @@ function renderChatMessage(options: {
   if (run.status === "failed") {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
+        {toolActivity}
         {content}
         <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} actions={copyAction} />
       </div>

@@ -510,6 +510,114 @@ describe("coerceConversationState", () => {
     });
   });
 
+  describe("run toolCalls coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "chat",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    const fullToolCalls = [
+      {
+        id: "call-1",
+        name: "list_decks",
+        input: {},
+        status: "success" as const,
+        output: { decks: [{ deckId: 3, title: "Spanish", cardCount: 12 }] },
+      },
+      {
+        id: "call-2",
+        name: "get_deck_cards",
+        input: { deckId: 3 },
+        status: "error" as const,
+        error: { message: "deck missing" },
+      },
+    ];
+
+    it("keeps toolCalls intact across a save→restore roundtrip (JSON wire shape)", () => {
+      const state: ConversationReducerState = {
+        ...initialConversationState,
+        id: "conv-1",
+        runs: {
+          r1: {
+            id: "r1",
+            mode: "chat",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1000),
+            elapsedSeconds: 1,
+            toolCalls: fullToolCalls,
+          },
+        },
+      };
+      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+      const restored = expectOk(persisted);
+      expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
+      expect(restored.runs["r1"]?.toolCalls).toEqual(fullToolCalls);
+    });
+
+    it("restores rows saved before tool activity unchanged (no toolCalls field)", () => {
+      const coerced = expectOk(makeStateWithRun(baseRun()));
+      expect(coerced.runs["r1"].toolCalls).toBeUndefined();
+    });
+
+    it("rejects a malformed toolCalls value as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ toolCalls: "yes" }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ toolCalls: null }))).length).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "pending" }],
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(makeStateWithRun(baseRun({ toolCalls: [{ name: "list_decks", input: {}, status: "success" }] })))
+          .length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(baseRun({ toolCalls: [{ id: 1, name: "list_decks", input: {}, status: "success" }] })),
+        ).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("strips unknown extra keys on a tool call instead of failing the row", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "running", extra: true }],
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.toolCalls).toEqual([
+        { id: "call-1", name: "list_decks", input: {}, status: "running" },
+      ]);
+    });
+  });
+
   // WHY: persisted rows are a compat boundary.
   // These pin the three behaviors a naive Zod port loses: `revertState` is
   // ignored even when present, an unparseable *present* `updatedAt` fails the
@@ -775,6 +883,36 @@ describe("normalizeRestoredConversation", () => {
     expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply" }]);
     expect(next.activeRunId).toBeNull();
     expect(next.dismissedRunErrorId).toBeNull();
+  });
+
+  it("marks in-flight toolCalls as error when converting a streaming run", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          mode: "chat",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [
+            { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
+            { id: "call-2", name: "get_deck_cards", input: { deckId: 3 }, status: "running" },
+          ],
+          templateFields: null,
+          startedAt: new Date(5000),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+    expect(next.runs["r1"]?.toolCalls).toEqual([
+      { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
+      { id: "call-2", name: "get_deck_cards", input: { deckId: 3 }, status: "error" },
+    ]);
   });
 
   it("preserves failed runs and assistant message parts, clearing dismissedRunErrorId", () => {

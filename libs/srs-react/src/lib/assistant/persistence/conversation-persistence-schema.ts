@@ -177,6 +177,22 @@ const dataAccessSnapshotField = z.object({
   manifest: dataAccessManifestField,
 });
 
+const toolCallStatusField = z.enum(["running", "success", "error"]);
+
+/**
+ * Tool activity recorded on the run. Shape mirrors `RunToolCall` — unknown
+ * extra keys are stripped; a present-but-invalid array fails the whole row
+ * as corrupt (same optional-field policy as `dataAccess`).
+ */
+const toolCallField = z.object({
+  id: z.string(),
+  name: z.string(),
+  input: z.unknown(),
+  status: toolCallStatusField,
+  output: z.unknown().optional(),
+  error: z.unknown().optional(),
+});
+
 const runSchema: z.ZodType<GenerationRun> = z
   .object({
     id: z.string(),
@@ -199,6 +215,10 @@ const runSchema: z.ZodType<GenerationRun> = z
     // when present it must validate — a malformed manifest fails the row as
     // corrupt rather than silently dropping the snapshot from the run.
     dataAccess: dataAccessSnapshotField.optional(),
+    // INVARIANT: optional so rows saved before tool activity restore unchanged;
+    // when present it must validate — a malformed array fails the row as
+    // corrupt rather than silently dropping tool history from the run.
+    toolCalls: z.array(toolCallField).optional(),
   })
   .superRefine((run, ctx) => {
     // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;
@@ -249,6 +269,7 @@ const runSchema: z.ZodType<GenerationRun> = z
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
       dataAccess: run.dataAccess,
+      toolCalls: run.toolCalls,
     };
   });
 

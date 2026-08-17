@@ -12,6 +12,7 @@ export * from "./lib/ai-chat-prompt-input";
 export * from "./lib/ai-chat-prompt-panel";
 export * from "./lib/ai-chat-settings-toggle";
 export * from "./lib/ai-chat-submit";
+export * from "./lib/ai-tool-activity";
 export * from "./lib/ai-model-parameters";
 export * from "./lib/ai-model-profile-key";
 export * from "./lib/ai-model-profile-picker";

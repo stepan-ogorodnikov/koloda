@@ -32,13 +32,16 @@ vi.mock("@koloda/ai-react", () => ({
       ) : null}
     </div>
   ),
+  AIToolActivity: ({ calls }: { calls: Array<{ name: string }> }) => (
+    <div data-testid="tool-activity">{calls.map((entry) => entry.name).join(",")}</div>
+  ),
 }));
 
 vi.mock("./copy-message-button", () => ({
   CopyMessageButton: () => null,
 }));
 
-function mountRenderer(runs: Record<string, GenerationRun>) {
+function mountRenderer(runs: Record<string, GenerationRun>, options: { assistantText?: string } = {}) {
   const conversationId = "c1";
   const runId = "r1";
   const store = createStore();
@@ -52,7 +55,7 @@ function mountRenderer(runs: Record<string, GenerationRun>) {
           createdAt: "2026-07-01T11:00:00.000Z",
           runId,
         }),
-        createTextMessage(assistantMessageId(runId), "assistant", "Hello", {
+        createTextMessage(assistantMessageId(runId), "assistant", options.assistantText ?? "Hello", {
           kind: "chat-text",
           runId,
         }),
@@ -93,5 +96,43 @@ describe("useAssistantMessageRenderer", () => {
     expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
     screen.getByRole("button", { name: "retry" }).click();
     expect(handleRetry).toHaveBeenCalledWith(runId);
+  });
+
+  it("renders tool activity on a streaming chat message", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "running" as const }],
+    };
+    mountRenderer({ r1: run }, { assistantText: "" });
+    expect(screen.getByTestId("tool-activity").textContent).toBe("list_decks");
+    expect(screen.queryByTestId("status-pending")).toBeNull();
+  });
+
+  it("renders tool activity above streaming text", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success" as const, output: { decks: [] } }],
+    };
+    mountRenderer({ r1: run });
+    expect(screen.getByTestId("tool-activity").textContent).toBe("list_decks");
+    expect(screen.getByText("Hello")).toBeTruthy();
+  });
+
+  it("renders tool activity on a completed chat message", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      toolCalls: [
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "success" as const,
+          output: { decks: [{ deckId: 1 }] },
+        },
+      ],
+    };
+    mountRenderer({ r1: run });
+    expect(screen.getByTestId("tool-activity").textContent).toBe("list_decks");
+    expect(screen.getByTestId("status-success")).toBeTruthy();
   });
 });

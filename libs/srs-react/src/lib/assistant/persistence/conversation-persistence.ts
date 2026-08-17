@@ -70,6 +70,18 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
       normalizedAny = true;
     }
 
+    // WHY: a crash-restored run is terminal; leaving toolCalls as `running`
+    // would keep the activity widget spinning after reload.
+    const toolCalls = nextRun.toolCalls;
+    if (toolCalls?.some((entry) => entry.status === "running")) {
+      nextRun = {
+        ...nextRun,
+        toolCalls: toolCalls.map((entry) => (entry.status === "running" ? { ...entry, status: "error" } : entry)),
+      };
+      runChanged = true;
+      normalizedAny = true;
+    }
+
     if (runChanged) {
       runs[runId] = nextRun;
     } else {

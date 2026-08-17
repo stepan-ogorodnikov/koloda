@@ -111,6 +111,36 @@ msgstr "Jump to latest"
 msgid "ai.chat.settings.toggle"
 msgstr "Settings"
 
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:113
+msgid "ai.chat.tool-activity.cards {0}"
+msgstr "{0} cards"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:109
+msgid "ai.chat.tool-activity.decks {0}"
+msgstr "{0} decks"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:65
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:80
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
+msgid "ai.chat.tool-activity.failed"
+msgstr "failed"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
+msgid "ai.chat.tool-activity.input"
+msgstr "Input"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:29
+msgid "ai.chat.tool-activity.label"
+msgstr "Tool activity"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:79
+msgid "ai.chat.tool-activity.output"
+msgstr "Output"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:58
+msgid "ai.chat.tool-activity.running"
+msgstr "Running"
+
 #: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
 msgid "ai.model-parameters.reasoning-effort.label"
 msgstr "Reasoning effort"
