@@ -75,23 +75,29 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
-        // WHY: Retry replays the run's submit-time snapshot unchanged — deck
-        // edits or deletions since submit must not leak into the retried
-        // request. Runs without one (restored pre-feature conversations)
-        // resolve fresh with the original run's mode and the conversation's
-        // deck, mirroring submit. Like handleGenerate, the fallback's await
-        // sits inside the in-flight guard so it cannot re-open the same-tick
-        // double-retry window the guard closes.
-        const dataAccess = currentState.runs[runId]?.dataAccess ?? (await resolveDataAccess(mode, currentState.deckId));
-        const prepared = prepareRunRequest(cfg, mode, promptText, visibleMessages, currentState.runs, dataAccess);
+        // WHY: Cards retry replays the run's submit-time snapshot unchanged —
+        // deck edits since submit must not leak into the retried request.
+        // Pre-feature cards runs without one resolve fresh inside the in-flight
+        // guard. Chat never resolves: tools re-read current data; a stored v1
+        // snapshot stays on the run record as inert metadata.
+        const stored = currentState.runs[runId]?.dataAccess;
+        const dataAccess = mode === "cards" ? (stored ?? (await resolveDataAccess(mode, currentState.deckId))) : stored;
+        const prepared = prepareRunRequest(
+          cfg,
+          mode,
+          promptText,
+          visibleMessages,
+          currentState.runs,
+          mode === "cards" ? dataAccess : undefined,
+        );
         if (!prepared) return;
 
         rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        // The snapshot rides the command so the restart stores it on the run
-        // record — later retries replay it instead of resolving again.
+        // The snapshot rides the command so restart stores it on the run
+        // record — cards later retries replay it; chat keeps inert metadata.
         await dispatchCommand(toRetryCommand(conversationId, runId, mode, prepared, dataAccess));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
@@ -141,11 +147,12 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;
       try {
-        // WHY: Resolve data access exactly once per submit, inside the
-        // in-flight guard — the await would otherwise re-open the same-tick
-        // double-submit window the guard closes. The same snapshot feeds the
-        // request (via prepareRunRequest) and the run record (via submitTurn).
-        const dataAccess = await resolveDataAccess(currentMode, currentState.deckId);
+        // WHY: Cards resolve exactly once per submit, inside the in-flight
+        // guard — the await would otherwise re-open the same-tick double-submit
+        // window. Chat discovers decks/cards via tools and must not store a
+        // new snapshot (old chat snapshots stay inert on restored runs).
+        const dataAccess =
+          currentMode === "cards" ? await resolveDataAccess(currentMode, currentState.deckId) : undefined;
         const prepared = prepareRunRequest(
           cfg,
           currentMode,

@@ -1,3 +1,4 @@
+import { ASSISTANT_TOOL_SPECS } from "@koloda/ai";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import { createTemplate } from "../../../test/test-helpers";
@@ -6,6 +7,8 @@ import { createTextMessage, userMessageId } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
 import type { DataAccessSnapshot } from "./data-access";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
+
+const CHAT_TOOLS = Object.keys(ASSISTANT_TOOL_SPECS);
 
 function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): AssistantConversationConfig {
   return {
@@ -60,7 +63,9 @@ describe("prepareRunRequest", () => {
     expect(prepared!.execution).toEqual({ profileId: "prof-1" });
     expect(prepared!.request).toMatchObject({
       input: { modelId: "model-1", prompt: "hello" },
+      tools: CHAT_TOOLS,
     });
+    expect(prepared!.request).not.toHaveProperty("dataContext");
   });
 
   it("prepares a cards run with template snapshot in execution identity", () => {
@@ -98,11 +103,13 @@ describe("prepareRunRequest — data access", () => {
     },
   };
 
-  it("embeds the resolved context as dataContext on a chat request", () => {
+  it("chat requests carry tool names and ignore a passed snapshot", () => {
     const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {}, dataAccess);
 
     expect(prepared).not.toBeNull();
-    expect(prepared!.request.dataContext).toBe(dataAccess.context);
+    expect(prepared!.request.tools).toEqual(CHAT_TOOLS);
+    expect(prepared!.request.tools).toEqual(["list_decks", "get_deck_cards"]);
+    expect(prepared!.request).not.toHaveProperty("dataContext");
   });
 
   it("embeds the resolved context as dataContext on a cards request", () => {
@@ -120,8 +127,15 @@ describe("prepareRunRequest — data access", () => {
     expect(prepared!.request.dataContext).toBe(dataAccess.context);
   });
 
-  it("omits dataContext when no data access snapshot is passed (retry path)", () => {
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+  it("omits dataContext on cards when no snapshot is passed (retry path)", () => {
+    const template = createTemplate({ id: 42 });
+    const prepared = prepareRunRequest(
+      makeConfig({ template, templateId: 42, deckId: 1 }),
+      "cards",
+      "make cards",
+      [],
+      {},
+    );
 
     expect(prepared).not.toBeNull();
     expect(prepared!.request.dataContext).toBeUndefined();

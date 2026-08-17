@@ -1,3 +1,4 @@
+import { ASSISTANT_TOOL_SPECS } from "@koloda/ai";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "@koloda/assistant";
 import type { AssistantCommand } from "@koloda/assistant";
 import { act, renderHook } from "@testing-library/react";
@@ -18,6 +19,8 @@ import { useRunOrchestration } from "./use-run-orchestration";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
 // retry (no prompt/profile/model/template) never reaches the engine.
+
+const CHAT_TOOLS = Object.keys(ASSISTANT_TOOL_SPECS);
 
 const emptySnapshot: DataAccessSnapshot = { context: "", manifest: { decks: [], writeTarget: null } };
 
@@ -156,6 +159,8 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     expect(command.input.mode).toBe("chat");
     expect(command.input.modelName).toBe("GPT-x");
     expect(command.input.request).toBeTypeOf("object");
+    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
+    expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.execution).toEqual({ profileId: cfg.profileId });
   });
 });
@@ -239,7 +244,7 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({
       type: "submit",
       conversationId: "conv-1",
-      input: { kind: "chat" },
+      input: { kind: "chat", request: { tools: CHAT_TOOLS } },
     });
   });
 });
@@ -283,35 +288,28 @@ describe("useRunOrchestration — data access resolution", () => {
     );
   }
 
-  it("chat submit resolves once with the state mode and deck, embeds the record, and stores it on the run", async () => {
+  it("chat submit passes tool names, does not resolve data access, and does not store a snapshot", async () => {
     seedConversation("conv-1");
-    const record: DataAccessSnapshot = {
-      context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
-      manifest: {
-        decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
-        writeTarget: null,
-      },
-    };
-    const resolveDataAccess = vi.fn(async () => record);
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
 
     const { result } = orchestrate(makeConfig(), resolveDataAccess);
     await act(async () => {
       await result.current.handleGenerate("hello");
     });
 
-    expect(resolveDataAccess).toHaveBeenCalledTimes(1);
-    expect(resolveDataAccess).toHaveBeenCalledWith("chat", null);
+    expect(resolveDataAccess).not.toHaveBeenCalled();
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     const command = dispatchCommand.mock.calls[0]![0] as Extract<AssistantCommand, { type: "submit" }>;
     expect(command.input.kind).toBe("chat");
-    expect(command.input.request.dataContext).toBe(record.context);
+    if (command.input.kind !== "chat") throw new Error("expected chat submit");
+    expect(command.input.request.tools).toEqual(CHAT_TOOLS);
+    expect(command.input.request.tools).toEqual(["list_decks", "get_deck_cards"]);
+    expect(command.input.request).not.toHaveProperty("dataContext");
 
     const runId = readState().activeRunId;
     expect(runId).not.toBeNull();
-    // WHY: identity, not toEqual — the run must store the same snapshot object
-    // the request embedded, not a re-resolved copy.
-    expect(readState().runs[runId!].dataAccess).toBe(record);
+    expect(readState().runs[runId!].dataAccess).toBeUndefined();
   });
 
   it("cards submit resolves with the write-target deck and carries its context", async () => {
@@ -356,8 +354,10 @@ describe("useRunOrchestration — data access resolution", () => {
     expect(readState().runs[runId!].dataAccess).toBe(record);
   });
 
-  it("same-tick double submit resolves once — the in-flight guard covers the resolve await", async () => {
+  it("same-tick double cards submit resolves once — the in-flight guard covers the resolve await", async () => {
     seedConversation("conv-1");
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {
       release = resolve;
@@ -366,10 +366,11 @@ describe("useRunOrchestration — data access resolution", () => {
       await gate;
     });
     const resolveDataAccess = vi.fn(async () => emptySnapshot);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
 
     const { result } = renderHook(() =>
       useRunOrchestration({
-        configRef: { current: makeConfig() },
+        configRef: { current: cfg },
         readState,
         dispatch,
         dispatchLocal: vi.fn(),
@@ -449,7 +450,7 @@ describe("useRunOrchestration — retry data access replay", () => {
     return dispatchCommand.mock.calls[index]![0] as Extract<AssistantCommand, { type: "retry" }>;
   }
 
-  it("retry with a stored snapshot does not resolve and replays the exact stored record", async () => {
+  it("chat retry with a stored snapshot is inert: no resolve, no request embed, still sends tools", async () => {
     seedConversation("conv-1");
     const stored: DataAccessSnapshot = {
       context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
@@ -467,8 +468,36 @@ describe("useRunOrchestration — retry data access replay", () => {
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     const command = retryCommand();
-    // WHY: identity, not toEqual — the retry must send the run's stored
-    // snapshot object unchanged, never a re-resolved or copied record.
+    // WHY: identity — the stored v1 snapshot stays on the run/command as
+    // inert metadata; it must not be copied or re-resolved.
+    expect(command.input.dataAccess).toBe(stored);
+    expect(command.input.request).not.toHaveProperty("dataContext");
+    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
+    expect(readState().runs["run-1"].dataAccess).toBe(stored);
+  });
+
+  it("cards retry with a stored snapshot does not resolve and replays the exact stored record", async () => {
+    seedConversation("conv-1");
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
+    const stored: DataAccessSnapshot = {
+      context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
+      manifest: { decks: [{ deckId: 7, title: "Old", cardCount: 1, templateTitle: "Default" }], writeTarget: null },
+    };
+    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
+    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
+    dispatch(["startRun", { runId: "run-1", mode: "cards", dataAccess: stored }]);
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
+
+    const { result } = orchestrate(cfg, resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).not.toHaveBeenCalled();
+    const command = retryCommand();
     expect(command.input.dataAccess).toBe(stored);
     expect(command.input.request.dataContext).toBe(stored.context);
     expect(readState().runs["run-1"].dataAccess).toBe(stored);
@@ -504,16 +533,41 @@ describe("useRunOrchestration — retry data access replay", () => {
     expect(command.input.request.dataContext).toBe(resolved.context);
   });
 
-  it("a second retry after the fallback snapshot was stored does not resolve again", async () => {
+  it("chat retry without a snapshot does not resolve (no fallback) and still sends tools", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
+    const resolveDataAccess = vi.fn(async () => emptySnapshot);
+
+    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(resolveDataAccess).not.toHaveBeenCalled();
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = retryCommand();
+    expect(command.input.dataAccess).toBeUndefined();
+    expect(command.input.request).not.toHaveProperty("dataContext");
+    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
+  });
+
+  it("a second cards retry after the fallback snapshot was stored does not resolve again", async () => {
+    seedConversation("conv-1");
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
+    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
+    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
+    dispatch(["startRun", { runId: "run-1", mode: "cards" }]);
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
+
     const resolved: DataAccessSnapshot = {
       context: "User decks:\n- Deck: Late resolve — 1 card — Template: Default (Front, Back)",
       manifest: { decks: [], writeTarget: null },
     };
     const resolveDataAccess = vi.fn(async () => resolved);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
 
-    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    const { result } = orchestrate(cfg, resolveDataAccess);
     await act(async () => {
       await result.current.handleRetry("run-1");
     });
@@ -523,7 +577,7 @@ describe("useRunOrchestration — retry data access replay", () => {
     // restarts the run and stores the snapshot the command carried.
     dispatch([
       "restartRun",
-      { runId: "run-1", templateFields: null, mode: "chat", modelName: "GPT-x", dataAccess: resolved },
+      { runId: "run-1", templateFields: null, mode: "cards", modelName: "GPT-x", dataAccess: resolved },
     ]);
     expect(readState().runs["run-1"].dataAccess).toBe(resolved);
     dispatch(["runFailed", { runId: "run-1", error: { message: "boom again" } }]);
@@ -535,14 +589,21 @@ describe("useRunOrchestration — retry data access replay", () => {
     expect(resolveDataAccess).toHaveBeenCalledTimes(1);
     expect(dispatchCommand).toHaveBeenCalledTimes(2);
     expect(retryCommand(1).input.dataAccess).toBe(resolved);
+    expect(retryCommand(1).input.request.dataContext).toBe(resolved.context);
   });
 
-  it("a replayed empty-context snapshot keeps dataContext absent from the retry request", async () => {
+  it("a replayed empty-context cards snapshot keeps dataContext absent from the retry request", async () => {
     seedConversation("conv-1");
-    addFailedChatRun("run-1", emptySnapshot);
+    dispatch(["setMode", { mode: "cards" }]);
+    dispatch(["setDeck", { deckId: 7 }]);
+    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
+    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
+    dispatch(["startRun", { runId: "run-1", mode: "cards", dataAccess: emptySnapshot }]);
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
     const resolveDataAccess = vi.fn(async () => emptySnapshot);
+    const cfg = makeConfig({ template: createTemplate({ id: 3 }), templateId: 3, deckId: 7 });
 
-    const { result } = orchestrate(makeConfig(), resolveDataAccess);
+    const { result } = orchestrate(cfg, resolveDataAccess);
     await act(async () => {
       await result.current.handleRetry("run-1");
     });

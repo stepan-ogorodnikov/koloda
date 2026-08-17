@@ -40,8 +40,9 @@ export function createExecutionIdentity(
  * stream. Centralizing the guard stack here is what lets `handleRetry`
  * execute only after validation.
  *
- * `dataAccess` is the submit-time snapshot resolved by React land; this
- * framework-free prep only embeds it into the request — it never resolves.
+ * `dataAccess` is the cards submit-time snapshot resolved by React land;
+ * this framework-free prep only embeds it into the cards request — it
+ * never resolves, and chat requests ignore it (tools, not injection).
  */
 export function prepareRunRequest(
   cfg: AssistantConversationConfig,
@@ -90,10 +91,10 @@ export function toSubmitCommand(conversationId: string, runId: string, prepared:
 }
 
 /**
- * Build the typed engine retry command from a prepared run. `dataAccess` is
- * the snapshot the retry replays (stored on the run, or freshly resolved for
- * a pre-feature run) — it rides the command so the restart stores it on the
- * run record, mirroring how `submitTurn` stores the submit-time snapshot.
+ * Build the typed engine retry command from a prepared run. `dataAccess` rides
+ * the command so restart stores it on the run record: cards replay the
+ * snapshot into the request; chat keeps a stored v1 snapshot as inert
+ * metadata (never embedded — ChatStreamRequest has no dataContext).
  */
 export function toRetryCommand(
   conversationId: string,
