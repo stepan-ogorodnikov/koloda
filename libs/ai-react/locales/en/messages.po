@@ -13,6 +13,14 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:150
+msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
+msgstr "{cardCount, plural, one {# card} other {# cards}}"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:146
+msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
+msgstr "{deckCount, plural, one {# deck} other {# decks}}"
+
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:17
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:20
 msgid "ai-chat.cancel.label"
@@ -111,35 +119,39 @@ msgstr "Jump to latest"
 msgid "ai.chat.settings.toggle"
 msgstr "Settings"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:113
-msgid "ai.chat.tool-activity.cards {0}"
-msgstr "{0} cards"
-
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:109
-msgid "ai.chat.tool-activity.decks {0}"
-msgstr "{0} decks"
-
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:65
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:80
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:79
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:99
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:140
 msgid "ai.chat.tool-activity.failed"
 msgstr "failed"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:133
+msgid "ai.chat.tool-activity.get-deck-cards"
+msgstr "Get deck cards"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:77
 msgid "ai.chat.tool-activity.input"
 msgstr "Input"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:29
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:40
 msgid "ai.chat.tool-activity.label"
 msgstr "Tool activity"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:79
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:132
+msgid "ai.chat.tool-activity.list-decks"
+msgstr "List decks"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
 msgid "ai.chat.tool-activity.output"
 msgstr "Output"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:58
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:110
 msgid "ai.chat.tool-activity.running"
 msgstr "Running"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:76
+msgid "ai.chat.tool-activity.tool"
+msgstr "Tool"
 
 #: ../../libs/ai-react/src/lib/ai-model-parameters.tsx:21
 msgid "ai.model-parameters.reasoning-effort.label"

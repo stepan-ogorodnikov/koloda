@@ -65,12 +65,13 @@ If it keeps calling instead of answering, the run stops.
 
 Tool traffic is visible in the chat feed as compact rows on that assistant message.
 
-- Each row shows the tool name as the protocol id, untranslated.
+- `list_decks` and `get_deck_cards` show a translated label.
+- Any other tool shows the protocol id.
 - A successful `list_decks` also shows how many decks came back.
 - A successful `get_deck_cards` also shows how many cards came back.
-- A running call shows a spinner.
+- A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
-- The user can expand a row to inspect the input and the output or error.
+- The user can expand a row to inspect the protocol id, the input, and the output or error.
 
 Those rows live on the run, not in the conversation history sent on later turns.
 Follow-up requests see the visible messages only, as the conversations spec already requires.
