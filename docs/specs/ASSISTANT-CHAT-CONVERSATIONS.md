@@ -1,8 +1,10 @@
 # Assistant Chat: Conversations
 
-Covers the conversation lifecycle, messages, runs, mode switching, deck selection and locking, AI profile state, persistence, restore, error handling, retry, and revert.
+Covers the conversation lifecycle, messages, runs, deck selection and locking, AI profile state, persistence, restore, error handling, retry, and revert.
 Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
 Those prompt and temperature preferences are covered by the assistant settings spec.
+Card proposal display, selection, and add are covered by the card-generation spec.
+How the model reads decks is covered by the data-access spec.
 
 ## What is a Conversation
 
@@ -10,8 +12,10 @@ A conversation is a single threaded interaction between the user and the AI.
 Each conversation has a name, a timestamp, and a history of messages and AI runs.
 
 A conversation starts empty.
-It has no messages, no runs, no deck selected, and is in chat mode.
+It has no messages, no runs, and no deck selected.
 It becomes active when the user sends their first message.
+Every new run is chat.
+The model may propose cards during that run.
 
 ## Conversation List
 
@@ -43,7 +47,8 @@ The user types a prompt, the AI responds — that's one exchange, tied to a sing
 
 Messages are displayed as a scrollable list.
 User messages appear as bubbles.
-Assistant messages render their content: plain text for chat responses, a table of generated cards for card generation runs.
+Assistant messages render that turn: tool activity, a review table when cards were accepted, and leftover text.
+How mixed turns display is covered by the messages spec.
 
 ### Conversation History
 
@@ -52,11 +57,13 @@ The rule is simple: what the user sees in the conversation is what the model get
 This includes:
 
 - All user messages (if they have text content)
-- All assistant chat responses (if they have text content), including partial responses from failed or canceled runs
+- All assistant text (if they have text content), including partial text from failed or canceled runs
 - All successfully generated card outputs (serialized as markdown blocks)
 
-Failed or canceled card generation outputs are not included in the history.
-Card outputs are not displayed in the conversation, so they are also not included in the history.
+A chat response that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
+Failed or canceled card outputs are not included in the history, even when the table stayed on screen.
+Tool activity is not included in the history.
+If the model needs current data again, it calls tools again.
 Messages that don't belong to any run are also excluded.
 
 ### Conversation Name
@@ -68,7 +75,8 @@ If there are no user messages yet, the name defaults to "Untitled".
 ## Runs
 
 A run represents a single AI request.
-It can be either a chat completion or a card generation.
+Every new run is a chat request.
+The model may call tools and propose cards during that run.
 Each run goes through a lifecycle:
 
 **streaming** → **success** | **failed** | **canceled** (`reason: user`) | **interrupted** (`reason: app_shutdown` | `crash_recovery`)
@@ -89,17 +97,17 @@ When the user sends a message, a run starts immediately:
 
 ### During Streaming
 
-For chat runs, text chunks arrive and accumulate on the assistant message in real time.
+Text chunks arrive and accumulate on the assistant message in real time.
 The user sees the response being built word by word.
 
-For card generation runs, individual cards arrive one at a time.
+Tool calls appear as compact rows on that message as they run.
+When `propose_cards` accepts cards, those cards appear as a review table on the same message.
 Each card starts in an idle state and can be independently marked as added to a deck, pending, or errored.
 
 ### Completion
 
 When the stream finishes successfully, the run is marked as success.
 Token usage is recorded.
-Conversation mode is unchanged.
 
 ### Failure
 
@@ -110,8 +118,8 @@ The user can see what was generated up to that point.
 ### Cancellation
 
 The user can cancel an active run at any time.
-For chat runs, the text accumulated so far is kept — the message shows the partial response.
-For card generation runs, cards received before cancellation are kept.
+The text accumulated so far is kept — the message shows the partial response.
+Cards accepted before cancellation are kept.
 Cancellation is recorded as `canceled` with `reason: user`.
 
 ### Interruption
@@ -123,28 +131,22 @@ A run can also end as `interrupted` without user cancel intent:
 
 Partial chat text and cards received before the interruption remain visible and eligible for retry.
 
-## Mode Switching
-
-The assistant operates in two modes: **chat** and **cards**.
-
-- **Chat mode**: the AI responds with free-form text
-- **Cards mode**: the AI generates structured flashcards
-
-The user can toggle between modes using a keyboard shortcut, but only when a deck is selected.
-If no deck is selected, the app stays in chat mode regardless of the toggle.
-
-Mode is user-controlled: toggle, hotkey, or revert (which mirrors the target run's mode).
-Run completion, failure, and cancellation do not change mode.
-
 ## Deck Selection and Locking
 
 Each conversation has a selected deck.
-The deck determines where generated cards can be added.
+The picker is a starting point.
+It is not the write target for a new proposal.
 
-Once a conversation contains successfully generated cards, it becomes **locked** — the deck cannot be changed.
+When the model proposes cards, the write target is the deck on that tool call.
+Add uses that write target, not whichever deck the picker currently shows.
+If the conversation is still unlocked when that run succeeds, the picker is aligned to that write target.
+
+Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the deck cannot be changed.
+This includes a chat proposal and a restored historical card-generation run.
 This prevents mixing cards from different decks in the same conversation.
 
-If card generation fails or is canceled, the conversation stays unlocked — the deck can still be changed.
+Failed, canceled, or interrupted runs with partial cards do not lock.
+An accepted list of 0 cards does not lock.
 
 ## AI Profile State
 
@@ -191,7 +193,7 @@ Once a profile exists, these empty states are no longer shown.
 ## Persistence
 
 Conversations are saved to the database automatically.
-The entire conversation state — messages, runs, mode, deck, and AI profile state — is saved as a single document.
+The entire conversation state — messages, runs, deck, and AI profile state — is saved as a single document.
 Each persisted document carries a `schemaVersion`. Unknown future versions fail restore explicitly rather than entering live state.
 Migrations for older versions are centralized at the persistence coerce boundary.
 
@@ -226,6 +228,7 @@ When a conversation is loaded from the database, it goes through validation and 
 - **Streaming runs become interrupted**: if the app crashed or was force-killed mid-stream, a persisted streaming checkpoint is converted to `interrupted` with `reason: crash_recovery`. Messages and partial output are kept so the user can retry.
 - **Failed, canceled, and interrupted runs are kept**: run records and assistant message parts (including partial chat text and cards) survive restore so retry remains available.
 - **Pending card statuses are reset**: cards that were mid-operation are reset to idle
+- **Historical card-generation messages keep their table**: restored turns that stored cards still show the review table, whether or not the run was recorded as chat
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
 - **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
@@ -271,17 +274,15 @@ Save errors are dismissed separately and are cleared by a successful save.
 
 The user can retry a failed, canceled, or interrupted run.
 Completed (success) runs are not retryable in the UI unless a separate regenerate feature is introduced.
-Retry re-executes the same request against the AI provider.
+Retry re-executes the same prompt as a chat request with tools.
 
 - The run ID is reused — the existing message pair is overwritten
-- For chat retries, the previous response text is cleared and replaced with the new stream
-- For card generation retries, previous cards are cleared and new cards stream in from scratch
+- Previous response text, cards, and tool rows are cleared and replaced with the new stream
+- A historical card-generation message is retried as a mixed chat turn
 - The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs
 
 Retry is only available on the most recent message pair.
 You cannot retry an older run.
-
-Retry preserves the original mode — a chat run retries as chat, a card generation run retries as cards.
 
 ### AI Profile State on Retry
 
@@ -302,7 +303,6 @@ The following are copied into the new conversation:
 - All completed runs (success, failed, canceled, or interrupted) — streaming runs are not cloned
 - AI profile state (profile, model, model parameters)
 - Deck selection and lock state
-- Current mode (chat or cards)
 - Conversation name
 
 ### What Does Not Get Cloned
@@ -366,7 +366,6 @@ Deleting a conversation evicts its runtime (cancels in-flight work, closes its s
 - If the sidebar has no conversations, nothing is shown (not even an empty state message)
 - Card statuses are always idle when first generated — they only become pending or success through user interaction
 - The deck picker hotkeys are disabled when the conversation is locked
-- Mode toggle is disabled when no deck is selected
 - Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar
 - Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
   The global last-used record is updated when the user changes the value or submits a prompt

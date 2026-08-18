@@ -6,7 +6,7 @@ No React, no Jotai, no TanStack Query, no UI, no repository I/O.
 ## Where it sits
 
 Consumed by `@koloda/srs-react` via an application-shell engine host (`useAssistantEngineHost`) that injects store callbacks, a required `AssistantExecutionPort`, and a durable-write adapter for persistence.
-Depends on `@koloda/ai` (stream/request types), `@koloda/app` (abort/error helpers), and `@koloda/srs` (template fields for card runs).
+Depends on `@koloda/ai` (stream/request types), `@koloda/app` (abort/error helpers), and `@koloda/srs` (template fields for proposed cards).
 Conversation documents and reducer policy still live in `@koloda/srs-react`; this package owns run **execution lifetime**, **per-conversation save queue scheduling**, and **graceful shutdown** so chat unmount does not abort background streams or dispose pending flushes.
 
 **Ownership source of truth for assistant chat:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing assistant edits.
@@ -74,4 +74,4 @@ Orphaned `streaming` checkpoints left on disk after a crash are normalized to `i
 
 - `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — run lifecycle and streaming rules
-- `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md` — card generation behavior
+- `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md` — card proposal behavior

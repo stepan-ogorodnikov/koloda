@@ -136,7 +136,7 @@ If a stored model ID is no longer in the provider's list, the first available mo
 
 ## Sending Requests
 
-Chat and card-generation runs go through the selected profile's secrets.
+Chat runs go through the selected profile's secrets.
 See the conversation and card-generation specs for run lifecycle, prompts, streaming UI, cancellation, and errors.
 
 Provider-facing details that matter here:
