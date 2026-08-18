@@ -13,11 +13,12 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:150
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:151
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:155
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# card} other {# cards}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:146
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:147
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# deck} other {# decks}}"
 
@@ -121,7 +122,7 @@ msgstr "Settings"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:79
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:99
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:140
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:141
 msgid "ai.chat.tool-activity.failed"
 msgstr "failed"
 
@@ -144,6 +145,10 @@ msgstr "List decks"
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
 msgid "ai.chat.tool-activity.output"
 msgstr "Output"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:134
+msgid "ai.chat.tool-activity.propose-cards"
+msgstr "Propose cards"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:110
 msgid "ai.chat.tool-activity.running"

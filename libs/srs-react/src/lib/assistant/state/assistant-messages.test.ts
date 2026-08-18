@@ -1,6 +1,6 @@
 import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard } from "@koloda/ai";
-import type { Template } from "@koloda/srs";
+import type { Template, TemplateFields } from "@koloda/srs";
 import { DEFAULT_TEMPLATE } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
@@ -179,9 +179,12 @@ function assistantErrorMessage(id: string, runId: string): UIMessage {
   } as UIMessage;
 }
 
-function createRunData(overrides: Partial<{ status: string; cards: GeneratedCard[] }> = {}): {
+function createRunData(
+  overrides: Partial<{ status: string; cards: GeneratedCard[]; templateFields: TemplateFields | null }> = {},
+): {
   status: string;
   cards: GeneratedCard[];
+  templateFields?: TemplateFields | null;
 } {
   return { status: "success", cards: [], ...overrides };
 }
@@ -292,10 +295,13 @@ describe("buildConversationMessages", () => {
   it("handles mixed conversation ordering correctly", () => {
     const messages = [
       userMessage("u1", "Generate some cards"),
-      assistantChatTextMessage("a1", "r1", "Sure!"),
-      assistantGeneratedCardsMessage("a2", "r1"),
+      assistantChatTextMessage("a1", "r-chat", "Sure!"),
+      assistantGeneratedCardsMessage("a2", "r-cards"),
     ];
-    const runs = { r1: createRunData({ status: "success", cards: [cardWithContent] }) };
+    const runs = {
+      "r-chat": createRunData(),
+      "r-cards": createRunData({ status: "success", cards: [cardWithContent] }),
+    };
 
     const result = buildConversationMessages(messages, runs, buildTemplate);
     expect(result).toHaveLength(3);
@@ -320,5 +326,74 @@ describe("buildConversationMessages", () => {
     const messages = [userMessage("u1", "Make cards"), cardError];
     const result = buildConversationMessages(messages, {}, buildTemplate);
     expect(result).toEqual([{ role: "user", content: "Make cards" }]);
+  });
+
+  it("includes chat-text prose and successful card markdown in one assistant message", () => {
+    const result = buildConversationMessages(
+      [assistantChatTextMessage("a1", "r1", "Here are five cards.")],
+      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
+      buildTemplate,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].role).toBe("assistant");
+    expect(result[0].content).toBe("Here are five cards.\n\n## Card 1\n**Front**: Question\n**Back**: Answer");
+  });
+
+  it("includes successful chat-text cards when the prose is empty", () => {
+    const result = buildConversationMessages(
+      [assistantChatTextMessage("a1", "r1", "  ")],
+      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
+      buildTemplate,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].content).toContain("## Card 1");
+    expect(result[0].content).not.toContain("\n\n");
+  });
+
+  it("omits cards from a failed chat-text run", () => {
+    const result = buildConversationMessages(
+      [assistantChatTextMessage("a1", "r1", "I started some cards.")],
+      { r1: createRunData({ status: "failed", cards: [cardWithContent] }) },
+      buildTemplate,
+    );
+    expect(result).toEqual([{ role: "assistant", content: "I started some cards." }]);
+  });
+
+  it("omits cards from canceled and interrupted chat-text runs", () => {
+    expect(
+      buildConversationMessages(
+        [assistantChatTextMessage("a1", "r1", "Partial.")],
+        { r1: createRunData({ status: "canceled", cards: [cardWithContent] }) },
+        buildTemplate,
+      ),
+    ).toEqual([{ role: "assistant", content: "Partial." }]);
+    expect(
+      buildConversationMessages(
+        [assistantChatTextMessage("a1", "r1", "Partial.")],
+        { r1: createRunData({ status: "interrupted", cards: [cardWithContent] }) },
+        buildTemplate,
+      ),
+    ).toEqual([{ role: "assistant", content: "Partial." }]);
+  });
+
+  it("serializes chat-text cards with run.templateFields when the conversation template differs", () => {
+    const runFields = [
+      { id: 10, title: "Prompt", type: "text" as const, isRequired: true },
+      { id: 11, title: "Response", type: "text" as const, isRequired: true },
+    ];
+    const proposedCard: GeneratedCard = {
+      content: {
+        "10": { text: "hola" },
+        "11": { text: "hello" },
+      },
+    };
+    const result = buildConversationMessages(
+      [assistantChatTextMessage("a1", "r1", "Proposed.")],
+      { r1: createRunData({ status: "success", cards: [proposedCard], templateFields: runFields }) },
+      buildTemplate,
+    );
+    expect(result[0].content).toContain("**Prompt**: hola");
+    expect(result[0].content).toContain("**Response**: hello");
+    expect(result[0].content).not.toContain("**Front**");
   });
 });

@@ -275,6 +275,7 @@ describe("cloneConversationAtom", () => {
     dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
     dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
     dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
+    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
     dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
     store.set(setCurrentConversationIdAtom, "A");
 

@@ -461,6 +461,7 @@ describe("setAssistantDeckAtom lock check", () => {
     dispatchTo(store, id, ["addUserMessage", { runId: "r1", text: "Hi" }]);
     dispatchTo(store, id, ["startRun", { runId: "r1", mode: "cards" }]);
     dispatchTo(store, id, ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
+    dispatchTo(store, id, ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
     dispatchTo(store, id, ["completeRun", { runId: "r1" }]);
   }
 
@@ -498,6 +499,43 @@ describe("setAssistantDeckAtom lock check", () => {
     // User message + a started but not-yet-completed run does not lock.
     dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
     dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
+    expect(store.get(assistantIsLockedAtom)).toBe(false);
+
+    store.set(setAssistantDeckAtom, 9);
+    expect(store.get(assistantConversationStateAtom).deckId).toBe(9);
+  });
+
+  it("locks after a successful chat run with cards", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "make 5 cards" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat" }]);
+    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "Here" }]);
+    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
+    dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
+
+    expect(store.get(assistantIsLockedAtom)).toBe(true);
+    store.set(setAssistantDeckAtom, 9);
+    expect(store.get(assistantConversationStateAtom).deckId).toBe(5);
+  });
+
+  it("does not lock failed or canceled runs that have partial cards", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "make cards" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "chat" }]);
+    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
+    dispatchTo(store, "A", ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+    expect(store.get(assistantIsLockedAtom)).toBe(false);
+
+    dispatchTo(store, "A", ["addUserMessage", { runId: "r2", text: "again" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r2", mode: "chat" }]);
+    dispatchTo(store, "A", ["addCard", { runId: "r2", card: { content: { "1": { text: "Q" } } } }]);
+    dispatchTo(store, "A", ["cancelRun", { runId: "r2" }]);
     expect(store.get(assistantIsLockedAtom)).toBe(false);
 
     store.set(setAssistantDeckAtom, 9);

@@ -1,6 +1,6 @@
 import { atom } from "jotai";
-import { getAssistantMetadata, getEffectiveChatMode } from "./assistant-messages";
-import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
+import { getEffectiveChatMode } from "./assistant-messages";
+import { findLatestErroredRun, getVisibleMessages, hasSuccessfulCardBearingRun } from "./conversation-reducer";
 import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
 
 export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
@@ -38,15 +38,10 @@ export const assistantConversationHasContextAtom = (id: string) =>
     return state ? state.messages.length > 0 || state.activeRunId !== null : false;
   });
 
-export const assistantIsLockedAtom = atom((get) => {
-  const state = get(assistantConversationStateAtom);
-  return state.messages.some((m) => {
-    if (m.role !== "assistant") return false;
-    const metadata = getAssistantMetadata(m);
-    if (metadata?.kind !== "generated-cards") return false;
-    return state.runs[metadata.runId]?.status === "success";
-  });
-});
+// INVARIANT: First successful card-bearing run locks the deck — cards-mode
+// generated-cards and chat proposals share this rule. Partial cards on
+// failed/canceled/interrupted runs do not lock.
+export const assistantIsLockedAtom = atom((get) => hasSuccessfulCardBearingRun(get(assistantConversationStateAtom)));
 
 export const assistantContextUsageAtom = atom((get) => {
   const runs = get(assistantRunsAtom);

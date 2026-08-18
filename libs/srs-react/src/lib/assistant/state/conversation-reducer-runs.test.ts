@@ -371,6 +371,67 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].status).toBe("success");
       expect(state.activeRunId).toBe("r2");
     });
+
+    it("aligns deckId to writeTargetDeckId when the conversation is unlocked", () => {
+      const proposeOutput = {
+        deckId: 5,
+        deckTitle: "Spanish",
+        templateTitle: "Default",
+        templateFields: [
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 11, title: "Back", type: "text", isRequired: true },
+        ],
+        cards: [{ fields: { Front: "hola", Back: "hello" } }],
+        rejectedCount: 0,
+      };
+      let state = reduce([
+        ["setDeck", { deckId: 1 }],
+        ["startRun", { runId: "r1", mode: "chat" }],
+      ]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", output: proposeOutput },
+      ]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      expect(state.deckId).toBe(5);
+    });
+
+    it("does not change deckId when a prior successful card run already locked", () => {
+      const proposeOutput = {
+        deckId: 5,
+        deckTitle: "Spanish",
+        templateTitle: "Default",
+        templateFields: [
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 11, title: "Back", type: "text", isRequired: true },
+        ],
+        cards: [{ fields: { Front: "hola", Back: "hello" } }],
+        rejectedCount: 0,
+      };
+      let state = reduce([
+        ["setDeck", { deckId: 1 }],
+        ["startRun", { runId: "r1", mode: "cards" }],
+        ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }],
+        ["completeRun", { runId: "r1" }],
+      ]);
+      expect(state.deckId).toBe(1);
+
+      state = conversationReducer(state, ["startRun", { runId: "r2", mode: "chat" }]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r2", call: { id: "call-2", name: "propose_cards", input: { deckId: 5, cards: [] } } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r2", callId: "call-2", output: proposeOutput },
+      ]);
+      state = conversationReducer(state, ["completeRun", { runId: "r2" }]);
+      expect(state.deckId).toBe(1);
+    });
   });
 
   describe("runFailed", () => {

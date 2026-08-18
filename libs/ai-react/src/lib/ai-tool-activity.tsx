@@ -127,10 +127,11 @@ function ToolPayloadBlock({ label, text }: ToolPayloadBlockProps) {
 }
 
 function toolCallLabel(name: string, translate: I18n["_"]): string {
-  // WHY: labels exist only for the two shipped tools; unknown names stay the protocol id
+  // WHY: labels exist only for the shipped tools; unknown names stay the protocol id
   // so a new tool still renders instead of a missing catalog string.
   if (name === "list_decks") return translate(msg`ai.chat.tool-activity.list-decks`);
   if (name === "get_deck_cards") return translate(msg`ai.chat.tool-activity.get-deck-cards`);
+  if (name === "propose_cards") return translate(msg`ai.chat.tool-activity.propose-cards`);
   return name;
 }
 
@@ -139,7 +140,7 @@ function toolCallSummary(call: AIToolCallRecord, translate: I18n["_"]): string |
   // t-macro and extracts nested `plural()` as `{0}`, which does not match the SWC runtime id.
   if (call.status === "error") return translate(msg`ai.chat.tool-activity.failed`);
   if (call.status !== "success") return null;
-  // WHY: compact counts exist only for these two output shapes; unknown tools
+  // WHY: compact counts exist only for these output shapes; unknown tools
   // must stay name-only (commit 5 copy decision / Visibility UI).
   if (call.name === "list_decks") {
     const deckCount = namedArrayLength(call.output, "decks");
@@ -147,6 +148,10 @@ function toolCallSummary(call: AIToolCallRecord, translate: I18n["_"]): string |
   }
   if (call.name === "get_deck_cards") {
     const cardCount = namedArrayLength(call.output, "cards") ?? namedNumber(call.output, "totalCards");
+    if (cardCount !== null) return translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`);
+  }
+  if (call.name === "propose_cards") {
+    const cardCount = namedArrayLength(call.output, "cards");
     if (cardCount !== null) return translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`);
   }
   return null;

@@ -41,7 +41,33 @@ vi.mock("./copy-message-button", () => ({
   CopyMessageButton: () => null,
 }));
 
-function mountRenderer(runs: Record<string, GenerationRun>, options: { assistantText?: string } = {}) {
+vi.mock("./assistant-cards-message", () => ({
+  AssistantCardsMessage: (props: { canAdd: boolean; deckId: number | null; templateId: number | undefined }) => (
+    <div
+      data-testid="cards-table"
+      data-can-add={String(props.canAdd)}
+      data-deck-id={String(props.deckId)}
+      data-template-id={String(props.templateId)}
+    />
+  ),
+}));
+
+const sampleCard = { content: { "1": { text: "Q" }, "2": { text: "A" } } };
+const sampleFields = [
+  { id: 1, title: "Front", type: "text" as const, isRequired: true },
+  { id: 2, title: "Back", type: "text" as const, isRequired: true },
+];
+
+function mountRenderer(
+  runs: Record<string, GenerationRun>,
+  options: {
+    assistantText?: string;
+    kind?: "chat-text" | "generated-cards";
+    deckId?: number | null;
+    templateId?: number;
+    activeRunId?: string | null;
+  } = {},
+) {
   const conversationId = "c1";
   const runId = "r1";
   const store = createStore();
@@ -50,13 +76,15 @@ function mountRenderer(runs: Record<string, GenerationRun>, options: { assistant
     [conversationId]: {
       ...initialConversationState,
       id: conversationId,
+      deckId: options.deckId === undefined ? null : options.deckId,
+      activeRunId: options.activeRunId === undefined ? null : options.activeRunId,
       messages: [
         createTextMessage("user-r1", "user", "Hi", {
           createdAt: "2026-07-01T11:00:00.000Z",
           runId,
         }),
         createTextMessage(assistantMessageId(runId), "assistant", options.assistantText ?? "Hello", {
-          kind: "chat-text",
+          kind: options.kind ?? "chat-text",
           runId,
         }),
       ],
@@ -71,7 +99,7 @@ function mountRenderer(runs: Record<string, GenerationRun>, options: { assistant
   const { result } = renderHook(
     () =>
       useAssistantMessageRenderer({
-        templateId: undefined,
+        templateId: options.templateId,
         handleRetry,
         handleRevert,
       }),
@@ -134,5 +162,85 @@ describe("useAssistantMessageRenderer", () => {
     mountRenderer({ r1: run });
     expect(screen.getByTestId("tool-activity").textContent).toBe("list_decks");
     expect(screen.getByTestId("status-success")).toBeTruthy();
+  });
+
+  it("renders the cards table on a chat run that proposed cards", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { templateId: 9 });
+    expect(screen.getByText("Hello")).toBeTruthy();
+    expect(screen.getByTestId("cards-table")).toBeTruthy();
+    expect(screen.queryByTestId("status-success")).toBeNull();
+  });
+
+  it("renders tools, prose, and the cards table in that order", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+      toolCalls: [
+        {
+          id: "call-1",
+          name: "propose_cards",
+          input: {},
+          status: "success" as const,
+          output: { cards: [sampleCard] },
+        },
+      ],
+    };
+    mountRenderer({ r1: run });
+    const tool = screen.getByTestId("tool-activity");
+    const prose = screen.getByText("Hello");
+    const table = screen.getByTestId("cards-table");
+    expect(tool.compareDocumentPosition(prose) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(prose.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId("status-success")).toBeNull();
+  });
+
+  it("does not enable add without writeTargetDeckId on a chat proposal", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+    };
+    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    const table = screen.getByTestId("cards-table");
+    expect(table.getAttribute("data-can-add")).toBe("false");
+    expect(table.getAttribute("data-deck-id")).toBe("null");
+    expect(table.getAttribute("data-template-id")).toBe("9");
+  });
+
+  it("enables add against writeTargetDeckId, not the picker deck", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    const table = screen.getByTestId("cards-table");
+    expect(table.getAttribute("data-can-add")).toBe("true");
+    expect(table.getAttribute("data-deck-id")).toBe("5");
+    expect(table.getAttribute("data-template-id")).toBe("9");
+  });
+
+  it("renders the cards table for old cards-mode messages", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      mode: "cards" as const,
+      cards: [sampleCard],
+      templateFields: sampleFields,
+    };
+    mountRenderer({ r1: run }, { kind: "generated-cards", deckId: 7, templateId: 9 });
+    const table = screen.getByTestId("cards-table");
+    expect(table).toBeTruthy();
+    expect(table.getAttribute("data-can-add")).toBe("true");
+    expect(table.getAttribute("data-deck-id")).toBe("7");
+    expect(table.getAttribute("data-template-id")).toBe("9");
   });
 });

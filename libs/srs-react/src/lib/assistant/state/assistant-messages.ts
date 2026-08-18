@@ -1,7 +1,7 @@
 import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard, Message } from "@koloda/ai";
 import type { AIChatMode } from "@koloda/ai";
-import type { Template } from "@koloda/srs";
+import type { Template, TemplateFields } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
 export type AssistantMessageMetadata =
@@ -169,9 +169,23 @@ export function serializeGeneratedCards(cards: GeneratedCard[], template: Templa
     .join("\n\n");
 }
 
+export function makeHistoricalTemplate(fields: TemplateFields): Template {
+  return {
+    id: 0,
+    title: "",
+    content: {
+      fields,
+      layout: fields.map((field) => ({ field: field.id, operation: "display" as const })),
+    },
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    isLocked: true,
+  };
+}
+
 export function buildConversationMessages(
   messages: UIMessage[],
-  runs: Record<string, { status: string; cards: GeneratedCard[] }>,
+  runs: Record<string, { status: string; cards: GeneratedCard[]; templateFields?: TemplateFields | null }>,
   template: Template | null | undefined,
 ) {
   const conversation: Message[] = [];
@@ -190,15 +204,27 @@ export function buildConversationMessages(
 
     const { runId } = metadata;
     const textContent = getTextMessageContent(message);
+    const run = runs[runId];
 
     if (metadata.kind === "chat-text") {
-      if (textContent) conversation.push({ role: "assistant", content: textContent });
+      const parts: string[] = [];
+      if (textContent) parts.push(textContent);
+      if (run && run.status === "success" && run.cards.length > 0) {
+        // WHY: Chat proposals carry the target deck's fields on the run. Using the
+        // conversation template would serialize against the picker's template instead.
+        const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : template;
+        if (cardTemplate) {
+          const cardContent = serializeGeneratedCards(run.cards, cardTemplate);
+          if (cardContent) parts.push(cardContent);
+        }
+      }
+      if (parts.length === 0) continue;
+      conversation.push({ role: "assistant", content: parts.join("\n\n") });
       continue;
     }
 
     if (metadata.kind === "error") continue;
 
-    const run = runs[runId];
     if (!run || run.status !== "success" || run.cards.length === 0) continue;
 
     if (!template) continue;

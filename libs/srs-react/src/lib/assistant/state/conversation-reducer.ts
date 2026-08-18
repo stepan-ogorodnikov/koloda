@@ -214,6 +214,13 @@ export function findLatestErroredRun(state: ConversationReducerState): Generatio
   return null;
 }
 
+// INVARIANT: Lock on the first successful run that actually produced cards.
+// Chat proposals and cards-mode runs share this rule. Failed/canceled/interrupted
+// runs with partial cards must not lock.
+export function hasSuccessfulCardBearingRun(state: ConversationReducerState): boolean {
+  return Object.values(state.runs).some((run) => run.status === "success" && run.cards.length > 0);
+}
+
 function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
   if (draft.activeRunId === runId) draft.activeRunId = null;
 }
@@ -482,7 +489,15 @@ function applyProposeCardsToRun(draft: ConversationReducerState, runId: string, 
 type RunIdPayload = { runId: string };
 
 function completeRun(draft: ConversationReducerState, payload: RunIdPayload) {
-  transitionRun(draft, payload.runId, { type: "complete" });
+  // WHY: Check lock before this run becomes success, so a first proposal can still
+  // align the picker to its write target.
+  const wasLocked = hasSuccessfulCardBearingRun(draft);
+  if (!transitionRun(draft, payload.runId, { type: "complete" })) return;
+  const run = draft.runs[payload.runId];
+  // INVARIANT: Do not overwrite deckId when a prior successful card run already locked it.
+  if (!wasLocked && run?.writeTargetDeckId !== undefined) {
+    draft.deckId = run.writeTargetDeckId;
+  }
 }
 
 type RunFailedPayload = { runId: string; error: { message: string } };

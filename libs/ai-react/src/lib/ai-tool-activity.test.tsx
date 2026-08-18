@@ -57,6 +57,24 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("ai.chat.tool-activity.get-deck-cards - ai.chat.tool-activity.cards")).toBeTruthy();
   });
 
+  it("renders a propose_cards success row from the cards array length", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "propose_cards",
+            status: "success",
+            input: { deckId: 5, cards: [] },
+            output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }] },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.propose-cards - ai.chat.tool-activity.cards")).toBeTruthy();
+  });
+
   it("shimmers the wrench row while a call is running", () => {
     const { container } = render(
       <AIToolActivity calls={[call({ id: "c1", name: "list_decks", status: "running", input: {} })]} />,

@@ -1,6 +1,6 @@
 import { getTextMessageContent } from "@koloda/ai";
 import { AIChatMessageLayout, AIChatMessageStatus, AIToolActivity } from "@koloda/ai-react";
-import type { Template, TemplateFields } from "@koloda/srs";
+import type { Template } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
@@ -12,6 +12,7 @@ import {
   getGeneratedCardsMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
+  makeHistoricalTemplate,
 } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
 import {
@@ -74,7 +75,18 @@ export function useAssistantMessageRenderer({
       const chatMetadata = getChatTextMetadata(message);
       if (chatMetadata) {
         const run = runs[chatMetadata.runId];
-        if (run) return renderChatMessage({ message, content, run, runId: chatMetadata.runId, isTail, handleRetry });
+        if (run) {
+          return renderChatMessage({
+            message,
+            content,
+            run,
+            runId: chatMetadata.runId,
+            isCurrentRun: chatMetadata.runId === activeRunId,
+            isTail,
+            templateId,
+            handleRetry,
+          });
+        }
       }
 
       return content;
@@ -118,6 +130,10 @@ function renderCardsMessage(options: {
 
   if (!cardsTemplate && !templateFieldsMissing) return null;
 
+  // INVARIANT: Chat proposals add to writeTargetDeckId, not the picker deck.
+  // Cards-mode keeps the picker as the write target (no writeTargetDeckId).
+  const addTargetDeckId = run.writeTargetDeckId ?? (run.mode === "cards" ? deckId : null);
+
   return (
     <AssistantCardsMessage
       runId={runId}
@@ -125,9 +141,9 @@ function renderCardsMessage(options: {
       cardStatuses={run.cardStatuses}
       template={cardsTemplate}
       templateUnavailable={templateFieldsMissing}
-      deckId={deckId}
+      deckId={addTargetDeckId}
       templateId={templateId}
-      canAdd={run.cards.length > 0 && !isCurrentRun && deckId !== null}
+      canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null}
       isGenerating={isCurrentRun}
       isCanceled={run.status === "canceled"}
       isInterrupted={run.status === "interrupted"}
@@ -154,15 +170,41 @@ function renderChatMessage(options: {
   content: ReactNode;
   run: GenerationRun;
   runId: string;
+  isCurrentRun: boolean;
   isTail: boolean;
+  templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
 }) {
-  const { message, content, run, runId, isTail, handleRetry } = options;
+  const { message, content, run, runId, isCurrentRun, isTail, templateId, handleRetry } = options;
   const text = getTextMessageContent(message);
   const copyAction = text ? <CopyMessageButton text={text} /> : null;
   // WHY: tool traffic lives on the run, not message parts — updateAssistantText
   // replaces parts wholesale, so the widget must read `run.toolCalls`.
   const toolActivity = run.toolCalls && run.toolCalls.length > 0 ? <AIToolActivity calls={run.toolCalls} /> : null;
+  const cardsBlock =
+    run.cards.length > 0
+      ? renderCardsMessage({
+          run,
+          runId,
+          isCurrentRun,
+          isTail,
+          deckId: null,
+          templateId,
+          handleRetry,
+        })
+      : null;
+
+  // WHY: AssistantCardsMessage already owns pending/success/failed status.
+  // A second AIChatMessageStatus in this wrapper would double the indicator.
+  if (cardsBlock) {
+    return (
+      <div className="group flex flex-col gap-2 self-start w-full">
+        {toolActivity}
+        {text ? content : null}
+        {cardsBlock}
+      </div>
+    );
+  }
 
   if (run.status === "streaming") {
     if (toolActivity) {
@@ -239,18 +281,4 @@ function renderChatMessage(options: {
   }
 
   return content;
-}
-
-function makeHistoricalTemplate(fields: TemplateFields): Template {
-  return {
-    id: 0,
-    title: "",
-    content: {
-      fields,
-      layout: fields.map((field) => ({ field: field.id, operation: "display" as const })),
-    },
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-    isLocked: true,
-  };
 }
