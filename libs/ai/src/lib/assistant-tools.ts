@@ -40,6 +40,7 @@ export type ProposeCardsOutput = {
   templateFields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
   cards: Array<{ fields: Record<string, string> }>;
   rejectedCount: number;
+  message?: string;
 };
 
 // WHY: hard card cap bounds serialization work and prompt growth before character
@@ -83,17 +84,55 @@ export type AssistantToolSpec = {
   inputSchema: z.ZodType;
 };
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+// WHY: weaker models omit the `fields` wrapper, send `{ text }` values, or call
+// with an empty cards array and then dump a markdown table instead.
+function coerceFieldRecord(value: unknown): Record<string, string> | null {
+  if (!isPlainObject(value)) return null;
+  const mapped: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string") {
+      mapped[key] = entry;
+      continue;
+    }
+    if (isPlainObject(entry) && typeof entry.text === "string") {
+      mapped[key] = entry.text;
+      continue;
+    }
+    return null;
+  }
+  return mapped;
+}
+
+function coerceProposeCard(value: unknown): unknown {
+  if (!isPlainObject(value)) return value;
+  if ("fields" in value) {
+    const fields = coerceFieldRecord(value.fields);
+    return fields == null ? value : { fields };
+  }
+  const fields = coerceFieldRecord(value);
+  return fields == null ? value : { fields };
+}
+
+const proposeCardSchema = z.preprocess(coerceProposeCard, z.object({ fields: z.record(z.string(), z.string()) }));
+
+export const PROPOSE_CARDS_RETRY_MESSAGE =
+  "No cards accepted. Call propose_cards again with cards[].fields keyed by the exact titles in templateFields. Do not write the cards as markdown.";
+
 export const ASSISTANT_TOOL_SPECS = {
   list_decks: {
     name: "list_decks",
     description:
-      "List the user's flashcard decks: deck id, deck title, card count, and the template's title and field titles. Call this first when the user asks about their decks or cards.",
+      "List the user's flashcard decks: deck id, deck title, card count, and the template's title and field titles. Call this when you need a deck id or field titles, including before propose_cards. Do not ask the user for field titles. This tool does not create cards.",
     inputSchema: z.object({}),
   },
   get_deck_cards: {
     name: "get_deck_cards",
     description:
-      "Get the existing cards of one deck by deck id (as reported by list_decks), as field-title-to-text pairs. Large decks are capped.",
+      "Get the existing cards of one deck by deck id (as reported by list_decks), as field-title-to-text pairs. Large decks are capped. Use this only to inspect existing cards, for example to avoid duplicates. Field titles come from list_decks, not from this tool. This cannot pick a single random card, cannot fetch one card by id, and cannot create cards.",
     inputSchema: z.object({
       deckId: z.int().positive(),
     }),
@@ -101,10 +140,10 @@ export const ASSISTANT_TOOL_SPECS = {
   propose_cards: {
     name: "propose_cards",
     description:
-      "Propose new flashcards for a deck. Use deckId and field titles from list_decks; fields is a map of field title to text.",
+      "Create new flashcards for a deck. Call this whenever the user asks to generate, create, make, add, or invent cards, including a random card — invent original field values; do not copy or pick existing cards. If you lack the deck id or field titles, call list_decks first in this turn; do not ask the user. deckId is the target deck from list_decks. Each cards item must include fields: a map of exact template field title to invented text. An empty cards array does not create cards. If the result accepts 0 cards, call this tool again with the titles in templateFields; never write cards as a markdown table.",
     inputSchema: z.object({
       deckId: z.int().positive(),
-      cards: z.array(z.object({ fields: z.record(z.string(), z.string()) })),
+      cards: z.array(proposeCardSchema).min(1),
     }),
   },
 } as const satisfies Record<string, AssistantToolSpec>;
@@ -247,7 +286,20 @@ export function shapeProposeCardsOutput(
     })),
     cards: accepted,
     rejectedCount,
+    ...(accepted.length === 0 && cards.length > 0 ? { message: PROPOSE_CARDS_RETRY_MESSAGE } : {}),
   };
+}
+
+function lookupProposedFieldText(inputFields: Record<string, string>, field: { id: number; title: string }): string {
+  const exact = inputFields[field.title];
+  if (exact !== undefined) return exact.trim();
+  const byId = inputFields[String(field.id)];
+  if (byId !== undefined) return byId.trim();
+  const lower = field.title.toLowerCase();
+  for (const [key, value] of Object.entries(inputFields)) {
+    if (key.toLowerCase() === lower) return value.trim();
+  }
+  return "";
 }
 
 function shapeProposedCardFields(
@@ -258,17 +310,15 @@ function shapeProposedCardFields(
   let hasNonEmpty = false;
   let isMissingRequired = false;
   for (const field of fields) {
-    const text = (inputFields[field.title] ?? "").trim();
+    // WHY: models often send lowercase titles or field ids instead of the exact
+    // titles from list_decks; exact match still wins so colliding titles stay stable.
+    const text = lookupProposedFieldText(inputFields, field);
     mapped[field.title] = text;
     if (text.length > 0) hasNonEmpty = true;
     else if (field.isRequired) isMissingRequired = true;
   }
   if (!hasNonEmpty || isMissingRequired) return null;
   return mapped;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
@@ -308,7 +358,8 @@ export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutpu
     Array.isArray(value.cards) &&
     value.cards.every(isProposeCardsCard) &&
     typeof value.rejectedCount === "number" &&
-    Number.isInteger(value.rejectedCount)
+    Number.isInteger(value.rejectedCount) &&
+    (value.message === undefined || typeof value.message === "string")
   );
 }
 

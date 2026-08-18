@@ -12,6 +12,7 @@ import type {
 import {
   generatedCardsFromProposeOutput,
   isProposeCardsOutput,
+  PROPOSE_CARDS_RETRY_MESSAGE,
   shapeGetDeckCardsOutput,
   shapeListDecksOutput,
   shapeProposeCardsOutput,
@@ -128,6 +129,20 @@ function toolResultOutputsOf(call: number, model: MockLanguageModelV3): unknown[
 }
 
 describe("assistant-tools binder", () => {
+  it("describes propose_cards as creating new cards, not listing existing ones", () => {
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/create new flashcards/i);
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/random card/i);
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/do not ask the user/i);
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/empty cards array/i);
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/markdown table/i);
+    expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/field titles/i);
+    expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/do not ask the user for field titles/i);
+    expect(ASSISTANT_TOOL_SPECS.list_decks.description).not.toMatch(
+      /call this first when the user asks about their decks or cards/i,
+    );
+    expect(ASSISTANT_TOOL_SPECS.get_deck_cards.description).toMatch(/cannot pick a single random card/i);
+  });
+
   it("binds only the requested specs with model-facing descriptions", () => {
     const bound = bindAssistantTools({ names: ["get_deck_cards"], execute: vi.fn() });
 
@@ -145,6 +160,30 @@ describe("assistant-tools binder", () => {
 
   it("rejects unknown tool names at bind time", () => {
     expect(() => bindAssistantTools({ names: ["nope"], execute: vi.fn() })).toThrow(/Unknown assistant tool/);
+  });
+});
+
+describe("propose_cards input schema", () => {
+  const schema = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema;
+
+  it("coerces a flattened card and { text } field values", () => {
+    expect(schema.parse({ deckId: 5, cards: [{ Front: "hola", Back: "hello" }] })).toEqual({
+      deckId: 5,
+      cards: [{ fields: { Front: "hola", Back: "hello" } }],
+    });
+    expect(
+      schema.parse({
+        deckId: 5,
+        cards: [{ fields: { Front: { text: "hola" }, Back: { text: "hello" } } }],
+      }),
+    ).toEqual({
+      deckId: 5,
+      cards: [{ fields: { Front: "hola", Back: "hello" } }],
+    });
+  });
+
+  it("rejects an empty cards array", () => {
+    expect(() => schema.parse({ deckId: 5, cards: [] })).toThrow();
   });
 });
 
@@ -305,6 +344,24 @@ describe("propose_cards output shaping", () => {
 
     expect(output.cards).toEqual([{ fields: { Front: "gato", Back: "cat", Hint: "" } }]);
     expect(output.rejectedCount).toBe(1);
+    expect(output.message).toBeUndefined();
+  });
+
+  it("accepts lowercase field titles and field-id keys", () => {
+    expect(shapeProposeCardsOutput(deck, [{ fields: { front: "hola", BACK: "hello" } }]).cards).toEqual([
+      { fields: { Front: "hola", Back: "hello", Hint: "" } },
+    ]);
+    expect(shapeProposeCardsOutput(deck, [{ fields: { "10": "hola", "11": "hello" } }]).cards).toEqual([
+      { fields: { Front: "hola", Back: "hello", Hint: "" } },
+    ]);
+  });
+
+  it("tells the model to retry when every card is rejected", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Hint: "only optional" } }]);
+
+    expect(output.cards).toEqual([]);
+    expect(output.rejectedCount).toBe(1);
+    expect(output.message).toBe(PROPOSE_CARDS_RETRY_MESSAGE);
   });
 
   it("ignores unknown field titles", () => {
@@ -426,6 +483,8 @@ describe("propose_cards output guard and mapper", () => {
     expect(isProposeCardsOutput({ ...validOutput, deckId: 0 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, deckId: 1.5 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, rejectedCount: 1.5 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, message: PROPOSE_CARDS_RETRY_MESSAGE })).toBe(true);
+    expect(isProposeCardsOutput({ ...validOutput, message: 1 })).toBe(false);
     expect(
       isProposeCardsOutput({
         ...validOutput,

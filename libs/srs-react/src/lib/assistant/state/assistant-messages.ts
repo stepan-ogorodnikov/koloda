@@ -204,7 +204,7 @@ export function buildConversationMessages(
 
     if (metadata.kind === "chat-text") {
       const parts: string[] = [];
-      if (textContent) parts.push(textContent);
+      // WHY: history matches the screen — table first, leftover note second.
       if (run && run.status === "success" && run.cards.length > 0) {
         // WHY: Chat proposals carry the target deck's fields on the run. Using the
         // conversation template would serialize against the picker's template instead.
@@ -214,6 +214,7 @@ export function buildConversationMessages(
           if (cardContent) parts.push(cardContent);
         }
       }
+      if (textContent) parts.push(textContent);
       if (parts.length === 0) continue;
       conversation.push({ role: "assistant", content: parts.join("\n\n") });
       continue;

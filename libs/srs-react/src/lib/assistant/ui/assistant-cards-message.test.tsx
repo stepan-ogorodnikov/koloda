@@ -77,6 +77,14 @@ describe("AssistantCardsMessage", () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
+  it("hides run status when embedded under leftover chat text", () => {
+    render(<AssistantCardsMessage {...baseProps} isGenerating showStatus={false} elapsedSeconds={undefined} />);
+
+    expect(screen.getByTestId("cards-table")).toBeTruthy();
+    expect(screen.queryByTestId("status-pending")).toBeNull();
+    expect(screen.queryByTestId("status-success")).toBeNull();
+  });
+
   it("hides the cards table when there are no cards on a failed run", () => {
     render(<AssistantCardsMessage {...baseProps} cards={[]} isFailed canRetry={false} />);
 

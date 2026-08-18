@@ -328,15 +328,15 @@ describe("buildConversationMessages", () => {
     expect(result).toEqual([{ role: "user", content: "Make cards" }]);
   });
 
-  it("includes chat-text prose and successful card markdown in one assistant message", () => {
+  it("includes successful card markdown, then leftover assistant text", () => {
     const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "Here are five cards.")],
+      [assistantChatTextMessage("a1", "r1", "I skipped a duplicate.")],
       { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
       buildTemplate,
     );
     expect(result).toHaveLength(1);
     expect(result[0].role).toBe("assistant");
-    expect(result[0].content).toBe("Here are five cards.\n\n## Card 1\n**Front**: Question\n**Back**: Answer");
+    expect(result[0].content).toBe("## Card 1\n**Front**: Question\n**Back**: Answer\n\nI skipped a duplicate.");
   });
 
   it("includes successful chat-text cards when the prose is empty", () => {
@@ -350,7 +350,7 @@ describe("buildConversationMessages", () => {
     expect(result[0].content).not.toContain("\n\n");
   });
 
-  it("omits cards from a failed chat-text run", () => {
+  it("keeps leftover text from a failed chat-text run that proposed cards", () => {
     const result = buildConversationMessages(
       [assistantChatTextMessage("a1", "r1", "I started some cards.")],
       { r1: createRunData({ status: "failed", cards: [cardWithContent] }) },
@@ -359,7 +359,7 @@ describe("buildConversationMessages", () => {
     expect(result).toEqual([{ role: "assistant", content: "I started some cards." }]);
   });
 
-  it("omits cards from canceled and interrupted chat-text runs", () => {
+  it("keeps leftover text from canceled and interrupted chat-text runs that proposed cards", () => {
     expect(
       buildConversationMessages(
         [assistantChatTextMessage("a1", "r1", "Partial.")],
@@ -395,5 +395,7 @@ describe("buildConversationMessages", () => {
     expect(result[0].content).toContain("**Prompt**: hola");
     expect(result[0].content).toContain("**Response**: hello");
     expect(result[0].content).not.toContain("**Front**");
+    expect(result[0].content.startsWith("## Card 1")).toBe(true);
+    expect(result[0].content.endsWith("Proposed.")).toBe(true);
   });
 });

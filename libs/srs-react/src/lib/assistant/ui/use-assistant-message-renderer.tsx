@@ -126,8 +126,9 @@ function renderCardsMessage(options: {
   deckId: number | null;
   templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
+  showStatus?: boolean;
 }) {
-  const { run, runId, isCurrentRun, isTail, deckId, templateId, handleRetry } = options;
+  const { run, runId, isCurrentRun, isTail, deckId, templateId, handleRetry, showStatus } = options;
   const templateFieldsMissing = run.templateFields === null;
   const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
 
@@ -148,6 +149,7 @@ function renderCardsMessage(options: {
       templateId={templateId}
       canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null}
       isGenerating={isCurrentRun}
+      showStatus={showStatus}
       isCanceled={run.status === "canceled"}
       isInterrupted={run.status === "interrupted"}
       isFailed={run.status === "failed"}
@@ -165,6 +167,58 @@ function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId:
     <AIChatMessageLayout role="assistant">
       <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} />
     </AIChatMessageLayout>
+  );
+}
+
+function renderChatProposal(options: {
+  toolActivity: ReactNode;
+  cardsBlock: ReactNode;
+  text: string;
+  content: ReactNode;
+  copyAction: ReactNode;
+  run: GenerationRun;
+  runId: string;
+  isTail: boolean;
+  handleRetry: (runId: string) => Promise<void>;
+}) {
+  const { toolActivity, cardsBlock, text, content, copyAction, run, runId, isTail, handleRetry } = options;
+  const status =
+    run.status === "streaming" && !text ? (
+      <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
+    ) : run.status === "success" && run.elapsedSeconds !== null ? (
+      <AIChatMessageStatus
+        state="success"
+        elapsedSeconds={run.elapsedSeconds}
+        modelName={run.modelName}
+        actions={copyAction}
+      />
+    ) : run.status === "canceled" ? (
+      <AIChatMessageStatus
+        state="canceled"
+        elapsedSeconds={run.elapsedSeconds ?? undefined}
+        canRetry={isTail}
+        onRetry={() => handleRetry(runId)}
+        actions={copyAction}
+      />
+    ) : run.status === "interrupted" ? (
+      <AIChatMessageStatus
+        state="interrupted"
+        elapsedSeconds={run.elapsedSeconds ?? undefined}
+        canRetry={isTail}
+        onRetry={() => handleRetry(runId)}
+        actions={copyAction}
+      />
+    ) : run.status === "failed" ? (
+      <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} actions={copyAction} />
+    ) : null;
+
+  return (
+    <div className="group flex flex-col gap-2 self-start w-full">
+      {toolActivity}
+      {cardsBlock}
+      {text ? content : null}
+      {status}
+    </div>
   );
 }
 
@@ -194,19 +248,26 @@ function renderChatMessage(options: {
           deckId: null,
           templateId,
           handleRetry,
+          // WHY: table is done once cards exist. Run status belongs under any
+          // leftover note, not on the table as a second "Working".
+          showStatus: false,
         })
       : null;
 
-  // WHY: AssistantCardsMessage already owns pending/success/failed status.
-  // A second AIChatMessageStatus in this wrapper would double the indicator.
+  // WHY: table first, leftover text second. The dump is still possible; putting
+  // it below keeps the table as the card UI without dropping useful notes.
   if (cardsBlock) {
-    return (
-      <div className="group flex flex-col gap-2 self-start w-full">
-        {toolActivity}
-        {text ? content : null}
-        {cardsBlock}
-      </div>
-    );
+    return renderChatProposal({
+      toolActivity,
+      cardsBlock,
+      text,
+      content,
+      copyAction,
+      run,
+      runId,
+      isTail,
+      handleRetry,
+    });
   }
 
   if (run.status === "streaming") {

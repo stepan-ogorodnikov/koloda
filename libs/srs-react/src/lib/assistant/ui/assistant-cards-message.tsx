@@ -16,6 +16,8 @@ export type AssistantCardsMessageProps = {
   templateId: Template["id"] | undefined;
   canAdd: boolean;
   isGenerating: boolean;
+  // WHY: chat proposals render run status below leftover text, not on the table.
+  showStatus?: boolean;
   isCanceled: boolean;
   isInterrupted?: boolean;
   isFailed: boolean;
@@ -36,6 +38,7 @@ export function AssistantCardsMessage({
   templateId,
   canAdd,
   isGenerating,
+  showStatus = true,
   isCanceled,
   isInterrupted = false,
   isFailed,
@@ -57,7 +60,7 @@ export function AssistantCardsMessage({
 
   return (
     <AIChatMessageLayout role="assistant">
-      {isGenerating && <AIChatMessageStatus state="pending" startedAt={startedAt} />}
+      {showStatus && isGenerating && <AIChatMessageStatus state="pending" startedAt={startedAt} />}
       {showCards && (
         <AssistantCardsTable
           runId={runId}
@@ -70,10 +73,10 @@ export function AssistantCardsMessage({
           isGenerating={isGenerating}
         />
       )}
-      {isCanceled && (
+      {showStatus && isCanceled && (
         <AIChatMessageStatus state="canceled" elapsedSeconds={elapsedSeconds} canRetry={canRetry} onRetry={onRetry} />
       )}
-      {isInterrupted && (
+      {showStatus && isInterrupted && (
         <AIChatMessageStatus
           state="interrupted"
           elapsedSeconds={elapsedSeconds}
@@ -81,8 +84,8 @@ export function AssistantCardsMessage({
           onRetry={onRetry}
         />
       )}
-      {isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
-      {isSuccess && elapsedSeconds !== undefined && showCards && (
+      {showStatus && isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
+      {showStatus && isSuccess && elapsedSeconds !== undefined && showCards && (
         <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
       )}
       {isSuccess && templateUnavailable && <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>}

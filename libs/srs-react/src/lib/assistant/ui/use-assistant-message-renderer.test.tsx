@@ -42,13 +42,23 @@ vi.mock("./copy-message-button", () => ({
 }));
 
 vi.mock("./assistant-cards-message", () => ({
-  AssistantCardsMessage: (props: { canAdd: boolean; deckId: number | null; templateId: number | undefined }) => (
-    <div
-      data-testid="cards-table"
-      data-can-add={String(props.canAdd)}
-      data-deck-id={String(props.deckId)}
-      data-template-id={String(props.templateId)}
-    />
+  AssistantCardsMessage: (props: {
+    canAdd: boolean;
+    deckId: number | null;
+    templateId: number | undefined;
+    isGenerating: boolean;
+    showStatus?: boolean;
+  }) => (
+    <div>
+      {props.isGenerating && props.showStatus !== false ? <div data-testid="status-pending" /> : null}
+      <div
+        data-testid="cards-table"
+        data-can-add={String(props.canAdd)}
+        data-deck-id={String(props.deckId)}
+        data-template-id={String(props.templateId)}
+        data-show-status={String(props.showStatus !== false)}
+      />
+    </div>
   ),
 }));
 
@@ -164,7 +174,7 @@ describe("useAssistantMessageRenderer", () => {
     expect(screen.getByTestId("status-success")).toBeTruthy();
   });
 
-  it("renders the cards table on a chat run that proposed cards", () => {
+  it("renders leftover text below the cards table on a chat proposal", () => {
     const run = {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
@@ -172,12 +182,16 @@ describe("useAssistantMessageRenderer", () => {
       writeTargetDeckId: 5,
     };
     mountRenderer({ r1: run }, { templateId: 9 });
-    expect(screen.getByText("Hello")).toBeTruthy();
-    expect(screen.getByTestId("cards-table")).toBeTruthy();
-    expect(screen.queryByTestId("status-success")).toBeNull();
+    const table = screen.getByTestId("cards-table");
+    const note = screen.getByText("Hello");
+    expect(table.getAttribute("data-show-status")).toBe("false");
+    expect(table.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const success = screen.getByTestId("status-success");
+    expect(success).toBeTruthy();
+    expect(note.compareDocumentPosition(success) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("renders tools, prose, and the cards table in that order", () => {
+  it("renders tools, then the cards table, then leftover text", () => {
     const run = {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
@@ -195,11 +209,40 @@ describe("useAssistantMessageRenderer", () => {
     };
     mountRenderer({ r1: run });
     const tool = screen.getByTestId("tool-activity");
-    const prose = screen.getByText("Hello");
     const table = screen.getByTestId("cards-table");
-    expect(tool.compareDocumentPosition(prose) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(prose.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.queryByTestId("status-success")).toBeNull();
+    const note = screen.getByText("Hello");
+    expect(tool.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(table.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("status-success")).toBeTruthy();
+  });
+
+  it("attaches pending below the table until leftover text arrives", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
+    const table = screen.getByTestId("cards-table");
+    const pending = screen.getByTestId("status-pending");
+    expect(table.getAttribute("data-show-status")).toBe("false");
+    expect(screen.queryByText("Hello")).toBeNull();
+    expect(table.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("drops pending once leftover text is streaming below the table", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { activeRunId: "r1" });
+    const table = screen.getByTestId("cards-table");
+    const note = screen.getByText("Hello");
+    expect(screen.queryByTestId("status-pending")).toBeNull();
+    expect(table.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("does not enable add without writeTargetDeckId on a chat proposal", () => {
