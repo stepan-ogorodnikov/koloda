@@ -304,7 +304,7 @@ describe("useRunOrchestration — data access resolution", () => {
     expect(command.input.kind).toBe("chat");
     if (command.input.kind !== "chat") throw new Error("expected chat submit");
     expect(command.input.request.tools).toEqual(CHAT_TOOLS);
-    expect(command.input.request.tools).toEqual(["list_decks", "get_deck_cards"]);
+    expect(command.input.request.tools).toEqual(["list_decks", "get_deck_cards", "propose_cards"]);
     expect(command.input.request).not.toHaveProperty("dataContext");
 
     const runId = readState().activeRunId;

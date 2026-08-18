@@ -29,6 +29,15 @@ export type GetDeckCardsOutput = {
   cards: Array<{ fields: Record<string, string> }>;
 };
 
+/** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
+export type ProposeCardsOutput = {
+  deckId: number;
+  deckTitle: string;
+  templateFields: Array<{ id: number; title: string }>;
+  cards: Array<{ fields: Record<string, string> }>;
+  rejectedCount: number;
+};
+
 // WHY: hard card cap bounds serialization work and prompt growth before character
 // accounting starts; `totalCards` keeps the true deck size visible to the model.
 export const ASSISTANT_TOOL_MAX_CARDS_PER_DECK = 200;
@@ -49,10 +58,10 @@ export type AssistantDeckSummarySource = {
 export type AssistantToolTemplate = {
   id: number;
   title: string;
-  content: { fields: Array<{ id: number; title: string }> };
+  content: { fields: Array<{ id: number; title: string; isRequired: boolean }> };
 };
 
-/** Structural deck + template subset for `get_deck_cards`. */
+/** Structural deck + template subset for `get_deck_cards` and `propose_cards`. */
 export type AssistantDeckCardsSource = {
   id: number;
   title: string;
@@ -83,6 +92,15 @@ export const ASSISTANT_TOOL_SPECS = {
       "Get the existing cards of one deck by deck id (as reported by list_decks), as field-title-to-text pairs. Large decks are capped.",
     inputSchema: z.object({
       deckId: z.int().positive(),
+    }),
+  },
+  propose_cards: {
+    name: "propose_cards",
+    description:
+      "Propose new flashcards for a deck. Use deckId and field titles from list_decks; fields is a map of field title to text.",
+    inputSchema: z.object({
+      deckId: z.int().positive(),
+      cards: z.array(z.object({ fields: z.record(z.string(), z.string()) })),
     }),
   },
 } as const satisfies Record<string, AssistantToolSpec>;
@@ -186,4 +204,56 @@ function shapeCardFields(
   fields: Array<{ id: number; title: string }>,
 ): Record<string, string> {
   return Object.fromEntries(fields.map((field) => [field.title, card.content[String(field.id)]?.text ?? ""]));
+}
+
+/**
+ * Shape `propose_cards` output from a loaded deck+template and title-keyed input
+ * cards. Invalid, empty, and over-cap cards are dropped — never a thrown error.
+ */
+export function shapeProposeCardsOutput(
+  deck: AssistantDeckCardsSource,
+  cards: Array<{ fields: Record<string, string> }>,
+): ProposeCardsOutput {
+  const templateFields = deck.template.content.fields;
+  const accepted: ProposeCardsOutput["cards"] = [];
+  let rejectedCount = 0;
+  for (const card of cards) {
+    const fields = shapeProposedCardFields(card.fields, templateFields);
+    if (fields == null) {
+      rejectedCount += 1;
+      continue;
+    }
+    // WHY: extras past the per-deck cap count as rejected so the model sees how
+    // many proposals were dropped without failing the tool run.
+    if (accepted.length >= ASSISTANT_TOOL_MAX_CARDS_PER_DECK) {
+      rejectedCount += 1;
+      continue;
+    }
+    accepted.push({ fields });
+  }
+
+  return {
+    deckId: deck.id,
+    deckTitle: deck.title,
+    templateFields: templateFields.map((field) => ({ id: field.id, title: field.title })),
+    cards: accepted,
+    rejectedCount,
+  };
+}
+
+function shapeProposedCardFields(
+  inputFields: Record<string, string>,
+  fields: AssistantToolTemplate["content"]["fields"],
+): Record<string, string> | null {
+  const mapped: Record<string, string> = {};
+  let hasNonEmpty = false;
+  let isMissingRequired = false;
+  for (const field of fields) {
+    const text = (inputFields[field.title] ?? "").trim();
+    mapped[field.title] = text;
+    if (text.length > 0) hasNonEmpty = true;
+    else if (field.isRequired) isMissingRequired = true;
+  }
+  if (!hasNonEmpty || isMissingRequired) return null;
+  return mapped;
 }

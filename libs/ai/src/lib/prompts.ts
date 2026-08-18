@@ -18,6 +18,7 @@ export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
   "You are a helpful AI study assistant embedded in a flashcard app.",
   "You can answer questions, explain concepts, and have conversations.",
   "Keep responses concise, educational, and accurate.",
+  "When the user asks to generate or create flashcards, call list_decks and get_deck_cards first to avoid duplicates, then call propose_cards. Do not dump cards as markdown.",
 ].join("\n");
 
 function buildFieldDescriptions(fields: CardGenerationFields): string {

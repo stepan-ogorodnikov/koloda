@@ -1,6 +1,6 @@
 import type { AIRuntime, AssistantToolExecutor } from "@koloda/ai";
 import { ASSISTANT_TOOL_SPECS, createAIGenerationClient, fetchModels } from "@koloda/ai";
-import { shapeGetDeckCardsOutput, shapeListDecksOutput } from "@koloda/ai";
+import { shapeGetDeckCardsOutput, shapeListDecksOutput, shapeProposeCardsOutput } from "@koloda/ai";
 import type { DB } from "@koloda/srs-pgsql";
 import { getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
 import { loadAIProfileSecrets } from "./ai";
@@ -31,6 +31,14 @@ function createDemoToolExecutor(db: DB): AssistantToolExecutor {
       if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
       const cards = await getCards(db, { deckId });
       return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, cards);
+    }
+    if (name === "propose_cards") {
+      const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);
+      const deck = (await getDecks(db)).find((row) => row.id === deckId);
+      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
+      const template = (await getTemplates(db)).find((row) => row.id === deck.templateId);
+      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+      return shapeProposeCardsOutput({ id: deck.id, title: deck.title, template }, cards);
     }
     throw new Error(`Unknown assistant tool: ${name}`);
   };

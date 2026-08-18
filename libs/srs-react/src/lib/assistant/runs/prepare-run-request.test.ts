@@ -108,7 +108,7 @@ describe("prepareRunRequest — data access", () => {
 
     expect(prepared).not.toBeNull();
     expect(prepared!.request.tools).toEqual(CHAT_TOOLS);
-    expect(prepared!.request.tools).toEqual(["list_decks", "get_deck_cards"]);
+    expect(prepared!.request.tools).toEqual(["list_decks", "get_deck_cards", "propose_cards"]);
     expect(prepared!.request).not.toHaveProperty("dataContext");
   });
 

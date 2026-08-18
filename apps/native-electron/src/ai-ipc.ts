@@ -18,6 +18,7 @@ import {
   isAIError,
   shapeGetDeckCardsOutput,
   shapeListDecksOutput,
+  shapeProposeCardsOutput,
   toAIError,
   wrapAIError,
 } from "@koloda/ai";
@@ -157,6 +158,14 @@ function createChatToolExecutor(db: KolodaDb): AssistantToolExecutor {
       const template = db.getTemplates().find((row) => row.id === deck.templateId);
       if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
       return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, db.getCards({ deckId }));
+    }
+    if (name === "propose_cards") {
+      const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);
+      const deck = db.getDecks().find((row) => row.id === deckId);
+      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
+      const template = db.getTemplates().find((row) => row.id === deck.templateId);
+      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+      return shapeProposeCardsOutput({ id: deck.id, title: deck.title, template }, cards);
     }
     throw new Error(`Unknown assistant tool: ${name}`);
   };

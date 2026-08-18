@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as AiSdkOllama from "ai-sdk-ollama";
 import { ASSISTANT_TOOL_MAX_CARDS_PER_DECK, ASSISTANT_TOOL_SPECS, bindAssistantTools } from "./assistant-tools";
 import type { AssistantToolCard, AssistantToolEvent } from "./assistant-tools";
-import { shapeGetDeckCardsOutput, shapeListDecksOutput } from "./assistant-tools";
+import { shapeGetDeckCardsOutput, shapeListDecksOutput, shapeProposeCardsOutput } from "./assistant-tools";
 import { streamChatWithOllama } from "./chat-stream";
 import type { ChatStreamRequest } from "./generation";
 
@@ -124,6 +124,14 @@ describe("assistant-tools binder", () => {
     expect(bound.get_deck_cards?.description).toBe(ASSISTANT_TOOL_SPECS.get_deck_cards.description);
   });
 
+  it("binds propose_cards as a known spec", () => {
+    const bound = bindAssistantTools({ names: ["propose_cards"], execute: vi.fn() });
+
+    expect(ASSISTANT_TOOL_SPECS.propose_cards).toBeDefined();
+    expect(Object.keys(bound)).toEqual(["propose_cards"]);
+    expect(bound.propose_cards?.description).toBe(ASSISTANT_TOOL_SPECS.propose_cards.description);
+  });
+
   it("rejects unknown tool names at bind time", () => {
     expect(() => bindAssistantTools({ names: ["nope"], execute: vi.fn() })).toThrow(/Unknown assistant tool/);
   });
@@ -136,12 +144,12 @@ describe("tool output shaping", () => {
       title: "Basic",
       content: {
         fields: [
-          { id: 10, title: "Front" },
-          { id: 11, title: "Back" },
+          { id: 10, title: "Front", isRequired: true },
+          { id: 11, title: "Back", isRequired: true },
         ],
       },
     },
-    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text" }] } },
+    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text", isRequired: true }] } },
   ];
   const deck = { id: 5, title: "Spanish verbs", template: templates[0] };
 
@@ -236,6 +244,96 @@ describe("tool output shaping", () => {
     expect(output.totalCards).toBe(3);
     expect(output.cards).toEqual([{ fields: { Front: bigText, Back: bigText } }]);
     expect(output.isCapped).toBe(true);
+  });
+});
+
+describe("propose_cards output shaping", () => {
+  const template = {
+    id: 1,
+    title: "Basic",
+    content: {
+      fields: [
+        { id: 10, title: "Front", isRequired: true },
+        { id: 11, title: "Back", isRequired: true },
+        { id: 12, title: "Hint", isRequired: false },
+      ],
+    },
+  };
+  const deck = { id: 5, title: "Spanish verbs", template };
+
+  it("maps titles onto template field ids and returns title-keyed accepted cards", () => {
+    expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }])).toEqual({
+      deckId: 5,
+      deckTitle: "Spanish verbs",
+      templateFields: [
+        { id: 10, title: "Front" },
+        { id: 11, title: "Back" },
+        { id: 12, title: "Hint" },
+      ],
+      cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
+      rejectedCount: 0,
+    });
+  });
+
+  it("drops all-empty cards", () => {
+    const output = shapeProposeCardsOutput(deck, [
+      { fields: { Front: "hola", Back: "hello" } },
+      { fields: { Front: "  ", Back: "", Hint: "   " } },
+      { fields: {} },
+    ]);
+
+    expect(output.cards).toEqual([{ fields: { Front: "hola", Back: "hello", Hint: "" } }]);
+    expect(output.rejectedCount).toBe(2);
+  });
+
+  it("drops cards missing required fields", () => {
+    const output = shapeProposeCardsOutput(deck, [
+      { fields: { Front: "hola", Hint: "greeting" } },
+      { fields: { Front: "gato", Back: "cat" } },
+    ]);
+
+    expect(output.cards).toEqual([{ fields: { Front: "gato", Back: "cat", Hint: "" } }]);
+    expect(output.rejectedCount).toBe(1);
+  });
+
+  it("ignores unknown field titles", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello", Extra: "nope" } }]);
+
+    expect(output.cards).toEqual([{ fields: { Front: "hola", Back: "hello", Hint: "" } }]);
+    expect(output.rejectedCount).toBe(0);
+  });
+
+  it("returns an empty accepted list for empty input without rejecting", () => {
+    expect(shapeProposeCardsOutput(deck, [])).toEqual({
+      deckId: 5,
+      deckTitle: "Spanish verbs",
+      templateFields: [
+        { id: 10, title: "Front" },
+        { id: 11, title: "Back" },
+        { id: 12, title: "Hint" },
+      ],
+      cards: [],
+      rejectedCount: 0,
+    });
+  });
+
+  it(`caps accepted cards at ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK} and counts extras as rejected`, () => {
+    const cards = Array.from({ length: ASSISTANT_TOOL_MAX_CARDS_PER_DECK + 5 }, (_unused, index) => ({
+      fields: { Front: `f${index}`, Back: `b${index}` },
+    }));
+
+    const output = shapeProposeCardsOutput(deck, cards);
+
+    expect(output.cards).toHaveLength(ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
+    expect(output.rejectedCount).toBe(5);
+    expect(output.cards[0]).toEqual({ fields: { Front: "f0", Back: "b0", Hint: "" } });
+    expect(output.cards[ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1]).toEqual({
+      fields: {
+        Front: `f${ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1}`,
+        Back: `b${ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1}`,
+        Hint: "",
+      },
+    });
   });
 });
 
