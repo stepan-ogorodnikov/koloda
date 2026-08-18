@@ -186,59 +186,6 @@ describe("createElectronAIRuntime", () => {
     expect(chunks).toEqual(["ok"]);
   });
 
-  it("uses a provided requestId for generate-cards IPC", async () => {
-    invokeMock.mockImplementation(async (cmd, args) => {
-      if (cmd !== "cmd_ai_generate_cards") return undefined;
-      const { requestId } = args as { requestId: string };
-      queueMicrotask(() => {
-        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
-      });
-    });
-
-    const runtime = createElectronAIRuntime();
-    await runtime.generateCards(
-      "profile-1",
-      {
-        template: { content: { fields: [] } },
-        input: { modelId: "m", prompt: "hi" },
-        onCard: () => {},
-        abortSignal: new AbortController().signal,
-      },
-      "host-req-cards",
-    );
-
-    expect(invokeMock).toHaveBeenCalledWith(
-      "cmd_ai_generate_cards",
-      expect.objectContaining({ requestId: "host-req-cards", profileId: "profile-1" }),
-    );
-  });
-
-  it("forwards generated cards over the stream channel", async () => {
-    invokeMock.mockImplementation(async (cmd, args) => {
-      if (cmd !== "cmd_ai_generate_cards") return undefined;
-      const { requestId } = args as { requestId: string };
-      queueMicrotask(() => {
-        emit(AI_STREAM_CHANNEL, {
-          requestId,
-          type: "card",
-          card: { content: { front: { text: "Q" } } },
-        });
-        emit(AI_STREAM_CHANNEL, { requestId, type: "done" });
-      });
-    });
-
-    const runtime = createElectronAIRuntime();
-    const cards: unknown[] = [];
-    await runtime.generateCards("profile-1", {
-      template: { content: { fields: [] } },
-      input: { modelId: "m", prompt: "hi" },
-      onCard: (card) => cards.push(card),
-      abortSignal: new AbortController().signal,
-    });
-
-    expect(cards).toEqual([{ content: { front: { text: "Q" } } }]);
-  });
-
   it("aborts an in-flight chat by requestId", async () => {
     let seenAbortId: string | undefined;
     invokeMock.mockImplementation(async (cmd, args) => {

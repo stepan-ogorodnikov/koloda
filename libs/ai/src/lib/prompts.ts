@@ -3,17 +3,6 @@ import type { AiProvider } from "./provider-catalog";
 
 export const GENERATION_TEMPERATURE = 0.2;
 
-export const DEFAULT_GENERATION_PROMPT_TEMPLATE = [
-  "You are a flashcard generator that must produce strictly structured flashcard data.",
-  "The flashcards have the following fields:",
-  "{{fields}}",
-  "",
-  "Rules:",
-  "{{rules}}",
-  "",
-  "{{provider}}",
-].join("\n");
-
 export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
   "You are a helpful AI study assistant embedded in a flashcard app.",
   "You can answer questions, explain concepts, and have conversations.",
@@ -27,26 +16,15 @@ function buildFieldDescriptions(fields: CardGenerationFields): string {
     .join("\n");
 }
 
-function buildCardGenerationRules(context: "structured" | "assistant"): string {
-  const noExtras =
-    context === "assistant"
-      ? "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards."
-      : "- Do not add extra keys, comments, explanations, markdown, headings, or prose.";
-
-  const rules = [
+function buildCardGenerationRules(): string {
+  return [
     '- Each card must be { "content": { ... } } where each field key maps to { "text": "..." }.',
     '- "content" keys must be ONLY the field keys listed above.',
-    noExtras,
+    "- Do not add extra keys, comments, explanations, markdown, headings, or prose when generating cards.",
     "- Keep text concise, educational, and accurate.",
     "- For required fields, never return empty text.",
     "- Follow the requested card count exactly when specified.",
-  ];
-
-  if (context === "structured") {
-    rules.unshift("- Output must match the provided schema exactly.");
-  }
-
-  return rules.join("\n");
+  ].join("\n");
 }
 
 function buildMarkdownFormatInstructions(fields: CardGenerationFields): string {
@@ -58,56 +36,8 @@ function buildMarkdownFormatInstructions(fields: CardGenerationFields): string {
   ].join("\n");
 }
 
-export function buildSystemPrompt(fields: CardGenerationFields, providerPrompt = ""): string {
-  const corePrompt = [
-    "You are a flashcard generator that must produce strictly structured flashcard data.",
-    "The flashcards have the following fields:",
-    buildFieldDescriptions(fields),
-    "Rules:",
-    buildCardGenerationRules("structured"),
-  ].join("\n");
-
-  return providerPrompt ? `${corePrompt}\n\n${providerPrompt}` : corePrompt;
-}
-
-export function buildProviderFormatPrompt(fields: CardGenerationFields) {
-  return ["Provider-specific format instructions:", buildMarkdownFormatInstructions(fields)].join("\n");
-}
-
-export function buildSystemPromptForProvider(fields: CardGenerationFields, provider?: AiProvider | null) {
-  if (!provider || provider === "openrouter") return buildSystemPrompt(fields);
-  return buildSystemPrompt(fields, buildProviderFormatPrompt(fields));
-}
-
-export function buildAssistantSystemPrompt(fields: CardGenerationFields, provider?: AiProvider | null): string {
-  const formatInstructions =
-    provider && provider !== "openrouter" ? "\n\n" + buildMarkdownFormatInstructions(fields) : "";
-
-  return [
-    "You are a helpful AI study assistant embedded in a flashcard app.",
-    "You can answer questions, explain concepts, and have conversations.",
-    "When the user asks you to generate flashcards, you must produce structured card data.",
-    "",
-    "The flashcards have the following fields:",
-    buildFieldDescriptions(fields),
-    "",
-    "Rules for card generation:",
-    buildCardGenerationRules("assistant"),
-    formatInstructions,
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-function resolveProviderFormatText(
-  fields: CardGenerationFields,
-  provider: AiProvider | null | undefined,
-  mode: "generation" | "chat",
-): string {
+function resolveProviderFormatText(fields: CardGenerationFields, provider: AiProvider | null | undefined): string {
   if (!provider || provider === "openrouter") return "";
-  if (mode === "generation") {
-    return buildProviderFormatPrompt(fields);
-  }
   return buildMarkdownFormatInstructions(fields);
 }
 
@@ -115,26 +45,14 @@ export function compilePromptTemplate(
   template: string,
   fields: CardGenerationFields,
   provider?: AiProvider | null,
-  mode: "generation" | "chat" = "generation",
 ): string {
   const fieldsText = buildFieldDescriptions(fields);
-  const rulesText = buildCardGenerationRules(mode === "generation" ? "structured" : "assistant");
-  const providerFormatText = resolveProviderFormatText(fields, provider, mode);
+  const rulesText = buildCardGenerationRules();
+  const providerFormatText = resolveProviderFormatText(fields, provider);
 
   return template
     .replace(/{{fields}}/g, fieldsText)
     .replace(/{{rules}}/g, rulesText)
     .replace(/{{provider}}/g, providerFormatText)
     .trim();
-}
-
-/**
- * Append always-on data context after the compiled system prompt. Deliberately
- * not a `{{placeholder}}`: data access is not user-positionable and settings
- * templates stay untouched. Absent or empty context returns the compiled
- * prompt unchanged.
- */
-export function appendDataContext(systemPrompt: string, dataContext: string | undefined): string {
-  if (!dataContext) return systemPrompt;
-  return `${systemPrompt}\n\n${dataContext}`;
 }

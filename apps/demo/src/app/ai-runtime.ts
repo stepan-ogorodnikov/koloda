@@ -63,11 +63,5 @@ export function createDemoAIRuntime(db: DB): AIRuntime {
         request.tools != null && request.tools.length > 0 ? { ...request, executeTool: demoToolExecutor } : request;
       return client.chat(requestWithExecutor, onChunk, abortSignal);
     },
-    generateCards: async (profileId, request, _requestId) => {
-      const secrets = await loadAIProfileSecrets(db, profileId);
-      if (!secrets) throw new Error("No secrets loaded for AI profile");
-      const client = createAIGenerationClient(secrets);
-      await client.generateCards(request);
-    },
   };
 }

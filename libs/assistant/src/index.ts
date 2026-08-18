@@ -4,8 +4,6 @@ export type {
   AssistantChatExecutionInput,
   AssistantExecutionIdentity,
   AssistantExecutionPort,
-  AssistantGenerateExecutionInput,
-  AssistantTemplateSnapshot,
   ImmutableExecutionValue,
 } from "./lib/assistant-execution-port";
 export type {
@@ -49,7 +47,6 @@ export type {
   ConversationRuntimeCallbacks,
   ConversationRuntimeTransports,
 } from "./lib/conversation-runtime";
-export type { CardGenerationExecutor, CardGenerationStreamRequest } from "./lib/card-generation";
 export type { StreamResult } from "./lib/stream-result";
 export { createRunControllerRegistry, RunControllerRegistryClosedError } from "./lib/run-controller-registry";
 export type { RunAbortReason, RunControllerRegistry } from "./lib/run-controller-registry";

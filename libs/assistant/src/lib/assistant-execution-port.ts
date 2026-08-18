@@ -1,11 +1,4 @@
-import type {
-  AssistantToolEvent,
-  CardGenerationFields,
-  ChatStreamRequest,
-  GeneratedCard,
-  StreamUsage,
-} from "@koloda/ai";
-import type { CardGenerationStreamRequest } from "./card-generation";
+import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 
 /** Recursively read-only data safe to retain across an asynchronous execution queue. */
 export type ImmutableExecutionValue<T> = T extends (...args: never[]) => unknown
@@ -17,24 +10,12 @@ export type ImmutableExecutionValue<T> = T extends (...args: never[]) => unknown
       : T;
 
 /**
- * The non-secret template data needed to execute card generation.
- * Credentials and provider secrets must never be added to this snapshot.
- */
-export type AssistantTemplateSnapshot = ImmutableExecutionValue<{
-  id: number;
-  content: {
-    fields: CardGenerationFields;
-  };
-}>;
-
-/**
  * Non-secret identity captured when an assistant command is accepted.
  * The profile identifies host-owned configuration; the host resolves any
  * credentials for that profile only when the execution port is invoked.
  */
 export type AssistantExecutionIdentity = ImmutableExecutionValue<{
   profileId: string;
-  template?: AssistantTemplateSnapshot;
 }>;
 
 export type AssistantChatExecutionInput = ImmutableExecutionValue<{
@@ -43,14 +24,6 @@ export type AssistantChatExecutionInput = ImmutableExecutionValue<{
   runId: string;
   identity: AssistantExecutionIdentity;
   request: ChatStreamRequest;
-}>;
-
-export type AssistantGenerateExecutionInput = ImmutableExecutionValue<{
-  kind: "cards";
-  conversationId: string;
-  runId: string;
-  identity: AssistantExecutionIdentity;
-  request: CardGenerationStreamRequest;
 }>;
 
 /**
@@ -65,9 +38,4 @@ export type AssistantExecutionPort = {
     onToolEvent: (event: AssistantToolEvent) => void,
     signal: AbortSignal,
   ) => Promise<StreamUsage | undefined>;
-  executeGenerate: (
-    input: AssistantGenerateExecutionInput,
-    onCard: (card: GeneratedCard) => void,
-    signal: AbortSignal,
-  ) => Promise<void>;
 };

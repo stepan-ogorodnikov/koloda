@@ -1,6 +1,6 @@
 # @koloda/ai
 
-Provider-agnostic AI abstraction: streams chat completions and generates structured cards from any registered provider, validates per-provider secrets, and derives pure conversation helpers. Framework-agnostic — no React, no DB, no conversation state. The TS provider enum and secrets schema mirror Rust; Rust is the source of truth.
+Provider-agnostic AI abstraction: streams chat completions from any registered provider, validates per-provider secrets, and derives pure conversation helpers. Framework-agnostic — no React, no DB, no conversation state. The TS provider enum and secrets schema mirror Rust; Rust is the source of truth.
 
 ## Where it sits
 
@@ -16,15 +16,14 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Provider registry & abstraction seam: `providers/` — one module per provider (`openrouter.ts`, `ollama.ts`, …) owning fetchModels + createClient + secrets probes; `provider-registry.ts` holds `AIGenerationClient` / `AIProviderEntry` types and wires `AI_PROVIDER_REGISTRY`. Adding a provider = one new file under `providers/` + one registry line (+ export from `src/index.ts` if public).
 - Provider catalog (TS half of the Rust mirror): `provider-catalog.ts` — `AI_PROVIDER_LABELS` / `AiProvider` / base URLs; `provider-secrets.ts` — per-provider zod schemas and `aiSecretsValidation` discriminated union.
 - Settings & profiles: `settings.ts` — profile/settings zod schemas, CRUD DTOs, `DEFAULT_AI_SETTINGS`.
-- Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (`AIChatMode`, chat/card request types, `generateCardsInputSchema`).
+- Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (`AIChatMode`, chat request types, `generateCardsInputSchema`).
 - Chat streaming: `chat-stream.ts` — shared `runChatStream` for all providers over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them. Per-provider wrappers only supply the model factory (and optional `providerOptions`).
-- Card generation: `card-generation.ts` — shared `runCardGeneration` for all HTTP providers. Tries structured `Output.array` streaming first, then parses raw stream text if no elements arrive, then falls back to plain `generateText` + `parseGeneratedCardsText`. Per-provider wrappers only supply the model factory (and optional `providerOptions`).
-- Card parsing & schema: `card-parsing.ts` — `getCardContentSchema` (zod schema per template fields), `parseGeneratedCardsText` (text → cards), `resolveGenerationTemperature`.
-- Prompt compilation: `prompts.ts` — default prompt templates, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (fields/rules/provider/mode injection).
+- Temperature: `card-parsing.ts` — `resolveGenerationTemperature` (chat still uses this).
+- Prompt compilation: `prompts.ts` — default chat prompt template, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (fields/rules/provider injection).
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
 - Reasoning levels: `providers/openrouter.ts` (API-provided); `providers/openai-compatible.ts` hardcodes deepseek-* / mimo-* via `resolveReasoningLevelsForModel` (Opencode Go/Zen).
-- Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` / `generateCards` by `profileId`). Hosts implement; shared React injects via `aiRuntimeAtom`.
+- Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` by `profileId`). Hosts implement; shared React injects via `aiRuntimeAtom`.
 - Compatibility: `types.ts` re-exports the domain modules above; prefer importing from the specific files.
 
 ### Does NOT own (prevent scope creep)
@@ -38,5 +37,5 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — Rust owns provider identity; this lib mirrors it
 - `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
-- `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming/generation)
+- `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming)
 - `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the domain behavior this lib serves

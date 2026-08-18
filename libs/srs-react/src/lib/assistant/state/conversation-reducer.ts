@@ -62,7 +62,7 @@ export type GenerationRun = {
   elapsedSeconds: number | null;
   modelName?: string;
   usage?: StreamUsage;
-  /** Submit-time data access snapshot: the context text sent and its manifest. */
+  /** Optional restore field from v1 injection. New submits omit it; malformed values fail as corrupt. */
   dataAccess?: DataAccessSnapshot;
 };
 

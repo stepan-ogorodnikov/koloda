@@ -347,7 +347,6 @@ fn test_assistant_temperature_defaults_when_omitted() {
     let json = r#"{
         "profiles": [],
         "assistant": {
-            "cardsPromptTemplate": null,
             "chatPromptTemplate": null
         }
     }"#;
@@ -373,7 +372,6 @@ fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
     let content = serde_json::json!({
         "profiles": [],
         "assistant": {
-            "cardsPromptTemplate": null,
             "chatPromptTemplate": null
         }
     });
@@ -438,7 +436,6 @@ fn test_assistant_temperature_nan_value_fails_validation() {
     let mut settings: AISettings = serde_json::from_str(r#"{ "profiles": [] }"#).unwrap();
     settings.assistant = Some(koloda_core::domain::settings_ai::AssistantSettings {
         temperature: f64::NAN,
-        cards_prompt_template: None,
         chat_prompt_template: None,
     });
 
@@ -456,4 +453,23 @@ fn test_assistant_temperature_null_fails_deserialization() {
     let json = r#"{ "profiles": [], "assistant": { "temperature": null } }"#;
     let result: Result<AISettings, _> = serde_json::from_str(json);
     assert!(result.is_err(), "null temperature should fail to deserialize");
+}
+
+#[test]
+fn test_assistant_ignores_unknown_cards_prompt_template() {
+    // Extra JSON from old saved settings (cardsPromptTemplate) must not fail parse.
+    let json = r#"{
+        "profiles": [],
+        "assistant": {
+            "temperature": 0.2,
+            "cardsPromptTemplate": "old generation template",
+            "chatPromptTemplate": null
+        }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("extra cardsPromptTemplate must not fail parse");
+    assert!(
+        settings.validate().is_ok(),
+        "extra cardsPromptTemplate should be ignored"
+    );
 }

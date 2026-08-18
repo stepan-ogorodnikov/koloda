@@ -72,14 +72,14 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         // access; a stored v1 snapshot stays on the run record as inert
         // metadata (tools re-read current data).
         const stored = currentState.runs[runId]?.dataAccess;
-        const prepared = prepareRunRequest(cfg, "chat", promptText, visibleMessages, currentState.runs);
+        const prepared = prepareRunRequest(cfg, promptText, visibleMessages, currentState.runs);
         if (!prepared) return;
 
         rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        await dispatchCommand(toRetryCommand(conversationId, runId, "chat", prepared, stored));
+        await dispatchCommand(toRetryCommand(conversationId, runId, prepared, stored));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
@@ -128,7 +128,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       try {
         // WHY: Submit is always chat+tools. Cards injection is not resolved
         // here — propose_cards runs against current data when the model calls it.
-        const prepared = prepareRunRequest(cfg, "chat", promptText, currentState.messages, currentState.runs);
+        const prepared = prepareRunRequest(cfg, promptText, currentState.messages, currentState.runs);
         if (!prepared) return;
 
         const runId = generateUUID();

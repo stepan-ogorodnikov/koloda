@@ -15,11 +15,9 @@ export type GenerateCardsInput = z.input<typeof generateCardsInputSchema>;
 
 export type GeneratedCard = { content: Record<string, { text: string }> };
 
-export type OnCardGenerated = (card: GeneratedCard) => void;
-
 export type Message = { role: "user" | "assistant" | "system"; content: string };
 
-/** Assistant chat operating mode: free-form text vs structured card generation. */
+/** Assistant chat operating mode. `"cards"` remains on restored historical runs. */
 export type AIChatMode = "chat" | "cards";
 
 export type CardGenerationFields = Array<{ id: number; title: string; isRequired: boolean; type?: string }>;
@@ -33,7 +31,7 @@ export type ChatStreamRequest = {
   tools?: string[];
   /** Host-supplied dispatcher for the tool names above; required when `tools` is non-empty. */
   executeTool?: AssistantToolExecutor;
-  /** Streams tool activity back to the caller; stripped and recreated at the IPC boundary like `onCard`. */
+  /** Streams tool activity back to the caller; stripped and recreated at the IPC boundary like `executeTool`. */
   onToolEvent?: OnToolEvent;
 };
 
@@ -42,16 +40,3 @@ export type ChatStreamGenerator = (
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
 ) => Promise<StreamUsage | undefined>;
-
-export type CardGenerationRequest = {
-  template: { content: { fields: CardGenerationFields } };
-  input: GenerateCardsInput;
-  messages?: Message[];
-  onCard: OnCardGenerated;
-  abortSignal?: AbortSignal;
-  systemPromptTemplate?: string;
-  /** Always-on data context appended after the compiled system prompt. */
-  dataContext?: string;
-};
-
-export type GenerateCardsFunction = (request: CardGenerationRequest) => Promise<void>;

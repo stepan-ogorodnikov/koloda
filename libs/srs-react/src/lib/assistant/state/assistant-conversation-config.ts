@@ -10,7 +10,6 @@ export type AssistantConversationConfig = {
   deckId: Deck["id"];
   templateId: Template["id"];
   template: Template | null | undefined;
-  cardsPromptTemplate: string | null;
   chatPromptTemplate: string | null;
   _: I18nContext["_"];
 };

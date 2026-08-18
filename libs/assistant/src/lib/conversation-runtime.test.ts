@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent } from "./assistant-protocol";
-import type { CardGenerationStreamRequest } from "./card-generation";
 import { createConversationRuntime } from "./conversation-runtime";
 import { createRunControllerRegistry } from "./run-controller-registry";
 
@@ -12,7 +11,6 @@ const TEST_EXECUTION = { profileId: "test-profile" } as const;
 function unusedPort(): AssistantExecutionPort {
   return {
     executeChat: vi.fn(async () => undefined),
-    executeGenerate: vi.fn(async () => undefined),
   };
 }
 
@@ -73,48 +71,6 @@ describe("createConversationRuntime closed-registry races", () => {
       outcome: { status: "interrupted", reason: "app_shutdown" },
     });
   });
-
-  it("closed registry at beginRun for generate settles as interrupted", async () => {
-    const events: AssistantEvent[] = [];
-    const streaming = new Set<string>(["run-cards"]);
-    const registry = createRunControllerRegistry();
-    const executionPort = unusedPort();
-
-    const runtime = createConversationRuntime(
-      "conv-a",
-      {
-        emit: (event) => {
-          events.push(event);
-          if (event.type === "runTerminated") {
-            streaming.delete(event.runId);
-          }
-        },
-        markReadIfCurrent: vi.fn(),
-        touch: vi.fn(),
-        isRunStreaming: (_conversationId, runId) => streaming.has(runId),
-        readConversationState: () => ({ runs: { "run-cards": { mode: "cards" } } }),
-      },
-      { executionPort },
-      registry,
-    );
-
-    registry.dispose("dispose");
-
-    const request: CardGenerationStreamRequest = {
-      input: { modelId: "m", prompt: "p", templateId: 1 },
-      messages: [],
-    };
-    await expect(runtime.executeGenerateRun("run-cards", request, TEST_EXECUTION)).resolves.toBeUndefined();
-
-    expect(executionPort.executeGenerate).not.toHaveBeenCalled();
-    expect(streaming.has("run-cards")).toBe(false);
-    expect(events).toContainEqual({
-      type: "runTerminated",
-      conversationId: "conv-a",
-      runId: "run-cards",
-      outcome: { status: "interrupted", reason: "app_shutdown" },
-    });
-  });
 });
 
 describe("createConversationRuntime command acceptance", () => {
@@ -169,7 +125,6 @@ describe("createConversationRuntime chat tool events", () => {
         onToolEvent({ kind: "toolResult", callId: "call-1", output: { decks: [] } });
         throw new DOMException("Aborted", "AbortError");
       },
-      executeGenerate: vi.fn(async () => undefined),
     };
 
     const runtime = createConversationRuntime(
@@ -225,7 +180,6 @@ describe("createConversationRuntime chat tool events", () => {
         onToolEvent({ kind: "toolResult", callId: "call-1", error: "Deck not found: 3" });
         return undefined;
       },
-      executeGenerate: vi.fn(async () => undefined),
     };
 
     const runtime = createConversationRuntime(

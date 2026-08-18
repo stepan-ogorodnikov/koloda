@@ -1,4 +1,3 @@
-import type { AIChatMode } from "@koloda/ai";
 import type { AssistantCommand, AssistantExecutionIdentity } from "@koloda/assistant";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { buildConversationMessages } from "../state/assistant-messages";
@@ -17,21 +16,8 @@ export type PreparedRun = StreamRequestResult & {
   execution: AssistantExecutionIdentity;
 };
 
-export function createExecutionIdentity(
-  cfg: AssistantConversationConfig,
-  kind: StreamRequestResult["kind"],
-): AssistantExecutionIdentity {
-  if (kind !== "cards") return { profileId: cfg.profileId };
-
-  const template = cfg.template;
-  if (!template) throw new Error("Card generation requires a template");
-  return {
-    profileId: cfg.profileId,
-    template: {
-      id: template.id,
-      content: { fields: template.content.fields },
-    },
-  };
+export function createExecutionIdentity(cfg: AssistantConversationConfig): AssistantExecutionIdentity {
+  return { profileId: cfg.profileId };
 }
 
 /**
@@ -40,49 +26,33 @@ export function createExecutionIdentity(
  * stream. Centralizing the guard stack here is what lets `handleRetry`
  * execute only after validation.
  *
- * `dataAccess` is the cards submit-time snapshot resolved by React land;
- * this framework-free prep only embeds it into the cards request — it
- * never resolves, and chat requests ignore it (tools, not injection).
+ * Prep is chat-only. A stored `dataAccess` snapshot is never embedded into
+ * the request (tools, not injection).
  */
 export function prepareRunRequest(
   cfg: AssistantConversationConfig,
-  mode: AIChatMode,
   promptText: string,
   messages: ConversationReducerState["messages"],
   runs: Record<string, GenerationRun>,
-  dataAccess?: DataAccessSnapshot,
 ): PreparedRun | null {
   if (!promptText || !cfg.profileId || !cfg.modelId) return null;
-  if (mode === "cards" && !cfg.template) return null;
 
   const conversationMessages = buildConversationMessages(messages, runs, cfg.template);
-  const result = buildStreamRequest(cfg, mode, promptText, conversationMessages, dataAccess);
+  const result = buildStreamRequest(cfg, promptText, conversationMessages);
   return {
     ...result,
     modelName: cfg.modelName,
-    execution: createExecutionIdentity(cfg, result.kind),
+    execution: createExecutionIdentity(cfg),
   };
 }
 
 /** Build the typed engine submit command from a prepared run. */
 export function toSubmitCommand(conversationId: string, runId: string, prepared: PreparedRun): AssistantCommand {
-  if (prepared.kind === "chat") {
-    return {
-      type: "submit",
-      conversationId,
-      input: {
-        kind: "chat",
-        runId,
-        request: prepared.request,
-        execution: prepared.execution,
-      },
-    };
-  }
   return {
     type: "submit",
     conversationId,
     input: {
-      kind: "cards",
+      kind: "chat",
       runId,
       request: prepared.request,
       execution: prepared.execution,
@@ -92,14 +62,12 @@ export function toSubmitCommand(conversationId: string, runId: string, prepared:
 
 /**
  * Build the typed engine retry command from a prepared run. `dataAccess` rides
- * the command so restart stores it on the run record: cards replay the
- * snapshot into the request; chat keeps a stored v1 snapshot as inert
- * metadata (never embedded — ChatStreamRequest has no dataContext).
+ * the command so restart stores it on the run record as inert metadata
+ * (never embedded — ChatStreamRequest has no dataContext).
  */
 export function toRetryCommand(
   conversationId: string,
   runId: string,
-  mode: AIChatMode,
   prepared: PreparedRun,
   dataAccess?: DataAccessSnapshot,
 ): AssistantCommand {
@@ -110,7 +78,7 @@ export function toRetryCommand(
       runId,
       request: prepared.request,
       templateFields: prepared.templateFields,
-      mode,
+      mode: "chat",
       modelName: prepared.modelName,
       execution: prepared.execution,
       dataAccess,

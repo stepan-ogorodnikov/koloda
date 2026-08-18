@@ -27,7 +27,6 @@ fn default_assistant_temperature() -> f64 {
 pub struct AssistantSettings {
     #[serde(default = "default_assistant_temperature")]
     pub temperature: f64,
-    pub cards_prompt_template: Option<String>,
     pub chat_prompt_template: Option<String>,
 }
 
@@ -35,7 +34,6 @@ impl Default for AssistantSettings {
     fn default() -> Self {
         Self {
             temperature: 0.2,
-            cards_prompt_template: None,
             chat_prompt_template: None,
         }
     }

@@ -58,7 +58,6 @@ function createMockAIRuntime(): AIRuntime {
   return {
     listModels: async () => [],
     chat: async () => undefined,
-    generateCards: async () => undefined,
   };
 }
 

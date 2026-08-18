@@ -1,5 +1,4 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
-import type { CardGenerationExecutor, CardGenerationStreamRequest } from "@koloda/assistant";
+import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { aiRuntimeAtom } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
 import { act, renderHook } from "@testing-library/react";
@@ -54,7 +53,6 @@ function createHarness() {
   });
 
   const chatStreamGenerator = vi.fn<ChatStreamGenerator>();
-  const streamGenerator = vi.fn<CardGenerationExecutor>();
   const chatExecutionProfiles: string[] = [];
 
   store.set(aiRuntimeAtom, {
@@ -63,10 +61,6 @@ function createHarness() {
       if (!profileId) throw new Error("Missing profile identity");
       chatExecutionProfiles.push(profileId);
       return chatStreamGenerator(request, onChunk, signal);
-    },
-    generateCards: (profileId, request) => {
-      if (!profileId) throw new Error("Missing profile identity");
-      return streamGenerator(request, request.onCard, request.abortSignal);
     },
   });
   ensureAssistantEngine(store);
@@ -79,7 +73,6 @@ function createHarness() {
     touch,
     dispatchToMap,
     chatStreamGenerator,
-    streamGenerator,
     chatExecutionProfiles,
   };
 }
@@ -96,16 +89,10 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
           conversationId,
           input: { kind: "chat", runId, request, execution: chatExecution },
         }) as Promise<void>,
-      executeGenerateRun: (conversationId: string, runId: string, request: CardGenerationStreamRequest) =>
-        dispatch({
-          type: "submit",
-          conversationId,
-          input: { kind: "cards", runId, request, execution: cardsExecution },
-        }) as Promise<void>,
       retryRun: (
         conversationId: string,
         runId: string,
-        request: ChatStreamRequest | CardGenerationStreamRequest,
+        request: ChatStreamRequest,
         templateFields: TemplateFields | null,
         mode: AIChatMode,
         modelName?: string,
@@ -140,10 +127,6 @@ function holdUntilAborted(signal: AbortSignal): Promise<never> {
 }
 
 const chatExecution = { profileId: "profile-chat" };
-const cardsExecution = {
-  profileId: "profile-cards",
-  template: { id: 1, content: { fields: [] } },
-};
 
 describe("useConversationRuns", () => {
   beforeEach(() => {
@@ -277,54 +260,6 @@ describe("useConversationRuns", () => {
     expect(harness.touch.mock.calls.every(([id]) => id === "A")).toBe(true);
   });
 
-  it("executeGenerateRun dispatches addCard via dispatchToConversation (per-id)", async () => {
-    const harness = createHarness();
-    harness.store.set(upsertConversationAtom, makeConversation("A"));
-    harness.store.set(upsertConversationAtom, makeConversation("B"));
-    harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-A",
-        mode: "cards",
-      },
-    ]);
-    harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      {
-        runId: "run-A",
-        kind: "generated-cards",
-        text: "",
-      },
-    ]);
-
-    harness.store.set(setCurrentConversationIdAtom, "B");
-
-    harness.streamGenerator.mockImplementation(async (_request, onCard) => {
-      onCard({
-        content: { front: { text: "Q1" }, back: { text: "A1" } },
-      } as GeneratedCard);
-      onCard({
-        content: { front: { text: "Q2" }, back: { text: "A2" } },
-      } as GeneratedCard);
-    });
-
-    const { result } = renderRuns(harness);
-
-    await act(async () => {
-      await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
-    });
-
-    const addCardActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "addCard");
-    expect(addCardActions).toHaveLength(2);
-    for (const entry of addCardActions) {
-      expect(entry.id).toBe("A");
-    }
-
-    const stateB = harness.store.get(conversationsAtom)["B"];
-    expect(stateB.messages).toHaveLength(0);
-  });
-
   it("an unrequested AbortError fails the originating conversation run", async () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
@@ -363,83 +298,6 @@ describe("useConversationRuns", () => {
     expect(cancelActions).toHaveLength(0);
     expect(failedActions).toHaveLength(1);
     expect(failedActions[0].id).toBe("A");
-  });
-
-  it("bumps the pending save when a successful card generation run completes", async () => {
-    // WHY: terminal-stream actions go through `dispatchToConversation` (per-id)
-    // and therefore do NOT bump the pending-save counter on their own.
-    // Without an explicit bump, the throttled streaming checkpoint would
-    // remain the latest save and a successful terminal status would never
-    // be persisted.
-    const harness = createHarness();
-    harness.store.set(upsertConversationAtom, makeConversation("A"));
-    harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-A",
-        mode: "cards",
-      },
-    ]);
-
-    harness.streamGenerator.mockImplementation(async (_request, onCard) => {
-      onCard({
-        content: { front: { text: "Q1" }, back: { text: "A1" } },
-      } as GeneratedCard);
-    });
-
-    const { result } = renderRuns(harness);
-
-    await act(async () => {
-      await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
-    });
-
-    const completeActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "completeRun");
-    expect(completeActions).toHaveLength(1);
-    expect(completeActions[0].id).toBe("A");
-
-    // One touch for the card chunk + one for terminal success.
-    expect(harness.touch).toHaveBeenCalledTimes(2);
-    expect(harness.touch).toHaveBeenCalledWith("A");
-  });
-
-  it("bumps the pending save when an aborted card generation run is canceled", async () => {
-    // WHY: same as the success case — a user-initiated cancel must
-    // also schedule a save with the real terminal state (`canceled`/`user`),
-    // not leave only a streaming checkpoint on disk.
-    const harness = createHarness();
-    harness.store.set(upsertConversationAtom, makeConversation("A"));
-    harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-A",
-        mode: "cards",
-      },
-    ]);
-
-    harness.streamGenerator.mockImplementation(async (_request, _onCard, signal) => {
-      await holdUntilAborted(signal);
-    });
-
-    const { result } = renderRuns(harness);
-
-    const runPromise = act(async () => {
-      await result.current.executeGenerateRun("A", "run-A", {} as CardGenerationStreamRequest);
-    });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    await act(async () => {
-      result.current.cancel("A", "run-A");
-    });
-    await runPromise;
-
-    const cancelActions = harness.dispatchToMap.filter((entry) => entry.action[0] === "cancelRun");
-    expect(cancelActions).toHaveLength(1);
-    expect(cancelActions[0].id).toBe("A");
-
-    expect(harness.touch).toHaveBeenCalledWith("A");
   });
 
   it("bumps the pending save for the originating conversation when a run fails", async () => {
@@ -603,52 +461,6 @@ describe("useConversationRuns", () => {
     });
 
     expect(signals[1]?.aborted).toBe(true);
-  });
-
-  it("cancel(conversationId, runId) aborts only that run across chat + cards", async () => {
-    const harness = createHarness();
-    harness.store.set(upsertConversationAtom, makeConversation("A"));
-    harness.store.set(upsertConversationAtom, makeConversation("B"));
-
-    const chatSignals: AbortSignal[] = [];
-    const cardSignals: AbortSignal[] = [];
-
-    harness.chatStreamGenerator.mockImplementation(async (_request, _onChunk, signal) => {
-      chatSignals.push(signal);
-      await holdUntilAborted(signal);
-    });
-    harness.streamGenerator.mockImplementation(async (_request, _onCard, signal) => {
-      cardSignals.push(signal);
-      await holdUntilAborted(signal);
-    });
-
-    const { result } = renderRuns(harness);
-
-    let chatRun!: Promise<void>;
-    let cardRun!: Promise<void>;
-    act(() => {
-      chatRun = result.current.executeChatRun("A", "run-chat", {} as ChatStreamRequest);
-      cardRun = result.current.executeGenerateRun("B", "run-cards", {} as CardGenerationStreamRequest);
-    });
-
-    await act(async () => {
-      while (chatSignals.length < 1 || cardSignals.length < 1) await Promise.resolve();
-    });
-
-    await act(async () => {
-      result.current.cancel("A", "run-chat");
-      await chatRun;
-    });
-
-    expect(chatSignals[0]?.aborted).toBe(true);
-    expect(cardSignals[0]?.aborted).toBe(false);
-
-    await act(async () => {
-      result.current.cancel("B", "run-cards");
-      await cardRun;
-    });
-
-    expect(cardSignals[0]?.aborted).toBe(true);
   });
 
   it("unmounting the hook does not abort an in-flight run", async () => {

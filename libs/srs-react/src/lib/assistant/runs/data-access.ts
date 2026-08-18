@@ -1,27 +1,4 @@
-import { ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET, ASSISTANT_TOOL_MAX_CARDS_PER_DECK } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai";
-import type { Card, Deck, Template, TemplateField } from "@koloda/srs";
-
-// WHY: budgets moved to @koloda/ai — tool executors are the data-access path now.
-// The v1 names stay aliased for the injection bridge until that path retires.
-export {
-  ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET as DATA_ACCESS_CARD_LIST_CHAR_BUDGET,
-  ASSISTANT_TOOL_MAX_CARDS_PER_DECK as DATA_ACCESS_MAX_CARDS_PER_DECK,
-};
-
-/** Structural template subset; field order matters — the first field is the card front. */
-export type DataAccessTemplate = Pick<Template, "id" | "title"> & {
-  content: { fields: Array<Pick<TemplateField, "id" | "title">> };
-};
-
-/** Deck summary source: real deck fields plus the card count resolved by the caller. */
-export type DataAccessDeckSummaryInput = Pick<Deck, "id" | "title" | "templateId"> & { cardCount: number };
-
-/** Structural card subset — only content is serialized; FSRS state never leaves the machine. */
-export type DataAccessCard = Pick<Card, "content">;
-
-/** Write-target source: deck fields plus its template (subset of `DeckWithTemplate`). */
-export type DataAccessDeckCardsInput = Pick<Deck, "id" | "title"> & { template: DataAccessTemplate };
+import type { Deck } from "@koloda/srs";
 
 export type DataAccessDeckSummary = {
   deckId: Deck["id"];
@@ -44,145 +21,18 @@ export type DataAccessWriteTarget =
       isTruncated: boolean;
     };
 
-/** Per-run record of what the request actually carried; persisted with the run. */
+/** Per-run record of what a historical request carried; persisted with the run. */
 export type DataAccessManifest = {
   decks: DataAccessDeckSummary[];
   /** Null on chat runs — chat never includes card contents. */
   writeTarget: DataAccessWriteTarget | null;
 };
 
-/** Resolved at submit: the context text sent to the model plus its manifest. */
+/**
+ * Restore-only snapshot on `GenerationRun`. New submits do not resolve or inject
+ * this; a stored value is inert metadata. Malformed persisted values fail as corrupt.
+ */
 export type DataAccessSnapshot = {
   context: string;
   manifest: DataAccessManifest;
 };
-
-/**
- * Async resolution owned by React land (the resolver hook). Framework-free
- * request prep only receives the produced snapshot — it never resolves itself.
- */
-export type ResolveDataAccess = (mode: AIChatMode, deckId: Deck["id"] | null) => Promise<DataAccessSnapshot>;
-
-export type SerializedDeckSummaries = {
-  context: string;
-  decks: DataAccessDeckSummary[];
-};
-
-export type SerializedDeckCards = {
-  context: string;
-  writeTarget: DataAccessWriteTarget;
-};
-
-/** Serialize every deck as a one-line summary (name, card count, template). */
-export function serializeDeckSummaries(
-  decks: DataAccessDeckSummaryInput[],
-  templates: DataAccessTemplate[],
-): SerializedDeckSummaries {
-  if (decks.length === 0) return { context: "", decks: [] };
-
-  const rows = decks.map((deck) => {
-    const template = templates.find((t) => t.id === deck.templateId) ?? null;
-    return {
-      summary: {
-        deckId: deck.id,
-        title: deck.title,
-        cardCount: deck.cardCount,
-        templateTitle: template?.title ?? null,
-      },
-      line: `- Deck: ${deck.title} — ${deck.cardCount} cards — Template: ${formatTemplateLabel(template)}`,
-    };
-  });
-
-  return {
-    context: ["User decks:", ...rows.map((row) => row.line)].join("\n"),
-    decks: rows.map((row) => row.summary),
-  };
-}
-
-/**
- * Serialize the write-target deck's cards: the count line first, then card fronts,
- * upgraded to full fields while the budget allows. Oversized decks degrade to the
- * capped list — never silence.
- */
-export function serializeDeckCards(
-  deck: DataAccessDeckCardsInput | null,
-  cards: DataAccessCard[],
-  budget: number,
-): SerializedDeckCards {
-  // INVARIANT: a write target deleted before submit resolves to nothing and is
-  // recorded as missing — it is never silently dropped from the manifest.
-  if (!deck) return { context: "", writeTarget: { isMissing: true } };
-
-  const fields = deck.template.content.fields;
-  const capped = cards.slice(0, ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
-  const isCapped = cards.length > capped.length;
-
-  const frontLines = capped.map((card) => getCardFront(card, fields[0]));
-  const fullLines = capped.map((card) => formatCardFields(card, fields));
-
-  // WHY: the count line is unconditional (a zero-budget deck still yields it) and the
-  // trailing notices are metadata, so only card lines count against the budget.
-  const listedIndices: number[] = [];
-  let usedChars = 0;
-  for (const [index, line] of frontLines.entries()) {
-    const cost = line.length + (listedIndices.length > 0 ? 1 : 0);
-    if (usedChars + cost > budget) break;
-    usedChars += cost;
-    listedIndices.push(index);
-  }
-
-  const fullFieldIndices = new Set<number>();
-  for (const index of listedIndices) {
-    const cost = fullLines[index].length - frontLines[index].length;
-    if (usedChars + cost > budget) break;
-    usedChars += cost;
-    fullFieldIndices.add(index);
-  }
-
-  const listLines = listedIndices.map(
-    (index) => `${index + 1}. ${fullFieldIndices.has(index) ? fullLines[index] : frontLines[index]}`,
-  );
-
-  const listedCount = listedIndices.length;
-  const fullFieldCount = fullFieldIndices.size;
-  const isTruncated = listedCount < capped.length || fullFieldCount < listedCount;
-
-  const notices = [
-    ...(isCapped ? [`Only the first ${capped.length} of ${cards.length} cards are listed.`] : []),
-    ...(listedCount < capped.length
-      ? [`Context budget reached: ${listedCount} of ${capped.length} cards listed.`]
-      : []),
-    ...(listedCount > 0 && fullFieldCount < listedCount
-      ? [`Full fields shown for ${fullFieldCount} of ${listedCount} listed cards (context budget).`]
-      : []),
-  ];
-
-  return {
-    context: [`Existing cards in deck ${deck.title} (${cards.length} total):`, ...listLines, ...notices].join("\n"),
-    writeTarget: {
-      isMissing: false,
-      deckId: deck.id,
-      title: deck.title,
-      totalCards: cards.length,
-      listedCards: listedCount,
-      fullFieldCards: fullFieldCount,
-      isCapped,
-      isTruncated,
-    },
-  };
-}
-
-/** The card front is the value of the template's first field. */
-function getCardFront(card: DataAccessCard, frontField: Pick<TemplateField, "id" | "title">): string {
-  return card.content[String(frontField.id)]?.text ?? "";
-}
-
-function formatCardFields(card: DataAccessCard, fields: Array<Pick<TemplateField, "id" | "title">>): string {
-  return fields.map((field) => `${field.title}: ${card.content[String(field.id)]?.text ?? ""}`).join(" | ");
-}
-
-function formatTemplateLabel(template: DataAccessTemplate | null): string {
-  if (!template) return "unknown";
-  const fieldTitles = template.content.fields.map((field) => field.title).join(", ");
-  return `${template.title} (${fieldTitles})`;
-}

@@ -3,7 +3,6 @@ import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
 import type { AssistantCommand, RunDataAccessSnapshot, ShutdownInput } from "./assistant-protocol";
-import type { CardGenerationStreamRequest } from "./card-generation";
 import type { ConversationPersistenceHost } from "./conversation-persistence-host";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "./conversation-persistence-host";
 import { createConversationRuntime } from "./conversation-runtime";
@@ -121,25 +120,10 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     );
   };
 
-  const executeGenerateRun = (
-    conversationId: string,
-    runId: string,
-    request: ImmutableExecutionValue<CardGenerationStreamRequest>,
-    execution: AssistantExecutionIdentity,
-  ): Promise<void> => {
-    assertRunning();
-    logCommand("executeGenerate", conversationId, runId);
-    return getRuntime(conversationId).executeGenerateRun(
-      runId,
-      captureExecutionValue<CardGenerationStreamRequest>(request),
-      captureExecutionValue(execution),
-    );
-  };
-
   const retryRun = (
     conversationId: string,
     runId: string,
-    request: ImmutableExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>,
+    request: ImmutableExecutionValue<ChatStreamRequest>,
     templateFields: ImmutableExecutionValue<TemplateFields> | null,
     mode: AIChatMode,
     modelName: string | undefined,
@@ -152,7 +136,7 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     logCommand("retry", conversationId, runId);
     return getRuntime(conversationId).retryRun(
       runId,
-      captureExecutionValue<ChatStreamRequest | CardGenerationStreamRequest>(request),
+      captureExecutionValue<ChatStreamRequest>(request),
       templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
       mode,
       modelName,
@@ -217,15 +201,7 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     dispatch(command) {
       switch (command.type) {
         case "submit":
-          if (command.input.kind === "chat") {
-            return executeChatRun(
-              command.conversationId,
-              command.input.runId,
-              command.input.request,
-              command.input.execution,
-            );
-          }
-          return executeGenerateRun(
+          return executeChatRun(
             command.conversationId,
             command.input.runId,
             command.input.request,

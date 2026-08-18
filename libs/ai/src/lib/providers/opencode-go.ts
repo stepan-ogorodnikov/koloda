@@ -1,4 +1,3 @@
-import { generateCardsWithOpencodeGo } from "../card-generation";
 import { streamChatWithOpencodeGo } from "../chat-stream";
 import { AIError } from "../error";
 import type { AIModel } from "../models";
@@ -23,7 +22,6 @@ function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencod
     provider: "opencodeGo",
     listModels: () => fetchOpencodeGoModels(resolved.apiKey),
     chat: (request, onChunk, abortSignal) => streamChatWithOpencodeGo(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithOpencodeGo(request, resolved),
   };
 }
 

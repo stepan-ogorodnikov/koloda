@@ -220,7 +220,6 @@ describe("execution port streamStart requestId", () => {
     store.set(aiRuntimeAtom, {
       listModels: async () => [],
       chat,
-      generateCards: async () => undefined,
     });
 
     const engine = ensureAssistantEngine(store);
@@ -254,49 +253,6 @@ describe("execution port streamStart requestId", () => {
     );
     expect(JSON.stringify(streamStart)).not.toMatch(/prompt|chunk|apiKey|secret/i);
   });
-
-  it("logs streamStart and passes the same requestId into generateCards", async () => {
-    const store = createStore();
-    const generateCards = vi.fn(async () => undefined);
-    store.set(aiRuntimeAtom, {
-      listModels: async () => [],
-      chat: async () => undefined,
-      generateCards,
-    });
-
-    const engine = ensureAssistantEngine(store);
-    await engine.dispatch({
-      type: "submit",
-      conversationId: "conv-2",
-      input: {
-        kind: "cards",
-        runId: "run-2",
-        request: { input: { modelId: "m", prompt: "hi" }, messages: [] },
-        execution: {
-          profileId: "profile-1",
-          template: { id: 1, content: { fields: [] } },
-        },
-      },
-    });
-
-    const streamStart = entries.find((entry) => entry.commandOrEvent === "streamStart");
-    expect(streamStart).toEqual(
-      expect.objectContaining({
-        conversationId: "conv-2",
-        runId: "run-2",
-        commandOrEvent: "streamStart",
-        requestId: expect.any(String),
-      }),
-    );
-    expect(generateCards).toHaveBeenCalledWith(
-      "profile-1",
-      expect.objectContaining({
-        input: { modelId: "m", prompt: "hi" },
-        messages: [],
-      }),
-      streamStart?.requestId,
-    );
-  });
 });
 
 describe("execution port chat tool callback", () => {
@@ -314,7 +270,6 @@ describe("execution port chat tool callback", () => {
     store.set(aiRuntimeAtom, {
       listModels: async () => [],
       chat,
-      generateCards: async () => undefined,
     });
     const engine = ensureAssistantEngine(store);
     return engine

@@ -15,11 +15,11 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 - Engine: `assistant-engine.ts` — `createAssistantEngine` / `AssistantEngine`.
   Lazy per-conversation runtimes; typed `dispatch(command)` is the **sole execution ingress** (`submit` / `retry` / `cancel` / `shutdown`).
-  Runtime `executeChatRun` / `executeGenerateRun` / `retryRun` are private.
+  Runtime `executeChatRun` / `retryRun` are private.
   Non-execution lifecycle: `setPersistenceHost` / `disposeConversation` / `dispose`.
 - Protocol: `assistant-protocol.ts` — framework-free `AssistantCommand` and `AssistantEvent` contracts.
   Store adapters (e.g. Jotai in `@koloda/srs-react`) translate events into reducer actions; the engine never emits reducer tuples.
-- Execution identity / port: `assistant-execution-port.ts` — each submit/retry command carries immutable non-secret `AssistantExecutionIdentity` (`profileId`, optional template snapshot).
+- Execution identity / port: `assistant-execution-port.ts` — each submit/retry command carries immutable non-secret `AssistantExecutionIdentity` (`profileId`).
   `ConversationRuntimeTransports.executionPort` is **required**.
   The host port resolves credentials from `profileId` at call time.
   There are no `getChatStreamGenerator` / `getStreamGenerator` getters and no mutable transport slot.
@@ -30,13 +30,13 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
   Production delete is transactional: `beginDelete` (tombstone + cancel queued + await in-flight) → DB delete → `commit`, or `rollback` (clear tombstone, preserve dirty, resume autosave).
   `prepareDelete` is a convenience that permanently tombstones (`beginDelete` then `commit`) for callers that cannot roll back; production uses `beginDelete` + commit/rollback.
   `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000 ms) and `SHUTDOWN_SAVE_MAX_ATTEMPTS` (3) bound the best-effort final flush on graceful shutdown.
-- Conversation runtime: `conversation-runtime.ts` — serial command queue and chat/card/retry execution against the injected execution port + by-id ports (`emit`, `touch`, `markReadIfCurrent`, `readConversationState`, `isRunStreaming`).
+- Conversation runtime: `conversation-runtime.ts` — serial command queue and chat/retry execution against the injected execution port + by-id ports (`emit`, `touch`, `markReadIfCurrent`, `readConversationState`, `isRunStreaming`).
   At most one active or queued execute/retry per conversation; a second command throws `AssistantDuplicateRunError` before occupancy is claimed.
 - Controllers: `run-controller-registry.ts` — engine-owned `AbortController` map keyed by `runId` (cancel isolation; shutdown/dispose aborts all).
   Closed-registry `beginRun` becomes a typed interrupt, not a bare throw that leaves the run `streaming`.
-- Stream funnel: `run-stream.ts` — shared `runStream` success / fail / abort handling used by chat and card paths.
+- Stream funnel: `run-stream.ts` — shared `runStream` success / fail / abort handling used by chat.
 - Serial queue: `serial-queue.ts` — per-conversation command serialization (one hop per public execute entry; retry must not re-enqueue through those entry points).
-- Types / helpers: `stream-result.ts`, `card-generation.ts` (executor/request types), `display-error.ts`.
+- Types / helpers: `stream-result.ts`, `display-error.ts`.
 
 ### Does NOT own (prevent scope creep)
 

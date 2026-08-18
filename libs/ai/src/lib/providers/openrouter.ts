@@ -1,4 +1,3 @@
-import { generateCardsWithOpenRouter } from "../card-generation";
 import { streamChatWithOpenRouter } from "../chat-stream";
 import { AIError, throwForAIResponse } from "../error";
 import type { AIModel } from "../models";
@@ -55,7 +54,6 @@ function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrou
     provider: "openrouter",
     listModels: fetchOpenRouterModels,
     chat: (request, onChunk, abortSignal) => streamChatWithOpenRouter(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithOpenRouter(request, resolved),
   };
 }
 

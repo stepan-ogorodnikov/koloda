@@ -4,7 +4,6 @@ import {
   assistantSettingsValidation,
   compilePromptTemplate,
   DEFAULT_CHAT_PROMPT_TEMPLATE,
-  DEFAULT_GENERATION_PROMPT_TEMPLATE,
 } from "@koloda/ai";
 import type { AISecrets } from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
@@ -34,7 +33,6 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
   const assistantSettings = data?.content?.assistant as AssistantSettingsType | undefined;
   const defaultValues = {
     temperature: assistantSettings?.temperature ?? 0.2,
-    cardsPromptTemplate: assistantSettings?.cardsPromptTemplate ?? null,
     chatPromptTemplate: assistantSettings?.chatPromptTemplate ?? null,
   };
 
@@ -66,16 +64,10 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
   }, [data, form]);
 
   const chatPromptTemplate = form.getFieldValue("chatPromptTemplate") ?? DEFAULT_CHAT_PROMPT_TEMPLATE;
-  const cardsPromptTemplate = form.getFieldValue("cardsPromptTemplate") ?? DEFAULT_GENERATION_PROMPT_TEMPLATE;
 
   const chatPreview = useMemo(
-    () => compilePromptTemplate(chatPromptTemplate, template?.content?.fields ?? [], provider, "chat"),
+    () => compilePromptTemplate(chatPromptTemplate, template?.content?.fields ?? [], provider),
     [chatPromptTemplate, provider, template],
-  );
-
-  const generationPreview = useMemo(
-    () => compilePromptTemplate(cardsPromptTemplate, template?.content?.fields ?? [], provider, "generation"),
-    [cardsPromptTemplate, provider, template],
   );
 
   return (
@@ -96,19 +88,6 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
             templateValue={field.state.value}
             defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
             preview={chatPreview}
-            onChange={field.handleChange}
-          />
-        )}
-      </form.Field>
-      <form.Field name="cardsPromptTemplate">
-        {(field) => (
-          <AssistantSettingsPromptEditor
-            label={_(msg`assistant.settings.system-prompt.cards.label`)}
-            rows={5}
-            maxRows={10}
-            templateValue={field.state.value}
-            defaultTemplate={DEFAULT_GENERATION_PROMPT_TEMPLATE}
-            preview={generationPreview}
             onChange={field.handleChange}
           />
         )}

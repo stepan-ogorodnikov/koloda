@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { aiProfileValidation, aiSettingsValidation, findDuplicateProfileId } from "./settings";
+import {
+  aiProfileValidation,
+  aiSettingsValidation,
+  assistantSettingsValidation,
+  findDuplicateProfileId,
+} from "./settings";
 import type { AISettings } from "./settings";
 
 describe("findDuplicateProfileId", () => {
@@ -63,5 +68,17 @@ describe("aiProfileValidation whitelistModelIds", () => {
 
   it("rejects empty model ids", () => {
     expect(() => aiProfileValidation.parse({ ...base, whitelistModelIds: [""] })).toThrow();
+  });
+});
+
+describe("assistantSettingsValidation", () => {
+  it("strips leftover cardsPromptTemplate from old saved settings", () => {
+    const parsed = assistantSettingsValidation.parse({
+      temperature: 0.2,
+      cardsPromptTemplate: "old generation template",
+      chatPromptTemplate: null,
+    });
+    expect(parsed).toEqual({ temperature: 0.2, chatPromptTemplate: null });
+    expect(parsed).not.toHaveProperty("cardsPromptTemplate");
   });
 });

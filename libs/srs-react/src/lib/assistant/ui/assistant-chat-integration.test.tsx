@@ -1,14 +1,5 @@
-import type {
-  AIModel,
-  AIProfile,
-  AIRuntime,
-  ChatStreamRequest,
-  GeneratedCard,
-  ModelParameter,
-  StreamUsage,
-} from "@koloda/ai";
+import type { AIModel, AIProfile, AIRuntime, ChatStreamRequest, ModelParameter, StreamUsage } from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
-import type { CardGenerationStreamRequest } from "@koloda/ai-react";
 import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
@@ -53,7 +44,7 @@ const wire = vi.hoisted(() => {
     profiles: [] as AIProfile[],
     models: [] as AIModel[],
     template: { id: 1 } as Template,
-    // Stream controls — AIRuntime.chat/generateCards read these.
+    // Stream controls — AIRuntime.chat reads these.
     chatStream: {
       started: 0,
       onChunk: null as null | ((chunk: string) => void),
@@ -63,12 +54,6 @@ const wire = vi.hoisted(() => {
       resolveNext: null as null | (() => void),
       rejectNext: null as null | ((error: Error) => void),
       keepInFlight: false,
-    },
-    cardStream: {
-      started: 0,
-      onCard: null as null | ((card: GeneratedCard) => void),
-      onStart: null as null | ((request: CardGenerationStreamRequest, onCard: (card: GeneratedCard) => void) => void),
-      abortNext: false,
     },
     // Save mutation spy. The `state` payload is the full serialized
     // ConversationReducerState — tests that need to assert on the run status
@@ -144,7 +129,7 @@ function buildQueries(): Queries {
     getSettingsQuery: (name) => ({
       queryKey: queryKeys.settings.detail(name),
       queryFn: async () => ({
-        content: { assistant: { temperature: 0.2, cardsPromptTemplate: null, chatPromptTemplate: null } },
+        content: { assistant: { temperature: 0.2, chatPromptTemplate: null } },
       }),
     }),
     setSettingsMutation: () => ({ mutationFn: async () => undefined }),
@@ -299,25 +284,6 @@ function createMockAIRuntime(): AIRuntime {
         );
       });
     },
-    generateCards: async (_profileId, request) => {
-      wire.cardStream.started += 1;
-      wire.cardStream.onCard = request.onCard ?? null;
-      wire.cardStream.onStart?.(
-        {
-          input: request.input,
-          messages: request.messages,
-          systemPromptTemplate: request.systemPromptTemplate,
-        },
-        request.onCard ?? (() => {}),
-      );
-      if (wire.cardStream.abortNext) {
-        throw new DOMException("Aborted", "AbortError");
-      }
-      const signal = request.abortSignal;
-      if (signal?.aborted) {
-        throw new DOMException("Aborted", "AbortError");
-      }
-    },
   };
 }
 
@@ -358,7 +324,6 @@ function setupTestHarness(overrides: { profileId?: string; modelId?: string } = 
     rejectNext: null,
     keepInFlight: false,
   };
-  wire.cardStream = { started: 0, onCard: null, onStart: null, abortNext: false };
   wire.setConversationCalls = [];
 
   const wrapper = makeWrapper();

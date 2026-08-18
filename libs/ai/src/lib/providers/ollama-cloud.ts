@@ -1,4 +1,3 @@
-import { generateCardsWithOllamaCloud } from "../card-generation";
 import { streamChatWithOllamaCloud } from "../chat-stream";
 import { AIError } from "../error";
 import type { AIModel } from "../models";
@@ -21,7 +20,6 @@ function createOllamaCloudClient(secrets: Extract<AISecrets, { provider: "ollama
     provider: "ollamaCloud",
     listModels: () => fetchOllamaCloudModels(resolved.apiKey),
     chat: (request, onChunk, abortSignal) => streamChatWithOllamaCloud(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithOllamaCloud(request, resolved),
   };
 }
 

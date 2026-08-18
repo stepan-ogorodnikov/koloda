@@ -46,7 +46,6 @@ export function useAssistantRuntimeConfig({
   });
   const template = templateQuery.data;
 
-  const cardsPromptTemplate = assistantSettings?.cardsPromptTemplate ?? null;
   const chatPromptTemplate = assistantSettings?.chatPromptTemplate ?? null;
 
   const conversationConfig: AssistantConversationConfig = {
@@ -58,7 +57,6 @@ export function useAssistantRuntimeConfig({
     deckId: deckId!,
     templateId: templateId!,
     template,
-    cardsPromptTemplate,
     chatPromptTemplate,
     _,
   };

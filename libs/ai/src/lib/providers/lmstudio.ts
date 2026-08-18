@@ -1,4 +1,3 @@
-import { generateCardsWithLMStudio } from "../card-generation";
 import { streamChatWithLMStudio } from "../chat-stream";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
@@ -12,7 +11,6 @@ function createLmStudioClient(secrets: Extract<AISecrets, { provider: "lmstudio"
     provider: "lmstudio",
     listModels: () => fetchOpenAICompatibleModels(resolved.baseUrl, resolved.apiKey),
     chat: (request, onChunk, abortSignal) => streamChatWithLMStudio(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithLMStudio(request, resolved),
   };
 }
 

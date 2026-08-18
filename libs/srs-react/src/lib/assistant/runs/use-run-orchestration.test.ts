@@ -31,7 +31,6 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
     deckId: 0,
     templateId: 0,
     template: null,
-    cardsPromptTemplate: null,
     chatPromptTemplate: null,
     _: ((m: unknown) => m) as never,
     ...overrides,

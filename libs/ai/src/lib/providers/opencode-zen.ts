@@ -1,4 +1,3 @@
-import { generateCardsWithOpencodeZen } from "../card-generation";
 import { streamChatWithOpencodeZen } from "../chat-stream";
 import { AIError } from "../error";
 import type { AIModel } from "../models";
@@ -23,7 +22,6 @@ function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "openco
     provider: "opencodeZen",
     listModels: () => fetchOpencodeZenModels(resolved.apiKey),
     chat: (request, onChunk, abortSignal) => streamChatWithOpencodeZen(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithOpencodeZen(request, resolved),
   };
 }
 

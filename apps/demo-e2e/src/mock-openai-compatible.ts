@@ -100,36 +100,19 @@ export async function mockOpenAICompatibleProvider(
 
     const text = next.text ?? "Hello from the mock assistant.";
     // doGenerate omits `stream`; only doStream sets `stream: true`. Defaulting to
-    // SSE when the field is absent breaks generateText (cards fallback) with
-    // "Invalid JSON response".
+    // SSE when the field is absent would break non-stream JSON completions.
     let stream = false;
-    let wantsStructured = false;
     try {
       const raw = route.request().postData();
       if (raw) {
-        const body = JSON.parse(raw) as { stream?: boolean; response_format?: unknown };
+        const body = JSON.parse(raw) as { stream?: boolean };
         stream = body.stream === true;
-        // LM Studio card generation sets supportsStructuredOutputs and sends
-        // response_format. Reject so runCardGeneration falls back to generateText
-        // + markdown parse against this mock's plain completion body.
-        wantsStructured = body.response_format != null;
       }
     } catch {
       // Keep non-stream default when body is missing/unparseable.
     }
 
     try {
-      if (wantsStructured) {
-        await route.fulfill({
-          status: 400,
-          contentType: "application/json",
-          body: JSON.stringify({
-            error: { message: "E2E mock does not support structured outputs" },
-          }),
-        });
-        return;
-      }
-
       if (next.toolCall) {
         if (!stream) {
           await route.fulfill({

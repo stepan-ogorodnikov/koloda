@@ -4,7 +4,7 @@
 
 ## Overview
 
-AI providers require changes across 5 layers: TypeScript catalog/secrets, Rust domain, UI forms, streaming/generation, and provider registry.
+AI providers require changes across 5 layers: TypeScript catalog/secrets, Rust domain, UI forms, chat streaming, and provider registry.
 
 ## Workflow
 
@@ -89,7 +89,6 @@ Add one file per provider (e.g. `my-provider.ts`) that owns fetchModels, createC
 
 ```typescript
 // libs/ai/src/lib/providers/my-provider.ts
-import { generateCardsWithMyProvider } from "../card-generation";
 import { streamChatWithMyProvider } from "../chat-stream";
 import { AIError, throwForAIResponse } from "../error";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
@@ -127,7 +126,6 @@ function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvi
     provider: "myProvider",
     listModels: () => fetchMyProviderModels(resolved.apiKey),
     chat: (request, onChunk, abortSignal) => streamChatWithMyProvider(request, onChunk, abortSignal, resolved),
-    generateCards: (request) => generateCardsWithMyProvider(request, resolved),
   };
 }
 
@@ -189,30 +187,7 @@ export function streamChatWithMyProvider(
 }
 ```
 
-### 6. Card Generation (`libs/ai/src/lib/card-generation.ts`)
-
-Add a thin wrapper that supplies the AI SDK model factory to shared `runCardGeneration`
-(structured stream → parse stream text → plain `generateText` fallback):
-
-```typescript
-export function generateCardsWithMyProvider(
-  request: CardGenerationRequest,
-  { apiKey }: { apiKey: string },
-) {
-  return wrapAIError(async () => {
-    const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
-    const myProvider = createOpenAICompatible({
-      name: "my-provider",
-      baseURL: "https://api.myprovider.com/v1",
-      apiKey,
-      supportsStructuredOutputs: true,
-    });
-    return runCardGeneration((modelId) => myProvider(modelId), "myProvider", request);
-  });
-}
-```
-
-### 7. UI Form Config (`libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts`)
+### 6. UI Form Config (`libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts`)
 
 The add and edit profile forms are generic.
 `AddAIProfileForm` and `EditAIProfileForm` look up a declarative `AIProviderFormConfig` in `AI_PROVIDER_FORM_CONFIG`.
@@ -255,27 +230,26 @@ No new locale strings are needed.
 If the provider needs a different field, extend `AIProfileFieldType`.
 Teach `AIProfileFormFields` to render it, and add its label string.
 
-### 8. Verify Dialog Wiring
+### 7. Verify Dialog Wiring
 
 There is no per-provider registration step.
 `settings-ai-add-profile.tsx` passes the picker selection to the generic `AddAIProfileForm`.
-The picker lists whatever the host store enables (see step 9).
+The picker lists whatever the host store enables (see step 8).
 `settings-ai-edit-profile.tsx` derives the provider from `profile.secrets?.provider` and renders `EditAIProfileForm`.
 Both resolve the entry added in step 7.
 Check that the add dialog renders the new fields and the edit dialog prefills them via `fromSecrets`.
 
-### 9. Host enablement
+### 8. Host enablement
 
 Do not edit app stores. Desktop uses `AI_PROVIDERS`; demo uses `listProvidersThatWorkInBrowser()`.
 
 Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and Electron, and is listed but disabled in demo’s add-profile picker.
 
-### 10. Add Tests
+### 9. Add Tests
 
 - `crates/koloda-core/tests/ai_tests.rs` - Rust unit tests
 - `crates/koloda-core/tests/ai_integration_tests.rs` - Rust integration tests
 - `crates/koloda-core/tests/settings_ai_tests.rs` - Settings validation tests
-- `libs/ai/src/lib/card-generation.test.ts` - Card generation tests
 
 ## Key Files Reference
 
@@ -287,7 +261,6 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 | Rust Repo | `crates/koloda-core/src/repo/ai.rs` | Secret redaction/reconstruction |
 | Registry | `libs/ai/src/lib/providers/<provider>.ts` + `provider-registry.ts` | Per-provider client/fetch; types + wiring table |
 | Streaming | `libs/ai/src/lib/chat-stream.ts` | Chat stream implementation |
-| Generation | `libs/ai/src/lib/card-generation.ts` | Card generation implementation |
 | Form Config | `libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts` | Per-provider fields, schema, secrets mapping |
 | Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
 | Edit Form | `libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |

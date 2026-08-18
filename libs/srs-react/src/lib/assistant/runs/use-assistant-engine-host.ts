@@ -1,4 +1,4 @@
-import type { CardGenerationRequest, ChatStreamRequest } from "@koloda/ai";
+import type { ChatStreamRequest } from "@koloda/ai";
 import { computeConversationTitle } from "@koloda/ai";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import type { AssistantEngine, AssistantExecutionPort, ConversationPersistenceHost } from "@koloda/assistant";
@@ -98,26 +98,6 @@ function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExec
         request.tools?.length ? { ...request, onToolEvent } : request,
         onChunk,
         signal,
-        requestId,
-      );
-    },
-    executeGenerate: async (input, onCard, signal) => {
-      const template = input.identity.template;
-      if (!template) throw new Error("Card generation execution requires a template snapshot");
-
-      const requestId = createStreamRequestId();
-      logStreamStart(input.conversationId, input.runId, requestId);
-      await store.get(aiRuntimeAtom).generateCards(
-        input.identity.profileId,
-        {
-          template: structuredClone(template) as unknown as CardGenerationRequest["template"],
-          input: structuredClone(input.request.input) as CardGenerationRequest["input"],
-          messages: structuredClone(input.request.messages) as CardGenerationRequest["messages"],
-          onCard,
-          abortSignal: signal,
-          systemPromptTemplate: input.request.systemPromptTemplate,
-          dataContext: input.request.dataContext,
-        },
         requestId,
       );
     },

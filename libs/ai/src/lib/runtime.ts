@@ -1,4 +1,4 @@
-import type { CardGenerationRequest, ChatStreamRequest } from "./generation";
+import type { ChatStreamRequest } from "./generation";
 import type { AIModel, StreamUsage } from "./models";
 
 // INVARIANT: Host adapters implement this (Electron main / demo). Shared React
@@ -14,10 +14,4 @@ export type AIRuntime = {
     /** Host correlation id; Electron uses this for IPC when provided. */
     requestId?: string,
   ) => Promise<StreamUsage | undefined>;
-  generateCards: (
-    profileId: string,
-    request: CardGenerationRequest,
-    /** Host correlation id; Electron uses this for IPC when provided. */
-    requestId?: string,
-  ) => Promise<void>;
 };

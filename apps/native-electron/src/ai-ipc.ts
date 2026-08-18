@@ -4,9 +4,7 @@ import type {
   AssistantToolEvent,
   AssistantToolExecutor,
   AssistantToolTemplate,
-  CardGenerationRequest,
   ChatStreamRequest,
-  GeneratedCard,
   StreamUsage,
 } from "@koloda/ai";
 import {
@@ -29,7 +27,6 @@ export const AI_STREAM_CHANNEL = "ai:stream";
 
 export type AiStreamEvent =
   | { requestId: string; type: "chunk"; chunk: string }
-  | { requestId: string; type: "card"; card: GeneratedCard }
   | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
   | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
@@ -41,12 +38,6 @@ type AiChatStreamArgs = {
   requestId: string;
   profileId: string;
   request: ChatStreamRequest;
-};
-
-type AiGenerateCardsArgs = {
-  requestId: string;
-  profileId: string;
-  request: Omit<CardGenerationRequest, "onCard" | "abortSignal">;
 };
 
 type AiAbortArgs = { requestId: string };
@@ -242,52 +233,6 @@ export function registerAiIpc(db: KolodaDb) {
           controller.signal,
         );
         sendStreamEvent(sender, { requestId, type: "done", usage });
-      } catch (error) {
-        // WHY: Only AbortError is cancel. Prefer provider errors over a racing
-        // aborted signal so auth/network failures are not reported as Aborted.
-        if (isAbortError(error)) {
-          sendStreamEvent(sender, { requestId, type: "error", code: "aborted", message: "Aborted" });
-          return;
-        }
-        const { code, message } = toStreamError(error);
-        sendStreamEvent(sender, { requestId, type: "error", code, message });
-      } finally {
-        endRequest(requestId, controller);
-      }
-    })();
-  });
-
-  ipcMain.handle("cmd_ai_generate_cards", (event: IpcMainInvokeEvent, args: AiGenerateCardsArgs) => {
-    const { requestId, profileId, request } = args;
-    const sender = event.sender;
-    // WHY: Register before any work so cmd_ai_abort during start binds to this run.
-    const controller = beginRequest(requestId);
-
-    let secrets: AISecrets;
-    try {
-      secrets = loadSecrets(db, profileId);
-    } catch (error) {
-      endRequest(requestId, controller);
-      throwIpcError(error);
-    }
-
-    if (controller.signal.aborted) {
-      endRequest(requestId, controller);
-      sendStreamEvent(sender, { requestId, type: "error", code: "aborted", message: "Aborted" });
-      return;
-    }
-
-    void (async () => {
-      try {
-        const client = createAIGenerationClient(secrets);
-        await client.generateCards({
-          ...request,
-          abortSignal: controller.signal,
-          onCard: (card) => {
-            sendStreamEvent(sender, { requestId, type: "card", card });
-          },
-        });
-        sendStreamEvent(sender, { requestId, type: "done" });
       } catch (error) {
         // WHY: Only AbortError is cancel. Prefer provider errors over a racing
         // aborted signal so auth/network failures are not reported as Aborted.

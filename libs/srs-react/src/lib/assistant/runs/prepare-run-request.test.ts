@@ -1,7 +1,6 @@
 import { ASSISTANT_TOOL_SPECS } from "@koloda/ai";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { createTemplate } from "../../../test/test-helpers";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { createTextMessage, userMessageId } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
@@ -20,7 +19,6 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
     deckId: 0,
     templateId: 0,
     template: null,
-    cardsPromptTemplate: null,
     chatPromptTemplate: null,
     _: ((m: unknown) => m) as never,
     ...overrides,
@@ -36,25 +34,21 @@ function chatUserMessage(runId: string, text: string): UIMessage {
 
 describe("prepareRunRequest", () => {
   it("returns null when prompt is empty", () => {
-    expect(prepareRunRequest(makeConfig(), "chat", "", [], {})).toBeNull();
+    expect(prepareRunRequest(makeConfig(), "", [], {})).toBeNull();
   });
 
   it("returns null when profileId is missing", () => {
-    expect(prepareRunRequest(makeConfig({ profileId: "" }), "chat", "hi", [], {})).toBeNull();
+    expect(prepareRunRequest(makeConfig({ profileId: "" }), "hi", [], {})).toBeNull();
   });
 
   it("returns null when modelId is missing", () => {
-    expect(prepareRunRequest(makeConfig({ modelId: "" }), "chat", "hi", [], {})).toBeNull();
-  });
-
-  it("returns null for cards mode without a template", () => {
-    expect(prepareRunRequest(makeConfig({ template: null }), "cards", "hi", [], {})).toBeNull();
+    expect(prepareRunRequest(makeConfig({ modelId: "" }), "hi", [], {})).toBeNull();
   });
 
   it("prepares a chat run with execution identity and provider request", () => {
     const messages = [chatUserMessage("run-1", "prior")];
     const runs: Record<string, GenerationRun> = {};
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", messages, runs);
+    const prepared = prepareRunRequest(makeConfig(), "hello", messages, runs);
 
     expect(prepared).not.toBeNull();
     expect(prepared!.kind).toBe("chat");
@@ -67,84 +61,22 @@ describe("prepareRunRequest", () => {
     });
     expect(prepared!.request).not.toHaveProperty("dataContext");
   });
-
-  it("prepares a cards run with template snapshot in execution identity", () => {
-    const template = createTemplate({
-      id: 42,
-      content: { fields: [{ id: 1, title: "Front", isRequired: true, type: "text" }] },
-    });
-    const prepared = prepareRunRequest(
-      makeConfig({ template, templateId: 42, deckId: 1 }),
-      "cards",
-      "make cards",
-      [],
-      {},
-    );
-
-    expect(prepared).not.toBeNull();
-    expect(prepared!.kind).toBe("cards");
-    expect(prepared!.templateFields).toEqual(template.content.fields);
-    expect(prepared!.execution).toEqual({
-      profileId: "prof-1",
-      template: {
-        id: 42,
-        content: { fields: template.content.fields },
-      },
-    });
-  });
 });
 
 describe("prepareRunRequest — data access", () => {
-  const dataAccess: DataAccessSnapshot = {
-    context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
-    manifest: {
-      decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
-      writeTarget: null,
-    },
-  };
-
-  it("chat requests carry tool names and ignore a passed snapshot", () => {
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {}, dataAccess);
+  it("chat requests carry tool names and do not embed a snapshot", () => {
+    const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
 
     expect(prepared).not.toBeNull();
     expect(prepared!.request.tools).toEqual(CHAT_TOOLS);
     expect(prepared!.request.tools).toEqual(["list_decks", "get_deck_cards", "propose_cards"]);
     expect(prepared!.request).not.toHaveProperty("dataContext");
   });
-
-  it("embeds the resolved context as dataContext on a cards request", () => {
-    const template = createTemplate({ id: 42 });
-    const prepared = prepareRunRequest(
-      makeConfig({ template, templateId: 42, deckId: 1 }),
-      "cards",
-      "make cards",
-      [],
-      {},
-      dataAccess,
-    );
-
-    expect(prepared).not.toBeNull();
-    expect(prepared!.request.dataContext).toBe(dataAccess.context);
-  });
-
-  it("omits dataContext on cards when no snapshot is passed (retry path)", () => {
-    const template = createTemplate({ id: 42 });
-    const prepared = prepareRunRequest(
-      makeConfig({ template, templateId: 42, deckId: 1 }),
-      "cards",
-      "make cards",
-      [],
-      {},
-    );
-
-    expect(prepared).not.toBeNull();
-    expect(prepared!.request.dataContext).toBeUndefined();
-  });
 });
 
 describe("toSubmitCommand / toRetryCommand", () => {
   it("builds a submit command for chat", () => {
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+    const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
     expect(toSubmitCommand("conv-1", "run-1", prepared!)).toEqual({
       type: "submit",
@@ -159,9 +91,9 @@ describe("toSubmitCommand / toRetryCommand", () => {
   });
 
   it("builds a retry command carrying mode and template fields", () => {
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+    const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
-    expect(toRetryCommand("conv-1", "run-1", "chat", prepared!)).toEqual({
+    expect(toRetryCommand("conv-1", "run-1", prepared!)).toEqual({
       type: "retry",
       conversationId: "conv-1",
       input: {
@@ -176,7 +108,7 @@ describe("toSubmitCommand / toRetryCommand", () => {
   });
 
   it("builds a retry command carrying the replayed data access snapshot", () => {
-    const prepared = prepareRunRequest(makeConfig(), "chat", "hello", [], {});
+    const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
     const dataAccess: DataAccessSnapshot = {
       context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
@@ -186,7 +118,7 @@ describe("toSubmitCommand / toRetryCommand", () => {
       },
     };
 
-    const command = toRetryCommand("conv-1", "run-1", "chat", prepared!, dataAccess);
+    const command = toRetryCommand("conv-1", "run-1", prepared!, dataAccess);
 
     // WHY: identity — the command must carry the exact snapshot object so the
     // restart stores it on the run record unchanged.

@@ -1,5 +1,5 @@
 import { AIError } from "./error";
-import type { ChatStreamGenerator, GenerateCardsFunction } from "./generation";
+import type { ChatStreamGenerator } from "./generation";
 import type { AIModel } from "./models";
 import { AI_PROVIDERS } from "./provider-catalog";
 import type { AiProvider } from "./provider-catalog";
@@ -15,7 +15,6 @@ export type AIGenerationClient = {
   provider: AISecrets["provider"];
   listModels: () => Promise<AIModel[]>;
   chat: ChatStreamGenerator;
-  generateCards: GenerateCardsFunction;
 };
 
 export type AIProviderEntry = {

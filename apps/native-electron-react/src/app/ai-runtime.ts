@@ -1,11 +1,4 @@
-import type {
-  AIRuntime,
-  CardGenerationRequest,
-  ChatStreamRequest,
-  GeneratedCard,
-  OnToolEvent,
-  StreamUsage,
-} from "@koloda/ai";
+import type { AIRuntime, ChatStreamRequest, OnToolEvent, StreamUsage } from "@koloda/ai";
 import { AIError, isAIError } from "@koloda/ai";
 import { isAppError } from "@koloda/app";
 import { invoke } from "./electron";
@@ -14,7 +7,6 @@ export const AI_STREAM_CHANNEL = "ai:stream";
 
 export type AiStreamEvent =
   | { requestId: string; type: "chunk"; chunk: string }
-  | { requestId: string; type: "card"; card: GeneratedCard }
   | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
   | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
@@ -43,7 +35,6 @@ type WaitForStreamOptions = {
   requestId: string;
   abortSignal: AbortSignal;
   onChunk?: (chunk: string) => void;
-  onCard?: (card: GeneratedCard) => void;
   onToolEvent?: OnToolEvent;
 };
 
@@ -53,7 +44,7 @@ type StreamWaiter = {
   dispose: () => void;
 };
 
-function waitForStream({ requestId, abortSignal, onChunk, onCard, onToolEvent }: WaitForStreamOptions): StreamWaiter {
+function waitForStream({ requestId, abortSignal, onChunk, onToolEvent }: WaitForStreamOptions): StreamWaiter {
   let isSettled = false;
   let unsubscribe = () => {};
   let removeAbortListener = () => {};
@@ -78,9 +69,6 @@ function waitForStream({ requestId, abortSignal, onChunk, onCard, onToolEvent }:
       switch (event.type) {
         case "chunk":
           onChunk?.(event.chunk);
-          return;
-        case "card":
-          onCard?.(event.card);
           return;
         case "toolCall":
           onToolEvent?.({ kind: "toolCall", call: event.call });
@@ -175,42 +163,6 @@ export function createElectronAIRuntime(): AIRuntime {
         void invoke("cmd_ai_abort", { requestId }).catch(() => {});
       }
       return waiter.promise;
-    },
-
-    generateCards: async (profileId, request: CardGenerationRequest, correlationId) => {
-      // WHY: Prefer the host-minted id so structured streamStart logs match IPC.
-      const requestId = correlationId ?? crypto.randomUUID();
-      const abortSignal = request.abortSignal ?? new AbortController().signal;
-      // INVARIANT: Attach the stream listener before invoke so early cards/errors are not missed.
-      const waiter = waitForStream({ requestId, abortSignal, onCard: request.onCard });
-      // WHY: Abort before start would leave an orphan provider stream if we still invoke.
-      if (abortSignal.aborted) {
-        await waiter.promise;
-        return;
-      }
-      try {
-        // WHY: Callbacks / AbortSignal are not IPC-serializable — recreate them in main.
-        await invoke("cmd_ai_generate_cards", {
-          requestId,
-          profileId,
-          request: {
-            template: request.template,
-            input: request.input,
-            messages: request.messages,
-            systemPromptTemplate: request.systemPromptTemplate,
-            dataContext: request.dataContext,
-          },
-        });
-      } catch (error) {
-        // WHY: Dispose (don't reject) — throwing below is the single rejection path.
-        waiter.dispose();
-        throw toRuntimeError(error);
-      }
-      // WHY: Abort during start may miss main's AbortController; re-abort after invoke binds.
-      if (abortSignal.aborted) {
-        void invoke("cmd_ai_abort", { requestId }).catch(() => {});
-      }
-      await waiter.promise;
     },
   };
 }

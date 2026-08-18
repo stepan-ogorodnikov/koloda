@@ -44,7 +44,6 @@ async function runChatStream(
       request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
       request.template?.content.fields ?? [],
       providerLabel,
-      "chat",
     ),
     messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     abortSignal,

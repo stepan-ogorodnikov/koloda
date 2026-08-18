@@ -1,10 +1,9 @@
-import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent, RunDataAccessSnapshot } from "./assistant-protocol";
-import type { CardGenerationStreamRequest } from "./card-generation";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
@@ -33,14 +32,9 @@ export type ConversationRuntimeTransports = {
 export type ConversationRuntime = {
   conversationId: string;
   executeChatRun: (runId: string, request: ChatStreamRequest, execution: AssistantExecutionIdentity) => Promise<void>;
-  executeGenerateRun: (
-    runId: string,
-    request: CardGenerationStreamRequest,
-    execution: AssistantExecutionIdentity,
-  ) => Promise<void>;
   retryRun: (
     runId: string,
-    request: ChatStreamRequest | CardGenerationStreamRequest,
+    request: ChatStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName: string | undefined,
@@ -335,84 +329,6 @@ export function createConversationRuntime(
     );
   };
 
-  const runGenerateRun = async (
-    runId: string,
-    request: CardGenerationStreamRequest,
-    execution: AssistantExecutionIdentity,
-  ): Promise<void> => {
-    const earlyCancel = takeCancelBeforeStart(runId);
-    if (earlyCancel !== undefined) {
-      applyQueuedCancel(runId, earlyCancel);
-      return;
-    }
-
-    return runStream<CardGenerationStreamRequest, GeneratedCard, StreamResult, null>(
-      {
-        mode: "cards",
-        transport: async (req, onValue) => {
-          const gateReason = takeCancelBeforeStart(runId);
-          if (gateReason !== undefined) {
-            abortedRunReasons.set(runId, gateReason);
-            return "aborted" as const;
-          }
-          if (runAwaitingStart === runId) runAwaitingStart = null;
-          const controller = beginRunForTransport(runId);
-          if (!controller) {
-            return "aborted" as const;
-          }
-          try {
-            const onCard = (card: GeneratedCard) => {
-              if (!controller.signal.aborted) onValue(card);
-            };
-            await transports.executionPort.executeGenerate(
-              {
-                kind: "cards",
-                conversationId,
-                runId,
-                identity: execution,
-                request: req,
-              },
-              onCard,
-              controller.signal,
-            );
-            return "success" as const;
-          } catch (e) {
-            if (isAbortError(e)) return classifyAbortError(runId);
-            const error = e instanceof Error ? e : new Error(String(e));
-            emit({
-              type: "runTerminated",
-              conversationId,
-              runId,
-              outcome: { status: "failed", error: { message: displayErrorMessage(error) } },
-            });
-            callbacks.markReadIfCurrent(conversationId, runId);
-            return "error" as const;
-          } finally {
-            controllerRegistry.endRun(runId, controller);
-          }
-        },
-        initial: null,
-        onValue: (_acc, card) => {
-          emit({
-            type: "runChunk",
-            conversationId,
-            runId,
-            chunk: { kind: "card", card },
-          });
-          // WHY: Card arrivals (and their idle card statuses) must dirty the
-          // originating conversation, not whatever is currently viewed.
-          callbacks.touch(conversationId);
-          return null;
-        },
-        finalize: (result) => result,
-      },
-      conversationId,
-      runId,
-      request,
-      handleStreamResult,
-    );
-  };
-
   const mapQueueClosed = (error: QueueClosedError): AssistantEngineClosedError =>
     new AssistantEngineClosedError(
       error.reason === "app_shutdown" || error.reason === "dispose" ? "closing" : "closed",
@@ -473,18 +389,9 @@ export function createConversationRuntime(
       await withAwaitingStart(runId, () => runChatRun(runId, request, execution));
     });
 
-  const executeGenerateRun = (
-    runId: string,
-    request: CardGenerationStreamRequest,
-    execution: AssistantExecutionIdentity,
-  ): Promise<void> =>
-    enqueueExclusive(runId, async () => {
-      await withAwaitingStart(runId, () => runGenerateRun(runId, request, execution));
-    });
-
   const retryRun = (
     runId: string,
-    request: ChatStreamRequest | CardGenerationStreamRequest,
+    request: ChatStreamRequest,
     templateFields: TemplateFields | null,
     mode: AIChatMode,
     modelName: string | undefined,
@@ -504,8 +411,7 @@ export function createConversationRuntime(
         // INVARIANT: Restart/clear/stream ownership stays on this runtime's
         // conversationId even if the UI-current conversation changed while
         // this retry waited in the serial queue.
-        // WHY: Command mode is authoritative. A stored cards-mode run retried
-        // as chat must call tools (propose_cards), not executeGenerate.
+        // WHY: Retry is always chat+tools, including historical cards-mode runs.
         emit({
           type: "runStarted",
           conversationId,
@@ -518,17 +424,13 @@ export function createConversationRuntime(
           },
         });
 
-        if (mode === "chat") {
-          emit({
-            type: "runChunk",
-            conversationId,
-            runId,
-            chunk: { kind: "assistantText", text: "" },
-          });
-          await runChatRun(runId, request as ChatStreamRequest, execution);
-        } else {
-          await runGenerateRun(runId, request as CardGenerationStreamRequest, execution);
-        }
+        emit({
+          type: "runChunk",
+          conversationId,
+          runId,
+          chunk: { kind: "assistantText", text: "" },
+        });
+        await runChatRun(runId, request, execution);
       });
     });
 
@@ -566,7 +468,6 @@ export function createConversationRuntime(
   return {
     conversationId,
     executeChatRun,
-    executeGenerateRun,
     retryRun,
     cancel,
     close,
