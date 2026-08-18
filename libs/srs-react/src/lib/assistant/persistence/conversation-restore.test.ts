@@ -368,6 +368,55 @@ describe("coerceConversationState", () => {
       expect(coerced.runs["r1"].dataAccess).toBeUndefined();
     });
 
+    it("roundtrips a cards-mode success run with cards and generated-cards metadata", () => {
+      const cards = [{ content: { "1": { text: "A" }, "2": { text: "B" } } }];
+      const fields = [
+        { id: 1, title: "Front", type: "text" as const, isRequired: true },
+        { id: 2, title: "Back", type: "text" as const, isRequired: true },
+      ];
+      const state: ConversationReducerState = {
+        ...initialConversationState,
+        id: "conv-1",
+        mode: "cards",
+        deckId: 7,
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Make cards" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant",
+            parts: [{ type: "text", text: "" }],
+            metadata: { kind: "generated-cards", runId: "r1" },
+          },
+        ],
+        runs: {
+          r1: {
+            id: "r1",
+            mode: "cards",
+            status: "success",
+            cards,
+            cardStatuses: { 0: "success" },
+            templateFields: fields,
+            startedAt: new Date(1000),
+            elapsedSeconds: 1,
+          },
+        },
+      };
+      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as { schemaVersion: number };
+      expect(persisted.schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
+      const restored = expectOk(persisted);
+      expect(restored.runs["r1"]?.mode).toBe("cards");
+      expect(restored.runs["r1"]?.status).toBe("success");
+      expect(restored.runs["r1"]?.cards).toEqual(cards);
+      expect(restored.runs["r1"]?.templateFields).toEqual(fields);
+      expect(restored.runs["r1"]?.dataAccess).toBeUndefined();
+      expect(restored.messages[1]?.metadata).toEqual({ kind: "generated-cards", runId: "r1" });
+    });
+
     it("rejects a wrong-typed dataAccess value as corrupt", () => {
       expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: "yes" }))).length).toBeGreaterThan(0);
       expect(expectCorrupt(makeStateWithRun(baseRun({ dataAccess: null }))).length).toBeGreaterThan(0);

@@ -55,7 +55,10 @@ export function useAssistantMessageRenderer({
       const generatedCardsMetadata = getGeneratedCardsMetadata(message);
       if (generatedCardsMetadata) {
         const run = runs[generatedCardsMetadata.runId];
-        if (run?.mode === "cards") {
+        // INVARIANT: Historical generated-cards rows keep the table after mode
+        // is no longer "cards" (retry overwrites mode; mixed restore). The
+        // table is the metadata, not `run.mode === "cards"`.
+        if (run) {
           const rendered = renderCardsMessage({
             run,
             runId: generatedCardsMetadata.runId,

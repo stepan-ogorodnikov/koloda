@@ -243,4 +243,20 @@ describe("useAssistantMessageRenderer", () => {
     expect(table.getAttribute("data-deck-id")).toBe("7");
     expect(table.getAttribute("data-template-id")).toBe("9");
   });
+
+  it("renders the cards table for generated-cards when run.mode is chat", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      mode: "chat" as const,
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { kind: "generated-cards", deckId: 7, templateId: 9 });
+    const table = screen.getByTestId("cards-table");
+    expect(table).toBeTruthy();
+    expect(table.getAttribute("data-can-add")).toBe("true");
+    expect(table.getAttribute("data-deck-id")).toBe("5");
+    expect(table.getAttribute("data-template-id")).toBe("9");
+  });
 });
