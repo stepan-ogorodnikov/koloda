@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import type { ToolSet } from "ai";
 import { z } from "zod";
+import type { GeneratedCard } from "./generation";
 
 /**
  * Assistant chat tool registry — specs, binder, and pure output shaping, no I/O
@@ -29,11 +30,14 @@ export type GetDeckCardsOutput = {
   cards: Array<{ fields: Record<string, string> }>;
 };
 
+/** Host field type — mirrors SRS `"text" | "markdown"` without importing `@koloda/srs`. */
+export type AssistantToolFieldType = "text" | "markdown";
+
 /** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
 export type ProposeCardsOutput = {
   deckId: number;
   deckTitle: string;
-  templateFields: Array<{ id: number; title: string }>;
+  templateFields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
   cards: Array<{ fields: Record<string, string> }>;
   rejectedCount: number;
 };
@@ -58,7 +62,7 @@ export type AssistantDeckSummarySource = {
 export type AssistantToolTemplate = {
   id: number;
   title: string;
-  content: { fields: Array<{ id: number; title: string; isRequired: boolean }> };
+  content: { fields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }> };
 };
 
 /** Structural deck + template subset for `get_deck_cards` and `propose_cards`. */
@@ -235,7 +239,12 @@ export function shapeProposeCardsOutput(
   return {
     deckId: deck.id,
     deckTitle: deck.title,
-    templateFields: templateFields.map((field) => ({ id: field.id, title: field.title })),
+    templateFields: templateFields.map((field) => ({
+      id: field.id,
+      title: field.title,
+      type: field.type,
+      isRequired: field.isRequired,
+    })),
     cards: accepted,
     rejectedCount,
   };
@@ -256,4 +265,59 @@ function shapeProposedCardFields(
   }
   if (!hasNonEmpty || isMissingRequired) return null;
   return mapped;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  if (!isPlainObject(value)) return false;
+  return Object.values(value).every((entry) => typeof entry === "string");
+}
+
+function isAssistantToolFieldType(value: unknown): value is AssistantToolFieldType {
+  return value === "text" || value === "markdown";
+}
+
+function isProposeCardsTemplateField(value: unknown): value is ProposeCardsOutput["templateFields"][number] {
+  if (!isPlainObject(value)) return false;
+  return (
+    typeof value.id === "number" &&
+    Number.isInteger(value.id) &&
+    typeof value.title === "string" &&
+    isAssistantToolFieldType(value.type) &&
+    typeof value.isRequired === "boolean"
+  );
+}
+
+function isProposeCardsCard(value: unknown): value is ProposeCardsOutput["cards"][number] {
+  if (!isPlainObject(value)) return false;
+  return isStringRecord(value.fields);
+}
+
+export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutput {
+  if (!isPlainObject(value)) return false;
+  return (
+    typeof value.deckId === "number" &&
+    Number.isInteger(value.deckId) &&
+    value.deckId > 0 &&
+    typeof value.deckTitle === "string" &&
+    Array.isArray(value.templateFields) &&
+    value.templateFields.every(isProposeCardsTemplateField) &&
+    Array.isArray(value.cards) &&
+    value.cards.every(isProposeCardsCard) &&
+    typeof value.rejectedCount === "number" &&
+    Number.isInteger(value.rejectedCount)
+  );
+}
+
+// WHY: hosts and the model speak field titles; GeneratedCard content is keyed
+// by field id. Mapping lives here so srs-react does not duplicate the table.
+export function generatedCardsFromProposeOutput(output: ProposeCardsOutput): GeneratedCard[] {
+  return output.cards.map((card) => ({
+    content: Object.fromEntries(
+      output.templateFields.map((field) => [String(field.id), { text: card.fields[field.title] ?? "" }]),
+    ),
+  }));
 }

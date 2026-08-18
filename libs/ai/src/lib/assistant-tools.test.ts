@@ -3,8 +3,19 @@ import { MockLanguageModelV3 } from "ai/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as AiSdkOllama from "ai-sdk-ollama";
 import { ASSISTANT_TOOL_MAX_CARDS_PER_DECK, ASSISTANT_TOOL_SPECS, bindAssistantTools } from "./assistant-tools";
-import type { AssistantToolCard, AssistantToolEvent } from "./assistant-tools";
-import { shapeGetDeckCardsOutput, shapeListDecksOutput, shapeProposeCardsOutput } from "./assistant-tools";
+import type {
+  AssistantToolCard,
+  AssistantToolEvent,
+  AssistantToolTemplate,
+  ProposeCardsOutput,
+} from "./assistant-tools";
+import {
+  generatedCardsFromProposeOutput,
+  isProposeCardsOutput,
+  shapeGetDeckCardsOutput,
+  shapeListDecksOutput,
+  shapeProposeCardsOutput,
+} from "./assistant-tools";
 import { streamChatWithOllama } from "./chat-stream";
 import type { ChatStreamRequest } from "./generation";
 
@@ -138,18 +149,18 @@ describe("assistant-tools binder", () => {
 });
 
 describe("tool output shaping", () => {
-  const templates = [
+  const templates: AssistantToolTemplate[] = [
     {
       id: 1,
       title: "Basic",
       content: {
         fields: [
-          { id: 10, title: "Front", isRequired: true },
-          { id: 11, title: "Back", isRequired: true },
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 11, title: "Back", type: "text", isRequired: true },
         ],
       },
     },
-    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text", isRequired: true }] } },
+    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text", type: "text", isRequired: true }] } },
   ];
   const deck = { id: 5, title: "Spanish verbs", template: templates[0] };
 
@@ -248,14 +259,14 @@ describe("tool output shaping", () => {
 });
 
 describe("propose_cards output shaping", () => {
-  const template = {
+  const template: AssistantToolTemplate = {
     id: 1,
     title: "Basic",
     content: {
       fields: [
-        { id: 10, title: "Front", isRequired: true },
-        { id: 11, title: "Back", isRequired: true },
-        { id: 12, title: "Hint", isRequired: false },
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
       ],
     },
   };
@@ -266,9 +277,9 @@ describe("propose_cards output shaping", () => {
       deckId: 5,
       deckTitle: "Spanish verbs",
       templateFields: [
-        { id: 10, title: "Front" },
-        { id: 11, title: "Back" },
-        { id: 12, title: "Hint" },
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
       ],
       cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
       rejectedCount: 0,
@@ -308,9 +319,9 @@ describe("propose_cards output shaping", () => {
       deckId: 5,
       deckTitle: "Spanish verbs",
       templateFields: [
-        { id: 10, title: "Front" },
-        { id: 11, title: "Back" },
-        { id: 12, title: "Hint" },
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
       ],
       cards: [],
       rejectedCount: 0,
@@ -334,6 +345,130 @@ describe("propose_cards output shaping", () => {
         Hint: "",
       },
     });
+  });
+
+  it("carries isRequired from the source template onto output fields", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]);
+
+    expect(output.templateFields).toEqual([
+      { id: 10, title: "Front", type: "text", isRequired: true },
+      { id: 11, title: "Back", type: "text", isRequired: true },
+      { id: 12, title: "Hint", type: "text", isRequired: false },
+    ]);
+  });
+
+  it("carries type: markdown from the source template onto output fields", () => {
+    const markdownDeck = {
+      id: 5,
+      title: "Spanish verbs",
+      template: {
+        id: 1,
+        title: "Basic",
+        content: {
+          fields: [
+            { id: 10, title: "Front", type: "text" as const, isRequired: true },
+            { id: 11, title: "Back", type: "markdown" as const, isRequired: true },
+          ],
+        },
+      },
+    };
+
+    const output = shapeProposeCardsOutput(markdownDeck, [{ fields: { Front: "hola", Back: "**hello**" } }]);
+
+    expect(output.templateFields).toEqual([
+      { id: 10, title: "Front", type: "text", isRequired: true },
+      { id: 11, title: "Back", type: "markdown", isRequired: true },
+    ]);
+    expect(isProposeCardsOutput(output)).toBe(true);
+  });
+});
+
+describe("propose_cards output guard and mapper", () => {
+  const validOutput: ProposeCardsOutput = {
+    deckId: 5,
+    deckTitle: "Spanish verbs",
+    templateFields: [
+      { id: 10, title: "Front", type: "text", isRequired: true },
+      { id: 11, title: "Back", type: "text", isRequired: true },
+      { id: 12, title: "Hint", type: "text", isRequired: false },
+    ],
+    cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
+    rejectedCount: 0,
+  };
+
+  it("accepts a shaped propose_cards payload", () => {
+    const deck = {
+      id: 5,
+      title: "Spanish verbs",
+      template: {
+        id: 1,
+        title: "Basic",
+        content: {
+          fields: [
+            { id: 10, title: "Front", type: "text" as const, isRequired: true },
+            { id: 11, title: "Back", type: "text" as const, isRequired: true },
+            { id: 12, title: "Hint", type: "text" as const, isRequired: false },
+          ],
+        },
+      },
+    };
+
+    expect(isProposeCardsOutput(validOutput)).toBe(true);
+    expect(isProposeCardsOutput(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]))).toBe(
+      true,
+    );
+  });
+
+  it("rejects malformed payloads", () => {
+    expect(isProposeCardsOutput(undefined)).toBe(false);
+    expect(isProposeCardsOutput(null)).toBe(false);
+    expect(isProposeCardsOutput({ decks: [] })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, deckId: 0 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, deckId: 1.5 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, rejectedCount: 1.5 })).toBe(false);
+    expect(
+      isProposeCardsOutput({
+        ...validOutput,
+        templateFields: [{ id: 10, title: "Front" }],
+      }),
+    ).toBe(false);
+    expect(
+      isProposeCardsOutput({
+        ...validOutput,
+        templateFields: [{ id: 10, title: "Front", isRequired: true }],
+      }),
+    ).toBe(false);
+    expect(
+      isProposeCardsOutput({
+        ...validOutput,
+        templateFields: [{ id: 10, title: "Front", type: "html", isRequired: true }],
+      }),
+    ).toBe(false);
+    expect(
+      isProposeCardsOutput({
+        ...validOutput,
+        cards: [{ fields: { Front: 1 } }],
+      }),
+    ).toBe(false);
+  });
+
+  it("maps title-keyed accepted cards onto id-keyed GeneratedCard content", () => {
+    expect(generatedCardsFromProposeOutput(validOutput)).toEqual([
+      { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
+    ]);
+  });
+
+  it("fills missing titles with empty text and ignores unknown titles", () => {
+    expect(
+      generatedCardsFromProposeOutput({
+        ...validOutput,
+        cards: [{ fields: { Front: "hola", Extra: "nope" } }],
+      }),
+    ).toEqual([{ content: { "10": { text: "hola" }, "11": { text: "" }, "12": { text: "" } } }]);
+  });
+
+  it("returns an empty list when no cards were accepted", () => {
+    expect(generatedCardsFromProposeOutput({ ...validOutput, cards: [] })).toEqual([]);
   });
 });
 

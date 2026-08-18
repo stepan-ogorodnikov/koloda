@@ -192,6 +192,154 @@ describe("conversationReducer", () => {
 
       expect(next).toEqual(state);
     });
+
+    const proposeOutput = {
+      deckId: 5,
+      deckTitle: "Spanish verbs",
+      templateFields: [
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
+      ],
+      cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
+      rejectedCount: 0,
+    };
+
+    function withProposeCall(
+      state: ConversationReducerState,
+      callId: string,
+      output: unknown,
+      error?: unknown,
+    ): ConversationReducerState {
+      const next = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: callId, name: "propose_cards", input: { deckId: 5, cards: [] } } },
+      ]);
+      return conversationReducer(next, [
+        "setToolCallResult",
+        error !== undefined ? { runId: "r1", callId, error } : { runId: "r1", callId, output },
+      ]);
+    }
+
+    it("maps a successful propose_cards output onto run cards, templateFields, and writeTargetDeckId", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = withProposeCall(state, "call-1", proposeOutput);
+
+      expect(state.runs["r1"].cards).toEqual([
+        { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
+      ]);
+      expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
+      expect(state.runs["r1"].templateFields).toEqual([
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
+      ]);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        id: "call-1",
+        name: "propose_cards",
+        status: "success",
+        output: proposeOutput,
+      });
+    });
+
+    it("maps field.type from propose_cards onto run.templateFields, including markdown", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      const markdownOutput = {
+        ...proposeOutput,
+        templateFields: [
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 11, title: "Back", type: "markdown", isRequired: true },
+          { id: 12, title: "Hint", type: "text", isRequired: false },
+        ],
+      };
+      state = withProposeCall(state, "call-1", markdownOutput);
+
+      expect(state.runs["r1"].templateFields).toEqual([
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "markdown", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
+      ]);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+    });
+
+    it("records an empty accepted list without setting cards, writeTargetDeckId, or templateFields", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      const emptyOutput = { ...proposeOutput, cards: [], rejectedCount: 2 };
+      state = withProposeCall(state, "call-1", emptyOutput);
+
+      expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].templateFields).toBeNull();
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "success", output: emptyOutput });
+    });
+
+    it("does not apply cards when propose_cards returns an error", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = withProposeCall(state, "call-1", proposeOutput, "Deck not found: 5");
+
+      expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].templateFields).toBeNull();
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        status: "error",
+        error: "Deck not found: 5",
+      });
+    });
+
+    it("stores a malformed successful output without applying cards", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = withProposeCall(state, "call-1", { decks: [] });
+
+      expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "success", output: { decks: [] } });
+    });
+
+    it("keeps the first write target and ignores a later propose_cards for a different deck", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = withProposeCall(state, "call-1", proposeOutput);
+      const otherDeck = {
+        ...proposeOutput,
+        deckId: 9,
+        deckTitle: "Other",
+        cards: [{ fields: { Front: "gato", Back: "cat", Hint: "" } }],
+      };
+      state = withProposeCall(state, "call-2", otherDeck);
+
+      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].cards).toHaveLength(1);
+      expect(state.runs["r1"].cards[0].content["10"].text).toBe("hola");
+      expect(state.runs["r1"].templateFields?.[0]).toMatchObject({ id: 10, title: "Front" });
+      expect(state.runs["r1"].toolCalls).toHaveLength(2);
+      expect(state.runs["r1"].toolCalls?.[1]).toMatchObject({ id: "call-2", status: "success", output: otherDeck });
+    });
+
+    it("appends cards from a later propose_cards for the same deck without replacing templateFields", () => {
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = withProposeCall(state, "call-1", proposeOutput);
+      const second = {
+        ...proposeOutput,
+        templateFields: [
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 99, title: "Changed", type: "markdown", isRequired: false },
+        ],
+        cards: [{ fields: { Front: "gato", Back: "cat", Hint: "" } }],
+      };
+      state = withProposeCall(state, "call-2", second);
+
+      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].cards).toEqual([
+        { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
+        { content: { "10": { text: "gato" }, "99": { text: "" } } },
+      ]);
+      expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "idle" });
+      expect(state.runs["r1"].templateFields).toEqual([
+        { id: 10, title: "Front", type: "text", isRequired: true },
+        { id: 11, title: "Back", type: "text", isRequired: true },
+        { id: 12, title: "Hint", type: "text", isRequired: false },
+      ]);
+    });
   });
 
   describe("completeRun", () => {
@@ -426,6 +574,39 @@ describe("conversationReducer", () => {
 
       // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
       expect(state.runs["r1"].toolCalls).toEqual([]);
+    });
+
+    it("clears cards, toolCalls, and writeTargetDeckId on restart", () => {
+      const proposeOutput = {
+        deckId: 5,
+        deckTitle: "Spanish verbs",
+        templateFields: [
+          { id: 10, title: "Front", type: "text", isRequired: true },
+          { id: 11, title: "Back", type: "text", isRequired: true },
+        ],
+        cards: [{ fields: { Front: "hola", Back: "hello" } }],
+        rejectedCount: 0,
+      };
+      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", output: proposeOutput },
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+
+      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].cards).toHaveLength(1);
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+
+      expect(state.runs["r1"].cards).toEqual([]);
+      expect(state.runs["r1"].cardStatuses).toEqual({});
+      expect(state.runs["r1"].toolCalls).toEqual([]);
+      expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {

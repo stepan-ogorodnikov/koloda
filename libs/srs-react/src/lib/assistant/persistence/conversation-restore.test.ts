@@ -618,6 +618,70 @@ describe("coerceConversationState", () => {
     });
   });
 
+  describe("run writeTargetDeckId coercion", () => {
+    function makeStateWithRun(run: Record<string, unknown>) {
+      return {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        messages: [],
+        runs: { r1: run },
+      };
+    }
+
+    function baseRun(overrides: Record<string, unknown> = {}) {
+      return {
+        id: "r1",
+        mode: "chat",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: 1,
+        ...overrides,
+      };
+    }
+
+    it("keeps writeTargetDeckId intact across a save→restore roundtrip (JSON wire shape)", () => {
+      const state: ConversationReducerState = {
+        ...initialConversationState,
+        id: "conv-1",
+        runs: {
+          r1: {
+            id: "r1",
+            mode: "chat",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1000),
+            elapsedSeconds: 1,
+            writeTargetDeckId: 5,
+          },
+        },
+      };
+      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+      const restored = expectOk(persisted);
+      expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
+      expect(restored.runs["r1"]?.writeTargetDeckId).toBe(5);
+    });
+
+    it("restores rows saved before write targets unchanged (no writeTargetDeckId field)", () => {
+      const coerced = expectOk(makeStateWithRun(baseRun()));
+      expect(coerced.runs["r1"].writeTargetDeckId).toBeUndefined();
+    });
+
+    it("rejects a malformed writeTargetDeckId value as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: "yes" }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: null }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: 0 }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: -1 }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: 1.5 }))).length).toBeGreaterThan(0);
+      expect(expectCorrupt(makeStateWithRun(baseRun({ writeTargetDeckId: true }))).length).toBeGreaterThan(0);
+    });
+  });
+
   // WHY: persisted rows are a compat boundary.
   // These pin the three behaviors a naive Zod port loses: `revertState` is
   // ignored even when present, an unparseable *present* `updatedAt` fails the

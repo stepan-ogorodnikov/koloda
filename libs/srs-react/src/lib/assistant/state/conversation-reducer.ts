@@ -1,3 +1,4 @@
+import { generatedCardsFromProposeOutput, isProposeCardsOutput } from "@koloda/ai";
 import type { AIChatMode, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import { logAssistantStructured } from "@koloda/assistant";
 import { dispatchReducerAction } from "@koloda/core-react";
@@ -52,6 +53,10 @@ export type GenerationRun = {
   // validates the array — a malformed payload fails the row as corrupt.
   toolCalls?: RunToolCall[];
   templateFields: TemplateFields | null;
+  // WHY: optional so rows saved before proposed-card write targets restore
+  // unchanged; live chat runs set it when `propose_cards` first succeeds.
+  // When present, persistence requires a positive int — malformed fails the row.
+  writeTargetDeckId?: number;
   error?: { message: string };
   startedAt: Date;
   elapsedSeconds: number | null;
@@ -244,6 +249,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.cards = [];
     run.cardStatuses = {};
     run.toolCalls = [];
+    run.writeTargetDeckId = undefined;
     run.templateFields = event.templateFields;
     run.startedAt = new Date();
     run.elapsedSeconds = null;
@@ -441,6 +447,36 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
   }
   call.status = "success";
   call.output = payload.output;
+  applyProposeCardsToRun(draft, payload.runId, call, payload.output);
+}
+
+// WHY: runtime must not parse tool payloads; the call name already lives on the run.
+function applyProposeCardsToRun(draft: ConversationReducerState, runId: string, call: RunToolCall, output: unknown) {
+  if (call.name !== "propose_cards") return;
+  if (!isProposeCardsOutput(output)) return;
+  // INVARIANT: empty accept must not set writeTargetDeckId or templateFields.
+  if (output.cards.length === 0) return;
+
+  const run = draft.runs[runId];
+  if (!run) return;
+
+  // WHY: first write target wins — a later propose_cards for a different deck
+  // must not retarget the run or mix in those cards; the tool row is still stored.
+  if (run.writeTargetDeckId !== undefined && run.writeTargetDeckId !== output.deckId) return;
+
+  if (run.writeTargetDeckId === undefined) {
+    run.writeTargetDeckId = output.deckId;
+    run.templateFields = output.templateFields.map((field) => ({
+      id: field.id,
+      title: field.title,
+      type: field.type,
+      isRequired: field.isRequired,
+    }));
+  }
+
+  for (const card of generatedCardsFromProposeOutput(output)) {
+    addCard(draft, { runId, card });
+  }
 }
 
 type RunIdPayload = { runId: string };

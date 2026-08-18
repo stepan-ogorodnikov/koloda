@@ -219,6 +219,10 @@ const runSchema: z.ZodType<GenerationRun> = z
     // when present it must validate — a malformed array fails the row as
     // corrupt rather than silently dropping tool history from the run.
     toolCalls: z.array(toolCallField).optional(),
+    // INVARIANT: optional so rows saved before proposed-card write targets
+    // restore unchanged; when present it must be a positive int — a malformed
+    // value fails the row as corrupt rather than silently dropping the target.
+    writeTargetDeckId: z.number().int().positive().optional(),
   })
   .superRefine((run, ctx) => {
     // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;
@@ -270,6 +274,7 @@ const runSchema: z.ZodType<GenerationRun> = z
       error: run.error,
       dataAccess: run.dataAccess,
       toolCalls: run.toolCalls,
+      writeTargetDeckId: run.writeTargetDeckId,
     };
   });
 
