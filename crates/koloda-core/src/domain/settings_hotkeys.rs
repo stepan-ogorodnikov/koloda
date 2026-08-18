@@ -29,7 +29,6 @@ const AI_KEYS: &[&str] = &[
     "previousConversation",
     "nextConversation",
     "toggleSettings",
-    "toggleCardsMode",
     "scrollUp",
     "scrollDown",
     "scrollToTop",

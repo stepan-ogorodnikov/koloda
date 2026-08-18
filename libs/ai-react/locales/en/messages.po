@@ -89,19 +89,6 @@ msgstr "Working"
 msgid "ai.chat.messages.label"
 msgstr "Conversation log"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:21
-msgid "ai.chat.mode.cards.no-deck"
-msgstr "Select a deck to use cards creation mode"
-
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:20
-msgid "ai.chat.mode.cards.off"
-msgstr "Turn on cards creation mode"
-
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:19
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:32
-msgid "ai.chat.mode.cards.on"
-msgstr "Turn off cards creation mode"
-
 #: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:19
 msgid "ai.chat.profile-data-missing"
 msgstr "Selected AI profile is missing required data"

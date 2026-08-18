@@ -89,19 +89,6 @@ msgstr "Обработка"
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:21
-msgid "ai.chat.mode.cards.no-deck"
-msgstr "Для режима создания карточек нужно выбрать колоду"
-
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:20
-msgid "ai.chat.mode.cards.off"
-msgstr "Включить режим создания карточек"
-
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:19
-#: ../../libs/ai-react/src/lib/ai-chat-mode-toggle.tsx:32
-msgid "ai.chat.mode.cards.on"
-msgstr "Выключить режим создания карточек"
-
 #: ../../libs/ai-react/src/lib/ai-chat-missing-secrets.tsx:19
 msgid "ai.chat.profile-data-missing"
 msgstr "У выбранного профиля отсутствуют необходимые данные"

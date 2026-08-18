@@ -20,9 +20,8 @@ export type ConversationRuntimeCallbacks = {
   touch: (conversationId: string) => void;
   /** True while the run can still accept a terminal cancel/complete transition. */
   isRunStreaming: (conversationId: string, runId: string) => boolean;
-  // WHY: Retry must read the originating conversation's runs, not UI-current
-  // state — a queued retry for A must still see A's mode after the user
-  // switches to B.
+  // WHY: disposeConversation cancels known run ids from this snapshot so
+  // in-flight AbortControllers abort before the runtime is dropped.
   readConversationState: (conversationId: string) => { runs: Record<string, { mode?: AIChatMode }> };
 };
 
@@ -505,22 +504,21 @@ export function createConversationRuntime(
         // INVARIANT: Restart/clear/stream ownership stays on this runtime's
         // conversationId even if the UI-current conversation changed while
         // this retry waited in the serial queue.
-        const run = callbacks.readConversationState(conversationId).runs[runId];
-        const effectiveMode: AIChatMode = run?.mode ?? mode;
-
+        // WHY: Command mode is authoritative. A stored cards-mode run retried
+        // as chat must call tools (propose_cards), not executeGenerate.
         emit({
           type: "runStarted",
           conversationId,
           run: {
             runId,
             templateFields,
-            mode: effectiveMode,
+            mode,
             modelName,
             dataAccess,
           },
         });
 
-        if (effectiveMode === "chat") {
+        if (mode === "chat") {
           emit({
             type: "runChunk",
             conversationId,

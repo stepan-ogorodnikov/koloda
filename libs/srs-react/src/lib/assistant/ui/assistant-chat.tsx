@@ -4,7 +4,6 @@ import {
   AIChatFooter,
   AIChatMessages,
   AIChatMissingSecrets,
-  AIChatModeToggle,
   AIChatPromptInput,
   AIChatPromptPanel,
   AIChatSettingsToggle,
@@ -27,8 +26,6 @@ import { AssistantNoProfiles } from "./assistant-no-profiles";
 import { AssistantSettings } from "./assistant-settings";
 import {
   assistantContextUsageAtom,
-  assistantDeckIdAtom,
-  assistantEffectiveModeAtom,
   assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
@@ -71,13 +68,11 @@ export function AssistantChat({
 }: AssistantChatProps) {
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
-  const deckId = useAtomValue(assistantDeckIdAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
   const saveStatus = useAtomValue(saveStatusAtom);
   const revertState = useAtomValue(assistantRevertStateAtom);
-  const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
   const [areSettingsOpen, setAreSettingsOpen] = useState(false);
   const [isAddProfileOpen, setIsAddProfileOpen] = useState(false);
   const modelProfilePickerRef = useRef<HTMLButtonElement>(null);
@@ -217,11 +212,6 @@ export function AssistantChat({
               <div className="flex flex-row items-center min-w-0 px-1 pb-2">
                 <div className="grow min-w-3" />
                 <div className="flex flex-row items-center gap-2 shrink-0 px-1">
-                  <AIChatModeToggle
-                    mode={effectiveMode}
-                    deckId={deckId ?? undefined}
-                    onModeChange={controller.setMode}
-                  />
                   <AIChatSubmit canSubmit={canSubmit} canCancel={canCancel} onCancel={controller.cancel} />
                 </div>
               </div>

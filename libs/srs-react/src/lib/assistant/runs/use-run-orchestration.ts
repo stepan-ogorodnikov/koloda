@@ -1,16 +1,13 @@
-import type { AIChatMode } from "@koloda/ai";
 import { getTextMessageContent } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import { AssistantDuplicateRunError } from "@koloda/assistant";
 import type { AssistantCommand } from "@koloda/assistant";
-import { msg } from "@lingui/core/macro";
 import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { getMessageRunId, userMessageId } from "../state/assistant-messages";
+import { userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
-import type { ResolveDataAccess } from "./data-access";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
@@ -19,15 +16,13 @@ type UseRunOrchestrationOptions = {
   readState: () => ConversationReducerState;
   dispatch: (action: ConversationReducerAction) => void;
   // WHY: Revert is visual/in-memory only and must not touch()
-  // (`toPersistedState` omits revertState). Mode changes still go through setMode.
+  // (`toPersistedState` omits revertState).
   dispatchLocal: (action: ConversationReducerAction) => void;
   rememberLastUsedAIProfile: (profileId: string, modelId: string) => void;
   cancelActiveRun: () => void;
-  setMode: (mode: AIChatMode) => void;
   /** Sole engine ingress — submit/retry go through typed commands. */
   dispatchCommand: (command: AssistantCommand) => void | Promise<void>;
   ensureConversationId: () => string | undefined;
-  resolveDataAccess: ResolveDataAccess;
 };
 
 type UseRunOrchestrationReturn = {
@@ -46,10 +41,8 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
     dispatchLocal,
     rememberLastUsedAIProfile,
     cancelActiveRun,
-    setMode,
     dispatchCommand,
     ensureConversationId,
-    resolveDataAccess,
   } = options;
 
   // WHY: Engine rejects duplicate runs, but same-tick double submit can still
@@ -63,8 +56,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const currentState = readState();
       const conversationId = currentState.id;
       if (isSubmitInFlightByConversationRef.current.has(conversationId)) return;
-      const mode = resolveRunMode(currentState, runId);
-      if (!mode) return;
+      if (!resolveRunMode(currentState, runId)) return;
 
       // WHY: Retry is exposed only on the visible tail. The history sent
       // to the AI must mirror what the user sees, so filter out anything
@@ -75,30 +67,19 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
-        // WHY: Cards retry replays the run's submit-time snapshot unchanged —
-        // deck edits since submit must not leak into the retried request.
-        // Pre-feature cards runs without one resolve fresh inside the in-flight
-        // guard. Chat never resolves: tools re-read current data; a stored v1
-        // snapshot stays on the run record as inert metadata.
+        // WHY: Every retry is chat+tools, including historical cards-mode
+        // runs — they may call propose_cards. Chat never resolves data
+        // access; a stored v1 snapshot stays on the run record as inert
+        // metadata (tools re-read current data).
         const stored = currentState.runs[runId]?.dataAccess;
-        const dataAccess = mode === "cards" ? (stored ?? (await resolveDataAccess(mode, currentState.deckId))) : stored;
-        const prepared = prepareRunRequest(
-          cfg,
-          mode,
-          promptText,
-          visibleMessages,
-          currentState.runs,
-          mode === "cards" ? dataAccess : undefined,
-        );
+        const prepared = prepareRunRequest(cfg, "chat", promptText, visibleMessages, currentState.runs);
         if (!prepared) return;
 
         rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);
 
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        // The snapshot rides the command so restart stores it on the run
-        // record — cards later retries replay it; chat keeps inert metadata.
-        await dispatchCommand(toRetryCommand(conversationId, runId, mode, prepared, dataAccess));
+        await dispatchCommand(toRetryCommand(conversationId, runId, "chat", prepared, stored));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;
@@ -107,7 +88,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(conversationId);
       }
     },
-    [configRef, dispatchCommand, readState, rememberLastUsedAIProfile, resolveDataAccess],
+    [configRef, dispatchCommand, readState, rememberLastUsedAIProfile],
   );
 
   const handleDismissGenerate = useCallback(() => {
@@ -140,27 +121,14 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         currentState = readState();
       }
 
-      const currentMode = currentState.mode;
-
       const promptText = (value ?? "").trim();
 
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;
       try {
-        // WHY: Cards resolve exactly once per submit, inside the in-flight
-        // guard — the await would otherwise re-open the same-tick double-submit
-        // window. Chat discovers decks/cards via tools and must not store a
-        // new snapshot (old chat snapshots stay inert on restored runs).
-        const dataAccess =
-          currentMode === "cards" ? await resolveDataAccess(currentMode, currentState.deckId) : undefined;
-        const prepared = prepareRunRequest(
-          cfg,
-          currentMode,
-          promptText,
-          currentState.messages,
-          currentState.runs,
-          dataAccess,
-        );
+        // WHY: Submit is always chat+tools. Cards injection is not resolved
+        // here — propose_cards runs against current data when the model calls it.
+        const prepared = prepareRunRequest(cfg, "chat", promptText, currentState.messages, currentState.runs);
         if (!prepared) return;
 
         const runId = generateUUID();
@@ -177,12 +145,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
           {
             runId,
             text: promptText,
-            mode: prepared.kind,
-            kind: prepared.kind === "chat" ? "chat-text" : "generated-cards",
-            assistantText: prepared.kind === "chat" ? "" : cfg._(msg`assistant.chat.message.status.pending`),
+            mode: "chat",
+            kind: "chat-text",
+            assistantText: "",
             templateFields: prepared.templateFields,
             modelName: prepared.modelName,
-            dataAccess,
           },
         ]);
         submittedRunId = runId;
@@ -196,15 +163,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
     },
-    [
-      configRef,
-      ensureConversationId,
-      dispatch,
-      dispatchCommand,
-      readState,
-      rememberLastUsedAIProfile,
-      resolveDataAccess,
-    ],
+    [configRef, ensureConversationId, dispatch, dispatchCommand, readState, rememberLastUsedAIProfile],
   );
 
   const handleRevert = useCallback(
@@ -218,7 +177,8 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // WHY: Revert is visual; the actual deletion happens on the next
       // prompt submit. We just set the in-memory revert state. Any active
       // stream is canceled because its run will be among the hidden
-      // messages and must not keep streaming.
+      // messages and must not keep streaming. Do not mirror the target
+      // run's cards mode onto the conversation — new submits are always chat.
       cancelActiveRun();
       dispatchLocal([
         "setRevertState",
@@ -227,17 +187,9 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
           preRevertInputText: currentInputText,
         },
       ]);
-      // WHY: Mirror the mode of the target message so the prompt input
-      // lines up with what the run was sent in. Use setMode (bumps save)
-      // rather than a raw setMode dispatch so the change persists.
-      const runId = getMessageRunId(userMessage);
-      const targetMode = runId ? resolveRunMode(state, runId) : null;
-      if (targetMode && targetMode !== state.mode) {
-        setMode(targetMode);
-      }
       return promptText;
     },
-    [readState, cancelActiveRun, dispatchLocal, setMode],
+    [readState, cancelActiveRun, dispatchLocal],
   );
 
   const handleRestore = useCallback(() => {

@@ -233,10 +233,6 @@ msgstr "Прокрутить на начало"
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Прокрутить вверх"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:51
-msgid "settings.hotkeys.ai.toggle-cards-mode"
-msgstr "Переключить режим карточек"
-
 #: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"

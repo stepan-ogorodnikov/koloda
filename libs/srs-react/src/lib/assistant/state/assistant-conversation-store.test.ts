@@ -15,7 +15,7 @@ import {
   assistantConversationHasContextAtom,
   assistantIsLockedAtom,
 } from "./conversation-selectors";
-import { setAssistantDeckAtom, setAssistantModeAtom } from "./conversation-actions";
+import { setAssistantDeckAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import { initialConversationState } from "./conversation-reducer";
 
@@ -431,14 +431,14 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     expect(store.get(pendingSaveAtom)).toBe(0);
   });
 
-  it("write atoms (e.g. setAssistantModeAtom) bump the current conversation's counter", () => {
+  it("write atoms (e.g. setAssistantDeckAtom) bump the current conversation's counter", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(upsertConversationAtom, makeConversation("B"));
 
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(setAssistantModeAtom, "chat");
-    store.set(setAssistantModeAtom, "cards");
+    store.set(setAssistantDeckAtom, 1);
+    store.set(setAssistantDeckAtom, 2);
     expect(store.get(pendingSaveAtom)).toBe(2);
 
     // Switch to B and bump its counter

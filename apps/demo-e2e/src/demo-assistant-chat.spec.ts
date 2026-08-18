@@ -7,7 +7,6 @@ import {
   getConversationIdFromUrl,
   openAssistantWithConversation,
   sendAssistantMessage,
-  sendCardsAssistantMessage,
   setupDemo,
   setupPageDefaults,
   waitForAssistantReady,
@@ -196,24 +195,27 @@ test("reverts a user message and restores it", async ({ page }) => {
 });
 
 test("generates cards and locks the deck", async ({ page }) => {
-  const cardMarkdown = ["## Card 1", "**Front**: E2E front", "**Back**: E2E back"].join("\n");
   const mock = await mockOpenAICompatibleProvider(page, {
-    defaultCompletion: { text: cardMarkdown, chunkBy: "all" },
+    defaultCompletion: { text: "Added a card to the deck.", chunkBy: "all" },
   });
 
   try {
     await setupDemo(page);
     await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
-    await createDeckAndOpenAssistant(page, "E2E Cards Deck");
+    const deckId = await createDeckAndOpenAssistant(page, "E2E Cards Deck");
     await waitForAssistantReady(page);
 
-    // aria-label is always "Turn off…" (pressed state distinguishes on/off).
-    const cardsToggle = page.getByRole("button", { name: "Turn off cards creation mode" });
-    await expect(cardsToggle).toBeEnabled();
-    await cardsToggle.click();
-    await expect(cardsToggle).toHaveAttribute("aria-pressed", "true");
+    mock.enqueueCompletion({
+      toolCall: {
+        name: "propose_cards",
+        arguments: {
+          deckId,
+          cards: [{ fields: { Front: "E2E front", Back: "E2E back" } }],
+        },
+      },
+    });
 
-    await sendCardsAssistantMessage(page, "Make a card");
+    await sendAssistantMessage(page, "Make a card");
 
     await expect(page.getByText("E2E front")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("button", { name: /E2E Cards Deck/ })).toBeDisabled();

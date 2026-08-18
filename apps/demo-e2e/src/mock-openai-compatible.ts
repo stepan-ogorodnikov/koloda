@@ -11,6 +11,14 @@ export type MockChatCompletionOptions = {
   /** How to split `text` into streamed chunks. Default: one chunk per word. */
   chunkBy?: "word" | "all";
   /**
+   * Stream an OpenAI tool-call step instead of assistant text.
+   * Used so chat + `propose_cards` can hit the real host executor.
+   */
+  toolCall?: {
+    name: string;
+    arguments: Record<string, unknown>;
+  };
+  /**
    * Hold the route without fulfilling until `release()` is called.
    * Used for cancel / in-flight assertions.
    */
@@ -122,6 +130,27 @@ export async function mockOpenAICompatibleProvider(
         return;
       }
 
+      if (next.toolCall) {
+        if (!stream) {
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify(buildOpenAIToolCallJSON(modelId, next.toolCall)),
+          });
+          return;
+        }
+        await route.fulfill({
+          status: 200,
+          headers: {
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
+          body: buildOpenAIToolCallSSE(modelId, next.toolCall),
+        });
+        return;
+      }
+
       if (!stream) {
         await route.fulfill({
           status: 200,
@@ -198,6 +227,96 @@ export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: str
   lines.push("data: [DONE]");
   lines.push("");
   return lines.join("\n\n");
+}
+
+export function buildOpenAIToolCallSSE(
+  modelId: string,
+  toolCall: { name: string; arguments: Record<string, unknown> },
+): string {
+  const id = "chatcmpl-e2e";
+  const created = Math.floor(Date.now() / 1000);
+  const callId = "call_e2e_propose_cards";
+  const args = JSON.stringify(toolCall.arguments);
+
+  const chunks = [
+    {
+      id,
+      object: "chat.completion.chunk",
+      created,
+      model: modelId,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            content: null,
+            tool_calls: [
+              {
+                index: 0,
+                id: callId,
+                type: "function",
+                function: { name: toolCall.name, arguments: "" },
+              },
+            ],
+          },
+          finish_reason: null,
+        },
+      ],
+    },
+    {
+      id,
+      object: "chat.completion.chunk",
+      created,
+      model: modelId,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            tool_calls: [{ index: 0, function: { arguments: args } }],
+          },
+          finish_reason: null,
+        },
+      ],
+    },
+    {
+      id,
+      object: "chat.completion.chunk",
+      created,
+      model: modelId,
+      choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }],
+    },
+  ];
+
+  return [...chunks.map((chunk) => `data: ${JSON.stringify(chunk)}`), "data: [DONE]", ""].join("\n\n");
+}
+
+export function buildOpenAIToolCallJSON(
+  modelId: string,
+  toolCall: { name: string; arguments: Record<string, unknown> },
+) {
+  return {
+    id: "chatcmpl-e2e",
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: modelId,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            {
+              id: "call_e2e_propose_cards",
+              type: "function",
+              function: { name: toolCall.name, arguments: JSON.stringify(toolCall.arguments) },
+            },
+          ],
+        },
+        finish_reason: "tool_calls",
+      },
+    ],
+  };
 }
 
 export function buildOpenAIChatCompletionJSON(modelId: string, content: string) {

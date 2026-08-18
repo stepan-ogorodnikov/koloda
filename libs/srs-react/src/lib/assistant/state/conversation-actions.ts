@@ -1,5 +1,4 @@
 import type { ModelParameter } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { dropRuns } from "./conversation-reducer";
@@ -31,11 +30,6 @@ export const removeConversationAtom = atom(null, (_get, set, id: string) => {
     delete next[id];
     return next;
   });
-});
-
-export const setAssistantModeAtom = atom(null, (_get, set, mode: AIChatMode) => {
-  set(assistantConversationStateAtom, ["setMode", { mode }]);
-  set(touchAtom);
 });
 
 export const setAssistantDeckAtom = atom(null, (get, set, deckId: number | null) => {

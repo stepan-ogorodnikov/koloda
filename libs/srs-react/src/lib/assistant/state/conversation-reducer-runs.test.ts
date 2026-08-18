@@ -727,6 +727,65 @@ describe("conversationReducer", () => {
       });
     });
 
+    it("rewrites a generated-cards message to chat-text when retrying as chat", () => {
+      let state = reduce([
+        ["addUserMessage", { runId: "r1", text: "Make cards" }],
+        ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }],
+        ["startRun", { runId: "r1", mode: "cards" }],
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+
+      expect(state.runs["r1"].mode).toBe("chat");
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.messages[1]).toEqual({
+        id: "assistant-r1",
+        role: "assistant",
+        parts: [{ type: "text", text: "" }],
+        metadata: { kind: "chat-text", runId: "r1" },
+      });
+    });
+
+    it("rewrites a cards-mode error marker to chat-text when retrying as chat", () => {
+      const state = conversationReducer(
+        {
+          ...initialConversationState,
+          runs: {
+            r1: {
+              id: "r1",
+              mode: "cards",
+              status: "failed",
+              cards: [],
+              cardStatuses: {},
+              templateFields: null,
+              startedAt: new Date(0),
+              elapsedSeconds: 1,
+              error: { message: "boom" },
+            },
+          },
+          messages: [
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "Make cards" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "error", runId: "r1", mode: "cards" },
+            },
+          ],
+        },
+        ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }],
+      );
+
+      expect(state.runs["r1"].mode).toBe("chat");
+      expect(state.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
+    });
+
     it("creates a fresh run and rewrites the assistant error marker back to generated-cards when the run is missing in cards mode", () => {
       const state = conversationReducer(
         {

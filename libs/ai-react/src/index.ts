@@ -7,7 +7,6 @@ export * from "./lib/ai-chat-message-status";
 export * from "./lib/ai-chat-message-status-pending";
 export * from "./lib/ai-chat-messages";
 export * from "./lib/ai-chat-missing-secrets";
-export * from "./lib/ai-chat-mode-toggle";
 export * from "./lib/ai-chat-prompt-input";
 export * from "./lib/ai-chat-prompt-panel";
 export * from "./lib/ai-chat-settings-toggle";

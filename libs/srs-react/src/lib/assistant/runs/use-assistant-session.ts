@@ -5,10 +5,9 @@ import { useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
 import { aiProfileStateAtom } from "../state/ai-profile-state";
-import { newConversationAtom, setAssistantModeAtom } from "../state/conversation-actions";
+import { newConversationAtom } from "../state/conversation-actions";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
 import { assistantConversationStateAtom, touchAtom } from "../state/conversation-store";
-import { useAssistantDataAccess } from "../use-assistant-data-access";
 import { useAssistantRuntimeConfig } from "../use-assistant-runtime-config";
 import { useRememberLastUsedAIProfile } from "../use-global-ai-profile-state";
 import type { RunController } from "./run-controller";
@@ -39,7 +38,6 @@ export function useAssistantSession({
   modelParameters,
 }: UseAssistantSessionOptions): UseAssistantSessionReturn {
   const setConversationReducerAction = useSetAtom(assistantConversationStateAtom);
-  const setMode = useSetAtom(setAssistantModeAtom);
   const touch = useSetAtom(touchAtom);
   const newConversation = useSetAtom(newConversationAtom);
   const rememberLastUsedAIProfile = useRememberLastUsedAIProfile();
@@ -77,7 +75,6 @@ export function useAssistantSession({
   );
 
   const { dispatch: dispatchCommand } = useConversationRuns();
-  const { resolve: resolveDataAccess } = useAssistantDataAccess();
 
   const handleCancel = useCallback(() => {
     const state = readState();
@@ -124,10 +121,8 @@ export function useAssistantSession({
     dispatchLocal,
     rememberLastUsedAIProfile,
     cancelActiveRun: handleCancel,
-    setMode,
     dispatchCommand,
     ensureConversationId,
-    resolveDataAccess,
   };
   const { handleGenerate, handleRetry, handleDismissGenerate, handleRevert, handleRestore } =
     useRunOrchestration(orchestrationOptions);
@@ -140,7 +135,6 @@ export function useAssistantSession({
     revert: handleRevert,
     restore: handleRestore,
     dismissGenerate: handleDismissGenerate,
-    setMode,
   };
 
   return { controller, template, templateId };

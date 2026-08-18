@@ -141,10 +141,6 @@ export function modeToMessageKind(mode: AIChatMode): "generated-cards" | "chat-t
   return mode === "cards" ? "generated-cards" : "chat-text";
 }
 
-export function getEffectiveChatMode(mode: AIChatMode, deckId: number | null): AIChatMode {
-  return mode === "cards" && deckId !== null ? "cards" : "chat";
-}
-
 export function createTextMessage(
   id: string,
   role: UIMessage["role"],

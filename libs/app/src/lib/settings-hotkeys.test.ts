@@ -47,7 +47,6 @@ describe("settings-hotkeys", () => {
         previousConversation: [],
         nextConversation: [],
         toggleSettings: [],
-        toggleCardsMode: [],
         scrollUp: [],
         scrollDown: [],
         scrollToTop: [],
@@ -110,5 +109,18 @@ describe("settings-hotkeys", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("strips unknown keys such as a retired toggleCardsMode binding", () => {
+    const parsed = hotkeysSettingsValidation.parse({
+      ...structuredClone(DEFAULT_HOTKEYS_SETTINGS),
+      ai: {
+        ...DEFAULT_HOTKEYS_SETTINGS.ai,
+        toggleCardsMode: ["Mod+M"],
+      } as typeof DEFAULT_HOTKEYS_SETTINGS.ai,
+    });
+
+    expect(parsed.ai).not.toHaveProperty("toggleCardsMode");
+    expect(parsed).toEqual(DEFAULT_HOTKEYS_SETTINGS);
   });
 });

@@ -1,14 +1,8 @@
 import type { UseAutoScrollReturn } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import type { RefObject } from "react";
-import { setAssistantModeAtom } from "../state/conversation-actions";
-import {
-  assistantDeckIdAtom,
-  assistantEffectiveModeAtom,
-  assistantIsLockedAtom,
-  assistantIsProcessingAtom,
-} from "../state/conversation-selectors";
+import { assistantDeckIdAtom, assistantIsLockedAtom, assistantIsProcessingAtom } from "../state/conversation-selectors";
 
 export type UseAssistantChatHotkeysOptions = {
   handleCancel: () => void;
@@ -35,15 +29,9 @@ export function useAssistantChatHotkeys({
   const deckId = useAtomValue(assistantDeckIdAtom);
   const isLocked = useAtomValue(assistantIsLockedAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
-  const setMode = useSetAtom(setAssistantModeAtom);
-  const effectiveMode = useAtomValue(assistantEffectiveModeAtom);
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
   useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
-  useAppHotkey(ai.toggleCardsMode, () => setMode(effectiveMode === "chat" ? "cards" : "chat"), "", {
-    enabled: !!deckId,
-    ignoreInputs: false,
-  });
   useAppHotkey(ai.openModelPicker, () => modelProfilePickerRef.current?.click(), "", {
     ignoreInputs: false,
   });

@@ -481,20 +481,6 @@ export async function sendAssistantMessage(page: Page, text: string) {
   await page.getByRole("button", { name: "Send" }).click();
 }
 
-/**
- * Cards mode silently no-ops until the deck template query resolves
- * (`handleGenerate` returns early when `!cfg.template`). Poll until a send
- * lands a user message; do not re-send after success.
- */
-export async function sendCardsAssistantMessage(page: Page, text: string) {
-  const log = conversationLog(page);
-  await expect(async () => {
-    if ((await log.getByText(text, { exact: true }).count()) > 0) return;
-    await sendAssistantMessage(page, text);
-    await expect(log.getByText(text, { exact: true })).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 20_000 });
-}
-
 export function conversationLog(page: Page) {
   // AIChatMessages uses role="log" (aria-label "Conversation log").
   return page.getByRole("log", { name: "Conversation log" });

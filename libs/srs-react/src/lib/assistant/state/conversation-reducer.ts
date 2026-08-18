@@ -524,6 +524,22 @@ type RestartRunPayload = {
   dataAccess?: DataAccessSnapshot;
 };
 
+function applyRetryAssistantKind(draft: ConversationReducerState, runId: string, mode: AIChatMode) {
+  const msg = draft.messages.find((m) => m.id === assistantMessageId(runId));
+  if (!msg) return;
+  const metadata = getAssistantMetadata(msg);
+  if (!metadata) return;
+  const nextKind = modeToMessageKind(mode);
+  if (metadata.kind === nextKind) return;
+  if (metadata.kind === "generated-cards" || metadata.kind === "error") {
+    // WHY: Retry of a historical cards run is a chat+tools run. Mixed
+    // rendering (tools + follow-up text + propose_cards table) only
+    // applies to chat-text; leaving generated-cards would keep the
+    // cards-mode table renderer.
+    msg.metadata = { kind: nextKind, runId };
+  }
+}
+
 function restartRun(draft: ConversationReducerState, payload: RestartRunPayload) {
   if (
     transitionRun(draft, payload.runId, {
@@ -533,6 +549,12 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
       dataAccess: payload.dataAccess,
     })
   ) {
+    const run = draft.runs[payload.runId];
+    // INVARIANT: Command mode must replace stored run.mode on retry.
+    // Do not restore "retry preserves original mode" — a historical
+    // cards run retried as chat must not keep cards write-target/rendering.
+    if (run) run.mode = payload.mode;
+    applyRetryAssistantKind(draft, payload.runId, payload.mode);
     return;
   }
 
@@ -546,16 +568,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
     payload.modelName,
     payload.dataAccess,
   );
-  const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
-  if (msg) {
-    const metadata = getAssistantMetadata(msg);
-    if (metadata?.kind === "error") {
-      msg.metadata = {
-        kind: modeToMessageKind(payload.mode),
-        runId: payload.runId,
-      };
-    }
-  }
+  applyRetryAssistantKind(draft, payload.runId, payload.mode);
   draft.activeRunId = payload.runId;
 }
 

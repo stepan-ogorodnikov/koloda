@@ -675,7 +675,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     }
 
     const onConversationIdChange = vi.fn();
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ conversationId }: { conversationId: string | undefined }) =>
         useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
       {
@@ -684,7 +684,7 @@ describe("assistant chat integration (per-conversation state)", () => {
       },
     );
 
-    // Let restore settle, then isolate mode-bump saves.
+    // Let restore settle, then isolate save-counter bumps.
     await act(async () => {
       vi.advanceTimersByTime(500);
     });
@@ -693,7 +693,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     // Bump the save counter for A a few times.
     for (let i = 0; i < 3; i += 1) {
       await act(async () => {
-        result.current.controller.setMode(result.current.profileId ? "cards" : "chat");
+        store.set(touchConversationAtom, "A");
       });
     }
 
@@ -701,7 +701,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     rerender({ conversationId: "B" });
     await act(async () => {
       store.set(setCurrentConversationIdAtom, "B");
-      result.current.controller.setMode("chat");
+      store.set(touchConversationAtom, "B");
     });
 
     // Allow the idle-save debounce to fire for both queues.

@@ -1,5 +1,4 @@
 import { atom } from "jotai";
-import { getEffectiveChatMode } from "./assistant-messages";
 import { findLatestErroredRun, getVisibleMessages, hasSuccessfulCardBearingRun } from "./conversation-reducer";
 import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
 
@@ -13,11 +12,7 @@ export const assistantMessagesAtom = atom((get) => {
 export const assistantRevertStateAtom = atom((get) => get(assistantConversationStateAtom).revertState);
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
-export const assistantModeAtom = atom((get) => get(assistantConversationStateAtom).mode);
 export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
-export const assistantEffectiveModeAtom = atom((get) =>
-  getEffectiveChatMode(get(assistantModeAtom), get(assistantDeckIdAtom)),
-);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
 export const assistantAIModelParametersAtom = atom((get) => get(assistantConversationStateAtom).modelParameters);

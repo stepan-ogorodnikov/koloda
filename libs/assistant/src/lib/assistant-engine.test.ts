@@ -261,8 +261,20 @@ describe("createAssistantEngine", () => {
     expect(chunkUpdates).toHaveLength(1);
     expect(chunkUpdates[0]?.conversationId).toBe("A");
 
-    expect(readConversationState).toHaveBeenCalledWith("A");
     expect(events.some((e) => e.conversationId === "B")).toBe(false);
+  });
+
+  it("retry with command mode chat uses executeChat even when the stored run is cards", async () => {
+    conversationStates["A"] = { runs: { "run-1": { mode: "cards" } } };
+    chatStreamGenerator.mockImplementation(async () => undefined);
+    streamGenerator.mockImplementation(async () => undefined);
+
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
+
+    expect(chatStreamGenerator).toHaveBeenCalled();
+    expect(streamGenerator).not.toHaveBeenCalled();
+    const restart = events.find((e) => e.type === "runStarted");
+    expect(restart?.type === "runStarted" && restart.run.mode).toBe("chat");
   });
 
   it("captures immutable command input before execution reaches the application port", async () => {
