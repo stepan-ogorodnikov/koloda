@@ -189,10 +189,6 @@ msgstr "Системная"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Прервать"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
-msgid "settings.hotkeys.ai.clear-deck"
-msgstr "Очистить колоду"
-
 #: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Фокус на поле ввода"
@@ -206,10 +202,6 @@ msgid "settings.hotkeys.ai.next-conversation"
 msgstr "Следующий диалог"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:47
-msgid "settings.hotkeys.ai.open-deck-picker"
-msgstr "Выбор колоды"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 

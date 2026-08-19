@@ -96,9 +96,6 @@ Each entry opens that deck.
 From the cards toolbar the user can open the assistant with this deck already selected.
 How generation and deck locking work once there is covered by the assistant specs.
 
-Elsewhere in the app, a deck picker lists the same decks.
-When a non-empty selection is required and none is chosen yet, the first deck in the list is selected.
-
 ## Edge Cases
 
 - Two decks may have the same title; they remain distinct

@@ -547,19 +547,6 @@ msgstr "Успешно"
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:31
-msgid "deck-picker.label"
-msgstr "Колода:"
-
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:32
-msgid "deck-picker.placeholder"
-msgstr "Не выбрана"
-
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:36
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:37
-msgid "deck-picker.search"
-msgstr "Поиск по названию"
-
 #: ../../libs/srs-react/src/lib/decks/deck-details.tsx:92
 msgid "deck.actions.label"
 msgstr "Действия"

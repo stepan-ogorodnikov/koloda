@@ -24,8 +24,6 @@ const AI_KEYS: &[&str] = &[
     "focusPrompt",
     "newConversation",
     "openModelPicker",
-    "openDeckPicker",
-    "clearDeck",
     "previousConversation",
     "nextConversation",
     "toggleSettings",

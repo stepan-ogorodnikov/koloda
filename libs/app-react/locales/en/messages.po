@@ -13,11 +13,6 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:134
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:137
-msgid "ai.deck-picker.clear"
-msgstr "Clear selection"
-
 #: ../../libs/app-react/src/lib/routes/_.algorithms.tsx:32
 msgid "algorithms.title"
 msgstr "Presets"

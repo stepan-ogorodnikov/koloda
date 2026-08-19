@@ -189,10 +189,6 @@ msgstr "System"
 msgid "settings.hotkeys.ai.cancel"
 msgstr "Interrupt"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:48
-msgid "settings.hotkeys.ai.clear-deck"
-msgstr "Clear deck selection"
-
 #: ../../libs/app/src/lib/settings-hotkeys.ts:45
 msgid "settings.hotkeys.ai.focus-prompt"
 msgstr "Focus chat input"
@@ -206,10 +202,6 @@ msgid "settings.hotkeys.ai.next-conversation"
 msgstr "Next conversation"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:47
-msgid "settings.hotkeys.ai.open-deck-picker"
-msgstr "Open deck picker"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Open AI model picker"
 

@@ -134,14 +134,15 @@ Partial chat text and cards received before the interruption remain visible and 
 ## Deck Selection and Locking
 
 Each conversation has a selected deck.
-The picker is a starting point.
-It is not the write target for a new proposal.
+A new conversation can be seeded silently from `/ai?deckId=`.
+The selected deck is not the write target for a new proposal.
+It supplies the template used to expand `{{fields}}` in the prompt.
 
 When the model proposes cards, the write target is the deck on that tool call.
-Add uses that write target, not whichever deck the picker currently shows.
-If the conversation is still unlocked when that run succeeds, the picker is aligned to that write target.
+Add uses that write target, not the conversation's selected deck.
+If the conversation is still unlocked when that run succeeds, the selected deck is aligned to that write target.
 
-Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the deck cannot be changed.
+Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the selected deck cannot be changed.
 This includes a chat proposal and a restored historical card-generation run.
 This prevents mixing cards from different decks in the same conversation.
 
@@ -365,7 +366,6 @@ Deleting a conversation evicts its runtime (cancels in-flight work, closes its s
 - The "New Conversation" button is disabled when there are no messages and no active run — you can't create a second empty conversation
 - If the sidebar has no conversations, nothing is shown (not even an empty state message)
 - Card statuses are always idle when first generated — they only become pending or success through user interaction
-- The deck picker hotkeys are disabled when the conversation is locked
 - Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar
 - Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
   The global last-used record is updated when the user changes the value or submits a prompt

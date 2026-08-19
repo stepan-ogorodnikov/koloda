@@ -547,19 +547,6 @@ msgstr "Done"
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:31
-msgid "deck-picker.label"
-msgstr "Deck:"
-
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:32
-msgid "deck-picker.placeholder"
-msgstr "Not selected"
-
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:36
-#: ../../libs/srs-react/src/lib/decks/deck-picker.tsx:37
-msgid "deck-picker.search"
-msgstr "Search by title"
-
 #: ../../libs/srs-react/src/lib/decks/deck-details.tsx:92
 msgid "deck.actions.label"
 msgstr "Actions"

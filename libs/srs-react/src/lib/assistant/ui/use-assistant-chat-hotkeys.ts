@@ -2,15 +2,13 @@ import type { UseAutoScrollReturn } from "@koloda/ai-react";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { useAtomValue } from "jotai";
 import type { RefObject } from "react";
-import { assistantDeckIdAtom, assistantIsLockedAtom, assistantIsProcessingAtom } from "../state/conversation-selectors";
+import { assistantIsProcessingAtom } from "../state/conversation-selectors";
 
 export type UseAssistantChatHotkeysOptions = {
   handleCancel: () => void;
   handleNewConversation: () => void;
   scroll: UseAutoScrollReturn;
   modelProfilePickerRef: RefObject<HTMLButtonElement | null>;
-  deckPickerRef?: RefObject<HTMLButtonElement | null>;
-  onClearDeck?: () => void;
   onPrevConversation?: () => void;
   onNextConversation?: () => void;
 };
@@ -20,27 +18,15 @@ export function useAssistantChatHotkeys({
   handleNewConversation,
   scroll,
   modelProfilePickerRef,
-  deckPickerRef,
-  onClearDeck,
   onPrevConversation,
   onNextConversation,
 }: UseAssistantChatHotkeysOptions) {
   const { ai } = useHotkeysSettings();
-  const deckId = useAtomValue(assistantDeckIdAtom);
-  const isLocked = useAtomValue(assistantIsLockedAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
 
   useAppHotkey(ai.cancel, () => handleCancel(), "", { enabled: isProcessing, ignoreInputs: false });
   useAppHotkey(ai.newConversation, handleNewConversation, "", { ignoreInputs: false });
   useAppHotkey(ai.openModelPicker, () => modelProfilePickerRef.current?.click(), "", {
-    ignoreInputs: false,
-  });
-  useAppHotkey(ai.openDeckPicker, () => deckPickerRef?.current?.click(), "", {
-    enabled: !isLocked,
-    ignoreInputs: false,
-  });
-  useAppHotkey(ai.clearDeck, () => onClearDeck?.(), "", {
-    enabled: !isLocked && !!deckId,
     ignoreInputs: false,
   });
   useAppHotkey(ai.previousConversation, () => onPrevConversation?.(), "", { ignoreInputs: false });

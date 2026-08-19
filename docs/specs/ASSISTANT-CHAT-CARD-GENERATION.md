@@ -37,7 +37,7 @@ It uses `get_deck_cards` only to inspect existing cards, for example to avoid du
 Field titles come from the deck list, not from listing cards.
 
 Each proposed card is a map of exact template field title to invented text.
-The write target is the deck id on that tool call, not whichever deck the picker currently shows.
+The write target is the deck id on that tool call, not the conversation's selected deck.
 
 An empty proposal does not create a review table.
 Invalid cards and cards past a 200-card cap are dropped from the accepted list.
@@ -106,7 +106,7 @@ Initially, all generated cards are selected.
 
 When the user presses the add button, the selected cards are transformed and sent to the write-target deck.
 
-For a chat proposal, that deck is the one from `propose_cards`, not the picker.
+For a chat proposal, that deck is the one from `propose_cards`, not the conversation's selected deck.
 For a restored historical card-generation turn that never recorded a write target, add uses the conversation's selected deck.
 
 Before the request is sent, all selected cards are marked as pending.

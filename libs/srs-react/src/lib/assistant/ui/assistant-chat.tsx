@@ -19,7 +19,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode } from "react";
 import { useCallback, useRef, useState } from "react";
 import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import { AssistantNoProfiles } from "./assistant-no-profiles";
@@ -49,8 +49,6 @@ export type AssistantChatProps = {
   onConversationIdChange: (id: string) => void;
   /** Called when the active conversation is deleted so the route can navigate away. */
   onActiveDeleted?: () => void;
-  deckPickerRef?: RefObject<HTMLButtonElement | null>;
-  onClearDeck?: () => void;
   onPrevConversation?: () => void;
   onNextConversation?: () => void;
   renderAddProfileDialog?: (props: RenderAddProfileDialogProps) => ReactNode;
@@ -60,8 +58,6 @@ export function AssistantChat({
   conversationId,
   onConversationIdChange,
   onActiveDeleted,
-  deckPickerRef,
-  onClearDeck,
   onPrevConversation,
   onNextConversation,
   renderAddProfileDialog,
@@ -154,8 +150,6 @@ export function AssistantChat({
     handleNewConversation,
     scroll,
     modelProfilePickerRef,
-    deckPickerRef,
-    onClearDeck,
     onPrevConversation,
     onNextConversation,
   });

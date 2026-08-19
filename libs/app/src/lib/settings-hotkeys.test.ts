@@ -42,8 +42,6 @@ describe("settings-hotkeys", () => {
         focusPrompt: [],
         newConversation: [],
         openModelPicker: [],
-        openDeckPicker: [],
-        clearDeck: [],
         previousConversation: [],
         nextConversation: [],
         toggleSettings: [],
@@ -117,10 +115,14 @@ describe("settings-hotkeys", () => {
       ai: {
         ...DEFAULT_HOTKEYS_SETTINGS.ai,
         toggleCardsMode: ["Mod+M"],
+        openDeckPicker: ["Mod+D"],
+        clearDeck: ["Mod+Shift+D"],
       } as typeof DEFAULT_HOTKEYS_SETTINGS.ai,
     });
 
     expect(parsed.ai).not.toHaveProperty("toggleCardsMode");
+    expect(parsed.ai).not.toHaveProperty("openDeckPicker");
+    expect(parsed.ai).not.toHaveProperty("clearDeck");
     expect(parsed).toEqual(DEFAULT_HOTKEYS_SETTINGS);
   });
 });
