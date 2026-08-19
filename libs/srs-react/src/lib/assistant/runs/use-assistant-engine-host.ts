@@ -87,7 +87,6 @@ function createAssistantExecutionPort(store: AssistantJotaiStore): AssistantExec
       const request = structuredClone({
         messages: input.request.messages,
         input: input.request.input,
-        template: input.request.template,
         systemPromptTemplate: input.request.systemPromptTemplate,
         tools: input.request.tools,
       }) as ChatStreamRequest;

@@ -323,27 +323,11 @@ msgstr "Сбросить"
 msgid "assistant.settings.system-prompt.cards.label"
 msgstr "Промпт генерации карточек"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:93
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:74
 msgid "assistant.settings.system-prompt.chat.label"
 msgstr "Промпт чата"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:16
-msgid "assistant.settings.system-prompt.variables"
-msgstr "Переменные"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:5
-msgid "assistant.settings.system-prompt.variables.fields"
-msgstr "Поля"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:7
-msgid "assistant.settings.system-prompt.variables.provider"
-msgstr "Провайдер"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-variables.tsx:6
-msgid "assistant.settings.system-prompt.variables.rules"
-msgstr "Правила"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:120
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:87
 msgid "assistant.settings.temperature.label"
 msgstr "Температура"
 

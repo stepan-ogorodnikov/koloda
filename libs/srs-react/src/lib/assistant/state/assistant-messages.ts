@@ -167,7 +167,6 @@ export function makeHistoricalTemplate(fields: TemplateFields): Template {
 export function buildConversationMessages(
   messages: UIMessage[],
   runs: Record<string, { status: string; cards: GeneratedCard[]; templateFields?: TemplateFields | null }>,
-  template: Template | null | undefined,
 ) {
   const conversation: Message[] = [];
 
@@ -191,9 +190,8 @@ export function buildConversationMessages(
       const parts: string[] = [];
       // WHY: history matches the screen — table first, leftover note second.
       if (run && run.status === "success" && run.cards.length > 0) {
-        // WHY: Chat proposals carry the target deck's fields on the run. Using the
-        // conversation template would serialize against the picker's template instead.
-        const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : template;
+        // WHY: Chat proposals serialize against the fields captured on that run.
+        const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
         if (cardTemplate) {
           const cardContent = serializeGeneratedCards(run.cards, cardTemplate);
           if (cardContent) parts.push(cardContent);

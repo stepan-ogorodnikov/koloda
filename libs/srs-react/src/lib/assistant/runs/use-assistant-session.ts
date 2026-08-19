@@ -1,6 +1,5 @@
 import type { ModelParameter } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
-import type { Template } from "@koloda/srs";
 import { useSetAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { useCallback, useRef } from "react";
@@ -25,8 +24,6 @@ export type UseAssistantSessionOptions = {
 
 export type UseAssistantSessionReturn = {
   controller: RunController;
-  template: Template | null | undefined;
-  templateId: Template["id"] | undefined;
 };
 
 export function useAssistantSession({
@@ -44,7 +41,7 @@ export function useAssistantSession({
 
   const reasoningEffort = modelParameters.find((p) => p.type === "reasoning_effort")?.value ?? "";
 
-  const { template, templateId, configRef } = useAssistantRuntimeConfig({
+  const { configRef } = useAssistantRuntimeConfig({
     profileId,
     modelId,
     modelName,
@@ -137,5 +134,5 @@ export function useAssistantSession({
     dismissGenerate: handleDismissGenerate,
   };
 
-  return { controller, template, templateId };
+  return { controller };
 }

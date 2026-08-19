@@ -5,10 +5,8 @@ import {
   compilePromptTemplate,
   DEFAULT_CHAT_PROMPT_TEMPLATE,
 } from "@koloda/ai";
-import type { AISecrets } from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import type { Template } from "@koloda/srs";
 import { Label, Slider, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -16,14 +14,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo } from "react";
 import { AssistantSettingsPromptEditor } from "./assistant-settings-prompt-editor";
-import { AssistantSettingsVariables } from "./assistant-settings-variables";
 
-export type AssistantSettingsProps = {
-  template: Template | null | undefined;
-  provider: AISecrets["provider"] | null;
-};
-
-export function AssistantSettings({ template, provider }: AssistantSettingsProps) {
+export function AssistantSettings() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const { getSettingsQuery, patchSettingsMutation } = useAtomValue(queriesAtom);
@@ -65,10 +57,7 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
 
   const chatPromptTemplate = form.getFieldValue("chatPromptTemplate") ?? DEFAULT_CHAT_PROMPT_TEMPLATE;
 
-  const chatPreview = useMemo(
-    () => compilePromptTemplate(chatPromptTemplate, template?.content?.fields ?? [], provider),
-    [chatPromptTemplate, provider, template],
-  );
+  const chatPreview = useMemo(() => compilePromptTemplate(chatPromptTemplate), [chatPromptTemplate]);
 
   return (
     <form
@@ -92,7 +81,6 @@ export function AssistantSettings({ template, provider }: AssistantSettingsProps
           />
         )}
       </form.Field>
-      <AssistantSettingsVariables />
       <form.Field name="temperature">
         {(field) => (
           <Slider minValue={0} maxValue={2} step={0.1} value={field.state.value} onChange={field.handleChange}>

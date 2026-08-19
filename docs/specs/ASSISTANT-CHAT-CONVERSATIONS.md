@@ -136,7 +136,7 @@ Partial chat text and cards received before the interruption remain visible and 
 Each conversation has a selected deck.
 A new conversation can be seeded silently from `/ai?deckId=`.
 The selected deck is not the write target for a new proposal.
-It supplies the template used to expand `{{fields}}` in the prompt.
+It is not compiled into the system prompt. Field titles reach the model through tools (`list_decks`, `propose_cards`).
 
 When the model proposes cards, the write target is the deck and template on that tool call.
 Add uses that write target, not the conversation's selected deck or that deck's template.

@@ -148,7 +148,6 @@ export function createElectronAIRuntime(): AIRuntime {
           request: {
             messages: request.messages,
             input: request.input,
-            template: request.template,
             systemPromptTemplate: request.systemPromptTemplate,
             tools: request.tools,
           },

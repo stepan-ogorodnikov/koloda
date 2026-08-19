@@ -17,12 +17,9 @@ export type GeneratedCard = { content: Record<string, { text: string }> };
 
 export type Message = { role: "user" | "assistant" | "system"; content: string };
 
-export type CardGenerationFields = Array<{ id: number; title: string; isRequired: boolean; type?: string }>;
-
 export type ChatStreamRequest = {
   messages: Message[];
   input: GenerateCardsInput;
-  template?: { content: { fields: CardGenerationFields } };
   systemPromptTemplate?: string;
   /** Tool names the model may call; names only so the request stays IPC-serializable. */
   tools?: string[];

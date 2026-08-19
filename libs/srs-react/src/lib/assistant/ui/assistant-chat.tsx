@@ -82,7 +82,6 @@ export function AssistantChat({
     modelName,
     models,
     profiles,
-    provider,
     modelParameters,
     missingSecretFieldLabels,
     isModelsLoading,
@@ -97,7 +96,7 @@ export function AssistantChat({
   const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad, blockedRestore } =
     useConversationPersistence({ conversationId });
 
-  const { controller, template } = useAssistantSession({
+  const { controller } = useAssistantSession({
     conversationId,
     onConversationIdChange,
     profileId,
@@ -185,7 +184,7 @@ export function AssistantChat({
           </Fade>
         ) : areSettingsOpen ? (
           <Fade key="settings" className="grow flex flex-col">
-            <AssistantSettings template={template} provider={provider} />
+            <AssistantSettings />
           </Fade>
         ) : (
           <Fade key="chat" className="grow flex flex-col min-h-0">

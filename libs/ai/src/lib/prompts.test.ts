@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compilePromptTemplate, DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 
-const FIELDS = [
-  { id: 1, title: "Front", isRequired: true, type: "text" },
-  { id: 2, title: "Back", isRequired: true, type: "text" },
-];
-
 describe("DEFAULT_CHAT_PROMPT_TEMPLATE", () => {
   it("tells the model to invent cards via propose_cards instead of picking existing ones", () => {
     expect(DEFAULT_CHAT_PROMPT_TEMPLATE).toContain("propose_cards");
@@ -23,10 +18,12 @@ describe("DEFAULT_CHAT_PROMPT_TEMPLATE", () => {
 });
 
 describe("compilePromptTemplate", () => {
-  it("does not bake a selected deck into the compiled prompt", () => {
-    const compiled = compilePromptTemplate("Hello.", FIELDS, null);
-    expect(compiled).toBe("Hello.");
-    expect(compiled).not.toMatch(/currently selected deck/);
-    expect(compiled).not.toMatch(/this deck/);
+  it("trims the template and leaves leftover placeholders as written", () => {
+    expect(compilePromptTemplate("  Hello.  ")).toBe("Hello.");
+    expect(compilePromptTemplate("Use {{fields}}\n{{rules}}\n{{provider}}")).toBe(
+      "Use {{fields}}\n{{rules}}\n{{provider}}",
+    );
+    expect(compilePromptTemplate("Hello.")).not.toMatch(/currently selected deck/);
+    expect(compilePromptTemplate("Hello.")).not.toMatch(/this deck/);
   });
 });

@@ -71,7 +71,7 @@ Settings add/replace still writes keys; edit UI uses `hasSecrets` for Replace.
 
 `AssistantChat` (`ui/`) wires `useAssistantProfileSelection` → `useConversationPersistence` → `useAssistantSession` directly.
 Autosave + engine hosts mount on the application shell via `useConversationSaveHost` / `useAssistantEngineHost` (`App` in `@koloda/app-react`; test harness mirrors that).
-Session returns a `RunController` (`runs/run-controller.ts`) plus template bits; UI and the test harness call through `controller.*`.
+Session returns a `RunController` (`runs/run-controller.ts`); UI and the test harness call through `controller.*`.
 `useRunOrchestration` is private composition: session owns its deps object; do not treat the options bag as a public API.
 Submit path: `prepareRunRequest` → `engine.dispatch(submit)` (must accept) → one `submitTurn`; `rollbackSubmitTurn` if the pending command later rejects.
 Do not reintroduce a god `useAssistantChat` hook; integration tests use `ui/assistant-chat-test-harness.ts` only.

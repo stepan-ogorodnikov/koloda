@@ -28,9 +28,6 @@ function makeConfig(overrides: Partial<AssistantConversationConfig> = {}): Assis
     modelName: "GPT-x",
     temperature: 0.5,
     reasoningEffort: "",
-    deckId: 0,
-    templateId: 0,
-    template: null,
     chatPromptTemplate: null,
     _: ((m: unknown) => m) as never,
     ...overrides,
@@ -297,7 +294,7 @@ describe("useRunOrchestration — always-chat submit", () => {
     seedConversation("conv-1");
     dispatch(["setDeck", { deckId: 7 }]);
 
-    const { result } = orchestrate(makeConfig({ template: null, templateId: 0, deckId: 7 }));
+    const { result } = orchestrate(makeConfig());
     await act(async () => {
       await result.current.handleGenerate("make cards");
     });

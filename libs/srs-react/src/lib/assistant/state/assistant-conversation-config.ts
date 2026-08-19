@@ -1,4 +1,3 @@
-import type { Deck, Template } from "@koloda/srs";
 import type { I18nContext } from "@lingui/react";
 
 export type AssistantConversationConfig = {
@@ -7,9 +6,6 @@ export type AssistantConversationConfig = {
   modelName?: string;
   temperature: number;
   reasoningEffort: string;
-  deckId: Deck["id"];
-  templateId: Template["id"];
-  template: Template | null | undefined;
   chatPromptTemplate: string | null;
   _: I18nContext["_"];
 };

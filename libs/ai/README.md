@@ -19,7 +19,7 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (chat request types, `generateCardsInputSchema`).
 - Chat streaming: `chat-stream.ts` — shared `runChatStream` for all providers over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them. Per-provider wrappers only supply the model factory (and optional `providerOptions`).
 - Temperature: `card-parsing.ts` — `resolveGenerationTemperature` (chat still uses this).
-- Prompt compilation: `prompts.ts` — default chat prompt template, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (fields/rules/provider injection).
+- Prompt compilation: `prompts.ts` — default chat prompt template, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (trim-only; field titles come from tools, not the system prompt).
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
 - Reasoning levels: `providers/openrouter.ts` (API-provided); `providers/openai-compatible.ts` hardcodes deepseek-* / mimo-* via `resolveReasoningLevelsForModel` (Opencode Go/Zen).

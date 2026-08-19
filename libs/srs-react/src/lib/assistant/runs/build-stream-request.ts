@@ -30,7 +30,6 @@ export function buildStreamRequest(
     request: {
       input,
       messages: [...conversationMessages, { role: "user", content: promptText }],
-      template: cfg.template ?? undefined,
       systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
       tools: CHAT_ASSISTANT_TOOL_NAMES,
     },

@@ -1,7 +1,6 @@
 import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard } from "@koloda/ai";
-import type { Template, TemplateFields } from "@koloda/srs";
-import { DEFAULT_TEMPLATE } from "@koloda/srs";
+import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import { createGeneratedCard, createTemplate } from "../../../test/test-helpers";
@@ -165,8 +164,7 @@ function createRunData(
   return { status: "success", cards: [], ...overrides };
 }
 
-const buildTemplate = structuredClone(DEFAULT_TEMPLATE) as Template;
-buildTemplate.content.fields = [
+const cardTemplateFields: TemplateFields = [
   { id: 1, title: "Front", type: "text", isRequired: true },
   { id: 2, title: "Back", type: "text", isRequired: true },
 ];
@@ -178,28 +176,28 @@ const cardWithContent: GeneratedCard = {
   },
 };
 
+function successCardsRun(cards: GeneratedCard[] = [cardWithContent]) {
+  return createRunData({ status: "success", cards, templateFields: cardTemplateFields });
+}
+
 describe("buildConversationMessages", () => {
   it("includes user messages with text content", () => {
-    const result = buildConversationMessages([userMessage("u1", "What is 2+2?")], {}, buildTemplate);
+    const result = buildConversationMessages([userMessage("u1", "What is 2+2?")], {});
     expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
   });
 
   it("skips user messages with empty content", () => {
-    const result = buildConversationMessages([userMessage("u1", "   ")], {}, buildTemplate);
+    const result = buildConversationMessages([userMessage("u1", "   ")], {});
     expect(result).toEqual([]);
   });
 
   it("includes assistant chat-text messages with text", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "The answer is 4.")],
-      {},
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "The answer is 4.")], {});
     expect(result).toEqual([{ role: "assistant", content: "The answer is 4." }]);
   });
 
   it("skips assistant chat-text messages with empty content", () => {
-    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "  ")], {}, buildTemplate);
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "  ")], {});
     expect(result).toEqual([]);
   });
 
@@ -209,16 +207,12 @@ describe("buildConversationMessages", () => {
       role: "assistant",
       parts: [{ type: "text", text: "No metadata" }],
     } as UIMessage;
-    const result = buildConversationMessages([msg], {}, buildTemplate);
+    const result = buildConversationMessages([msg], {});
     expect(result).toEqual([]);
   });
 
   it("includes chat-text card markdown when the run succeeded and has cards", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "")],
-      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], { r1: successCardsRun() });
     expect(result).toHaveLength(1);
     expect(result[0].role).toBe("assistant");
     expect(result[0].content).toContain("## Card 1");
@@ -227,34 +221,28 @@ describe("buildConversationMessages", () => {
   });
 
   it("skips chat-text card markdown when run status is not success", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "")],
-      { r1: createRunData({ status: "failed", cards: [cardWithContent] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], {
+      r1: createRunData({ status: "failed", cards: [cardWithContent] }),
+    });
     expect(result).toEqual([]);
   });
 
   it("skips chat-text card markdown when run has no cards and no leftover text", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "")],
-      { r1: createRunData({ status: "success", cards: [] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], {
+      r1: createRunData({ status: "success", cards: [] }),
+    });
     expect(result).toEqual([]);
   });
 
   it("skips chat-text card markdown when run does not exist", () => {
-    const result = buildConversationMessages([assistantChatTextMessage("a1", "missing", "")], {}, buildTemplate);
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "missing", "")], {});
     expect(result).toEqual([]);
   });
 
-  it("skips chat-text card markdown when template is null and the run has no templateFields", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "")],
-      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
-      null,
-    );
+  it("skips chat-text card markdown when the run has no templateFields", () => {
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], {
+      r1: createRunData({ status: "success", cards: [cardWithContent] }),
+    });
     expect(result).toEqual([]);
   });
 
@@ -264,7 +252,7 @@ describe("buildConversationMessages", () => {
       role: "system",
       parts: [{ type: "text", text: "System message" }],
     } as UIMessage;
-    const result = buildConversationMessages([msg], {}, buildTemplate);
+    const result = buildConversationMessages([msg], {});
     expect(result).toEqual([]);
   });
 
@@ -276,10 +264,10 @@ describe("buildConversationMessages", () => {
     ];
     const runs = {
       "r-chat": createRunData(),
-      "r-cards": createRunData({ status: "success", cards: [cardWithContent] }),
+      "r-cards": successCardsRun(),
     };
 
-    const result = buildConversationMessages(messages, runs, buildTemplate);
+    const result = buildConversationMessages(messages, runs);
     expect(result).toHaveLength(3);
     expect(result[0]).toEqual({ role: "user", content: "Generate some cards" });
     expect(result[1]).toEqual({ role: "assistant", content: "Sure!" });
@@ -288,59 +276,47 @@ describe("buildConversationMessages", () => {
 
   it("skips assistant error messages when building history", () => {
     const messages = [userMessage("u1", "What is 2+2?"), assistantErrorMessage("a1", "r1")];
-    const result = buildConversationMessages(messages, {}, buildTemplate);
+    const result = buildConversationMessages(messages, {});
     expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
   });
 
   it("includes successful card markdown, then leftover assistant text", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "I skipped a duplicate.")],
-      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "I skipped a duplicate.")], {
+      r1: successCardsRun(),
+    });
     expect(result).toHaveLength(1);
     expect(result[0].role).toBe("assistant");
     expect(result[0].content).toBe("## Card 1\n**Front**: Question\n**Back**: Answer\n\nI skipped a duplicate.");
   });
 
   it("includes successful chat-text cards when the prose is empty", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "  ")],
-      { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "  ")], { r1: successCardsRun() });
     expect(result).toHaveLength(1);
     expect(result[0].content).toContain("## Card 1");
     expect(result[0].content).not.toContain("\n\n");
   });
 
   it("keeps leftover text from a failed chat-text run that proposed cards", () => {
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "I started some cards.")],
-      { r1: createRunData({ status: "failed", cards: [cardWithContent] }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "I started some cards.")], {
+      r1: createRunData({ status: "failed", cards: [cardWithContent] }),
+    });
     expect(result).toEqual([{ role: "assistant", content: "I started some cards." }]);
   });
 
   it("keeps leftover text from canceled and interrupted chat-text runs that proposed cards", () => {
     expect(
-      buildConversationMessages(
-        [assistantChatTextMessage("a1", "r1", "Partial.")],
-        { r1: createRunData({ status: "canceled", cards: [cardWithContent] }) },
-        buildTemplate,
-      ),
+      buildConversationMessages([assistantChatTextMessage("a1", "r1", "Partial.")], {
+        r1: createRunData({ status: "canceled", cards: [cardWithContent] }),
+      }),
     ).toEqual([{ role: "assistant", content: "Partial." }]);
     expect(
-      buildConversationMessages(
-        [assistantChatTextMessage("a1", "r1", "Partial.")],
-        { r1: createRunData({ status: "interrupted", cards: [cardWithContent] }) },
-        buildTemplate,
-      ),
+      buildConversationMessages([assistantChatTextMessage("a1", "r1", "Partial.")], {
+        r1: createRunData({ status: "interrupted", cards: [cardWithContent] }),
+      }),
     ).toEqual([{ role: "assistant", content: "Partial." }]);
   });
 
-  it("serializes chat-text cards with run.templateFields when the conversation template differs", () => {
+  it("serializes chat-text cards with run.templateFields", () => {
     const runFields = [
       { id: 10, title: "Prompt", type: "text" as const, isRequired: true },
       { id: 11, title: "Response", type: "text" as const, isRequired: true },
@@ -351,11 +327,9 @@ describe("buildConversationMessages", () => {
         "11": { text: "hello" },
       },
     };
-    const result = buildConversationMessages(
-      [assistantChatTextMessage("a1", "r1", "Proposed.")],
-      { r1: createRunData({ status: "success", cards: [proposedCard], templateFields: runFields }) },
-      buildTemplate,
-    );
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "Proposed.")], {
+      r1: createRunData({ status: "success", cards: [proposedCard], templateFields: runFields }),
+    });
     expect(result[0].content).toContain("**Prompt**: hola");
     expect(result[0].content).toContain("**Response**: hello");
     expect(result[0].content).not.toContain("**Front**");

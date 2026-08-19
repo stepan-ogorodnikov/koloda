@@ -5,9 +5,7 @@ import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, wrapAIError } from "./error";
 import type { ChatStreamRequest, Message } from "./generation";
 import type { StreamUsage } from "./models";
-import { compilePromptTemplate } from "./prompts";
-import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
-import type { AiProvider } from "./provider-catalog";
+import { compilePromptTemplate, DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
@@ -17,7 +15,6 @@ const CHAT_TOOL_STEP_BUDGET = 8;
 
 async function runChatStream(
   modelFactory: (modelId: string) => Parameters<typeof wrapModelWithReasoningExtraction>[0],
-  providerLabel: AiProvider,
   request: ChatStreamRequest,
   onChunk: (chunk: string) => void,
   abortSignal: AbortSignal,
@@ -40,11 +37,7 @@ async function runChatStream(
     model: wrapModelWithReasoningExtraction(modelFactory(request.input.modelId)),
 
     temperature: resolveGenerationTemperature(request.input.temperature),
-    system: compilePromptTemplate(
-      request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE,
-      request.template?.content.fields ?? [],
-      providerLabel,
-    ),
+    system: compilePromptTemplate(request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE),
     messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     abortSignal,
     // WHY: multi-step only exists for tool runs; stopWhen keeps them bounded. Without
@@ -111,7 +104,7 @@ export function streamChatWithOpenRouter(
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
     const openrouter = createOpenRouter({ apiKey });
-    return runChatStream((modelId) => openrouter(modelId), "openrouter", request, onChunk, abortSignal);
+    return runChatStream((modelId) => openrouter(modelId), request, onChunk, abortSignal);
   });
 }
 
@@ -124,7 +117,7 @@ export function streamChatWithOllama(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
-    return runChatStream((modelId) => ollama(modelId), "ollama", request, onChunk, abortSignal);
+    return runChatStream((modelId) => ollama(modelId), request, onChunk, abortSignal);
   });
 }
 
@@ -137,7 +130,7 @@ export function streamChatWithOllamaCloud(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: OLLAMA_CLOUD_BASE_URL, apiKey });
-    return runChatStream((modelId) => ollama(modelId), "ollamaCloud", request, onChunk, abortSignal);
+    return runChatStream((modelId) => ollama(modelId), request, onChunk, abortSignal);
   });
 }
 
@@ -150,7 +143,7 @@ export function streamChatWithLMStudio(
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const lmstudio = createOpenAICompatible({ name: "lmstudio", baseURL: baseUrl, apiKey });
-    return runChatStream((modelId) => lmstudio(modelId), "lmstudio", request, onChunk, abortSignal);
+    return runChatStream((modelId) => lmstudio(modelId), request, onChunk, abortSignal);
   });
 }
 
@@ -166,14 +159,7 @@ export function streamChatWithOpencodeGo(
     const providerOptions = request.input.reasoningEffort
       ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
       : undefined;
-    return runChatStream(
-      (modelId) => opencodeGo(modelId),
-      "opencodeGo",
-      request,
-      onChunk,
-      abortSignal,
-      providerOptions,
-    );
+    return runChatStream((modelId) => opencodeGo(modelId), request, onChunk, abortSignal, providerOptions);
   });
 }
 
@@ -189,14 +175,7 @@ export function streamChatWithOpencodeZen(
     const providerOptions = request.input.reasoningEffort
       ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
       : undefined;
-    return runChatStream(
-      (modelId) => opencodeZen(modelId),
-      "opencodeZen",
-      request,
-      onChunk,
-      abortSignal,
-      providerOptions,
-    );
+    return runChatStream((modelId) => opencodeZen(modelId), request, onChunk, abortSignal, providerOptions);
   });
 }
 

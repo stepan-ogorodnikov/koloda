@@ -37,7 +37,7 @@ export function prepareRunRequest(
 ): PreparedRun | null {
   if (!promptText || !cfg.profileId || !cfg.modelId) return null;
 
-  const conversationMessages = buildConversationMessages(messages, runs, cfg.template);
+  const conversationMessages = buildConversationMessages(messages, runs);
   const result = buildStreamRequest(cfg, promptText, conversationMessages);
   return {
     ...result,
