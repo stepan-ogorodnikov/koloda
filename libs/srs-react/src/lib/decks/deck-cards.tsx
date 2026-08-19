@@ -1,10 +1,6 @@
-import { AiMagicIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
-import { button, getCSSVar, Link, QueryState, Tooltip } from "@koloda/ui";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
+import { getCSSVar, QueryState } from "@koloda/ui";
 import { useMediaQuery } from "@react-hook/media-query";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
@@ -19,7 +15,6 @@ type DeckCardsProps = { deckId: Deck["id"] };
 
 export function DeckCards({ deckId }: DeckCardsProps) {
   const isMobile = useMediaQuery(`(width < ${getCSSVar("--breakpoint-wd")})`);
-  const { _ } = useLingui();
   const { getDeckQuery, getCardsQuery } = useAtomValue(queriesAtom);
   const { data } = useQuery(getDeckQuery(deckId));
   const query = useQuery(getCardsQuery({ deckId }));
@@ -37,11 +32,6 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
-        <Tooltip content={_(msg`assistant.trigger`)}>
-          <Link className={button({ style: "dashed", size: "icon" })} to="/ai" search={{ deckId: Number(deckId) }}>
-            <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={AiMagicIcon} aria-hidden="true" />
-          </Link>
-        </Tooltip>
         <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
       </div>
       <QueryState query={query}>

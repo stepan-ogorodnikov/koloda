@@ -81,7 +81,7 @@ Do not reintroduce a god `useAssistantChat` hook; integration tests use `ui/assi
 App shells may import only:
 
 - UI: `AssistantChat`, `AssistantConversationsList`, `AssistantNewConversationButton`, `ConversationHeaderMenu`, `CONVERSATION_TITLE_FALLBACK`
-- State: `newConversationAtom`, `setAssistantDeckAtom`
+- State: `newConversationAtom`
 - Profile: `useGlobalAIProfileState`
 - Persistence host: `useConversationSaveHost` (mount on the application shell, not the AI route)
 - Engine host: `useAssistantEngineHost` (mount on the application shell; run lifetime + best-effort unload shutdown)

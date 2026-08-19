@@ -7,7 +7,6 @@ import {
   CONVERSATION_TITLE_FALLBACK,
   ConversationHeaderMenu,
   newConversationAtom,
-  setAssistantDeckAtom,
   useGlobalAIProfileState,
 } from "@koloda/srs-react";
 import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
@@ -23,7 +22,6 @@ export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
   validateSearch: (search: Record<string, unknown>) => ({
     conversationId: typeof search.conversationId === "string" ? search.conversationId : undefined,
-    deckId: typeof search.deckId === "string" || typeof search.deckId === "number" ? Number(search.deckId) : undefined,
   }),
   loader: ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery, getConversationsQuery } = queries;
@@ -39,8 +37,7 @@ function AIRoute() {
   const ref = useRouteFocus();
   useLayoutHeaderScrollShadow(ref);
   const navigate = Route.useNavigate();
-  const { conversationId, deckId: deckIdFromSearch } = Route.useSearch();
-  const setDeck = useSetAtom(setAssistantDeckAtom);
+  const { conversationId } = Route.useSearch();
   const newConversation = useSetAtom(newConversationAtom);
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery(getConversationsQuery());
@@ -48,26 +45,25 @@ function AIRoute() {
   const { title } =
     useMemo(() => conversations.find((c) => c.id === conversationId), [conversations, conversationId]) || {};
   const [globalAIProfileState] = useGlobalAIProfileState();
-  const creatingFromDeckRef = useRef(false);
+  const creatingConversationRef = useRef(false);
 
   useEffect(() => {
     if (conversationId) {
       setActiveConversationId(conversationId);
-      creatingFromDeckRef.current = false;
-      return;
-    }
-    if (deckIdFromSearch !== undefined) {
-      if (creatingFromDeckRef.current) return;
-      creatingFromDeckRef.current = true;
-      const id = newConversation(globalAIProfileState);
-      setDeck(deckIdFromSearch);
-      setActiveConversationId(id);
-      navigate({ search: { conversationId: id }, replace: true });
+      creatingConversationRef.current = false;
       return;
     }
     const stored = getActiveConversationId();
-    if (stored) navigate({ search: { conversationId: stored }, replace: true });
-  }, [conversationId, deckIdFromSearch, navigate, newConversation, setDeck, globalAIProfileState]);
+    if (stored) {
+      navigate({ search: { conversationId: stored }, replace: true });
+      return;
+    }
+    if (creatingConversationRef.current) return;
+    creatingConversationRef.current = true;
+    const id = newConversation(globalAIProfileState);
+    setActiveConversationId(id);
+    navigate({ search: { conversationId: id }, replace: true });
+  }, [conversationId, navigate, newConversation, globalAIProfileState]);
 
   const handleConversationIdChange = useCallback(
     (id: string) => {

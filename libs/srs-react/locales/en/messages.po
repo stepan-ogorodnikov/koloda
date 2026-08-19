@@ -347,10 +347,6 @@ msgstr "Success"
 msgid "assistant.template-unavailable"
 msgstr "This message was generated with a template that is no longer accessible."
 
-#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
-msgid "assistant.trigger"
-msgstr "AI Chat"
-
 #: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
 msgid "card.action.reset-progress"
 msgstr "Reset progress"

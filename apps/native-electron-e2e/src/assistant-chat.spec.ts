@@ -218,7 +218,6 @@ test("generates cards and locks the deck", async ({ page }) => {
     await sendAssistantMessage(page, "Make a card");
 
     await expect(page.getByText("E2E front")).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByRole("button", { name: /E2E Cards Deck/ })).toBeDisabled();
 
     expect(mock.completionRequests).toBeGreaterThanOrEqual(1);
   } finally {

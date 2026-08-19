@@ -394,9 +394,9 @@ export async function addLmStudioProfile(page: Page, options: { title?: string; 
 }
 
 /**
- * Open Assistant with a real conversation. Cold start (`/ai` with no id) has no
- * store conversation, so profile/model writes no-op and Send stays disabled.
- * `/ai?deckId=` is the existing route path that creates a conversation.
+ * Open Assistant with a real conversation. Visiting `/ai` with no conversationId
+ * and no stored active id creates a conversation and replaces the URL with
+ * `?conversationId=`.
  */
 export function getConversationIdFromUrl(page: Page): string {
   const match = page.url().match(/conversationId=([^&]+)/);
@@ -410,8 +410,8 @@ export async function openAssistantWithConversation(page: Page, conversationId: 
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
 }
 
-export async function openAssistantWithDeck(page: Page, deckId: number) {
-  await page.goto(`/ai?deckId=${deckId}`);
+export async function openAssistantWithDeck(page: Page) {
+  await page.goto(`/ai`);
   await expect(page).toHaveURL(/\/ai\?conversationId=/);
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
 }
@@ -428,7 +428,7 @@ export async function createDeckAndOpenAssistant(page: Page, deckTitle = "E2E As
   const match = page.url().match(/\/decks\/(\d+)/);
   if (!match?.[1]) throw new Error(`Could not parse deck id from ${page.url()}`);
   const deckId = Number(match[1]);
-  await openAssistantWithDeck(page, deckId);
+  await openAssistantWithDeck(page);
   return deckId;
 }
 

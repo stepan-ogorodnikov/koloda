@@ -347,10 +347,6 @@ msgstr "Успешно"
 msgid "assistant.template-unavailable"
 msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
 
-#: ../../libs/srs-react/src/lib/decks/deck-cards.tsx:40
-msgid "assistant.trigger"
-msgstr "Помощник ИИ"
-
 #: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
 msgid "card.action.reset-progress"
 msgstr "Сбросить прогресс"

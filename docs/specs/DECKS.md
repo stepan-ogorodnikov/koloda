@@ -26,7 +26,6 @@ Relationships:
 - Deleting a deck deletes its cards and those cards' review history.
 - Learning settings defaults supply the algorithm and template suggested when creating a deck.
 - Lessons can target one deck or all decks; available counts are computed per deck.
-- The assistant can open with a deck already selected; locking and generation are covered by the assistant specs.
 
 ## Adding Decks
 
@@ -92,9 +91,6 @@ A template or algorithm that was only referenced as this deck's current choice b
 
 Decks appear in a sidebar list ordered by creation time.
 Each entry opens that deck.
-
-From the cards toolbar the user can open the assistant with this deck already selected.
-How generation and deck locking work once there is covered by the assistant specs.
 
 ## Edge Cases
 

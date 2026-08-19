@@ -13,7 +13,7 @@ export { ConversationHeaderMenu } from "./lib/assistant/ui/conversation-header-m
 export { useConversationSaveHost } from "./lib/assistant/persistence/use-conversation-save-host";
 export { shutdownAssistantGracefully, useAssistantEngineHost } from "./lib/assistant/runs/use-assistant-engine-host";
 export { useGlobalAIProfileState } from "./lib/assistant/use-global-ai-profile-state";
-export { newConversationAtom, setAssistantDeckAtom } from "./lib/assistant/state/conversation-actions";
+export { newConversationAtom } from "./lib/assistant/state/conversation-actions";
 export * from "./lib/cards/add-card";
 export * from "./lib/cards/card-details";
 export * from "./lib/cards/card-preview";

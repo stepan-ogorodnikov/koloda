@@ -143,9 +143,6 @@ The chosen view is remembered while the app stays open; it is not persisted acro
 
 On narrow screens the stack view is forced and the view toggle is hidden.
 
-From the cards toolbar the user can open the assistant with this deck already selected.
-How generation works once there is covered by the assistant specs.
-
 ### Table View
 
 The table view shows every card in a paginated, sortable table.

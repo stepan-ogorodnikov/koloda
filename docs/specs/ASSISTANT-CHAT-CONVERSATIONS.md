@@ -134,7 +134,6 @@ Partial chat text and cards received before the interruption remain visible and 
 ## Deck Selection and Locking
 
 Each conversation has a selected deck.
-A new conversation can be seeded silently from `/ai?deckId=`.
 The selected deck is not the write target for a new proposal.
 It is not compiled into the system prompt. Field titles reach the model through tools (`list_decks`, `propose_cards`).
 
