@@ -107,30 +107,6 @@ describe("conversationReducer", () => {
     });
   });
 
-  describe("setDeck", () => {
-    it("sets the deck when the conversation is not locked", () => {
-      const state = conversationReducer(initialConversationState, ["setDeck", { deckId: 5 }]);
-      expect(state.deckId).toBe(5);
-    });
-
-    it("is allowed after a user message but before any successful card-bearing run", () => {
-      let state = reduce([["addUserMessage", { runId: "r1", text: "Hi" }]]);
-      state = conversationReducer(state, ["setDeck", { deckId: 5 }]);
-      expect(state.deckId).toBe(5);
-    });
-
-    it("stays unlocked when a card-bearing run is still streaming or failed", () => {
-      let state = reduce([
-        ["addUserMessage", { runId: "r1", text: "Hi" }],
-        ["startRun", { runId: "r1" }],
-        ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }],
-        ["runFailed", { runId: "r1", error: { message: "failed" } }],
-      ]);
-      state = conversationReducer(state, ["setDeck", { deckId: 7 }]);
-      expect(state.deckId).toBe(7);
-    });
-  });
-
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
       let state = reduce([
@@ -201,7 +177,6 @@ describe("conversationReducer", () => {
       let state = reduce([
         ["addUserMessage", { runId: "r1", text: "Hi" }],
         ["startRun", { runId: "r1" }],
-        ["setDeck", { deckId: 3 }],
         ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
         ["setAIModel", { modelId: "m2", modelParameters: { reasoning_effort: "low" } }],
         ["setAIModelParameter", { paramType: "reasoning_effort", value: "medium" }],
@@ -216,7 +191,6 @@ describe("conversationReducer", () => {
         runs: {},
         activeRunId: null,
         dismissedRunErrorId: null,
-        deckId: null,
         profileId: null,
         modelId: null,
         modelParameters: {},

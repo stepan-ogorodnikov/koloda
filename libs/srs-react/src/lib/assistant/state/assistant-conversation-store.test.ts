@@ -10,12 +10,8 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import {
-  assistantActiveRunIdAtom,
-  assistantConversationHasContextAtom,
-  assistantIsLockedAtom,
-} from "./conversation-selectors";
-import { setAssistantDeckAtom } from "./conversation-actions";
+import { assistantActiveRunIdAtom, assistantConversationHasContextAtom } from "./conversation-selectors";
+import { setAssistantAIProfileAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import { initialConversationState } from "./conversation-reducer";
 
@@ -223,11 +219,11 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     dispatchTo(store, "A", (prev) => ({
       ...prev,
-      deckId: 9,
+      profileId: "p9",
     }));
 
     const state = store.get(assistantConversationStateAtom);
-    expect(state.deckId).toBe(9);
+    expect(state.profileId).toBe("p9");
   });
 
   it("a newConversation action via the writable atom populates the map and switches the current id (cold start)", () => {
@@ -427,115 +423,24 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     expect(store.get(pendingSaveAtom)).toBe(0);
   });
 
-  it("write atoms (e.g. setAssistantDeckAtom) bump the current conversation's counter", () => {
+  it("write atoms (e.g. setAssistantAIProfileAtom) bump the current conversation's counter", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(upsertConversationAtom, makeConversation("B"));
 
     store.set(setCurrentConversationIdAtom, "A");
-    store.set(setAssistantDeckAtom, 1);
-    store.set(setAssistantDeckAtom, 2);
+    store.set(setAssistantAIProfileAtom, { profileId: "p1", modelId: "m1" });
+    store.set(setAssistantAIProfileAtom, { profileId: "p2", modelId: "m2" });
     expect(store.get(pendingSaveAtom)).toBe(2);
 
     // Switch to B and bump its counter
     store.set(setCurrentConversationIdAtom, "B");
-    store.set(setAssistantDeckAtom, 7);
+    store.set(setAssistantAIProfileAtom, { profileId: "p7", modelId: "m7" });
     expect(store.get(pendingSaveAtom)).toBe(1);
 
     // Switch back to A — A's counter still shows 2, B's shows 1
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(pendingSaveAtom)).toBe(2);
-  });
-});
-
-describe("setAssistantDeckAtom lock check", () => {
-  /**
-   * Locking is enforced at the write-atom layer (not the reducer) so the
-   * "what counts as locked" rule lives in one place: `assistantIsLockedAtom`.
-   */
-  function lockConversationWithSuccessfulCards(store: ReturnType<typeof createStore>, id: string) {
-    dispatchTo(store, id, ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, id, ["startRun", { runId: "r1" }]);
-    dispatchTo(store, id, ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }]);
-    dispatchTo(store, id, ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
-    dispatchTo(store, id, ["completeRun", { runId: "r1" }]);
-  }
-
-  it("refuses to change the deck when a card-bearing run has completed successfully", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    expect(store.get(assistantIsLockedAtom)).toBe(false);
-
-    lockConversationWithSuccessfulCards(store, "A");
-    expect(store.get(assistantIsLockedAtom)).toBe(true);
-
-    store.set(setAssistantDeckAtom, 9);
-    expect(store.get(assistantConversationStateAtom).deckId).toBe(5);
-  });
-
-  it("does not bump the pending-save counter when the deck change is rejected", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    lockConversationWithSuccessfulCards(store, "A");
-    expect(store.get(pendingSaveAtom)).toBe(0);
-
-    store.set(setAssistantDeckAtom, 9);
-    expect(store.get(pendingSaveAtom)).toBe(0);
-  });
-
-  it("allows the deck change when no successful card-bearing run is present", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    // User message + a started but not-yet-completed run does not lock.
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    expect(store.get(assistantIsLockedAtom)).toBe(false);
-
-    store.set(setAssistantDeckAtom, 9);
-    expect(store.get(assistantConversationStateAtom).deckId).toBe(9);
-  });
-
-  it("locks after a successful chat run with cards", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "make 5 cards" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "Here" }]);
-    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
-    dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
-
-    expect(store.get(assistantIsLockedAtom)).toBe(true);
-    store.set(setAssistantDeckAtom, 9);
-    expect(store.get(assistantConversationStateAtom).deckId).toBe(5);
-  });
-
-  it("does not lock failed or canceled runs that have partial cards", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "make cards" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
-    dispatchTo(store, "A", ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-    expect(store.get(assistantIsLockedAtom)).toBe(false);
-
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r2", text: "again" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r2" }]);
-    dispatchTo(store, "A", ["addCard", { runId: "r2", card: { content: { "1": { text: "Q" } } } }]);
-    dispatchTo(store, "A", ["cancelRun", { runId: "r2" }]);
-    expect(store.get(assistantIsLockedAtom)).toBe(false);
-
-    store.set(setAssistantDeckAtom, 9);
-    expect(store.get(assistantConversationStateAtom).deckId).toBe(9);
   });
 });
 
@@ -682,17 +587,6 @@ describe("updatedAt stamping (only on run start)", () => {
     advanceClock();
 
     dispatchTo(store, "A", ["dismissRunError", { runId: "seed" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("setDeck does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["setDeck", { deckId: 42 }]);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
   });
 

@@ -38,6 +38,11 @@ describe("toPersistedState / fromPersistedState", () => {
     expect(fromPersistedState(persisted).revertState).toBeNull();
     expect(fromPersistedState(persisted)).not.toHaveProperty("schemaVersion");
   });
+
+  it("does not write leftover conversation deckId", () => {
+    const persisted = toPersistedState(initialConversationState);
+    expect(persisted).not.toHaveProperty("deckId");
+  });
 });
 
 describe("coerceConversationState", () => {
@@ -64,7 +69,6 @@ describe("coerceConversationState", () => {
   it("rejects objects with wrong field types as corrupt", () => {
     expect(expectCorrupt({ ...initialConversationState, id: 123 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...initialConversationState, mode: "voice" }).length).toBeGreaterThan(0);
-    expect(expectCorrupt({ ...initialConversationState, deckId: "5" }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...initialConversationState, profileId: 5 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...initialConversationState, modelId: 7 }).length).toBeGreaterThan(0);
     expect(expectCorrupt({ ...initialConversationState, modelParameters: "x" }).length).toBeGreaterThan(0);
@@ -406,6 +410,24 @@ describe("coerceConversationState", () => {
       });
       expect(coerced).not.toHaveProperty("mode");
       expect(coerced.runs["r1"]).not.toHaveProperty("mode");
+    });
+
+    it("strips leftover conversation deckId on restore", () => {
+      const numeric = expectOk({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        deckId: 5,
+      });
+      expect(numeric).not.toHaveProperty("deckId");
+
+      const malformed = expectOk({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        deckId: "5",
+      });
+      expect(malformed).not.toHaveProperty("deckId");
     });
 
     it("rejects a wrong-typed dataAccess value as corrupt", () => {

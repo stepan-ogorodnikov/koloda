@@ -1,7 +1,7 @@
 # Decks
 
 Covers decks: creating with defaults, editing title/algorithm/template, cascade delete, and how decks relate to cards, lessons, and the assistant.
-Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing, or assistant conversation locking.
+Does not cover card browsing, reset progress, preview, lesson session flow, algorithm or template editing.
 Those are covered by the cards, lessons, algorithms, templates, and assistant specs.
 
 ## What is a Deck
@@ -99,5 +99,5 @@ Each entry opens that deck.
 - An empty library with no decks is allowed
 - Failed add or update does not partially create or change a deck
 - Changing learning-settings defaults never rewrites existing decks
-- Deleting a deck does not rewrite assistant conversations that still point at its id
+- Deleting a deck does not rewrite assistant conversations whose persisted run write targets or tool inputs still mention its id
 - Lesson counts for a deleted deck disappear with the deck; other decks are unaffected

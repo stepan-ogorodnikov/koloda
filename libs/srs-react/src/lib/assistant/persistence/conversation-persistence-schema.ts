@@ -72,7 +72,7 @@ const optionalString = z
 
 /** `null`-able number: `null` → `null`; a finite number → number; else fail.
  * A *missing* value fails the row, unlike `optionalString` — mirrors the
- * pre-refactor `elapsedSeconds`/`deckId` gates, which rejected `undefined`. */
+ * pre-refactor `elapsedSeconds` gate, which rejected `undefined`. */
 const nullableNumberField = z.unknown().transform((v, ctx): number | null => {
   if (v === null) return null;
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -302,7 +302,6 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
     modelId: optionalString,
     modelParameters: modelParametersField,
     lastReadRunId: optionalString,
-    deckId: nullableNumberField,
     // WHY: Live conversations have no mode. Historical `"chat"` is stripped;
     // `"cards"` (and any other value) fails the row as corrupt — not rewritten
     // into chat.
@@ -348,7 +347,6 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
       modelId: state.modelId,
       modelParameters: state.modelParameters,
       lastReadRunId: state.lastReadRunId,
-      deckId: state.deckId,
     }),
   );
 

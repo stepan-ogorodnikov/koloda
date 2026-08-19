@@ -1,6 +1,6 @@
 # @koloda/ai-react
 
-Shared React UI primitives and streaming transport hooks for assistant chat. Presentational components and abortable stream helpers only — no conversation store, no run lifecycle, no deck locking, no persistence.
+Shared React UI primitives and streaming transport hooks for assistant chat. Presentational components and abortable stream helpers only — no conversation store, no run lifecycle, no persistence.
 
 ## Where it sits
 
@@ -19,7 +19,7 @@ Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces
 ### Does NOT own (prevent scope creep)
 
 - Conversation / run lifecycle state — `libs/srs-react/.../assistant`
-- Deck locking, revert — `libs/srs-react/.../assistant`
+- Revert — `libs/srs-react/.../assistant`
 - Provider HTTP calls — `@koloda/ai`
 - Secrets storage / redaction — `crates/koloda-core`
 - Persistence schema — `drizzle/`

@@ -290,9 +290,8 @@ describe("useRunOrchestration — always-chat submit", () => {
     expect(readState().runs[runId!].dataAccess).toBeUndefined();
   });
 
-  it("submit is chat when no template is selected", async () => {
+  it("submit is chat+tools without a conversation deck", async () => {
     seedConversation("conv-1");
-    dispatch(["setDeck", { deckId: 7 }]);
 
     const { result } = orchestrate(makeConfig());
     await act(async () => {
@@ -443,7 +442,6 @@ describe("useRunOrchestration — handleRevert", () => {
 
     expect(prompt).toBe("make cards");
     expect(readState()).not.toHaveProperty("mode");
-    expect(dispatchLocal.mock.calls.every((call) => call[0][0] !== "setDeck")).toBe(true);
   });
 });
 

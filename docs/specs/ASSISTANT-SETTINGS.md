@@ -66,7 +66,7 @@ Field titles reach the model through tools (`list_decks`, `propose_cards`).
 ## Preview
 
 Preview shows the compiled prompt for the current editor text: the editor value after trim.
-It does not use the conversation's selected deck, that deck's template, or the selected profile's provider.
+It does not use a deck, a template, or the selected profile's provider.
 
 Changing the editor text updates the preview without saving.
 

@@ -78,7 +78,6 @@ export type ConversationReducerState = {
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
   dismissedRunErrorId: string | null;
-  deckId: number | null;
   profileId: string | null;
   modelId: string | null;
   modelParameters: Partial<Record<ModelParameter["type"], string>>;
@@ -97,7 +96,6 @@ export const initialConversationState: ConversationReducerState = {
   runs: {},
   activeRunId: null,
   dismissedRunErrorId: null,
-  deckId: null,
   profileId: null,
   modelId: null,
   modelParameters: {},
@@ -122,7 +120,6 @@ const actions = {
   interruptRun,
   restartRun,
   setUsage,
-  setDeck,
   setAIProfile,
   setAIModel,
   setAIModelParameter,
@@ -201,12 +198,6 @@ export function findLatestErroredRun(state: ConversationReducerState): Generatio
     }
   }
   return null;
-}
-
-// INVARIANT: Lock on the first successful run that actually produced cards.
-// Failed/canceled/interrupted runs with partial cards must not lock.
-export function hasSuccessfulCardBearingRun(state: ConversationReducerState): boolean {
-  return Object.values(state.runs).some((run) => run.status === "success" && run.cards.length > 0);
 }
 
 function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
@@ -470,15 +461,7 @@ function applyProposeCardsToRun(draft: ConversationReducerState, runId: string, 
 type RunIdPayload = { runId: string };
 
 function completeRun(draft: ConversationReducerState, payload: RunIdPayload) {
-  // WHY: Check lock before this run becomes success, so a first proposal can still
-  // align the picker to its write target.
-  const wasLocked = hasSuccessfulCardBearingRun(draft);
-  if (!transitionRun(draft, payload.runId, { type: "complete" })) return;
-  const run = draft.runs[payload.runId];
-  // INVARIANT: Do not overwrite deckId when a prior successful card run already locked it.
-  if (!wasLocked && run?.writeTargetDeckId !== undefined) {
-    draft.deckId = run.writeTargetDeckId;
-  }
+  transitionRun(draft, payload.runId, { type: "complete" });
 }
 
 type RunFailedPayload = { runId: string; error: { message: string } };
@@ -540,12 +523,6 @@ type SetUsagePayload = { runId: string; usage: StreamUsage };
 function setUsage(draft: ConversationReducerState, payload: SetUsagePayload) {
   const run = draft.runs[payload.runId];
   if (run) run.usage = payload.usage;
-}
-
-type SetDeckPayload = { deckId: number | null };
-
-function setDeck(draft: ConversationReducerState, payload: SetDeckPayload) {
-  draft.deckId = payload.deckId;
 }
 
 type SetAIProfilePayload = {
@@ -620,7 +597,6 @@ function newConversation(draft: ConversationReducerState, payload: NewConversati
   draft.runs = {};
   draft.activeRunId = null;
   draft.dismissedRunErrorId = null;
-  draft.deckId = null;
   draft.profileId = payload.profileId ?? null;
   draft.modelId = payload.modelId ?? null;
   draft.modelParameters = payload.modelParameters ?? {};

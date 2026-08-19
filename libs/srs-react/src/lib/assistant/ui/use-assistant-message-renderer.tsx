@@ -99,7 +99,7 @@ function renderCardsMessage(options: {
   if (!cardsTemplate && !templateFieldsMissing) return null;
 
   // INVARIANT: Add uses writeTargetDeckId / writeTargetTemplateId only.
-  // Missing either disables add — do not fall back to conversation.deckId.
+  // Missing either disables add.
   const addTargetDeckId = run.writeTargetDeckId ?? null;
   const addTargetTemplateId = run.writeTargetTemplateId;
 

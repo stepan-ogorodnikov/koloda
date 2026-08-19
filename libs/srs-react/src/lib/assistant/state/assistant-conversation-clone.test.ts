@@ -7,9 +7,9 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { assistantHasContextAtom, assistantIsLockedAtom, unreadConversationIdsAtom } from "./conversation-selectors";
+import { assistantHasContextAtom, unreadConversationIdsAtom } from "./conversation-selectors";
 import { cloneConversationAtom } from "./conversation-actions";
-import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
+import { makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import type { ConversationReducerState } from "./conversation-reducer";
 
 describe("cloneConversationAtom", () => {
@@ -57,7 +57,6 @@ describe("cloneConversationAtom", () => {
       ],
       runs: { r1: makeRun("r1", "success") },
       lastReadRunId: "r1",
-      deckId: 7,
     });
     store.set(upsertConversationAtom, source);
     store.set(setCurrentConversationIdAtom, "A");
@@ -242,7 +241,7 @@ describe("cloneConversationAtom", () => {
     expect(clone.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1", "user-r3", "assistant-r3"]);
   });
 
-  it("copies AI profile state and deck selection from the source", () => {
+  it("copies AI profile state from the source", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -250,7 +249,6 @@ describe("cloneConversationAtom", () => {
         profileId: "p1",
         modelId: "m1",
         modelParameters: { reasoning_effort: "high" },
-        deckId: 42,
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -261,33 +259,8 @@ describe("cloneConversationAtom", () => {
     expect(clone.profileId).toBe("p1");
     expect(clone.modelId).toBe("m1");
     expect(clone.modelParameters).toEqual({ reasoning_effort: "high" });
-    expect(clone.deckId).toBe(42);
+    expect(clone).not.toHaveProperty("deckId");
     expect(clone).not.toHaveProperty("mode");
-  });
-
-  it("preserves the deck lock by copying deckId when the source is locked", () => {
-    // WHY: §Deck Selection and Locking — once a conversation has
-    // successfully generated cards, its deck is locked. The clone must
-    // inherit the lock so the user cannot retarget to a different deck.
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }]);
-    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
-    dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
-    store.set(setCurrentConversationIdAtom, "A");
-
-    expect(store.get(assistantIsLockedAtom)).toBe(true);
-
-    const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
-    const clone = store.get(conversationsAtom)[newId];
-
-    expect(clone.deckId).toBe(5);
-    // The clone carries the completed run, so `assistantIsLockedAtom`
-    // reports locked for the clone too.
-    store.set(setCurrentConversationIdAtom, newId);
-    expect(store.get(assistantIsLockedAtom)).toBe(true);
   });
 
   it("clears activeRunId so the clone has no in-flight run", () => {

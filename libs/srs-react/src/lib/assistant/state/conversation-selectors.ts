@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { findLatestErroredRun, getVisibleMessages, hasSuccessfulCardBearingRun } from "./conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
 import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
 
 export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
@@ -12,7 +12,6 @@ export const assistantMessagesAtom = atom((get) => {
 export const assistantRevertStateAtom = atom((get) => get(assistantConversationStateAtom).revertState);
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
-export const assistantDeckIdAtom = atom((get) => get(assistantConversationStateAtom).deckId);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
 export const assistantAIModelIdAtom = atom((get) => get(assistantConversationStateAtom).modelId);
 export const assistantAIModelParametersAtom = atom((get) => get(assistantConversationStateAtom).modelParameters);
@@ -32,10 +31,6 @@ export const assistantConversationHasContextAtom = (id: string) =>
     const state = get(conversationsAtom)[id];
     return state ? state.messages.length > 0 || state.activeRunId !== null : false;
   });
-
-// INVARIANT: First successful card-bearing run locks the deck.
-// Partial cards on failed/canceled/interrupted runs do not lock.
-export const assistantIsLockedAtom = atom((get) => hasSuccessfulCardBearingRun(get(assistantConversationStateAtom)));
 
 export const assistantContextUsageAtom = atom((get) => {
   const runs = get(assistantRunsAtom);

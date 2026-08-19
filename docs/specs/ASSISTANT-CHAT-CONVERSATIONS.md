@@ -1,6 +1,6 @@
 # Assistant Chat: Conversations
 
-Covers the conversation lifecycle, messages, runs, deck selection and locking, AI profile state, persistence, restore, error handling, retry, and revert.
+Covers the conversation lifecycle, messages, runs, AI profile state, persistence, restore, error handling, retry, and revert.
 Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
 Those prompt and temperature preferences are covered by the assistant settings spec.
 Card proposal display, selection, and add are covered by the card-generation spec.
@@ -12,7 +12,7 @@ A conversation is a single threaded interaction between the user and the AI.
 Each conversation has a name, a timestamp, and a history of messages and AI runs.
 
 A conversation starts empty.
-It has no messages, no runs, and no deck selected.
+It has no messages and no runs.
 It becomes active when the user sends their first message.
 Every new run is chat.
 The model may propose cards during that run.
@@ -131,21 +131,16 @@ A run can also end as `interrupted` without user cancel intent:
 
 Partial chat text and cards received before the interruption remain visible and eligible for retry.
 
-## Deck Selection and Locking
+## Write Targets
 
-Each conversation has a selected deck.
-The selected deck is not the write target for a new proposal.
-It is not compiled into the system prompt. Field titles reach the model through tools (`list_decks`, `propose_cards`).
-
+Conversations do not have a selected deck.
 When the model proposes cards, the write target is the deck and template on that tool call.
-Add uses that write target, not the conversation's selected deck or that deck's template.
-If the conversation is still unlocked when that run succeeds, the selected deck is aligned to that write target.
+Add uses that write target.
+Each run keeps its own write target, so later turns may propose for a different deck.
 
-Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the selected deck cannot be changed.
-This prevents mixing cards from different decks in the same conversation.
+Write targets are not compiled into the system prompt. Field titles reach the model through tools (`list_decks`, `propose_cards`).
 
-Failed, canceled, or interrupted runs with partial cards do not lock.
-An accepted list of 0 cards does not lock.
+An accepted list of 0 cards does not set a write target.
 
 ## AI Profile State
 
@@ -192,7 +187,7 @@ Once a profile exists, these empty states are no longer shown.
 ## Persistence
 
 Conversations are saved to the database automatically.
-The entire conversation state — messages, runs, deck, and AI profile state — is saved as a single document.
+The entire conversation state — messages, runs, and AI profile state — is saved as a single document.
 Each persisted document carries a `schemaVersion`. Unknown future versions fail restore explicitly rather than entering live state.
 Migrations for older versions are centralized at the persistence coerce boundary.
 
@@ -229,6 +224,7 @@ When a conversation is loaded from the database, it goes through validation and 
 - **Pending card statuses are reset**: cards that were mid-operation are reset to idle
 - **Chat turns with stored cards keep their table**: the review table is the cards on that run
 - **Old cards-mode documents are rejected**: a row whose conversation or run `mode` is `"cards"`, or whose message kind is `generated-cards`, is corrupt. It is not rewritten into chat.
+- **Leftover conversation `deckId` is stripped**: old documents that still have a selected-deck field restore without it. A malformed leftover does not fail the row as corrupt.
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
 - **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
@@ -301,7 +297,6 @@ The following are copied into the new conversation:
 - All messages (user and assistant)
 - All completed runs (success, failed, canceled, or interrupted) — streaming runs are not cloned
 - AI profile state (profile, model, model parameters)
-- Deck selection and lock state
 - Conversation name
 
 ### What Does Not Get Cloned
@@ -333,7 +328,7 @@ Reloading the app clears the revert state, and the messages become visible again
 ### Conversation-Level Implications
 
 - The conversation history sent to the next run is filtered by the revert state — hidden messages are not included.
-- Deck lock and deck contents are not affected by revert, even if the run that caused the lock is among the hidden messages.
+- Run write targets and deck contents are not affected by revert.
 - A conversation that looks empty because of revert is still saved, since the messages are still in the conversation state.
 - Restore clears the revert state, making all messages visible again, and returns the prompt input to its pre-revert state.
 
@@ -343,7 +338,7 @@ When the user submits a new prompt while in a reverted state, the hidden message
 A fresh run starts with a new run ID.
 The conversation history sent to the AI is rebuilt from the now-shorter message list.
 If the deletion leaves the conversation with no messages, the conversation falls under the existing rule that empty conversations are not saved.
-Deck lock and deck contents are preserved through the deletion, even if the run that caused the lock is among the removed messages.
+Runs that remain after the deletion keep their write targets.
 
 ### Cloning a Reverted Conversation
 

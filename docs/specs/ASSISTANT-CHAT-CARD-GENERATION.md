@@ -37,7 +37,7 @@ It uses `get_deck_cards` only to inspect existing cards, for example to avoid du
 Field titles come from the deck list, not from listing cards.
 
 Each proposed card is a map of exact template field title to invented text.
-The write target is the deck id and template id on that tool call, not the conversation's selected deck.
+The write target is the deck id and template id on that tool call.
 
 An empty proposal does not create a review table.
 Invalid cards and cards past a 200-card cap are dropped from the accepted list.
@@ -106,7 +106,7 @@ Initially, all generated cards are selected.
 
 When the user presses the add button, the selected cards are transformed and sent to the write-target deck with the write-target template.
 
-For a chat proposal, that deck and template are the ones from `propose_cards`, not the conversation's selected deck.
+For a chat proposal, that deck and template are the ones from `propose_cards`.
 If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
@@ -145,4 +145,4 @@ Retry is only available on the most recent message pair.
 
 - If the template no longer exists when a previous conversation is restored, a synthetic template is created from stored field data so the table can still render
 - A markdown table in the assistant text does not become reviewable cards
-- An accepted list of 0 cards does not lock the conversation or set a write target
+- An accepted list of 0 cards does not set a write target

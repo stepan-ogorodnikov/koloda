@@ -3,7 +3,6 @@ import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { dropRuns } from "./conversation-reducer";
 import type { CardStatus, ConversationReducerState } from "./conversation-reducer";
-import { assistantIsLockedAtom } from "./conversation-selectors";
 import {
   assistantConversationStateAtom,
   touchAtom,
@@ -30,12 +29,6 @@ export const removeConversationAtom = atom(null, (_get, set, id: string) => {
     delete next[id];
     return next;
   });
-});
-
-export const setAssistantDeckAtom = atom(null, (get, set, deckId: number | null) => {
-  if (get(assistantIsLockedAtom)) return;
-  set(assistantConversationStateAtom, ["setDeck", { deckId }]);
-  set(touchAtom);
 });
 
 type SetAssistantAIProfileAtomPayload = {
@@ -99,7 +92,7 @@ export type CloneConversationPayload = {
 };
 
 // WHY: Clone is implemented as a store-level action so all the derived
-// atoms (sidebar list, unread indicators, active-run pulse, locked state)
+// atoms (sidebar list, unread indicators, active-run pulse)
 // observe the new conversation in a single synchronous write — the
 // sidebar shows the clone immediately and the route navigates to it
 // without a re-render race. The reducer in `conversation-reducer.ts`
@@ -147,7 +140,6 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     messages,
     runs,
     activeRunId: null,
-    deckId: source.deckId,
     dismissedRunErrorId: null,
     lastReadRunId: latestClonedRunId,
     revertState: null,
