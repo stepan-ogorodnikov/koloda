@@ -1,4 +1,4 @@
-import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
@@ -21,7 +21,7 @@ export type ConversationRuntimeCallbacks = {
   isRunStreaming: (conversationId: string, runId: string) => boolean;
   // WHY: disposeConversation cancels known run ids from this snapshot so
   // in-flight AbortControllers abort before the runtime is dropped.
-  readConversationState: (conversationId: string) => { runs: Record<string, { mode?: AIChatMode }> };
+  readConversationState: (conversationId: string) => { runs: Record<string, unknown> };
 };
 
 export type ConversationRuntimeTransports = {
@@ -36,7 +36,6 @@ export type ConversationRuntime = {
     runId: string,
     request: ChatStreamRequest,
     templateFields: TemplateFields | null,
-    mode: AIChatMode,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
     dataAccess: RunDataAccessSnapshot | undefined,
@@ -210,7 +209,6 @@ export function createConversationRuntime(
 
     return runStream(
       {
-        mode: "chat",
         transport: async (req, onValue) => {
           // WHY: Last-chance gate for cancel that landed after dequeue.
           const gateReason = takeCancelBeforeStart(runId);
@@ -393,7 +391,6 @@ export function createConversationRuntime(
     runId: string,
     request: ChatStreamRequest,
     templateFields: TemplateFields | null,
-    mode: AIChatMode,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
     dataAccess: RunDataAccessSnapshot | undefined,
@@ -411,14 +408,13 @@ export function createConversationRuntime(
         // INVARIANT: Restart/clear/stream ownership stays on this runtime's
         // conversationId even if the UI-current conversation changed while
         // this retry waited in the serial queue.
-        // WHY: Retry is always chat+tools, including historical cards-mode runs.
+        // WHY: Retry is always chat+tools.
         emit({
           type: "runStarted",
           conversationId,
           run: {
             runId,
             templateFields,
-            mode,
             modelName,
             dataAccess,
           },

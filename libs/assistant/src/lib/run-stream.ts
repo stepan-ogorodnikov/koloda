@@ -1,4 +1,3 @@
-import type { AIChatMode } from "@koloda/ai";
 import type { StreamResult } from "./stream-result";
 
 /**
@@ -7,7 +6,6 @@ import type { StreamResult } from "./stream-result";
  * accumulated text on abort and dispatches `setUsage`.
  */
 export type RunExecution<TRequest, TValue, TResult, TAcc> = {
-  mode: AIChatMode;
   transport: (request: TRequest, onValue: (v: TValue) => void) => Promise<TResult>;
   initial: TAcc;
   onValue: (acc: TAcc, value: TValue) => TAcc;

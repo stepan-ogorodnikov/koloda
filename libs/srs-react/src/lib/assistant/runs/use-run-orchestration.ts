@@ -7,7 +7,7 @@ import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
-import { findLatestErroredRun, getVisibleMessages, resolveRunMode } from "../state/conversation-reducer";
+import { findLatestErroredRun, getVisibleMessages, hasRetryableTurn } from "../state/conversation-reducer";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
@@ -56,7 +56,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       const currentState = readState();
       const conversationId = currentState.id;
       if (isSubmitInFlightByConversationRef.current.has(conversationId)) return;
-      if (!resolveRunMode(currentState, runId)) return;
+      if (!hasRetryableTurn(currentState, runId)) return;
 
       // WHY: Retry is exposed only on the visible tail. The history sent
       // to the AI must mirror what the user sees, so filter out anything
@@ -67,8 +67,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
-        // WHY: Every retry is chat+tools, including historical cards-mode
-        // runs — they may call propose_cards. Chat never resolves data
+        // WHY: Every retry is chat+tools. Chat never resolves data
         // access; a stored v1 snapshot stays on the run record as inert
         // metadata (tools re-read current data).
         const stored = currentState.runs[runId]?.dataAccess;
@@ -145,7 +144,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
           {
             runId,
             text: promptText,
-            mode: "chat",
             kind: "chat-text",
             assistantText: "",
             templateFields: prepared.templateFields,
@@ -177,8 +175,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // WHY: Revert is visual; the actual deletion happens on the next
       // prompt submit. We just set the in-memory revert state. Any active
       // stream is canceled because its run will be among the hidden
-      // messages and must not keep streaming. Do not mirror the target
-      // run's cards mode onto the conversation — new submits are always chat.
+      // messages and must not keep streaming.
       cancelActiveRun();
       dispatchLocal([
         "setRevertState",

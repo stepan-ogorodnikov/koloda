@@ -97,7 +97,7 @@ export function AssistantChat({
   const { isRestoring, loadError, handleDismissSave, retrySave, retryLoad, blockedRestore } =
     useConversationPersistence({ conversationId });
 
-  const { controller, template, templateId } = useAssistantSession({
+  const { controller, template } = useAssistantSession({
     conversationId,
     onConversationIdChange,
     profileId,
@@ -140,7 +140,6 @@ export function AssistantChat({
   });
 
   const renderMessage = useAssistantMessageRenderer({
-    templateId,
     handleRetry: controller.retry,
     handleRevert,
   });

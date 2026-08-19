@@ -16,7 +16,7 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Provider registry & abstraction seam: `providers/` — one module per provider (`openrouter.ts`, `ollama.ts`, …) owning fetchModels + createClient + secrets probes; `provider-registry.ts` holds `AIGenerationClient` / `AIProviderEntry` types and wires `AI_PROVIDER_REGISTRY`. Adding a provider = one new file under `providers/` + one registry line (+ export from `src/index.ts` if public).
 - Provider catalog (TS half of the Rust mirror): `provider-catalog.ts` — `AI_PROVIDER_LABELS` / `AiProvider` / base URLs; `provider-secrets.ts` — per-provider zod schemas and `aiSecretsValidation` discriminated union.
 - Settings & profiles: `settings.ts` — profile/settings zod schemas, CRUD DTOs, `DEFAULT_AI_SETTINGS`.
-- Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (`AIChatMode` for restored historical runs, chat request types, `generateCardsInputSchema`).
+- Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (chat request types, `generateCardsInputSchema`).
 - Chat streaming: `chat-stream.ts` — shared `runChatStream` for all providers over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them. Per-provider wrappers only supply the model factory (and optional `providerOptions`).
 - Temperature: `card-parsing.ts` — `resolveGenerationTemperature` (chat still uses this).
 - Prompt compilation: `prompts.ts` — default chat prompt template, `GENERATION_TEMPERATURE`, and `compilePromptTemplate` (fields/rules/provider injection).

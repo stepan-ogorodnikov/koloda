@@ -29,7 +29,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", content: "hello" }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -54,7 +53,6 @@ describe("conversations repository integration", () => {
       messages: [],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
     const stateV2 = {
@@ -63,7 +61,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", content: "hi" }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -86,7 +83,6 @@ describe("conversations repository integration", () => {
       messages: [],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
     const pinned = new Date(1650000000000);
@@ -111,7 +107,6 @@ describe("conversations repository integration", () => {
       messages: [],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -134,7 +129,6 @@ describe("conversations repository integration", () => {
       messages: [],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -142,8 +136,8 @@ describe("conversations repository integration", () => {
     await setConversation(db, { id: "conv-b", state: { ...state, id: "conv-b" } });
     // Ensure both rows have a non-null updated_at so ordering is deterministic,
     // then make conv-a the most recently updated.
-    await setConversation(db, { id: "conv-b", state: { ...state, id: "conv-b", mode: "chat" } });
-    await setConversation(db, { id: "conv-a", state: { ...state, id: "conv-a", mode: "cards" } });
+    await setConversation(db, { id: "conv-b", state: { ...state, id: "conv-b", deckId: 1 } });
+    await setConversation(db, { id: "conv-a", state: { ...state, id: "conv-a", deckId: 2 } });
 
     const list = await getConversations(db);
     expect(list).toHaveLength(2);
@@ -165,7 +159,6 @@ describe("conversations repository integration", () => {
       runs: {
         "run-1": {
           id: "run-1",
-          mode: "cards",
           status: "completed",
           cards: [
             { front: "Cat", back: "A small domesticated feline" },
@@ -186,7 +179,6 @@ describe("conversations repository integration", () => {
         },
       },
       activeRunId: "run-1",
-      mode: "cards",
       deckId: 1,
     };
 
@@ -217,7 +209,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -236,7 +227,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -256,7 +246,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -275,7 +264,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -299,7 +287,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "anything" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -318,7 +305,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "hello" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
 
@@ -342,7 +328,6 @@ describe("conversations repository integration", () => {
       messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "v1" }] }],
       runs: {},
       activeRunId: null,
-      mode: "chat",
       deckId: null,
     };
     const stateV2 = {

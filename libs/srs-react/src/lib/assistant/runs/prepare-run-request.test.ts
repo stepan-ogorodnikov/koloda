@@ -90,7 +90,7 @@ describe("toSubmitCommand / toRetryCommand", () => {
     });
   });
 
-  it("builds a retry command carrying mode and template fields", () => {
+  it("builds a retry command carrying template fields", () => {
     const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
     expect(toRetryCommand("conv-1", "run-1", prepared!)).toEqual({
@@ -100,7 +100,6 @@ describe("toSubmitCommand / toRetryCommand", () => {
         runId: "run-1",
         request: prepared!.request,
         templateFields: null,
-        mode: "chat",
         modelName: "GPT-x",
         execution: prepared!.execution,
       },

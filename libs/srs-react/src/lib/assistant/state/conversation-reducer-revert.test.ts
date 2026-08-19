@@ -54,7 +54,6 @@ describe("conversationReducer → setRevertState", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -64,7 +63,6 @@ describe("conversationReducer → setRevertState", () => {
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -107,7 +105,6 @@ describe("conversationReducer → setRevertState", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -176,7 +173,6 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -186,7 +182,6 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -196,7 +191,6 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
         },
         r3: {
           id: "r3",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -225,7 +219,6 @@ describe("conversationReducer → commitRevert", () => {
   function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" | "interrupted" = "success") {
     return {
       id: runId,
-      mode: "chat" as const,
       status,
       cards: [],
       cardStatuses: {},

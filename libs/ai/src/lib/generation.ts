@@ -17,9 +17,6 @@ export type GeneratedCard = { content: Record<string, { text: string }> };
 
 export type Message = { role: "user" | "assistant" | "system"; content: string };
 
-/** Assistant chat operating mode. `"cards"` remains on restored historical runs. */
-export type AIChatMode = "chat" | "cards";
-
 export type CardGenerationFields = Array<{ id: number; title: string; isRequired: boolean; type?: string }>;
 
 export type ChatStreamRequest = {

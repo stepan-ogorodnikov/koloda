@@ -1,4 +1,4 @@
-import type { AIChatMode, ChatStreamRequest } from "@koloda/ai";
+import type { ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
@@ -125,7 +125,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     runId: string,
     request: ImmutableExecutionValue<ChatStreamRequest>,
     templateFields: ImmutableExecutionValue<TemplateFields> | null,
-    mode: AIChatMode,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
     dataAccess: RunDataAccessSnapshot | undefined,
@@ -138,7 +137,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       runId,
       captureExecutionValue<ChatStreamRequest>(request),
       templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
-      mode,
       modelName,
       captureExecutionValue(execution),
       // WHY: passed by reference, not captured — the replayed snapshot must
@@ -213,7 +211,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
             command.input.runId,
             command.input.request,
             command.input.templateFields,
-            command.input.mode,
             command.input.modelName,
             command.input.execution,
             command.input.dataAccess,

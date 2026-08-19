@@ -143,7 +143,6 @@ Add uses that write target, not the conversation's selected deck or that deck's 
 If the conversation is still unlocked when that run succeeds, the selected deck is aligned to that write target.
 
 Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the selected deck cannot be changed.
-This includes a chat proposal and a restored historical card-generation run.
 This prevents mixing cards from different decks in the same conversation.
 
 Failed, canceled, or interrupted runs with partial cards do not lock.
@@ -229,7 +228,8 @@ When a conversation is loaded from the database, it goes through validation and 
 - **Streaming runs become interrupted**: if the app crashed or was force-killed mid-stream, a persisted streaming checkpoint is converted to `interrupted` with `reason: crash_recovery`. Messages and partial output are kept so the user can retry.
 - **Failed, canceled, and interrupted runs are kept**: run records and assistant message parts (including partial chat text and cards) survive restore so retry remains available.
 - **Pending card statuses are reset**: cards that were mid-operation are reset to idle
-- **Historical card-generation messages keep their table**: restored turns that stored cards still show the review table, whether or not the run was recorded as chat
+- **Chat turns with stored cards keep their table**: the review table is the cards on that run
+- **Old cards-mode documents are rejected**: a row whose conversation or run `mode` is `"cards"`, or whose message kind is `generated-cards`, is corrupt. It is not rewritten into chat.
 - **Active run is cleared**: no run is considered active after restore
 - **Dismissed error is cleared**: any previously dismissed error banner resets
 - **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
@@ -279,7 +279,6 @@ Retry re-executes the same prompt as a chat request with tools.
 
 - The run ID is reused — the existing message pair is overwritten
 - Previous response text, cards, and tool rows are cleared and replaced with the new stream
-- A historical card-generation message is retried as a mixed chat turn
 - The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs
 
 Retry is only available on the most recent message pair.

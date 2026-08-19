@@ -242,7 +242,7 @@ describe("cloneConversationAtom", () => {
     expect(clone.messages.map((m) => m.id)).toEqual(["user-r1", "assistant-r1", "user-r3", "assistant-r3"]);
   });
 
-  it("copies AI profile state, deck selection, and mode from the source", () => {
+  it("copies AI profile state and deck selection from the source", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
@@ -251,7 +251,6 @@ describe("cloneConversationAtom", () => {
         modelId: "m1",
         modelParameters: { reasoning_effort: "high" },
         deckId: 42,
-        mode: "cards",
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");
@@ -263,7 +262,7 @@ describe("cloneConversationAtom", () => {
     expect(clone.modelId).toBe("m1");
     expect(clone.modelParameters).toEqual({ reasoning_effort: "high" });
     expect(clone.deckId).toBe(42);
-    expect(clone.mode).toBe("cards");
+    expect(clone).not.toHaveProperty("mode");
   });
 
   it("preserves the deck lock by copying deckId when the source is locked", () => {
@@ -273,8 +272,8 @@ describe("cloneConversationAtom", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { deckId: 5 }));
     dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    dispatchTo(store, "A", ["startRun", { runId: "r1", mode: "cards" }]);
-    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }]);
+    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
+    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }]);
     dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }]);
     dispatchTo(store, "A", ["completeRun", { runId: "r1" }]);
     store.set(setCurrentConversationIdAtom, "A");

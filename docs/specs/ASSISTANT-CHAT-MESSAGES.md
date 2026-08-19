@@ -31,16 +31,10 @@ Its content fills in as the AI stream progresses.
 
 Each assistant message carries metadata that classifies its kind.
 
-There are three kinds:
+There are two kinds:
 
 - **chat-text** — a chat response from the AI.
-  New runs use this kind.
   The same turn may also show tool activity and a review table when that run proposed cards.
-- **generated-cards** — a historical card-generation response.
-  Restored conversations may still have this kind.
-  The message itself holds minimal text.
-  The actual card data lives in the generation run keyed by the run ID.
-  New runs are not this kind.
 - **error** — a synthesized error marker.
   Created when a run fails or when restoring a failed run from the database.
   The message text is cleared to empty.
@@ -62,13 +56,6 @@ Assistant messages dispatch to different displays based on metadata:
   Leftover text appears below the table, not above it.
   Once cards are on screen, the pending status is not shown on the table; it attaches below the table until text arrives.
   Tool activity, if any, appears above the table even when there is no leftover text.
-- **generated-cards**: a table of generated cards is shown.
-  The table has a selection column and one column per template field.
-  The table is those stored cards, not whether the run was recorded as chat or cards.
-  While streaming, a pending shimmer is shown.
-  On success, the table and elapsed time appear.
-  On cancellation, cards received before cancel remain with a canceled status.
-  On failure, partial cards remain with a failed status and a retry button.
 - **error**: a status indicator showing failed state is displayed.
   A retry button is shown.
 - **no metadata**: the message content is rendered as-is.
@@ -98,7 +85,6 @@ The message state maps to the run state:
   An interrupted status indicator with a retry button is shown.
 
 For a mixed chat turn, content is the tool rows, the proposed cards, and leftover text together.
-For a historical card-generation message, content is the set of generated cards.
 
 ## Interactions
 
@@ -126,7 +112,6 @@ Retry reuses the same run ID.
 The existing message content is cleared.
 New content streams in from scratch.
 Retry is always a chat turn with tools.
-A historical card-generation message is rewritten so the new stream can show tools, leftover text, and a proposal table together.
 
 ### Reverting the Conversation
 
@@ -202,7 +187,6 @@ Non-text parts are ignored.
 - If a template no longer exists when restoring, a synthetic template is created from stored field data so the card table can still render
 - Only the most recent message pair can be retried — older runs are not retryable
 - Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn
-- Retry of a historical generated-cards message rewrites it to chat-text for the same reason
 - Messages without metadata are rendered as raw content without status indicators
 - Revert is available on any user message regardless of its assistant's status — success, failed, canceled, or error marker. A streaming run is auto-canceled as part of the revert.
 - The conversation history sent to the AI excludes hidden messages while revert is active.

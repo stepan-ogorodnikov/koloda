@@ -11,12 +11,11 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(1000);
 
-      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1", mode: "chat" }]);
+      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1" }]);
 
       expect(state.activeRunId).toBe("r1");
       expect(state.runs["r1"]).toMatchObject({
         id: "r1",
-        mode: "chat",
         status: "streaming",
         cards: [],
         cardStatuses: {},
@@ -28,14 +27,13 @@ describe("conversationReducer", () => {
       vi.useRealTimers();
     });
 
-    it("stamps templateFields for cards runs when provided", () => {
+    it("stamps templateFields when provided", () => {
       const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
 
       const state = conversationReducer(initialConversationState, [
         "startRun",
         {
           runId: "r1",
-          mode: "cards",
           templateFields: fields,
         },
       ]);
@@ -48,7 +46,6 @@ describe("conversationReducer", () => {
         "startRun",
         {
           runId: "r1",
-          mode: "chat",
           modelName: "GPT-4",
         },
       ]);
@@ -57,7 +54,7 @@ describe("conversationReducer", () => {
     });
 
     it("leaves modelName undefined when not provided", () => {
-      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1", mode: "chat" }]);
+      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].modelName).toBeUndefined();
     });
@@ -78,7 +75,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           text: "hello",
-          mode: "chat",
           kind: "chat-text",
           assistantText: "",
           dataAccess,
@@ -94,7 +90,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           text: "hello",
-          mode: "chat",
           kind: "chat-text",
           assistantText: "",
         },
@@ -106,7 +101,7 @@ describe("conversationReducer", () => {
 
   describe("addCard", () => {
     it("adds a card to the run's cards array and seeds idle status", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "cards" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addCard",
         {
@@ -122,7 +117,7 @@ describe("conversationReducer", () => {
 
   describe("addToolCall", () => {
     it("appends a tool call with running status", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -131,7 +126,7 @@ describe("conversationReducer", () => {
     });
 
     it("skips a duplicate tool call id idempotently", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -147,7 +142,7 @@ describe("conversationReducer", () => {
 
   describe("setToolCallResult", () => {
     it("resolves a running tool call to success with its output", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -165,7 +160,7 @@ describe("conversationReducer", () => {
     });
 
     it("resolves a running tool call to error with the error payload", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
@@ -183,7 +178,7 @@ describe("conversationReducer", () => {
     });
 
     it("no-ops on an unmatched callId", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -223,7 +218,7 @@ describe("conversationReducer", () => {
     }
 
     it("maps a successful propose_cards output onto run cards, templateFields, and write targets", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
 
       expect(state.runs["r1"].cards).toEqual([
@@ -246,7 +241,7 @@ describe("conversationReducer", () => {
     });
 
     it("maps field.type from propose_cards onto run.templateFields, including markdown", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       const markdownOutput = {
         ...proposeOutput,
         templateFields: [
@@ -267,7 +262,7 @@ describe("conversationReducer", () => {
     });
 
     it("records an empty accepted list without setting cards, writeTargetDeckId, writeTargetTemplateId, or templateFields", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       const emptyOutput = { ...proposeOutput, cards: [], rejectedCount: 2 };
       state = withProposeCall(state, "call-1", emptyOutput);
 
@@ -279,7 +274,7 @@ describe("conversationReducer", () => {
     });
 
     it("does not apply cards when propose_cards returns an error", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = withProposeCall(state, "call-1", proposeOutput, "Deck not found: 5");
 
       expect(state.runs["r1"].cards).toEqual([]);
@@ -293,7 +288,7 @@ describe("conversationReducer", () => {
     });
 
     it("stores a malformed successful output without applying cards", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = withProposeCall(state, "call-1", { decks: [] });
 
       expect(state.runs["r1"].cards).toEqual([]);
@@ -303,7 +298,7 @@ describe("conversationReducer", () => {
     });
 
     it("keeps the first write target and ignores a later propose_cards for a different deck", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
       const otherDeck = {
         ...proposeOutput,
@@ -324,7 +319,7 @@ describe("conversationReducer", () => {
     });
 
     it("appends cards from a later propose_cards for the same deck without replacing templateFields", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
       const second = {
         ...proposeOutput,
@@ -357,7 +352,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
 
       vi.setSystemTime(5000);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
@@ -372,8 +367,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run completes", () => {
       let state = reduce([
-        ["startRun", { runId: "r1", mode: "chat" }],
-        ["startRun", { runId: "r2", mode: "chat" }],
+        ["startRun", { runId: "r1" }],
+        ["startRun", { runId: "r2" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -397,7 +392,7 @@ describe("conversationReducer", () => {
       };
       let state = reduce([
         ["setDeck", { deckId: 1 }],
-        ["startRun", { runId: "r1", mode: "chat" }],
+        ["startRun", { runId: "r1" }],
       ]);
       state = conversationReducer(state, [
         "addToolCall",
@@ -426,13 +421,13 @@ describe("conversationReducer", () => {
       };
       let state = reduce([
         ["setDeck", { deckId: 1 }],
-        ["startRun", { runId: "r1", mode: "cards" }],
+        ["startRun", { runId: "r1" }],
         ["addCard", { runId: "r1", card: { content: { "1": { text: "Q" } } } }],
         ["completeRun", { runId: "r1" }],
       ]);
       expect(state.deckId).toBe(1);
 
-      state = conversationReducer(state, ["startRun", { runId: "r2", mode: "chat" }]);
+      state = conversationReducer(state, ["startRun", { runId: "r2" }]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r2", call: { id: "call-2", name: "propose_cards", input: { deckId: 5, cards: [] } } },
@@ -451,7 +446,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
 
       vi.setSystemTime(3000);
       state = conversationReducer(state, [
@@ -472,8 +467,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run fails", () => {
       let state = reduce([
-        ["startRun", { runId: "r1", mode: "chat" }],
-        ["startRun", { runId: "r2", mode: "chat" }],
+        ["startRun", { runId: "r1" }],
+        ["startRun", { runId: "r2" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -491,7 +486,7 @@ describe("conversationReducer", () => {
 
   describe("cancelRun", () => {
     it("sets status to canceled with reason user and clears activeRunId", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("canceled");
@@ -505,7 +500,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
 
       vi.setSystemTime(4000);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
@@ -519,7 +514,7 @@ describe("conversationReducer", () => {
     });
 
     it("records crash_recovery as the interruption reason", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
 
       expect(state.runs["r1"].status).toBe("interrupted");
@@ -528,8 +523,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run is interrupted", () => {
       let state = reduce([
-        ["startRun", { runId: "r1", mode: "chat" }],
-        ["startRun", { runId: "r2", mode: "chat" }],
+        ["startRun", { runId: "r1" }],
+        ["startRun", { runId: "r2" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -543,7 +538,7 @@ describe("conversationReducer", () => {
     it("ignores completeRun after the run already finished", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       vi.setSystemTime(2000);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       const afterFirst = state.runs["r1"];
@@ -559,7 +554,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions after cancel", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       const afterCancel = state.runs["r1"];
 
@@ -571,7 +566,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions after interrupt", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
       const afterInterrupt = state.runs["r1"];
 
@@ -583,7 +578,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions for a missing runId", () => {
-      const state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      const state = reduce([["startRun", { runId: "r1" }]]);
       const next = conversationReducer(state, ["completeRun", { runId: "missing" }]);
       expect(next).toEqual(state);
     });
@@ -599,7 +594,6 @@ describe("conversationReducer", () => {
           "startRun",
           {
             runId: "r1",
-            mode: "cards",
             templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
@@ -613,7 +607,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: null,
-          mode: "cards",
         },
       ]);
 
@@ -632,7 +625,7 @@ describe("conversationReducer", () => {
     });
 
     it("clears recorded tool calls on restart", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -643,7 +636,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
 
       // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
       expect(state.runs["r1"].toolCalls).toEqual([]);
@@ -661,7 +654,7 @@ describe("conversationReducer", () => {
         cards: [{ fields: { Front: "hola", Back: "hello" } }],
         rejectedCount: 0,
       };
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
@@ -676,7 +669,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
       expect(state.runs["r1"].cards).toHaveLength(1);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
@@ -686,18 +679,18 @@ describe("conversationReducer", () => {
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       expect(state.runs["r1"].reason).toBe("user");
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
 
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
       expect(state.runs["r1"].reason).toBe("app_shutdown");
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
     });
@@ -717,7 +710,7 @@ describe("conversationReducer", () => {
               id: "assistant-r1",
               role: "assistant",
               parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1", mode: "chat" },
+              metadata: { kind: "error", runId: "r1" },
             },
           ],
         },
@@ -726,13 +719,12 @@ describe("conversationReducer", () => {
           {
             runId: "r1",
             templateFields: null,
-            mode: "chat",
           },
         ],
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
-      expect(state.runs["r1"].mode).toBe("chat");
+      expect(state.runs["r1"]).not.toHaveProperty("mode");
       expect(state.activeRunId).toBe("r1");
       expect(state.messages[1]).toEqual({
         id: "assistant-r1",
@@ -742,34 +734,13 @@ describe("conversationReducer", () => {
       });
     });
 
-    it("rewrites a generated-cards message to chat-text when retrying as chat", () => {
-      let state = reduce([
-        ["addUserMessage", { runId: "r1", text: "Make cards" }],
-        ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }],
-        ["startRun", { runId: "r1", mode: "cards" }],
-      ]);
-      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
-
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
-
-      expect(state.runs["r1"].mode).toBe("chat");
-      expect(state.runs["r1"].status).toBe("streaming");
-      expect(state.messages[1]).toEqual({
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "chat-text", runId: "r1" },
-      });
-    });
-
-    it("rewrites a cards-mode error marker to chat-text when retrying as chat", () => {
+    it("rewrites an error marker to chat-text when retrying", () => {
       const state = conversationReducer(
         {
           ...initialConversationState,
           runs: {
             r1: {
               id: "r1",
-              mode: "cards",
               status: "failed",
               cards: [],
               cardStatuses: {},
@@ -790,55 +761,15 @@ describe("conversationReducer", () => {
               id: "assistant-r1",
               role: "assistant",
               parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1", mode: "cards" },
+              metadata: { kind: "error", runId: "r1" },
             },
           ],
         },
-        ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }],
+        ["restartRun", { runId: "r1", templateFields: null }],
       );
 
-      expect(state.runs["r1"].mode).toBe("chat");
+      expect(state.runs["r1"]).not.toHaveProperty("mode");
       expect(state.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
-    });
-
-    it("creates a fresh run and rewrites the assistant error marker back to generated-cards when the run is missing in cards mode", () => {
-      const state = conversationReducer(
-        {
-          ...initialConversationState,
-          messages: [
-            {
-              id: "user-r1",
-              role: "user",
-              parts: [{ type: "text", text: "Make cards" }],
-              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-            },
-            {
-              id: "assistant-r1",
-              role: "assistant",
-              parts: [{ type: "text", text: "" }],
-              metadata: { kind: "error", runId: "r1", mode: "cards" },
-            },
-          ],
-        },
-        [
-          "restartRun",
-          {
-            runId: "r1",
-            templateFields: null,
-            mode: "cards",
-          },
-        ],
-      );
-
-      expect(state.runs["r1"].status).toBe("streaming");
-      expect(state.runs["r1"].mode).toBe("cards");
-      expect(state.activeRunId).toBe("r1");
-      expect(state.messages[1]).toEqual({
-        id: "assistant-r1",
-        role: "assistant",
-        parts: [{ type: "text", text: "" }],
-        metadata: { kind: "generated-cards", runId: "r1" },
-      });
     });
 
     it("updates templateFields on retry", () => {
@@ -847,7 +778,6 @@ describe("conversationReducer", () => {
           "startRun",
           {
             runId: "r1",
-            mode: "cards",
             templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
@@ -860,7 +790,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: nextFields,
-          mode: "cards",
         },
       ]);
 
@@ -868,7 +797,7 @@ describe("conversationReducer", () => {
     });
 
     it("overwrites modelName when a new value is provided", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -876,7 +805,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: null,
-          mode: "chat",
           modelName: "Claude",
         },
       ]);
@@ -885,7 +813,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun omits it", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -893,7 +821,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: null,
-          mode: "chat",
         },
       ]);
 
@@ -901,7 +828,7 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat", modelName: "GPT-4" }]]);
+      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -909,7 +836,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: null,
-          mode: "chat",
           modelName: undefined,
         },
       ]);
@@ -923,7 +849,6 @@ describe("conversationReducer", () => {
         {
           runId: "r1",
           templateFields: null,
-          mode: "chat",
           modelName: "Claude",
         },
       ]);
@@ -933,13 +858,10 @@ describe("conversationReducer", () => {
 
     it("stores the replayed data access snapshot on restart, keeping identity", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, [
-        "restartRun",
-        { runId: "r1", templateFields: null, mode: "chat", dataAccess },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, dataAccess }]);
 
       // WHY: identity, not toEqual — the restarted run must carry the exact
       // snapshot object the retry replayed, so later retries replay it too.
@@ -948,10 +870,10 @@ describe("conversationReducer", () => {
 
     it("keeps the stored data access snapshot when the restart carries none", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([["startRun", { runId: "r1", mode: "chat", dataAccess }]]);
+      let state = reduce([["startRun", { runId: "r1", dataAccess }]]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
 
       expect(state.runs["r1"].dataAccess).toBe(dataAccess);
     });
@@ -961,7 +883,7 @@ describe("conversationReducer", () => {
 
       const state = conversationReducer(initialConversationState, [
         "restartRun",
-        { runId: "r1", templateFields: null, mode: "chat", dataAccess },
+        { runId: "r1", templateFields: null, dataAccess },
       ]);
 
       expect(state.runs["r1"].dataAccess).toBe(dataAccess);
@@ -970,7 +892,7 @@ describe("conversationReducer", () => {
 
   describe("setUsage", () => {
     it("sets usage on the specified run", () => {
-      let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
+      let state = reduce([["startRun", { runId: "r1" }]]);
       const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
       state = conversationReducer(state, ["setUsage", { runId: "r1", usage }]);
       expect(state.runs["r1"].usage).toEqual(usage);
@@ -999,7 +921,6 @@ describe("cancelStreamingRuns", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1026,7 +947,6 @@ describe("cancelStreamingRuns", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1036,7 +956,6 @@ describe("cancelStreamingRuns", () => {
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1046,7 +965,6 @@ describe("cancelStreamingRuns", () => {
         },
         r3: {
           id: "r3",
-          mode: "cards",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1077,7 +995,6 @@ describe("cancelStreamingRuns", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1096,7 +1013,6 @@ describe("cancelStreamingRuns", () => {
       ...initialConversationState,
       id: "conv-1",
       createdAt: new Date("2026-07-01T11:00:00Z"),
-      mode: "cards",
       deckId: 42,
       profileId: "prof-1",
       modelId: "model-1",
@@ -1119,7 +1035,6 @@ describe("cancelStreamingRuns", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},

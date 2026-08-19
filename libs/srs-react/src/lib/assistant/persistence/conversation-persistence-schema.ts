@@ -106,9 +106,9 @@ const modelNameField = z
 /** `templateFields`: `null` → `null`; a `TemplateFields` array → passthrough; else fail.
  * WHY: `TemplateFields` is `Template["content"]["fields"]` — an *array* of field
  * objects, not a record. A previous port used `z.record(...)` here, which
- * rejects arrays, so any cards-mode run that persisted its non-null
- * `templateFields` failed the whole row on restore and the conversation fell
- * back to a fresh empty state (empty feed after reload). Tighter than the old
+ * rejects arrays, so any run that persisted its non-null `templateFields`
+ * failed the whole row on restore and the conversation fell back to a fresh
+ * empty state (empty feed after reload). Tighter than the old
  * truthy gate, which would have accepted and miscast a record; no real row is
  * a record, so behavior for persisted rows is unchanged (see file header). */
 const templateFieldsField = z.union([z.null(), z.array(z.unknown())]);
@@ -196,7 +196,10 @@ const toolCallField = z.object({
 const runSchema: z.ZodType<GenerationRun> = z
   .object({
     id: z.string(),
-    mode: z.enum(["chat", "cards"]),
+    // WHY: Live runs have no mode. Historical `"chat"` is stripped;
+    // `"cards"` (and any other value) fails the row as corrupt — not rewritten
+    // into chat.
+    mode: z.enum(["chat"]).optional(),
     // INVARIANT: status must be one of the five known values — never an
     // arbitrary string cast to RunStatus.
     status: runStatusField,
@@ -262,7 +265,6 @@ const runSchema: z.ZodType<GenerationRun> = z
       status === "canceled" || status === "interrupted" ? (run.reason as RunTerminationReason | undefined) : undefined;
     return {
       id: run.id,
-      mode: run.mode,
       status,
       reason,
       cards: run.cards as GeneratedCard[],
@@ -301,7 +303,36 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
     modelParameters: modelParametersField,
     lastReadRunId: optionalString,
     deckId: nullableNumberField,
-    mode: z.enum(["chat", "cards"]),
+    // WHY: Live conversations have no mode. Historical `"chat"` is stripped;
+    // `"cards"` (and any other value) fails the row as corrupt — not rewritten
+    // into chat.
+    mode: z.enum(["chat"]).optional(),
+  })
+  .superRefine((state, ctx) => {
+    for (let i = 0; i < state.messages.length; i++) {
+      const message = state.messages[i];
+      if (!message || typeof message !== "object" || Array.isArray(message)) continue;
+      const metadata = (message as Record<string, unknown>).metadata;
+      if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) continue;
+      const kind = (metadata as Record<string, unknown>).kind;
+      const mode = (metadata as Record<string, unknown>).mode;
+      // INVARIANT: Do not restore generated-cards or cards-mode error markers.
+      // Those documents are corrupt, not rewritten into chat-text.
+      if (kind === "generated-cards") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["messages", i, "metadata", "kind"],
+          message: '"generated-cards" is not a valid message kind',
+        });
+      }
+      if (mode === "cards") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["messages", i, "metadata", "mode"],
+          message: '"cards" is not a valid assistant mode',
+        });
+      }
+    }
   })
   .transform(
     (state): PersistedConversation => ({
@@ -318,7 +349,6 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
       modelParameters: state.modelParameters,
       lastReadRunId: state.lastReadRunId,
       deckId: state.deckId,
-      mode: state.mode,
     }),
   );
 

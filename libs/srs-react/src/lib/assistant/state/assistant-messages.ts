@@ -1,13 +1,9 @@
 import { getTextMessageContent } from "@koloda/ai";
 import type { GeneratedCard, Message } from "@koloda/ai";
-import type { AIChatMode } from "@koloda/ai";
 import type { Template, TemplateFields } from "@koloda/srs";
 import type { TextUIPart, UIMessage } from "ai";
 
-export type AssistantMessageMetadata =
-  | { kind: "generated-cards"; runId: string }
-  | { kind: "chat-text"; runId: string }
-  | { kind: "error"; runId: string; mode: AIChatMode };
+export type AssistantMessageMetadata = { kind: "chat-text"; runId: string } | { kind: "error"; runId: string };
 
 export type UserMessageMetadata = { createdAt: string; runId: string };
 
@@ -35,8 +31,8 @@ function isAssistantMetadata(value: unknown): value is AssistantMessageMetadata 
   const obj = value as Record<string, unknown>;
 
   if (typeof obj.runId !== "string") return false;
-  if (obj.kind === "generated-cards" || obj.kind === "chat-text") return true;
-  if (obj.kind === "error") return obj.mode === "chat" || obj.mode === "cards";
+  if (obj.kind === "chat-text") return true;
+  if (obj.kind === "error") return true;
 
   return false;
 }
@@ -110,13 +106,6 @@ export function backfillUserMessageRunIds(
   return changed ? next : messages;
 }
 
-export function getGeneratedCardsMetadata(
-  message: UIMessage,
-): Extract<AssistantMessageMetadata, { kind: "generated-cards" }> | null {
-  const metadata = getAssistantMetadata(message);
-  return metadata?.kind === "generated-cards" ? metadata : null;
-}
-
 export function getChatTextMetadata(
   message: UIMessage,
 ): Extract<AssistantMessageMetadata, { kind: "chat-text" }> | null {
@@ -135,10 +124,6 @@ export function userMessageId(runId: string) {
 
 export function assistantMessageId(runId: string) {
   return `assistant-${runId}`;
-}
-
-export function modeToMessageKind(mode: AIChatMode): "generated-cards" | "chat-text" {
-  return mode === "cards" ? "generated-cards" : "chat-text";
 }
 
 export function createTextMessage(
@@ -221,12 +206,6 @@ export function buildConversationMessages(
     }
 
     if (metadata.kind === "error") continue;
-
-    if (!run || run.status !== "success" || run.cards.length === 0) continue;
-
-    if (!template) continue;
-    const cardContent = serializeGeneratedCards(run.cards, template);
-    if (cardContent) conversation.push({ role: "assistant", content: cardContent });
   }
 
   return conversation;

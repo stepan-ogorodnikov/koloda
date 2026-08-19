@@ -77,7 +77,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     const { withUserMessage = true } = opts;
     if (withUserMessage) dispatch(["addUserMessage", { runId, text: "hello" }]);
     dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId, mode: "chat" }]);
+    dispatch(["startRun", { runId }]);
   }
 
   function orchestrate(cfg: AssistantConversationConfig) {
@@ -146,7 +146,6 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     expect(command.conversationId).toBe("conv-1");
     expect(command.input.runId).toBe("run-1");
     expect(command.input.templateFields).toBeNull();
-    expect(command.input.mode).toBe("chat");
     expect(command.input.modelName).toBe("GPT-x");
     expect(command.input.request).toBeTypeOf("object");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
@@ -220,7 +219,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     };
     expect(payload).toMatchObject({
       text: "Hello atomic",
-      mode: "chat",
       kind: "chat-text",
       assistantText: "",
     });
@@ -295,9 +293,8 @@ describe("useRunOrchestration — always-chat submit", () => {
     expect(readState().runs[runId!].dataAccess).toBeUndefined();
   });
 
-  it("submit is chat even when the conversation mode is cards and no template is selected", async () => {
+  it("submit is chat when no template is selected", async () => {
     seedConversation("conv-1");
-    dispatch(["setMode", { mode: "cards" }]);
     dispatch(["setDeck", { deckId: 7 }]);
 
     const { result } = orchestrate(makeConfig({ template: null, templateId: 0, deckId: 7 }));
@@ -312,7 +309,7 @@ describe("useRunOrchestration — always-chat submit", () => {
     expect(command.input.request).not.toHaveProperty("dataContext");
 
     const runId = readState().activeRunId;
-    expect(readState().runs[runId!].mode).toBe("chat");
+    expect(readState().runs[runId!]).not.toHaveProperty("mode");
   });
 });
 
@@ -341,7 +338,7 @@ describe("useRunOrchestration — retry always chat", () => {
   function addFailedChatRun(runId: string, dataAccess?: DataAccessSnapshot) {
     dispatch(["addUserMessage", { runId, text: "hello" }]);
     dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId, mode: "chat", dataAccess }]);
+    dispatch(["startRun", { runId, dataAccess }]);
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 
@@ -382,55 +379,9 @@ describe("useRunOrchestration — retry always chat", () => {
     // WHY: identity — the stored v1 snapshot stays on the run/command as
     // inert metadata; it must not be copied or re-resolved.
     expect(command.input.dataAccess).toBe(stored);
-    expect(command.input.mode).toBe("chat");
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
     expect(readState().runs["run-1"].dataAccess).toBe(stored);
-  });
-
-  it("retry of a cards-mode run uses chat tools and does not embed the stored snapshot", async () => {
-    seedConversation("conv-1");
-    dispatch(["setMode", { mode: "cards" }]);
-    dispatch(["setDeck", { deckId: 7 }]);
-    const stored: DataAccessSnapshot = {
-      context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
-      manifest: { decks: [{ deckId: 7, title: "Old", cardCount: 1, templateTitle: "Default" }], writeTarget: null },
-    };
-    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
-    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
-    dispatch(["startRun", { runId: "run-1", mode: "cards", dataAccess: stored }]);
-    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
-
-    const { result } = orchestrate();
-    await act(async () => {
-      await result.current.handleRetry("run-1");
-    });
-
-    const command = retryCommand();
-    expect(command.input.mode).toBe("chat");
-    expect(command.input.dataAccess).toBe(stored);
-    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
-    expect(command.input.request).not.toHaveProperty("dataContext");
-  });
-
-  it("retry of a cards-mode run without a snapshot still sends chat tools", async () => {
-    seedConversation("conv-1");
-    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
-    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
-    dispatch(["startRun", { runId: "run-1", mode: "cards" }]);
-    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
-
-    const { result } = orchestrate();
-    await act(async () => {
-      await result.current.handleRetry("run-1");
-    });
-
-    expect(dispatchCommand).toHaveBeenCalledTimes(1);
-    const command = retryCommand();
-    expect(command.input.mode).toBe("chat");
-    expect(command.input.dataAccess).toBeUndefined();
-    expect(command.input.request).not.toHaveProperty("dataContext");
-    expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
   });
 
   it("chat retry without a snapshot still sends tools", async () => {
@@ -463,7 +414,7 @@ describe("useRunOrchestration — handleRevert", () => {
     dispatchLocal = vi.fn((action) => store.set(assistantConversationStateAtom, action));
   });
 
-  it("does not change conversation mode when reverting a cards-mode run", () => {
+  it("reverts a completed run without dispatching a conversation-mode action", () => {
     store.set(upsertConversationAtom, {
       ...initialConversationState,
       id: "conv-1",
@@ -471,8 +422,8 @@ describe("useRunOrchestration — handleRevert", () => {
     });
     store.set(currentConversationIdAtom, "conv-1");
     dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
-    dispatch(["addAssistantMessage", { runId: "run-1", kind: "generated-cards", text: "" }]);
-    dispatch(["startRun", { runId: "run-1", mode: "cards" }]);
+    dispatch(["addAssistantMessage", { runId: "run-1", kind: "chat-text", text: "" }]);
+    dispatch(["startRun", { runId: "run-1" }]);
     dispatch(["completeRun", { runId: "run-1" }]);
 
     const { result } = renderHook(() =>
@@ -494,8 +445,8 @@ describe("useRunOrchestration — handleRevert", () => {
     });
 
     expect(prompt).toBe("make cards");
-    expect(readState().mode).toBe("chat");
-    expect(dispatchLocal.mock.calls.every((call) => call[0][0] !== "setMode")).toBe(true);
+    expect(readState()).not.toHaveProperty("mode");
+    expect(dispatchLocal.mock.calls.every((call) => call[0][0] !== "setDeck")).toBe(true);
   });
 });
 
@@ -522,7 +473,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
   function addFailedChatRun(runId: string) {
     dispatch(["addUserMessage", { runId, text: "hello" }]);
     dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId, mode: "chat" }]);
+    dispatch(["startRun", { runId }]);
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 

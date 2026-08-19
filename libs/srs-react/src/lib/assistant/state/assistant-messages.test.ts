@@ -10,7 +10,6 @@ import {
   buildConversationMessages,
   createTextMessage,
   getErrorMetadata,
-  getGeneratedCardsMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
   serializeGeneratedCards,
@@ -82,27 +81,13 @@ describe("aiChatUtility", () => {
     expect(healed.metadata).toEqual({ createdAt: realIso, runId: "r2" });
   });
 
-  it("reads generated-card metadata only from matching assistant messages", () => {
-    const message = createTextMessage("assistant-1", "assistant", "ready", {
-      kind: "generated-cards",
-      runId: "run-1",
-    });
-
-    expect(getGeneratedCardsMetadata(message)).toEqual({
-      kind: "generated-cards",
-      runId: "run-1",
-    });
-    expect(getGeneratedCardsMetadata(createTextMessage("assistant-2", "assistant", "ready"))).toBeNull();
-  });
-
   it("reads error metadata from error assistant messages", () => {
     const message = createTextMessage("assistant-1", "assistant", "", {
       kind: "error",
       runId: "run-1",
-      mode: "chat",
     });
 
-    expect(getErrorMetadata(message)).toEqual({ kind: "error", runId: "run-1", mode: "chat" });
+    expect(getErrorMetadata(message)).toEqual({ kind: "error", runId: "run-1" });
     expect(getErrorMetadata(createTextMessage("assistant-2", "assistant", "ready"))).toBeNull();
   });
 
@@ -161,21 +146,12 @@ function assistantChatTextMessage(id: string, runId: string, text: string): UIMe
   } as UIMessage;
 }
 
-function assistantGeneratedCardsMessage(id: string, runId: string): UIMessage {
-  return {
-    id,
-    role: "assistant",
-    parts: [{ type: "text", text: "" }],
-    metadata: { kind: "generated-cards", runId },
-  } as UIMessage;
-}
-
 function assistantErrorMessage(id: string, runId: string): UIMessage {
   return {
     id,
     role: "assistant",
     parts: [{ type: "text", text: "" }],
-    metadata: { kind: "error", runId, mode: "chat" },
+    metadata: { kind: "error", runId },
   } as UIMessage;
 }
 
@@ -237,9 +213,9 @@ describe("buildConversationMessages", () => {
     expect(result).toEqual([]);
   });
 
-  it("includes generated-cards messages when run succeeded and has cards", () => {
+  it("includes chat-text card markdown when the run succeeded and has cards", () => {
     const result = buildConversationMessages(
-      [assistantGeneratedCardsMessage("a1", "r1")],
+      [assistantChatTextMessage("a1", "r1", "")],
       { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
       buildTemplate,
     );
@@ -250,32 +226,32 @@ describe("buildConversationMessages", () => {
     expect(result[0].content).toContain("**Back**");
   });
 
-  it("skips generated-cards messages when run status is not success", () => {
+  it("skips chat-text card markdown when run status is not success", () => {
     const result = buildConversationMessages(
-      [assistantGeneratedCardsMessage("a1", "r1")],
+      [assistantChatTextMessage("a1", "r1", "")],
       { r1: createRunData({ status: "failed", cards: [cardWithContent] }) },
       buildTemplate,
     );
     expect(result).toEqual([]);
   });
 
-  it("skips generated-cards messages when run has no cards", () => {
+  it("skips chat-text card markdown when run has no cards and no leftover text", () => {
     const result = buildConversationMessages(
-      [assistantGeneratedCardsMessage("a1", "r1")],
+      [assistantChatTextMessage("a1", "r1", "")],
       { r1: createRunData({ status: "success", cards: [] }) },
       buildTemplate,
     );
     expect(result).toEqual([]);
   });
 
-  it("skips generated-cards messages when run does not exist", () => {
-    const result = buildConversationMessages([assistantGeneratedCardsMessage("a1", "missing")], {}, buildTemplate);
+  it("skips chat-text card markdown when run does not exist", () => {
+    const result = buildConversationMessages([assistantChatTextMessage("a1", "missing", "")], {}, buildTemplate);
     expect(result).toEqual([]);
   });
 
-  it("skips generated-cards messages when template is null", () => {
+  it("skips chat-text card markdown when template is null and the run has no templateFields", () => {
     const result = buildConversationMessages(
-      [assistantGeneratedCardsMessage("a1", "r1")],
+      [assistantChatTextMessage("a1", "r1", "")],
       { r1: createRunData({ status: "success", cards: [cardWithContent] }) },
       null,
     );
@@ -296,7 +272,7 @@ describe("buildConversationMessages", () => {
     const messages = [
       userMessage("u1", "Generate some cards"),
       assistantChatTextMessage("a1", "r-chat", "Sure!"),
-      assistantGeneratedCardsMessage("a2", "r-cards"),
+      assistantChatTextMessage("a2", "r-cards", ""),
     ];
     const runs = {
       "r-chat": createRunData(),
@@ -314,18 +290,6 @@ describe("buildConversationMessages", () => {
     const messages = [userMessage("u1", "What is 2+2?"), assistantErrorMessage("a1", "r1")];
     const result = buildConversationMessages(messages, {}, buildTemplate);
     expect(result).toEqual([{ role: "user", content: "What is 2+2?" }]);
-  });
-
-  it("skips assistant error messages in cards mode when building history", () => {
-    const cardError: UIMessage = {
-      id: "a1",
-      role: "assistant",
-      parts: [{ type: "text", text: "" }],
-      metadata: { kind: "error", runId: "r1", mode: "cards" },
-    } as UIMessage;
-    const messages = [userMessage("u1", "Make cards"), cardError];
-    const result = buildConversationMessages(messages, {}, buildTemplate);
-    expect(result).toEqual([{ role: "user", content: "Make cards" }]);
   });
 
   it("includes successful card markdown, then leftover assistant text", () => {

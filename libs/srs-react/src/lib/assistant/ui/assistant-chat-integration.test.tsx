@@ -1567,7 +1567,6 @@ describe("assistant chat restore policy (blocked rows)", () => {
         runs: {
           r1: {
             id: "r1",
-            mode: "chat",
             status: "success",
             cards: [],
             cardStatuses: {},

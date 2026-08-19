@@ -39,7 +39,7 @@ describe("createConversationRuntime closed-registry races", () => {
         markReadIfCurrent: vi.fn(),
         touch: vi.fn(),
         isRunStreaming: (_conversationId, runId) => streaming.has(runId),
-        readConversationState: () => ({ runs: { "run-1": { mode: "chat" } } }),
+        readConversationState: () => ({ runs: { "run-1": {} } }),
       },
       { executionPort },
       registry,

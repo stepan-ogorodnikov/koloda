@@ -78,7 +78,6 @@ export function toRetryCommand(
       runId,
       request: prepared.request,
       templateFields: prepared.templateFields,
-      mode: "chat",
       modelName: prepared.modelName,
       execution: prepared.execution,
       dataAccess,

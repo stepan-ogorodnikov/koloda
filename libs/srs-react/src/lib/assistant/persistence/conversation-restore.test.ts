@@ -196,7 +196,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "chat",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -236,12 +235,11 @@ describe("coerceConversationState", () => {
 
   // WHY: `TemplateFields` is an *array* of field objects
   // (`Template["content"]["fields"]`), not a record. A prior Zod port used
-  // `z.record(...)` here, which rejects arrays — so any cards-mode run that
-  // persisted its non-null `templateFields` failed the whole row on restore
-  // and the conversation fell back to a fresh empty state (empty feed after
-  // reload, while chat-only rows survived because they store `null`). These
-  // pin the array-or-null acceptance that the pre-refactor hand-rolled gate
-  // provided.
+  // `z.record(...)` here, which rejects arrays — so any run that persisted
+  // its non-null `templateFields` failed the whole row on restore and the
+  // conversation fell back to a fresh empty state (empty feed after reload,
+  // while rows that store `null` survived). These pin the array-or-null
+  // acceptance that the pre-refactor hand-rolled gate provided.
   describe("run templateFields coercion", () => {
     function makeStateWithRun(run: Record<string, unknown>) {
       return {
@@ -256,7 +254,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "cards",
         status: "success",
         cards: [{ content: { "1": { text: "A" } } }],
         cardStatuses: { 0: "success" },
@@ -267,13 +264,13 @@ describe("coerceConversationState", () => {
       };
     }
 
-    it("accepts a TemplateFields array (cards-mode run survives restore)", () => {
+    it("accepts a TemplateFields array (a proposal run survives restore)", () => {
       const fields = [{ id: 1, title: "Front", type: "text", isRequired: true }];
       const coerced = expectOk(makeStateWithRun(baseRun({ templateFields: fields })));
       expect(coerced.runs["r1"].templateFields).toEqual(fields);
     });
 
-    it("accepts null templateFields (chat-mode runs store null)", () => {
+    it("accepts null templateFields", () => {
       const coerced = expectOk(makeStateWithRun(baseRun({ templateFields: null })));
       expect(coerced.runs["r1"].templateFields).toBeNull();
     });
@@ -304,7 +301,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "cards",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -342,7 +338,6 @@ describe("coerceConversationState", () => {
         runs: {
           r1: {
             id: "r1",
-            mode: "cards",
             status: "success",
             cards: [],
             cardStatuses: {},
@@ -368,53 +363,49 @@ describe("coerceConversationState", () => {
       expect(coerced.runs["r1"].dataAccess).toBeUndefined();
     });
 
-    it("roundtrips a cards-mode success run with cards and generated-cards metadata", () => {
-      const cards = [{ content: { "1": { text: "A" }, "2": { text: "B" } } }];
-      const fields = [
-        { id: 1, title: "Front", type: "text" as const, isRequired: true },
-        { id: 2, title: "Back", type: "text" as const, isRequired: true },
-      ];
-      const state: ConversationReducerState = {
+    it("rejects a conversation whose mode is cards as corrupt", () => {
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          mode: "cards",
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("rejects a run whose mode is cards as corrupt", () => {
+      expect(expectCorrupt(makeStateWithRun(baseRun({ mode: "cards" }))).length).toBeGreaterThan(0);
+    });
+
+    it("rejects generated-cards message metadata as corrupt", () => {
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          messages: [
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "generated-cards", runId: "r1" },
+            },
+          ],
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+
+    it("strips historical chat mode from conversation and run on restore", () => {
+      const coerced = expectOk({
         ...initialConversationState,
         id: "conv-1",
-        mode: "cards",
-        deckId: 7,
-        messages: [
-          {
-            id: "user-r1",
-            role: "user",
-            parts: [{ type: "text", text: "Make cards" }],
-            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
-          },
-          {
-            id: "assistant-r1",
-            role: "assistant",
-            parts: [{ type: "text", text: "" }],
-            metadata: { kind: "generated-cards", runId: "r1" },
-          },
-        ],
-        runs: {
-          r1: {
-            id: "r1",
-            mode: "cards",
-            status: "success",
-            cards,
-            cardStatuses: { 0: "success" },
-            templateFields: fields,
-            startedAt: new Date(1000),
-            elapsedSeconds: 1,
-          },
-        },
-      };
-      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as { schemaVersion: number };
-      expect(persisted.schemaVersion).toBe(CONVERSATION_SCHEMA_VERSION);
-      const restored = expectOk(persisted);
-      expect(restored.runs["r1"]?.mode).toBe("cards");
-      expect(restored.runs["r1"]?.status).toBe("success");
-      expect(restored.runs["r1"]?.cards).toEqual(cards);
-      expect(restored.runs["r1"]?.templateFields).toEqual(fields);
-      expect(restored.runs["r1"]?.dataAccess).toBeUndefined();
-      expect(restored.messages[1]?.metadata).toEqual({ kind: "generated-cards", runId: "r1" });
+        createdAt: new Date(1),
+        mode: "chat",
+        runs: { r1: baseRun({ mode: "chat" }) },
+      });
+      expect(coerced).not.toHaveProperty("mode");
+      expect(coerced.runs["r1"]).not.toHaveProperty("mode");
     });
 
     it("rejects a wrong-typed dataAccess value as corrupt", () => {
@@ -530,9 +521,7 @@ describe("coerceConversationState", () => {
 
     it("accepts legal edge shapes: empty context, empty decks, null writeTarget, missing-deck marker", () => {
       const coerced = expectOk(
-        makeStateWithRun(
-          baseRun({ mode: "chat", dataAccess: { context: "", manifest: { decks: [], writeTarget: null } } }),
-        ),
+        makeStateWithRun(baseRun({ dataAccess: { context: "", manifest: { decks: [], writeTarget: null } } })),
       );
       expect(coerced.runs["r1"]?.dataAccess).toEqual({ context: "", manifest: { decks: [], writeTarget: null } });
 
@@ -573,7 +562,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "chat",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -608,7 +596,6 @@ describe("coerceConversationState", () => {
         runs: {
           r1: {
             id: "r1",
-            mode: "chat",
             status: "success",
             cards: [],
             cardStatuses: {},
@@ -681,7 +668,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "chat",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -699,7 +685,6 @@ describe("coerceConversationState", () => {
         runs: {
           r1: {
             id: "r1",
-            mode: "chat",
             status: "success",
             cards: [],
             cardStatuses: {},
@@ -745,7 +730,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "chat",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -763,7 +747,6 @@ describe("coerceConversationState", () => {
         runs: {
           r1: {
             id: "r1",
-            mode: "chat",
             status: "success",
             cards: [],
             cardStatuses: {},
@@ -851,7 +834,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "chat",
         status: "success",
         cards: [],
         cardStatuses: {},
@@ -981,7 +963,6 @@ describe("coerceConversationState", () => {
     function baseRun(overrides: Record<string, unknown> = {}) {
       return {
         id: "r1",
-        mode: "cards",
         status: "success",
         cards: [{ content: { "1": { text: "A" } } }],
         cardStatuses: { 0: "success" },
@@ -1043,7 +1024,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1073,7 +1053,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1118,7 +1097,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           error: { message: "Network error" },
           cards: [],
@@ -1138,7 +1116,7 @@ describe("normalizeRestoredConversation", () => {
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
-  it("preserves failed card runs and generated-cards message metadata without rewriting", () => {
+  it("preserves failed chat runs with cards and chat-text metadata without rewriting", () => {
     const cards = [{ content: { "1": { text: "A" } } }];
     const state: ConversationReducerState = {
       ...initialConversationState,
@@ -1156,13 +1134,12 @@ describe("normalizeRestoredConversation", () => {
           id: "assistant-r1",
           role: "assistant",
           parts: [{ type: "text", text: "" }],
-          metadata: { kind: "generated-cards", runId: "r1" },
+          metadata: { kind: "chat-text", runId: "r1" },
         },
       ],
       runs: {
         r1: {
           id: "r1",
-          mode: "cards",
           status: "failed",
           error: { message: "Provider error" },
           cards,
@@ -1178,7 +1155,7 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs["r1"]).toEqual(state.runs["r1"]);
     expect(next.runs["r1"]?.cards).toEqual(cards);
-    expect(next.messages[1]?.metadata).toEqual({ kind: "generated-cards", runId: "r1" });
+    expect(next.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
@@ -1199,7 +1176,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           error: { message: "Network error" },
           cards: [],
@@ -1237,7 +1213,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1275,7 +1250,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1320,7 +1294,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1330,7 +1303,6 @@ describe("normalizeRestoredConversation", () => {
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1361,7 +1333,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "cards",
           status: "success",
           cards: [
             { content: { "1": { text: "A" } } },
@@ -1423,7 +1394,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1433,7 +1403,6 @@ describe("normalizeRestoredConversation", () => {
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "failed",
           error: { message: "Network error" },
           cards: [],
@@ -1463,7 +1432,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           error: { message: "Timeout" },
           cards: [],
@@ -1490,7 +1458,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "streaming",
           cards: [],
           cardStatuses: {},
@@ -1518,7 +1485,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           error: { message: "Network error" },
           cards: [],
@@ -1548,7 +1514,6 @@ describe("normalizeRestoredConversation", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "cards",
           status: "success",
           cards: [{ content: { "1": { text: "A" } } }, { content: { "1": { text: "B" } } }],
           cardStatuses: { 0: "pending", 1: "success" },
@@ -1576,7 +1541,6 @@ describe("findLatestErroredRun", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           cards: [],
           cardStatuses: {},
@@ -1587,7 +1551,6 @@ describe("findLatestErroredRun", () => {
         },
         r2: {
           id: "r2",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},
@@ -1597,7 +1560,6 @@ describe("findLatestErroredRun", () => {
         },
         r3: {
           id: "r3",
-          mode: "cards",
           status: "failed",
           cards: [],
           cardStatuses: {},
@@ -1620,7 +1582,6 @@ describe("findLatestErroredRun", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "failed",
           cards: [],
           cardStatuses: {},
@@ -1642,7 +1603,6 @@ describe("findLatestErroredRun", () => {
       runs: {
         r1: {
           id: "r1",
-          mode: "chat",
           status: "success",
           cards: [],
           cardStatuses: {},

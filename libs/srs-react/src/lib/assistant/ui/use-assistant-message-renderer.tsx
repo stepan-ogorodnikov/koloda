@@ -1,6 +1,5 @@
 import { getTextMessageContent } from "@koloda/ai";
 import { AIChatMessageLayout, AIChatMessageStatus, AIToolActivity } from "@koloda/ai-react";
-import type { Template } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
@@ -9,37 +8,25 @@ import { AssistantCardsMessage } from "./assistant-cards-message";
 import {
   getChatTextMetadata,
   getErrorMetadata,
-  getGeneratedCardsMetadata,
   getMessageRunId,
   getUserMessageCreatedAt,
   makeHistoricalTemplate,
 } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
-import {
-  assistantActiveRunIdAtom,
-  assistantDeckIdAtom,
-  assistantMessagesAtom,
-  assistantRunsAtom,
-} from "../state/conversation-selectors";
+import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "../state/conversation-selectors";
 import { CopyMessageButton } from "./copy-message-button";
 import { MessageTimestamp } from "./message-timestamp";
 import { RevertMessageButton } from "./revert-message-button";
 
 export type UseAssistantMessageRendererProps = {
-  templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
   handleRevert: (userMessageId: string) => void;
 };
 
-export function useAssistantMessageRenderer({
-  templateId,
-  handleRetry,
-  handleRevert,
-}: UseAssistantMessageRendererProps) {
+export function useAssistantMessageRenderer({ handleRetry, handleRevert }: UseAssistantMessageRendererProps) {
   const runs = useAtomValue(assistantRunsAtom);
   const messages = useAtomValue(assistantMessagesAtom);
   const activeRunId = useAtomValue(assistantActiveRunIdAtom);
-  const deckId = useAtomValue(assistantDeckIdAtom);
   const tailMessageId = messages.at(-1)?.id;
 
   return useCallback(
@@ -51,26 +38,6 @@ export function useAssistantMessageRenderer({
       }
 
       const isTail = message.id === tailMessageId;
-
-      const generatedCardsMetadata = getGeneratedCardsMetadata(message);
-      if (generatedCardsMetadata) {
-        const run = runs[generatedCardsMetadata.runId];
-        // INVARIANT: Historical generated-cards rows keep the table after mode
-        // is no longer "cards" (retry overwrites mode; mixed restore). The
-        // table is the metadata, not `run.mode === "cards"`.
-        if (run) {
-          const rendered = renderCardsMessage({
-            run,
-            runId: generatedCardsMetadata.runId,
-            isCurrentRun: generatedCardsMetadata.runId === activeRunId,
-            isTail,
-            deckId,
-            templateId,
-            handleRetry,
-          });
-          if (rendered) return rendered;
-        }
-      }
 
       const errorMetadata = getErrorMetadata(message);
       if (errorMetadata) return renderErrorMessage(errorMetadata.runId, isTail, handleRetry);
@@ -86,7 +53,6 @@ export function useAssistantMessageRenderer({
             runId: chatMetadata.runId,
             isCurrentRun: chatMetadata.runId === activeRunId,
             isTail,
-            templateId,
             handleRetry,
           });
         }
@@ -94,7 +60,7 @@ export function useAssistantMessageRenderer({
 
       return content;
     },
-    [tailMessageId, runs, activeRunId, templateId, deckId, handleRetry, handleRevert],
+    [tailMessageId, runs, activeRunId, handleRetry, handleRevert],
   );
 }
 
@@ -123,22 +89,19 @@ function renderCardsMessage(options: {
   runId: string;
   isCurrentRun: boolean;
   isTail: boolean;
-  deckId: number | null;
-  templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
   showStatus?: boolean;
 }) {
-  const { run, runId, isCurrentRun, isTail, deckId, templateId, handleRetry, showStatus } = options;
+  const { run, runId, isCurrentRun, isTail, handleRetry, showStatus } = options;
   const templateFieldsMissing = run.templateFields === null;
   const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
 
   if (!cardsTemplate && !templateFieldsMissing) return null;
 
-  // INVARIANT: Chat proposals add to writeTargetDeckId / writeTargetTemplateId,
-  // not the picker deck. Cards-mode keeps the picker as the write target
-  // (no writeTarget* on the run).
-  const addTargetDeckId = run.writeTargetDeckId ?? (run.mode === "cards" ? deckId : null);
-  const addTargetTemplateId = run.writeTargetTemplateId ?? (run.mode === "cards" ? templateId : undefined);
+  // INVARIANT: Add uses writeTargetDeckId / writeTargetTemplateId only.
+  // Missing either disables add — do not fall back to conversation.deckId.
+  const addTargetDeckId = run.writeTargetDeckId ?? null;
+  const addTargetTemplateId = run.writeTargetTemplateId;
 
   return (
     <AssistantCardsMessage
@@ -231,10 +194,9 @@ function renderChatMessage(options: {
   runId: string;
   isCurrentRun: boolean;
   isTail: boolean;
-  templateId: Template["id"] | undefined;
   handleRetry: (runId: string) => Promise<void>;
 }) {
-  const { message, content, run, runId, isCurrentRun, isTail, templateId, handleRetry } = options;
+  const { message, content, run, runId, isCurrentRun, isTail, handleRetry } = options;
   const text = getTextMessageContent(message);
   const copyAction = text ? <CopyMessageButton text={text} /> : null;
   // WHY: tool traffic lives on the run, not message parts — updateAssistantText
@@ -247,8 +209,6 @@ function renderChatMessage(options: {
           runId,
           isCurrentRun,
           isTail,
-          deckId: null,
-          templateId,
           handleRetry,
           // WHY: table is done once cards exist. Run status belongs under any
           // leftover note, not on the table as a second "Working".

@@ -1,4 +1,4 @@
-import type { AIChatMode, ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { aiRuntimeAtom } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
 import { act, renderHook } from "@testing-library/react";
@@ -94,7 +94,6 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
         runId: string,
         request: ChatStreamRequest,
         templateFields: TemplateFields | null,
-        mode: AIChatMode,
         modelName?: string,
       ) =>
         dispatch({
@@ -104,7 +103,6 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
             runId,
             request,
             templateFields,
-            mode,
             modelName,
             execution: chatExecution,
           },
@@ -151,7 +149,6 @@ describe("useConversationRuns", () => {
       "startRun",
       {
         runId: "run-1",
-        mode: "chat",
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -230,7 +227,6 @@ describe("useConversationRuns", () => {
       "startRun",
       {
         runId: "run-1",
-        mode: "chat",
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -269,7 +265,6 @@ describe("useConversationRuns", () => {
       "startRun",
       {
         runId: "run-A",
-        mode: "chat",
       },
     ]);
     harness.store.set(assistantConversationStateAtom, [
@@ -309,7 +304,6 @@ describe("useConversationRuns", () => {
       "startRun",
       {
         runId: "run-A",
-        mode: "chat",
       },
     ]);
     harness.store.set(setCurrentConversationIdAtom, "B");
@@ -343,7 +337,7 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat" }]);
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A" }]);
     harness.store.set(assistantConversationStateAtom, [
       "addAssistantMessage",
       { runId: "run-A", kind: "chat-text", text: "" },
@@ -385,7 +379,7 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A", mode: "chat" }]);
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A" }]);
     harness.store.set(assistantConversationStateAtom, [
       "addAssistantMessage",
       { runId: "run-A", kind: "chat-text", text: "" },
@@ -509,7 +503,6 @@ describe("useConversationRuns", () => {
         runs: {
           "run-a": {
             id: "run-a",
-            mode: "chat",
             status: "failed",
             cards: [],
             cardStatuses: {},
@@ -552,7 +545,7 @@ describe("useConversationRuns", () => {
 
     let retryPromise!: Promise<void>;
     act(() => {
-      retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, null, "chat", "m");
+      retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, null, "m");
     });
     await act(async () => {
       await Promise.resolve();
@@ -593,7 +586,6 @@ describe("useConversationRuns", () => {
         runs: {
           "run-a": {
             id: "run-a",
-            mode: "chat",
             status: "failed",
             cards: [],
             cardStatuses: {},
@@ -620,7 +612,6 @@ describe("useConversationRuns", () => {
           runId: "run-a",
           request: {} as ChatStreamRequest,
           templateFields: null,
-          mode: "chat",
           execution: chatExecution,
           dataAccess,
         },
@@ -687,7 +678,7 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-1", mode: "chat" }]);
+    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-1" }]);
     harness.store.set(assistantConversationStateAtom, [
       "addAssistantMessage",
       { runId: "run-1", kind: "chat-text", text: "" },

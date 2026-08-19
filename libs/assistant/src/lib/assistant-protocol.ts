@@ -1,4 +1,4 @@
-import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 
@@ -28,7 +28,6 @@ export type RetryInput = ImmutableExecutionValue<{
   execution: AssistantExecutionIdentity;
   request: ChatStreamRequest;
   templateFields: TemplateFields | null;
-  mode: AIChatMode;
   modelName?: string;
   dataAccess?: RunDataAccessSnapshot;
 }>;
@@ -49,10 +48,9 @@ export type AssistantCommand =
   | { type: "cancel"; conversationId: string; runId: string }
   | { type: "shutdown"; input: ShutdownInput };
 
-/** Snapshot carried on retry restart — identity, mode, and replayed data access; full run records stay in the store. */
+/** Snapshot carried on retry restart — identity and replayed data access; full run records stay in the store. */
 export type RunStartSnapshot = {
   runId: string;
-  mode: AIChatMode;
   templateFields: TemplateFields | null;
   modelName?: string;
   dataAccess?: RunDataAccessSnapshot;

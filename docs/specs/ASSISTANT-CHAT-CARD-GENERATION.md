@@ -107,7 +107,7 @@ Initially, all generated cards are selected.
 When the user presses the add button, the selected cards are transformed and sent to the write-target deck with the write-target template.
 
 For a chat proposal, that deck and template are the ones from `propose_cards`, not the conversation's selected deck.
-For a restored historical card-generation turn that never recorded a write target, add uses the conversation's selected deck and that deck's template.
+If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
 On success, each card is individually marked as success or error based on the per-card result from the server.
@@ -140,8 +140,6 @@ It clears the previous cards and tool rows and streams a new response from scrat
 The model may call `propose_cards` again.
 The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs.
 Retry is only available on the most recent message pair.
-
-Retrying a historical card-generation message turns that message into a mixed chat turn.
 
 ## Edge Cases
 

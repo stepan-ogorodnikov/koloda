@@ -11,7 +11,6 @@ export function assistantEventToReducerAction(event: AssistantEvent): Conversati
         {
           runId: event.run.runId,
           templateFields: event.run.templateFields,
-          mode: event.run.mode,
           modelName: event.run.modelName,
           // WHY: the engine carries the snapshot opaquely (`manifest: unknown`);
           // this adapter is the boundary that restores the store's typed shape.

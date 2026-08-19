@@ -6,7 +6,6 @@ import { initialConversationState } from "./conversation-reducer";
 export function makeRun(id: string, status: GenerationRun["status"]): GenerationRun {
   return {
     id,
-    mode: "chat",
     status,
     cards: [],
     cardStatuses: {},

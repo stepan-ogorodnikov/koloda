@@ -7,11 +7,11 @@ describe("assistantEventToReducerAction", () => {
     const event: AssistantEvent = {
       type: "runStarted",
       conversationId: "c1",
-      run: { runId: "r1", mode: "chat", templateFields: null, modelName: "m" },
+      run: { runId: "r1", templateFields: null, modelName: "m" },
     };
     expect(assistantEventToReducerAction(event)).toEqual([
       "restartRun",
-      { runId: "r1", mode: "chat", templateFields: null, modelName: "m" },
+      { runId: "r1", templateFields: null, modelName: "m" },
     ]);
   });
 
@@ -20,7 +20,7 @@ describe("assistantEventToReducerAction", () => {
     const event: AssistantEvent = {
       type: "runStarted",
       conversationId: "c1",
-      run: { runId: "r1", mode: "chat", templateFields: null, modelName: "m", dataAccess },
+      run: { runId: "r1", templateFields: null, modelName: "m", dataAccess },
     };
     const action = assistantEventToReducerAction(event);
     expect(action[0]).toBe("restartRun");

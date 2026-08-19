@@ -1,4 +1,4 @@
-import type { AIChatMode, AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssistantDuplicateRunError, AssistantEngineClosedError, createAssistantEngine } from "./assistant-engine";
 import type {
@@ -15,7 +15,7 @@ type TestChatTransport = (
   signal: AbortSignal,
 ) => Promise<StreamUsage | undefined>;
 
-type ConversationStateSnapshot = { runs: Record<string, { mode?: AIChatMode }> };
+type ConversationStateSnapshot = { runs: Record<string, unknown> };
 
 function holdUntilAborted(signal: AbortSignal): Promise<never> {
   return new Promise((_, reject) => {
@@ -55,7 +55,6 @@ function dispatchRetry(
   runId: string,
   request: ChatStreamRequest,
   templateFields: null,
-  mode: AIChatMode,
   modelName?: string,
 ): Promise<void> {
   return target.dispatch({
@@ -65,7 +64,6 @@ function dispatchRetry(
       runId,
       request,
       templateFields,
-      mode,
       ...(modelName === undefined ? {} : { modelName }),
       execution: TEST_EXECUTION,
     },
@@ -184,7 +182,7 @@ describe("createAssistantEngine", () => {
   });
 
   it("replays the retry's data access snapshot on runStarted by reference", async () => {
-    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+    conversationStates["A"] = { runs: { "run-1": {} } };
     chatStreamGenerator.mockImplementation(async () => undefined);
 
     const dataAccess = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
@@ -195,7 +193,6 @@ describe("createAssistantEngine", () => {
         runId: "run-1",
         request: {} as ChatStreamRequest,
         templateFields: null,
-        mode: "chat",
         execution: TEST_EXECUTION,
         dataAccess,
       },
@@ -208,7 +205,7 @@ describe("createAssistantEngine", () => {
   });
 
   it("in-flight retry for A stays owned by A after UI-current switches to B", async () => {
-    conversationStates["A"] = { runs: { "run-a": { mode: "chat" } } };
+    conversationStates["A"] = { runs: { "run-a": {} } };
     conversationStates["B"] = { runs: {} };
 
     let releaseRetry!: () => void;
@@ -222,11 +219,11 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const retryPromise = dispatchRetry(engine, "A", "run-a", {} as ChatStreamRequest, null, "chat", "model-a");
+    const retryPromise = dispatchRetry(engine, "A", "run-a", {} as ChatStreamRequest, null, "model-a");
     await Promise.resolve();
 
     // Simulate the UI switching to B while A's retry is still in flight.
-    conversationStates["B"] = { runs: { "run-b": { mode: "chat" } } };
+    conversationStates["B"] = { runs: { "run-b": {} } };
 
     releaseRetry();
     await retryPromise;
@@ -250,15 +247,16 @@ describe("createAssistantEngine", () => {
     expect(events.some((e) => e.conversationId === "B")).toBe(false);
   });
 
-  it("retry with command mode chat uses executeChat even when the stored run is cards", async () => {
-    conversationStates["A"] = { runs: { "run-1": { mode: "cards" } } };
+  it("retry uses executeChat", async () => {
+    conversationStates["A"] = { runs: { "run-1": {} } };
     chatStreamGenerator.mockImplementation(async () => undefined);
 
-    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
 
     expect(chatStreamGenerator).toHaveBeenCalled();
     const restart = events.find((e) => e.type === "runStarted");
-    expect(restart?.type === "runStarted" && restart.run.mode).toBe("chat");
+    expect(restart?.type).toBe("runStarted");
+    expect(restart?.type === "runStarted" && restart.run).not.toHaveProperty("mode");
   });
 
   it("captures immutable command input before execution reaches the application port", async () => {
@@ -437,7 +435,7 @@ describe("createAssistantEngine", () => {
   });
 
   it("repeated retry while active rejects without enqueueing another provider call", async () => {
-    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+    conversationStates["A"] = { runs: { "run-1": {} } };
 
     let releaseFirst!: () => void;
     const firstGate = new Promise<void>((resolve) => {
@@ -452,8 +450,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
-    expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat")).toThrow(
+    const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
+    expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null)).toThrow(
       new AssistantDuplicateRunError("A", "run-1", "run-1"),
     );
 
@@ -466,7 +464,7 @@ describe("createAssistantEngine", () => {
 
   it("cancel in-flight twice then retry same runId still runs", async () => {
     const streaming = new Set(["run-1"]);
-    conversationStates["A"] = { runs: { "run-1": { mode: "chat" } } };
+    conversationStates["A"] = { runs: { "run-1": {} } };
 
     engine = createAssistantEngine({
       executionPort: portFromGenerators(chatStreamGenerator),
@@ -508,7 +506,7 @@ describe("createAssistantEngine", () => {
     await expect(firstRun).resolves.toBeUndefined();
     expect(streaming.has("run-1")).toBe(false);
 
-    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null, "chat");
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
 
     expect(providerCalls).toBe(2);
     const restartActions = events.filter((e) => e.type === "runStarted");
@@ -607,8 +605,8 @@ describe("createAssistantEngine", () => {
 
   it("disposeConversation closes only that conversation runtime", async () => {
     const streaming = new Set<string>(["run-a", "run-b"]);
-    conversationStates.A = { runs: { "run-a": { mode: "chat" } } };
-    conversationStates.B = { runs: { "run-b": { mode: "chat" } } };
+    conversationStates.A = { runs: { "run-a": {} } };
+    conversationStates.B = { runs: { "run-b": {} } };
 
     engine = createAssistantEngine({
       executionPort: portFromGenerators(chatStreamGenerator),
@@ -642,8 +640,8 @@ describe("createAssistantEngine", () => {
 
   it("disposeConversation aborts in-flight streams only while store still has run keys", async () => {
     const signals: AbortSignal[] = [];
-    conversationStates.A = { runs: { "run-kept": { mode: "chat" } } };
-    conversationStates.B = { runs: { "run-cleared": { mode: "chat" } } };
+    conversationStates.A = { runs: { "run-kept": {} } };
+    conversationStates.B = { runs: { "run-cleared": {} } };
 
     engine = createAssistantEngine({
       executionPort: portFromGenerators(chatStreamGenerator),

@@ -34,7 +34,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   const runs: Record<string, GenerationRun> = {};
 
   // INVARIANT: Failed (and all other) runs must not be dropped on restore so
-  // partial chat / cards remain and retry stays available.
+  // partial chat remains and retry stays available.
   for (const [runId, run] of Object.entries(state.runs)) {
     let nextRun: GenerationRun = run;
     let runChanged = false;

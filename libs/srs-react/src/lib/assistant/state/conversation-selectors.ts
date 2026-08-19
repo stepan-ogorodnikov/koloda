@@ -33,9 +33,8 @@ export const assistantConversationHasContextAtom = (id: string) =>
     return state ? state.messages.length > 0 || state.activeRunId !== null : false;
   });
 
-// INVARIANT: First successful card-bearing run locks the deck — cards-mode
-// generated-cards and chat proposals share this rule. Partial cards on
-// failed/canceled/interrupted runs do not lock.
+// INVARIANT: First successful card-bearing run locks the deck.
+// Partial cards on failed/canceled/interrupted runs do not lock.
 export const assistantIsLockedAtom = atom((get) => hasSuccessfulCardBearingRun(get(assistantConversationStateAtom)));
 
 export const assistantContextUsageAtom = atom((get) => {

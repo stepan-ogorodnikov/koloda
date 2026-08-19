@@ -1,5 +1,5 @@
 import { generatedCardsFromProposeOutput, isProposeCardsOutput } from "@koloda/ai";
-import type { AIChatMode, GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
+import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import { logAssistantStructured } from "@koloda/assistant";
 import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
@@ -12,7 +12,6 @@ import {
   createTextMessage,
   getAssistantMetadata,
   getMessageRunId,
-  modeToMessageKind,
   userMessageId,
 } from "./assistant-messages";
 
@@ -42,7 +41,6 @@ export type RunToolCall = {
 
 export type GenerationRun = {
   id: string;
-  mode: AIChatMode;
   status: RunStatus;
   /** Set for terminal `canceled` / `interrupted` only; absent otherwise. */
   reason?: RunTerminationReason;
@@ -80,7 +78,6 @@ export type ConversationReducerState = {
   runs: Record<string, GenerationRun>;
   activeRunId: string | null;
   dismissedRunErrorId: string | null;
-  mode: AIChatMode;
   deckId: number | null;
   profileId: string | null;
   modelId: string | null;
@@ -100,7 +97,6 @@ export const initialConversationState: ConversationReducerState = {
   runs: {},
   activeRunId: null,
   dismissedRunErrorId: null,
-  mode: "chat",
   deckId: null,
   profileId: null,
   modelId: null,
@@ -126,7 +122,6 @@ const actions = {
   interruptRun,
   restartRun,
   setUsage,
-  setMode,
   setDeck,
   setAIProfile,
   setAIModel,
@@ -153,14 +148,12 @@ export function getVisibleMessages(messages: UIMessage[], revertState: RevertSta
 
 function makeRun(
   runId: string,
-  mode: AIChatMode,
   templateFields: TemplateFields | null | undefined,
   modelName?: string,
   dataAccess?: DataAccessSnapshot,
 ): GenerationRun {
   return {
     id: runId,
-    mode,
     status: "streaming",
     cards: [],
     cardStatuses: {},
@@ -190,18 +183,13 @@ export function dropRuns(
   return { messages, runs };
 }
 
-export function resolveRunMode(state: ConversationReducerState, runId: string): AIChatMode | null {
-  const run = state.runs[runId];
-  if (run) return run.mode;
+export function hasRetryableTurn(state: ConversationReducerState, runId: string): boolean {
+  if (state.runs[runId]) return true;
 
   const assistantMessage = state.messages.find((m) => m.id === assistantMessageId(runId));
-  if (!assistantMessage) return null;
+  if (!assistantMessage) return false;
   const metadata = getAssistantMetadata(assistantMessage);
-  if (!metadata) return null;
-  if (metadata.kind === "error") return metadata.mode;
-  if (metadata.kind === "generated-cards") return "cards";
-  if (metadata.kind === "chat-text") return "chat";
-  return null;
+  return metadata?.kind === "error" || metadata?.kind === "chat-text";
 }
 
 export function findLatestErroredRun(state: ConversationReducerState): GenerationRun | null {
@@ -216,8 +204,7 @@ export function findLatestErroredRun(state: ConversationReducerState): Generatio
 }
 
 // INVARIANT: Lock on the first successful run that actually produced cards.
-// Chat proposals and cards-mode runs share this rule. Failed/canceled/interrupted
-// runs with partial cards must not lock.
+// Failed/canceled/interrupted runs with partial cards must not lock.
 export function hasSuccessfulCardBearingRun(state: ConversationReducerState): boolean {
   return Object.values(state.runs).some((run) => run.status === "success" && run.cards.length > 0);
 }
@@ -326,7 +313,7 @@ function addUserMessage(draft: ConversationReducerState, payload: AddUserMessage
   );
 }
 
-type AddAssistantMessagePayload = { runId: string; kind: "chat-text" | "generated-cards"; text: string };
+type AddAssistantMessagePayload = { runId: string; kind: "chat-text"; text: string };
 
 function addAssistantMessage(draft: ConversationReducerState, payload: AddAssistantMessagePayload) {
   draft.messages.push(
@@ -348,7 +335,6 @@ function updateAssistantText(draft: ConversationReducerState, payload: UpdateAss
 
 type StartRunPayload = {
   runId: string;
-  mode: AIChatMode;
   templateFields?: TemplateFields | null;
   modelName?: string;
   dataAccess?: DataAccessSnapshot;
@@ -356,20 +342,13 @@ type StartRunPayload = {
 
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
-  draft.runs[payload.runId] = makeRun(
-    payload.runId,
-    payload.mode,
-    payload.templateFields,
-    payload.modelName,
-    payload.dataAccess,
-  );
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName, payload.dataAccess);
 }
 
 type SubmitTurnPayload = {
   runId: string;
   text: string;
-  mode: AIChatMode;
-  kind: "chat-text" | "generated-cards";
+  kind: "chat-text";
   assistantText: string;
   templateFields?: TemplateFields | null;
   modelName?: string;
@@ -383,7 +362,6 @@ function submitTurn(draft: ConversationReducerState, payload: SubmitTurnPayload)
   addUserMessage(draft, { runId: payload.runId, text: payload.text });
   startRun(draft, {
     runId: payload.runId,
-    mode: payload.mode,
     templateFields: payload.templateFields,
     modelName: payload.modelName,
     dataAccess: payload.dataAccess,
@@ -522,24 +500,17 @@ function interruptRun(draft: ConversationReducerState, payload: InterruptRunPayl
 type RestartRunPayload = {
   runId: string;
   templateFields: TemplateFields | null;
-  mode: AIChatMode;
   modelName?: string;
   dataAccess?: DataAccessSnapshot;
 };
 
-function applyRetryAssistantKind(draft: ConversationReducerState, runId: string, mode: AIChatMode) {
+function applyRetryAssistantKind(draft: ConversationReducerState, runId: string) {
   const msg = draft.messages.find((m) => m.id === assistantMessageId(runId));
   if (!msg) return;
   const metadata = getAssistantMetadata(msg);
-  if (!metadata) return;
-  const nextKind = modeToMessageKind(mode);
-  if (metadata.kind === nextKind) return;
-  if (metadata.kind === "generated-cards" || metadata.kind === "error") {
-    // WHY: Retry of a historical cards run is a chat+tools run. Mixed
-    // rendering (tools + follow-up text + propose_cards table) only
-    // applies to chat-text; leaving generated-cards would keep the
-    // cards-mode table renderer.
-    msg.metadata = { kind: nextKind, runId };
+  if (!metadata || metadata.kind === "chat-text") return;
+  if (metadata.kind === "error") {
+    msg.metadata = { kind: "chat-text", runId };
   }
 }
 
@@ -552,26 +523,15 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
       dataAccess: payload.dataAccess,
     })
   ) {
-    const run = draft.runs[payload.runId];
-    // INVARIANT: Command mode must replace stored run.mode on retry.
-    // Do not restore "retry preserves original mode" — a historical
-    // cards run retried as chat must not keep cards write-target/rendering.
-    if (run) run.mode = payload.mode;
-    applyRetryAssistantKind(draft, payload.runId, payload.mode);
+    applyRetryAssistantKind(draft, payload.runId);
     return;
   }
 
   // WHY: Retry after restore may find the run dropped (normalize removes
   // orphaned failed markers) while the assistant error message
   // remains — recreate the run and rewrite the error marker.
-  draft.runs[payload.runId] = makeRun(
-    payload.runId,
-    payload.mode,
-    payload.templateFields,
-    payload.modelName,
-    payload.dataAccess,
-  );
-  applyRetryAssistantKind(draft, payload.runId, payload.mode);
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName, payload.dataAccess);
+  applyRetryAssistantKind(draft, payload.runId);
   draft.activeRunId = payload.runId;
 }
 
@@ -580,12 +540,6 @@ type SetUsagePayload = { runId: string; usage: StreamUsage };
 function setUsage(draft: ConversationReducerState, payload: SetUsagePayload) {
   const run = draft.runs[payload.runId];
   if (run) run.usage = payload.usage;
-}
-
-type SetModePayload = { mode: AIChatMode };
-
-function setMode(draft: ConversationReducerState, payload: SetModePayload) {
-  draft.mode = payload.mode;
 }
 
 type SetDeckPayload = { deckId: number | null };
@@ -666,7 +620,6 @@ function newConversation(draft: ConversationReducerState, payload: NewConversati
   draft.runs = {};
   draft.activeRunId = null;
   draft.dismissedRunErrorId = null;
-  draft.mode = "chat";
   draft.deckId = null;
   draft.profileId = payload.profileId ?? null;
   draft.modelId = payload.modelId ?? null;

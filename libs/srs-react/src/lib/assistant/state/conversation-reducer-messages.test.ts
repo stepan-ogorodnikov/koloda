@@ -24,7 +24,6 @@ describe("conversationReducer", () => {
           {
             runId: "r1",
             text: "Hello",
-            mode: "chat",
             kind: "chat-text",
             assistantText: "",
             modelName: "GPT-x",
@@ -39,28 +38,9 @@ describe("conversationReducer", () => {
       expect(state.activeRunId).toBe("r1");
       expect(state.runs.r1).toMatchObject({
         id: "r1",
-        mode: "chat",
         status: "streaming",
         modelName: "GPT-x",
       });
-    });
-
-    it("uses cards placeholder text and generated-cards kind for cards mode", () => {
-      const state = reduce([
-        [
-          "submitTurn",
-          {
-            runId: "r2",
-            text: "Make cards",
-            mode: "cards",
-            kind: "generated-cards",
-            assistantText: "pending…",
-          },
-        ],
-      ]);
-      expect(state.messages[1]?.metadata).toMatchObject({ kind: "generated-cards", runId: "r2" });
-      expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "pending…" }]);
-      expect(state.runs.r2?.mode).toBe("cards");
     });
   });
 
@@ -72,7 +52,6 @@ describe("conversationReducer", () => {
           {
             runId: "r1",
             text: "Hello",
-            mode: "chat",
             kind: "chat-text",
             assistantText: "",
           },
@@ -91,7 +70,6 @@ describe("conversationReducer", () => {
           {
             runId: "r1",
             text: "Hello",
-            mode: "chat",
             kind: "chat-text",
             assistantText: "",
           },
@@ -128,12 +106,6 @@ describe("conversationReducer", () => {
       expect(state.messages).toEqual([]);
     });
   });
-  describe("setMode", () => {
-    it("changes the conversation mode", () => {
-      const state = conversationReducer(initialConversationState, ["setMode", { mode: "cards" }]);
-      expect(state.mode).toBe("cards");
-    });
-  });
 
   describe("setDeck", () => {
     it("sets the deck when the conversation is not locked", () => {
@@ -141,17 +113,17 @@ describe("conversationReducer", () => {
       expect(state.deckId).toBe(5);
     });
 
-    it("is allowed after a user message but before any successful generated-cards run", () => {
+    it("is allowed after a user message but before any successful card-bearing run", () => {
       let state = reduce([["addUserMessage", { runId: "r1", text: "Hi" }]]);
       state = conversationReducer(state, ["setDeck", { deckId: 5 }]);
       expect(state.deckId).toBe(5);
     });
 
-    it("stays unlocked when a generated-cards run is still streaming or failed", () => {
+    it("stays unlocked when a card-bearing run is still streaming or failed", () => {
       let state = reduce([
         ["addUserMessage", { runId: "r1", text: "Hi" }],
-        ["startRun", { runId: "r1", mode: "cards" }],
-        ["addAssistantMessage", { runId: "r1", kind: "generated-cards", text: "" }],
+        ["startRun", { runId: "r1" }],
+        ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }],
         ["runFailed", { runId: "r1", error: { message: "failed" } }],
       ]);
       state = conversationReducer(state, ["setDeck", { deckId: 7 }]);
@@ -162,7 +134,7 @@ describe("conversationReducer", () => {
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
       let state = reduce([
-        ["startRun", { runId: "r1", mode: "cards" }],
+        ["startRun", { runId: "r1" }],
         ["addCard", { runId: "r1", card: { content: {} } }],
       ]);
       state = conversationReducer(state, ["setCardStatus", { runId: "r1", index: 0, status: "success" }]);
@@ -178,7 +150,6 @@ describe("conversationReducer", () => {
           ...state.runs,
           [runId]: {
             id: runId,
-            mode: "chat",
             status: "success",
             cards: [],
             cardStatuses: {},
@@ -229,7 +200,7 @@ describe("conversationReducer", () => {
       const createdAt = new Date(1234);
       let state = reduce([
         ["addUserMessage", { runId: "r1", text: "Hi" }],
-        ["startRun", { runId: "r1", mode: "chat" }],
+        ["startRun", { runId: "r1" }],
         ["setDeck", { deckId: 3 }],
         ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
         ["setAIModel", { modelId: "m2", modelParameters: { reasoning_effort: "low" } }],
@@ -245,7 +216,6 @@ describe("conversationReducer", () => {
         runs: {},
         activeRunId: null,
         dismissedRunErrorId: null,
-        mode: "chat",
         deckId: null,
         profileId: null,
         modelId: null,
