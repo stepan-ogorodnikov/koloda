@@ -138,8 +138,8 @@ A new conversation can be seeded silently from `/ai?deckId=`.
 The selected deck is not the write target for a new proposal.
 It supplies the template used to expand `{{fields}}` in the prompt.
 
-When the model proposes cards, the write target is the deck on that tool call.
-Add uses that write target, not the conversation's selected deck.
+When the model proposes cards, the write target is the deck and template on that tool call.
+Add uses that write target, not the conversation's selected deck or that deck's template.
 If the conversation is still unlocked when that run succeeds, the selected deck is aligned to that write target.
 
 Once a conversation contains a successful run that actually produced cards, it becomes **locked** — the selected deck cannot be changed.

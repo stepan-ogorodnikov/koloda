@@ -134,9 +134,11 @@ function renderCardsMessage(options: {
 
   if (!cardsTemplate && !templateFieldsMissing) return null;
 
-  // INVARIANT: Chat proposals add to writeTargetDeckId, not the picker deck.
-  // Cards-mode keeps the picker as the write target (no writeTargetDeckId).
+  // INVARIANT: Chat proposals add to writeTargetDeckId / writeTargetTemplateId,
+  // not the picker deck. Cards-mode keeps the picker as the write target
+  // (no writeTarget* on the run).
   const addTargetDeckId = run.writeTargetDeckId ?? (run.mode === "cards" ? deckId : null);
+  const addTargetTemplateId = run.writeTargetTemplateId ?? (run.mode === "cards" ? templateId : undefined);
 
   return (
     <AssistantCardsMessage
@@ -146,8 +148,8 @@ function renderCardsMessage(options: {
       template={cardsTemplate}
       templateUnavailable={templateFieldsMissing}
       deckId={addTargetDeckId}
-      templateId={templateId}
-      canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null}
+      templateId={addTargetTemplateId}
+      canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null && addTargetTemplateId !== undefined}
       isGenerating={isCurrentRun}
       showStatus={showStatus}
       isCanceled={run.status === "canceled"}

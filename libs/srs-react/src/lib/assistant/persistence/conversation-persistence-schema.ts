@@ -223,6 +223,7 @@ const runSchema: z.ZodType<GenerationRun> = z
     // restore unchanged; when present it must be a positive int — a malformed
     // value fails the row as corrupt rather than silently dropping the target.
     writeTargetDeckId: z.number().int().positive().optional(),
+    writeTargetTemplateId: z.number().int().positive().optional(),
   })
   .superRefine((run, ctx) => {
     // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;
@@ -275,6 +276,7 @@ const runSchema: z.ZodType<GenerationRun> = z
       dataAccess: run.dataAccess,
       toolCalls: run.toolCalls,
       writeTargetDeckId: run.writeTargetDeckId,
+      writeTargetTemplateId: run.writeTargetTemplateId,
     };
   });
 

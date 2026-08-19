@@ -255,10 +255,10 @@ describe("useAssistantMessageRenderer", () => {
     const table = screen.getByTestId("cards-table");
     expect(table.getAttribute("data-can-add")).toBe("false");
     expect(table.getAttribute("data-deck-id")).toBe("null");
-    expect(table.getAttribute("data-template-id")).toBe("9");
+    expect(table.getAttribute("data-template-id")).toBe("undefined");
   });
 
-  it("enables add against writeTargetDeckId, not the picker deck", () => {
+  it("does not enable add without writeTargetTemplateId on a chat proposal", () => {
     const run = {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
@@ -267,9 +267,24 @@ describe("useAssistantMessageRenderer", () => {
     };
     mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
     const table = screen.getByTestId("cards-table");
+    expect(table.getAttribute("data-can-add")).toBe("false");
+    expect(table.getAttribute("data-deck-id")).toBe("5");
+    expect(table.getAttribute("data-template-id")).toBe("undefined");
+  });
+
+  it("enables add against write-target deck and template, not the picker", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+      writeTargetTemplateId: 3,
+    };
+    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    const table = screen.getByTestId("cards-table");
     expect(table.getAttribute("data-can-add")).toBe("true");
     expect(table.getAttribute("data-deck-id")).toBe("5");
-    expect(table.getAttribute("data-template-id")).toBe("9");
+    expect(table.getAttribute("data-template-id")).toBe("3");
   });
 
   it("renders the cards table for old cards-mode messages", () => {
@@ -287,6 +302,20 @@ describe("useAssistantMessageRenderer", () => {
     expect(table.getAttribute("data-template-id")).toBe("9");
   });
 
+  it("does not enable add on cards-mode without a conversation template id", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      mode: "cards" as const,
+      cards: [sampleCard],
+      templateFields: sampleFields,
+    };
+    mountRenderer({ r1: run }, { kind: "generated-cards", deckId: 7 });
+    const table = screen.getByTestId("cards-table");
+    expect(table.getAttribute("data-can-add")).toBe("false");
+    expect(table.getAttribute("data-deck-id")).toBe("7");
+    expect(table.getAttribute("data-template-id")).toBe("undefined");
+  });
+
   it("renders the cards table for generated-cards when run.mode is chat", () => {
     const run = {
       ...makeRun("r1", "success"),
@@ -294,12 +323,13 @@ describe("useAssistantMessageRenderer", () => {
       cards: [sampleCard],
       templateFields: sampleFields,
       writeTargetDeckId: 5,
+      writeTargetTemplateId: 3,
     };
     mountRenderer({ r1: run }, { kind: "generated-cards", deckId: 7, templateId: 9 });
     const table = screen.getByTestId("cards-table");
     expect(table).toBeTruthy();
     expect(table.getAttribute("data-can-add")).toBe("true");
     expect(table.getAttribute("data-deck-id")).toBe("5");
-    expect(table.getAttribute("data-template-id")).toBe("9");
+    expect(table.getAttribute("data-template-id")).toBe("3");
   });
 });

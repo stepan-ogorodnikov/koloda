@@ -196,6 +196,7 @@ describe("conversationReducer", () => {
     const proposeOutput = {
       deckId: 5,
       deckTitle: "Spanish verbs",
+      templateId: 1,
       templateFields: [
         { id: 10, title: "Front", type: "text", isRequired: true },
         { id: 11, title: "Back", type: "text", isRequired: true },
@@ -221,7 +222,7 @@ describe("conversationReducer", () => {
       ]);
     }
 
-    it("maps a successful propose_cards output onto run cards, templateFields, and writeTargetDeckId", () => {
+    it("maps a successful propose_cards output onto run cards, templateFields, and write targets", () => {
       let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
 
@@ -235,6 +236,7 @@ describe("conversationReducer", () => {
         { id: 12, title: "Hint", type: "text", isRequired: false },
       ]);
       expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
         id: "call-1",
         name: "propose_cards",
@@ -261,15 +263,17 @@ describe("conversationReducer", () => {
         { id: 12, title: "Hint", type: "text", isRequired: false },
       ]);
       expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
     });
 
-    it("records an empty accepted list without setting cards, writeTargetDeckId, or templateFields", () => {
+    it("records an empty accepted list without setting cards, writeTargetDeckId, writeTargetTemplateId, or templateFields", () => {
       let state = reduce([["startRun", { runId: "r1", mode: "chat" }]]);
       const emptyOutput = { ...proposeOutput, cards: [], rejectedCount: 2 };
       state = withProposeCall(state, "call-1", emptyOutput);
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
       expect(state.runs["r1"].templateFields).toBeNull();
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "success", output: emptyOutput });
     });
@@ -280,6 +284,7 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
       expect(state.runs["r1"].templateFields).toBeNull();
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
         status: "error",
@@ -293,6 +298,7 @@ describe("conversationReducer", () => {
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "success", output: { decks: [] } });
     });
 
@@ -303,11 +309,13 @@ describe("conversationReducer", () => {
         ...proposeOutput,
         deckId: 9,
         deckTitle: "Other",
+        templateId: 4,
         cards: [{ fields: { Front: "gato", Back: "cat", Hint: "" } }],
       };
       state = withProposeCall(state, "call-2", otherDeck);
 
       expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
       expect(state.runs["r1"].cards).toHaveLength(1);
       expect(state.runs["r1"].cards[0].content["10"].text).toBe("hola");
       expect(state.runs["r1"].templateFields?.[0]).toMatchObject({ id: 10, title: "Front" });
@@ -320,6 +328,7 @@ describe("conversationReducer", () => {
       state = withProposeCall(state, "call-1", proposeOutput);
       const second = {
         ...proposeOutput,
+        templateId: 4,
         templateFields: [
           { id: 10, title: "Front", type: "text", isRequired: true },
           { id: 99, title: "Changed", type: "markdown", isRequired: false },
@@ -329,6 +338,7 @@ describe("conversationReducer", () => {
       state = withProposeCall(state, "call-2", second);
 
       expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
       expect(state.runs["r1"].cards).toEqual([
         { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
         { content: { "10": { text: "gato" }, "99": { text: "" } } },
@@ -376,6 +386,7 @@ describe("conversationReducer", () => {
       const proposeOutput = {
         deckId: 5,
         deckTitle: "Spanish",
+        templateId: 1,
         templateTitle: "Default",
         templateFields: [
           { id: 10, title: "Front", type: "text", isRequired: true },
@@ -404,6 +415,7 @@ describe("conversationReducer", () => {
       const proposeOutput = {
         deckId: 5,
         deckTitle: "Spanish",
+        templateId: 1,
         templateTitle: "Default",
         templateFields: [
           { id: 10, title: "Front", type: "text", isRequired: true },
@@ -637,10 +649,11 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].toolCalls).toEqual([]);
     });
 
-    it("clears cards, toolCalls, and writeTargetDeckId on restart", () => {
+    it("clears cards, toolCalls, and write targets on restart", () => {
       const proposeOutput = {
         deckId: 5,
         deckTitle: "Spanish verbs",
+        templateId: 1,
         templateFields: [
           { id: 10, title: "Front", type: "text", isRequired: true },
           { id: 11, title: "Back", type: "text", isRequired: true },
@@ -660,6 +673,7 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
       expect(state.runs["r1"].cards).toHaveLength(1);
 
       state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, mode: "chat" }]);
@@ -668,6 +682,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].cardStatuses).toEqual({});
       expect(state.runs["r1"].toolCalls).toEqual([]);
       expect(state.runs["r1"].writeTargetDeckId).toBeUndefined();
+      expect(state.runs["r1"].writeTargetTemplateId).toBeUndefined();
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {

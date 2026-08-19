@@ -37,6 +37,7 @@ export type AssistantToolFieldType = "text" | "markdown";
 export type ProposeCardsOutput = {
   deckId: number;
   deckTitle: string;
+  templateId: number;
   templateFields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
   cards: Array<{ fields: Record<string, string> }>;
   rejectedCount: number;
@@ -278,6 +279,7 @@ export function shapeProposeCardsOutput(
   return {
     deckId: deck.id,
     deckTitle: deck.title,
+    templateId: deck.template.id,
     templateFields: templateFields.map((field) => ({
       id: field.id,
       title: field.title,
@@ -353,6 +355,9 @@ export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutpu
     Number.isInteger(value.deckId) &&
     value.deckId > 0 &&
     typeof value.deckTitle === "string" &&
+    typeof value.templateId === "number" &&
+    Number.isInteger(value.templateId) &&
+    value.templateId > 0 &&
     Array.isArray(value.templateFields) &&
     value.templateFields.every(isProposeCardsTemplateField) &&
     Array.isArray(value.cards) &&

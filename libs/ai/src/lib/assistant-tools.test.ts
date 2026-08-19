@@ -315,6 +315,7 @@ describe("propose_cards output shaping", () => {
     expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }])).toEqual({
       deckId: 5,
       deckTitle: "Spanish verbs",
+      templateId: 1,
       templateFields: [
         { id: 10, title: "Front", type: "text", isRequired: true },
         { id: 11, title: "Back", type: "text", isRequired: true },
@@ -375,6 +376,7 @@ describe("propose_cards output shaping", () => {
     expect(shapeProposeCardsOutput(deck, [])).toEqual({
       deckId: 5,
       deckTitle: "Spanish verbs",
+      templateId: 1,
       templateFields: [
         { id: 10, title: "Front", type: "text", isRequired: true },
         { id: 11, title: "Back", type: "text", isRequired: true },
@@ -402,6 +404,10 @@ describe("propose_cards output shaping", () => {
         Hint: "",
       },
     });
+  });
+
+  it("copies the source template id onto the shaped result", () => {
+    expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]).templateId).toBe(1);
   });
 
   it("carries isRequired from the source template onto output fields", () => {
@@ -444,6 +450,7 @@ describe("propose_cards output guard and mapper", () => {
   const validOutput: ProposeCardsOutput = {
     deckId: 5,
     deckTitle: "Spanish verbs",
+    templateId: 1,
     templateFields: [
       { id: 10, title: "Front", type: "text", isRequired: true },
       { id: 11, title: "Back", type: "text", isRequired: true },
@@ -482,6 +489,9 @@ describe("propose_cards output guard and mapper", () => {
     expect(isProposeCardsOutput({ decks: [] })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, deckId: 0 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, deckId: 1.5 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, templateId: 0 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, templateId: 1.5 })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, templateId: "1" })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, rejectedCount: 1.5 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, message: PROPOSE_CARDS_RETRY_MESSAGE })).toBe(true);
     expect(isProposeCardsOutput({ ...validOutput, message: 1 })).toBe(false);

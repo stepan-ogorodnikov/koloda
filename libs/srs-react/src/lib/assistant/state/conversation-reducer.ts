@@ -57,6 +57,7 @@ export type GenerationRun = {
   // unchanged; live chat runs set it when `propose_cards` first succeeds.
   // When present, persistence requires a positive int — malformed fails the row.
   writeTargetDeckId?: number;
+  writeTargetTemplateId?: number;
   error?: { message: string };
   startedAt: Date;
   elapsedSeconds: number | null;
@@ -257,6 +258,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.cardStatuses = {};
     run.toolCalls = [];
     run.writeTargetDeckId = undefined;
+    run.writeTargetTemplateId = undefined;
     run.templateFields = event.templateFields;
     run.startedAt = new Date();
     run.elapsedSeconds = null;
@@ -461,7 +463,7 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
 function applyProposeCardsToRun(draft: ConversationReducerState, runId: string, call: RunToolCall, output: unknown) {
   if (call.name !== "propose_cards") return;
   if (!isProposeCardsOutput(output)) return;
-  // INVARIANT: empty accept must not set writeTargetDeckId or templateFields.
+  // INVARIANT: empty accept must not set writeTargetDeckId, writeTargetTemplateId, or templateFields.
   if (output.cards.length === 0) return;
 
   const run = draft.runs[runId];
@@ -473,6 +475,7 @@ function applyProposeCardsToRun(draft: ConversationReducerState, runId: string, 
 
   if (run.writeTargetDeckId === undefined) {
     run.writeTargetDeckId = output.deckId;
+    run.writeTargetTemplateId = output.templateId;
     run.templateFields = output.templateFields.map((field) => ({
       id: field.id,
       title: field.title,

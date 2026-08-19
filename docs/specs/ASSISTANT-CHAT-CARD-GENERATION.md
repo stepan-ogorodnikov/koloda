@@ -37,7 +37,7 @@ It uses `get_deck_cards` only to inspect existing cards, for example to avoid du
 Field titles come from the deck list, not from listing cards.
 
 Each proposed card is a map of exact template field title to invented text.
-The write target is the deck id on that tool call, not the conversation's selected deck.
+The write target is the deck id and template id on that tool call, not the conversation's selected deck.
 
 An empty proposal does not create a review table.
 Invalid cards and cards past a 200-card cap are dropped from the accepted list.
@@ -104,10 +104,10 @@ Initially, all generated cards are selected.
 
 ## Adding Cards to Deck
 
-When the user presses the add button, the selected cards are transformed and sent to the write-target deck.
+When the user presses the add button, the selected cards are transformed and sent to the write-target deck with the write-target template.
 
-For a chat proposal, that deck is the one from `propose_cards`, not the conversation's selected deck.
-For a restored historical card-generation turn that never recorded a write target, add uses the conversation's selected deck.
+For a chat proposal, that deck and template are the ones from `propose_cards`, not the conversation's selected deck.
+For a restored historical card-generation turn that never recorded a write target, add uses the conversation's selected deck and that deck's template.
 
 Before the request is sent, all selected cards are marked as pending.
 On success, each card is individually marked as success or error based on the per-card result from the server.
@@ -121,6 +121,7 @@ The add button is disabled when:
 - Cards are currently being added
 - No cards are selected
 - There is no write-target deck
+- There is no write-target template
 
 ## Conversation History
 
