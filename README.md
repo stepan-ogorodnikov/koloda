@@ -11,7 +11,7 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 ### Prerequisites
 
 - [Bun](https://bun.sh)
-- [Rust toolchain](https://rustup.rs) (1.80.0+)
+- [Rust toolchain](https://rustup.rs) (1.81.0+)
 
 ```bash
 bun install
@@ -69,6 +69,7 @@ libs/
   ai-react/               # AI features React UI
   app/                    # Generic app infrastructure (error types, utilities, interface settings)
   app-react/              # App shell, routing, settings UI, global hooks
+  assistant/              # Assistant application layer (run execution, save scheduling)
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
   srs/                    # SRS domain logic
   srs-pgsql/              # PostgreSQL backend (web)
