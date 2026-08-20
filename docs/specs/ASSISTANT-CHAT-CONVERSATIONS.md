@@ -318,7 +318,7 @@ Revert is a visual action.
 It hides the target user message and everything after it from the UI.
 The hidden messages are only actually deleted when the user submits a new prompt.
 The user can also restore a reverted conversation, bringing the hidden messages back.
-Full behavior is specified in MESSAGES.md (§Reverting the Conversation).
+Full behavior is specified in ASSISTANT-CHAT-MESSAGES.md (§Reverting the Conversation).
 
 ### Revert State
 
