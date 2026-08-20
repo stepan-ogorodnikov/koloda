@@ -23,6 +23,7 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
 - Reasoning levels: `providers/openrouter.ts` (API-provided); `providers/openai-compatible.ts` hardcodes deepseek-* / mimo-* via `resolveReasoningLevelsForModel` (Opencode Go/Zen).
+- Reasoning extraction: `model-reasoning-extraction.ts` — `wrapModelWithReasoningExtraction` strips ` thinking`-tagged chain-of-thought from the text stream.
 - Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` by `profileId`). Hosts implement; shared React injects via `aiRuntimeAtom`.
 - Compatibility: `types.ts` re-exports the domain modules above; prefer importing from the specific files.
 

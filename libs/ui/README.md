@@ -15,6 +15,8 @@ Depends on `@koloda/app` (`ERROR_MESSAGES`, form error types) and `@koloda/core-
 - Form & overlay primitives: `primitives/form/`, `primitives/overlay/` — RAC-backed controls, dialogs, popovers, tooltips.
 - Table & misc primitives: `primitives/table/`, tabs, select, search-field, link, dnd, animations.
 - Core helpers: `core/focus.ts`, `core/hotkeys.ts` — focus and keyboard matching.
+- Icons: `icons/` — `cards-icon`, `check-icon`, `circular-progress`.
+- Types: `types.ts` — Tailwind Variants prop helpers (`TWVProp`, `TWVProps`).
 - App chrome widgets: `ui/` — titlebar, hotkey recorder, query loading/error, delete dialog, not-found.
 - Hooks: `hooks/use-motion-settings`, `use-route-focus`, `use-scrolled-past`.
 
