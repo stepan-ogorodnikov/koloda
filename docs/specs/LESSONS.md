@@ -28,6 +28,7 @@ Closing the dialog clears the session.
 - **Current card** — the card being studied, with its template layout, answer form, and grade options
 - **Progress** — how many cards of each type are done versus still pending in this session
 - **Upload queue** — graded results waiting to be saved, one at a time
+- **Phase** — the current stage of the lesson: closed, preparing, configuring, loading-cards, studying, or finished
 
 Relationships:
 
@@ -60,10 +61,32 @@ Opening a lesson disables navigation hotkeys for the duration of the dialog.
 Closing the lesson restores them and refreshes the available counts and today's review totals.
 
 While the lesson dialog is open, Escape and the "Close popover" hotkey have the same effect.
-What that effect is depends on the current phase (init, studying, or completion).
+What that effect is depends on the current phase.
 
 Only one lesson dialog can be active.
 If a lesson is already open, a second start request is ignored.
+
+## Phases
+
+A lesson moves through six phases: closed, preparing, configuring, loading-cards, studying, and finished.
+
+- **closed** — no lesson is open.
+  It is the resting state before opening and after closing.
+- **preparing** — the dialog has opened and the app is loading the available counts and today's review totals.
+  The dialog shows its title and no content yet.
+- **configuring** — the init screen is shown with the loaded counts.
+  The user edits the amounts for the lesson.
+- **loading-cards** — the user pressed Start and the cards for the chosen amounts are being loaded.
+- **studying** — the cards are shown and graded one by one.
+- **finished** — every card has been graded and the completion screen is shown.
+
+Escape, the "Close popover" hotkey, and the dialog close control all close or interrupt the lesson.
+The effect depends on the phase.
+
+- In **preparing** and **configuring**, the dialog closes immediately.
+  The lesson does not start.
+- In **loading-cards** and **studying**, the dialog asks for confirmation before closing.
+- In **finished**, the dialog closes immediately.
 
 ## Init
 
@@ -221,14 +244,14 @@ Escape or "Close popover" also closes the dialog.
 
 ## Early Termination
 
-During studying, closing the lesson requires confirmation.
+While cards are loading or being studied, closing the lesson requires confirmation.
 That includes the dialog close control, Escape, and "Close popover".
 
 The confirmation offers "Continue studying" or "Close".
 "Continue studying" dismisses the confirmation and leaves the current card as it was.
 "Close" ends the lesson immediately.
 
-On the init and completion screens, close, Escape, and "Close popover" end the lesson without that confirmation.
+In the preparing, configuring, and finished phases, close, Escape, and "Close popover" end the lesson without that confirmation.
 
 Ending a lesson mid-study does not undo grades that already uploaded successfully.
 Cards that were graded but not yet uploaded are discarded with the cleared session state.
