@@ -1,10 +1,5 @@
 import type { AssistantSettings as AssistantSettingsType } from "@koloda/ai";
-import {
-  assistantSettingsFormSchema,
-  assistantSettingsValidation,
-  compilePromptTemplate,
-  DEFAULT_CHAT_PROMPT_TEMPLATE,
-} from "@koloda/ai";
+import { assistantSettingsFormSchema, assistantSettingsValidation, DEFAULT_CHAT_PROMPT_TEMPLATE } from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Label, Slider, useAppForm } from "@koloda/ui";
@@ -12,7 +7,7 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { AssistantSettingsPromptEditor } from "./assistant-settings-prompt-editor";
 
 export function AssistantSettings() {
@@ -55,10 +50,6 @@ export function AssistantSettings() {
     if (data) form.reset();
   }, [data, form]);
 
-  const chatPromptTemplate = form.getFieldValue("chatPromptTemplate") ?? DEFAULT_CHAT_PROMPT_TEMPLATE;
-
-  const chatPreview = useMemo(() => compilePromptTemplate(chatPromptTemplate), [chatPromptTemplate]);
-
   return (
     <form
       className="self-center grow flex flex-col gap-6 w-full max-w-3xl px-2"
@@ -76,7 +67,6 @@ export function AssistantSettings() {
             maxRows={6}
             templateValue={field.state.value}
             defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
-            preview={chatPreview}
             onChange={field.handleChange}
           />
         )}

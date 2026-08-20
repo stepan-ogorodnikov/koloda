@@ -12,9 +12,3 @@ export const DEFAULT_CHAT_PROMPT_TEMPLATE = [
   "Call get_deck_cards only to inspect existing cards, for example to avoid duplicates. Field titles come from list_decks, not from listing cards.",
   "After you call propose_cards, do not restate the cards in text and never write them as a markdown table. The app shows accepted cards as a review table. If the tool accepts 0 cards, call propose_cards again in this turn with cards[].fields keyed by the exact titles in the tool result. A short note that does not dump field values is fine. New cards appear only when you call propose_cards.",
 ].join("\n");
-
-// WHY: preview and run share one compile. Placeholders are gone; leftover
-// `{{fields}}` in a saved custom prompt stays as written.
-export function compilePromptTemplate(template: string): string {
-  return template.trim();
-}

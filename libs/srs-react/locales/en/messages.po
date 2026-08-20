@@ -304,18 +304,8 @@ msgstr "Working"
 msgid "assistant.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:40
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:47
-msgid "assistant.settings.prompt.edit"
-msgstr "Edit"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:40
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:47
-msgid "assistant.settings.prompt.preview"
-msgstr "Preview"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:60
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:63
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:33
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:36
 msgid "assistant.settings.prompt.reset"
 msgstr "Reset"
 

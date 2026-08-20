@@ -5,7 +5,7 @@ import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, wrapAIError } from "./error";
 import type { ChatStreamRequest, Message } from "./generation";
 import type { StreamUsage } from "./models";
-import { compilePromptTemplate, DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
 
@@ -37,7 +37,8 @@ async function runChatStream(
     model: wrapModelWithReasoningExtraction(modelFactory(request.input.modelId)),
 
     temperature: resolveGenerationTemperature(request.input.temperature),
-    system: compilePromptTemplate(request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE),
+    // WHY: empty custom prompts are allowed; trim so whitespace-only is sent empty.
+    system: (request.systemPromptTemplate ?? DEFAULT_CHAT_PROMPT_TEMPLATE).trim(),
     messages: request.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     abortSignal,
     // WHY: multi-step only exists for tool runs; stopWhen keeps them bounded. Without
