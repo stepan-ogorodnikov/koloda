@@ -22,11 +22,12 @@ The listed files are relative to the repo root.
 | --- | --- |
 | Any TS or React edit | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
 | Edit touches `className` | add `agents/CSS.md` |
-| Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Assistant chat (anything) | `agents/ASSISTANT-CHAT-MAP.md` (it routes to the specs and files) |
+| SRS behavior change (cards, decks, lessons, grading, templates, algorithms, learning settings) | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md` |
-| Add a hotkey | `agents/ADD-HOTKEY.md`, `agents/I18N.md` |
+| Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Write or update a functional spec | `agents/ADD-FUNCTIONAL-SPECIFICATION.md`, `agents/MARKDOWN.md` |
 | Write or update an ADR (new area decision) | `docs/adr/README.md`, `agents/MARKDOWN.md` |
 | Write or update any markdown | `agents/MARKDOWN.md` |
@@ -40,11 +41,12 @@ Then add the same guides the author used for that change type, so the reviewer a
 | --- | --- |
 | Any diff | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
 | Diff touches `className` | add `agents/CSS.md` |
-| Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Assistant chat diff | `agents/ASSISTANT-CHAT-MAP.md` (+ the spec it names) |
+| SRS behavior diff | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
 | Theme diff | `agents/ADD-COLOR-THEME.md` |
-| Hotkey diff | `agents/ADD-HOTKEY.md`, `agents/I18N.md` |
+| Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 
 ## Always-available background
 
