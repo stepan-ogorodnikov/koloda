@@ -4,7 +4,7 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
-    GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals, TodaysReviewTotalsMeta,
+    calculate_todays_review_totals, GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals,
 };
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_learning::LearningSettings;
@@ -101,53 +101,10 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         let (from, to) = current_learning_day_range(&learning_settings.day_starts_at)?;
         let review_totals = get_review_totals(db, GetReviewTotalsParams { from, to })?;
 
-        let daily_limits = learning_settings.daily_limits.clone();
-        let counted_total = [
-            (daily_limits.untouched.counts, review_totals.untouched),
-            (daily_limits.learn.counts, review_totals.learn),
-            (daily_limits.review.counts, review_totals.review),
-        ]
-        .into_iter()
-        .fold(
-            0_i64,
-            |total, (counts, value)| {
-                if counts {
-                    total + value
-                } else {
-                    total
-                }
-            },
-        );
-        let review_totals = ReviewTotals {
-            total: counted_total,
-            ..review_totals
-        };
-
-        let meta = TodaysReviewTotalsMeta {
-            is_untouched_over_the_limit: review_totals.untouched > 0
-                && (review_totals.untouched > i64::from(daily_limits.untouched.value)
-                    || (daily_limits.total > 0
-                        && daily_limits.untouched.counts
-                        && review_totals.total >= i64::from(daily_limits.total))),
-            is_learn_over_the_limit: review_totals.learn > 0
-                && (review_totals.learn > i64::from(daily_limits.learn.value)
-                    || (daily_limits.total > 0
-                        && daily_limits.learn.counts
-                        && review_totals.total >= i64::from(daily_limits.total))),
-            is_review_over_the_limit: review_totals.review > 0
-                && (review_totals.review > i64::from(daily_limits.review.value)
-                    || (daily_limits.total > 0
-                        && daily_limits.review.counts
-                        && review_totals.total >= i64::from(daily_limits.total))),
-            is_total_over_the_limit: daily_limits.total > 0
-                && review_totals.total > 0
-                && review_totals.total >= i64::from(daily_limits.total),
-        };
-
-        Ok(TodaysReviewTotals {
-            daily_limits,
+        // Counted-total fold + over-limit meta are product policy — delegated to domain.
+        Ok(calculate_todays_review_totals(
             review_totals,
-            meta,
-        })
+            learning_settings.daily_limits,
+        ))
     })
 }

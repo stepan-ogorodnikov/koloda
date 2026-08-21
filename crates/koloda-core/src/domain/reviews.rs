@@ -103,6 +103,75 @@ pub struct TodaysReviewTotals {
     pub meta: TodaysReviewTotalsMeta,
 }
 
+/// Pure daily-limit policy — mirrors `@koloda/srs` `calculateTodaysReviewTotals`.
+///
+/// Replaces `review_totals.total` with the sum of buckets whose limit type has
+/// `counts = true`, then derives the over-limit flags against those normalized
+/// totals. Keep in sync with the TS implementation when limits policy changes.
+pub fn calculate_todays_review_totals(
+    mut review_totals: ReviewTotals,
+    daily_limits: DailyLimits,
+) -> TodaysReviewTotals {
+    // INVARIANT: only buckets whose limit has `counts = true` contribute to
+    // `total`, so "today's total" ignores non-counted types.
+    review_totals.total = [
+        (daily_limits.untouched.counts, review_totals.untouched),
+        (daily_limits.learn.counts, review_totals.learn),
+        (daily_limits.review.counts, review_totals.review),
+    ]
+    .into_iter()
+    .fold(
+        0_i64,
+        |total, (counts, value)| {
+            if counts {
+                total + value
+            } else {
+                total
+            }
+        },
+    );
+
+    let meta = TodaysReviewTotalsMeta {
+        is_untouched_over_the_limit: is_bucket_over_the_limit(
+            daily_limits.untouched.counts,
+            review_totals.untouched,
+            daily_limits.untouched.value,
+            review_totals.total,
+            daily_limits.total,
+        ),
+        is_learn_over_the_limit: is_bucket_over_the_limit(
+            daily_limits.learn.counts,
+            review_totals.learn,
+            daily_limits.learn.value,
+            review_totals.total,
+            daily_limits.total,
+        ),
+        is_review_over_the_limit: is_bucket_over_the_limit(
+            daily_limits.review.counts,
+            review_totals.review,
+            daily_limits.review.value,
+            review_totals.total,
+            daily_limits.total,
+        ),
+        is_total_over_the_limit: daily_limits.total > 0
+            && review_totals.total > 0
+            && review_totals.total >= i64::from(daily_limits.total),
+    };
+
+    TodaysReviewTotals {
+        daily_limits,
+        review_totals,
+        meta,
+    }
+}
+
+// INVARIANT: a limit value of 0 is "no cap", not a hard zero; a bucket is over
+// its own limit strictly above it, and over the shared Total only when it counts
+// toward Total and the (non-zero) Total is reached (`>=`, matching TS).
+fn is_bucket_over_the_limit(counted: bool, bucket: i64, bucket_limit: u32, total: i64, total_limit: u32) -> bool {
+    bucket > 0 && (bucket > i64::from(bucket_limit) || (total_limit > 0 && counted && total >= i64::from(total_limit)))
+}
+
 fn validate_rating(rating: i32) -> Result<(), AppError> {
     if !(RATING_MIN..=RATING_MAX).contains(&rating) {
         return Err(AppError::new(
