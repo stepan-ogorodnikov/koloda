@@ -1,10 +1,11 @@
-use rusqlite::{params, Row};
+use rusqlite::{params, Connection, Row};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
-    calculate_todays_review_totals, GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals,
+    calculate_todays_review_totals, GetReviewTotalsParams, GetReviewsData, InsertReviewData, Review, ReviewTotals,
+    TodaysReviewTotals,
 };
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_learning::LearningSettings;
@@ -26,6 +27,37 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
         is_ignored: row.get(10)?,
         created_at: row.get(11)?,
     })
+}
+
+// WHY pub(crate): no NAPI `cmd_*` needs a direct review insert today — the only
+// writer is `submit_lesson_result`, which calls this inside its own transaction.
+// Keeping it internal mirrors the seed helpers (`insert_algorithm`, …) so the
+// public repo surface stays read-side until a real second writer appears.
+// INVARIANT: callers validate `data` (see `InsertReviewData::validate`) and wrap
+// errors with their own operation code; this helper is a raw write primitive.
+pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64) -> Result<i64, AppError> {
+    conn.execute(
+        r#"
+        INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
+                            scheduled_days, learning_steps, time, is_ignored, created_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+        "#,
+        params![
+            data.card_id,
+            data.rating,
+            data.state,
+            data.due_at,
+            data.stability,
+            data.difficulty,
+            data.scheduled_days,
+            data.learning_steps,
+            data.time,
+            data.is_ignored,
+            now
+        ],
+    )?;
+
+    Ok(conn.last_insert_rowid())
 }
 
 pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, AppError> {

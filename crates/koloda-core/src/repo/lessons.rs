@@ -10,6 +10,7 @@ use crate::domain::lessons::{
 };
 use crate::repo::cards::get_card_row;
 use crate::repo::fsrs_sql;
+use crate::repo::reviews;
 
 fn get_lesson_deck_row(row: &Row) -> Result<LessonDeck, rusqlite::Error> {
     Ok(LessonDeck {
@@ -278,26 +279,9 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
                 ],
             )?;
 
-            tx.execute(
-                r#"
-                INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                    scheduled_days, learning_steps, time, is_ignored, created_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
-                "#,
-                rusqlite::params![
-                    data.review.card_id,
-                    data.review.rating,
-                    data.review.state,
-                    data.review.due_at,
-                    data.review.stability,
-                    data.review.difficulty,
-                    data.review.scheduled_days,
-                    data.review.learning_steps,
-                    data.review.time,
-                    data.review.is_ignored,
-                    now
-                ],
-            )?;
+            // Review INSERT SQL lives in `reviews::insert_review` — single home for
+            // review writes so future writers reuse the same statement.
+            reviews::insert_review(tx, &data.review, now)?;
 
             Ok(())
         })
