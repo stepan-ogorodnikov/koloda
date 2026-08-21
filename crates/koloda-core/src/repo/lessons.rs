@@ -3,12 +3,13 @@ use rusqlite::Row;
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
-use crate::domain::cards::{Card, CardState};
+use crate::domain::cards::Card;
 use crate::domain::lessons::{
     GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonData, LessonDeck, LessonResultData, LessonTemplate,
     LessonTemplateLayoutItem, LessonsResult,
 };
 use crate::repo::cards::get_card_row;
+use crate::repo::fsrs_sql;
 
 fn get_lesson_deck_row(row: &Row) -> Result<LessonDeck, rusqlite::Error> {
     Ok(LessonDeck {
@@ -51,9 +52,9 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
                 SELECT
                     d.id,
                     d.title,
-                    COALESCE(SUM(CASE WHEN c.state = {new} THEN 1 END), 0) AS untouched,
-                    COALESCE(SUM(CASE WHEN c.state IN ({learning}, {relearning}) AND c.due_at < {due_at_param} THEN 1 END), 0) AS learn,
-                    COALESCE(SUM(CASE WHEN c.state = {review} AND c.due_at < {due_at_param} THEN 1 END), 0) AS review
+                    COALESCE(SUM(CASE WHEN {untouched} THEN 1 END), 0) AS untouched,
+                    COALESCE(SUM(CASE WHEN {learn_due} THEN 1 END), 0) AS learn,
+                    COALESCE(SUM(CASE WHEN {review_due} THEN 1 END), 0) AS review
                 FROM decks d
                 LEFT JOIN cards c ON c.deck_id = d.id
                 {filters}
@@ -63,10 +64,9 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
             FROM per_deck
             ORDER BY id
             "#,
-                new = CardState::New.as_i32(),
-                learning = CardState::Learning.as_i32(),
-                relearning = CardState::Relearning.as_i32(),
-                review = CardState::Review.as_i32(),
+                untouched = fsrs_sql::eq_new("c.state"),
+                learn_due = format_args!("{} AND c.due_at < {}", fsrs_sql::in_learn("c.state"), due_at_param),
+                review_due = format_args!("{} AND c.due_at < {}", fsrs_sql::eq_review("c.state"), due_at_param),
             );
 
             let sql_params: Vec<&dyn rusqlite::ToSql> =
@@ -133,7 +133,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = {new}{filters_untouched}
+                WHERE {untouched}{filters_untouched}
                 ORDER BY created_at
                 LIMIT {limit_untouched_param}
             )
@@ -145,7 +145,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state IN ({learning}, {relearning}) AND due_at < {due_at_param} {filters_learn}
+                WHERE {learn_due}{filters_learn}
                 ORDER BY due_at
                 LIMIT {limit_learn_param}
             )
@@ -157,15 +157,14 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                        scheduled_days, learning_steps, reps, lapses, last_reviewed_at,
                        created_at, updated_at
                 FROM cards
-                WHERE state = {review} AND due_at < {due_at_param} {filters_review}
+                WHERE {review_due}{filters_review}
                 ORDER BY due_at
                 LIMIT {limit_review_param}
             )
             "#,
-                new = CardState::New.as_i32(),
-                learning = CardState::Learning.as_i32(),
-                relearning = CardState::Relearning.as_i32(),
-                review = CardState::Review.as_i32(),
+                untouched = fsrs_sql::eq_new("state"),
+                learn_due = format_args!("{} AND due_at < {}", fsrs_sql::in_learn("state"), due_at_param),
+                review_due = format_args!("{} AND due_at < {}", fsrs_sql::eq_review("state"), due_at_param),
             );
 
             let sql_params: Vec<&dyn rusqlite::ToSql> =

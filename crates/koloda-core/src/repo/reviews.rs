@@ -2,13 +2,13 @@ use rusqlite::{params, Row};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::domain::cards::CardState;
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
     GetReviewTotalsParams, GetReviewsData, Review, ReviewTotals, TodaysReviewTotals, TodaysReviewTotalsMeta,
 };
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_learning::LearningSettings;
+use crate::repo::fsrs_sql;
 use crate::repo::settings as settings_repo;
 
 fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
@@ -60,19 +60,19 @@ pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result
                 &format!(
                     r#"
                 SELECT
-                    COUNT(*) FILTER (WHERE state = {new}) AS untouched,
-                    COUNT(*) FILTER (WHERE state IN ({learning}, {relearning}) AND created_at < ?2) AS learn,
-                    COUNT(*) FILTER (WHERE state = {review} AND created_at < ?2) AS review,
-                    COUNT(*) FILTER (WHERE state IN ({new}, {learning}, {review}, {relearning}) AND created_at < ?2) AS total
+                    COUNT(*) FILTER (WHERE {untouched}) AS untouched,
+                    COUNT(*) FILTER (WHERE {learn_due}) AS learn,
+                    COUNT(*) FILTER (WHERE {review_due}) AS review,
+                    COUNT(*) FILTER (WHERE {total_due}) AS total
                 FROM reviews
                 WHERE is_ignored = 0
                   AND created_at >= ?1
                   AND created_at < ?2
                 "#,
-                    new = CardState::New.as_i32(),
-                    learning = CardState::Learning.as_i32(),
-                    relearning = CardState::Relearning.as_i32(),
-                    review = CardState::Review.as_i32(),
+                    untouched = fsrs_sql::eq_new("state"),
+                    learn_due = format_args!("{} AND created_at < ?2", fsrs_sql::in_learn("state")),
+                    review_due = format_args!("{} AND created_at < ?2", fsrs_sql::eq_review("state")),
+                    total_due = format_args!("{} AND created_at < ?2", fsrs_sql::in_all_tracked("state")),
                 ),
                 params![params.from, params.to],
                 |row| {

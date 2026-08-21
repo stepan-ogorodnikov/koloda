@@ -13,6 +13,7 @@ use crate::domain::templates::Template;
 use std::collections::HashMap;
 
 use crate::repo::decks::{get_deck, get_decks_by_ids};
+use crate::repo::fsrs_sql;
 use crate::repo::templates::{get_template, get_templates_by_ids};
 
 pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
@@ -302,12 +303,12 @@ pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result
                 &format!(
                     r#"
                 UPDATE cards
-                SET state = {new}, due_at = NULL, stability = 0, difficulty = 0,
+                SET {reset_to_new}, due_at = NULL, stability = 0, difficulty = 0,
                     scheduled_days = 0, learning_steps = 0, reps = 0, lapses = 0,
                     last_reviewed_at = NULL, updated_at = ?1
                 WHERE id = ?2
                 "#,
-                    new = CardState::New.as_i32(),
+                    reset_to_new = fsrs_sql::eq_state("state", CardState::New),
                 ),
                 params![now, data.id],
             )?;
