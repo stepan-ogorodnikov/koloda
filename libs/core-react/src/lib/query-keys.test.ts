@@ -14,10 +14,22 @@ describe("queryKeys", () => {
   });
 
   it("builds stable card and deck keys", () => {
+    expect(queryKeys.cards.all()).toEqual(["cards"]);
     expect(queryKeys.cards.deck({ deckId: 9 })).toEqual(["cards", "9"]);
     expect(queryKeys.cards.detail(9)).toEqual(["cards", "9"]);
     expect(queryKeys.decks.all()).toEqual(["decks"]);
     expect(queryKeys.decks.detail(9)).toEqual(["decks", "9"]);
+  });
+
+  it("normalizes missing lesson filters so invalidations match no-arg queries", () => {
+    expect(queryKeys.lessons.all()).toStrictEqual(["lessons", { filters: {} }]);
+    expect(queryKeys.lessons.all({})).toStrictEqual(["lessons", { filters: {} }]);
+    expect(queryKeys.lessons.all(undefined)).toStrictEqual(["lessons", { filters: {} }]);
+  });
+
+  it("builds usage-count prefixes for deck guards", () => {
+    expect(queryKeys.algorithms.decksAll()).toEqual(["algorithm_decks"]);
+    expect(queryKeys.templates.decksAll()).toEqual(["template_decks"]);
   });
 
   it("builds stable conversation, lesson, review, settings, and template keys", () => {

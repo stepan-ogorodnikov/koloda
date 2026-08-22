@@ -51,6 +51,12 @@ export function AppProviders({ store, basepath, history, activateLanguage, getLa
         defaultOptions: {
           queries: {
             retry: false,
+            // WHY: all data lives in a local database and changes only through
+            // explicit mutations, which invalidate the affected queries. Without
+            // a staleTime every (re)mounting observer considers data stale and
+            // refetches, replacing cached object identities and triggering
+            // re-render cascades across consumers of the same query.
+            staleTime: 60_000,
           },
         },
       }),

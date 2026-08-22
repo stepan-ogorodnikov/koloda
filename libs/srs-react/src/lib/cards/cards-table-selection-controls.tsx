@@ -47,6 +47,7 @@ export function CardsTableSelectionControls({
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
           setIsOpen(false);
           onClearSelection();
         },

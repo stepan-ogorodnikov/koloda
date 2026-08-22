@@ -18,8 +18,12 @@ export const queryKeys = {
     all: () => ["algorithms"] as const,
     detail: (id: Algorithm["id"]) => ["algorithms", String(id)] as const,
     decks: (id: Algorithm["id"]) => ["algorithm_decks", String(id)] as const,
+    // WHY: deck mutations change which decks reference any algorithm; invalidate
+    // every per-algorithm deck list via this prefix.
+    decksAll: () => ["algorithm_decks"] as const,
   },
   cards: {
+    all: () => ["cards"] as const,
     deck: ({ deckId }: GetCardsParams) => ["cards", String(deckId)] as const,
     detail: (id: Deck["id"]) => ["cards", String(id)] as const,
   },
@@ -32,7 +36,10 @@ export const queryKeys = {
     detail: (id: Deck["id"]) => ["decks", String(id)] as const,
   },
   lessons: {
-    all: (filters?: LessonFilters) => ["lessons", { filters }] as const,
+    // WHY: normalize missing filters to {} so invalidations like all() and all({})
+    // match queries created without arguments; otherwise staleTime keeps serving
+    // cached lesson lists that invalidations never reach.
+    all: (filters?: LessonFilters) => ["lessons", { filters: filters ?? {} }] as const,
     data: (params: GetLessonDataParams) => ["lesson_data", params] as const,
     todayReviewTotals: () => ["today_review_totals"] as const,
   },
@@ -47,5 +54,8 @@ export const queryKeys = {
     all: () => ["templates"] as const,
     detail: (id: Template["id"]) => ["templates", String(id)] as const,
     decks: (id: Template["id"]) => ["template_decks", String(id)] as const,
+    // WHY: deck mutations change which decks reference any template; invalidate
+    // every per-template deck list via this prefix.
+    decksAll: () => ["template_decks"] as const,
   },
 } as const;

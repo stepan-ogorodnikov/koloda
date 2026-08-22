@@ -27,6 +27,9 @@ export function useLessonClose(): UseLessonCloseResult {
     queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all(activeFilters) });
     queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
     queryClient.invalidateQueries({ queryKey: queryKeys.lessons.todayReviewTotals() });
+    // WHY: graded cards changed state/dueAt in the database; without this the deck
+    // cards table serves stale card rows until its own invalidation.
+    queryClient.invalidateQueries({ queryKey: queryKeys.cards.all() });
   }, [closeLessonState, queryClient, store]);
 
   return { closeLesson };

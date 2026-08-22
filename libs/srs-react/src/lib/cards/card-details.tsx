@@ -63,6 +63,7 @@ export function CardDetails({ card }: CardDetailsProps) {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId: card.deckId }) });
           queryClient.invalidateQueries({ queryKey: queryKeys.reviews.card({ cardId: card.id }) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
         },
       },
     );

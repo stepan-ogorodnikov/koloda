@@ -35,6 +35,7 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
         onSuccess: () => {
           setIsOpen(false);
           queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
         },
       },
     );

@@ -13,26 +13,27 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
     return [...ids].sort((a, b) => a - b);
   }, [cards, deckTemplateId]);
 
-  const templateQueries = useQueries({
+  // WHY: useQueries returns a fresh results array on every render; without `combine`
+  // the derived templates array would get a new identity each render and invalidate
+  // every memo consuming it (cards table columns), rebuilding cell DOM nonstop.
+  const { templates, isLoading } = useQueries({
     queries: templateIds.map((id) => getTemplateQuery(id)),
+    combine: (results) => ({
+      isLoading: results.some((result) => result.isLoading),
+      templates: results
+        .map((result) => result.data)
+        .filter((template): template is Template => template !== null && template !== undefined),
+    }),
   });
 
-  const templates = useMemo(
-    () => templateQueries.map((q) => q.data).filter((t): t is Template => t !== null && t !== undefined),
-    [templateQueries],
-  );
-
   const templateMapRef = useRef(new Map());
-  const currentMap = new Map(templates.map((t) => [t.id, t]));
-  templateMapRef.current = currentMap;
+  templateMapRef.current = new Map(templates.map((t) => [t.id, t]));
 
-  const isLoading = templateQueries.some((query) => query.isLoading);
   const isReady = !isLoading && templates.length === templateIds.length;
 
   return {
     templates,
     templateMapRef,
-    isLoading,
     isReady,
   };
 }
