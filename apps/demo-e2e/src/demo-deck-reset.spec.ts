@@ -40,9 +40,10 @@ test("discards changes to deck details and resets form to persisted state", asyn
   const detailsPanel = page.getByRole("tabpanel", { name: "Details", exact: true });
 
   // Verify initial default values
+  // New decks default to the seeded learning defaults: preset "Simple", template "Type".
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(deckTitle);
-  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Default");
-  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Default");
+  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Simple");
+  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Type");
 
   // Change all 3 fields
   const titleField = detailsPanel.getByRole("textbox", { name: "Title", exact: true });
@@ -67,6 +68,6 @@ test("discards changes to deck details and resets form to persisted state", asyn
 
   // Verify form reset to original persisted values
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(deckTitle);
-  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Default");
-  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Default");
+  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Simple");
+  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Type");
 });

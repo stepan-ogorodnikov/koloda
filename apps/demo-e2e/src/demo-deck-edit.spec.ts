@@ -41,9 +41,10 @@ test("edits deck title, algorithm, and template via the Details tab and verifies
   const detailsPanel = page.getByRole("tabpanel", { name: "Details", exact: true });
 
   // Verify initial default values (button accessible names are "{value} {label}")
+  // New decks default to the seeded learning defaults: preset "Simple", template "Type".
   await expect(detailsPanel.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(deckTitle);
-  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Default");
-  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Default");
+  await expect(detailsPanel.getByRole("button", { name: /Preset$/ })).toContainText("Simple");
+  await expect(detailsPanel.getByRole("button", { name: /Template$/ })).toContainText("Type");
 
   // Change title, algorithm, and template all at once
   const titleField = detailsPanel.getByRole("textbox", { name: "Title", exact: true });

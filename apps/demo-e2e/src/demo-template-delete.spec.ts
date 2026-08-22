@@ -33,9 +33,9 @@ test("deletes a template with no decks and redirects to /templates", async ({ pa
 test("prevents deleting a default template", async ({ page }) => {
   await setupDemo(page);
 
-  // Navigate to the default template
+  // Navigate to the seeded learning-default template
   await openSection(page, "Templates");
-  await page.getByRole("link", { name: "Default", exact: true }).click();
+  await page.getByRole("link", { name: "Type answer", exact: true }).click();
   await expect(page).toHaveURL(/\/templates\/\d+$/);
 
   // Verify delete trigger is disabled

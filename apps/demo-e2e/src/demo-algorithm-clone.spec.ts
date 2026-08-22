@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createAlgorithm, openSection, setupDemo, setupPageDefaults } from "./helpers";
+import { createAlgorithm, openSection, setSliderValue, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
@@ -8,16 +8,13 @@ test.beforeEach(async ({ page }) => {
 test("clones an existing algorithm and verifies copied parameters", async ({ page }) => {
   const sourceTitle = "E2E Source Algorithm";
   const clonedTitle = "E2E Cloned Algorithm";
-  const sourceRetention = "85";
+  const sourceRetention = 85;
 
   await setupDemo(page);
   await createAlgorithm(page, sourceTitle);
 
   // Modify algorithm before cloning
-  const retentionField = page.getByRole("textbox", { name: "Retention" });
-  await retentionField.click();
-  await retentionField.fill(sourceRetention);
-  await retentionField.blur();
+  await setSliderValue(page, "Retention", sourceRetention);
 
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
   await saveButton.scrollIntoViewIfNeeded();
@@ -45,7 +42,7 @@ test("clones an existing algorithm and verifies copied parameters", async ({ pag
   // Verify content
   await expect(page).toHaveURL(/\/algorithms\/\d+$/);
   await expect(page.getByRole("heading", { name: clonedTitle, exact: true })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Retention" })).toHaveValue(sourceRetention);
+  await expect(page.getByRole("slider", { name: "Retention" })).toHaveValue(String(sourceRetention));
 
   // Verify presence in the list of algorithms
   await openSection(page, "Presets");

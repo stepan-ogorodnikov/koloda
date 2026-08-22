@@ -20,7 +20,11 @@ test("locks template when card is added and unlocks when card is deleted", async
   await page.getByRole("tab", { name: "Details", exact: true }).click();
   await page.getByRole("button", { name: /Template$/ }).click();
   await page.getByRole("option", { name: templateTitle, exact: true }).click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
+  await expect(saveButton).toBeVisible();
+  await saveButton.click();
+  // Wait for the mutation to complete (Save button disappears via form reset)
+  await expect(saveButton).not.toBeVisible();
 
   // Ensure template isn't locked
   await openSection(page, "Templates");

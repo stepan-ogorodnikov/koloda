@@ -217,7 +217,8 @@ test("generates cards and locks the deck", async ({ page }) => {
 
     await sendAssistantMessage(page, "Make a card");
 
-    await expect(page.getByText("E2E front")).toBeVisible({ timeout: 20_000 });
+    // Exact match: the raw tool-call JSON payloads also quote the field text.
+    await expect(page.getByText("E2E front", { exact: true })).toBeVisible({ timeout: 20_000 });
 
     expect(mock.completionRequests).toBeGreaterThanOrEqual(1);
   } finally {

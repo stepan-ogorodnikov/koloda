@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createAlgorithm, setupDemo, setupPageDefaults } from "./helpers";
+import { createAlgorithm, getSliderValue, setSliderValue, setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
@@ -14,7 +14,7 @@ test("discards changes to algorithm details and resets form to persisted state",
 
   // Capture initial default values
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(algorithmTitle);
-  const initialRetention = await page.getByRole("textbox", { name: "Retention" }).inputValue();
+  const initialRetention = await getSliderValue(page, "Retention");
   const initialWeights = await page.getByRole("textbox", { name: "Weights" }).inputValue();
   const initialLearningStep = await page
     .getByRole("textbox", { name: "Amount for learning step number 1" })
@@ -31,10 +31,7 @@ test("discards changes to algorithm details and resets form to persisted state",
   await titleField.blur();
 
   // Change retention
-  const retentionField = page.getByRole("textbox", { name: "Retention" });
-  await retentionField.click();
-  await retentionField.fill("85");
-  await retentionField.blur();
+  await setSliderValue(page, "Retention", initialRetention === 95 ? 85 : 95);
 
   // Change weights
   const weightsField = page.getByRole("textbox", { name: "Weights" });
@@ -67,7 +64,7 @@ test("discards changes to algorithm details and resets form to persisted state",
 
   // Verify form reset to original persisted values
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(algorithmTitle);
-  await expect(page.getByRole("textbox", { name: "Retention" })).toHaveValue(initialRetention);
+  await expect(page.getByRole("slider", { name: "Retention" })).toHaveValue(String(initialRetention));
   await expect(page.getByRole("textbox", { name: "Weights" })).toHaveValue(initialWeights);
   await expect(page.getByRole("textbox", { name: "Amount for learning step number 1" })).toHaveValue(
     initialLearningStep,
