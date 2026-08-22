@@ -93,7 +93,10 @@ fn add_cards_rejects_missing_deck_per_item() {
     .expect("batch add should return per-item results");
 
     assert_eq!(result.len(), 1);
-    assert_eq!(result[0].error.as_deref(), Some(error_codes::NOT_FOUND_CARDS_ADD_DECK));
+    assert_eq!(
+        result[0].error.as_ref().map(|e| e.code.as_str()),
+        Some(error_codes::NOT_FOUND_CARDS_ADD_DECK)
+    );
 
     let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
     assert!(cards_after.is_empty(), "no card should be inserted for a missing deck");
@@ -145,6 +148,11 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
 
     assert!(results[0].error.is_none(), "first card should succeed");
     assert!(results[1].error.is_some(), "second card should fail");
+    assert_eq!(
+        results[1].error.as_ref().map(|e| e.code.as_str()),
+        Some(error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE),
+        "failure item must keep the structured error code"
+    );
 
     let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
     assert_eq!(

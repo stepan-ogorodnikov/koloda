@@ -1,5 +1,4 @@
-use crate::domain::cards::AddCardsItemResult;
-use crate::domain::cards::AddCardsResponse;
+use crate::domain::cards::{AddCardsItemError, AddCardsItemResult, AddCardsResponse};
 use rusqlite::{params, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
@@ -163,7 +162,10 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
         for card_data in data.into_iter() {
             if !decks.contains_key(&card_data.deck_id) {
                 results.push(AddCardsItemResult {
-                    error: Some(error_codes::NOT_FOUND_CARDS_ADD_DECK.to_string()),
+                    error: Some(AddCardsItemError {
+                        code: error_codes::NOT_FOUND_CARDS_ADD_DECK.to_string(),
+                        details: None,
+                    }),
                 });
                 continue;
             }
@@ -171,12 +173,15 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
             match templates.get(&card_data.template_id) {
                 Some(template) => match insert_card_data(db, &card_data, template) {
                     Ok(_) => results.push(AddCardsItemResult { error: None }),
-                    Err(e) => results.push(AddCardsItemResult {
-                        error: Some(format!("{}", e)),
-                    }),
+                    // WHY: keep the real AppError code/details — flattening to Display
+                    // would strip the code consumers translate.
+                    Err(e) => results.push(AddCardsItemResult { error: Some(e.into()) }),
                 },
                 None => results.push(AddCardsItemResult {
-                    error: Some(error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE.to_string()),
+                    error: Some(AddCardsItemError {
+                        code: error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE.to_string(),
+                        details: None,
+                    }),
                 }),
             }
         }

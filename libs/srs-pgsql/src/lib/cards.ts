@@ -1,4 +1,4 @@
-import { AppError, throwKnownError } from "@koloda/app";
+import { AppError, isAppError, throwKnownError } from "@koloda/app";
 import { cardRowSchema, getInsertCardSchema, getUpdateCardSchema } from "@koloda/srs";
 import type {
   Card,
@@ -6,6 +6,7 @@ import type {
   DeleteCardsData,
   GetCardsParams,
   InsertCardData,
+  InsertCardsItemError,
   InsertCardsResponse,
   ResetCardProgressData,
   UpdateCardData,
@@ -13,6 +14,7 @@ import type {
 import { eq, inArray } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
+import { ZodError } from "zod";
 import { assertRow, assertRowOrUndefined, assertRows } from "./parse-rows";
 import { cards, reviews } from "./schema";
 import { getTemplate, getTemplatesByIds } from "./templates";
@@ -46,6 +48,20 @@ export async function addCard(db: DB, data: InsertCardData) {
   });
 }
 
+function toInsertCardsItemError(e: unknown): InsertCardsItemError {
+  if (e instanceof ZodError) {
+    // WHY: zod issue messages carry AppError-catalog codes (see getCardContentValidation),
+    // so the first issue becomes the code and any remaining issues become details.
+    const [first, ...rest] = e.issues;
+    const details = rest.map((issue) => issue.message).join(", ");
+    return details ? { code: first?.message ?? "unknown", details } : { code: first?.message ?? "unknown" };
+  }
+  if (isAppError(e)) {
+    return e.details ? { code: e.code, details: e.details } : { code: e.code };
+  }
+  return { code: "unknown", details: e instanceof Error ? e.message : String(e) };
+}
+
 export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCardsResponse> {
   if (data.length === 0) return [];
 
@@ -58,7 +74,7 @@ export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCa
     const card = data[i];
     const template = templates.get(card.templateId);
     if (!template) {
-      results.push({ error: "not-found.cards.add.template" });
+      results.push({ error: { code: "not-found.cards.add.template" } });
       continue;
     }
     try {
@@ -67,7 +83,7 @@ export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCa
       await db.insert(cards).values(validated).returning();
       results.push({});
     } catch (e) {
-      results.push({ error: e instanceof Error ? e.message : String(e) });
+      results.push({ error: toInsertCardsItemError(e) });
     }
   }
 

@@ -56,7 +56,14 @@ export const insertCardSchema = cardValidation.omit({ id: true });
 
 export type InsertCardData = z.input<typeof insertCardSchema>;
 
-export type InsertCardsResponse = Array<{ error?: string }>;
+// Mirrors koloda-core `AddCardsItemResult`: success items omit `error`, failures
+// carry the structured `{ code, details? }` using AppError-catalog codes.
+export type InsertCardsItemError = {
+  code: string;
+  details?: string;
+};
+
+export type InsertCardsResponse = Array<{ error?: InsertCardsItemError }>;
 
 export function getUpdateCardSchema(template: Template) {
   const contentValidation = getCardContentValidation(template.content.fields);

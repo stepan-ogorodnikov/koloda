@@ -63,12 +63,13 @@ describe("cards repository integration", () => {
       },
     };
 
-    const result = await addCards(db, [validCard, invalidCard]);
+    const result = await addCards(db, [validCard, invalidCard, { ...validCard, templateId: 999_999 }]);
     const storedCards = await getCards(db, { deckId: deck.id });
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(3);
     expect(result[0]).toEqual({});
-    expect(result[1]?.error).toContain("validation.cards.content.field-empty");
+    expect(result[1]?.error).toEqual({ code: "validation.cards.content.field-empty" });
+    expect(result[2]?.error).toEqual({ code: "not-found.cards.add.template" });
     expect(storedCards).toHaveLength(1);
     expect(storedCards[0]?.content["1"]?.text).toBe("Front value");
   });

@@ -140,10 +140,32 @@ pub struct ResetCardProgressData {
     pub id: i64,
 }
 
+/// Per-item batch-add result — mirrors `@koloda/srs` `InsertCardsResponse`.
+///
+/// Success items omit `error` (serialize as `{}`); failures keep the structured
+/// `code`/`details` so consumers can translate codes instead of parsing strings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AddCardsItemResult {
-    pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<AddCardsItemError>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddCardsItemError {
+    pub code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<String>,
+}
+
+impl From<AppError> for AddCardsItemError {
+    fn from(err: AppError) -> Self {
+        Self {
+            code: err.code,
+            details: err.details,
+        }
+    }
 }
 
 pub type AddCardsResponse = Vec<AddCardsItemResult>;
