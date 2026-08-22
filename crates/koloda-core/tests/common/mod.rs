@@ -180,3 +180,85 @@ pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda_core::ap
         },
     }
 }
+
+pub fn valid_template_fields() -> [koloda_core::domain::templates::TemplateField; 2] {
+    use koloda_core::domain::templates::TemplateField;
+
+    [
+        TemplateField {
+            id: 1,
+            title: "Front".to_string(),
+            field_type: "text".to_string(),
+            is_required: true,
+        },
+        TemplateField {
+            id: 2,
+            title: "Back".to_string(),
+            field_type: "text".to_string(),
+            is_required: false,
+        },
+    ]
+}
+
+pub fn valid_card_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" },
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn empty_required_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "" },
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn missing_required_field_content() -> serde_json::Value {
+    json!({
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn empty_optional_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" },
+        "2": { "text": "" }
+    })
+}
+
+pub fn missing_optional_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" }
+    })
+}
+
+pub fn valid_card_progress_json() -> serde_json::Value {
+    json!({
+        "id": 1,
+        "state": 0,
+        "dueAt": 1000000000,
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "scheduledDays": 1,
+        "learningSteps": 0,
+        "reps": 0,
+        "lapses": 0,
+        "lastReviewedAt": null
+    })
+}
+
+pub fn valid_review_json() -> serde_json::Value {
+    json!({
+        "cardId": 1,
+        "rating": 1,
+        "state": 0,
+        "dueAt": null,
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "scheduledDays": 1,
+        "learningSteps": 0,
+        "time": 0,
+        "isIgnored": false
+    })
+}
