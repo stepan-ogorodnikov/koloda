@@ -26,6 +26,7 @@ The listed files are relative to the repo root.
 | Assistant chat (anything) | `agents/ASSISTANT-CHAT-MAP.md` (it routes to the specs and files) |
 | SRS behavior change (cards, decks, lessons, grading, templates, algorithms, learning settings) | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
+| Change inside `crates/koloda-core` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/CORE-CRATE.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md` |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Write or update a functional spec | `agents/ADD-FUNCTIONAL-SPECIFICATION.md`, `agents/MARKDOWN.md` |
@@ -45,6 +46,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Assistant chat diff | `agents/ASSISTANT-CHAT-MAP.md` (+ the spec it names) |
 | SRS behavior diff | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
+| koloda-core diff | `agents/CORE-CRATE.md`, `docs/adr/0001` |
 | Theme diff | `agents/ADD-COLOR-THEME.md` |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 
