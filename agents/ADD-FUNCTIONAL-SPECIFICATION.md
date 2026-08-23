@@ -49,6 +49,10 @@ Instead of "the system handles errors gracefully," describe: "if the stream fail
 
 Follow `agents/MARKDOWN.md`.
 
+Enumerate concrete values as lists, not prose.
+One value per item.
+State the default as a separate statement, not as a list annotation.
+
 ## Structure
 
 A functional specification typically covers:

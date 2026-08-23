@@ -79,7 +79,13 @@ Assistant messages dispatch to different displays based on metadata:
 - **no metadata**: the message content is rendered as-is.
 
 Status indicators appear below assistant messages.
-They show one of: pending (animated shimmer), success, canceled, interrupted, or failed.
+They show one of:
+
+- pending
+- success
+- canceled
+- interrupted
+- failed
 
 ## Message States
 
