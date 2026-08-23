@@ -60,7 +60,8 @@ Consult them yourself when a change crosses a boundary.
 - `agents/BACKWARDS-COMPATIBILITY.md` — deletion policy, no shims.
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist.
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why two DB engines exist.
-- `libs/*/README.md` — per-package "Where it sits" and "Does NOT own" boundaries.
+- `libs/*/README.md`, `apps/*/README.md` — per-package "Where it sits" and "Does NOT own" boundaries.
+- `apps/native-electron/IPC.md` — the desktop renderer ↔ main IPC channel contract.
 
 ## Rule to remember
 

@@ -1,7 +1,7 @@
 # Algorithms
 
 Covers algorithm presets: parameters, adding, cloning, editing, and deleting with a successor.
-Does not cover FSRS scheduling math, how grades update card state, or learning-settings UI.
+Does not cover FSRS scheduling math, how grades update card state, or learning settings UI.
 How decks pick an algorithm is covered lightly; deck management itself is not.
 
 ## What is an Algorithm
@@ -16,14 +16,14 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 
 - **Algorithm** — a titled FSRS preset
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
-- **Default algorithm** — the learning-settings default offered when creating a deck
+- **Default algorithm** — the learning settings default offered when creating a deck
 - **Successor** — another algorithm that takes over decks when one is deleted
 
 Relationships:
 
 - A deck stores an algorithm id and uses that algorithm's current parameters when grading.
 - Cards do not store an algorithm id of their own.
-- The learning-settings default algorithm cannot be deleted while it remains the default.
+- The learning settings default algorithm cannot be deleted while it remains the default.
 - At least one algorithm must remain; the last algorithm cannot be deleted.
 
 ## Parameters
@@ -86,7 +86,7 @@ On success the user is returned to the algorithms list.
 
 Delete is unavailable when either of these is true:
 
-- the algorithm is the learning-settings default
+- the algorithm is the learning settings default
 - it is the only algorithm left
 
 When no decks use the algorithm, confirm deletes it directly.
@@ -105,6 +105,6 @@ Deleting an algorithm does not delete decks or cards.
 - Weights must be exactly twenty-one numeric values separated by commas
 - Retention outside 70–99 cannot be saved
 - Maximum interval must be greater than zero
-- The default learning-settings algorithm can be edited, but it cannot be deleted while it remains the default
+- The default learning settings algorithm can be edited, but it cannot be deleted while it remains the default
 - Failed delete with decks does not partially reassign those decks
-- Changing the learning-settings default elsewhere is what makes a former default deletable again
+- Changing the learning settings default elsewhere is what makes a former default deletable again

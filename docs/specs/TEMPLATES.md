@@ -1,7 +1,7 @@
 # Templates
 
 Covers template structure, fields, layout, locking, adding, cloning, editing, and deleting.
-Does not cover how cards store content, how lessons render fields during study, or learning-settings defaults UI.
+Does not cover how cards store content, how lessons render fields during study, or learning settings defaults UI.
 
 ## What is a Template
 
@@ -113,7 +113,7 @@ On success the user is returned to the templates list.
 Delete is unavailable when any of these is true:
 
 - the template is locked (cards still use it)
-- the template is the learning-settings default template
+- the template is the learning settings default template
 - any deck currently uses the template
 
 Each blocked reason is explained to the user.
@@ -127,4 +127,4 @@ Deleting a template does not delete decks or cards; those references must be cle
 - Unlocking happens only when the last card that used the template is deleted
 - A deck may point at a template that no longer matches the templates of its older cards
 - Layout may list a field more than once only if the editor allows it; each item still needs a valid field id
-- The default learning-settings template can be edited, but it cannot be deleted while it remains the default
+- The default learning settings template can be edited, but it cannot be deleted while it remains the default
