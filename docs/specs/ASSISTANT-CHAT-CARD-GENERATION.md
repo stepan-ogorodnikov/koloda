@@ -19,6 +19,22 @@ A request to pick or retrieve an existing card is not card generation.
 Card generation happens inside a chat run.
 It goes through the same lifecycle: streaming, success, failure, cancellation, or interruption.
 
+## Core Model
+
+- **Proposal** — the model's `propose_cards` call: a deck id plus invented cards keyed by field title
+- **Write target** — the deck and template of the run's accepted proposal
+- **Review table** — accepted cards on the assistant message, with selection and one column per field
+- **Card status** — idle, pending, success, or error; tracked per card
+- **Selection** — which idle cards the add button will send; all cards start selected
+
+Relationships:
+
+- Card generation happens inside a chat run; there is no separate mode.
+- The first accepted proposal sets the run's write target and field titles.
+- A later proposal for the same deck appends cards; one for a different deck is ignored for the table.
+- Add sends the selected cards to the write target and settles each card's status independently.
+- Only successfully generated cards are serialized into the conversation history.
+
 ## Card Structure
 
 Each proposed card has a value for each field in the target deck's template.

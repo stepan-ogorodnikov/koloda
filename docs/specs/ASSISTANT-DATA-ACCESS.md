@@ -23,6 +23,24 @@ Nothing about the user's decks is baked into the system prompt.
 There is no submit-time snapshot of decks or cards.
 Duplicate prevention is the model's choice to inspect existing cards through a tool before it proposes new ones.
 
+## Core Model
+
+- **Reach** — the app reads user data locally, when a tool runs
+- **Egress** — the tool result leaves the machine toward the provider, in the same run
+- **Tools** — `list_decks`, `get_deck_cards`, and `propose_cards`
+- **Tool activity** — the visible record of tool calls, kept on the run
+- **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
+- **Historical snapshot** — restore-only record on runs saved before tools; inert
+
+Relationships:
+
+- Data access is always on; every provider behaves the same.
+- Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
+- Reach happens when the tool runs; egress is its result sent back to the model.
+- Tool activity lives on the run, not in the history; later requests do not replay it.
+- A retried run calls tools again and sees current data.
+- Writes are not part of data access; cards are created only through the review flow.
+
 ## Resources
 
 The assistant reads decks.

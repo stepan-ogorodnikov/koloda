@@ -17,6 +17,24 @@ It becomes active when the user sends their first message.
 Every new run is chat.
 The model may propose cards during that run.
 
+## Core Model
+
+- **Conversation** — one thread with a name, a timestamp, its messages, runs, and AI profile state
+- **Message** — one half of an exchange; every user message is paired with an assistant message
+- **Run** — one AI request with a lifecycle: streaming, then success, failed, canceled, or interrupted
+- **AI profile state** — the profile, model, and model parameters; stored per conversation and once globally
+- **Write target** — the deck and template an accepted proposal targeted; kept per run
+- **Revert state** — in-memory only; hides messages from a past user message onward
+
+Relationships:
+
+- A user message, its assistant message, and their run form one turn.
+- Only one run can be active per conversation at a time.
+- A conversation persists as a single document; empty conversations are never saved.
+- The sidebar sorts conversations by run activity and shows working and unread indicators.
+- A new conversation's AI profile state is pre-filled from the global record and may diverge from then on.
+- Revert filters what the UI and the next request see; deletion happens only on the next submit.
+
 ## Conversation List
 
 Conversations are listed in the sidebar, sorted by most recently updated.

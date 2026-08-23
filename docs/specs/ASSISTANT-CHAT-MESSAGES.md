@@ -14,6 +14,24 @@ Messages are displayed as a scrollable list.
 The user scrolls through the history of exchanges.
 New messages appear at the bottom.
 
+## Core Model
+
+- **User message** — the submitted prompt text, shown as a bubble
+- **Assistant message** — the AI's response; created empty at run start and filled by the stream
+- **Turn** — one user message and its assistant message, tied to a single run
+- **Metadata kind** — chat-text or error; decides how an assistant message renders
+- **Status indicator** — pending, success, canceled, interrupted, or failed, shown below assistant messages
+- **Content parts** — typed message parts; text and reasoning render, tool calls and metadata show as lines
+- **Revert point** — the user message a revert targets; in-memory, at most one per conversation
+
+Relationships:
+
+- An assistant message inherits its state from its run.
+- A message pair maps to exactly one run; retry overwrites that pair in place.
+- The metadata kind picks the display; an error marker has empty text and shows a retry button.
+- A turn that proposed cards renders as tool activity, the review table, then leftover text.
+- Revert hides the target turn and everything after it; the data is removed only by the next submit.
+
 ## Message Types
 
 There are two types of messages: user messages and assistant messages.
