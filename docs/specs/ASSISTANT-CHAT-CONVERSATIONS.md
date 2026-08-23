@@ -329,6 +329,33 @@ Cloning is triggered from the conversation header's dots menu.
 The clone appears immediately in the sidebar, sorted by its new timestamp.
 The user is navigated to the cloned conversation.
 
+## Delete
+
+The user can delete a conversation from the sidebar.
+Each conversation row reveals a delete button on hover or keyboard focus.
+Clicking it opens a confirmation popover.
+
+### What Deletion Does
+
+The confirmation states the rule: "Delete this conversation? This cannot be undone."
+Confirming permanently removes the conversation, its messages, and its runs from the database.
+The row disappears from the sidebar.
+
+A run that is still streaming in the deleted conversation is canceled as part of deletion.
+Deletion coordinates with persistence so a late in-flight save cannot resurrect the row — see Concurrent Behavior.
+
+### Deleting the Open Conversation
+
+If the deleted conversation is the one currently open, the app starts a fresh empty conversation in its place.
+The new conversation's AI profile state is pre-filled from the global record, like any new conversation.
+The user is navigated to it immediately.
+
+### Failed Deletion
+
+If deleting fails, the confirmation popover shows the error in place of its message.
+The confirm button stays disabled until the popover is reopened, which resets the error.
+The conversation itself is unchanged.
+
 ## Revert
 
 The user can revert the conversation to the state it was in before any past user message.
