@@ -1,4 +1,4 @@
-import { createEmptyCard, Rating } from "ts-fsrs";
+import { createEmptyCard, Rating, State } from "ts-fsrs";
 import { describe, expect, it } from "vitest";
 import { algorithmFSRSValidation, createFSRSAlgorithm, DEFAULT_FSRS_ALGORITHM } from "./algorithms-fsrs";
 
@@ -69,6 +69,38 @@ describe("createFSRSAlgorithm", () => {
 
     expect(shortInterval).toBeLessThan(longInterval);
     expect(shortInterval).toBeLessThanOrEqual(15);
+  });
+
+  it("pins a new card graded Easy to Review with an eight-day interval", () => {
+    // WHY: Fuzz off so the interval math is deterministic and pinnable.
+    const instance = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });
+    const now = new Date("2026-08-24T12:00:00.000Z");
+    const card = createEmptyCard(now);
+
+    const easy = instance.repeat(card, now)[Rating.Easy].card;
+
+    expect(easy.state).toBe(State.Review);
+    expect(easy.scheduled_days).toBe(8);
+    expect(+easy.due - +now).toBe(8 * 86_400_000);
+    expect(easy.stability).toBeCloseTo(8.2956, 5); // initial stability w[3]
+    expect(easy.difficulty).toBe(1); // initial difficulty clamped to the [1, 10] floor
+  });
+
+  it("pins Again on a learning card to the first one-minute learning step", () => {
+    // WHY: Fuzz off so the interval math is deterministic and pinnable.
+    const instance = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });
+    const now = new Date("2026-08-24T12:00:00.000Z");
+    // Good on a new card leaves it in Learning, due at the second learning step (10m).
+    const learningCard = instance.repeat(createEmptyCard(now), now)[Rating.Good].card;
+    expect(learningCard.state).toBe(State.Learning);
+
+    const reviewedAt = learningCard.due;
+    const again = instance.repeat(learningCard, reviewedAt)[Rating.Again].card;
+
+    expect(again.state).toBe(State.Learning);
+    expect(+again.due - +reviewedAt).toBe(60_000);
+    expect(again.stability).toBeCloseTo(0.77508398, 5);
+    expect(again.difficulty).toBeCloseTo(7.39450274, 5);
   });
 
   it("uses fuzz setting from algorithm data", () => {
