@@ -21,7 +21,8 @@ type ElectronFixtures = {
 export const test = base.extend<ElectronFixtures>({
   // WHY: Playwright's fixture signature is `(parentFixtures, provide) => …`, so root fixtures must destructure an empty object.
   // Parameter is `provide` (not Playwright's usual `use`) so react/rules-of-hooks does not treat it as React `use`.
-  userDataDir: async ({}, provide) => { // oxlint-disable-line no-empty-pattern
+  // oxlint-disable-next-line no-empty-pattern
+  userDataDir: async ({}, provide) => {
     const dir = await mkdtemp(resolve(tmpdir(), "koloda-e2e-"));
     await provide(dir);
     await rm(dir, { recursive: true, force: true });

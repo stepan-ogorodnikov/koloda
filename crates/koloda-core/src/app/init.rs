@@ -89,9 +89,7 @@ fn get_settings_names(db: &Database) -> Result<Vec<String>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let mut stmt = conn.prepare("SELECT name FROM settings")?;
-            let names = stmt
-                .query_map([], |row| row.get(0))?
-                .collect::<Result<Vec<_>, _>>()?;
+            let names = stmt.query_map([], |row| row.get(0))?.collect::<Result<Vec<_>, _>>()?;
             Ok(names)
         })
     })
