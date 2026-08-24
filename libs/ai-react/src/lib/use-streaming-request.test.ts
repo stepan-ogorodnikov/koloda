@@ -474,34 +474,56 @@ describe("useStreamingRequest", () => {
   });
 
   describe("accumulation via ref", () => {
-    it("uses latest accumulate function even when captured at start", async () => {
+    it("uses the latest accumulate function for chunks emitted after a rerender swaps it mid-stream", async () => {
       let onChunkCaptured: ((chunk: string) => void) | undefined;
+      let resolveStream: (() => void) | undefined;
 
+      // Gated executor: keeps the stream open so the swap below happens mid-stream,
+      // not after completion.
       const executor = vi.fn((_request: string, onChunk: (chunk: string) => void) => {
         onChunkCaptured = onChunk;
-        return Promise.resolve(undefined);
+        return new Promise<string | undefined>((resolve) => {
+          resolveStream = () => resolve(undefined);
+        });
       });
 
-      const { result } = renderHook(() =>
-        useStreamingRequest<string, string, string, string | undefined>({
-          initialData: "",
-          accumulate: (prev, chunk) => prev + chunk,
-          executor,
-        }),
+      const { result, rerender } = renderHook(
+        ({ accumulate }: { accumulate: (prev: string, chunk: string) => string }) =>
+          useStreamingRequest<string, string, string, string | undefined>({
+            initialData: "",
+            accumulate,
+            executor,
+          }),
+        { initialProps: { accumulate: (prev: string, chunk: string) => prev + chunk } },
       );
 
       act(() => {
         result.current.start("request");
       });
 
+      expect(result.current.isRunning).toBe(true);
+
+      // Chunk while the original accumulate is current
       act(() => {
-        onChunkCaptured!("A");
+        onChunkCaptured!("a");
       });
+      expect(result.current.data).toBe("a");
+
+      // Swap accumulate via rerender while the stream is still running
+      rerender({ accumulate: (prev: string, chunk: string) => `${prev}[${chunk}]` });
+
+      // The next chunk must go through the NEW accumulate fn
       act(() => {
-        onChunkCaptured!("B");
+        onChunkCaptured!("b");
+      });
+      expect(result.current.data).toBe("a[b]");
+
+      await act(async () => {
+        resolveStream!();
       });
 
-      expect(result.current.data).toBe("AB");
+      expect(result.current.isRunning).toBe(false);
+      expect(result.current.data).toBe("a[b]");
     });
   });
 });
