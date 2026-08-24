@@ -64,6 +64,101 @@ describe("reviews", () => {
     });
   });
 
+  it("treats a zero total daily limit as no cap", async () => {
+    // A daily limit of zero means "no cap", not "hard zero" — mirrors the
+    // Rust zero_total_limit_is_no_cap rule.
+    const result = await calculateTodaysReviewTotals(
+      {
+        ...DEFAULT_LEARNING_SETTINGS,
+        dailyLimits: {
+          total: 0,
+          untouched: { value: 10, counts: true },
+          learn: { value: 10, counts: true },
+          review: { value: 10, counts: true },
+        },
+      },
+      { untouched: 5, learn: 5, review: 5, total: 0 },
+    );
+
+    expect(result.meta).toEqual({
+      isUntouchedOverTheLimit: false,
+      isLearnOverTheLimit: false,
+      isReviewOverTheLimit: false,
+      isTotalOverTheLimit: false,
+    });
+  });
+
+  it("does not flag a bucket exactly at its own limit", async () => {
+    // A bucket's own limit uses strictly-greater semantics.
+    const result = await calculateTodaysReviewTotals(
+      {
+        ...DEFAULT_LEARNING_SETTINGS,
+        dailyLimits: {
+          total: 100,
+          untouched: { value: 2, counts: true },
+          learn: { value: 50, counts: true },
+          review: { value: 50, counts: true },
+        },
+      },
+      { untouched: 2, learn: 0, review: 0, total: 0 },
+    );
+
+    expect(result.meta).toEqual({
+      isUntouchedOverTheLimit: false,
+      isLearnOverTheLimit: false,
+      isReviewOverTheLimit: false,
+      isTotalOverTheLimit: false,
+    });
+  });
+
+  it("flags counted buckets when the shared total reaches its limit", async () => {
+    // The shared total limit uses >= semantics: exactly at the limit is over.
+    // Every bucket is under its own limit of 2; only the shared total trips.
+    // (Bucket limits must be <= total here — settings validation rejects otherwise.)
+    const result = await calculateTodaysReviewTotals(
+      {
+        ...DEFAULT_LEARNING_SETTINGS,
+        dailyLimits: {
+          total: 3,
+          untouched: { value: 2, counts: true },
+          learn: { value: 2, counts: true },
+          review: { value: 2, counts: true },
+        },
+      },
+      { untouched: 1, learn: 1, review: 1, total: 0 },
+    );
+
+    expect(result.meta).toEqual({
+      isUntouchedOverTheLimit: true,
+      isLearnOverTheLimit: true,
+      isReviewOverTheLimit: true,
+      isTotalOverTheLimit: true,
+    });
+  });
+
+  it("never flags zero activity as over the limit", async () => {
+    const result = await calculateTodaysReviewTotals(
+      {
+        ...DEFAULT_LEARNING_SETTINGS,
+        dailyLimits: {
+          total: 1,
+          untouched: { value: 0, counts: true },
+          learn: { value: 0, counts: true },
+          review: { value: 0, counts: true },
+        },
+      },
+      { untouched: 0, learn: 0, review: 0, total: 0 },
+    );
+
+    expect(result.reviewTotals.total).toBe(0);
+    expect(result.meta).toEqual({
+      isUntouchedOverTheLimit: false,
+      isLearnOverTheLimit: false,
+      isReviewOverTheLimit: false,
+      isTotalOverTheLimit: false,
+    });
+  });
+
   it("maps fsrs review properties back to app review fields", () => {
     const result = createReviewFromReviewFSRS({
       rating: 3,
