@@ -138,3 +138,26 @@ fn test_lesson_result_all_states_valid() {
         assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
     }
 }
+
+// ============================================================================
+// LESSON RESULT DATA - CARD/REVIEW ID MATCH
+// ============================================================================
+
+#[test]
+fn test_lesson_result_card_review_id_mismatch_fails() {
+    // Both entities are individually valid; only their id link is broken.
+    // The mismatch rule must fire even when neither side has a validation
+    // error of its own.
+    let mut card = valid_card_progress_json();
+    card["id"] = json!(7);
+    let mut review = valid_review_json();
+    review["cardId"] = json!(8);
+
+    let data = json!({
+        "card": card,
+        "review": review
+    });
+    let result = serde_json::from_value::<LessonResultData>(data);
+    let err = result.unwrap().validate().unwrap_err();
+    assert_eq!(err.code, "validation.lessons.result.card-review-mismatch");
+}
