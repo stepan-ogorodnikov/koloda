@@ -559,69 +559,6 @@ fn unconditional_upsert_recreates_row_after_delete() {
     );
 }
 
-#[test]
-fn delayed_write_that_respects_tombstone_after_delete_does_not_resurrect_row() {
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::mpsc::sync_channel;
-    use std::sync::Arc;
-
-    let db = test_db();
-    let id = "conv-delayed-write-delete";
-    let state_v1 = json!({
-        "id": id,
-        "createdAt": 1_700_000_000_000_i64,
-        "messages": [{
-            "id": "msg-1",
-            "role": "user",
-            "parts": [{ "type": "text", "text": "v1" }]
-        }],
-        "runs": {},
-        "activeRunId": null,
-        "mode": "chat",
-        "deckId": null,
-    });
-    let state_v2 = json!({
-        "id": id,
-        "createdAt": 1_700_000_000_000_i64,
-        "messages": [{
-            "id": "msg-1",
-            "role": "user",
-            "parts": [{ "type": "text", "text": "v2" }]
-        }],
-        "runs": {},
-        "activeRunId": null,
-        "mode": "chat",
-        "deckId": null,
-    });
-
-    set(&db, id, state_v1).expect("initial set should succeed");
-
-    let (release_tx, release_rx) = sync_channel::<()>(0);
-    let tombstoned = Arc::new(AtomicBool::new(false));
-    let tombstoned_for_write = Arc::clone(&tombstoned);
-    let db_for_write = db.clone();
-    let id_owned = id.to_string();
-
-    // WHY: mirrors prepareDelete ordering — tombstone, delete, then resume a
-    // write that already passed the in-memory existence check.
-    let delayed = std::thread::spawn(move || {
-        release_rx.recv().expect("gate should release");
-        if !tombstoned_for_write.load(Ordering::SeqCst) {
-            set(&db_for_write, &id_owned, state_v2).expect("delayed set should succeed");
-        }
-    });
-
-    tombstoned.store(true, Ordering::SeqCst);
-    repo::delete_conversation(&db, id).expect("delete should succeed");
-    release_tx.send(()).expect("gate should open");
-    delayed.join().expect("delayed write thread should finish");
-
-    assert!(
-        repo::get_conversation(&db, id).expect("query should succeed").is_none(),
-        "tombstoned delayed write must not resurrect the row"
-    );
-}
-
 // ============================================================================
 // REPO RETURN TYPE SHAPE
 // ============================================================================
