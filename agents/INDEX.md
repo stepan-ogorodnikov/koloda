@@ -21,6 +21,7 @@ The listed files are relative to the repo root.
 | Change type | Include in the prompt |
 | --- | --- |
 | Any TS or React edit | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
+| Change adds or edits tests | add `agents/TESTING.md` |
 | Edit touches `className` | add `agents/CSS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Assistant chat (anything) | `agents/ASSISTANT-CHAT-MAP.md` (it routes to the specs and files) |
@@ -42,6 +43,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Review target | Add to `agents/REVIEW.md` |
 | --- | --- |
 | Any diff | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
+| Diff adds or changes tests | add `agents/TESTING.md` |
 | Diff touches `className` | add `agents/CSS.md` |
 | Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Assistant chat diff | `agents/ASSISTANT-CHAT-MAP.md` (+ the spec it names) |
