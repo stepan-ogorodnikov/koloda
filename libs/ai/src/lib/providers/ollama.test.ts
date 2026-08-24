@@ -44,4 +44,13 @@ describe("fetchOllamaModels", () => {
     });
     expect(listMock).toHaveBeenCalledTimes(1);
   });
+
+  it("maps a models response missing the models field to ai.invalid-response", async () => {
+    listMock.mockResolvedValueOnce({});
+
+    await expect(fetchOllamaModels("http://localhost:11434")).rejects.toMatchObject({
+      code: "ai.invalid-response",
+      message: "ai.invalid-response",
+    });
+  });
 });
