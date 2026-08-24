@@ -133,7 +133,11 @@ fn test_daily_limits_untouched_exceeds_total_fails() {
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_err(), "Should fail when untouched exceeds total");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(
+        err.code,
+        "validation.settings-learning.daily-limits.untouched-exceeds-total"
+    );
 }
 
 #[test]
@@ -150,7 +154,11 @@ fn test_daily_limits_learn_exceeds_total_fails() {
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_err(), "Should fail when learn exceeds total");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(
+        err.code,
+        "validation.settings-learning.daily-limits.learn-exceeds-total"
+    );
 }
 
 #[test]
@@ -167,7 +175,11 @@ fn test_daily_limits_review_exceeds_total_fails() {
     );
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_err(), "Should fail when review exceeds total");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(
+        err.code,
+        "validation.settings-learning.daily-limits.review-exceeds-total"
+    );
 }
 
 #[test]
@@ -316,7 +328,8 @@ fn test_learn_ahead_limit_minutes_too_high_fails() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[0, 60]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_err(), "Should fail when minutes > 59");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.learn-ahead-limit.minutes-range");
 }
 
 #[test]
@@ -324,7 +337,8 @@ fn test_learn_ahead_limit_hours_too_high_fails() {
     let json = build_learning_settings_json(standard_daily_limits(), r#""04:00""#, "[49, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
-    assert!(settings.validate().is_err(), "Should fail when hours > 48");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.learn-ahead-limit.hours-range");
 }
 
 #[test]
