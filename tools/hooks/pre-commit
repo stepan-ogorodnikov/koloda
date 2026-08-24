@@ -1,0 +1,23 @@
+#!/bin/sh
+# Wired via core.hooksPath (set by the "prepare" script in package.json).
+#
+# Commit boundary: local, per-file checks — fast, true regardless of the rest
+# of the change, so intermediate commits of a bigger change still pass them.
+# Whole-program checks (typecheck, clippy) live at the push boundary (pre-push).
+# Escape hatch: git commit --no-verify.
+
+command -v bun >/dev/null 2>&1 || exit 0
+
+# Format the staged files and fold the fixes into this commit. dprint has no
+# option to re-stage itself, so re-add exactly the files that were staged.
+# It formats working-tree content: for partially staged files this folds the
+# unstaged edits into the commit too — format before staging in that case.
+# Covers TS/TSX/JSON/CSS/YAML/HTML and .rs (via rustfmt --edition 2021).
+if command -v dprint >/dev/null 2>&1; then
+  dprint fmt --staged --allow-no-files || exit 1
+  git diff --cached --name-only -z | xargs -0 -r git add --
+fi
+
+# Lint (nx-cached; re-lints only projects with changed files). Runs after
+# formatting so it sees the final content.
+exec bun run check:commit

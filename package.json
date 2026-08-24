@@ -14,8 +14,12 @@
     "db:generate": "bun run db:generate:pgsql && bun run db:generate:sqlite",
     "test:libs": "nx run-many --target=test --projects=tag:type:lib",
     "check:workspace-deps": "bunx vitest run --config tools/vitest.config.mjs --configLoader runner && bun run tools/check-workspace-deps.ts",
-    "check:demo-deploy": "nx run-many -t lint,typecheck && bun run test:libs && bun run check:workspace-deps",
-    "check:demo-all": "bun run check:demo-deploy && nx run demo-e2e:e2e"
+    "check:commit": "nx run-many -t lint",
+    "check:push": "nx run-many -t lint,typecheck",
+    "check:rust": "cargo clippy --workspace --all-targets -- -D warnings",
+    "check:demo-deploy": "bun run check:push && bun run test:libs && bun run check:workspace-deps",
+    "check:demo-all": "bun run check:demo-deploy && nx run demo-e2e:e2e",
+    "prepare": "git config core.hooksPath tools/hooks"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.41",

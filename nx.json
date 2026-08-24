@@ -64,7 +64,8 @@
     {
       "plugin": "nx-oxlint",
       "options": {
-        "lintTargetName": "lint"
+        "lintTargetName": "lint",
+        "maxWarnings": 0
       }
     },
     {
