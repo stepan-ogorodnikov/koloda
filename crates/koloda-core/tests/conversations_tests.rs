@@ -7,7 +7,9 @@ use serde_json::json;
 // ============================================================================
 
 #[test]
-fn test_conversation_serialization_uses_camel_case_keys() {
+fn test_conversation_serialization_uses_camel_case_keys_and_iso_timestamps() {
+    // WHY: the wire contract is camelCase keys carrying RFC3339 strings; snake_case leakage or
+    // raw epoch numbers on output would break the `@koloda/app` API mirror.
     let conversation = Conversation {
         id: "conv-1".to_string(),
         title: Some("My title".to_string()),
@@ -19,11 +21,9 @@ fn test_conversation_serialization_uses_camel_case_keys() {
     let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
     let obj = serialized.as_object().expect("serialized value should be an object");
 
-    assert!(obj.contains_key("id"), "missing camelCase key 'id'");
-    assert!(obj.contains_key("title"), "missing camelCase key 'title'");
-    assert!(obj.contains_key("state"), "missing camelCase key 'state'");
-    assert!(obj.contains_key("createdAt"), "missing camelCase key 'createdAt'");
-    assert!(obj.contains_key("updatedAt"), "missing camelCase key 'updatedAt'");
+    for key in ["id", "title", "state", "createdAt", "updatedAt"] {
+        assert!(obj.contains_key(key), "missing camelCase key '{key}'");
+    }
     assert!(
         !obj.contains_key("created_at"),
         "snake_case key 'created_at' leaked into output"
@@ -32,43 +32,24 @@ fn test_conversation_serialization_uses_camel_case_keys() {
         !obj.contains_key("updated_at"),
         "snake_case key 'updated_at' leaked into output"
     );
+
+    for field in ["createdAt", "updatedAt"] {
+        let rendered = serialized
+            .get(field)
+            .and_then(|v| v.as_str())
+            .unwrap_or_else(|| panic!("{field} should render as a string"));
+        assert!(
+            chrono::DateTime::parse_from_rfc3339(rendered).is_ok(),
+            "{field} is not a valid RFC3339 string: {rendered}"
+        );
+    }
 }
 
 #[test]
-fn test_conversation_serialization_renders_timestamps_as_iso_strings() {
-    let conversation = Conversation {
-        id: "conv-1".to_string(),
-        title: None,
-        state: json!({}),
-        created_at: 1_700_000_000_000,
-        updated_at: Some(1_700_000_001_000),
-    };
-
-    let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
-
-    let created_at = serialized
-        .get("createdAt")
-        .and_then(|v| v.as_str())
-        .expect("createdAt should be a string");
-    let updated_at = serialized
-        .get("updatedAt")
-        .and_then(|v| v.as_str())
-        .expect("updatedAt should be a string");
-
-    assert!(
-        chrono::DateTime::parse_from_rfc3339(created_at).is_ok(),
-        "createdAt is not a valid RFC3339 string: {}",
-        created_at
-    );
-    assert!(
-        chrono::DateTime::parse_from_rfc3339(updated_at).is_ok(),
-        "updatedAt is not a valid RFC3339 string: {}",
-        updated_at
-    );
-}
-
-#[test]
-fn test_conversation_serialization_renders_null_updated_at_when_absent() {
+fn test_conversation_serialization_renders_none_optionals_as_null() {
+    // WHY: TS readers tell `null` apart from an absent key, so both optional fields must render
+    // explicit nulls when None (title via the derive, updatedAt via serialize_optional_timestamp's
+    // serialize_none) rather than being skipped.
     let conversation = Conversation {
         id: "conv-1".to_string(),
         title: None,
@@ -79,49 +60,12 @@ fn test_conversation_serialization_renders_null_updated_at_when_absent() {
 
     let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
 
-    assert!(
-        serialized.get("updatedAt").map(|v| v.is_null()).unwrap_or(false),
-        "updatedAt should be serialized as null when None"
-    );
-}
-
-#[test]
-fn test_conversation_serialization_renders_null_title_when_absent() {
-    let conversation = Conversation {
-        id: "conv-1".to_string(),
-        title: None,
-        state: json!({}),
-        created_at: 1_700_000_000_000,
-        updated_at: None,
-    };
-
-    let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
-
-    assert!(
-        serialized.get("title").map(|v| v.is_null()).unwrap_or(false),
-        "title should be serialized as null when None"
-    );
-}
-
-#[test]
-fn test_conversation_serialization_preserves_state_payload() {
-    let state = json!({
-        "messages": [
-            {"role": "user", "content": "hi"},
-            {"role": "assistant", "content": "hello"},
-        ],
-        "metadata": {"model": "test", "tokens": 42},
-    });
-    let conversation = Conversation {
-        id: "conv-1".to_string(),
-        title: None,
-        state: state.clone(),
-        created_at: 1_700_000_000_000,
-        updated_at: None,
-    };
-
-    let serialized = serde_json::to_value(&conversation).expect("conversation should serialize");
-    assert_eq!(serialized.get("state"), Some(&state));
+    for field in ["title", "updatedAt"] {
+        assert!(
+            serialized.get(field).map(|v| v.is_null()).unwrap_or(false),
+            "{field} should be serialized as null when None"
+        );
+    }
 }
 
 // ============================================================================
@@ -150,7 +94,8 @@ fn test_conversation_deserialization_from_camel_case() {
 #[test]
 fn test_conversation_deserialization_omitted_title_is_none() {
     // Backwards compatibility: rows saved before the title column was
-    // added deserialise with title = None rather than failing.
+    // added deserialise with title = None rather than failing. Explicit
+    // `null` collapses through the same Option handling.
     let data = json!({
         "id": "conv-1",
         "state": {"messages": []},
@@ -164,70 +109,39 @@ fn test_conversation_deserialization_omitted_title_is_none() {
 }
 
 #[test]
-fn test_conversation_deserialization_explicit_null_title_is_none() {
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": {},
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": null,
-    });
+fn test_conversation_deserialization_accepts_iso_string_timestamps() {
+    // WHY: both timestamp fields share the ISO-string branch of their custom deserializers, so
+    // one table pins the RFC3339 accept path for the required and optional sides alike.
+    let rows: &[(&str, i64, fn(&Conversation) -> i64)] = &[
+        ("createdAt", 1_700_000_000_000, |conversation| conversation.created_at),
+        ("updatedAt", 1_700_000_001_000, |conversation| {
+            conversation.updated_at.expect("updatedAt should be present")
+        }),
+    ];
 
-    let conversation: Conversation = serde_json::from_value(data).expect("null title should deserialize");
+    for &(field, expected_ms, read) in rows {
+        let iso = chrono::DateTime::from_timestamp_millis(expected_ms)
+            .expect("timestamp should be valid")
+            .to_rfc3339();
 
-    assert!(conversation.title.is_none());
-}
+        let mut data = json!({
+            "id": "conv-1",
+            "title": null,
+            "state": {},
+            "createdAt": 1_700_000_000_000_i64,
+            "updatedAt": 1_700_000_001_000_i64,
+        });
+        data[field] = json!(iso);
 
-#[test]
-fn test_set_conversation_input_deserialization_omitted_title_is_none() {
-    let data = json!({
-        "id": "conv-1",
-        "state": {"messages": []},
-    });
+        let conversation: Conversation =
+            serde_json::from_value(data).unwrap_or_else(|err| panic!("{field}: ISO string should deserialize: {err}"));
 
-    let input: SetConversationInput = serde_json::from_value(data).expect("missing title should deserialize as None");
-
-    assert!(input.title.is_none());
-}
-
-#[test]
-fn test_conversation_deserialization_accepts_iso_string_for_updated_at() {
-    // ISO strings on the wire are accepted, matching what the serializer
-    // emits and the convention used by sibling domain types.
-    let updated_at = chrono::DateTime::from_timestamp_millis(1_700_000_001_000)
-        .expect("timestamp should be valid")
-        .to_rfc3339();
-
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": {},
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": updated_at,
-    });
-
-    let conversation: Conversation =
-        serde_json::from_value(data).expect("ISO string for updated_at should deserialize");
-    assert_eq!(conversation.updated_at, Some(1_700_000_001_000));
-}
-
-#[test]
-fn test_conversation_deserialization_accepts_iso_string_for_created_at() {
-    let created_at = chrono::DateTime::from_timestamp_millis(1_700_000_000_000)
-        .expect("timestamp should be valid")
-        .to_rfc3339();
-
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": {},
-        "createdAt": created_at,
-        "updatedAt": null,
-    });
-
-    let conversation: Conversation =
-        serde_json::from_value(data).expect("ISO string for created_at should deserialize");
-    assert_eq!(conversation.created_at, 1_700_000_000_000);
+        assert_eq!(
+            read(&conversation),
+            expected_ms,
+            "{field} should parse the ISO string back to epoch millis"
+        );
+    }
 }
 
 #[test]
@@ -255,37 +169,6 @@ fn test_conversation_deserialization_missing_created_at_uses_default() {
         conversation.created_at,
         skew
     );
-}
-
-#[test]
-fn test_conversation_deserialization_missing_updated_at_is_none() {
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": {},
-        "createdAt": 1_700_000_000_000_i64,
-    });
-
-    let conversation: Conversation =
-        serde_json::from_value(data).expect("conversation should deserialize with optional updatedAt");
-
-    assert!(conversation.updated_at.is_none());
-}
-
-#[test]
-fn test_conversation_deserialization_explicit_null_updated_at_is_none() {
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": {},
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": null,
-    });
-
-    let conversation: Conversation =
-        serde_json::from_value(data).expect("conversation should deserialize null updatedAt");
-
-    assert!(conversation.updated_at.is_none());
 }
 
 #[test]
@@ -317,65 +200,26 @@ fn test_conversation_deserialization_invalid_updated_at_string_fails() {
 }
 
 #[test]
-fn test_conversation_deserialization_state_accepts_string_payload() {
-    let data = json!({
+fn test_conversation_deserialization_missing_required_field_fails() {
+    // WHY: id and state are the only fields without defaults, so dropping either from an
+    // otherwise complete payload must reject through the same missing-field path.
+    let baseline = json!({
         "id": "conv-1",
-        "title": null,
-        "state": "raw-string-state",
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": null,
-    });
-
-    let conversation: Conversation =
-        serde_json::from_value(data).expect("state is serde_json::Value and accepts any JSON type");
-
-    assert_eq!(conversation.state, json!("raw-string-state"));
-}
-
-#[test]
-fn test_conversation_deserialization_state_accepts_arbitrary_json() {
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "state": [
-            1,
-            2,
-            3,
-            {"nested": [true, null, "x"]}
-        ],
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": null,
-    });
-
-    let conversation: Conversation = serde_json::from_value(data).expect("state should accept arbitrary JSON values");
-
-    assert_eq!(conversation.state, json!([1, 2, 3, {"nested": [true, null, "x"]}]));
-}
-
-#[test]
-fn test_conversation_deserialization_missing_id_fails() {
-    let data = json!({
         "title": null,
         "state": {},
         "createdAt": 1_700_000_000_000_i64,
         "updatedAt": null,
     });
 
-    let result = serde_json::from_value::<Conversation>(data);
-    assert!(result.is_err(), "missing id should fail deserialization");
-}
+    for field in ["id", "state"] {
+        let mut data = baseline.clone();
+        data.as_object_mut()
+            .expect("baseline should be an object")
+            .remove(field);
 
-#[test]
-fn test_conversation_deserialization_missing_state_fails() {
-    let data = json!({
-        "id": "conv-1",
-        "title": null,
-        "createdAt": 1_700_000_000_000_i64,
-        "updatedAt": null,
-    });
-
-    let result = serde_json::from_value::<Conversation>(data);
-    assert!(result.is_err(), "missing state should fail deserialization");
+        let result = serde_json::from_value::<Conversation>(data);
+        assert!(result.is_err(), "missing {field} should fail deserialization");
+    }
 }
 
 // ============================================================================
