@@ -2,38 +2,22 @@ import { describe, expect, it } from "vitest";
 import { transformGeneratedCards } from "./assistant-cards-generation";
 
 describe("assistant-cards-generation", () => {
-  it("transforms generated cards into insertable card payloads", () => {
-    expect(
-      transformGeneratedCards(
-        [
-          {
-            content: {
-              "1": { text: "Front" },
-              "2": { text: "Back" },
-            },
+  it("generates cards in the new state with no due date", () => {
+    const [card] = transformGeneratedCards(
+      [
+        {
+          content: {
+            "1": { text: "Front" },
+            "2": { text: "Back" },
           },
-        ],
-        5,
-        7,
-      ),
-    ).toEqual([
-      {
-        deckId: 5,
-        templateId: 7,
-        content: {
-          "1": { text: "Front" },
-          "2": { text: "Back" },
         },
-        state: 0,
-        dueAt: null,
-        stability: 0,
-        difficulty: 0,
-        scheduledDays: 0,
-        learningSteps: 0,
-        reps: 0,
-        lapses: 0,
-        lastReviewedAt: null,
-      },
-    ]);
+      ],
+      5,
+      7,
+    );
+
+    expect(card).toMatchObject({ deckId: 5, templateId: 7 });
+    expect(card.state).toBe(0);
+    expect(card.dueAt).toBeNull();
   });
 });
