@@ -77,127 +77,49 @@ fn test_ai_secrets_ollama_deserialize_base_url_alias() {
     assert_eq!(secrets.api_key(), None);
 }
 
-#[test]
-fn test_opencode_go_validate_ok_with_api_key() {
-    let secrets = AISecrets::OpencodeGo {
-        api_key: Some("go-secret".to_string()),
-    };
+// WHY: These variants share an identical single-field `{ api_key }` payload, so their
+// accept/reject/alias contracts collapse into one table; `openrouter` mirrors the input rules
+// but anchors the storage-redaction cases, so its tests stay explicit above.
+const KEYED_PROVIDER_ROWS: &[(&str, &str, fn(Option<String>) -> AISecrets)] = &[
+    ("opencodeGo", "go-secret", |api_key| AISecrets::OpencodeGo { api_key }),
+    ("opencodeZen", "zen-secret", |api_key| AISecrets::OpencodeZen {
+        api_key,
+    }),
+    ("ollamaCloud", "cloud-secret", |api_key| AISecrets::OllamaCloud {
+        api_key,
+    }),
+];
 
-    secrets.validate().unwrap();
-    assert_eq!(secrets.provider(), "opencodeGo");
-    assert_eq!(secrets.api_key(), Some("go-secret"));
+#[test]
+fn test_keyed_providers_require_non_blank_api_key() {
+    for &(provider, secret, build) in KEYED_PROVIDER_ROWS {
+        let secrets = build(Some(secret.to_string()));
+        secrets.validate().unwrap();
+        assert_eq!(secrets.provider(), provider, "{provider} reports its provider id");
+        assert_eq!(secrets.api_key(), Some(secret), "{provider} exposes its stored key");
+
+        for api_key in [None, Some("  ".to_string())] {
+            let result = build(api_key).validate();
+            // WHY: absent and whitespace-only keys funnel through the same trimmed check,
+            // so both rejections surface `validation.settings-ai.providers.apiKey`.
+            assert_eq!(
+                result.unwrap_err().code,
+                "validation.settings-ai.providers.apiKey",
+                "{provider} must reject a missing or blank apiKey"
+            );
+        }
+    }
 }
 
 #[test]
-fn test_opencode_go_validate_empty_api_key_fails() {
-    let secrets = AISecrets::OpencodeGo { api_key: None };
+fn test_keyed_providers_deserialize_api_key_alias() {
+    for &(provider, ..) in KEYED_PROVIDER_ROWS {
+        let json = format!(r#"{{ "provider": "{provider}", "api_key": "alias-key" }}"#);
 
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_opencode_go_validate_whitespace_api_key_fails() {
-    let secrets = AISecrets::OpencodeGo {
-        api_key: Some("  ".to_string()),
-    };
-
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_ai_secrets_opencode_go_deserialize_api_key_alias() {
-    let json = r#"{
-        "provider": "opencodeGo",
-        "api_key": "alias-key"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
-    assert_eq!(secrets.provider(), "opencodeGo");
-    assert_eq!(secrets.api_key(), Some("alias-key"));
-}
-
-#[test]
-fn test_opencode_zen_validate_ok_with_api_key() {
-    let secrets = AISecrets::OpencodeZen {
-        api_key: Some("zen-secret".to_string()),
-    };
-
-    secrets.validate().unwrap();
-    assert_eq!(secrets.provider(), "opencodeZen");
-    assert_eq!(secrets.api_key(), Some("zen-secret"));
-}
-
-#[test]
-fn test_opencode_zen_validate_empty_api_key_fails() {
-    let secrets = AISecrets::OpencodeZen { api_key: None };
-
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_opencode_zen_validate_whitespace_api_key_fails() {
-    let secrets = AISecrets::OpencodeZen {
-        api_key: Some("  ".to_string()),
-    };
-
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_ai_secrets_opencode_zen_deserialize_api_key_alias() {
-    let json = r#"{
-        "provider": "opencodeZen",
-        "api_key": "alias-key"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
-    assert_eq!(secrets.provider(), "opencodeZen");
-    assert_eq!(secrets.api_key(), Some("alias-key"));
-}
-
-#[test]
-fn test_ollama_cloud_validate_ok_with_api_key() {
-    let secrets = AISecrets::OllamaCloud {
-        api_key: Some("cloud-secret".to_string()),
-    };
-
-    secrets.validate().unwrap();
-    assert_eq!(secrets.provider(), "ollamaCloud");
-    assert_eq!(secrets.api_key(), Some("cloud-secret"));
-}
-
-#[test]
-fn test_ollama_cloud_validate_empty_api_key_fails() {
-    let secrets = AISecrets::OllamaCloud { api_key: None };
-
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_ollama_cloud_validate_whitespace_api_key_fails() {
-    let secrets = AISecrets::OllamaCloud {
-        api_key: Some("  ".to_string()),
-    };
-
-    let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
-}
-
-#[test]
-fn test_ai_secrets_ollama_cloud_deserialize_api_key_alias() {
-    let json = r#"{
-        "provider": "ollamaCloud",
-        "api_key": "alias-key"
-    }"#;
-
-    let secrets: AISecrets = serde_json::from_str(json).expect("Should deserialize with api_key alias");
-    assert_eq!(secrets.provider(), "ollamaCloud");
-    assert_eq!(secrets.api_key(), Some("alias-key"));
+        let secrets: AISecrets = serde_json::from_str(&json).expect("Should deserialize with api_key alias");
+        assert_eq!(secrets.provider(), provider);
+        assert_eq!(secrets.api_key(), Some("alias-key"));
+    }
 }
 
 #[test]
