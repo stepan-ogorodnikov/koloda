@@ -44,13 +44,6 @@ describe("AIChatMessageStatus", () => {
       expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
       expect(status!.textContent).not.toContain("GPT-4");
     });
-
-    it("hides the modelName and separator when modelName is undefined", () => {
-      render(<AIChatMessageStatus state="success" elapsedSeconds={5} modelName={undefined} />);
-
-      const status = screen.getByText(/5/).parentElement;
-      expect(status!.querySelector('[aria-hidden="true"]')).toBeNull();
-    });
   });
 
   describe("retry on terminal states", () => {

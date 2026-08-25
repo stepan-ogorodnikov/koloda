@@ -147,63 +147,6 @@ fn test_valid_stability_large_value() {
 }
 
 #[test]
-fn test_valid_scheduled_days_zero() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
-fn test_valid_learning_steps_zero() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
-fn test_valid_time_zero() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
-    data.validate().unwrap();
-}
-
-#[test]
 fn test_valid_time_positive() {
     let json = r#"{
         "cardId": 1,

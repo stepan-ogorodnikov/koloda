@@ -417,8 +417,6 @@ describe("cloneConversationAtom", () => {
 
     store.set(cloneConversationAtom, { sourceId: "A" });
     // Switch back to A — its counter is unchanged.
-    const stateA = store.get(conversationsAtom)["A"];
-    void stateA;
     // Pending-save count for A is unchanged (it was 0 before the clone,
     // and switching back to A reads from the A counter).
     store.set(setCurrentConversationIdAtom, "A");

@@ -1,9 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createConversationPersistenceHost,
-  SHUTDOWN_FLUSH_TIMEOUT_MS,
-  SHUTDOWN_SAVE_MAX_ATTEMPTS,
-} from "./conversation-persistence-host";
+import { createConversationPersistenceHost, SHUTDOWN_SAVE_MAX_ATTEMPTS } from "./conversation-persistence-host";
 import { SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
 import { IDLE_SAVE_DEBOUNCE_MS } from "./create-save-scheduler";
 
@@ -514,10 +510,5 @@ describe("createConversationPersistenceHost", () => {
 
     expect(rows.has("A")).toBe(false);
     host.dispose();
-  });
-
-  it("documents the shutdown flush bound constant", () => {
-    expect(SHUTDOWN_FLUSH_TIMEOUT_MS).toBe(2000);
-    expect(SHUTDOWN_SAVE_MAX_ATTEMPTS).toBe(3);
   });
 });

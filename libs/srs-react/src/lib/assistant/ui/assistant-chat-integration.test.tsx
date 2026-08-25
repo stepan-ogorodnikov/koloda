@@ -1,4 +1,4 @@
-import type { AIModel, AIProfile, AIRuntime, ChatStreamRequest, ModelParameter, StreamUsage } from "@koloda/ai";
+import type { AIModel, AIProfile, AIRuntime, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import type * as KolodaAiReactModule from "@koloda/ai-react";
 import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
@@ -87,34 +87,6 @@ vi.mock("@koloda/ai-react", async () => {
       isLoading: false,
       isError: false,
     }),
-  };
-});
-
-vi.mock("./use-assistant-profile-selection", () => {
-  // Re-export a thin shim that reads from the same `wire` used by the
-  // mock of `@koloda/ai-react`. The shim mirrors the public shape of
-  // `useAssistantProfileSelection` exactly.
-  return {
-    useAssistantProfileSelection: () => {
-      const profile = wire.profiles[0] ?? null;
-      return {
-        profileId: profile?.id ?? "",
-        modelId: wire.models[0]?.id ?? "",
-        modelName: wire.models[0]?.name,
-        models: wire.models,
-        isModelsLoading: false,
-        isModelsError: false,
-        selectedProfile: profile,
-        profiles: wire.profiles,
-        defaultProfileId: profile?.id ?? null,
-        missingSecretFieldLabels: [] as string[],
-        provider: profile?.secrets?.provider ?? null,
-        modelParameters: [] as ModelParameter[],
-        hasProfiles: wire.profiles.length > 0,
-        handleModelProfileChange: () => {},
-        handleModelParameterChange: () => {},
-      };
-    },
   };
 });
 
@@ -287,25 +259,6 @@ function createMockAIRuntime(): AIRuntime {
   };
 }
 
-function makeWrapper() {
-  const store = createStore();
-  store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
-  store.set(aiRuntimeAtom, createMockAIRuntime());
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  // Preload the templates query cache so the template is available synchronously.
-  queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
-
-  return function Wrapper({ children }: PropsWithChildren) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <JotaiProvider store={store}>{children}</JotaiProvider>
-      </QueryClientProvider>
-    );
-  };
-}
-
 function setupTestHarness(overrides: { profileId?: string; modelId?: string } = {}) {
   const profile = createAIProfile(overrides.profileId ? { id: overrides.profileId } : {});
   const model = createAIModel(overrides.modelId ? { id: overrides.modelId } : {});
@@ -325,14 +278,6 @@ function setupTestHarness(overrides: { profileId?: string; modelId?: string } = 
     keepInFlight: false,
   };
   wire.setConversationCalls = [];
-
-  const wrapper = makeWrapper();
-  const store = (wrapper as unknown as { store?: never }).store;
-
-  // The store is created inside makeWrapper; we expose it for tests that
-  // need to drive the atoms directly. We do that by re-creating it here
-  // and sharing the same instance.
-  return { wrapper, store };
 }
 
 beforeEach(() => {

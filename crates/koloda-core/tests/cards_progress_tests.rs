@@ -371,23 +371,6 @@ fn test_update_card_progress_last_reviewed_at_invalid_type() {
 // ============================================================================
 
 #[test]
-fn test_update_card_progress_state_valid() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap().validate().unwrap();
-}
-
-#[test]
 fn test_update_card_progress_state_all_valid() {
     for state in 0..=3 {
         let data = json!({
