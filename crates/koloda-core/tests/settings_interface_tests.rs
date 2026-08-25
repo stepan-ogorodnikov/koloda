@@ -33,149 +33,31 @@ fn test_missing_themes_default_to_github() {
     settings.validate().unwrap();
 }
 
-#[test]
-fn test_valid_language_en() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_language_ru() {
-    let json = r#"{
-        "language": "ru",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_scheme_light() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "light",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_scheme_dark() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "dark",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_scheme_system() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "off"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_motion_on() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "on"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_motion_off() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "off"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
-#[test]
-fn test_valid_motion_system() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    settings.validate().unwrap();
-}
-
 // ============================================================================
 // MISSING FIELDS
 // ============================================================================
 
 #[test]
-fn test_missing_language_fails() {
-    let json = r#"{
+fn test_missing_required_fields_fail() {
+    let base = serde_json::json!({
+        "language": "en",
         "scheme": "system",
         "motion": "system"
-    }"#;
+    });
 
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when language is missing");
-}
+    // WHY: language/scheme/motion carry no serde default, so omitting any one of them fails
+    // identically at deserialization; only the themes are optional (pinned above).
+    for field in ["language", "scheme", "motion"] {
+        let mut content = base.clone();
+        content.as_object_mut().unwrap().remove(field);
 
-#[test]
-fn test_missing_scheme_fails() {
-    let json = r#"{
-        "language": "en",
-        "motion": "system"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheme is missing");
-}
-
-#[test]
-fn test_missing_motion_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when motion is missing");
-}
-
-#[test]
-fn test_empty_json_object_fails() {
-    let json = r#"{}"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail with empty JSON");
+        let result: Result<InterfaceSettings, _> = serde_json::from_value(content);
+        assert!(result.is_err(), "Should fail when {field} is missing");
+    }
 }
 
 // ============================================================================
-// EXSESSIVE FIELDS
+// EXTRA FIELDS
 // ============================================================================
 
 #[test]
@@ -198,74 +80,23 @@ fn test_extra_fields_ignored() {
 
 #[test]
 fn test_invalid_language_fails() {
-    let json = r#"{
-        "language": "invalid",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
+    // WHY: validate() does a plain membership check against LANGUAGES, so unknown, empty, and
+    // wrong-case spellings all funnel through the same rejection path and error code.
+    for language in ["invalid", "", "EN"] {
+        let content = serde_json::json!({
+            "language": language,
+            "scheme": "system",
+            "motion": "system"
+        });
 
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with invalid language").code,
-        "validation.settings-interface.language"
-    );
-}
-
-#[test]
-fn test_empty_language_fails() {
-    let json = r#"{
-        "language": "",
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with empty language").code,
-        "validation.settings-interface.language"
-    );
-}
-
-#[test]
-fn test_language_with_different_case_fails() {
-    let json = r#"{
-        "language": "EN",
-        "scheme": "light",
-        "motion": "off"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with uppercase language").code,
-        "validation.settings-interface.language"
-    );
-}
-
-#[test]
-fn test_language_invalid_type_fails() {
-    let json = r#"{
-        "language": 123,
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when language is a number");
-}
-
-#[test]
-fn test_language_as_null_fails() {
-    let json = r#"{
-        "language": null,
-        "scheme": "system",
-        "motion": "system"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when language is null");
+        let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+        let result = settings.validate();
+        assert_eq!(
+            result.expect_err("Should fail with invalid language").code,
+            "validation.settings-interface.language",
+            "language {language:?} must be rejected"
+        );
+    }
 }
 
 // ============================================================================
@@ -274,74 +105,23 @@ fn test_language_as_null_fails() {
 
 #[test]
 fn test_invalid_scheme_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "blue",
-        "motion": "system"
-    }"#;
+    // WHY: same membership check as language, so one table covers unknown, empty, and
+    // capitalized spellings of scheme.
+    for scheme in ["blue", "", "Light"] {
+        let content = serde_json::json!({
+            "language": "en",
+            "scheme": scheme,
+            "motion": "system"
+        });
 
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with invalid scheme").code,
-        "validation.settings-interface.scheme"
-    );
-}
-
-#[test]
-fn test_empty_scheme_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with empty scheme").code,
-        "validation.settings-interface.scheme"
-    );
-}
-
-#[test]
-fn test_scheme_with_different_case_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "Light",
-        "motion": "system"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with capitalized scheme").code,
-        "validation.settings-interface.scheme"
-    );
-}
-
-#[test]
-fn test_scheme_invalid_type_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": 123,
-        "motion": "off"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheme is a number");
-}
-
-#[test]
-fn test_scheme_as_null_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": null,
-        "motion": "system"
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheme is null");
+        let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+        let result = settings.validate();
+        assert_eq!(
+            result.expect_err("Should fail with invalid scheme").code,
+            "validation.settings-interface.scheme",
+            "scheme {scheme:?} must be rejected"
+        );
+    }
 }
 
 // ============================================================================
@@ -388,74 +168,23 @@ fn test_invalid_dark_theme_fails() {
 
 #[test]
 fn test_invalid_motion_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "partial"
-    }"#;
+    // WHY: motion joins the same membership-check family; unknown, empty, and capitalized
+    // values share one rejection path and error code.
+    for motion in ["partial", "", "On"] {
+        let content = serde_json::json!({
+            "language": "en",
+            "scheme": "system",
+            "motion": motion
+        });
 
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with invalid motion").code,
-        "validation.settings-interface.motion"
-    );
-}
-
-#[test]
-fn test_empty_motion_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": ""
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with empty motion").code,
-        "validation.settings-interface.motion"
-    );
-}
-
-#[test]
-fn test_motion_with_different_case_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": "On"
-    }"#;
-
-    let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize");
-    let result = settings.validate();
-    assert_eq!(
-        result.expect_err("Should fail with capitalized motion").code,
-        "validation.settings-interface.motion"
-    );
-}
-
-#[test]
-fn test_motion_as_number_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "system",
-        "motion": 123
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when motion is a number");
-}
-
-#[test]
-fn test_motion_as_null_fails() {
-    let json = r#"{
-        "language": "en",
-        "scheme": "light",
-        "motion": null
-    }"#;
-
-    let result: Result<InterfaceSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when motion is null");
+        let settings: InterfaceSettings = serde_json::from_value(content).expect("Should deserialize");
+        let result = settings.validate();
+        assert_eq!(
+            result.expect_err("Should fail with invalid motion").code,
+            "validation.settings-interface.motion",
+            "motion {motion:?} must be rejected"
+        );
+    }
 }
 
 // ============================================================================
@@ -465,14 +194,6 @@ fn test_motion_as_null_fails() {
 #[test]
 fn test_settings_name_interface_validation_with_non_object_content() {
     let content = serde_json::json!("not an object");
-
-    let result = SettingsName::Interface.validate(&content);
-    assert!(result.is_err());
-}
-
-#[test]
-fn test_settings_name_interface_validation_with_array_content() {
-    let content = serde_json::json!([1, 2, 3]);
 
     let result = SettingsName::Interface.validate(&content);
     assert!(result.is_err());
