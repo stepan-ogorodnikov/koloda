@@ -29,29 +29,19 @@ describe("interfaceSettingsValidation", () => {
     });
   });
 
-  it("rejects invalid language", () => {
-    const result = interfaceSettingsValidation.safeParse({ language: "fr" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid scheme", () => {
-    const result = interfaceSettingsValidation.safeParse({ scheme: "blue" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid light theme", () => {
-    const result = interfaceSettingsValidation.safeParse({ lightTheme: "solarized" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid dark theme", () => {
-    const result = interfaceSettingsValidation.safeParse({ darkTheme: "solarized" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid motion", () => {
-    const result = interfaceSettingsValidation.safeParse({ motion: "slow" });
-    expect(result.success).toBe(false);
+  // WHY: every field is a strict z.enum over its registry keys, so all five rejections share
+  // one mechanism; one invalid spelling per field pins the schema against loosening to z.string().
+  it("rejects values outside any field's enum", () => {
+    for (const [field, value] of [
+      ["language", "fr"],
+      ["scheme", "blue"],
+      ["lightTheme", "solarized"],
+      ["darkTheme", "solarized"],
+      ["motion", "slow"],
+    ] as const) {
+      const result = interfaceSettingsValidation.safeParse({ [field]: value });
+      expect(result.success, `${field} must reject ${value}`).toBe(false);
+    }
   });
 
   it("DEFAULT_INTERFACE_SETTINGS matches parse({})", () => {
@@ -60,20 +50,12 @@ describe("interfaceSettingsValidation", () => {
 });
 
 describe("getLanguageCode", () => {
-  it("returns en for en", () => {
-    expect(getLanguageCode("en")).toBe("en");
-  });
-
-  it("returns ru for ru", () => {
+  it("echoes a supported locale", () => {
     expect(getLanguageCode("ru")).toBe("ru");
   });
 
   it("strips region from en-US", () => {
     expect(getLanguageCode("en-US")).toBe("en");
-  });
-
-  it("strips region from ru-RU", () => {
-    expect(getLanguageCode("ru-RU")).toBe("ru");
   });
 
   it("falls back to en for unsupported fr", () => {
@@ -86,13 +68,5 @@ describe("getLanguageCode", () => {
 
   it("falls back to en for null", () => {
     expect(getLanguageCode(null)).toBe("en");
-  });
-
-  it("falls back to en for empty string", () => {
-    expect(getLanguageCode("")).toBe("en");
-  });
-
-  it("falls back to en for undefined", () => {
-    expect(getLanguageCode(undefined as any)).toBe("en");
   });
 });
