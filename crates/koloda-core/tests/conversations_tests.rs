@@ -112,7 +112,8 @@ fn test_conversation_deserialization_omitted_title_is_none() {
 fn test_conversation_deserialization_accepts_iso_string_timestamps() {
     // WHY: both timestamp fields share the ISO-string branch of their custom deserializers, so
     // one table pins the RFC3339 accept path for the required and optional sides alike.
-    let rows: &[(&str, i64, fn(&Conversation) -> i64)] = &[
+    type IsoTimestampRow = (&'static str, i64, fn(&Conversation) -> i64);
+    let rows: &[IsoTimestampRow] = &[
         ("createdAt", 1_700_000_000_000, |conversation| conversation.created_at),
         ("updatedAt", 1_700_000_001_000, |conversation| {
             conversation.updated_at.expect("updatedAt should be present")

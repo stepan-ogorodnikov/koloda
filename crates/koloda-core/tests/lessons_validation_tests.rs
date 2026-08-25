@@ -16,10 +16,17 @@ fn valid_payload() -> Value {
 /// section isolates that entity's error-code namespace (`cards-progress.*` vs `reviews.*`).
 fn assert_rejected(section: &str, field: &str, offending: Value, expected_code: &str) {
     let mut payload = valid_payload();
-    payload[section][field] = offending.clone();
+    payload
+        .get_mut(section)
+        .expect("payload should contain the patched section")
+        .as_object_mut()
+        .expect("patched section should be an object")
+        .insert(field.to_string(), offending.clone());
 
     let data = serde_json::from_value::<LessonResultData>(payload).expect("patched payload should still deserialize");
-    let error = data.validate().unwrap_err();
+    let error = data
+        .validate()
+        .expect_err("patched lesson result should fail validation");
     assert_eq!(
         error.code, expected_code,
         "{section}.{field} = {offending} must surface {expected_code}"
@@ -28,12 +35,19 @@ fn assert_rejected(section: &str, field: &str, offending: Value, expected_code: 
 
 fn assert_accepted(section: &str, field: &str, value: Value) {
     let mut payload = valid_payload();
-    payload[section][field] = value.clone();
+    payload
+        .get_mut(section)
+        .expect("payload should contain the patched section")
+        .as_object_mut()
+        .expect("patched section should be an object")
+        .insert(field.to_string(), value.clone());
 
     let data = serde_json::from_value::<LessonResultData>(payload).expect("patched payload should still deserialize");
-    if let Err(error) = data.validate() {
-        panic!("{section}.{field} = {value} must pass validation, got {}", error.code);
-    }
+    let observed = data.validate().err().map(|error| error.code);
+    assert!(
+        observed.is_none(),
+        "{section}.{field} = {value} must pass validation, got {observed:?}"
+    );
 }
 
 // ============================================================================

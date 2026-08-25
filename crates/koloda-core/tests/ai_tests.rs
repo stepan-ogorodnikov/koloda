@@ -80,7 +80,8 @@ fn test_ai_secrets_ollama_deserialize_base_url_alias() {
 // WHY: These variants share an identical single-field `{ api_key }` payload, so their
 // accept/reject/alias contracts collapse into one table; `openrouter` mirrors the input rules
 // but anchors the storage-redaction cases, so its tests stay explicit above.
-const KEYED_PROVIDER_ROWS: &[(&str, &str, fn(Option<String>) -> AISecrets)] = &[
+type KeyedProviderRow = (&'static str, &'static str, fn(Option<String>) -> AISecrets);
+const KEYED_PROVIDER_ROWS: &[KeyedProviderRow] = &[
     ("opencodeGo", "go-secret", |api_key| AISecrets::OpencodeGo { api_key }),
     ("opencodeZen", "zen-secret", |api_key| AISecrets::OpencodeZen {
         api_key,
