@@ -1,450 +1,11 @@
 mod common;
 
 use koloda_core::domain::reviews::InsertReviewData;
+use serde_json::{json, Value};
 
-// ============================================================================
-// CARD ID FIELD
-// ============================================================================
-
-#[test]
-fn test_card_id_as_string_fails() {
-    let json = r#"{
-        "cardId": "1",
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when cardId is a string");
-}
-
-// ============================================================================
-// RATING FIELD
-// ============================================================================
-
-#[test]
-fn test_rating_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": "1",
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when rating is a string");
-}
-
-#[test]
-fn test_rating_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": null,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when rating is null");
-}
-
-// ============================================================================
-// STATE FIELD
-// ============================================================================
-
-#[test]
-fn test_state_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": "0",
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when state is a string");
-}
-
-#[test]
-fn test_state_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": null,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when state is null");
-}
-
-// ============================================================================
-// DUE AT FIELD
-// ============================================================================
-
-#[test]
-fn test_due_at_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": "1234567890",
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when dueAt is a string");
-}
-
-// ============================================================================
-// STABILITY FIELD
-// ============================================================================
-
-#[test]
-fn test_stability_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": "5.0",
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when stability is a string");
-}
-
-#[test]
-fn test_stability_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": null,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when stability is null");
-}
-
-// ============================================================================
-// DIFFICULTY FIELD
-// ============================================================================
-
-#[test]
-fn test_difficulty_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": "5.0",
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when difficulty is a string");
-}
-
-#[test]
-fn test_difficulty_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": null,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when difficulty is null");
-}
-
-// ============================================================================
-// SCHEDULED DAYS FIELD
-// ============================================================================
-
-#[test]
-fn test_scheduled_days_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": "0",
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheduledDays is a string");
-}
-
-#[test]
-fn test_scheduled_days_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": null,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheduledDays is null");
-}
-
-// ============================================================================
-// LEARNING STEPS FIELD
-// ============================================================================
-
-#[test]
-fn test_learning_steps_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": "0",
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when learningSteps is a string");
-}
-
-#[test]
-fn test_learning_steps_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": null,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when learningSteps is null");
-}
-
-// ============================================================================
-// TIME FIELD
-// ============================================================================
-
-#[test]
-fn test_time_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": "0",
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when time is a string");
-}
-
-#[test]
-fn test_time_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": null,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when time is null");
-}
-
-// ============================================================================
-// IS IGNORED FIELD
-// ============================================================================
-
-#[test]
-fn test_is_ignored_as_string_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": "false"
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when isIgnored is a string");
-}
-
-#[test]
-fn test_is_ignored_as_null_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": null
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when isIgnored is null");
-}
-
-// ============================================================================
-// MISSING FIELDS
-// ============================================================================
-
-#[test]
-fn test_missing_card_id_fails() {
-    let json = r#"{
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when cardId is missing");
-}
-
-#[test]
-fn test_missing_rating_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when rating is missing");
-}
-
-#[test]
-fn test_missing_state_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when state is missing");
-}
-
-#[test]
-fn test_missing_due_at_defaults_to_null() {
-    let json = r#"{
+/// Canonical valid review-insert payload used as the mutation base for JSON-shape contract cases.
+fn valid_payload() -> Value {
+    json!({
         "cardId": 1,
         "rating": 1,
         "state": 0,
@@ -454,150 +15,85 @@ fn test_missing_due_at_defaults_to_null() {
         "learningSteps": 0,
         "time": 0,
         "isIgnored": false
-    }"#;
+    })
+}
 
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize");
+// ============================================================================
+// INSERT REVIEW DATA - SERDE SHAPE CONTRACTS
+// ============================================================================
+
+#[test]
+fn test_missing_required_fields_fail() {
+    let required_fields = [
+        "cardId",
+        "rating",
+        "state",
+        "stability",
+        "difficulty",
+        "scheduledDays",
+        "learningSteps",
+        "time",
+        "isIgnored",
+    ];
+
+    for field in required_fields {
+        let mut payload = valid_payload();
+        payload.as_object_mut().unwrap().remove(field);
+
+        let result: Result<InsertReviewData, _> = serde_json::from_value(payload);
+        assert!(result.is_err(), "Should fail when {field} is missing");
+    }
+
+    let result: Result<InsertReviewData, _> = serde_json::from_value(json!({}));
+    assert!(result.is_err(), "Should fail when every field is missing");
+
+    // WHY: only `dueAt` carries an explicit `#[serde(default)]`,
+    // so absence must deserialize to `None` instead of failing.
+    let data: InsertReviewData = serde_json::from_value(valid_payload()).expect("`dueAt` should default when absent");
+    assert_eq!(data.due_at, None);
+}
+
+#[test]
+fn test_wrong_typed_fields_fail() {
+    // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
+    // so extra members must never reject an otherwise valid payload.
+    let mut payload = valid_payload();
+    payload["dueAt"] = json!(null);
+    payload["unknownField"] = json!("ignored");
+
+    let data: InsertReviewData = serde_json::from_value(payload).expect("Should deserialize ignoring extra fields");
+    assert_eq!(data.due_at, None);
     data.validate().unwrap();
-    assert!(data.due_at.is_none());
-}
 
-#[test]
-fn test_missing_stability_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
+    // `dueAt` tolerates `null` and ISO 8601 strings (`deserialize_optional_timestamp`),
+    // so only a non-ISO string must reject.
+    let mistyped_fields = [
+        ("cardId", json!("not-a-number")),
+        ("cardId", json!(null)),
+        ("rating", json!("not-a-number")),
+        ("rating", json!(null)),
+        ("state", json!("not-a-number")),
+        ("state", json!(null)),
+        ("dueAt", json!("not-a-timestamp")),
+        ("stability", json!("not-a-number")),
+        ("stability", json!(null)),
+        ("difficulty", json!("not-a-number")),
+        ("difficulty", json!(null)),
+        ("scheduledDays", json!("not-a-number")),
+        ("scheduledDays", json!(null)),
+        ("learningSteps", json!("not-a-number")),
+        ("learningSteps", json!(null)),
+        ("time", json!("not-a-number")),
+        ("time", json!(null)),
+        ("isIgnored", json!("not-a-bool")),
+        ("isIgnored", json!(null)),
+    ];
 
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when stability is missing");
-}
+    for (field, offending) in mistyped_fields {
+        let mut payload = valid_payload();
+        payload[field] = offending.clone();
 
-#[test]
-fn test_missing_difficulty_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when difficulty is missing");
-}
-
-#[test]
-fn test_missing_scheduled_days_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when scheduledDays is missing");
-}
-
-#[test]
-fn test_missing_learning_steps_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "time": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when learningSteps is missing");
-}
-
-#[test]
-fn test_missing_time_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "isIgnored": false
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when time is missing");
-}
-
-#[test]
-fn test_missing_is_ignored_fails() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0
-    }"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when isIgnored is missing");
-}
-
-#[test]
-fn test_empty_json_object_fails() {
-    let json = r#"{}"#;
-
-    let result: Result<InsertReviewData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail with empty JSON");
-}
-
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
-
-#[test]
-fn test_extra_fields_ignored() {
-    let json = r#"{
-        "cardId": 1,
-        "rating": 1,
-        "state": 0,
-        "dueAt": null,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 0,
-        "learningSteps": 0,
-        "time": 0,
-        "isIgnored": false,
-        "nonexistent": "ignored",
-        "another": 123
-    }"#;
-
-    let data: InsertReviewData = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
-    data.validate().unwrap();
+        let result: Result<InsertReviewData, _> = serde_json::from_value(payload);
+        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    }
 }
