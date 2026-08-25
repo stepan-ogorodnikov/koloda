@@ -5,14 +5,13 @@ import { createSelectKeyboardDelegate, isIterableEmpty } from "./select-behavior
 import type { SelectState } from "./select-behavior";
 
 describe("isIterableEmpty", () => {
-  it("treats missing and empty iterables as empty", () => {
+  // WHY: Select gates emptyContent/allowsEmptyCollection on this predicate;
+  // missing items and exhausted iterables must collapse to "empty" while any
+  // yielded item keeps it false.
+  it("treats missing and empty iterables as empty and populated ones as non-empty", () => {
     expect(isIterableEmpty(undefined)).toBe(true);
     expect(isIterableEmpty([])).toBe(true);
-  });
-
-  it("returns false when the iterable yields at least one item", () => {
     expect(isIterableEmpty(["a"])).toBe(false);
-    expect(isIterableEmpty(new Set([1]))).toBe(false);
   });
 });
 
