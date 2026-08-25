@@ -5,216 +5,79 @@ use common::{
     missing_required_field_content, valid_card_content, valid_template_fields,
 };
 use koloda_core::domain::cards::InsertCardData;
-use serde_json::json;
+use serde_json::{json, Value};
 
-// ============================================================================
-// INSERT CARD DATA - MISSING FIELDS
-// ============================================================================
-
-#[test]
-fn test_insert_card_data_missing_deck_id() {
-    let data = json!({
+/// Canonical valid card-insert payload used as the mutation base for JSON-shape contract cases.
+fn valid_payload() -> Value {
+    json!({
+        "deckId": 1,
         "templateId": 1,
         "content": valid_card_content()
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_missing_template_id() {
-    let data = json!({
-        "deckId": 1,
-        "content": valid_card_content()
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_missing_content() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
+    })
 }
 
 // ============================================================================
-// INSERT CARD DATA - EXTRA FIELDS
+// INSERT CARD DATA - SERDE SHAPE CONTRACTS
 // ============================================================================
 
 #[test]
-fn test_insert_card_data_extra_fields_ok() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "nonexistent": "ignored",
-        "another": 123
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap();
-}
+fn test_missing_required_fields_fail() {
+    let required_fields = ["deckId", "templateId", "content"];
 
-// ============================================================================
-// INSERT CARD DATA - INVALID TYPES
-// ============================================================================
+    for field in required_fields {
+        let mut payload = valid_payload();
+        payload.as_object_mut().unwrap().remove(field);
 
-#[test]
-fn test_insert_card_data_deck_id_invalid_type() {
-    let data = json!({
-        "deckId": "not-a-number",
-        "templateId": 1,
-        "content": valid_card_content()
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
+        let result = serde_json::from_value::<InsertCardData>(payload);
+        assert!(result.is_err(), "Should fail when {field} is missing");
+    }
+
+    let result = serde_json::from_value::<InsertCardData>(json!({}));
+    assert!(result.is_err(), "Should fail when every field is missing");
+
+    // WHY: `dueAt` and `lastReviewedAt` carry an explicit `#[serde(default)]`, every other optional
+    // member is a plain `Option`, so absent members must materialize as `None` instead of failing.
+    let data =
+        serde_json::from_value::<InsertCardData>(valid_payload()).expect("Optional fields should default when absent");
+    assert_eq!(data.state, None);
+    assert_eq!(data.due_at, None);
+    assert_eq!(data.last_reviewed_at, None);
 }
 
 #[test]
-fn test_insert_card_data_template_id_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": "not-a-number",
-        "content": valid_card_content()
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
+fn test_wrong_typed_fields_fail() {
+    // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
+    // so extra members must never reject an otherwise valid payload.
+    let mut payload = valid_payload();
+    payload["nonexistent"] = json!("ignored");
+    payload["another"] = json!(123);
 
-#[test]
-fn test_insert_card_data_content_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": "not-an-object"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
+    serde_json::from_value::<InsertCardData>(payload).expect("Should deserialize ignoring extra fields");
 
-#[test]
-fn test_insert_card_data_content_field_text_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": {
-            "1": { "text": 123 },
-            "2": { "text": "Back text" }
-        }
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
+    let mistyped_fields = [
+        ("deckId", json!("not-a-number")),
+        ("templateId", json!("not-a-number")),
+        ("content", json!("not-an-object")),
+        // Content values are typed structs (`CardContentField`), so a non-string `text` must reject.
+        ("content", json!({"1": { "text": 123 }, "2": { "text": "Back text" }})),
+        ("state", json!("not-a-number")),
+        ("dueAt", json!("not-a-timestamp")),
+        ("stability", json!("not-a-number")),
+        ("difficulty", json!("not-a-number")),
+        ("scheduledDays", json!("not-a-number")),
+        ("learningSteps", json!("not-a-number")),
+        ("reps", json!("not-a-number")),
+        ("lapses", json!("not-a-number")),
+        ("lastReviewedAt", json!("not-a-timestamp")),
+    ];
 
-#[test]
-fn test_insert_card_data_state_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "state": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
+    for (field, offending) in mistyped_fields {
+        let mut payload = valid_payload();
+        payload[field] = offending.clone();
 
-#[test]
-fn test_insert_card_data_due_at_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "dueAt": "not-a-timestamp"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_stability_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "stability": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_difficulty_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "difficulty": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_scheduled_days_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "scheduledDays": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_learning_steps_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "learningSteps": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_reps_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "reps": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_lapses_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "lapses": "not-a-number"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_insert_card_data_last_reviewed_at_invalid_type() {
-    let data = json!({
-        "deckId": 1,
-        "templateId": 1,
-        "content": valid_card_content(),
-        "lastReviewedAt": "not-a-timestamp"
-    });
-    let result = serde_json::from_value::<InsertCardData>(data);
-    result.unwrap_err();
+        let result = serde_json::from_value::<InsertCardData>(payload);
+        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    }
 }
 
 // ============================================================================
