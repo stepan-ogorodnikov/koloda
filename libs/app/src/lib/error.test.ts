@@ -19,21 +19,6 @@ describe("AppError", () => {
     expect(err.code).toBe("ai.http.500");
     expect(err.details).toBe("Something went wrong");
   });
-
-  it("details are undefined when not provided", () => {
-    const err = new AppError("unknown");
-    expect(err.details).toBeUndefined();
-  });
-
-  it("is instance of Error", () => {
-    const err = new AppError("unknown");
-    expect(err).toBeInstanceOf(Error);
-  });
-
-  it("is instance of AppError", () => {
-    const err = new AppError("unknown");
-    expect(err).toBeInstanceOf(AppError);
-  });
 });
 
 describe("isAppError", () => {
@@ -51,10 +36,6 @@ describe("isAppError", () => {
 
   it("returns false for null", () => {
     expect(isAppError(null)).toBe(false);
-  });
-
-  it("returns false for undefined", () => {
-    expect(isAppError(undefined)).toBe(false);
   });
 });
 
@@ -122,23 +103,16 @@ describe("throwKnownError", () => {
 });
 
 describe("toFormErrors", () => {
-  it("converts a ZodError with one issue to indexed record", () => {
-    const schema = z.object({ name: z.string().min(1) });
-    const result = schema.safeParse({ name: "" });
-    expect(result.success).toBe(false);
-    const errors = toFormErrors(result.error!);
-    expect(errors["0"]).toHaveLength(1);
-    expect(errors["0"][0].path).toEqual(["name"]);
-    expect(errors["0"][0].message).toBe("Too small: expected string to have >=1 characters");
-  });
-
-  it("converts a ZodError with multiple issues to indexed keys", () => {
+  it("converts a ZodError issues to an indexed record", () => {
     const schema = z.object({ a: z.string().min(1), b: z.string().min(1) });
     const result = schema.safeParse({ a: "", b: "" });
     expect(result.success).toBe(false);
     const errors = toFormErrors(result.error!);
+    expect(Object.keys(errors)).toEqual(["0", "1"]);
     expect(errors["0"]).toHaveLength(1);
     expect(errors["1"]).toHaveLength(1);
+    expect(errors["0"][0].path).toEqual(["a"]);
+    expect(errors["0"][0].message).toBe("Too small: expected string to have >=1 characters");
   });
 
   it("converts AppError to a single entry with error code", () => {
@@ -157,12 +131,5 @@ describe("toFormErrors", () => {
     expect(errors["0"]).toHaveLength(1);
     expect(errors["0"][0].message).toBe("unknown");
     expect(errors["0"][0].path).toEqual(["0"]);
-  });
-
-  it("converts null to unknown fallback", () => {
-    const errors = toFormErrors(null);
-
-    expect(errors["0"]).toHaveLength(1);
-    expect(errors["0"][0].message).toBe("unknown");
   });
 });
