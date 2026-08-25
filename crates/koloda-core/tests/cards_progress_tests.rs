@@ -1,159 +1,11 @@
 mod common;
 
 use koloda_core::domain::cards::UpdateCardProgress;
-use serde_json::json;
+use serde_json::{json, Value};
 
-// ============================================================================
-// UPDATE CARD PROGRESS - MISSING FIELDS
-// ============================================================================
-
-#[test]
-fn test_update_card_progress_missing_id() {
-    let data = json!({
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_state() {
-    let data = json!({
-        "id": 1,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_due_at() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_stability() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_difficulty() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_scheduled_days() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_learning_steps() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_reps() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_lapses() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_missing_last_reviewed_at_ok() {
-    let data = json!({
+/// Canonical valid card-progress payload used as the mutation base for JSON-shape contract cases.
+fn valid_payload() -> Value {
+    json!({
         "id": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -163,207 +15,77 @@ fn test_update_card_progress_missing_last_reviewed_at_ok() {
         "learningSteps": 0,
         "reps": 0,
         "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap();
+    })
 }
 
 // ============================================================================
-// UPDATE CARD PROGRESS - EXTRA FIELDS
+// UPDATE CARD PROGRESS - SERDE SHAPE CONTRACTS
 // ============================================================================
 
 #[test]
-fn test_update_card_progress_extra_fields_ok() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0,
-        "lastReviewedAt": null,
-        "unknownField": "ignored"
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap();
-}
+fn test_missing_required_fields_fail() {
+    let required_fields = [
+        "id",
+        "state",
+        "dueAt",
+        "stability",
+        "difficulty",
+        "scheduledDays",
+        "learningSteps",
+        "reps",
+        "lapses",
+    ];
 
-// ============================================================================
-// UPDATE CARD PROGRESS - INVALID TYPES
-// ============================================================================
+    for field in required_fields {
+        let mut payload = valid_payload();
+        payload.as_object_mut().unwrap().remove(field);
 
-#[test]
-fn test_update_card_progress_id_invalid_type() {
-    let data = json!({
-        "id": "not-a-number",
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
+        let result = serde_json::from_value::<UpdateCardProgress>(payload);
+        assert!(result.is_err(), "Should fail when {field} is missing");
+    }
+
+    let result = serde_json::from_value::<UpdateCardProgress>(json!({}));
+    assert!(result.is_err(), "Should fail when every field is missing");
+
+    // WHY: only `lastReviewedAt` carries an explicit `#[serde(default)]`,
+    // so absence must deserialize to `None` instead of failing.
+    let progress: UpdateCardProgress =
+        serde_json::from_value(valid_payload()).expect("`lastReviewedAt` should default when absent");
+    assert_eq!(progress.last_reviewed_at, None);
 }
 
 #[test]
-fn test_update_card_progress_state_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": "not-a-number",
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
+fn test_wrong_typed_fields_fail() {
+    // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
+    // so extra members must never reject an otherwise valid payload.
+    let mut payload = valid_payload();
+    payload["lastReviewedAt"] = json!(null);
+    payload["unknownField"] = json!("ignored");
 
-#[test]
-fn test_update_card_progress_due_at_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": "not-a-timestamp",
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
+    let progress =
+        serde_json::from_value::<UpdateCardProgress>(payload).expect("Should deserialize ignoring extra fields");
+    assert_eq!(progress.last_reviewed_at, None);
 
-#[test]
-fn test_update_card_progress_stability_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": "not-a-number",
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
+    let mistyped_fields = [
+        ("id", json!("not-a-number")),
+        ("state", json!("not-a-number")),
+        ("dueAt", json!("not-a-timestamp")),
+        ("stability", json!("not-a-number")),
+        ("difficulty", json!("not-a-number")),
+        ("scheduledDays", json!("not-a-number")),
+        ("learningSteps", json!("not-a-number")),
+        ("reps", json!("not-a-number")),
+        ("lapses", json!("not-a-number")),
+        ("lastReviewedAt", json!("not-a-timestamp")),
+    ];
 
-#[test]
-fn test_update_card_progress_difficulty_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": "not-a-number",
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
+    for (field, offending) in mistyped_fields {
+        let mut payload = valid_payload();
+        payload[field] = offending.clone();
 
-#[test]
-fn test_update_card_progress_scheduled_days_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": "not-a-number",
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_learning_steps_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": "not-a-number",
-        "reps": 0,
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_reps_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": "not-a-number",
-        "lapses": 0
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_lapses_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": "not-a-number"
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
-}
-
-#[test]
-fn test_update_card_progress_last_reviewed_at_invalid_type() {
-    let data = json!({
-        "id": 1,
-        "state": 0,
-        "dueAt": 1000000000,
-        "stability": 5.0,
-        "difficulty": 5.0,
-        "scheduledDays": 1,
-        "learningSteps": 0,
-        "reps": 0,
-        "lapses": 0,
-        "lastReviewedAt": "not-a-timestamp"
-    });
-    let result = serde_json::from_value::<UpdateCardProgress>(data);
-    result.unwrap_err();
+        let result = serde_json::from_value::<UpdateCardProgress>(payload);
+        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    }
 }
 
 // ============================================================================
