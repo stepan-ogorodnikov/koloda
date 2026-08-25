@@ -1,4 +1,18 @@
 use koloda_core::domain::algorithms_fsrs::AlgorithmFSRS;
+use serde_json::{json, Value};
+
+/// Canonical valid FSRS payload used as the mutation base for JSON-shape contract cases.
+fn valid_payload() -> Value {
+    json!({
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    })
+}
 
 #[test]
 fn test_valid_algorithm_full() {
@@ -17,166 +31,58 @@ fn test_valid_algorithm_full() {
 }
 
 #[test]
-fn test_missing_type_fails() {
-    let json = r#"{
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
+fn test_missing_required_fields_fail() {
+    let required_fields = [
+        "type",
+        "retention",
+        "weights",
+        "isFuzzEnabled",
+        "learningSteps",
+        "relearningSteps",
+        "maximumInterval",
+    ];
 
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when type is missing");
+    for field in required_fields {
+        let mut payload = valid_payload();
+        payload.as_object_mut().unwrap().remove(field);
+
+        let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
+        assert!(result.is_err(), "Should fail when {field} is missing");
+    }
+
+    let result: Result<AlgorithmFSRS, _> = serde_json::from_value(json!({}));
+    assert!(result.is_err(), "Should fail when every field is missing");
 }
 
 #[test]
-fn test_missing_retention_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
+fn test_wrong_typed_fields_fail() {
+    // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
+    // so extra members must never reject an otherwise valid payload.
+    let mut payload = valid_payload();
+    payload["extraField"] = json!("ignored");
+    payload["anotherExtra"] = json!(123);
 
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when retention is missing");
-}
-
-#[test]
-fn test_missing_weights_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when weights is missing");
-}
-
-#[test]
-fn test_missing_is_fuzz_enabled_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when isFuzzEnabled is missing");
-}
-
-#[test]
-fn test_missing_learning_steps_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when learningSteps is missing");
-}
-
-#[test]
-fn test_missing_relearning_steps_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when relearningSteps is missing");
-}
-
-#[test]
-fn test_missing_maximum_interval_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": []
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when maximumInterval is missing");
-}
-
-#[test]
-fn test_empty_json_object_fails() {
-    let json = r#"{}"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail with empty JSON");
-}
-
-#[test]
-fn test_extra_fields_ignored() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500,
-        "extraField": "ignored",
-        "anotherExtra": 123
-    }"#;
-
-    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
+    let algorithm: AlgorithmFSRS = serde_json::from_value(payload).expect("Should deserialize ignoring extra fields");
     algorithm.validate().unwrap();
-}
 
-#[test]
-fn test_type_as_number_fails() {
-    let json = r#"{
-        "type": 123,
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
+    let mistyped_fields = [
+        ("type", json!(123)),
+        ("type", json!(null)),
+        ("retention", json!("90.0")),
+        ("retention", json!(null)),
+        ("isFuzzEnabled", json!("true")),
+        // Steps must be `[amount, unit]` tuples, not plain strings.
+        ("learningSteps", json!(["10m", "1d"])),
+        ("maximumInterval", json!("36500")),
+    ];
 
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when type is a number");
-}
+    for (field, offending) in mistyped_fields {
+        let mut payload = valid_payload();
+        payload[field] = offending.clone();
 
-#[test]
-fn test_type_as_null_fails() {
-    let json = r#"{
-        "type": null,
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when type is null");
+        let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
+        assert!(result.is_err(), "Should fail when {field} is {offending}");
+    }
 }
 
 #[test]
@@ -241,38 +147,6 @@ fn test_retention_above_maximum_fails() {
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     assert!(algorithm.validate().is_err(), "Should fail when retention > 99");
-}
-
-#[test]
-fn test_retention_as_string_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": "90.0",
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when retention is a string");
-}
-
-#[test]
-fn test_retention_as_null_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": null,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when retention is null");
 }
 
 #[test]
@@ -415,22 +289,6 @@ fn test_is_fuzz_enabled_false() {
 }
 
 #[test]
-fn test_is_fuzz_enabled_as_string_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": "true",
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when isFuzzEnabled is a string");
-}
-
-#[test]
 fn test_learning_steps_empty_array() {
     let json = r#"{
         "type": "fsrs",
@@ -514,22 +372,6 @@ fn test_learning_steps_negative_amount_fails() {
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     assert!(algorithm.validate().is_err(), "Should fail with negative amount");
-}
-
-#[test]
-fn test_learning_steps_wrong_format_string_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": ["10m", "1d"],
-        "relearningSteps": [],
-        "maximumInterval": 36500
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when steps are strings instead of tuples");
 }
 
 #[test]
@@ -658,20 +500,4 @@ fn test_maximum_interval_negative_fails() {
 
     let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
     assert!(algorithm.validate().is_err(), "Should fail with negative interval");
-}
-
-#[test]
-fn test_maximum_interval_as_string_fails() {
-    let json = r#"{
-        "type": "fsrs",
-        "retention": 90.0,
-        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
-        "isFuzzEnabled": true,
-        "learningSteps": [],
-        "relearningSteps": [],
-        "maximumInterval": "36500"
-    }"#;
-
-    let result: Result<AlgorithmFSRS, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when maximumInterval is a string");
 }
