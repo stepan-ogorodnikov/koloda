@@ -136,6 +136,8 @@ Match these files when the shape fits:
 - `libs/srs-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/native-electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
+- `crates/koloda-core/tests/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
+- `libs/srs-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
 
 ## Running
 
