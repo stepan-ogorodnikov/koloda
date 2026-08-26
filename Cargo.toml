@@ -5,6 +5,10 @@ members = [
 ]
 resolver = "2"
 
+# Faster MSVC links: deps get line tables only. Workspace crates keep full debuginfo
+[profile.dev.package."*"]
+debug = 1
+
 [workspace.lints.clippy]
 # Don't panic
 string_slice = "warn"
