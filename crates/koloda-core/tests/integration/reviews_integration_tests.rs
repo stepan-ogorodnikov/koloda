@@ -3,10 +3,9 @@ use koloda_core::domain::settings::SettingsName;
 use koloda_core::repo::reviews;
 use serde_json::json;
 
-mod common;
-use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
-use common::test_db;
-use common::{counted_daily_limit, learning_settings_with_day_start};
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
+use crate::common::test_db;
+use crate::common::{counted_daily_limit, learning_settings_with_day_start};
 
 fn get_todays_timestamp() -> i64 {
     koloda_core::app::utility::get_current_timestamp().expect("timestamp should be available")

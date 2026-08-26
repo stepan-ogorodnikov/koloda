@@ -6,9 +6,8 @@ use koloda_core::domain::lessons::{
 use koloda_core::domain::reviews::InsertReviewData;
 use koloda_core::repo::lessons;
 
-mod common;
-use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_card_row};
-use common::test_db;
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_card_row};
+use crate::common::test_db;
 
 #[test]
 fn submit_lesson_result_updates_card_and_inserts_review() {

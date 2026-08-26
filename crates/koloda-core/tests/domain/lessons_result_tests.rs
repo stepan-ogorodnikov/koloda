@@ -1,6 +1,4 @@
-mod common;
-
-use common::{valid_card_progress_json, valid_review_json};
+use crate::common::{valid_card_progress_json, valid_review_json};
 use koloda_core::domain::lessons::LessonResultData;
 use serde_json::json;
 

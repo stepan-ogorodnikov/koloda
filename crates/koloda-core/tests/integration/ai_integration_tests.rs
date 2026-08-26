@@ -3,8 +3,7 @@ use koloda_core::domain::ai::AISecrets;
 use koloda_core::repo::ai;
 use std::sync::Arc;
 
-mod common;
-use common::test_db;
+use crate::common::test_db;
 
 mod test_store {
     use koloda_core::app::error::AppError;

@@ -6,9 +6,9 @@ use koloda_core::domain::lessons::LessonResultData;
 use koloda_core::domain::reviews::{GetReviewsData, InsertReviewData};
 use koloda_core::repo::{cards, lessons, reviews};
 
-mod common;
-use common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
-use common::test_db;
+use crate::common::card_content;
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
+use crate::common::test_db;
 
 #[test]
 fn add_card_rejects_missing_deck() {
@@ -22,7 +22,7 @@ fn add_card_rejects_missing_deck() {
         InsertCardData {
             deck_id: 999_999,
             template_id,
-            content: common::card_content("question", "answer"),
+            content: card_content("question", "answer"),
             state: None,
             due_at: None,
             stability: None,
@@ -50,7 +50,7 @@ fn add_card_rejects_invalid_progress_state() {
         InsertCardData {
             deck_id,
             template_id,
-            content: common::card_content("question", "answer"),
+            content: card_content("question", "answer"),
             state: Some(999),
             due_at: None,
             stability: None,
@@ -78,7 +78,7 @@ fn add_cards_rejects_missing_deck_per_item() {
         vec![InsertCardData {
             deck_id: 999_999,
             template_id,
-            content: common::card_content("question", "answer"),
+            content: card_content("question", "answer"),
             state: None,
             due_at: None,
             stability: None,
@@ -115,7 +115,7 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
             InsertCardData {
                 deck_id,
                 template_id,
-                content: common::card_content("first", "answer"),
+                content: card_content("first", "answer"),
                 state: None,
                 due_at: None,
                 stability: None,
@@ -129,7 +129,7 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
             InsertCardData {
                 deck_id,
                 template_id: 999_999,
-                content: common::card_content("second", "answer"),
+                content: card_content("second", "answer"),
                 state: None,
                 due_at: None,
                 stability: None,
@@ -178,7 +178,7 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
             InsertCardData {
                 deck_id: deck_id_a,
                 template_id: template_id_a,
-                content: common::card_content("first", "answer"),
+                content: card_content("first", "answer"),
                 state: None,
                 due_at: None,
                 stability: None,
@@ -192,7 +192,7 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
             InsertCardData {
                 deck_id: deck_id_b,
                 template_id: template_id_b,
-                content: common::card_content("second", "answer"),
+                content: card_content("second", "answer"),
                 state: None,
                 due_at: None,
                 stability: None,

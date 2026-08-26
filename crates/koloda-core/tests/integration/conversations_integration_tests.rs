@@ -2,9 +2,8 @@ use koloda_core::domain::conversations::Conversation;
 use koloda_core::repo::conversations as repo;
 use serde_json::json;
 
-mod common;
-use common::fixtures::add_conversation;
-use common::test_db;
+use crate::common::fixtures::add_conversation;
+use crate::common::test_db;
 
 fn set(
     db: &koloda_core::app::db::Database,

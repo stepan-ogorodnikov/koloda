@@ -3,8 +3,7 @@ use koloda_core::domain::settings::SettingsName;
 use koloda_core::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
 use koloda_core::repo::{algorithms, settings, templates};
 
-mod common;
-use common::{fsrs_algorithm_content, seed_data, test_db};
+use crate::common::{fsrs_algorithm_content, seed_data, test_db};
 
 #[test]
 fn seed_db_is_idempotent_and_reuses_oldest_algorithm_and_template() {

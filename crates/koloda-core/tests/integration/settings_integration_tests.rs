@@ -3,8 +3,7 @@ use koloda_core::domain::settings::SettingsName;
 use koloda_core::repo::settings;
 use serde_json::json;
 
-mod common;
-use common::{counted_daily_limit, interface_settings, learning_settings, test_db};
+use crate::common::{counted_daily_limit, interface_settings, learning_settings, test_db};
 
 #[test]
 fn set_settings_updates_row_and_sets_updated_at() {

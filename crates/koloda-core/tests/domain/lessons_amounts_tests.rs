@@ -1,5 +1,3 @@
-mod common;
-
 use koloda_core::app::error::error_codes;
 use koloda_core::domain::lessons::{GetLessonDataParams, LessonAmounts, LessonFilters};
 

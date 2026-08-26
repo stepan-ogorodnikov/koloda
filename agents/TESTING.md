@@ -25,8 +25,8 @@ If it would still pass, redesign the test before writing it.
 | Layer | Owns | Location |
 | --- | --- | --- |
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
-| Rust unit | Domain validation, serde wire contracts | `crates/koloda-core/tests/<entity>_tests.rs` |
-| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `*_integration_tests.rs`, `libs/srs-pgsql/src/lib/*.integration.test.ts` |
+| Rust unit | Domain validation, serde wire contracts | `crates/koloda-core/tests/domain/<entity>_tests.rs` |
+| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda-core/tests/integration/<entity>_integration_tests.rs`, `libs/srs-pgsql/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/demo-e2e`, `apps/native-electron-e2e` |
 
 - Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
@@ -36,6 +36,7 @@ If it would still pass, redesign the test before writing it.
   Trimming CRUD permutations must never remove an entity's last roundtrip.
 - Do not add a unit test that shadows a Playwright spec; the flow belongs to e2e.
 - Rust file pairs follow `agents/CORE-CRATE.md` (Entity CRUD notes).
+  New files go under `tests/domain/` or `tests/integration/` and must be listed in `tests/domain/main.rs` or `tests/integration/main.rs`.
 
 ## Write tests for
 
@@ -131,12 +132,12 @@ Coverage must never dip between two commits.
 
 Match these files when the shape fits:
 
-- `crates/koloda-core/tests/reviews_totals_tests.rs` — boundary semantics for limit policy.
+- `crates/koloda-core/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
 - `libs/assistant/src/lib/assistant-engine.test.ts` — gated-deferred interleavings for async coordination.
 - `libs/srs-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/native-electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
-- `crates/koloda-core/tests/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
+- `crates/koloda-core/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
 - `libs/srs-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
 
 ## Running
@@ -144,4 +145,5 @@ Match these files when the shape fits:
 - All TS lib tests: `bun run test:libs`.
 - One TS lib: `bunx vitest run --config libs/<name>/vitest.config.mjs --configLoader runner [filter]`.
 - Rust: `cargo test -p koloda-core`.
+  Domain vs persistence: `cargo test -p koloda-core --test domain` / `--test integration`.
   The integration harness is self-contained (in-memory SQLite); no external services.

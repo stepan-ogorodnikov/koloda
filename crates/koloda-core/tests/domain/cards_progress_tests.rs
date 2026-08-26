@@ -1,5 +1,3 @@
-mod common;
-
 use koloda_core::domain::cards::UpdateCardProgress;
 use serde_json::{json, Value};
 

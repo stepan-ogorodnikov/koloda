@@ -1,4 +1,4 @@
-#![expect(dead_code, reason = "shared fixtures are not all used by every including test")]
+#![allow(dead_code, reason = "shared fixtures are not all used by every including test")]
 
 use koloda_core::app::db::Database;
 use koloda_core::domain::algorithms::InsertAlgorithmData;

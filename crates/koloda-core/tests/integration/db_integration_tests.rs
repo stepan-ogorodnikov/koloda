@@ -1,5 +1,4 @@
-mod common;
-use common::test_db;
+use crate::common::test_db;
 use koloda_core::app::error::{error_codes, throw_known_error, AppError};
 
 #[test]

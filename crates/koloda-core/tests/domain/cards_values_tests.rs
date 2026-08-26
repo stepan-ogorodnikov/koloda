@@ -1,6 +1,4 @@
-mod common;
-
-use common::{
+use crate::common::{
     empty_optional_field_content, empty_required_field_content, missing_optional_field_content,
     missing_required_field_content, valid_card_content, valid_template_fields,
 };

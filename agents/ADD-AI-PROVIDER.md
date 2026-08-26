@@ -247,9 +247,9 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 
 ### 9. Add Tests
 
-- `crates/koloda-core/tests/ai_tests.rs` - Rust unit tests
-- `crates/koloda-core/tests/ai_integration_tests.rs` - Rust integration tests
-- `crates/koloda-core/tests/settings_ai_tests.rs` - Settings validation tests
+- `crates/koloda-core/tests/domain/ai_tests.rs` - Rust unit tests
+- `crates/koloda-core/tests/integration/ai_integration_tests.rs` - Rust integration tests
+- `crates/koloda-core/tests/domain/settings_ai_tests.rs` - Settings validation tests
 
 ## Key Files Reference
 

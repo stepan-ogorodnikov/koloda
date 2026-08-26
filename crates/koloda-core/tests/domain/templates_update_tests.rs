@@ -1,5 +1,3 @@
-mod common;
-
 use koloda_core::domain::templates::{
     TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };

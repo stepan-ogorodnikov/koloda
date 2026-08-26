@@ -4,9 +4,8 @@ use koloda_core::domain::templates::{
 };
 use koloda_core::repo::templates;
 
-mod common;
-use common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use common::test_db;
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
+use crate::common::test_db;
 
 #[test]
 fn delete_template_fails_when_template_is_locked_by_cards() {

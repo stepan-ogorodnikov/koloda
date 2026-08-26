@@ -2,9 +2,8 @@ use koloda_core::app::error::error_codes;
 use koloda_core::domain::decks::{InsertDeckData, UpdateDeckData, UpdateDeckValues};
 use koloda_core::repo::decks;
 
-mod common;
-use common::fixtures::{add_algorithm, add_deck, add_template};
-use common::test_db;
+use crate::common::fixtures::{add_algorithm, add_deck, add_template};
+use crate::common::test_db;
 
 #[test]
 fn add_deck_rejects_missing_algorithm() {

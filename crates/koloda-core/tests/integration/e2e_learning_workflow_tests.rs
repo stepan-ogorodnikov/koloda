@@ -7,8 +7,7 @@ use koloda_core::domain::lessons::{
 use koloda_core::domain::reviews::GetReviewTotalsParams;
 use koloda_core::repo::{algorithms, cards, decks, lessons, reviews, templates};
 
-mod common;
-use common::{card_content, fsrs_content, test_db};
+use crate::common::{card_content, fsrs_content, simple_template, test_db};
 
 #[test]
 fn e2e_full_learning_workflow() {
@@ -24,7 +23,7 @@ fn e2e_full_learning_workflow() {
     .expect("algorithm should be created");
     let algorithm_id = algorithm.id;
 
-    let template = templates::add_template(&db, common::simple_template()).expect("template should be created");
+    let template = templates::add_template(&db, simple_template()).expect("template should be created");
     let template_id = template.id;
 
     let deck = decks::add_deck(
