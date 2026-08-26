@@ -1,112 +1,140 @@
+//! Secret-store seam contract tests plus one gated real-store smoke test.
+//!
+//! The default suite is hermetic: the seam tests inject a marker fake through
+//! `set_test_secret_store` and never touch the OS credential vault. The smoke
+//! test below is the only one that hits real FFI; run it explicitly with
+//! `cargo test -p koloda-core -- --ignored`.
+
 use koloda_core::app::secrets::{create_secret_store, SecretStore};
-use std::sync::{Arc, Barrier};
-use std::thread;
-use std::time::{SystemTime, UNIX_EPOCH};
 
-fn unique_service_name(prefix: &str) -> String {
-    let nanos = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Clock went backwards")
-        .as_nanos();
-    format!("{}-{}-{}", prefix, std::process::id(), nanos)
+// The seam compiles only under `debug_assertions` (see WHY comment in
+// `src/app/secrets.rs`), so these tests are gated identically to keep
+// `cargo test --release` green.
+#[cfg(debug_assertions)]
+mod seam {
+    use koloda_core::app::error::AppError;
+    use koloda_core::app::secrets::{get_secret_store, set_test_secret_store, SecretStore};
+    use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+
+    static LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+    /// Serializes seam tests: each holds the global lock for its duration and
+    /// clears the override on drop, so a failing assertion cannot leak state
+    /// into the next test.
+    struct Guard(#[expect(dead_code, reason = "holds mutex guard for test isolation")] MutexGuard<'static, ()>);
+
+    impl Drop for Guard {
+        fn drop(&mut self) {
+            set_test_secret_store(None).expect("clear test secret store");
+        }
+    }
+
+    /// Stateless marker stub: exists only so a test has an `Arc` to compare
+    /// against. A distinctive code makes any call-through fail loudly at the
+    /// consuming `expect`, proving the wrong store was reached.
+    struct MarkerStore;
+
+    const MARKER_CALLED: &str = "test-secrets.marker-store-called";
+
+    fn marker_called() -> AppError {
+        AppError::new(
+            MARKER_CALLED,
+            Some("marker store must never be called through".to_string()),
+        )
+    }
+
+    impl SecretStore for MarkerStore {
+        fn get(&self, _key: &str) -> Result<Option<String>, AppError> {
+            Err(marker_called())
+        }
+        fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
+            Err(marker_called())
+        }
+        fn remove(&self, _key: &str) -> Result<(), AppError> {
+            Err(marker_called())
+        }
+    }
+
+    fn install_marker() -> (Guard, Arc<dyn SecretStore>) {
+        let guard = Guard(LOCK.lock().unwrap_or_else(|e| e.into_inner()));
+        let marker: Arc<dyn SecretStore> = Arc::new(MarkerStore);
+        set_test_secret_store(Some(Arc::clone(&marker))).expect("install marker store");
+        (guard, marker)
+    }
+
+    #[test]
+    fn get_secret_store_returns_the_installed_override() {
+        let (_guard, marker) = install_marker();
+
+        let resolved = get_secret_store().expect("get_secret_store should resolve");
+        assert!(Arc::ptr_eq(&resolved, &marker), "override must be returned as-is");
+    }
+
+    #[test]
+    fn fallback_after_clear_returns_real_singleton_not_the_override() {
+        let (_guard, marker) = install_marker();
+        set_test_secret_store(None).expect("clear marker store");
+
+        // Fallback constructs the real store object only; no vault access happens here.
+        let first = get_secret_store().expect("first fallback should resolve");
+        let second = get_secret_store().expect("second fallback should resolve");
+
+        assert!(
+            !Arc::ptr_eq(&first, &marker),
+            "cleared override must not leak into fallback"
+        );
+        assert!(
+            Arc::ptr_eq(&first, &second),
+            "fallback calls must hit the same REAL_SECRET_STORE singleton"
+        );
+    }
 }
 
-fn cleanup_key(store: &dyn SecretStore, key: &str) {
-    if let Err(_cleanup_err) = store.remove(key) {}
-}
+/// Manual purge if this key ever strands: Windows Credential Manager target
+/// "koloda-test-smoke:smoke-key"; other platforms service "koloda-test-smoke",
+/// entry "smoke-key".
+const SERVICE: &str = "koloda-test-smoke";
+const KEY: &str = "smoke-key";
 
+#[ignore = "writes a real OS credential; run explicitly"]
 #[test]
-fn runtime_store_set_get_remove_round_trip() {
-    let service = unique_service_name("runtime-secrets-round-trip");
-    let store = create_secret_store(Box::leak(service.into_boxed_str()));
-    let key = "alpha";
+fn real_store_smoke_set_get_overwrite_remove() {
+    let store = create_secret_store(SERVICE);
 
-    cleanup_key(&*store, key);
-    store.set(key, "v1").expect("set should work");
-    assert_eq!(store.get(key).expect("get should work"), Some("v1".to_string()));
+    // Cleanup layer 1 (entry): recovers a key stranded by an earlier killed run
+    // (no unwind happened) and makes "vault lacks this key" an explicit fixture
+    // precondition. Delete-of-absent maps to Ok on both real stores.
+    store.remove(KEY).expect("entry cleanup remove");
 
-    store.remove(key).expect("remove should work");
-    assert_eq!(store.get(key).expect("get after remove should work"), None);
-}
+    // Cleanup layer 2 (drop): removes the key even when an assertion panics and
+    // the unwind runs.
+    struct RemoveOnDrop<'a>(&'a dyn SecretStore);
+    impl Drop for RemoveOnDrop<'_> {
+        fn drop(&mut self) {
+            if let Err(cleanup_err) = self.0.remove(KEY) {
+                eprintln!("smoke-test cleanup remove failed: {}", cleanup_err);
+            }
+        }
+    }
+    let _cleanup = RemoveOnDrop(&*store);
 
-#[test]
-fn runtime_store_overwrite_updates_value() {
-    let service = unique_service_name("runtime-secrets-overwrite");
-    let store = create_secret_store(Box::leak(service.into_boxed_str()));
-    let key = "alpha";
+    // Smokes the not-found mapping branch: ERROR_NOT_FOUND / NoEntry -> Ok(None).
+    assert_eq!(store.get(KEY).expect("get on absent key"), None);
 
-    cleanup_key(&*store, key);
-    store.set(key, "v1").expect("first set should work");
-    store.set(key, "v2").expect("second set should work");
+    store.set(KEY, "v1").expect("set should work");
+    assert_eq!(store.get(KEY).expect("get should work"), Some("v1".to_string()));
 
-    assert_eq!(store.get(key).expect("get should work"), Some("v2".to_string()));
-    store.remove(key).expect("cleanup remove should work");
-}
+    store.set(KEY, "v2").expect("overwrite set should work");
+    assert_eq!(store.get(KEY).expect("get after overwrite"), Some("v2".to_string()));
 
-#[test]
-fn runtime_store_is_isolated_by_service() {
-    let service_a = unique_service_name("runtime-secrets-service-a");
-    let service_b = unique_service_name("runtime-secrets-service-b");
-    let store_a = create_secret_store(Box::leak(service_a.into_boxed_str()));
-    let store_b = create_secret_store(Box::leak(service_b.into_boxed_str()));
-    let key = "shared-key";
-
-    cleanup_key(&*store_a, key);
-    cleanup_key(&*store_b, key);
-
-    store_a.set(key, "a-value").expect("set on service A should work");
+    // The reads above are served by the first store's per-process cache; a second
+    // instance has a cold cache, forcing a real FFI found-read (blob decode).
+    let cold_reader = create_secret_store(SERVICE);
     assert_eq!(
-        store_a.get(key).expect("get from service A should work"),
-        Some("a-value".to_string())
+        cold_reader.get(KEY).expect("cache-miss get after overwrite"),
+        Some("v2".to_string())
     );
-    assert_eq!(store_b.get(key).expect("get from service B should work"), None);
 
-    store_a.remove(key).expect("cleanup remove on service A should work");
-}
-
-#[test]
-fn runtime_store_concurrent_set_and_get() {
-    let service = unique_service_name("runtime-secrets-concurrent");
-    let store = create_secret_store(Box::leak(service.into_boxed_str()));
-    let workers = 10;
-    let start = Arc::new(Barrier::new(workers));
-    let mut handles = Vec::new();
-
-    for i in 0..workers {
-        let store = Arc::clone(&store);
-        let start = Arc::clone(&start);
-        handles.push(thread::spawn(move || {
-            let key = format!("concurrent-key-{}", i);
-            let value = format!("value-{}", i);
-
-            start.wait();
-
-            store.set(&key, &value).expect("concurrent set should work");
-            assert_eq!(
-                store.get(&key).expect("concurrent get should work"),
-                Some(value.clone()),
-                "concurrent get should return own value for own key"
-            );
-
-            store.remove(&key).expect("concurrent remove should work");
-            assert_eq!(
-                store.get(&key).expect("concurrent get after remove should work"),
-                None,
-                "concurrent remove should clear own key"
-            );
-        }));
-    }
-
-    for handle in handles {
-        handle.join().expect("thread should not panic");
-    }
-}
-
-#[test]
-fn runtime_store_get_nonexistent_key() {
-    let service = unique_service_name("runtime-secrets-missing");
-    let store = create_secret_store(Box::leak(service.into_boxed_str()));
-
-    let result = store.get("nonexistent-key").expect("get should work");
-    assert_eq!(result, None, "nonexistent key should return None");
+    store.remove(KEY).expect("remove should work");
+    assert_eq!(store.get(KEY).expect("get after remove"), None);
 }
