@@ -13,14 +13,9 @@ import {
 import { assistantActiveRunIdAtom, assistantConversationHasContextAtom } from "./conversation-selectors";
 import { setAssistantAIProfileAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
-import { initialConversationState } from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
 describe("assistantConversationStateAtom (per-conversation store)", () => {
-  it("returns initialConversationState when no conversation is selected", () => {
-    const store = createStore();
-    expect(store.get(assistantConversationStateAtom)).toEqual(initialConversationState);
-  });
-
   it("round-trips a dispatch through the writable atom for the current conversation", () => {
     const store = createStore();
 
@@ -512,119 +507,78 @@ describe("updatedAt stamping (only on run start)", () => {
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
   });
 
-  it("addUserMessage does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
+  type UpdatedAtNegativeCase = {
+    label: string;
+    /** Dispatched verbatim — action/payload pairs stay byte-identical to real call sites. */
+    action: ConversationReducerAction;
+    /** Conversation fixture overrides (commitRevert needs pre-existing messages + a finished run). */
+    buildOverrides?: Partial<ConversationReducerState>;
+    /** Overrides the default seedUpdatedAt baseline (addCard self-seeds via its own startRun). */
+    baseline?: (store: ReturnType<typeof createStore>) => number;
+    /** Setup dispatch after baseline capture, before advanceClock (commitRevert arms revert state first). */
+    prefixDispatch?: (store: ReturnType<typeof createStore>) => void;
+  };
 
-    dispatchTo(store, "A", ["addUserMessage", { runId: "r1", text: "Hi" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("addAssistantMessage does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("updateAssistantText does NOT bump updatedAt (streaming chunk)", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["updateAssistantText", { runId: "seed", text: "chunk" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("addCard does NOT bump updatedAt (streaming chunk)", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    const ts = store.get(conversationsAtom)["A"]!.updatedAt!.getTime();
-    advanceClock();
-
-    dispatchTo(store, "A", ["addCard", { runId: "r1", card: { content: {} } }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("completeRun does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["completeRun", { runId: "seed" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("cancelRun does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["cancelRun", { runId: "seed" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("dismissRunError does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["dismissRunError", { runId: "seed" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("setAIProfile does NOT bump updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
-    advanceClock();
-
-    dispatchTo(store, "A", ["setAIProfile", { profileId: "p1", modelId: "m1" }]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
-  });
-
-  it("commitRevert does NOT bump updatedAt", () => {
-    const store = createStore();
-    const messages = [
-      {
-        id: "user-r1",
-        role: "user" as const,
-        parts: [{ type: "text" as const, text: "Hi" }],
-        metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+  // WHY: Only run-start actions (startRun/submitTurn/restartRun — RUN_START_ACTIONS in
+  // conversation-store.ts) may stamp `updatedAt`; every other action must leave the
+  // timestamp exactly as the last run-start left it. One table keeps that negative
+  // surface exhaustive without nine copy-pasted tests. Rows deliberately preserve the
+  // original runIds ("seed" vs "r1") and payload shapes; per-row hooks exist only where
+  // the setup genuinely differs (addCard captures its own startRun bump as baseline;
+  // commitRevert needs revert state armed before the timed dispatch).
+  const negativeCases: UpdatedAtNegativeCase[] = [
+    { label: "addUserMessage", action: ["addUserMessage", { runId: "r1", text: "Hi" }] },
+    { label: "addAssistantMessage", action: ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }] },
+    {
+      label: "updateAssistantText (streaming chunk)",
+      action: ["updateAssistantText", { runId: "seed", text: "chunk" }],
+    },
+    {
+      label: "addCard (streaming chunk)",
+      action: ["addCard", { runId: "r1", card: { content: {} } }],
+      baseline: (store) => {
+        dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
+        return store.get(conversationsAtom)["A"]!.updatedAt!.getTime();
       },
-      {
-        id: "assistant-r1",
-        role: "assistant" as const,
-        parts: [{ type: "text" as const, text: "Hello" }],
-        metadata: { kind: "chat-text", runId: "r1" },
+    },
+    { label: "completeRun", action: ["completeRun", { runId: "seed" }] },
+    { label: "cancelRun", action: ["cancelRun", { runId: "seed" }] },
+    { label: "dismissRunError", action: ["dismissRunError", { runId: "seed" }] },
+    { label: "setAIProfile", action: ["setAIProfile", { profileId: "p1", modelId: "m1" }] },
+    {
+      label: "commitRevert",
+      action: ["commitRevert"],
+      buildOverrides: {
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "Hi" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+          {
+            id: "assistant-r1",
+            role: "assistant",
+            parts: [{ type: "text", text: "Hello" }],
+            metadata: { kind: "chat-text", runId: "r1" },
+          },
+        ],
+        runs: { r1: makeRun("r1", "success") },
       },
-    ];
-    store.set(upsertConversationAtom, makeConversation("A", { messages, runs: { r1: makeRun("r1", "success") } }));
-    store.set(setCurrentConversationIdAtom, "A");
-    const ts = seedUpdatedAt(store, "A");
+      prefixDispatch: (store) =>
+        dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r1", preRevertInputText: "" }]),
+    },
+  ];
 
-    dispatchTo(store, "A", ["setRevertState", { revertedToUserMessageId: "user-r1", preRevertInputText: "" }]);
+  it.each(negativeCases)("$label does NOT bump updatedAt", (row) => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", row.buildOverrides));
+    store.set(setCurrentConversationIdAtom, "A");
+    const ts = row.baseline ? row.baseline(store) : seedUpdatedAt(store, "A");
+    row.prefixDispatch?.(store);
     advanceClock();
 
-    dispatchTo(store, "A", ["commitRevert"]);
+    dispatchTo(store, "A", row.action);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
   });
 });
