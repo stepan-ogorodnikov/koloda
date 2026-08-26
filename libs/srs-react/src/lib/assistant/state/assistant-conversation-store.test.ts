@@ -1,5 +1,5 @@
 import { createStore } from "jotai";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   assistantConversationStateAtom,
   touchAtom,
@@ -440,6 +440,21 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
 });
 
 describe("updatedAt stamping (only on run start)", () => {
+  // WHY: Fake only the wall clock (`toFake: ["Date"]`) — these tests are fully
+  // synchronous and never touch timers, so a narrow fake surface gives exact
+  // control over `updatedAt` stamping without risking interference with jotai
+  // internals or promise scheduling. Hooks are scoped to this describe so every
+  // other suite in the file keeps real time.
+  const CLOCK_STEP_MS = 1000;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   function seedUpdatedAt(store: ReturnType<typeof createStore>, id: string) {
     const original = store.get(conversationsAtom)[id]!.updatedAt;
     dispatchTo(store, id, ["startRun", { runId: "seed" }]);
@@ -449,11 +464,11 @@ describe("updatedAt stamping (only on run start)", () => {
     return seeded!.getTime();
   }
 
+  // WHY: The fake clock is frozen between steps, so one fixed-step advance
+  // replaces the old busy-wait spin — deterministic, and any spurious restamp
+  // becomes exactly measurable (bumped rows assert seed + step below).
   function advanceClock() {
-    const t = Date.now();
-    while (Date.now() === t) {
-      /* spin */
-    }
+    vi.advanceTimersByTime(CLOCK_STEP_MS);
   }
 
   it("startRun bumps updatedAt", () => {
@@ -482,7 +497,7 @@ describe("updatedAt stamping (only on run start)", () => {
         assistantText: "",
       },
     ]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts + CLOCK_STEP_MS);
   });
 
   it("restartRun bumps updatedAt", () => {
@@ -504,7 +519,7 @@ describe("updatedAt stamping (only on run start)", () => {
         templateFields: null,
       },
     ]);
-    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBeGreaterThan(ts);
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts + CLOCK_STEP_MS);
   });
 
   type UpdatedAtNegativeCase = {
