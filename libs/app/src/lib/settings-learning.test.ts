@@ -2,8 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_LEARNING_SETTINGS,
   learningSettingsValidation,
+  parseDayStartsAt,
   resolvedLearningSettingsValidation,
 } from "./settings-learning";
+
+describe("parseDayStartsAt", () => {
+  it.each([
+    { name: "00:00", input: "00:00", hours: 0, minutes: 0 },
+    { name: "05:00", input: "05:00", hours: 5, minutes: 0 },
+    { name: "23:59", input: "23:59", hours: 23, minutes: 59 },
+  ])("returns hours and minutes for $name", ({ input, hours, minutes }) => {
+    expect(parseDayStartsAt(input)).toEqual({ hours, minutes });
+  });
+});
 
 describe("learningSettingsValidation", () => {
   it("provides default daily limits when empty", () => {

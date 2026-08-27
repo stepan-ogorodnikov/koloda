@@ -26,13 +26,10 @@ If it would still pass, redesign the test before writing it.
 | --- | --- | --- |
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
 | Rust unit | Domain validation, serde wire contracts | `crates/koloda-core/tests/domain/<entity>_tests.rs` |
-| Conformance | Mirrored domain behavior both backends must agree on | `conformance/*.json` plus a thin adapter per language |
 | Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda-core/tests/integration/<entity>_integration_tests.rs`, `libs/srs-pgsql/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/demo-e2e`, `apps/native-electron-e2e` |
 
-- Every rule has exactly one test home per implementation.
-  The TS ↔ Rust twins required below are mirror coverage, not duplicates.
-  When a conformance suite exists for that rule, the JSON file is that home; do not add a second hand-written twin.
+- Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
 - Do not re-test a validator through the repo layer unless the repo adds persistence-specific behavior.
 - Every entity keeps at least one full-field roundtrip at the integration layer: write every column, read it back, compare field-by-field.
   This is the only check that catches SQL↔struct column-mapping drift — validators and unit tests never see it.
@@ -63,15 +60,7 @@ An intermittent failure is a bug — fix it before merging rather than retrying.
 
 Mirrored domain logic (`docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`) must carry the same boundary tests on both sides.
 A rule tested in only one implementation will regress in the other.
-
-When a shared golden suite exists for that rule (`conformance/*.json`), add the case there.
-Do not add a second hand-written twin.
-Both language adapters must run it.
-Fixture shape and how to add a row: `conformance/README.md`.
-
-When no golden suite exists yet, keep the old twin: a case in `libs/srs` or `libs/app` needs its counterpart in `crates/koloda-core`, and vice versa.
-
-Keep colocated unit tests for details goldens do not encode: Zod/serde defaults, wrappers, fake-timer current-time paths.
+When you add a boundary case in `libs/srs` or `libs/app`, add its twin in `crates/koloda-core`, and vice versa.
 
 ## Banned patterns
 

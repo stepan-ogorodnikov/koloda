@@ -15,7 +15,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["libs/srs/src/**/*.test.ts"],
-    exclude: ["libs/srs/src/lib/conformance/**"],
     setupFiles: ["libs/srs/src/test-setup.ts"],
     env: {
       TZ: "America/New_York",

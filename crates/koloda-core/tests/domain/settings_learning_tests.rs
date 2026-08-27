@@ -1,5 +1,5 @@
 use koloda_core::domain::settings::SettingsName;
-use koloda_core::domain::settings_learning::LearningSettings;
+use koloda_core::domain::settings_learning::{parse_day_starts_at, LearningSettings};
 
 fn standard_daily_limits() -> &'static str {
     r#"{
@@ -217,6 +217,13 @@ fn test_non_counted_limit_can_exceed_total() {
         settings.validate().is_ok(),
         "Non-counted limits should not be capped by total"
     );
+}
+
+#[test]
+fn parse_day_starts_at_returns_hours_and_minutes() {
+    assert_eq!(parse_day_starts_at("00:00").unwrap(), (0, 0));
+    assert_eq!(parse_day_starts_at("05:00").unwrap(), (5, 0));
+    assert_eq!(parse_day_starts_at("23:59").unwrap(), (23, 59));
 }
 
 #[test]

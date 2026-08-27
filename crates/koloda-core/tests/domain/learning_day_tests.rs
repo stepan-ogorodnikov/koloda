@@ -130,6 +130,42 @@ fn learning_day_range_at_midnight_boundary() {
 }
 
 #[test]
+fn learning_day_range_at_last_minute_boundary() {
+    let now = local_datetime(2024, 1, 2, 23, 59);
+    let (from, to) = learning_day_range_at(now, "23:59").expect("range should be valid");
+
+    assert_eq!(from, local_datetime(2024, 1, 2, 23, 59).timestamp_millis());
+    assert_eq!(to, local_datetime(2024, 1, 3, 23, 59).timestamp_millis());
+}
+
+#[test]
+fn learning_day_range_rolls_back_across_month_boundary() {
+    let now = local_datetime(2024, 2, 1, 4, 30);
+    let (from, to) = learning_day_range_at(now, "05:00").expect("range should be valid");
+
+    assert_eq!(from, local_datetime(2024, 1, 31, 5, 0).timestamp_millis());
+    assert_eq!(to, local_datetime(2024, 2, 1, 5, 0).timestamp_millis());
+}
+
+#[test]
+fn learning_day_range_rolls_back_across_year_boundary() {
+    let now = local_datetime(2024, 1, 1, 4, 30);
+    let (from, to) = learning_day_range_at(now, "05:00").expect("range should be valid");
+
+    assert_eq!(from, local_datetime(2023, 12, 31, 5, 0).timestamp_millis());
+    assert_eq!(to, local_datetime(2024, 1, 1, 5, 0).timestamp_millis());
+}
+
+#[test]
+fn learning_day_range_keeps_leap_day() {
+    let now = local_datetime(2024, 2, 29, 6, 30);
+    let (from, to) = learning_day_range_at(now, "05:00").expect("range should be valid");
+
+    assert_eq!(from, local_datetime(2024, 2, 29, 5, 0).timestamp_millis());
+    assert_eq!(to, local_datetime(2024, 3, 1, 5, 0).timestamp_millis());
+}
+
+#[test]
 fn learning_day_range_spring_forward_before_boundary_is_23_hours() {
     // 2024-03-10 02:00 EST → 03:00 EDT. Window [03-09 05:00 EST, 03-10 05:00 EDT) spans the gap.
     let now = ny_datetime(2024, 3, 10, 4, 30);

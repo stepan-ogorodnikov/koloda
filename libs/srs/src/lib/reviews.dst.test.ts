@@ -46,6 +46,15 @@ describe.skipIf(processTimeZone !== "America/New_York")(
       });
     });
 
+    it("keeps 05:00 local the morning after spring-forward", () => {
+      const range = getLearningDayRangeAt(new Date(2024, 2, 11, 4, 30, 0, 0), "05:00");
+
+      expect(range).toEqual({
+        from: new Date(2024, 2, 10, 5, 0, 0, 0).toISOString(),
+        to: new Date(2024, 2, 11, 5, 0, 0, 0).toISOString(),
+      });
+    });
+
     it("uses a 25-hour window when before 05:00 on the fall-back day", () => {
       const range = getLearningDayRangeAt(new Date(2024, 10, 3, 4, 30, 0, 0), "05:00");
       const from = new Date(range.from);

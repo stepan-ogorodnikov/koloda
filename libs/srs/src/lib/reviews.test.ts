@@ -38,6 +38,48 @@ describe("reviews", () => {
     } satisfies Partial<AppError>);
   });
 
+  it("treats the boundary instant as the start of the current learning day", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 0, 2, 5, 0, 0, 0), "05:00")).toEqual({
+      from: new Date(2024, 0, 2, 5, 0, 0, 0).toISOString(),
+      to: new Date(2024, 0, 3, 5, 0, 0, 0).toISOString(),
+    });
+  });
+
+  it("uses midnight as a calendar-date boundary", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 5, 15, 12, 0, 0, 0), "00:00")).toEqual({
+      from: new Date(2024, 5, 15, 0, 0, 0, 0).toISOString(),
+      to: new Date(2024, 5, 16, 0, 0, 0, 0).toISOString(),
+    });
+  });
+
+  it("uses the last minute of the calendar day as a boundary", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 0, 2, 23, 59, 0, 0), "23:59")).toEqual({
+      from: new Date(2024, 0, 2, 23, 59, 0, 0).toISOString(),
+      to: new Date(2024, 0, 3, 23, 59, 0, 0).toISOString(),
+    });
+  });
+
+  it("rolls the previous learning day back across a month boundary", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 1, 1, 4, 30, 0, 0), "05:00")).toEqual({
+      from: new Date(2024, 0, 31, 5, 0, 0, 0).toISOString(),
+      to: new Date(2024, 1, 1, 5, 0, 0, 0).toISOString(),
+    });
+  });
+
+  it("rolls the previous learning day back across a year boundary", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 0, 1, 4, 30, 0, 0), "05:00")).toEqual({
+      from: new Date(2023, 11, 31, 5, 0, 0, 0).toISOString(),
+      to: new Date(2024, 0, 1, 5, 0, 0, 0).toISOString(),
+    });
+  });
+
+  it("keeps leap day as a real calendar date", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 1, 29, 6, 30, 0, 0), "05:00")).toEqual({
+      from: new Date(2024, 1, 29, 5, 0, 0, 0).toISOString(),
+      to: new Date(2024, 2, 1, 5, 0, 0, 0).toISOString(),
+    });
+  });
+
   it("normalizes totals using counts flags and marks over-limit states", async () => {
     const result = await calculateTodaysReviewTotals(
       {
