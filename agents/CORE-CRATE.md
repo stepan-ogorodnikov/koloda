@@ -18,7 +18,7 @@ This file only tells you where to start.
 | Schema / migrations | `agents/DB.md` |
 | AI provider enum / secrets redaction | `agents/ADD-AI-PROVIDER.md` |
 | Hotkeys settings | `agents/ADD-HOTKEY.md` |
-| Assistant chat persistence | `agents/ASSISTANT-CHAT-MAP.md` |
+| Assistant chat persistence | `agents/ASSISTANT-MAP.md` |
 
 ## Per-task notes
 

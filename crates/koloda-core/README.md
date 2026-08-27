@@ -33,4 +33,4 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 - `agents/ADD-AI-PROVIDER.md` — Rust domain + repo + secrets redaction
 - `agents/ADD-HOTKEY.md` — `domain/settings_hotkeys.rs`
 - `agents/BACKWARDS-COMPATIBILITY.md` — pre-release; no compat shims
-- `agents/ASSISTANT-CHAT-MAP.md` — persistence invariants that repos must uphold
+- `agents/ASSISTANT-MAP.md` — persistence invariants that repos must uphold

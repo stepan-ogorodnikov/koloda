@@ -24,7 +24,7 @@ The listed files are relative to the repo root.
 | Change adds or edits tests | add `agents/TESTING.md` |
 | Edit touches `className` | add `agents/CSS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
-| Assistant chat (anything) | `agents/ASSISTANT-CHAT-MAP.md` (it routes to the specs and files) |
+| Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to the specs and files) |
 | SRS behavior change (cards, decks, lessons, grading, templates, algorithms, learning settings) | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
 | Change inside `crates/koloda-core` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/CORE-CRATE.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
@@ -46,7 +46,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Diff adds or changes tests | add `agents/TESTING.md` |
 | Diff touches `className` | add `agents/CSS.md` |
 | Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
-| Assistant chat diff | `agents/ASSISTANT-CHAT-MAP.md` (+ the spec it names) |
+| Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the spec it names) |
 | SRS behavior diff | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
 | koloda-core diff | `agents/CORE-CRATE.md`, `docs/adr/0001` |

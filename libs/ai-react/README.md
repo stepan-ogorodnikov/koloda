@@ -6,7 +6,7 @@ Shared React UI primitives and streaming transport hooks for assistant chat. Pre
 
 Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces). Depends on `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`. Conversation state, orchestration, and persistence live in `libs/srs-react/src/lib/assistant/`.
 
-**Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing edits.
+**Ownership source of truth:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing edits.
 
 ## Architectural Map
 
@@ -27,5 +27,5 @@ Consumed by `libs/srs-react/.../assistant` (and apps that compose those surfaces
 
 ## Read next
 
-- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
-- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — behavioral rules the chat feature implements
+- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
+- `docs/specs/ASSISTANT-CONVERSATIONS.md` — behavioral rules the chat feature implements

@@ -159,7 +159,7 @@ export const touchAtom = atom(null, (get, set) => {
 export const setCurrentConversationIdAtom = atom(null, (get, set, id: string | null) => {
   set(currentConversationIdAtom, id);
   // WHY: Opening a conversation is what marks it as read (see
-  // ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status). Dispatch a markRead
+  // ASSISTANT-CONVERSATIONS.md §Unread Status). Dispatch a markRead
   // for the latest run, so the conversation clears its unread state and
   // the updated `lastReadRunId` is persisted. We do this here rather than
   // at the route layer so any future caller of this atom (deep links,

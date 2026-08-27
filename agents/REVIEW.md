@@ -30,7 +30,7 @@ Acceptable anchors:
 - A guide file and section: `agents/CODE-STYLE.md` (Props Types), `agents/CSS.md` (Conditional styling).
 - An ADR: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
 - A spec: `docs/specs/LESSONS.md` (Grading).
-- A playbook row: `agents/ASSISTANT-CHAT-MAP.md` (Fix streaming).
+- A playbook row: `agents/ASSISTANT-MAP.md` (Fix streaming).
 - A package README boundary: `libs/srs-react/README.md` (Does NOT own).
 - A lint rule from `.oxlintrc.json`.
 
@@ -49,7 +49,7 @@ It must be fixed before merge.
 Raise Blocking for:
 
 - Correctness errors, broken invariants, or behavior that contradicts a spec.
-- Layer boundary violations: cite a row from `agents/ASSISTANT-CHAT-MAP.md` or a README "Does NOT own" line.
+- Layer boundary violations: cite a row from `agents/ASSISTANT-MAP.md` or a README "Does NOT own" line.
 - TS ↔ Rust out of sync: provider enum, theme ids, schema, or any field that `docs/adr/0001` says both sides must agree on.
 - Missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious inline code (see `agents/CODE-DOCUMENTATION.md`).
   Module/type orientation docs that state ownership, mappings, or do-not-interpret rules are allowed; do not demand tags on those.
@@ -85,7 +85,7 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
 - Do not suggest deprecation shims, adapter layers, or compatibility wrappers. See `agents/BACKWARDS-COMPATIBILITY.md`.
 - Do not propose collapsing the TS ↔ Rust duplication or unifying the two DB dialects. See `docs/adr/0001`, `docs/adr/0002`.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust. The source of truth is TS. See `docs/adr/0001`.
-- Do not flag provider HTTP calls living in `libs/ai` instead of the store. Layer boundaries own this. See `agents/ASSISTANT-CHAT-MAP.md`.
+- Do not flag provider HTTP calls living in `libs/ai` instead of the store. Layer boundaries own this. See `agents/ASSISTANT-MAP.md`.
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport. It is the allowed compound component exception. See `agents/CODE-STYLE.md`.
 - Do not request i18n for theme labels. Labels are plain strings in the theme registries. See `agents/ADD-COLOR-THEME.md`.
 - Do not propose a "cleaner" code shape that contradicts a spec. Specs are the source of truth. If code and spec disagree, raise the discrepancy as Blocking and stop.

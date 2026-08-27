@@ -1,4 +1,4 @@
-# Assistant Chat: Conversations
+# Assistant Conversations
 
 Covers the conversation lifecycle, messages, runs, AI profile state, persistence, restore, error handling, retry, and revert.
 Does not cover deck management, AI provider configuration, assistant settings (prompt templates and temperature), or the streaming transport layer.
@@ -39,7 +39,11 @@ Relationships:
 
 Conversations are listed in the sidebar, sorted by most recently updated.
 The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
-One of the following indicators could be shown in the sidebar next to the conversation's name.
+Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
+If the sidebar has no conversations, nothing is shown.
+The "New Conversation" button is disabled when there are no messages and no active run.
+A second empty conversation cannot be created.
+A working or unread indicator may appear next to the conversation's name.
 
 ### Working Status
 
@@ -363,7 +367,7 @@ Revert is a visual action.
 It hides the target user message and everything after it from the UI.
 The hidden messages are only actually deleted when the user submits a new prompt.
 The user can also restore a reverted conversation, bringing the hidden messages back.
-Full behavior is specified in ASSISTANT-CHAT-MESSAGES.md (§Reverting the Conversation).
+Full behavior is specified in ASSISTANT-MESSAGES.md (§Reverting the Conversation).
 
 ### Revert State
 
@@ -396,16 +400,3 @@ Only one run can be active at a time per conversation.
 If the user switches to a different conversation while a run is active, the run continues in the background.
 Stream chunks, terminal transitions, and persistence dirty notifications target the originating conversation by id — switching away does not abort the run and does not apply updates to the newly viewed conversation.
 Deleting a conversation evicts its runtime (cancels in-flight work, closes its serial queue) after coordinated delete/tombstone handling so a late upsert cannot resurrect the row.
-
-## Edge Cases
-
-- A conversation with no user messages is named "Untitled" and never persisted to the database
-- A failed, canceled, or interrupted run from a previous session keeps its messages and run record on restore so partial output and retry survive reload
-- The "New Conversation" button is disabled when there are no messages and no active run — you can't create a second empty conversation
-- If the sidebar has no conversations, nothing is shown (not even an empty state message)
-- Card statuses are always idle when first generated — they only become pending or success through user interaction
-- Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar
-- Picking a different AI profile, model, or model parameter in one conversation does not immediately change what other conversations show
-  The global last-used record is updated when the user changes the value or submits a prompt
-- When a conversation is loaded and its data is invalid or declares an unknown future schema version, it's silently reset to empty rather than showing an error
-- Revert never persists; reloading the app clears the revert state and the messages become visible again.

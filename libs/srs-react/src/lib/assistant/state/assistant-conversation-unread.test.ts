@@ -334,7 +334,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
   });
 });
 
-// WHY: ASSISTANT-CHAT-CONVERSATIONS.md §Conversation List — "The timestamp
+// WHY: ASSISTANT-CONVERSATIONS.md §Conversation List — "The timestamp
 // is bumped only when a new run starts". Every other action (streaming
 // chunks, completions, cancellations, deck/mode/profile changes, etc.)
 // must NOT touch updatedAt.

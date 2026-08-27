@@ -101,7 +101,7 @@ export type CloneConversationPayload = {
 // message history while dropping the message pair for any streaming run
 // (linked by `runId` metadata). So the clone is assembled here directly
 // and inserted into the store as a complete unit (see
-// ASSISTANT-CHAT-CONVERSATIONS.md §Clone).
+// ASSISTANT-CONVERSATIONS.md §Clone).
 export const cloneConversationAtom = atom(null, (get, set, payload: CloneConversationPayload) => {
   const { sourceId } = payload;
   const store = get(conversationsAtom);

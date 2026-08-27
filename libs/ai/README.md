@@ -5,11 +5,11 @@ Provider-agnostic AI abstraction: streams chat completions from any registered p
 ## Where it sits
 
 Consumed by host `AIRuntime` adapters (Electron main / demo) for provider HTTP, and by `libs/ai-react` / `libs/srs-react/.../assistant` for types, pure helpers, and the `AIRuntime` contract.
-Shared React must not call `createAIGenerationClient` with secrets — see `agents/ASSISTANT-CHAT-MAP.md` (AIRuntime seam).
+Shared React must not call `createAIGenerationClient` with secrets — see `agents/ASSISTANT-MAP.md` (AIRuntime seam).
 Mirrors the provider enum and secrets schema in `crates/koloda-core` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`.
 Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
 
-**Ownership source of truth:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over package READMEs when routing edits.
+**Ownership source of truth:** `agents/ASSISTANT-MAP.md` — prefer that map over package READMEs when routing edits.
 
 ## Architectural Map
 
@@ -37,6 +37,6 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 ## Read next
 
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — Rust owns provider identity; this lib mirrors it
-- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
+- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
 - `agents/ADD-AI-PROVIDER.md` — step-by-step across all 5 layers (TS types, Rust domain, Rust repo, registry, streaming)
-- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — the domain behavior this lib serves
+- `docs/specs/ASSISTANT-CONVERSATIONS.md` — the domain behavior this lib serves

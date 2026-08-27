@@ -72,16 +72,9 @@ Values outside 0–2 cannot be saved.
 
 A run uses the settings that are current when the run starts.
 Changing settings does not rewrite past messages or past runs.
+Saving does not start a run and does not change the active conversation's messages.
 
 If the user has not saved a custom prompt, that run uses the built-in default.
 If a custom prompt is saved, that text is trimmed and used instead.
 
 Temperature omitted or unset falls back to 0.2 for the run.
-
-## Edge Cases
-
-- Assistant settings are shared across all conversations; editing them in one place affects later runs everywhere
-- Settings-panel open state is local to the assistant view and is not persisted
-- Saving does not start a run and does not change the active conversation's messages
-- Profile secrets and model parameters are not part of assistant settings
-- Leftover placeholder text in a saved custom prompt is sent as written; it is not expanded from a deck template

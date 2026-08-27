@@ -12,7 +12,7 @@ function elapsedSecondsSince(startedAt: Date): number {
 /**
  * DB-writable conversation fields.
  * No `revertState` — revert is in-memory only
- * (ASSISTANT-CHAT-CONVERSATIONS.md §Revert / §Persistence).
+ * (ASSISTANT-CONVERSATIONS.md §Revert / §Persistence).
  * `schemaVersion` is persistence-boundary only (not live reducer state).
  */
 export type PersistedConversation = Omit<ConversationReducerState, "revertState"> & {

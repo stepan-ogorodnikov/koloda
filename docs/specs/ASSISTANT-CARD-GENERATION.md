@@ -1,4 +1,4 @@
-# Assistant Chat: Card Generation
+# Assistant Card Generation
 
 Covers how the AI proposes flashcard content during chat, how proposed cards are displayed, selected, and added to a deck, and how invalid proposals are handled.
 Does not cover conversation lifecycle, assistant settings editing, or the streaming transport layer.
@@ -56,6 +56,7 @@ Each proposed card is a map of exact template field title to invented text.
 The write target is the deck id and template id on that tool call.
 
 An empty proposal does not create a review table.
+An accepted list of 0 cards does not set a write target.
 Invalid cards and cards past a 200-card cap are dropped from the accepted list.
 If the tool accepts 0 cards, the result tells the model to call `propose_cards` again with the titles from that result.
 The run itself is not failed by an empty or invalid proposal.
@@ -156,9 +157,3 @@ It clears the previous cards and tool rows and streams a new response from scrat
 The model may call `propose_cards` again.
 The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs.
 Retry is only available on the most recent message pair.
-
-## Edge Cases
-
-- If the template no longer exists when a previous conversation is restored, a synthetic template is created from stored field data so the table can still render
-- A markdown table in the assistant text does not become reviewable cards
-- An accepted list of 0 cards does not set a write target

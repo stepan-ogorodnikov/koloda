@@ -1,4 +1,4 @@
-# Assistant Chat: Data Access
+# Assistant Data Access
 
 Covers what user data the assistant reads, when that data is fetched and sent, what is recorded, and how retry treats it.
 Does not cover the run lifecycle, retry availability, revert, or clone behavior — those are covered by the conversations spec.
@@ -161,15 +161,3 @@ What a live run fetched is the tool activity on that run.
   A malformed snapshot fails restore as corrupt.
 - The conversation stores nothing new for data access.
 - Format versioning, migration, and unknown-version handling follow the conversations spec.
-
-## Edge Cases
-
-- An oversized deck always yields something: the capped list, never silence
-- A user with no decks can still list them; the list is empty
-- Deck data is never injected into the system prompt
-- Edits after submit are visible to a retry, because tools run again
-- A tool call for a missing deck fails that call.
-  The run is not silently denied data access as a whole
-- Tool rows survive reload; in-flight calls on a crash-restored run show as failed
-- A model that cannot call tools fails the run with the provider error; there is no injected fallback
-- Existing cards reach the model only when it calls `get_deck_cards`

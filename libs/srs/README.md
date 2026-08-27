@@ -28,4 +28,4 @@ Desktop mirrors live in `crates/koloda-core/src/domain/`; keep TS and Rust align
 
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust domain stay duplicated
 - `agents/DB.md` — update domain here when schema fields change
-- `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md` — card generation behavior this lib serves
+- `docs/specs/ASSISTANT-CARD-GENERATION.md` — card generation behavior this lib serves

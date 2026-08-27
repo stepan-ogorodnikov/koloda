@@ -1,4 +1,4 @@
-# Assistant Chat: Messages
+# Assistant Messages
 
 Covers message types, message metadata, how messages are displayed, message states and status indicators, and user interactions with messages.
 Does not cover conversation lifecycle, runs, persistence, or the streaming transport layer.
@@ -117,6 +117,7 @@ For a mixed chat turn, content is the tool rows, the proposed cards, and leftove
 The user types a prompt and presses Enter or clicks Submit.
 This creates a user message and an assistant message placeholder.
 A run starts immediately in streaming status.
+If that run fails, the user message and an error assistant message remain, so the conversation is not empty.
 
 ### Canceling a Run
 
@@ -136,6 +137,7 @@ Retry reuses the same run ID.
 The existing message content is cleared.
 New content streams in from scratch.
 Retry is always a chat turn with tools.
+Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn.
 
 ### Reverting the Conversation
 
@@ -145,6 +147,7 @@ It hides the target user message and everything after it from the UI, while leav
 The hidden messages are only actually deleted when the user submits a new prompt.
 
 The revert affordance is available next to every user message.
+It is available regardless of the paired assistant's status: success, failed, canceled, or error marker.
 
 #### What Is Hidden
 
@@ -157,6 +160,7 @@ After revert, the following are hidden from the UI:
 
 The hidden messages and runs remain in the conversation state.
 They are filtered out of the UI but the data is not modified.
+While revert is active, hidden messages are also excluded from the conversation history sent to the AI.
 
 #### Reverting Again
 
@@ -199,18 +203,3 @@ Step-start parts are filtered out and not displayed.
 When extracting text content for display or history, all text parts are joined with double newlines.
 Leading and trailing whitespace is trimmed.
 Non-text parts are ignored.
-
-## Edge Cases
-
-- An empty placeholder assistant message is created at run start, before any content arrives
-- Partial content from a failed or canceled run is preserved and visible to the user
-- Error marker messages have empty text
-- When restoring from database, persisted streaming checkpoints become `interrupted` with `reason: crash_recovery`; messages and partial output are kept so the user can retry (see ASSISTANT-CHAT-CONVERSATIONS.md §Restore)
-- Failed runs leave behind the user message and an error assistant message, so the conversation is never empty
-- Pending card statuses are reset to idle on restore, allowing the user to try adding them again
-- If a template no longer exists when restoring, a synthetic template is created from stored field data so the card table can still render
-- Only the most recent message pair can be retried — older runs are not retryable
-- Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn
-- Messages without metadata are rendered as raw content without status indicators
-- Revert is available on any user message regardless of its assistant's status — success, failed, canceled, or error marker. A streaming run is auto-canceled as part of the revert.
-- The conversation history sent to the AI excludes hidden messages while revert is active.

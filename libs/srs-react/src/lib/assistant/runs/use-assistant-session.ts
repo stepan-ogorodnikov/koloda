@@ -81,7 +81,7 @@ export function useAssistantSession({
     dispatch(["cancelRun", { runId: currentActiveRunId }]);
     // WHY: User cancel is always on the current conversation. Mark read
     // after cancelRun so navigating away does not surface this run as unread
-    // (ASSISTANT-CHAT-CONVERSATIONS.md §Unread Status).
+    // (ASSISTANT-CONVERSATIONS.md §Unread Status).
     setConversationReducerAction(["markRead", { runId: currentActiveRunId }]);
     // WHY: Abort only this run's controller. Other conversations can stream
     // concurrently (same or different mode); canceling must not kill them.

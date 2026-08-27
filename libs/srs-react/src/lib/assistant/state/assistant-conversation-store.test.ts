@@ -622,5 +622,5 @@ describe("assistantConversationHasContextAtom", () => {
   });
 });
 
-// WHY: Revert is in-memory only (ASSISTANT-CHAT-CONVERSATIONS.md
+// WHY: Revert is in-memory only (ASSISTANT-CONVERSATIONS.md
 // §Revert). It must not bump `updatedAt` and must not be persisted.

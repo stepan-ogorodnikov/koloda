@@ -9,7 +9,7 @@ Consumed by `@koloda/srs-react` via an application-shell engine host (`useAssist
 Depends on `@koloda/ai` (stream/request types), `@koloda/app` (abort/error helpers), and `@koloda/srs` (template fields for proposed cards).
 Conversation documents and reducer policy still live in `@koloda/srs-react`; this package owns run **execution lifetime**, **per-conversation save queue scheduling**, and **graceful shutdown** so chat unmount does not abort background streams or dispose pending flushes.
 
-**Ownership source of truth for assistant chat:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing assistant edits.
+**Ownership source of truth for assistant chat:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing assistant edits.
 
 ## Architectural Map
 
@@ -72,6 +72,6 @@ Orphaned `streaming` checkpoints left on disk after a crash are normalized to `i
 
 ## Read next
 
-- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
-- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md` — run lifecycle and streaming rules
-- `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md` — card proposal behavior
+- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
+- `docs/specs/ASSISTANT-CONVERSATIONS.md` — run lifecycle and streaming rules
+- `docs/specs/ASSISTANT-CARD-GENERATION.md` — card proposal behavior

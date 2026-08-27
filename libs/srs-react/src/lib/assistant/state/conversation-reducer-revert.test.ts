@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { conversationReducer, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 
-// WHY: See ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
+// WHY: See ASSISTANT-MESSAGES.md §Reverting the Conversation.
 // Revert is now a visual overlay (setRevertState) backed by an explicit
 // commit step (commitRevert) that performs the actual deletion on the
 // next generate.
@@ -214,7 +214,7 @@ describe("conversationReducer → re-revert (setRevertState over an existing rev
 // WHY: commitRevert is the only step that actually deletes hidden
 // messages and runs. It is fired when the user submits a new prompt
 // while the conversation is in a reverted state. See
-// ASSISTANT-CHAT-MESSAGES.md §Reverting the Conversation.
+// ASSISTANT-MESSAGES.md §Reverting the Conversation.
 describe("conversationReducer → commitRevert", () => {
   function chatRun(runId: string, status: "streaming" | "success" | "failed" | "canceled" | "interrupted" = "success") {
     return {

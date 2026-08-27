@@ -8,7 +8,7 @@ Consumed by `@koloda/app-react` route files.
 Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
 Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`; run execution lifetime lives in `@koloda/assistant`; this package owns conversation policy, React hosts, and SRS screens.
 
-**Ownership source of truth for assistant chat:** `agents/ASSISTANT-CHAT-MAP.md` — prefer that map over this README when routing assistant edits.
+**Ownership source of truth for assistant chat:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing assistant edits.
 
 ## Architectural Map
 
@@ -28,8 +28,8 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 
 ## Read next
 
-- `agents/ASSISTANT-CHAT-MAP.md` — task routing and layer boundaries
-- `docs/specs/ASSISTANT-CHAT-CONVERSATIONS.md`
-- `docs/specs/ASSISTANT-CHAT-MESSAGES.md`
-- `docs/specs/ASSISTANT-CHAT-CARD-GENERATION.md`
+- `agents/ASSISTANT-MAP.md` — task routing and layer boundaries
+- `docs/specs/ASSISTANT-CONVERSATIONS.md`
+- `docs/specs/ASSISTANT-MESSAGES.md`
+- `docs/specs/ASSISTANT-CARD-GENERATION.md`
 - `agents/I18N.md` — strings in feature UI

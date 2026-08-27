@@ -19,7 +19,7 @@ export type SaveScheduler = {
 /**
  * Throttle/debounce coalescing for conversation autosave.
  * Framework-free so timing can be unit-tested with fake timers
- * (ASSISTANT-CHAT-CONVERSATIONS.md §Persistence).
+ * (ASSISTANT-CONVERSATIONS.md §Persistence).
  *
  * Streaming checkpoints are persisted as-is (`streaming` status). Restore
  * normalizes orphaned streaming runs to `interrupted`/`crash_recovery`.

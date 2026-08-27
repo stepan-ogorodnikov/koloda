@@ -4,14 +4,14 @@ import type { AIProfileStateUpdater } from "./ai-profile-state";
 /**
  * Dual-write / last-used shapes for AI profile state.
  * Conversation reducer fields and the global localStorage record stay separate
- * stores (see ASSISTANT-CHAT-CONVERSATIONS.md §AI Profile State); this module
+ * stores (see ASSISTANT-CONVERSATIONS.md §AI Profile State); this module
  * owns the payloads that keep them in sync.
  */
 
 export function lastUsedOnRunStart(profileId: string, modelId: string): AIProfileStateUpdater {
   // WHY: Omit modelParameters — `useSetGlobalAIProfileState` patches entry-wise,
   // so an omitted (or empty) map leaves stored params alone. Submit/retry must
-  // not clear params the picker already wrote (ASSISTANT-CHAT-CONVERSATIONS.md
+  // not clear params the picker already wrote (ASSISTANT-CONVERSATIONS.md
   // §AI Profile State — global updates on run start).
   return { profileId, modelId };
 }
