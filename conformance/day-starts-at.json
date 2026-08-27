@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "accepts 00:00",
+      "input": { "dayStartsAt": "00:00" },
+      "output": { "hours": 0, "minutes": 0 }
+    },
+    {
+      "name": "accepts 05:00",
+      "input": { "dayStartsAt": "05:00" },
+      "output": { "hours": 5, "minutes": 0 }
+    },
+    {
+      "name": "accepts 23:00",
+      "input": { "dayStartsAt": "23:00" },
+      "output": { "hours": 23, "minutes": 0 }
+    },
+    {
+      "name": "accepts 23:59",
+      "input": { "dayStartsAt": "23:59" },
+      "output": { "hours": 23, "minutes": 59 }
+    },
+    {
+      "name": "accepts 04:59",
+      "input": { "dayStartsAt": "04:59" },
+      "output": { "hours": 4, "minutes": 59 }
+    },
+    {
+      "name": "rejects unpadded hours",
+      "input": { "dayStartsAt": "5:00" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects unpadded minutes",
+      "input": { "dayStartsAt": "05:0" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects missing colon",
+      "input": { "dayStartsAt": "0400" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects seconds",
+      "input": { "dayStartsAt": "04:00:00" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects empty",
+      "input": { "dayStartsAt": "" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects garbage",
+      "input": { "dayStartsAt": "invalid" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects hours 24",
+      "input": { "dayStartsAt": "24:00" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects hours 25",
+      "input": { "dayStartsAt": "25:00" },
+      "error": "validation.settings-learning.day-starts-at"
+    },
+    {
+      "name": "rejects minutes 60",
+      "input": { "dayStartsAt": "04:60" },
+      "error": "validation.settings-learning.day-starts-at"
+    }
+  ]
+}

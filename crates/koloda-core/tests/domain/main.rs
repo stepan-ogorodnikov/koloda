@@ -1,4 +1,4 @@
-//! Domain tests (no DB). Add a module here; do not add a new `tests/*.rs` crate root.
+//! Domain tests (no DB). Add a module here; do not add an autodiscovered `tests/*.rs` crate root.
 #[path = "../common/mod.rs"]
 mod common;
 

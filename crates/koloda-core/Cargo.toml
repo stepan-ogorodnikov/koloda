@@ -3,7 +3,7 @@ name = "koloda-core"
 version = "0.0.1"
 edition = "2021"
 rust-version = "1.81.0"
-# Two explicit binaries (`domain`, `integration`). Do not add `tests/*.rs` crate roots.
+# Three explicit binaries (`domain`, `integration`, `conformance`). Do not add `tests/*.rs` crate roots.
 autotests = false
 
 [lints]
@@ -16,6 +16,10 @@ path = "tests/domain/main.rs"
 [[test]]
 name = "integration"
 path = "tests/integration/main.rs"
+
+[[test]]
+name = "conformance"
+path = "tests/conformance/main.rs"
 
 [dependencies]
 serde_json = "1.0"
