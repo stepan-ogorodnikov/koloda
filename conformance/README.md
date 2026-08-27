@@ -27,6 +27,23 @@ Expected failures use stable error codes, never localized messages.
 
 Do not generate expected values from either implementation.
 
+## Files
+
+- `day-starts-at.json` — clock-string parse for `dayStartsAt`
+- `learning-day.utc.json` — learning-day `[from, to)` windows with `"timeZone": "UTC"`
+
+Learning-day files require a file-level `timeZone`.
+Parser files do not.
+
+## `now` parsing
+
+Used by learning-day fixtures.
+
+No offset (`2024-01-02T04:30:00`) is naive local time in the file's `timeZone`.
+If that civil time is ambiguous, use the earlier occurrence (the JavaScript default).
+A trailing `Z` (`2024-11-03T06:30:00.000Z`) is an absolute instant.
+Adapters convert that instant into the file's `timeZone`.
+
 ## How to add a case
 
 1. Add a row to the matching JSON file, or add a new file if this is a new concern.

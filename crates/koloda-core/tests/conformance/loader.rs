@@ -9,6 +9,8 @@ const SCHEMA_VERSION: u32 = 1;
 #[serde(rename_all = "camelCase")]
 pub struct FixtureFile<I, O> {
     pub schema_version: u32,
+    #[serde(default)]
+    pub time_zone: Option<String>,
     pub cases: Vec<FixtureCase<I, O>>,
 }
 

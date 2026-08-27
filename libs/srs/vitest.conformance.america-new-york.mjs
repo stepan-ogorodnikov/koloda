@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  cacheDir: "../../node_modules/.vite/libs/srs",
+  cacheDir: "../../node_modules/.vite/libs/srs-conformance-america-new-york",
   resolve: {
     tsconfigPaths: true,
     alias: {
@@ -14,8 +14,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["libs/srs/src/**/*.test.ts"],
-    exclude: ["libs/srs/src/lib/conformance/**"],
+    include: ["libs/srs/src/lib/conformance/**/*.test.ts"],
     setupFiles: ["libs/srs/src/test-setup.ts"],
     env: {
       TZ: "America/New_York",

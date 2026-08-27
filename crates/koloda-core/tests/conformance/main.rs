@@ -4,4 +4,5 @@
 //! Mirroring: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
 
 mod day_starts_at;
+mod learning_day;
 mod loader;
