@@ -34,6 +34,9 @@ Relationships:
 - The sidebar sorts conversations by run activity and shows working and unread indicators.
 - A new conversation's AI profile state is pre-filled from the global record and may diverge from then on.
 - Revert filters what the UI and the next request see; deletion happens only on the next submit.
+  See ASSISTANT-MESSAGES.md (§Reverting the Conversation).
+- Write targets belong to runs, not conversations; see ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
+- What the model sees of decks is through tools; see ASSISTANT-DATA-ACCESS.md.
 
 ## Conversation List
 
@@ -84,7 +87,9 @@ This includes:
 
 A chat response that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
 Failed or canceled card outputs are not included in the history, even when the table stayed on screen.
+See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown serialization.
 Tool activity is not included in the history.
+See ASSISTANT-DATA-ACCESS.md (§Visibility).
 If the model needs current data again, it calls tools again.
 Messages that don't belong to any run are also excluded.
 
@@ -141,7 +146,7 @@ The user can see what was generated up to that point.
 
 The user can cancel an active run at any time.
 The text accumulated so far is kept — the message shows the partial response.
-Cards accepted before cancellation are kept.
+Accepted cards stay visible; see ASSISTANT-CARD-GENERATION.md (§Card Display).
 Cancellation is recorded as `canceled` with `reason: user`.
 
 ### Interruption
@@ -156,13 +161,11 @@ Partial chat text and cards received before the interruption remain visible and 
 ## Write Targets
 
 Conversations do not have a selected deck.
-When the model proposes cards, the write target is the deck and template on that tool call.
-Add uses that write target.
 Each run keeps its own write target, so later turns may propose for a different deck.
+Add uses that write target.
 
-Write targets are not compiled into the system prompt. Field titles reach the model through tools (`list_decks`, `propose_cards`).
-
-An accepted list of 0 cards does not set a write target.
+How a proposal sets the write target, including an accepted list of 0 cards, is in ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
+Field titles reach the model through tools, not the system prompt; see ASSISTANT-DATA-ACCESS.md.
 
 ## AI Profile State
 
@@ -243,7 +246,7 @@ When a conversation is loaded from the database, it goes through validation and 
 - **Schema version**: rows without `schemaVersion` migrate forward; rows with a future version fail and reset rather than loading into live state.
 - **Streaming runs become interrupted**: if the app crashed or was force-killed mid-stream, a persisted streaming checkpoint is converted to `interrupted` with `reason: crash_recovery`. Messages and partial output are kept so the user can retry.
 - **Failed, canceled, and interrupted runs are kept**: run records and assistant message parts (including partial chat text and cards) survive restore so retry remains available.
-- **Pending card statuses are reset**: cards that were mid-operation are reset to idle
+- **Pending card statuses are reset**: see ASSISTANT-CARD-GENERATION.md (§Card Status)
 - **Chat turns with stored cards keep their table**: the review table is the cards on that run
 - **Old cards-mode documents are rejected**: a row whose conversation or run `mode` is `"cards"`, or whose message kind is `generated-cards`, is corrupt. It is not rewritten into chat.
 - **Leftover conversation `deckId` is stripped**: old documents that still have a selected-deck field restore without it. A malformed leftover does not fail the row as corrupt.
@@ -300,6 +303,9 @@ Retry re-executes the same prompt as a chat request with tools.
 
 Retry is only available on the most recent message pair.
 You cannot retry an older run.
+How a mixed turn looks after retry is in ASSISTANT-MESSAGES.md (§Retrying a Run).
+How cards and tools are cleared is in ASSISTANT-CARD-GENERATION.md (§Retry).
+How retry fetches data is in ASSISTANT-DATA-ACCESS.md (§Retry).
 
 ### AI Profile State on Retry
 
@@ -362,32 +368,25 @@ The conversation itself is unchanged.
 
 ## Revert
 
-The user can revert the conversation to the state it was in before any past user message.
-Revert is a visual action.
-It hides the target user message and everything after it from the UI.
-The hidden messages are only actually deleted when the user submits a new prompt.
-The user can also restore a reverted conversation, bringing the hidden messages back.
 Full behavior is specified in ASSISTANT-MESSAGES.md (§Reverting the Conversation).
+This section covers only conversation-level effects.
 
 ### Revert State
 
 Revert does not persist across sessions.
-Reloading the app clears the revert state, and the messages become visible again as if revert had never been pressed.
+Reloading the app clears the revert state.
 
 ### Conversation-Level Implications
 
 - The conversation history sent to the next run is filtered by the revert state — hidden messages are not included.
 - Run write targets and deck contents are not affected by revert.
 - A conversation that looks empty because of revert is still saved, since the messages are still in the conversation state.
-- Restore clears the revert state, making all messages visible again, and returns the prompt input to its pre-revert state.
 
 ### Deletion on New Prompt
 
-When the user submits a new prompt while in a reverted state, the hidden messages and their runs are permanently removed from the conversation state.
-A fresh run starts with a new run ID.
-The conversation history sent to the AI is rebuilt from the now-shorter message list.
-If the deletion leaves the conversation with no messages, the conversation falls under the existing rule that empty conversations are not saved.
-Runs that remain after the deletion keep their write targets.
+See ASSISTANT-MESSAGES.md (§Re-trigger) for how submit deletes the hidden turns.
+If that deletion leaves no messages, the conversation is not saved.
+Runs that remain keep their write targets.
 
 ### Cloning a Reverted Conversation
 

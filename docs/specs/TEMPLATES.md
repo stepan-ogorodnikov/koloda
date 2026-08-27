@@ -7,7 +7,8 @@ Does not cover how cards store content, how lessons render fields during study, 
 
 A template defines the shape of card content and how that content appears during study.
 It has a title, a list of fields, and a layout that maps those fields to study operations.
-Decks and cards reference templates; cards keep the template they were created with.
+Decks and cards reference templates.
+See CARDS.md (§Relationships) for how a card keeps its template.
 
 ## Core Model
 
@@ -21,7 +22,7 @@ Relationships:
 - Every template has at least one field and at least one layout item.
 - Each layout item points at a field that exists on the same template.
 - A deck has a current template used when adding cards manually.
-- A card stores its own template id; changing a deck's template does not rewrite existing cards.
+- See CARDS.md (§Relationships) for a card's own template id.
 - Lock is derived from cards: any card on the template locks it; deleting the last such card unlocks it.
 
 ## Fields
@@ -107,6 +108,7 @@ Empty field titles are allowed.
 When the template is locked, the editor disables changing field type and required, and hides add-field and remove-field controls.
 Title edits, field-title edits, reorder, and layout edits remain available.
 The learning settings default template can be edited while it remains the default.
+See LEARNING-SETTINGS.md (§Defaults).
 
 ## Deleting Templates
 
@@ -116,7 +118,7 @@ On success the user is returned to the templates list.
 Delete is unavailable when any of these is true:
 
 - the template is locked (cards still use it)
-- the template is the learning settings default template
+- the template is the learning settings default template; see LEARNING-SETTINGS.md (§Defaults)
 - any deck currently uses the template
 
 Each blocked reason is explained to the user.

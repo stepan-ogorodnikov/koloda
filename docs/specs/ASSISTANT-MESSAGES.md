@@ -28,8 +28,10 @@ Relationships:
 
 - An assistant message inherits its state from its run.
 - A message pair maps to exactly one run; retry overwrites that pair in place.
+  See ASSISTANT-CONVERSATIONS.md (§Retry).
 - The metadata kind picks the display; an error marker has empty text and shows a retry button.
 - A turn that proposed cards renders as tool activity, the review table, then leftover text.
+  See ASSISTANT-CARD-GENERATION.md (§Card Display).
 - Revert hides the target turn and everything after it; the data is removed only by the next submit.
 
 ## Message Types
@@ -90,10 +92,7 @@ They show one of:
 ## Message States
 
 An assistant message inherits its state from the run it belongs to.
-
-A run goes through these states:
-
-**streaming** → **success** | **failed** | **canceled** | **interrupted**
+See ASSISTANT-CONVERSATIONS.md (§Runs) for the run lifecycle.
 
 The message state maps to the run state:
 
@@ -116,27 +115,19 @@ For a mixed chat turn, content is the tool rows, the proposed cards, and leftove
 
 The user types a prompt and presses Enter or clicks Submit.
 This creates a user message and an assistant message placeholder.
-A run starts immediately in streaming status.
+A run starts immediately in streaming status; see ASSISTANT-CONVERSATIONS.md (§Starting a Run).
 If that run fails, the user message and an error assistant message remain, so the conversation is not empty.
 
 ### Canceling a Run
 
 The user can press a stop button or use a hotkey while a run is active.
+See ASSISTANT-CONVERSATIONS.md (§Cancellation) for the run outcome.
 The text accumulated so far is kept.
-Cards accepted before cancellation are kept.
-The run transitions to canceled status.
 
 ### Retrying a Run
 
-The user can retry a failed, canceled, or interrupted run.
-Completed (success) runs are not retryable in the UI unless a separate regenerate feature is introduced.
-Retry is only available on the most recent message pair.
-An older run cannot be retried.
+See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available, which run it reuses, and which AI profile state it uses.
 
-Retry reuses the same run ID.
-The existing message content is cleared.
-New content streams in from scratch.
-Retry is always a chat turn with tools.
 Retry of an error marker rewrites it to a chat-text message so the new stream can render as a mixed turn.
 
 ### Reverting the Conversation

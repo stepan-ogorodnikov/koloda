@@ -123,7 +123,7 @@ If the user opened from the "Total" badge, defaults fill "New", then "Learn", th
 Each type that counts toward "Total" consumes remaining "Total" allowance as it goes.
 Types that do not count toward "Total" leave that allowance untouched.
 
-A daily limit value of zero is treated as no cap for that limit.
+See LEARNING-SETTINGS.md (§Daily Limits) for a limit value of zero.
 
 Editing an amount after defaults are set recalculates "Total".
 Manual edits are not re-clamped to daily limits — only to the available count for that type.

@@ -9,7 +9,7 @@ How decks pick an algorithm is covered lightly; deck management itself is not.
 An algorithm is a named FSRS parameter set used by decks when scheduling cards.
 The product lists these under Presets.
 Each deck points at one algorithm.
-Editing an algorithm changes the parameters used for later grades on decks that reference it.
+Editing an algorithm, or pointing a deck at a different algorithm, changes the parameters used for later grades.
 It does not rewrite existing card scheduling numbers until those cards are graded again.
 
 ## Core Model
@@ -22,8 +22,8 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 Relationships:
 
 - A deck stores an algorithm id and uses that algorithm's current parameters when grading.
-- Cards do not store an algorithm id of their own.
-- The learning settings default algorithm cannot be deleted while it remains the default.
+- Cards do not store an algorithm id of their own; see DECKS.md (§Relationships).
+- See LEARNING-SETTINGS.md (§Defaults) for the default algorithm offered when creating a deck.
 - At least one algorithm must remain; the last algorithm cannot be deleted.
 
 ## Parameters
@@ -80,6 +80,7 @@ Discard restores the last saved values.
 Changing parameters affects future grading for decks that use this algorithm.
 It does not immediately rewrite card due times or review history.
 The learning settings default algorithm can be edited while it remains the default.
+See LEARNING-SETTINGS.md (§Defaults).
 
 ## Deleting Algorithms
 
@@ -88,7 +89,7 @@ On success the user is returned to the algorithms list.
 
 Delete is unavailable when either of these is true:
 
-- the algorithm is the learning settings default
+- the algorithm is the learning settings default; see LEARNING-SETTINGS.md (§Defaults)
 - it is the only algorithm left
 
 Changing the learning settings default elsewhere is what makes a former default deletable again.

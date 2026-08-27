@@ -9,7 +9,6 @@ Those are covered by the cards, lessons, algorithms, templates, and assistant sp
 A deck is a titled collection of cards that shares one algorithm and one current template.
 The algorithm schedules grades for cards in the deck.
 The current template is used when the user adds cards manually or generates cards into this deck.
-Existing cards keep the template they were created with even if the deck's template later changes.
 
 ## Core Model
 
@@ -20,19 +19,17 @@ Existing cards keep the template they were created with even if the deck's templ
 
 Relationships:
 
-- Every card belongs to one deck and cannot be moved to another deck.
+- See CARDS.md (§Relationships) for deck membership and a card's own template.
 - Cards do not store an algorithm of their own; they use the deck's algorithm at grade time.
-- Each card stores its own template id; changing the deck's template does not rewrite existing cards.
 - Deleting a deck deletes its cards and those cards' review history.
-- Learning settings defaults supply the algorithm and template suggested when creating a deck.
+- See LEARNING-SETTINGS.md (§Defaults) for the algorithm and template offered when creating a deck.
 - Lessons can target one deck or all decks; available counts are computed per deck.
 
 ## Adding Decks
 
 The user adds a deck by giving it a title and choosing an algorithm and a template.
 
-If the user does not pick otherwise, the algorithm and template pickers fall back to the learning settings defaults.
-Changing those defaults later never rewrites existing decks.
+See LEARNING-SETTINGS.md (§Defaults) for the algorithm and template offered when the user does not pick otherwise.
 The title is required and limited in length.
 Two decks may have the same title; they remain distinct.
 An empty title is rejected.
@@ -59,11 +56,10 @@ Saving persists title, algorithm, and template together.
 Discard restores the last saved values.
 
 Changing the algorithm affects future grading for cards in this deck.
-It does not rewrite existing card due times, scheduling numbers, or review history.
+See ALGORITHMS.md (§What is an Algorithm) for when existing scheduling numbers change.
 
 Changing the template changes which template is used for newly added cards.
-It does not rewrite existing cards onto the new template.
-Those older cards keep their own templates until edited or deleted individually.
+See CARDS.md (§Relationships) for existing cards.
 
 Invalid values are rejected on save.
 The previous saved deck remains unchanged.

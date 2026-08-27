@@ -19,11 +19,16 @@ A card belongs to exactly one deck and uses exactly one template.
 
 Relationships:
 
+- A card belongs to exactly one deck and cannot be moved to another.
+- A card stores its own template id.
+  Changing the deck's current template does not rewrite existing cards.
+  Table, edit, and preview resolve the template per card.
 - A card's template defines the fields its content must have.
 - A card's deck's algorithm defines the scheduling data.
+  Cards do not store an algorithm of their own; see DECKS.md (§Relationships).
 - Grading a card updates its state, scheduling data, and due time, and creates a review record.
 - Manual add uses the deck's current template.
-- If the deck's template later changes, existing cards keep their old template; table, edit, and preview resolve the template per card.
+- Lock and delete rules for a template in use are in TEMPLATES.md (§Locking).
 
 ## Card Content
 
@@ -36,9 +41,8 @@ Every field of the template must be present in the content.
 In the management UI, every field is edited and shown as plain text, including markdown fields.
 Rendered markdown appears only in preview and lessons.
 
-Having any card on a template locks that template's field structure.
-The template cannot be deleted while the card exists.
-The locking rules themselves are part of template management.
+Having any card on a template locks that template.
+See TEMPLATES.md (§Locking).
 
 ## Card State
 

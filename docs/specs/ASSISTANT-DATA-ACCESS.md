@@ -38,8 +38,11 @@ Relationships:
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
 - Reach happens when the tool runs; egress is its result sent back to the model.
 - Tool activity lives on the run, not in the history; later requests do not replay it.
+  See ASSISTANT-CONVERSATIONS.md (§Conversation History).
 - A retried run calls tools again and sees current data.
+  See ASSISTANT-CONVERSATIONS.md (§Retry).
 - Writes are not part of data access; cards are created only through the review flow.
+  See ASSISTANT-CARD-GENERATION.md.
 
 ## Resources
 
@@ -67,7 +70,7 @@ The model sees the conversation and three tools, and it calls them if it needs d
   Generating, creating, making, or inventing cards — including a random card — uses this tool.
   It is not a way to pick an existing card.
   Cards must use the deck's field titles.
-  Empty or invalid proposals do not create a review table.
+  See ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
 
 Reach happens when a tool runs, not at submit.
 Egress is the tool result sent back to the model in that same run.
@@ -94,12 +97,12 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - The user can expand a row to inspect the protocol id, the input, and the output or error.
 
 Those rows live on the run, not in the conversation history sent on later turns.
-Follow-up requests see the visible messages only, as the conversations spec already requires.
-They do not replay prior tool results as history.
+See ASSISTANT-CONVERSATIONS.md (§Conversation History).
+Follow-up requests do not replay prior tool results as history.
 If the model needs current data again, it calls the tools again.
 
-This is the same split as card outputs: the user sees them; the next request does not resend the tool rows as history.
 Successful cards are serialized into history as the conversations spec requires.
+See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown format.
 
 ### Budgets
 
@@ -120,12 +123,12 @@ A retried run may call tools again.
 Those calls see the decks and cards as they are now, not as they were at the original submit.
 Tool activity is recorded again on the run, replacing the previous tool rows.
 
+See ASSISTANT-CONVERSATIONS.md (§Retry) for retry availability and AI profile state.
+
 Older runs may still store an injected-context snapshot from before tools.
 That snapshot is inert.
 It is not sent on retry.
 It is not migrated away.
-
-Profile, model, and parameters on retry come from the current selection, per the conversations spec.
 
 ### Models that cannot call tools
 

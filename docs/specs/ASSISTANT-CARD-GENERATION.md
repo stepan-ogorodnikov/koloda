@@ -31,9 +31,11 @@ Relationships:
 
 - Card generation happens inside a chat run; there is no separate mode.
 - The first accepted proposal sets the run's write target and field titles.
+  An accepted list of 0 cards does not set a write target.
 - A later proposal for the same deck appends cards; one for a different deck is ignored for the table.
 - Add sends the selected cards to the write target and settles each card's status independently.
 - Only successfully generated cards are serialized into the conversation history.
+  See ASSISTANT-CONVERSATIONS.md (§Conversation History) for what is sent; this spec covers the markdown format.
 
 ## Card Structure
 
@@ -57,7 +59,8 @@ The write target is the deck id and template id on that tool call.
 
 An empty proposal does not create a review table.
 An accepted list of 0 cards does not set a write target.
-Invalid cards and cards past a 200-card cap are dropped from the accepted list.
+Invalid cards and cards past the proposal cap are dropped from the accepted list.
+See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
 If the tool accepts 0 cards, the result tells the model to call `propose_cards` again with the titles from that result.
 The run itself is not failed by an empty or invalid proposal.
 
@@ -142,18 +145,15 @@ The add button is disabled when:
 
 ## Conversation History
 
-When a new message is sent, successfully generated cards from previous runs are included in the conversation history sent to the AI.
-The cards are serialized in markdown format: each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.
+Successfully generated cards are included in the conversation history sent to the AI.
+See ASSISTANT-CONVERSATIONS.md (§Conversation History) for what else is included and what is omitted.
 
+The cards are serialized in markdown format: each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.
 A chat turn that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
-Failed or canceled card outputs are not included.
-Card outputs that are not displayed are not included.
 
 ## Retry
 
-A failed, canceled, or interrupted run that proposed cards can be retried.
-Retry is always a chat run with tools.
-It clears the previous cards and tool rows and streams a new response from scratch.
+See ASSISTANT-CONVERSATIONS.md (§Retry) for when retry is available and which run it reuses.
+
+Retry of a turn that proposed cards clears the previous cards and tool rows and streams a new response from scratch.
 The model may call `propose_cards` again.
-The conversation history sent to the AI is rebuilt from the current state, including all previously successful runs.
-Retry is only available on the most recent message pair.

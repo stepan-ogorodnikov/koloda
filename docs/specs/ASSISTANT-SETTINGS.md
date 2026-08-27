@@ -26,6 +26,7 @@ Relationships:
 - Saved settings are global; every conversation reads the same values.
 - Profile, model, and model parameters stay per conversation; see the conversations spec.
 - When a run starts, the saved custom prompt (or the built-in default) is trimmed and sent as the system message.
+- Deck data is not injected into that prompt; see ASSISTANT-DATA-ACCESS.md.
 - Card proposal behavior after the prompt is sent is covered by the card-generation spec.
 
 ## Prompt Template
@@ -58,8 +59,7 @@ Leftover `{{fields}}`, `{{rules}}`, `{{provider}}`, or other brace text in a pre
 The built-in default is plain text with no variables.
 It tells the model to invent cards through `propose_cards` and not to ask the user for field titles.
 
-Nothing about the user's decks is baked into the system prompt.
-Field titles reach the model through tools (`list_decks`, `propose_cards`).
+See ASSISTANT-DATA-ACCESS.md for how the model gets deck and field data.
 
 ## Temperature
 
