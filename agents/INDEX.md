@@ -14,6 +14,10 @@ Find your change type in the table.
 Paste the listed guides into the prompt, plus the task description.
 Nothing else.
 
+Load one primary spec, not a cluster.
+If the task crosses that spec's stated out-of-scope, add the sibling it names.
+Do not add the rest of the area by default.
+
 The listed files are relative to the repo root.
 
 ## Authoring
@@ -24,8 +28,13 @@ The listed files are relative to the repo root.
 | Change adds or edits tests | add `agents/TESTING.md` |
 | Edit touches `className` | add `agents/CSS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
-| Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to the specs and files) |
-| SRS behavior change (cards, decks, lessons, grading, templates, algorithms, learning settings) | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
+| Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
+| Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
+| Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
+| Lessons (session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
+| Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
+| Algorithms / presets | `docs/specs/ALGORITHMS.md` |
+| Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
 | Change inside `crates/koloda-core` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/CORE-CRATE.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
@@ -46,8 +55,13 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Diff adds or changes tests | add `agents/TESTING.md` |
 | Diff touches `className` | add `agents/CSS.md` |
 | Add AI provider diff | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
-| Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the spec it names) |
-| SRS behavior diff | `docs/specs/CARDS.md`, `docs/specs/DECKS.md`, `docs/specs/LESSONS.md`, `docs/specs/ALGORITHMS.md`, `docs/specs/TEMPLATES.md`, `docs/specs/LEARNING-SETTINGS.md` |
+| Assistant chat diff | `agents/ASSISTANT-MAP.md` (+ the one spec it names) |
+| Cards diff | `docs/specs/CARDS.md` |
+| Decks diff | `docs/specs/DECKS.md` |
+| Lessons diff | `docs/specs/LESSONS.md` |
+| Templates diff | `docs/specs/TEMPLATES.md` |
+| Algorithms diff | `docs/specs/ALGORITHMS.md` |
+| Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
 | koloda-core diff | `agents/CORE-CRATE.md`, `docs/adr/0001` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
@@ -70,3 +84,4 @@ Consult them yourself when a change crosses a boundary.
 Minimal context is the goal.
 If a guide is not relevant to the task, do not include it.
 This index helps you omit, not pile on.
+A spec that is only linked from the primary spec is not in the prompt until the task actually needs it.
