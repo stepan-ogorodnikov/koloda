@@ -35,10 +35,8 @@ export const insertReviewSchema = reviewValidation.omit({ id: true });
 
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
 
-export async function getCurrentLearningDayRange(dayStartsAt: string) {
+export function getLearningDayRangeAt(now: Date, dayStartsAt: string) {
   const { hours, minutes } = parseDayStartsAt(dayStartsAt);
-
-  const now = new Date();
 
   const todayBoundary = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
 
@@ -59,6 +57,10 @@ export async function getCurrentLearningDayRange(dayStartsAt: string) {
     from: from.toISOString(),
     to: to.toISOString(),
   };
+}
+
+export async function getCurrentLearningDayRange(dayStartsAt: string) {
+  return getLearningDayRangeAt(new Date(), dayStartsAt);
 }
 
 export type GetReviewTotalsProps = {

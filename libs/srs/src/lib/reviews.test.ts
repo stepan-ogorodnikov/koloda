@@ -1,7 +1,12 @@
 import type { AppError } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import { describe, expect, it, vi } from "vitest";
-import { calculateTodaysReviewTotals, createReviewFromReviewFSRS, getCurrentLearningDayRange } from "./reviews";
+import {
+  calculateTodaysReviewTotals,
+  createReviewFromReviewFSRS,
+  getCurrentLearningDayRange,
+  getLearningDayRangeAt,
+} from "./reviews";
 
 describe("reviews", () => {
   it("returns the previous learning day range when current time is before the boundary", async () => {
@@ -14,11 +19,8 @@ describe("reviews", () => {
     });
   });
 
-  it("returns the current learning day range when current time is after the boundary", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(2024, 0, 2, 6, 30, 0, 0));
-
-    await expect(getCurrentLearningDayRange("05:00")).resolves.toEqual({
+  it("returns the current learning day range when current time is after the boundary", () => {
+    expect(getLearningDayRangeAt(new Date(2024, 0, 2, 6, 30, 0, 0), "05:00")).toEqual({
       from: new Date(2024, 0, 2, 5, 0, 0, 0).toISOString(),
       to: new Date(2024, 0, 3, 5, 0, 0, 0).toISOString(),
     });

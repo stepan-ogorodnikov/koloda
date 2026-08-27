@@ -16,5 +16,8 @@ export default defineConfig({
     environment: "node",
     include: ["libs/srs/src/**/*.test.ts"],
     setupFiles: ["libs/srs/src/test-setup.ts"],
+    env: {
+      TZ: "America/New_York",
+    },
   },
 });
