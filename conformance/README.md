@@ -31,6 +31,7 @@ Do not generate expected values from either implementation.
 
 - `day-starts-at.json` — clock-string parse for `dayStartsAt`
 - `learning-day.utc.json` — learning-day `[from, to)` windows with `"timeZone": "UTC"`
+- `learning-day.america-new-york.json` — learning-day `[from, to)` windows with `"timeZone": "America/New_York"`
 
 Learning-day files require a file-level `timeZone`.
 Parser files do not.
