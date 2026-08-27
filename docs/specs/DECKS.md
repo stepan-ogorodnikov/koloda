@@ -32,7 +32,9 @@ Relationships:
 The user adds a deck by giving it a title and choosing an algorithm and a template.
 
 If the user does not pick otherwise, the algorithm and template pickers fall back to the learning settings defaults.
+Changing those defaults later never rewrites existing decks.
 The title is required and limited in length.
+Two decks may have the same title; they remain distinct.
 An empty title is rejected.
 The chosen algorithm and template must already exist; otherwise add fails and nothing is created.
 
@@ -83,6 +85,10 @@ On success:
 Delete is always available for an existing deck.
 There is no “last deck” or default-deck protection.
 
+Deleting a deck does not rewrite assistant conversations.
+Persisted run write targets or tool inputs may still mention its id.
+Lesson counts for a deleted deck disappear with the deck; other decks are unaffected.
+
 Deleting a deck does not delete algorithms or templates.
 A template that was only referenced by this deck's cards may become unlocked after those cards are gone.
 A template or algorithm that was only referenced as this deck's current choice becomes free of that deck reference.
@@ -91,13 +97,4 @@ A template or algorithm that was only referenced as this deck's current choice b
 
 Decks appear in a sidebar list ordered by creation time.
 Each entry opens that deck.
-
-## Edge Cases
-
-- Two decks may have the same title; they remain distinct
-- Cards cannot be moved between decks
-- An empty library with no decks is allowed
-- Failed add or update does not partially create or change a deck
-- Changing learning settings defaults never rewrites existing decks
-- Deleting a deck does not rewrite assistant conversations whose persisted run write targets or tool inputs still mention its id
-- Lesson counts for a deleted deck disappear with the deck; other decks are unaffected
+An empty library with no decks is allowed.

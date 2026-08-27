@@ -34,6 +34,9 @@ The assistant chat enables the **ai** scope while the AI panel is visible.
 
 When a scope is disabled, its hotkeys are silently ignored.
 They do not fire, even if the keys are pressed.
+Enabling a scope that is already enabled leaves it enabled.
+If a scope is disabled while one of its hotkeys is mid-keystroke, that action completes.
+Only later presses are blocked.
 
 ## Global vs Component-Registered
 
@@ -68,6 +71,8 @@ Supported modifiers:
 - `Ctrl`
 
 Single keys without modifiers are also valid.
+
+Hotkeys do not fire when a text input or textarea is focused, unless the hotkey is designed to ignore input focus.
 
 ## Conflict Resolution
 
@@ -133,13 +138,6 @@ Some hotkeys have no default binding and must be configured by the user to be us
 Hotkey settings are saved to the database.
 They persist across sessions.
 
+If a save fails, the in-memory bindings revert to the last saved state.
 If the stored settings are invalid (corrupted data, missing keys), the defaults are used.
 The invalid settings are replaced with defaults silently.
-
-## Edge Cases
-
-- If a scope is enabled multiple times, it stays enabled — enabling is idempotent
-- If a scope is disabled while its hotkeys are mid-keystroke, the action completes — only future presses are blocked
-- The user can assign the same key to hotkeys in different non-UI scopes — only the active scope's hotkey fires
-- On save failure, the in-memory state reverts to the last saved state
-- Hotkeys do not fire when a text input or textarea is focused, unless explicitly designed to ignore input focus

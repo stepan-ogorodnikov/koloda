@@ -43,6 +43,8 @@ The document language follows the active locale for assistive tools.
 
 At startup the app does not read the saved language back.
 Startup picks the locale itself: a remembered last choice where the app keeps one, otherwise the device language, otherwise English.
+The desktop app starts from the device language each time.
+The web app remembers the last choice in the browser.
 The saved value records the choice; it does not restore it.
 
 ## Color Scheme
@@ -114,13 +116,4 @@ Scheme, themes, and motion are also mirrored to a lightweight local cache.
 The cache lets the app paint with the last-used look before the database loads.
 Before styles load, the last-used scheme and surface color are painted to avoid a flash of wrong colors.
 Once the saved settings load, they take precedence over the cached values.
-
-## Edge Cases
-
-- The saved language is not restored at startup; startup detection sets the locale
-- The desktop app starts from the device language each time; the web app remembers the last choice in the browser
-- While the scheme is System, device switches apply live without a restart
-- Switching scheme never loses the inactive side's theme choice
-- A rejected or failed write never partially applies settings
-- Cached startup values never override the saved settings once loaded
-- Failures to write the cache do not affect saving to the database
+Failures to write the cache do not affect saving to the database.

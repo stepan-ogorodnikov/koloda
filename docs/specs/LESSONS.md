@@ -131,6 +131,7 @@ Manual edits are not re-clamped to daily limits — only to the available count 
 ## Studying
 
 When the user starts the lesson, cards are loaded for the chosen amounts and filters.
+If the loaded data has no cards, studying never begins and no current card is shown.
 
 Cards are included in this order:
 
@@ -203,6 +204,7 @@ After a grade, the updated card may be appended back onto the end of the current
 That happens when learn-ahead is configured and the card's new due time falls before the cutoff from now.
 
 The appended card is studied later in the same session, after cards already queued.
+Learn-ahead can make the session longer than the amounts chosen at init.
 If learn-ahead is unset, the card has no due time, or the due is at or after the cutoff, it is not appended.
 
 ## Progress
@@ -215,6 +217,7 @@ While studying, the header shows two summaries:
 Progress dots represent every card currently in the session, including cards appended by learn-ahead.
 The current card is highlighted.
 Dots scroll so the current card stays centered.
+Progress counts follow each card's scheduling state when it appears in the session list.
 
 Each finished card's dot reflects upload status:
 
@@ -255,18 +258,3 @@ In the preparing, configuring, and finished phases, close, Escape, and "Close po
 
 Ending a lesson mid-study does not undo grades that already uploaded successfully.
 Cards that were graded but not yet uploaded are discarded with the cleared session state.
-
-## Edge Cases
-
-- A badge with count zero cannot start a lesson
-- "Start" is disabled when the chosen "Total" amount is zero
-- If lesson data loads with no cards, studying never begins and no current card is shown
-- Opening a lesson while one is already open does not replace the active session
-- Daily limits shape init defaults; the user can still raise amounts up to what is available
-- A daily limit value of zero does not block cards; it is treated as no cap
-- Review time spent on a card never exceeds one hour in the saved review
-- Learn-ahead can make the session longer than the amounts chosen at init
-- Progress counts follow each card's scheduling state when it appears in the session list
-- Upload errors are visible on progress dots but are not retried from the lesson UI
-- Keyboard dismissal of the lesson dialog is disabled — close via the close control, Escape, "Close popover", or completion "Close"
-- Navigation hotkeys stay disabled for the whole time the lesson dialog is open

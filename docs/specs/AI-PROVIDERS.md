@@ -161,6 +161,10 @@ If the allowlist is unset, the picker shows every catalog model.
 If the currently selected model is not in the filtered list, it stays visible so a catalog change cannot strand the selection.
 A selected model that is not in the catalog at all is shown as a placeholder.
 
+The allowlist is per profile.
+Changing one profile's allowlist does not affect other profiles.
+The allowlist decides what the picker offers; it does not change how a run is sent.
+
 ### Reasoning Effort
 
 Some models support a reasoning-effort parameter.
@@ -184,15 +188,3 @@ Provider-facing details that matter here:
 - If the model supports reasoning effort and the user set a level, that level is passed through.
 - All providers stream responses.
 - An unreachable self-hosted base URL surfaces as a network error on first use.
-
-## Edge Cases
-
-- An unset allowlist means every catalog model is available
-- An empty allowlist allows no models; the picker shows an empty list for that profile
-- IDs no longer in the catalog stay checked in the settings dialog; the user can deselect them
-- Switching to "all" and back to "selected" restores the previous selection
-- The currently selected model stays in the picker even when it is not in the catalog or the allowlist
-- The allowlist is per profile; changing one profile's allowlist does not affect other profiles
-- Saving in "all" mode clears a previously stored allowlist
-- The dialog fetches models only while it is open; a failed fetch shows an error with a retry
-- The allowlist decides what the picker offers; it does not change how a run is sent

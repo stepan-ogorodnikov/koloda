@@ -80,6 +80,7 @@ Saving a locked template rejects removing existing fields or changing their type
 ## Adding Templates
 
 The user adds a template by giving it a title.
+Two templates may have the same title; they remain distinct.
 The new template starts from the built-in default shape: two required text fields ("Front" and "Back"), with Front displayed and Back typed.
 
 After a successful add, the dialog offers a link to open the new template.
@@ -89,6 +90,7 @@ Changing the title again clears that success state so another add can be submitt
 
 The user can clone any template, including a locked one.
 Clone asks for a new title and copies the source fields and layout into an independent template.
+It does not copy cards, decks, or lock status from the source.
 
 The clone starts unlocked if it has no cards of its own.
 After success, the dialog offers a link to open the clone.
@@ -104,6 +106,7 @@ Empty field titles are allowed.
 
 When the template is locked, the editor disables changing field type and required, and hides add-field and remove-field controls.
 Title edits, field-title edits, reorder, and layout edits remain available.
+The learning settings default template can be edited while it remains the default.
 
 ## Deleting Templates
 
@@ -119,12 +122,3 @@ Delete is unavailable when any of these is true:
 Each blocked reason is explained to the user.
 
 Deleting a template does not delete decks or cards; those references must be cleared first by changing or removing them elsewhere.
-
-## Edge Cases
-
-- Two templates may have the same title; they remain distinct
-- Cloning does not copy cards, decks, or lock status from the source
-- Unlocking happens only when the last card that used the template is deleted
-- A deck may point at a template that no longer matches the templates of its older cards
-- Layout may list a field more than once only if the editor allows it; each item still needs a valid field id
-- The default learning settings template can be edited, but it cannot be deleted while it remains the default

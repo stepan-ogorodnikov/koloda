@@ -63,6 +63,7 @@ A per-type limit that does not count toward Total may be larger than Total.
 Limits do not hard-block studying.
 They shape lesson init defaults.
 In a lesson, the user can still raise amounts up to what is available; see the lessons spec.
+Types that do not count toward Total leave Total room unused when those defaults are computed.
 
 ## Learning Day
 
@@ -108,14 +109,3 @@ Discard restores the last saved values without writing.
 Invalid input is rejected on save.
 The previous saved settings remain unchanged.
 Validation errors are shown on the form — for example when a counted per-type limit exceeds Total.
-
-## Edge Cases
-
-- A daily limit of zero is no cap, not a hard zero
-- Types that do not count toward Total leave Total room unused when lesson defaults are computed
-- Today's Total ignores reviews of types that do not count toward Total
-- Ignored reviews do not contribute to today's totals
-- Changing defaults never rewrites existing decks or cards
-- Changing Day starts at can move reviews into or out of "today" without deleting them
-- Failed validation does not partially apply settings
-- Learn-ahead of zero duration does not requeue cards that become due only in the future

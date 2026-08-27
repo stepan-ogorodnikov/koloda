@@ -37,6 +37,7 @@ In the management UI, every field is edited and shown as plain text, including m
 Rendered markdown appears only in preview and lessons.
 
 Having any card on a template locks that template's field structure.
+The template cannot be deleted while the card exists.
 The locking rules themselves are part of template management.
 
 ## Card State
@@ -66,6 +67,7 @@ The user does not edit these numbers directly, except through resetting progress
 
 The user adds a card to a deck through a dialog that shows a text area for each field of the deck's current template.
 The user cannot pick a different template when adding manually.
+Two cards with identical content are still two distinct cards.
 
 - Each required field must be filled before the card can be saved.
 - Empty optional fields are allowed.
@@ -96,6 +98,8 @@ The card's deck, template, state, and scheduling data are not modified.
 
 Submitting a blank required field is rejected.
 Submitting a valid change updates the card and refreshes the card views.
+The card's update timestamp changes only when content is edited.
+Grading and resetting progress leave it unchanged.
 
 Without the card's template, the content cannot be edited.
 
@@ -159,6 +163,7 @@ The table supports:
 - selecting individual cards, or all cards on the current page at once
 - bulk delete on the selected cards
 - filtering by state, by due status (overdue or not yet due), and by template when more than one template is in use
+  - An untouched card has no due time and matches "not yet due", not "overdue"
 - full-text search across the card content
 - showing, hiding, and reordering columns
 - pagination with a chosen page size
@@ -169,11 +174,3 @@ The stack view shows one card at a time using the card details view.
 The user moves between cards with previous and next buttons.
 A counter shows the current position and the total number of cards.
 There is no filtering, selection, or pagination in the stack view.
-
-## Edge Cases
-
-- Two cards with identical content are still two distinct cards
-- A card's template cannot be deleted while the card exists
-- The card's update timestamp bumps only on content changes; grading and resetting progress leave it untouched
-- Changing the deck's template does not rewrite existing cards onto the new template
-- An untouched card has no due time and matches "not yet due", not "overdue"
