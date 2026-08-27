@@ -28,9 +28,8 @@ A scope must be enabled for its hotkeys to fire.
 Scopes are enabled and disabled at runtime.
 
 The **navigation** scope is enabled on app load and stays enabled unless explicitly disabled.
-Other scopes are enabled by the component that uses them.
-For example, the lesson view enables the **grades** scope while a lesson is open.
-The assistant chat enables the **ai** scope while the AI panel is visible.
+Other scopes are enabled while the UI that uses them is open.
+For example, grade hotkeys while a lesson is open, and assistant hotkeys while the assistant is visible.
 
 When a scope is disabled, its hotkeys are silently ignored.
 They do not fire, even if the keys are pressed.
@@ -38,29 +37,10 @@ Enabling a scope that is already enabled leaves it enabled.
 If a scope is disabled while one of its hotkeys is mid-keystroke, that action completes.
 Only later presses are blocked.
 
-## Global vs Component-Registered
-
-Some hotkeys are registered globally and work everywhere.
-Others are registered in specific components and only work when that component is mounted.
-
-**Global hotkeys** (registered once at app level):
-
-- All **navigation** hotkeys
-- Focus management hotkeys (focus next, focus previous)
-- Tab switching hotkeys (next tab, previous tab)
-- Toggle sidebar controls
-- Toggle color scheme
-
-**Component-registered hotkeys** (registered where they are used):
-
-- **form** hotkeys — registered in form dialogs
-- **grades** hotkeys — registered in the lesson view
-- **ai** hotkeys — registered in the assistant chat
-
 ## Key Bindings
 
 Each hotkey can have zero or more key bindings.
-A hotkey with no bindings does nothing — it is not registered with the keyboard handler.
+A hotkey with no bindings does nothing.
 
 Key bindings use a modifier-plus-key format.
 Supported modifiers:

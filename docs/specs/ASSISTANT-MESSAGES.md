@@ -10,18 +10,12 @@ A message is one half of a user-AI exchange.
 Every user message is paired with an assistant message.
 Together they form a single turn in the conversation, tied to one AI run.
 
-Messages are displayed as a scrollable list.
-The user scrolls through the history of exchanges.
-New messages appear at the bottom.
-
 ## Core Model
 
-- **User message** — the submitted prompt text, shown as a bubble
+- **User message** — the submitted prompt text
 - **Assistant message** — the AI's response; created empty at run start and filled by the stream
 - **Turn** — one user message and its assistant message, tied to a single run
 - **Metadata kind** — chat-text or error; decides how an assistant message renders
-- **Status indicator** — pending, success, canceled, interrupted, or failed, shown below assistant messages
-- **Content parts** — typed message parts; text and reasoning render, tool calls and metadata show as lines
 - **Revert point** — the user message a revert targets; in-memory, at most one per conversation
 
 Relationships:
@@ -39,11 +33,9 @@ Relationships:
 There are two types of messages: user messages and assistant messages.
 
 User messages contain the text the user typed.
-They appear as rounded bubbles aligned to the right side of the chat.
 A user message is created when the user submits a prompt.
 
 Assistant messages contain the AI's response.
-They appear aligned to the left side of the chat, spanning the full width.
 An assistant message is created as an empty placeholder when a run starts.
 Its content fills in as the AI stream progresses.
 
@@ -65,20 +57,18 @@ The metadata kind determines how the message is rendered.
 
 Messages are rendered differently based on their type and metadata.
 
-User messages always render as text bubbles.
+User messages always render as text.
 
-Assistant messages dispatch to different displays based on metadata:
+Assistant messages:
 
-- **chat-text**: the streamed text content is rendered inline.
-  A status indicator shows the run state below the text.
+- **chat-text**: the streamed text is shown.
+  A status indicator shows the run state.
   When the same run proposed cards, that turn is mixed:
   tool activity, then the review table, then leftover streamed text, then status.
   Leftover text appears below the table, not above it.
   Once cards are on screen, the pending status is not shown on the table; it attaches below the table until text arrives.
   Tool activity, if any, appears above the table even when there is no leftover text.
-- **error**: a status indicator showing failed state is displayed.
-  A retry button is shown.
-- **no metadata**: the message content is rendered as-is.
+- **error**: a failed status indicator and a retry button are shown.
 
 Status indicators appear below assistant messages.
 They show one of:
@@ -184,13 +174,9 @@ The conversation history sent to the AI is rebuilt from the now-shorter message 
 
 ## Message Content
 
-Message content is composed of typed parts.
+Text is displayed as paragraphs.
+Reasoning is displayed as dimmed text.
+Tool calls and other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
 
-Text parts are displayed as paragraphs.
-Reasoning parts are displayed as dimmed text.
-Tool call parts, source parts, and file parts are displayed as metadata lines.
-Step-start parts are filtered out and not displayed.
-
-When extracting text content for display or history, all text parts are joined with double newlines.
+When extracting text for display or history, all text parts are joined with double newlines.
 Leading and trailing whitespace is trimmed.
-Non-text parts are ignored.

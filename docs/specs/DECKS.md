@@ -13,9 +13,7 @@ The current template is used when the user adds cards manually or generates card
 ## Core Model
 
 - **Deck** — a titled collection with an algorithm and a current template
-- **Algorithm** — the FSRS preset used when grading cards that belong to this deck
 - **Current template** — the template offered for new cards added to this deck
-- **Cards** — study units that belong to exactly one deck
 
 Relationships:
 

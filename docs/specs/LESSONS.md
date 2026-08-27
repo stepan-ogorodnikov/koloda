@@ -11,7 +11,7 @@ For each card the user reveals or types answers, then grades the card.
 Each grade updates the card's scheduling and records a review.
 
 A lesson can target one deck or all decks at once.
-It runs in a modal dialog that blocks keyboard dismissal.
+It runs in a dialog.
 Closing the dialog clears the session.
 
 ## Core Model
@@ -24,11 +24,9 @@ Closing the dialog clears the session.
 - **Available counts** — cards of each type ready to study now, per deck and across all decks
 - **Amounts** — how many cards of each type the user chose for this lesson
 - **Daily limits** — caps on how many cards of each type, and in total, may be studied today
-- **Lesson data** — the session's cards, plus the decks, templates, and algorithms they need
-- **Current card** — the card being studied, with its template layout, answer form, and grade options
 - **Progress** — how many cards of each type are done versus still pending in this session
 - **Upload queue** — graded results waiting to be saved, one at a time
-- **Phase** — the current stage of the lesson: closed, preparing, configuring, loading-cards, studying, or finished
+- **Phase** — closed, preparing, configuring, loading-cards, studying, or finished
 
 Relationships:
 
@@ -41,9 +39,6 @@ Relationships:
 
 The lessons screen lists every deck with available counts for "New", "Learn", "Review", and "Total".
 A final row aggregates the same counts across all decks.
-
-On wide screens the list is a table.
-On narrow screens it is a stacked list with the same counts.
 
 Each count is a badge.
 A badge with a non-zero count starts a lesson of that type for that deck (or for all decks on the aggregate row).
@@ -216,15 +211,13 @@ While studying, the header shows two summaries:
 
 Progress dots represent every card currently in the session, including cards appended by learn-ahead.
 The current card is highlighted.
-Dots scroll so the current card stays centered.
 Progress counts follow each card's scheduling state when it appears in the session list.
 
 Each finished card's dot reflects upload status:
 
 - success when the result was saved
 - error when saving failed
-- a plain marker while still pending or not yet graded
-- a play marker on the current card before it has an upload status
+- pending when not yet saved or not yet graded
 
 ## Persisting Results
 

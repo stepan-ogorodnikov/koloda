@@ -30,9 +30,7 @@ Relationships:
 
 - A user message, its assistant message, and their run form one turn.
 - Only one run can be active per conversation at a time.
-- A conversation persists as a single document; empty conversations are never saved.
-- The sidebar sorts conversations by run activity and shows working and unread indicators.
-- A new conversation's AI profile state is pre-filled from the global record and may diverge from then on.
+- Empty conversations are never saved.
 - Revert filters what the UI and the next request see; deletion happens only on the next submit.
   See ASSISTANT-MESSAGES.md (§Reverting the Conversation).
 - Write targets belong to runs, not conversations; see ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
@@ -63,17 +61,12 @@ The indicator is shown when the latest run finished streaming and has not been r
 The unread indicator is cleared when the user opens the conversation.
 
 A run that finishes in the currently-open conversation is automatically marked as read — the user has just watched it stream, so it cannot be unread.
-This keeps the conversation out of the unread set the next time the user navigates away, and is what `lastReadRunId` tracks on the conversation state.
 
 ## Messages
 
 Every user message is paired with an assistant message.
 The user types a prompt, the AI responds — that's one exchange, tied to a single run.
-
-Messages are displayed as a scrollable list.
-User messages appear as bubbles.
-Assistant messages render that turn: tool activity, a review table when cards were accepted, and leftover text.
-How mixed turns display is covered by the messages spec.
+How a turn displays is covered by the messages spec.
 
 ### Conversation History
 
@@ -126,15 +119,11 @@ When the user sends a message, a run starts immediately:
 
 Text chunks arrive and accumulate on the assistant message in real time.
 The user sees the response being built word by word.
-
-Tool calls appear as compact rows on that message as they run.
-When `propose_cards` accepts cards, those cards appear as a review table on the same message.
-Each card starts in an idle state and can be independently marked as added to a deck, pending, or errored.
+Tool activity and accepted cards appear on the same message; see ASSISTANT-CARD-GENERATION.md (§Card Display).
 
 ### Completion
 
 When the stream finishes successfully, the run is marked as success.
-Token usage is recorded.
 
 ### Failure
 
@@ -211,23 +200,20 @@ Once a profile exists, these empty states are no longer shown.
 
 ## Persistence
 
-Conversations are saved to the database automatically.
-The entire conversation state — messages, runs, and AI profile state — is saved as a single document.
-Each persisted document carries a `schemaVersion`. Unknown future versions fail restore explicitly rather than entering live state.
-Migrations for older versions are centralized at the persistence coerce boundary.
-
-The revert state is not saved — see the Revert section for details.
+Conversations are saved automatically.
+Messages, runs, and AI profile state are saved together.
+Unknown future formats fail restore rather than loading.
+The revert state is not saved.
 
 ### When Saves Happen
 
-- **During streaming**: saves are throttled to at most once per second
-- **While idle**: saves are debounced at 250ms after the last change
-- **On page unload**: any pending save is flushed immediately
+- **During streaming**: at most once per second
+- **While idle**: shortly after the last change
+- **On app close**: any pending save is flushed immediately
 
 ### What Gets Saved
 
 Everything is saved as-is, including failed runs and their error messages.
-There is no filtering before save.
 
 ### What Doesn't Get Saved
 
@@ -236,33 +222,23 @@ They exist only in memory until the user sends a message.
 
 ### Active Conversation
 
-The ID of the currently active conversation is stored in browser local storage separately from the conversation state.
-This allows the app to reopen the same conversation on reload.
+The currently open conversation is remembered so the app can reopen it on reload.
 
-## Restore and Normalization
+## Restore
 
-When a conversation is loaded from the database, it goes through validation and cleanup:
+When a conversation is loaded:
 
-- **Schema version**: rows without `schemaVersion` migrate forward; rows with a future version fail and reset rather than loading into live state.
-- **Streaming runs become interrupted**: if the app crashed or was force-killed mid-stream, a persisted streaming checkpoint is converted to `interrupted` with `reason: crash_recovery`. Messages and partial output are kept so the user can retry.
-- **Failed, canceled, and interrupted runs are kept**: run records and assistant message parts (including partial chat text and cards) survive restore so retry remains available.
-- **Pending card statuses are reset**: see ASSISTANT-CARD-GENERATION.md (§Card Status)
-- **Chat turns with stored cards keep their table**: the review table is the cards on that run
-- **Old cards-mode documents are rejected**: a row whose conversation or run `mode` is `"cards"`, or whose message kind is `generated-cards`, is corrupt. It is not rewritten into chat.
-- **Leftover conversation `deckId` is stripped**: old documents that still have a selected-deck field restore without it. A malformed leftover does not fail the row as corrupt.
-- **Active run is cleared**: no run is considered active after restore
-- **Dismissed error is cleared**: any previously dismissed error banner resets
-- **Revert state is cleared**: revert is in-memory only, so loading a conversation always starts in a non-reverted state.
+- A run that was still streaming becomes interrupted (crash recovery).
+  Partial output is kept so the user can retry.
+- Failed, canceled, and interrupted runs are kept, including partial chat text and cards.
+- Pending card statuses are reset; see ASSISTANT-CARD-GENERATION.md (§Card Status).
+- Accepted cards on a turn still show as a review table.
+- No run is active after restore.
+- Dismissed errors and revert state are cleared.
 
-This ensures restore never leaves a zombie streaming state, while preserving terminal partial output.
-
-If the stored data is corrupted, invalid, or declares an unknown future schema version, the conversation is reset to a fresh empty state with the same ID and current timestamp.
+If the stored data is corrupted or from an unknown future format, the conversation resets to empty with the same identity and a current timestamp.
 
 ## Error Handling
-
-Errors are displayed in an error panel at the bottom of the chat.
-
-### Error State
 
 Each conversation tracks its own errors.
 The error panel shows the most recent error for the current conversation.
@@ -294,7 +270,7 @@ Save errors are dismissed separately and are cleared by a successful save.
 ## Retry
 
 The user can retry a failed, canceled, or interrupted run.
-Completed (success) runs are not retryable in the UI unless a separate regenerate feature is introduced.
+Successful runs are not retryable.
 Retry re-executes the same prompt as a chat request with tools.
 
 - The run ID is reused — the existing message pair is overwritten
@@ -335,24 +311,22 @@ The following are copied into the new conversation:
 
 ### Clone Trigger
 
-Cloning is triggered from the conversation header's dots menu.
+Cloning is triggered from the conversation menu.
 The clone appears immediately in the sidebar, sorted by its new timestamp.
 The user is navigated to the cloned conversation.
 
 ## Delete
 
 The user can delete a conversation from the sidebar.
-Each conversation row reveals a delete button on hover or keyboard focus.
-Clicking it opens a confirmation popover.
+Delete asks for confirmation and cannot be undone.
 
 ### What Deletion Does
 
-The confirmation states the rule: "Delete this conversation? This cannot be undone."
-Confirming permanently removes the conversation, its messages, and its runs from the database.
+Confirming permanently removes the conversation, its messages, and its runs.
 The row disappears from the sidebar.
 
 A run that is still streaming in the deleted conversation is canceled as part of deletion.
-Deletion coordinates with persistence so a late in-flight save cannot resurrect the row — see Concurrent Behavior.
+A late save cannot bring the conversation back; see Concurrent Behavior.
 
 ### Deleting the Open Conversation
 
@@ -396,6 +370,7 @@ The clone is created from the underlying conversation data with all messages vis
 ## Concurrent Behavior
 
 Only one run can be active at a time per conversation.
-If the user switches to a different conversation while a run is active, the run continues in the background.
-Stream chunks, terminal transitions, and persistence dirty notifications target the originating conversation by id — switching away does not abort the run and does not apply updates to the newly viewed conversation.
-Deleting a conversation evicts its runtime (cancels in-flight work, closes its serial queue) after coordinated delete/tombstone handling so a late upsert cannot resurrect the row.
+If the user switches away, the run continues in the background.
+Updates still apply to the conversation that started the run, not the one now on screen.
+Deleting a conversation cancels its in-flight work.
+A late save cannot bring it back.

@@ -21,7 +21,7 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 
 ## Core Model
 
-- **Proposal** — the model's `propose_cards` call: a deck id plus invented cards keyed by field title
+- **Proposal** — invented cards for a deck, keyed by field title
 - **Write target** — the deck and template of the run's accepted proposal
 - **Review table** — accepted cards on the assistant message, with selection and one column per field
 - **Card status** — idle, pending, success, or error; tracked per card
@@ -30,12 +30,8 @@ It goes through the same lifecycle: streaming, success, failure, cancellation, o
 Relationships:
 
 - Card generation happens inside a chat run; there is no separate mode.
-- The first accepted proposal sets the run's write target and field titles.
-  An accepted list of 0 cards does not set a write target.
-- A later proposal for the same deck appends cards; one for a different deck is ignored for the table.
 - Add sends the selected cards to the write target and settles each card's status independently.
-- Only successfully generated cards are serialized into the conversation history.
-  See ASSISTANT-CONVERSATIONS.md (§Conversation History) for what is sent; this spec covers the markdown format.
+- History serialization is in ASSISTANT-CONVERSATIONS.md (§Conversation History); the markdown format is below.
 
 ## Card Structure
 
@@ -90,9 +86,6 @@ The table still renders, but the template is marked as unavailable.
 
 If no cards were accepted, the review table is not shown.
 
-Historical turns that were saved as card-generation messages still render as a table.
-The table is those stored cards, not whether the run was recorded as chat or cards.
-
 ## Card Status
 
 Each card in a generation run has an independent status.
@@ -124,16 +117,16 @@ Initially, all generated cards are selected.
 
 ## Adding Cards to Deck
 
-When the user presses the add button, the selected cards are transformed and sent to the write-target deck with the write-target template.
+When the user presses the add button, the selected cards are sent to the write-target deck with the write-target template.
 
-For a chat proposal, that deck and template are the ones from `propose_cards`.
+That deck and template are the ones from the proposal.
 If either write target is missing, add is disabled.
 
 Before the request is sent, all selected cards are marked as pending.
 On success, each card is individually marked as success or error based on the per-card result from the server.
 On a network error, all selected cards are marked as error.
 
-After a successful add, the deck's card list is refreshed and the assistant settings query is invalidated.
+After a successful add, the deck's card list is refreshed.
 The selection is cleared — all rows are deselected.
 
 The add button is disabled when:

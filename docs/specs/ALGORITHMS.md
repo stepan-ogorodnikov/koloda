@@ -16,13 +16,12 @@ It does not rewrite existing card scheduling numbers until those cards are grade
 
 - **Algorithm** — a titled FSRS preset
 - **Parameters** — retention, weights, fuzz, learning steps, relearning steps, and maximum interval
-- **Default algorithm** — the learning settings default offered when creating a deck
 - **Successor** — another algorithm that takes over decks when one is deleted
 
 Relationships:
 
-- A deck stores an algorithm id and uses that algorithm's current parameters when grading.
-- Cards do not store an algorithm id of their own; see DECKS.md (§Relationships).
+- A deck stores which algorithm to use and uses that algorithm's current parameters when grading.
+- Cards do not store an algorithm of their own; see DECKS.md (§Relationships).
 - See LEARNING-SETTINGS.md (§Defaults) for the default algorithm offered when creating a deck.
 - At least one algorithm must remain; the last algorithm cannot be deleted.
 

@@ -2,7 +2,6 @@
 
 Covers what user data the assistant reads, when that data is fetched and sent, what is recorded, and how retry treats it.
 Does not cover the run lifecycle, retry availability, revert, or clone behavior — those are covered by the conversations spec.
-This spec extends retry only where access context is involved.
 Card proposal display, selection, and add are covered by the card-generation spec.
 Prompt template editing is covered by the assistant settings spec.
 
@@ -30,19 +29,13 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
 - **Tools** — `list_decks`, `get_deck_cards`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
-- **Historical snapshot** — restore-only record on runs saved before tools; inert
 
 Relationships:
 
 - Data access is always on; every provider behaves the same.
 - Discovery happens by tool calls during the run — never by system-prompt injection or submit-time snapshots.
-- Reach happens when the tool runs; egress is its result sent back to the model.
-- Tool activity lives on the run, not in the history; later requests do not replay it.
-  See ASSISTANT-CONVERSATIONS.md (§Conversation History).
-- A retried run calls tools again and sees current data.
-  See ASSISTANT-CONVERSATIONS.md (§Retry).
-- Writes are not part of data access; cards are created only through the review flow.
-  See ASSISTANT-CARD-GENERATION.md.
+- Tool activity lives on the run, not in the history; see ASSISTANT-CONVERSATIONS.md (§Conversation History).
+- Writes are not part of data access; see ASSISTANT-CARD-GENERATION.md.
 
 ## Resources
 
@@ -125,10 +118,7 @@ Tool activity is recorded again on the run, replacing the previous tool rows.
 
 See ASSISTANT-CONVERSATIONS.md (§Retry) for retry availability and AI profile state.
 
-Older runs may still store an injected-context snapshot from before tools.
-That snapshot is inert.
-It is not sent on retry.
-It is not migrated away.
+Older stored access records from before tools are not sent on retry.
 
 ### Models that cannot call tools
 
@@ -137,30 +127,12 @@ There is no injected-context fallback.
 If the selected model cannot call tools, the provider error surfaces as a failed run.
 The user can switch models and retry.
 
-## Historical snapshots
-
-Runs saved before this unification may still carry a submit-time access snapshot and a manifest.
-That record is restore-only.
-
-- It is not sent to the model.
-- It is not used to prevent duplicates.
-- Retry of those runs is chat with tools, against current data.
-- A malformed snapshot fails restore as corrupt.
-
-A **manifest** on those historical runs recorded what that request resolved: every deck's summary and the write target's counts.
-Chat runs do not carry a manifest of this kind.
-What a live run fetched is the tool activity on that run.
-
 ## Persistence
 
-- Runs store tool activity on the run as an optional field.
-  Rows saved before tool activity restore without it; the format version is unchanged.
-  A malformed tool-activity value fails restore as corrupt, not as an empty conversation.
-  That follows the conversations spec.
-  After a crash, a run that was still streaming is interrupted.
-  Any tool call that was still running is recorded as failed so it does not keep spinning.
-- Historical snapshots remain on those runs as inert metadata, same optional-field policy.
-  Rows saved before data access restore unchanged.
-  A malformed snapshot fails restore as corrupt.
-- The conversation stores nothing new for data access.
-- Format versioning, migration, and unknown-version handling follow the conversations spec.
+Runs store tool activity on the run.
+Missing tool activity restores without it.
+A malformed value fails restore as corrupt, not as an empty conversation; see ASSISTANT-CONVERSATIONS.md (§Restore).
+After a crash, a run that was still streaming is interrupted.
+Any tool call that was still running is recorded as failed so it does not keep spinning.
+Stored access records from before tools are not sent to the model.
+Format versioning follows the conversations spec.

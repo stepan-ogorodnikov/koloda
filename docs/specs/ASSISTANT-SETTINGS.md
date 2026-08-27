@@ -11,7 +11,6 @@ They live beside the chat UI and apply across conversations.
 They do not belong to a single conversation.
 
 The user toggles settings open from the assistant footer.
-While settings are open, the settings form replaces the conversation view.
 Closing settings returns to the conversation.
 Whether settings are open is not remembered across reloads.
 
@@ -25,9 +24,7 @@ Relationships:
 
 - Saved settings are global; every conversation reads the same values.
 - Profile, model, and model parameters stay per conversation; see the conversations spec.
-- When a run starts, the saved custom prompt (or the built-in default) is trimmed and sent as the system message.
-- Deck data is not injected into that prompt; see ASSISTANT-DATA-ACCESS.md.
-- Card proposal behavior after the prompt is sent is covered by the card-generation spec.
+- Deck data is not injected into the prompt; see ASSISTANT-DATA-ACCESS.md.
 
 ## Prompt Template
 
@@ -46,15 +43,12 @@ Discard restores the last saved values.
 An empty custom template is allowed and is sent as empty after trimming.
 Invalid temperature is rejected on save; the previous saved settings remain unchanged.
 
-A previously saved card-generation template is dropped on load.
-It is not shown and not used.
-
 ## How the Prompt Is Sent
 
 There are no placeholders.
 
 The template is used as written after trimming.
-Leftover `{{fields}}`, `{{rules}}`, `{{provider}}`, or other brace text in a previously saved custom prompt stays as literal text.
+Leftover brace placeholders in a previously saved custom prompt stay as literal text.
 
 The built-in default is plain text with no variables.
 It tells the model to invent cards through `propose_cards` and not to ask the user for field titles.

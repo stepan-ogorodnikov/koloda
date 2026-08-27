@@ -20,7 +20,7 @@ A card belongs to exactly one deck and uses exactly one template.
 Relationships:
 
 - A card belongs to exactly one deck and cannot be moved to another.
-- A card stores its own template id.
+- A card stores its own template.
   Changing the deck's current template does not rewrite existing cards.
   Table, edit, and preview resolve the template per card.
 - A card's template defines the fields its content must have.

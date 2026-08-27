@@ -22,7 +22,7 @@ Relationships:
 - Every template has at least one field and at least one layout item.
 - Each layout item points at a field that exists on the same template.
 - A deck has a current template used when adding cards manually.
-- See CARDS.md (§Relationships) for a card's own template id.
+- See CARDS.md (§Relationships) for a card's own template.
 - Lock is derived from cards: any card on the template locks it; deleting the last such card unlocks it.
 
 ## Fields

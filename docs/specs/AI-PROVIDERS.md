@@ -15,19 +15,11 @@ The app presents one consistent interface regardless of provider.
 
 ## Core Model
 
-- **Provider** — a built-in identifier for an external AI service.
-  Each provider has a fixed display name and a fixed shape of secrets.
-- **Profile** — a user-named configuration that pairs a provider with the secrets needed to talk to it.
-  A profile can also carry a model allowlist.
-- **Secrets** — the credentials stored inside a profile.
-  The required fields depend on the provider.
-- **Model** — a model available from a provider, identified by a model ID and a display name.
-  Models are discovered at runtime, not hard-coded.
-- **Model allowlist** — the per-profile restriction on which models are available.
-  An unset allowlist allows every model.
-  A present array is the allowlist; an empty array allows none.
-- **Run input** — the per-request inputs sent through a profile.
-  This includes the chosen model and optional model parameters such as reasoning effort.
+- **Provider** — a built-in identifier for an external AI service
+- **Profile** — a user-named configuration that pairs a provider with secrets
+- **Secrets** — the credentials stored inside a profile
+- **Model** — a model available from a provider, identified by a model ID and a display name
+- **Model allowlist** — the per-profile restriction on which models are available
 
 Relationships:
 
@@ -66,7 +58,7 @@ The user cannot see the stored key without choosing to replace it.
 For base-URL fields, the value is editable as a normal URL input.
 
 On success, the profile is updated and the profile list refreshes.
-Editing does not change the profile ID or created-at timestamp.
+Editing does not change which profile it is, or when it was created.
 The provider cannot be changed through edit — to use a different provider, the user creates a new profile.
 
 ### Deleting a Profile
@@ -107,7 +99,7 @@ Failed validation shows an error per field and prevents the request from being s
 
 On save, the app also rejects:
 
-- Profiles with no ID.
+- Profiles that cannot be identified.
 - Titles longer than the maximum allowed length.
 - Required secret fields that are empty or whitespace-only on create.
 - Whitespace-only secret fields on store, including partial updates that try to clear a field with whitespace.
@@ -122,9 +114,7 @@ Each provider exposes a list of models fetched at runtime.
 ### Fetching
 
 The app fetches models when the user opens the model picker in a conversation, and whenever else the list is needed for that profile.
-
-The list is normalized to a common shape and sorted alphabetically by display name.
-Missing metadata is filled with defaults so the picker stays consistent.
+The list is sorted alphabetically by display name.
 
 If the model list response is malformed, the error is surfaced to the user.
 
