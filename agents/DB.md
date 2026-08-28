@@ -8,7 +8,7 @@ Why two engines and ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PER
 - **Migration directories**:
   - `drizzle/pgsql/`: Generated PostgreSQL migrations (source of truth for web)
   - `drizzle/sqlite/`: Generated SQLite migrations (source of truth for desktop)
-  - `crates/koloda-core/src/migrations/`: Refinery migrations embedded into the Rust core via `refinery::embed_migrations!("./")` at `crates/koloda-core/src/migrations/mod.rs:6`. Committed to the repo, hand-derived from `drizzle/sqlite/`. See workflow step 5 for the conversion rules.
+  - `crates/koloda-core/src/migrations/`: Refinery migrations embedded into the Rust core via `refinery::embed_migrations!("src/migrations")` at `crates/koloda-core/src/migrations/mod.rs:6`. Committed to the repo, hand-derived from `drizzle/sqlite/`. See workflow step 5 for the conversion rules.
 - **Generate migrations**: `bun run db:generate` (generates both pgsql and sqlite)
 - **Rust core owns the desktop schema**: `apps/native-electron/src-rust` is a consumer of `koloda-core`; it does not define or convert migrations itself.
 

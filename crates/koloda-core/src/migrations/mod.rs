@@ -3,7 +3,7 @@ use refinery::Runner;
 
 mod embedded {
     use refinery::embed_migrations;
-    embed_migrations!("./");
+    embed_migrations!("src/migrations");
 }
 
 pub fn runner() -> Runner {
