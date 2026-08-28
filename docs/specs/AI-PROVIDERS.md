@@ -13,6 +13,27 @@ Users create a profile for a provider, supply credentials, pick a model, and the
 Providers differ in how they authenticate and which models they expose.
 The app presents one consistent interface regardless of provider.
 
+## Platform availability
+
+Not every built-in provider works in the browser.
+The desktop app supports every built-in provider.
+
+Available in the browser:
+
+- OpenRouter
+- Ollama
+- LM Studio
+
+Desktop only:
+
+- OpenCode Go
+- OpenCode Zen
+- Ollama Cloud
+
+In the browser, desktop-only providers are disabled in the add-profile picker.
+Profiles for a desktop-only provider remain visible but cannot be used.
+AI settings shows a platform-limitations note and a per-profile warning for those profiles.
+
 ## Core Model
 
 - **Provider** — a built-in identifier for an external AI service
