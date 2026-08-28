@@ -7,15 +7,6 @@ use serde::{Deserialize, Deserializer, Serialize};
 use crate::app::error::{error_codes, AppError};
 use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
-pub const AI_PROVIDERS: &[&str] = &[
-    "openrouter",
-    "ollama",
-    "lmstudio",
-    "opencodeGo",
-    "opencodeZen",
-    "ollamaCloud",
-];
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AIProfile {
@@ -92,11 +83,6 @@ pub enum AISecrets {
         #[serde(rename = "apiKey", alias = "api_key", deserialize_with = "deserialize_api_key")]
         api_key: Option<String>,
     },
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ApiKeySecret {
-    pub api_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

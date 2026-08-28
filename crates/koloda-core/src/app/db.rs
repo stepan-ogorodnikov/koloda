@@ -61,13 +61,6 @@ impl Database {
         Ok(result)
     }
 
-    pub fn checkpoint(&self) -> Result<(), AppError> {
-        let guard = self.conn.lock().map_err(crate::app::error::from_db_lock_error)?;
-        guard.execute("PRAGMA wal_checkpoint(TRUNCATE)", [])?;
-
-        Ok(())
-    }
-
     pub fn new(conn: Connection) -> Self {
         Self {
             conn: Arc::new(Mutex::new(conn)),

@@ -404,9 +404,4 @@ impl KolodaDb {
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         repo::ai::remove_ai_profile(&self.db, &data.id).map_err(to_napi_error)
     }
-
-    #[napi]
-    pub fn checkpoint(&self) -> Result<()> {
-        self.db.checkpoint().map_err(to_napi_error)
-    }
 }
