@@ -24,7 +24,7 @@ pub mod error_codes {
     pub const NOT_FOUND_DECKS_UPDATE_DECK: &str = "not-found.decks.update.deck";
     pub const NOT_FOUND_DECKS_UPDATE_ALGORITHM: &str = "not-found.decks.update.algorithm";
     pub const NOT_FOUND_DECKS_UPDATE_TEMPLATE: &str = "not-found.decks.update.template";
-    pub const NOT_FOUND_AI_PROFILE: &str = "not-found.ai.profile";
+    pub const NOT_FOUND_AI_PROFILE: &str = "not-found.ai-profile";
 
     pub const VALIDATION_COMMON_TITLE_TOO_SHORT: &str = "validation.common.title.too-short";
     pub const VALIDATION_COMMON_TITLE_TOO_LONG: &str = "validation.common.title.too-long";

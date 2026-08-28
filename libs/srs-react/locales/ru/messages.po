@@ -18,7 +18,7 @@ msgstr ""
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:65
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:66
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "{selectedCount, plural, one {выбрана} few {выбраны} many {выбрано} other {выбрано} }"
 
@@ -44,41 +44,41 @@ msgstr "Новый алгоритм"
 msgid "add-algorithm.trigger"
 msgstr "Новый алгоритм"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:132
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
 msgid "add-card.submit"
 msgstr "Добавить"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:88
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:89
 msgid "add-cards.title"
 msgstr "Добавить карточку"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:79
 #: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:81
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:90
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:93
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:115
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:118
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:122
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:122
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:79
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:82
 msgid "add-deck.title"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:64
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:65
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:67
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:68
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
@@ -138,7 +138,7 @@ msgstr "У вас нет ни одного профиля ИИ"
 msgid "ai.chat.no-profiles.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:184
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:171
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
@@ -296,11 +296,7 @@ msgstr "Тип временного отрезка для интервала п�
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/assistant/runs/use-run-orchestration.ts:150
-msgid "assistant.chat.message.status.pending"
-msgstr "Обработка"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:90
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:93
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
 
@@ -309,15 +305,11 @@ msgstr "Карточки не сгенерированы"
 msgid "assistant.settings.prompt.reset"
 msgstr "Сбросить"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:106
-msgid "assistant.settings.system-prompt.cards.label"
-msgstr "Промпт генерации карточек"
-
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:74
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:65
 msgid "assistant.settings.system-prompt.chat.label"
 msgstr "Промпт чата"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:87
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:77
 msgid "assistant.settings.temperature.label"
 msgstr "Температура"
 
@@ -333,40 +325,40 @@ msgstr "В обработке"
 msgid "assistant.table.columns.status.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:88
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-message.tsx:91
 msgid "assistant.template-unavailable"
 msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:152
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:153
 msgid "card.action.reset-progress"
 msgstr "Сбросить прогресс"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:146
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:147
 msgid "card.labels.actions"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:126
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:127
 msgid "card.labels.difficulty"
 msgstr "Сложность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:112
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:113
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:87
 msgid "card.labels.due-at"
 msgstr "Срок"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:133
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:134
 msgid "card.labels.lapses"
 msgstr "Ошибки"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:140
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:141
 msgid "card.labels.reviews"
 msgstr "История"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:119
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:120
 msgid "card.labels.stability"
 msgstr "Стабильность"
 
-#: ../../libs/srs-react/src/lib/cards/card-details.tsx:106
+#: ../../libs/srs-react/src/lib/cards/card-details.tsx:107
 #: ../../libs/srs-react/src/lib/cards/cards-table-filters.tsx:69
 msgid "card.labels.state"
 msgstr "Статус"
@@ -431,19 +423,19 @@ msgstr "Поиск по карточкам"
 msgid "cards-table.search.placeholder"
 msgstr "Поиск"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:97
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:98
 msgid "cards-table.selection.clear"
 msgstr "Сбросить выбор"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:88
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:89
 msgid "cards-table.selection.delete.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:85
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:86
 msgid "cards-table.selection.delete.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:71
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:72
 msgid "cards-table.selection.delete.trigger"
 msgstr "Удалить"
 
@@ -463,7 +455,7 @@ msgstr "Статус"
 msgid "cards.table.columns.updated-at"
 msgstr "Обновлена"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:80
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:81
 msgid "cards.table.selection.delete-confirm"
 msgstr "Вы уверены, что хотите удалить выбранные карточки?"
 
@@ -517,11 +509,11 @@ msgstr "Успешно"
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:92
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:95
 msgid "deck.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:69
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:72
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
@@ -553,39 +545,39 @@ msgstr "Алгоритм наследник"
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:70
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:51
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:71
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:52
 msgid "delete-card.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:67
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:53
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:68
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:54
 msgid "delete-card.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:63
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:47
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:64
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:48
 msgid "delete-card.message"
 msgstr "Подтвердите удаление карточки"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:49
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:41
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:50
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:42
 msgid "delete-card.trigger"
 msgstr "Удалить карточку"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:52
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:56
 msgid "delete-deck.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:54
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:58
 msgid "delete-deck.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:48
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:52
 msgid "delete-deck.message"
 msgstr "Подтвердите удаление колоды"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:42
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:46
 msgid "delete-deck.trigger"
 msgstr "Удалить колоду"
 
@@ -625,20 +617,20 @@ msgstr "Редактировать карточку"
 msgid "learned-today.title"
 msgstr "Изучено сегодня"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:65
+#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:76
 msgid "lesson.completion.close"
 msgstr "Закрыть"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-completion.tsx:17
+#: ../../libs/srs-react/src/lib/lessons/lesson-completion.tsx:12
 msgid "lesson.completion.message"
 msgstr "Выполнено"
 
-#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:58
-#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:56
+#: ../../libs/srs-react/src/lib/cards/card-preview.tsx:64
+#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:67
 msgid "lesson.content.submit"
 msgstr "Продолжить"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-termination.tsx:36
+#: ../../libs/srs-react/src/lib/lessons/lesson-termination.tsx:31
 msgid "lesson.content.termination.accept"
 msgstr "Завершить сессию"
 
@@ -646,44 +638,44 @@ msgstr "Завершить сессию"
 msgid "lesson.content.termination.refuse"
 msgstr "Продолжить изучение"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:12
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:11
 msgid "lesson.init.amount-input.learn"
 msgstr "Количество карт типа 'заучивание'"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:13
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:12
 msgid "lesson.init.amount-input.review"
 msgstr "Количество карт типа 'повтор'"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:11
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-amount-input.tsx:10
 msgid "lesson.init.amount-input.untouched"
 msgstr "Количество карт типа 'новые'"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-list.tsx:39
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-list.tsx:34
 msgid "lesson.init.list.labels.available"
 msgstr "Доступно:"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:38
+#: ../../libs/srs-react/src/lib/lessons/lesson-footer.tsx:54
 msgid "lesson.init.submit"
 msgstr "Начать"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:28
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:24
 msgid "lesson.init.table.columns.amount"
 msgstr "Количество"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:29
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:25
 msgid "lesson.init.table.columns.available"
 msgstr "Доступно"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:30
+#: ../../libs/srs-react/src/lib/lessons/lesson-init-table.tsx:26
 msgid "lesson.init.table.columns.learned"
 msgstr "Сегодня"
 
-#: ../../libs/srs-react/src/lib/lessons/lesson-header.tsx:43
+#: ../../libs/srs-react/src/lib/lessons/lesson-header.tsx:47
 msgid "lesson.init.title"
 msgstr "Начать изучение"
 
 #. placeholder {0}: index + 1
-#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:35
+#: ../../libs/srs-react/src/lib/lessons/lesson-progress-dots.tsx:36
 msgid "lesson.progress.label {0} {total}"
 msgstr "Прогресс: карточка № {0}, всего {total}"
 

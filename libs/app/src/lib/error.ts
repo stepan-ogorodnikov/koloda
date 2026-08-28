@@ -43,6 +43,7 @@ export const ERROR_MESSAGES = {
   "not-found.decks.update.deck": msg`not-found.decks.update.deck`,
   "not-found.decks.update.algorithm": msg`not-found.decks.update.algorithm`,
   "not-found.decks.update.template": msg`not-found.decks.update.template`,
+  "not-found.ai-profile": msg`not-found.ai-profile`,
   "validation.common.title.too-short": msg`validation.common.title.too-short`,
   "validation.common.title.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.common.title.too-long" })}`,

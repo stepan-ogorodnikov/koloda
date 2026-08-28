@@ -13,7 +13,7 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app/src/lib/error.ts:48
+#: ../../libs/app/src/lib/error.ts:49
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Название не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
 
@@ -113,6 +113,10 @@ msgstr "Включено"
 msgid "motion.system"
 msgstr "Как в системе"
 
+#: ../../libs/app/src/lib/error.ts:46
+msgid "not-found.ai-profile"
+msgstr "Профиль не найден"
+
 #: ../../libs/app/src/lib/error.ts:31
 msgid "not-found.algorithms.clone.source"
 msgstr "Исходный алгоритм не найден"
@@ -197,7 +201,7 @@ msgstr "Фокус на поле ввода"
 msgid "settings.hotkeys.ai.new-conversation"
 msgstr "Новый диалог"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:53
+#: ../../libs/app/src/lib/settings-hotkeys.ts:50
 msgid "settings.hotkeys.ai.next-conversation"
 msgstr "Следующий диалог"
 
@@ -205,27 +209,27 @@ msgstr "Следующий диалог"
 msgid "settings.hotkeys.ai.open-model-picker"
 msgstr "Выбор модели ИИ"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:52
+#: ../../libs/app/src/lib/settings-hotkeys.ts:49
 msgid "settings.hotkeys.ai.previous-conversation"
 msgstr "Предыдущий диалог"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:55
+#: ../../libs/app/src/lib/settings-hotkeys.ts:52
 msgid "settings.hotkeys.ai.scroll-down"
 msgstr "Прокрутить вниз"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:57
+#: ../../libs/app/src/lib/settings-hotkeys.ts:54
 msgid "settings.hotkeys.ai.scroll-to-bottom"
 msgstr "Прокрутить в конец"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:56
+#: ../../libs/app/src/lib/settings-hotkeys.ts:53
 msgid "settings.hotkeys.ai.scroll-to-top"
 msgstr "Прокрутить на начало"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:54
+#: ../../libs/app/src/lib/settings-hotkeys.ts:51
 msgid "settings.hotkeys.ai.scroll-up"
 msgstr "Прокрутить вверх"
 
-#: ../../libs/app/src/lib/settings-hotkeys.ts:50
+#: ../../libs/app/src/lib/settings-hotkeys.ts:48
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"
 
@@ -333,86 +337,86 @@ msgstr "Переключить боковую панель"
 msgid "unknown"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app/src/lib/error.ts:62
+#: ../../libs/app/src/lib/error.ts:63
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Не удалось создать уникальный идентификатор профиля"
 
-#: ../../libs/app/src/lib/error.ts:63
+#: ../../libs/app/src/lib/error.ts:64
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Температура должна быть от 0 до 2"
 
-#: ../../libs/app/src/lib/error.ts:68
+#: ../../libs/app/src/lib/error.ts:69
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:46
+#: ../../libs/app/src/lib/error.ts:47
 msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:57
 msgid "validation.lessons.amounts.negative"
 msgstr "Количество не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:56
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
-#: ../../libs/app/src/lib/error.ts:61
+#: ../../libs/app/src/lib/error.ts:62
 msgid "validation.settings-ai.profiles.whitelist-model-ids"
 msgstr "ID модели не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:59
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:60
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Некорректный URL"
 
-#: ../../libs/app/src/lib/error.ts:60
+#: ../../libs/app/src/lib/error.ts:61
 msgid "validation.settings-ai.providers.id"
 msgstr "Идентификатор профиля обязателен"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:58
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Есть конфликтующие комбинации клавиш"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:51
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Лимит карточек повтора не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:50
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "Лимит новых карточек не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Неверный формат настройки начала дня"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Часы должны быть от 0 до 48"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/app/src/lib/error.ts:67
+#: ../../libs/app/src/lib/error.ts:68
 msgid "validation.templates.delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:64
+#: ../../libs/app/src/lib/error.ts:65
 msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
-#: ../../libs/app/src/lib/error.ts:65
+#: ../../libs/app/src/lib/error.ts:66
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 
-#: ../../libs/app/src/lib/error.ts:66
+#: ../../libs/app/src/lib/error.ts:67
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"
