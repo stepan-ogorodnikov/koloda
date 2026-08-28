@@ -63,7 +63,11 @@ export const decks = table(
       .references(() => templates.id),
     ...timestamps,
   },
-  (table) => [index("decks_title_idx").on(table.title)],
+  (table) => [
+    index("decks_title_idx").on(table.title),
+    index("decks_algorithm_id_idx").on(table.algorithmId),
+    index("decks_template_id_idx").on(table.templateId),
+  ],
 );
 
 export const cards = table(
@@ -88,25 +92,33 @@ export const cards = table(
     lastReviewedAt: timestamp("last_reviewed_at"),
     ...timestamps,
   },
-  (table) => [index("cards_due_at_idx").on(table.dueAt)],
+  (table) => [
+    index("cards_due_at_idx").on(table.dueAt),
+    index("cards_deck_id_idx").on(table.deckId),
+    index("cards_template_id_idx").on(table.templateId),
+  ],
 );
 
-export const reviews = table("reviews", {
-  id: bigint({ mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(),
-  cardId: integer("card_id")
-    .notNull()
-    .references(() => cards.id, { onDelete: "cascade" }),
-  state: smallint().notNull().default(0),
-  rating: smallint().notNull().default(0),
-  dueAt: timestamp("due_at"),
-  stability: real().notNull().default(0),
-  difficulty: real().notNull().default(0),
-  scheduledDays: integer("scheduled_days").notNull().default(0),
-  learningSteps: integer().notNull().default(0),
-  time: integer().notNull().default(0),
-  isIgnored: boolean("is_ignored").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const reviews = table(
+  "reviews",
+  {
+    id: bigint({ mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(),
+    cardId: integer("card_id")
+      .notNull()
+      .references(() => cards.id, { onDelete: "cascade" }),
+    state: smallint().notNull().default(0),
+    rating: smallint().notNull().default(0),
+    dueAt: timestamp("due_at"),
+    stability: real().notNull().default(0),
+    difficulty: real().notNull().default(0),
+    scheduledDays: integer("scheduled_days").notNull().default(0),
+    learningSteps: integer().notNull().default(0),
+    time: integer().notNull().default(0),
+    isIgnored: boolean("is_ignored").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("reviews_card_id_idx").on(table.cardId), index("reviews_created_at_idx").on(table.createdAt)],
+);
 
 export const conversations = table(
   "conversations",

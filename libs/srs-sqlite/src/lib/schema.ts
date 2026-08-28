@@ -53,7 +53,11 @@ export const decks = table(
       .references(() => templates.id),
     ...timestamps,
   },
-  (t) => [index("decks_title_idx").on(t.title)],
+  (t) => [
+    index("decks_title_idx").on(t.title),
+    index("decks_algorithm_id_idx").on(t.algorithmId),
+    index("decks_template_id_idx").on(t.templateId),
+  ],
 );
 
 export const cards = table(
@@ -78,27 +82,35 @@ export const cards = table(
     lastReviewedAt: integer("last_reviewed_at", { mode: "timestamp_ms" }),
     ...timestamps,
   },
-  (t) => [index("cards_due_at_idx").on(t.dueAt)],
+  (t) => [
+    index("cards_due_at_idx").on(t.dueAt),
+    index("cards_deck_id_idx").on(t.deckId),
+    index("cards_template_id_idx").on(t.templateId),
+  ],
 );
 
-export const reviews = table("reviews", {
-  id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-  cardId: integer("card_id")
-    .notNull()
-    .references(() => cards.id, { onDelete: "cascade" }),
-  state: integer("state").notNull().default(0),
-  rating: integer("rating").notNull().default(0),
-  dueAt: integer("due_at", { mode: "timestamp_ms" }),
-  stability: real("stability").notNull().default(0),
-  difficulty: real("difficulty").notNull().default(0),
-  scheduledDays: integer("scheduled_days").notNull().default(0),
-  learningSteps: integer("learning_steps").notNull().default(0),
-  time: integer("time").notNull().default(0),
-  isIgnored: integer("is_ignored", { mode: "boolean" }).notNull().default(false),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .$defaultFn(() => new Date())
-    .notNull(),
-});
+export const reviews = table(
+  "reviews",
+  {
+    id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+    cardId: integer("card_id")
+      .notNull()
+      .references(() => cards.id, { onDelete: "cascade" }),
+    state: integer("state").notNull().default(0),
+    rating: integer("rating").notNull().default(0),
+    dueAt: integer("due_at", { mode: "timestamp_ms" }),
+    stability: real("stability").notNull().default(0),
+    difficulty: real("difficulty").notNull().default(0),
+    scheduledDays: integer("scheduled_days").notNull().default(0),
+    learningSteps: integer("learning_steps").notNull().default(0),
+    time: integer("time").notNull().default(0),
+    isIgnored: integer("is_ignored", { mode: "boolean" }).notNull().default(false),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (t) => [index("reviews_card_id_idx").on(t.cardId), index("reviews_created_at_idx").on(t.createdAt)],
+);
 
 export const conversations = table(
   "conversations",
