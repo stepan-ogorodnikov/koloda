@@ -220,6 +220,16 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
 }
 
 #[test]
+fn reset_card_progress_fails_with_not_found_when_card_is_missing() {
+    let db = test_db();
+
+    let err = cards::reset_card_progress(&db, ResetCardProgressData { id: 999_999 })
+        .expect_err("resetting progress for a missing card should fail");
+
+    assert_eq!(err.code, error_codes::NOT_FOUND_CARDS_RESET_CARD);
+}
+
+#[test]
 fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

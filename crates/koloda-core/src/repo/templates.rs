@@ -173,7 +173,7 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
     throw_known_error(error_codes::DB_UPDATE, || {
         let original = get_template(db, data.id)?.ok_or_else(|| {
             AppError::new(
-                error_codes::NOT_FOUND_CARDS_UPDATE_TEMPLATE,
+                error_codes::NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE,
                 Some(format!("Template id: {}", data.id)),
             )
         })?;

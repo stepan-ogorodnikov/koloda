@@ -8,6 +8,28 @@ use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
 use crate::common::test_db;
 
 #[test]
+fn update_template_fails_with_not_found_when_template_is_missing() {
+    let db = test_db();
+
+    let err = templates::update_template(
+        &db,
+        UpdateTemplateData {
+            id: 999_999,
+            values: UpdateTemplateValues {
+                title: "Renamed".to_string(),
+                content: TemplateContent {
+                    fields: Vec::new(),
+                    layout: Vec::new(),
+                },
+            },
+        },
+    )
+    .expect_err("updating a missing template should fail");
+
+    assert_eq!(err.code, error_codes::NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE);
+}
+
+#[test]
 fn delete_template_fails_when_template_is_locked_by_cards() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

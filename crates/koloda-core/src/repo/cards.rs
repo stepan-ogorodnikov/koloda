@@ -299,6 +299,13 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
 
 pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result<Card, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
+        get_card(db, data.id)?.ok_or_else(|| {
+            AppError::new(
+                error_codes::NOT_FOUND_CARDS_RESET_CARD,
+                Some(format!("Card id: {}", data.id)),
+            )
+        })?;
+
         let now = get_current_timestamp()?;
 
         db.with_transaction(|tx| {

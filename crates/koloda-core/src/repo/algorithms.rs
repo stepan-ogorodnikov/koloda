@@ -130,6 +130,13 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
     throw_known_error(error_codes::DB_UPDATE, || {
         data.values.validate()?;
 
+        get_algorithm(db, data.id)?.ok_or_else(|| {
+            AppError::new(
+                error_codes::NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM,
+                Some(format!("Algorithm id: {}", data.id)),
+            )
+        })?;
+
         let now = get_current_timestamp()?;
 
         db.with_conn(|conn| {

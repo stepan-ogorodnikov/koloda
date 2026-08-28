@@ -1,9 +1,28 @@
 use koloda_core::app::error::error_codes;
-use koloda_core::domain::algorithms::DeleteAlgorithmData;
+use koloda_core::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
 use koloda_core::repo::algorithms;
 
 use crate::common::fixtures::{add_algorithm, add_deck, add_template};
-use crate::common::test_db;
+use crate::common::{fsrs_algorithm_content, test_db};
+
+#[test]
+fn update_algorithm_fails_with_not_found_when_algorithm_is_missing() {
+    let db = test_db();
+
+    let err = algorithms::update_algorithm(
+        &db,
+        UpdateAlgorithmData {
+            id: 999_999,
+            values: UpdateAlgorithmValues {
+                title: "Renamed FSRS".to_string(),
+                content: fsrs_algorithm_content(),
+            },
+        },
+    )
+    .expect_err("updating a missing algorithm should fail");
+
+    assert_eq!(err.code, error_codes::NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM);
+}
 
 #[test]
 fn delete_algorithm_reassigns_decks_to_successor() {
