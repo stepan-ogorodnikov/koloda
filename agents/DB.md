@@ -26,4 +26,5 @@ When modifying database schema:
    - Strip backticks and `--> statement-breakpoint` markers
    - Add `IF NOT EXISTS` to `CREATE TABLE` / `CREATE INDEX` / `CREATE UNIQUE INDEX`
    - Use the next sequential `V` number (drizzle number + 1), and keep the exact same name from the drizzle migration (the part after `0000_`). E.g. drizzle `0002_create_users.sql` → refinery `V3__create_users.sql`
-6. **Verify**: `cargo check -p koloda-core` to ensure the embedded migrations compile
+6. **Refresh the embedded migrations**: touch `crates/koloda-core/src/migrations/mod.rs` (or `cargo clean -p koloda-core`). `embed_migrations!` snapshots the directory listing at compile time, so an incremental build won't embed a newly added file — tests would silently run against the old schema.
+7. **Verify**: `cargo check -p koloda-core` to ensure the embedded migrations compile
