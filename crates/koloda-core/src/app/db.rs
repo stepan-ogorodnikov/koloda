@@ -35,6 +35,9 @@ impl Database {
 
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
+        // WHY: Wait out brief contention (e.g. an external process touching the file)
+        // instead of surfacing an immediate SQLITE_BUSY as an `unknown` error.
+        conn.pragma_update(None, "busy_timeout", 5000)?;
 
         migrations::runner().run(&mut conn).map_err(AppError::from)?;
 
