@@ -253,7 +253,8 @@ impl AIProfile {
         }
 
         if let Some(title) = &self.title {
-            if title.len() > 128 {
+            // WHY: Character count, not bytes — same rule as `common::validate_title`.
+            if title.chars().count() > 128 {
                 return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }
@@ -273,7 +274,8 @@ impl AIProfile {
         }
 
         if let Some(title) = &self.title {
-            if title.len() > 128 {
+            // WHY: Character count, not bytes — same rule as `common::validate_title`.
+            if title.chars().count() > 128 {
                 return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }

@@ -212,6 +212,37 @@ fn test_ai_profile_validate_title_too_long_fails() {
 }
 
 #[test]
+fn test_ai_profile_validate_title_max_length_in_cyrillic_ok() {
+    // 128 Cyrillic chars are 256 UTF-8 bytes — byte counting would reject the
+    // title the TS zod mirror (UTF-16 units) accepts.
+    let profile = AIProfile {
+        id: "profile-5".to_string(),
+        title: Some("ф".repeat(128)),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    profile.validate().unwrap();
+}
+
+#[test]
+fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
+    let profile = AIProfile {
+        id: "profile-6".to_string(),
+        title: Some("ф".repeat(129)),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate();
+    assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
+}
+
+#[test]
 fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     let profile = AIProfile {
         id: "profile-4".to_string(),
