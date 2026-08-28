@@ -671,3 +671,38 @@ fn add_ai_profile_rejects_empty_whitelist_model_id() {
 
     test_store::teardown(_guard);
 }
+
+#[test]
+fn remove_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
+    let (guard, data) = test_store::setup_shared();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-original-key".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+
+    test_store::replace_store(test_store::FailingRemoveSecretStore::new(Arc::clone(&data)).into_arc());
+
+    let err = ai::remove_ai_profile(&db, &added.id).expect_err("remove must fail when keyring remove fails");
+    assert_eq!(err.code, "keyring");
+
+    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = profiles
+        .iter()
+        .find(|p| p.id == added.id)
+        .expect("profile should be restored after failed remove");
+    assert_eq!(retrieved.title, Some("OpenRouter".to_string()));
+    assert!(retrieved.has_secrets);
+    let secrets = ai::get_ai_profile_secrets(&db, &added.id)
+        .expect("should load secrets")
+        .expect("secrets should exist");
+    assert_eq!(secrets.api_key(), Some("sk-original-key"));
+
+    test_store::teardown(guard);
+}

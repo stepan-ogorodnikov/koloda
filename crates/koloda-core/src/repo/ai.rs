@@ -264,12 +264,28 @@ pub fn update_ai_profile(
     })
 }
 
+// WHY: Same DB-then-keyring ordering as add/update. Keyring-first deleted the
+// secret while the settings row kept referencing it, so a settings-write
+// failure after key deletion left a profile that lost its key. On keyring
+// failure after the settings write succeeded, restore the profile.
 pub fn remove_ai_profile(db: &Database, id: &str) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        remove_api_key(id)?;
+        let previous = get_ai_settings_or_default(db)?
+            .profiles
+            .into_iter()
+            .find(|profile| profile.id == id);
 
-        let mut settings = get_ai_settings_or_default(db)?;
-        settings.profiles.retain(|profile| profile.id != id);
-        set_ai_settings(db, settings)
+        drop_ai_profile_from_settings(db, id)?;
+
+        if let Err(err) = remove_api_key(id) {
+            // WHY: Best-effort rollback; prefer the original keyring error over a
+            // secondary settings failure. `?` here would replace the cause.
+            if let Some(previous) = previous {
+                if let Err(_rollback_err) = restore_ai_profile_in_settings(db, previous) {}
+            }
+            return Err(err);
+        }
+
+        Ok(())
     })
 }
