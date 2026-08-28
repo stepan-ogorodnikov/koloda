@@ -32,7 +32,7 @@ The listed files are relative to the repo root.
 | Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
 | Decks (create, edit algorithm/template, delete) | `docs/specs/DECKS.md` |
-| Lessons (session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
+| Lessons (overview, today's progress, session, amounts, grading, learn-ahead) | `docs/specs/LESSONS.md` |
 | Templates (fields, layout, locking) | `docs/specs/TEMPLATES.md` |
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |

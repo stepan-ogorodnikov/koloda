@@ -1,7 +1,9 @@
 # Lessons
 
-Covers lessons overview, starting a lesson, amount selection, studying, grading, learn-ahead, progress, result persistence, completion, and early termination.
-Does not cover deck or template editing, FSRS algorithm internals, learning settings UI, or hotkey binding configuration.
+Covers lessons overview, today's progress on that screen, starting a lesson, amount selection, studying, grading, learn-ahead, session progress, result persistence, completion, and early termination.
+Does not cover deck or template editing, FSRS algorithm internals, or hotkey binding configuration.
+Does not define daily limits, the learning-day window, or how today's review totals are counted.
+Those are LEARNING-SETTINGS.md.
 
 ## What is a Lesson
 
@@ -23,7 +25,8 @@ Closing the dialog clears the session.
   - **Total** — the sum of the three types above
 - **Available counts** — cards of each type ready to study now, per deck and across all decks
 - **Amounts** — how many cards of each type the user chose for this lesson
-- **Daily limits** — caps on how many cards of each type, and in total, may be studied today
+- **Daily limits** — caps for the current learning day; defined in LEARNING-SETTINGS.md (§Daily Limits)
+- **Today's review totals** — how many of each type have been studied in the current learning day; defined in LEARNING-SETTINGS.md (§Learning Day)
 - **Progress** — how many cards of each type are done versus still pending in this session
 - **Upload queue** — graded results waiting to be saved, one at a time
 - **Phase** — closed, preparing, configuring, loading-cards, studying, or finished
@@ -32,6 +35,7 @@ Relationships:
 
 - Available counts come from the user's decks and due times.
 - Amounts are chosen at init, then used to load lesson data.
+- Today's review totals and daily limits appear on the lessons screen and at init; see §Today's Progress.
 - Each card in the session uses its deck's template and algorithm.
 - Grading a card enqueues a result for persistence and advances to the next card.
 
@@ -43,6 +47,20 @@ A final row aggregates the same counts across all decks.
 Each count is a badge.
 A badge with a non-zero count starts a lesson of that type for that deck (or for all decks on the aggregate row).
 A badge with zero is disabled and shows "0".
+
+Beside the deck list, the screen shows today's progress.
+
+## Today's Progress
+
+The lessons screen shows how many cards of each type have already been studied today, against that type's daily limit.
+New, Learn, Review, and Total are each shown.
+
+What counts as today and how Total is summed are LEARNING-SETTINGS.md (§Learning Day).
+What a limit of zero means is LEARNING-SETTINGS.md (§Daily Limits).
+
+The same learned-and-limit figures appear on the lesson init screen next to the amount pickers.
+
+Closing a lesson refreshes these figures.
 
 ## Starting a Lesson
 
@@ -90,7 +108,7 @@ It shows, for each card type:
 
 - the amount that will be studied
 - how many cards of that type are available
-- how many have already been studied today, with the daily limit when one is set
+- today's learned count and daily limit; see §Today's Progress
 
 "New", "Learn", and "Review" amounts are editable number fields.
 Each field is capped at the available count for that type.

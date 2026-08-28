@@ -2,7 +2,8 @@
 
 Covers learning settings: defaults, daily limits, the learning-day boundary, and learn-ahead.
 Does not cover lesson session flow, grading, or amount selection beyond how settings shape them.
-Those behaviors are covered by the lessons spec.
+Does not cover where today's totals are shown on the lessons screen.
+Those behaviors are LESSONS.md.
 Does not cover algorithm or template editing, or interface settings.
 
 ## What are Learning Settings
@@ -25,7 +26,8 @@ They are edited on the learning settings screen and take effect for later study.
 
 Relationships:
 
-- Daily limits and today's review totals shape lesson init defaults.
+- Daily limits and today's review totals shape lesson init defaults; see LESSONS.md (§Default Amounts).
+- Those same figures are shown on the lessons screen; see LESSONS.md (§Today's Progress).
 - Day starts at defines the time window used for today's review totals.
 - Learn-ahead is applied while studying; see LESSONS.md (§Learn Ahead).
 - Defaults do not rewrite existing decks or cards.
@@ -62,7 +64,7 @@ A per-type limit that does not count toward Total may be larger than Total.
 
 Limits do not hard-block studying.
 They shape lesson init defaults.
-In a lesson, the user can still raise amounts up to what is available; see the lessons spec.
+In a lesson, the user can still raise amounts up to what is available; see LESSONS.md (§Init).
 Types that do not count toward Total leave Total room unused when those defaults are computed.
 
 ## Learning Day
