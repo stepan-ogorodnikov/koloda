@@ -4,10 +4,9 @@ pub const TITLE_MIN_LENGTH: usize = 1;
 pub const TITLE_MAX_LENGTH: usize = 255;
 
 pub fn validate_title(title: &str) -> Result<(), AppError> {
-    // WHY: Count characters, not UTF-8 bytes, to match the TS zod mirrors that count
-    // UTF-16 units — one per Cyrillic char, so Russian users get the full limit.
-    // Intentional divergence on astral-plane chars: an emoji counts 1 here, 2 in UTF-16.
-    let length = title.chars().count();
+    // WHY: Count UTF-16 units, not UTF-8 bytes — the TS zod mirrors limit by JS
+    // `.length` (UTF-16 units), so astral chars like emoji count 2 here, same as on web.
+    let length = title.encode_utf16().count();
 
     if length < TITLE_MIN_LENGTH {
         return Err(AppError::new(

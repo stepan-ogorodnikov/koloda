@@ -239,8 +239,8 @@ impl AIProfile {
         }
 
         if let Some(title) = &self.title {
-            // WHY: Character count, not bytes — same rule as `common::validate_title`.
-            if title.chars().count() > 128 {
+            // WHY: UTF-16 units, not bytes — same rule as `common::validate_title`.
+            if title.encode_utf16().count() > 128 {
                 return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }
@@ -260,8 +260,8 @@ impl AIProfile {
         }
 
         if let Some(title) = &self.title {
-            // WHY: Character count, not bytes — same rule as `common::validate_title`.
-            if title.chars().count() > 128 {
+            // WHY: UTF-16 units, not bytes — same rule as `common::validate_title`.
+            if title.encode_utf16().count() > 128 {
                 return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }

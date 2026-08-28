@@ -243,6 +243,23 @@ fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
 }
 
 #[test]
+fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
+    // 64 emoji are 128 UTF-16 units (2 per astral char), 65 are 130 — char counting
+    // would accept the title the TS zod mirror (UTF-16 units) rejects.
+    let profile = AIProfile {
+        id: "profile-7".to_string(),
+        title: Some("🦀".repeat(65)),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate();
+    assert_eq!(result.unwrap_err().code, "validation.common.title.too-long");
+}
+
+#[test]
 fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     let profile = AIProfile {
         id: "profile-4".to_string(),
