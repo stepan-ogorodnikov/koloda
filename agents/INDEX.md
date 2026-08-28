@@ -17,6 +17,7 @@ Nothing else.
 Load one primary spec, not a cluster.
 If the task crosses that spec's stated out-of-scope, add the sibling it names.
 Do not add the rest of the area by default.
+When the change edits a file under `docs/specs/`, also include `agents/FUNCTIONAL-SPECIFICATIONS.md`.
 
 The listed files are relative to the repo root.
 
@@ -40,7 +41,7 @@ The listed files are relative to the repo root.
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
-| Write or update a functional spec | `agents/ADD-FUNCTIONAL-SPECIFICATION.md`, `agents/MARKDOWN.md` |
+| Write or update a functional spec | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 | Write or update an ADR (new area decision) | `docs/adr/README.md`, `agents/MARKDOWN.md` |
 | Write or update any markdown | `agents/MARKDOWN.md` |
 
@@ -67,6 +68,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
+| Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
 
 ## Always-available background
 

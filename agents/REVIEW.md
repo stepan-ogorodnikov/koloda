@@ -8,6 +8,9 @@ Always read this file plus `agents/CODE-STYLE.md`, `agents/CSS.md`, and `agents/
 These three define the standing rules you enforce — for example, missing `// WHY` / `// INVARIANT` / `// WORKAROUND` on non-obvious code is a Blocking finding per `agents/CODE-DOCUMENTATION.md`.
 If you have not loaded them, you cannot raise Blocking findings that cite them.
 
+When the diff includes a file under `docs/specs/`, also read `agents/FUNCTIONAL-SPECIFICATIONS.md` and `agents/MARKDOWN.md`.
+Spec quality findings cite those guides.
+
 The prompt additionally lists the task-specific specs, ADRs, and playbooks that apply to that diff.
 Read those too. Do not load specs, ADRs, or playbooks the prompt did not list; those are task-scoped and loading unlisted ones causes whole-repo auditing noise.
 
@@ -28,6 +31,7 @@ Every finding must cite the rule it enforces.
 Acceptable anchors:
 
 - A guide file and section: `agents/CODE-STYLE.md` (Props Types), `agents/CSS.md` (Conditional styling).
+- The spec standard: `agents/FUNCTIONAL-SPECIFICATIONS.md` (One home per rule).
 - An ADR: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
 - A spec: `docs/specs/LESSONS.md` (Grading).
 - A playbook row: `agents/ASSISTANT-MAP.md` (Fix streaming).
@@ -60,6 +64,8 @@ Raise Blocking for:
   - A bare-adjective boolean variant instead of a verb-prefixed one.
   - A barrel that only forwards other modules (the compound component assignment is an exception, see below).
 - A change that needs an ADR but does not include one (see `agents/CODE-DOCUMENTATION.md`, Comments vs ADRs).
+- A user-visible behavior change that does not update the spec that owns it (see `agents/FUNCTIONAL-SPECIFICATIONS.md`, Living document).
+- A spec hunk that violates `agents/FUNCTIONAL-SPECIFICATIONS.md`: restated invariants, an "Edge Cases" section, code or persistence field names, UI chrome, or a Core Model that recaps later sections.
 
 ### Nit (optional, never required)
 
@@ -89,6 +95,8 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport. It is the allowed compound component exception. See `agents/CODE-STYLE.md`.
 - Do not request i18n for theme labels. Labels are plain strings in the theme registries. See `agents/ADD-COLOR-THEME.md`.
 - Do not propose a "cleaner" code shape that contradicts a spec. Specs are the source of truth. If code and spec disagree, raise the discrepancy as Blocking and stop.
+- Do not demand a new spec, extra sibling specs, or an "Edge Cases" section. Cite `agents/FUNCTIONAL-SPECIFICATIONS.md`.
+- Do not flag a pointer (`FILE.md (§Section)`) as missing detail. One home per rule is the point.
 - Do not suggest adding optional parameters or future-proofing branches. See Change Discipline in `agents/CODE-STYLE.md`.
 - Do not propose renaming or reformatting adjacent code the task did not touch. See Change Discipline in `agents/CODE-STYLE.md`.
 
