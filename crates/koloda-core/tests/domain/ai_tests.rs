@@ -414,3 +414,52 @@ fn test_update_profile_data_whitelist_patch_states() {
     .expect("array whitelist should deserialize");
     assert_eq!(set.whitelist_model_ids, Some(Some(vec!["openai/gpt-4".to_string()])));
 }
+
+#[test]
+fn ai_secrets_provider_tags_match_ts_registry() {
+    use koloda_core::domain::ai::AISecrets;
+
+    // INVARIANT: TS↔Rust twin (agents/TESTING.md) — the serialized `provider`
+    // tags must stay in sync with the TS registry keys pinned in
+    // `libs/ai/src/lib/provider-registry.test.ts`. Adding a provider requires
+    // touching both pins (agents/ADD-AI-PROVIDER.md).
+    let variants = vec![
+        AISecrets::OpenRouter { api_key: None },
+        AISecrets::Ollama {
+            base_url: "http://localhost".into(),
+            api_key: None,
+        },
+        AISecrets::LmStudio {
+            base_url: "http://localhost".into(),
+            api_key: None,
+        },
+        AISecrets::OpencodeGo { api_key: None },
+        AISecrets::OpencodeZen { api_key: None },
+        AISecrets::OllamaCloud { api_key: None },
+    ];
+
+    let mut tags: Vec<String> = variants
+        .iter()
+        .map(|variant| {
+            let value = serde_json::to_value(variant).expect("AISecrets serializes");
+            value
+                .get("provider")
+                .and_then(|tag| tag.as_str())
+                .expect("tagged enum carries a provider tag")
+                .to_string()
+        })
+        .collect();
+    tags.sort();
+
+    assert_eq!(
+        tags,
+        vec![
+            "lmstudio".to_string(),
+            "ollama".to_string(),
+            "ollamaCloud".to_string(),
+            "opencodeGo".to_string(),
+            "opencodeZen".to_string(),
+            "openrouter".to_string(),
+        ]
+    );
+}
