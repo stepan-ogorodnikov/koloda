@@ -423,7 +423,7 @@ fn ai_secrets_provider_tags_match_ts_registry() {
     // tags must stay in sync with the TS registry keys pinned in
     // `libs/ai/src/lib/provider-registry.test.ts`. Adding a provider requires
     // touching both pins (agents/ADD-AI-PROVIDER.md).
-    let variants = vec![
+    let variants = [
         AISecrets::OpenRouter { api_key: None },
         AISecrets::Ollama {
             base_url: "http://localhost".into(),
