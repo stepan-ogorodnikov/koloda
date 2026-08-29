@@ -1,10 +1,9 @@
 import type { AssistantSettings } from "@koloda/ai";
 import { queriesAtom } from "@koloda/core-react";
-import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import type { RefObject } from "react";
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { AssistantConversationConfig } from "./state/assistant-conversation-config";
 
 export type UseAssistantRuntimeConfigOptions = {
@@ -24,7 +23,6 @@ export function useAssistantRuntimeConfig({
   modelName,
   reasoningEffort,
 }: UseAssistantRuntimeConfigOptions): UseAssistantRuntimeConfigReturn {
-  const { _ } = useLingui();
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const { data: aiSettings } = useQuery(getSettingsQuery("ai"));
   const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
@@ -38,11 +36,15 @@ export function useAssistantRuntimeConfig({
     temperature,
     reasoningEffort,
     chatPromptTemplate,
-    _,
   };
 
+  // WHY: keep the ref write in a layout effect (not render) so a concurrent
+  // render cannot mutate the shared ref mid-commit; consumers read it from
+  // event handlers, which always run after layout effects.
   const configRef = useRef(conversationConfig);
-  configRef.current = conversationConfig;
+  useLayoutEffect(() => {
+    configRef.current = conversationConfig;
+  });
 
   return { configRef };
 }
