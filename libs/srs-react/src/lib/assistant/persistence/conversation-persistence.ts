@@ -1,5 +1,5 @@
 import { backfillUserMessageRunIds } from "../state/assistant-messages";
-import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+import type { CardStatus, ConversationReducerState, AssistantRun } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
 /** Mirror `stampElapsed` without mutating the source run. */
@@ -29,12 +29,12 @@ export function fromPersistedState(persisted: PersistedConversation): Conversati
 
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {
   let normalizedAny = false;
-  const runs: Record<string, GenerationRun> = {};
+  const runs: Record<string, AssistantRun> = {};
 
   // INVARIANT: Failed (and all other) runs must not be dropped on restore so
   // partial chat remains and retry stays available.
   for (const [runId, run] of Object.entries(state.runs)) {
-    let nextRun: GenerationRun = run;
+    let nextRun: AssistantRun = run;
     let runChanged = false;
 
     // WHY: A persisted `streaming` checkpoint means the process died mid-run

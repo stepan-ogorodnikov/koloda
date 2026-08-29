@@ -7,10 +7,10 @@ import {
 } from "./conversation-store";
 import { assistantMessagesAtom } from "./conversation-selectors";
 import { dispatchTo, makeConversation } from "./assistant-conversation.fixtures";
-import type { GenerationRun } from "./conversation-reducer";
+import type { AssistantRun } from "./conversation-reducer";
 
 describe("revert state in-memory lifecycle", () => {
-  function chatRun(runId: string): GenerationRun {
+  function chatRun(runId: string): AssistantRun {
     return {
       id: runId,
       status: "success",

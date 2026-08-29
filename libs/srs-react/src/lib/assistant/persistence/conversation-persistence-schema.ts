@@ -7,7 +7,7 @@ import { CONVERSATION_SCHEMA_VERSION, migratePersistedConversation } from "./con
 import type {
   CardStatus,
   ConversationReducerState,
-  GenerationRun,
+  AssistantRun,
   RunStatus,
   RunTerminationReason,
 } from "../state/conversation-reducer";
@@ -213,7 +213,7 @@ const toolCallField = z.object({
   error: z.unknown().optional(),
 });
 
-const runSchema: z.ZodType<GenerationRun> = z
+const runSchema: z.ZodType<AssistantRun> = z
   .object({
     id: z.string(),
     // WHY: Live runs have no mode. Historical `"chat"` is stripped;
@@ -279,7 +279,7 @@ const runSchema: z.ZodType<GenerationRun> = z
       });
     }
   })
-  .transform((run): GenerationRun => {
+  .transform((run): AssistantRun => {
     const status = run.status as RunStatus;
     const reason =
       status === "canceled" || status === "interrupted" ? (run.reason as RunTerminationReason | undefined) : undefined;

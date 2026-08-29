@@ -3,7 +3,7 @@ import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { createTextMessage, userMessageId } from "../state/assistant-messages";
-import type { GenerationRun } from "../state/conversation-reducer";
+import type { AssistantRun } from "../state/conversation-reducer";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 const CHAT_TOOLS = Object.keys(ASSISTANT_TOOL_SPECS);
@@ -43,7 +43,7 @@ describe("prepareRunRequest", () => {
 
   it("prepares a chat run with execution identity and provider request", () => {
     const messages = [chatUserMessage("run-1", "prior")];
-    const runs: Record<string, GenerationRun> = {};
+    const runs: Record<string, AssistantRun> = {};
     const prepared = prepareRunRequest(makeConfig(), "hello", messages, runs);
 
     expect(prepared).not.toBeNull();

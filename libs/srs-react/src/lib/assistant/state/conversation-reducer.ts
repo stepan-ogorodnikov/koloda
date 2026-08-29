@@ -39,7 +39,7 @@ export type RunToolCall = {
   error?: unknown;
 };
 
-export type GenerationRun = {
+export type AssistantRun = {
   id: string;
   status: RunStatus;
   /** Set for terminal `canceled` / `interrupted` only; absent otherwise. */
@@ -75,7 +75,7 @@ export type ConversationReducerState = {
   createdAt: Date;
   updatedAt: Date | null;
   messages: UIMessage[];
-  runs: Record<string, GenerationRun>;
+  runs: Record<string, AssistantRun>;
   activeRunId: string | null;
   dismissedRunErrorId: string | null;
   profileId: string | null;
@@ -146,7 +146,7 @@ function makeRun(
   templateFields: TemplateFields | null | undefined,
   modelName?: string,
   dataAccess?: DataAccessSnapshot,
-): GenerationRun {
+): AssistantRun {
   return {
     id: runId,
     status: "streaming",
@@ -166,12 +166,12 @@ function makeRun(
 export function dropRuns(
   state: ConversationReducerState,
   droppedRunIds: ReadonlySet<string>,
-): { messages: UIMessage[]; runs: Record<string, GenerationRun> } {
+): { messages: UIMessage[]; runs: Record<string, AssistantRun> } {
   const messages = state.messages.filter((m) => {
     const runId = getMessageRunId(m);
     return !runId || !droppedRunIds.has(runId);
   });
-  const runs: Record<string, GenerationRun> = {};
+  const runs: Record<string, AssistantRun> = {};
   for (const [runId, run] of Object.entries(state.runs)) {
     if (!droppedRunIds.has(runId)) runs[runId] = run;
   }
@@ -187,7 +187,7 @@ export function hasRetryableTurn(state: ConversationReducerState, runId: string)
   return metadata?.kind === "error" || metadata?.kind === "chat-text";
 }
 
-export function findLatestErroredRun(state: ConversationReducerState): GenerationRun | null {
+export function findLatestErroredRun(state: ConversationReducerState): AssistantRun | null {
   const ids = Object.keys(state.runs);
   for (let i = ids.length - 1; i >= 0; i--) {
     const run = state.runs[ids[i]];
@@ -213,7 +213,7 @@ export type RunLifecycleEvent =
       modelName?: string;
     };
 
-function stampElapsed(run: GenerationRun) {
+function stampElapsed(run: AssistantRun) {
   run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
 }
 

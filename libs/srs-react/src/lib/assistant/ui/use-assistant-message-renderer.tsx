@@ -12,7 +12,7 @@ import {
   getUserMessageCreatedAt,
   makeHistoricalTemplate,
 } from "../state/assistant-messages";
-import type { GenerationRun } from "../state/conversation-reducer";
+import type { AssistantRun } from "../state/conversation-reducer";
 import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "../state/conversation-selectors";
 import { CopyMessageButton } from "./copy-message-button";
 import { MessageTimestamp } from "./message-timestamp";
@@ -85,7 +85,7 @@ function renderUserMessage(
 }
 
 function renderCardsMessage(options: {
-  run: GenerationRun;
+  run: AssistantRun;
   runId: string;
   isCurrentRun: boolean;
   isTail: boolean;
@@ -138,7 +138,7 @@ function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId:
 // Streaming/pending states stay with the callers (the pending condition
 // depends on whether leftover text or a cards table is present).
 function renderRunStatus(options: {
-  run: GenerationRun;
+  run: AssistantRun;
   runId: string;
   isTail: boolean;
   copyAction: ReactNode;
@@ -175,7 +175,7 @@ function renderChatProposal(options: {
   text: string;
   content: ReactNode;
   copyAction: ReactNode;
-  run: GenerationRun;
+  run: AssistantRun;
   runId: string;
   isTail: boolean;
   handleRetry: (runId: string) => Promise<void>;
@@ -201,7 +201,7 @@ function renderChatProposal(options: {
 function renderChatMessage(options: {
   message: UIMessage;
   content: ReactNode;
-  run: GenerationRun;
+  run: AssistantRun;
   runId: string;
   isCurrentRun: boolean;
   isTail: boolean;

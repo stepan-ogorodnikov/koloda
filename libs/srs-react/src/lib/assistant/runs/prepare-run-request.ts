@@ -1,7 +1,7 @@
 import type { AssistantCommand, AssistantExecutionIdentity } from "@koloda/assistant";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { buildConversationMessages } from "../state/assistant-messages";
-import type { ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
+import type { ConversationReducerState, AssistantRun } from "../state/conversation-reducer";
 import type { StreamRequestResult } from "./build-stream-request";
 import { buildStreamRequest } from "./build-stream-request";
 
@@ -32,7 +32,7 @@ export function prepareRunRequest(
   cfg: AssistantConversationConfig,
   promptText: string,
   messages: ConversationReducerState["messages"],
-  runs: Record<string, GenerationRun>,
+  runs: Record<string, AssistantRun>,
 ): PreparedRun | null {
   if (!promptText || !cfg.profileId || !cfg.modelId) return null;
 

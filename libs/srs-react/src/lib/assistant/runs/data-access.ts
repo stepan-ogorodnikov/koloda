@@ -29,7 +29,7 @@ export type DataAccessManifest = {
 };
 
 /**
- * Restore-only snapshot on `GenerationRun`. New submits do not resolve or inject
+ * Restore-only snapshot on `AssistantRun`. New submits do not resolve or inject
  * this; a stored value is inert metadata. Malformed persisted values fail as corrupt.
  */
 export type DataAccessSnapshot = {

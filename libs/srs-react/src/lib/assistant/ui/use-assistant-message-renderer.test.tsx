@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { makeRun } from "../state/assistant-conversation.fixtures";
 import { assistantMessageId, createTextMessage } from "../state/assistant-messages";
 import { initialConversationState } from "../state/conversation-reducer";
-import type { GenerationRun } from "../state/conversation-reducer";
+import type { AssistantRun } from "../state/conversation-reducer";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
 
@@ -69,7 +69,7 @@ const sampleFields = [
 ];
 
 function mountRenderer(
-  runs: Record<string, GenerationRun>,
+  runs: Record<string, AssistantRun>,
   options: {
     assistantText?: string;
     kind?: "chat-text";
