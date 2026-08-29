@@ -1,4 +1,5 @@
 export * from "./lib/assistant-tools";
+export * from "./lib/assistant-tool-executor";
 export * from "./lib/card-parsing";
 export * from "./lib/chat-stream";
 export * from "./lib/conversations";

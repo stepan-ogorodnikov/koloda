@@ -2,22 +2,18 @@ import type {
   AISecrets,
   AssistantToolCard,
   AssistantToolEvent,
-  AssistantToolExecutor,
   ChatStreamChunk,
-  AssistantToolTemplate,
   ChatStreamRequest,
+  AssistantToolTemplate,
   StreamUsage,
 } from "@koloda/ai";
 import {
   AIError,
   aiSecretsValidation,
-  ASSISTANT_TOOL_SPECS,
   createAIGenerationClient,
+  createAssistantToolExecutor,
   fetchModels,
   isAIError,
-  shapeGetDeckCardsOutput,
-  shapeListDecksOutput,
-  shapeProposeCardsOutput,
   toAIError,
   wrapAIError,
 } from "@koloda/ai";
@@ -128,40 +124,13 @@ function toToolErrorMessage(error: unknown): string {
 
 // INVARIANT: main-side executor over the NAPI KolodaDb surface; NAPI reads are
 // synchronous. Shaping and budgets live in @koloda/ai.
-function createChatToolExecutor(db: KolodaDb): AssistantToolExecutor {
-  return async (name, input) => {
-    if (name === "list_decks") {
-      const decks = db.getDecks();
-      const templates = db.getTemplates();
-      const counts = new Map(db.getCardCounts().map((row) => [row.deckId, row.count]));
-      return shapeListDecksOutput(
-        decks.map((deck) => ({
-          id: deck.id,
-          title: deck.title,
-          templateId: deck.templateId,
-          cardCount: counts.get(deck.id) ?? 0,
-        })),
-        templates,
-      );
-    }
-    if (name === "get_deck_cards") {
-      const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);
-      const deck = db.getDecks().find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = db.getTemplates().find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
-      return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, db.getCards({ deckId }));
-    }
-    if (name === "propose_cards") {
-      const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);
-      const deck = db.getDecks().find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = db.getTemplates().find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
-      return shapeProposeCardsOutput({ id: deck.id, title: deck.title, template }, cards);
-    }
-    throw new Error(`Unknown assistant tool: ${name}`);
-  };
+function createChatToolExecutor(db: KolodaDb) {
+  return createAssistantToolExecutor({
+    getDecks: () => db.getDecks(),
+    getTemplates: () => db.getTemplates(),
+    getCards: ({ deckId }) => db.getCards({ deckId }),
+    getCardCounts: () => Object.fromEntries(db.getCardCounts().map((row) => [row.deckId, row.count])),
+  });
 }
 
 function sendToolEvent(sender: WebContents, requestId: string, toolEvent: AssistantToolEvent) {

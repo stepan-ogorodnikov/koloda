@@ -1,47 +1,18 @@
-import type { AIRuntime, AssistantToolExecutor } from "@koloda/ai";
-import { ASSISTANT_TOOL_SPECS, createAIGenerationClient, fetchModels } from "@koloda/ai";
-import { shapeGetDeckCardsOutput, shapeListDecksOutput, shapeProposeCardsOutput } from "@koloda/ai";
+import type { AIRuntime } from "@koloda/ai";
+import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
 import type { DB } from "@koloda/srs-pgsql";
 import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
 import { loadAIProfileSecrets } from "./ai";
 
 // INVARIANT: Demo host executor — closes over the PGlite db via the same in-process
 // query implementations queries.ts uses; shaping and budgets live in @koloda/ai.
-function createDemoToolExecutor(db: DB): AssistantToolExecutor {
-  return async (name, input) => {
-    if (name === "list_decks") {
-      const decks = await getDecks(db);
-      const templates = await getTemplates(db);
-      const counts = await getCardCounts(db);
-      return shapeListDecksOutput(
-        decks.map((deck) => ({
-          id: deck.id,
-          title: deck.title,
-          templateId: deck.templateId,
-          cardCount: counts[deck.id] ?? 0,
-        })),
-        templates,
-      );
-    }
-    if (name === "get_deck_cards") {
-      const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);
-      const deck = (await getDecks(db)).find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = (await getTemplates(db)).find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
-      const cards = await getCards(db, { deckId });
-      return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, cards);
-    }
-    if (name === "propose_cards") {
-      const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);
-      const deck = (await getDecks(db)).find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = (await getTemplates(db)).find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
-      return shapeProposeCardsOutput({ id: deck.id, title: deck.title, template }, cards);
-    }
-    throw new Error(`Unknown assistant tool: ${name}`);
-  };
+function createDemoToolExecutor(db: DB) {
+  return createAssistantToolExecutor({
+    getDecks: () => getDecks(db),
+    getTemplates: () => getTemplates(db),
+    getCards: ({ deckId }) => getCards(db, { deckId }),
+    getCardCounts: () => getCardCounts(db),
+  });
 }
 
 // INVARIANT: Demo host adapter. Loads usable secrets from PGlite only at call
