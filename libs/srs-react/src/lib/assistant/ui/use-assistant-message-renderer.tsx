@@ -96,8 +96,6 @@ function renderCardsMessage(options: {
   const templateFieldsMissing = run.templateFields === null;
   const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
 
-  if (!cardsTemplate && !templateFieldsMissing) return null;
-
   // INVARIANT: Add uses writeTargetDeckId / writeTargetTemplateId only.
   // Missing either disables add.
   const addTargetDeckId = run.writeTargetDeckId ?? null;
@@ -135,6 +133,42 @@ function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId:
   );
 }
 
+// WHY: one terminal-status ladder for every run rendering path — the
+// success/canceled/interrupted/failed copies had already drifted subtly.
+// Streaming/pending states stay with the callers (the pending condition
+// depends on whether leftover text or a cards table is present).
+function renderRunStatus(options: {
+  run: GenerationRun;
+  runId: string;
+  isTail: boolean;
+  copyAction: ReactNode;
+  handleRetry: (runId: string) => Promise<void>;
+}): ReactNode {
+  const { run, runId, isTail, copyAction, handleRetry } = options;
+  if (run.status === "success") {
+    return run.elapsedSeconds !== null ? (
+      <AIChatMessageStatus
+        state="success"
+        elapsedSeconds={run.elapsedSeconds}
+        modelName={run.modelName}
+        actions={copyAction}
+      />
+    ) : null;
+  }
+  if (run.status === "canceled" || run.status === "interrupted" || run.status === "failed") {
+    return (
+      <AIChatMessageStatus
+        state={run.status}
+        elapsedSeconds={run.elapsedSeconds ?? undefined}
+        canRetry={isTail}
+        onRetry={() => handleRetry(runId)}
+        actions={copyAction}
+      />
+    );
+  }
+  return null;
+}
+
 function renderChatProposal(options: {
   toolActivity: ReactNode;
   cardsBlock: ReactNode;
@@ -150,32 +184,9 @@ function renderChatProposal(options: {
   const status =
     run.status === "streaming" && !text ? (
       <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
-    ) : run.status === "success" && run.elapsedSeconds !== null ? (
-      <AIChatMessageStatus
-        state="success"
-        elapsedSeconds={run.elapsedSeconds}
-        modelName={run.modelName}
-        actions={copyAction}
-      />
-    ) : run.status === "canceled" ? (
-      <AIChatMessageStatus
-        state="canceled"
-        elapsedSeconds={run.elapsedSeconds ?? undefined}
-        canRetry={isTail}
-        onRetry={() => handleRetry(runId)}
-        actions={copyAction}
-      />
-    ) : run.status === "interrupted" ? (
-      <AIChatMessageStatus
-        state="interrupted"
-        elapsedSeconds={run.elapsedSeconds ?? undefined}
-        canRetry={isTail}
-        onRetry={() => handleRetry(runId)}
-        actions={copyAction}
-      />
-    ) : run.status === "failed" ? (
-      <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} actions={copyAction} />
-    ) : null;
+    ) : (
+      renderRunStatus({ run, runId, isTail, copyAction, handleRetry })
+    );
 
   return (
     <div className="group flex flex-col gap-2 self-start w-full">
@@ -249,59 +260,13 @@ function renderChatMessage(options: {
     );
   }
 
-  if (run.status === "success" && run.elapsedSeconds !== null) {
+  const terminalStatus = renderRunStatus({ run, runId, isTail, copyAction, handleRetry });
+  if (terminalStatus) {
     return (
       <div className="group flex flex-col gap-2 self-start w-full">
         {toolActivity}
         {content}
-        <AIChatMessageStatus
-          state="success"
-          elapsedSeconds={run.elapsedSeconds}
-          modelName={run.modelName}
-          actions={copyAction}
-        />
-      </div>
-    );
-  }
-
-  if (run.status === "canceled") {
-    return (
-      <div className="group flex flex-col gap-2 self-start w-full">
-        {toolActivity}
-        {content}
-        <AIChatMessageStatus
-          state="canceled"
-          elapsedSeconds={run.elapsedSeconds ?? undefined}
-          canRetry={isTail}
-          onRetry={() => handleRetry(runId)}
-          actions={copyAction}
-        />
-      </div>
-    );
-  }
-
-  if (run.status === "interrupted") {
-    return (
-      <div className="group flex flex-col gap-2 self-start w-full">
-        {toolActivity}
-        {content}
-        <AIChatMessageStatus
-          state="interrupted"
-          elapsedSeconds={run.elapsedSeconds ?? undefined}
-          canRetry={isTail}
-          onRetry={() => handleRetry(runId)}
-          actions={copyAction}
-        />
-      </div>
-    );
-  }
-
-  if (run.status === "failed") {
-    return (
-      <div className="group flex flex-col gap-2 self-start w-full">
-        {toolActivity}
-        {content}
-        <AIChatMessageStatus state="failed" canRetry={isTail} onRetry={() => handleRetry(runId)} actions={copyAction} />
+        {terminalStatus}
       </div>
     );
   }
