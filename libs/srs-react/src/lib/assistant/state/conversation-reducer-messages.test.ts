@@ -324,11 +324,12 @@ describe("conversationReducer", () => {
   });
 
   describe("unknown action", () => {
-    it("returns the current state unchanged", () => {
-      const state = conversationReducer(initialConversationState, ["nonexistent"] as unknown as Parameters<
-        typeof conversationReducer
-      >[1]);
-      expect(state).toBe(initialConversationState);
+    it("throws instead of silently dropping the action", () => {
+      expect(() =>
+        conversationReducer(initialConversationState, ["nonexistent"] as unknown as Parameters<
+          typeof conversationReducer
+        >[1]),
+      ).toThrow("Unknown reducer action: nonexistent");
     });
   });
 });
