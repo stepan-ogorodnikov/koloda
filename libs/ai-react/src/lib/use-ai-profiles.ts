@@ -40,7 +40,9 @@ export function useAIProfiles(profileId?: string | null) {
     return profiles.find((p: AIProfile) => p.id === profileId) ?? null;
   }, [profiles, profileId]);
 
-  const missingSecretFields = getMissingSecretFields(selectedProfile);
+  // WHY: memoized on the selected profile so the labels array keeps a stable
+  // reference across re-renders that do not change the profile.
+  const missingSecretFields = useMemo(() => getMissingSecretFields(selectedProfile), [selectedProfile]);
   const missingSecretFieldLabels = useMemo(
     () => missingSecretFields.map((field) => _(SECRETS_LABELS[field])),
     [missingSecretFields, _],
