@@ -1,4 +1,4 @@
-import type { AIRuntime, ChatStreamRequest, OnToolEvent, StreamUsage } from "@koloda/ai";
+import type { AIRuntime, ChatStreamChunk, ChatStreamRequest, OnToolEvent, StreamUsage } from "@koloda/ai";
 import { AIError, isAIError } from "@koloda/ai";
 import { isAppError } from "@koloda/app";
 import { invoke } from "./electron";
@@ -34,7 +34,7 @@ function toRuntimeError(error: unknown): AIError {
 type WaitForStreamOptions = {
   requestId: string;
   abortSignal: AbortSignal;
-  onChunk?: (chunk: string) => void;
+  onChunk?: (chunk: ChatStreamChunk) => void;
   onToolEvent?: OnToolEvent;
 };
 
@@ -68,7 +68,7 @@ function waitForStream({ requestId, abortSignal, onChunk, onToolEvent }: WaitFor
 
       switch (event.type) {
         case "chunk":
-          onChunk?.(event.chunk);
+          onChunk?.({ kind: "text", text: event.chunk });
           return;
         case "toolCall":
           onToolEvent?.({ kind: "toolCall", call: event.call });

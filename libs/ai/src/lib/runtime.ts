@@ -1,4 +1,4 @@
-import type { ChatStreamRequest } from "./generation";
+import type { ChatStreamChunk, ChatStreamRequest } from "./generation";
 import type { AIModel, StreamUsage } from "./models";
 
 // INVARIANT: Host adapters implement this (Electron main / demo). Shared React
@@ -9,7 +9,7 @@ export type AIRuntime = {
   chat: (
     profileId: string,
     request: ChatStreamRequest,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: ChatStreamChunk) => void,
     abortSignal: AbortSignal,
     /** Host correlation id; Electron uses this for IPC when provided. */
     requestId?: string,

@@ -1,4 +1,4 @@
-import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamChunk, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 
 /** Recursively read-only data safe to retain across an asynchronous execution queue. */
 export type ImmutableExecutionValue<T> = T extends (...args: never[]) => unknown
@@ -34,7 +34,7 @@ export type AssistantChatExecutionInput = ImmutableExecutionValue<{
 export type AssistantExecutionPort = {
   executeChat: (
     input: AssistantChatExecutionInput,
-    onChunk: (chunk: string) => void,
+    onChunk: (chunk: ChatStreamChunk) => void,
     onToolEvent: (event: AssistantToolEvent) => void,
     signal: AbortSignal,
   ) => Promise<StreamUsage | undefined>;

@@ -154,8 +154,8 @@ describe("useConversationRuns", () => {
     let resolveStream!: () => void;
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
       streamStarted = true;
-      onChunk("Hello ");
-      onChunk("world");
+      onChunk({ kind: "text", text: "Hello " });
+      onChunk({ kind: "text", text: "world" });
       harness.store.set(setCurrentConversationIdAtom, "B");
       await new Promise<void>((resolve) => {
         resolveStream = resolve;
@@ -219,7 +219,7 @@ describe("useConversationRuns", () => {
     ]);
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
-      onChunk("done");
+      onChunk({ kind: "text", text: "done" });
       harness.store.set(setCurrentConversationIdAtom, "B");
       return undefined;
     });
@@ -248,7 +248,7 @@ describe("useConversationRuns", () => {
     harness.store.set(setCurrentConversationIdAtom, "B");
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
-      onChunk("partial");
+      onChunk({ kind: "text", text: "partial" });
       throw new DOMException("Aborted", "AbortError");
     });
 
@@ -311,8 +311,8 @@ describe("useConversationRuns", () => {
     ]);
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
-      onChunk("partial ");
-      onChunk("text");
+      onChunk({ kind: "text", text: "partial " });
+      onChunk({ kind: "text", text: "text" });
       await holdUntilAborted(signal);
       return undefined;
     });
@@ -357,7 +357,7 @@ describe("useConversationRuns", () => {
       totalTokens: 15,
     };
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
-      onChunk("hi");
+      onChunk({ kind: "text", text: "hi" });
       return usage;
     });
 
@@ -383,7 +383,7 @@ describe("useConversationRuns", () => {
     const signals: AbortSignal[] = [];
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
       signals.push(signal);
-      onChunk("chunk");
+      onChunk({ kind: "text", text: "chunk" });
       await holdUntilAborted(signal);
     });
 
@@ -431,7 +431,7 @@ describe("useConversationRuns", () => {
     let resolveStream!: () => void;
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
       signals.push(signal);
-      onChunk("chunk");
+      onChunk({ kind: "text", text: "chunk" });
       await new Promise<void>((resolve) => {
         resolveStream = resolve;
       });
@@ -502,7 +502,7 @@ describe("useConversationRuns", () => {
     });
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
-      onChunk("retried-a");
+      onChunk({ kind: "text", text: "retried-a" });
       await retryGate;
       return undefined;
     });

@@ -5,7 +5,7 @@ import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
 import type { DataAccessSnapshot } from "../runs/data-access";
-import type { UIMessage } from "ai";
+import type { TextUIPart, UIMessage } from "ai";
 import { produce } from "immer";
 import {
   assistantMessageId,
@@ -27,8 +27,8 @@ export type InterruptedReason = Exclude<RunTerminationReason, "user">;
 export type ToolCallStatus = "running" | "success" | "error";
 
 /**
- * Tool activity recorded on the run — mirrors `cards`/`cardStatuses`, not
- * message parts, because `updateAssistantText` replaces message parts wholesale.
+ * Tool activity recorded on the run — mirrors `cards`/`cardStatuses` on the
+ * run record: message parts and follow-up history never replay tool traffic.
  */
 export type RunToolCall = {
   id: string;
@@ -105,6 +105,7 @@ export const initialConversationState: ConversationReducerState = {
 
 const actions = {
   updateAssistantText,
+  appendAssistantReasoning,
   submitTurn,
   rollbackSubmitTurn,
   addCard,
@@ -311,11 +312,32 @@ function addAssistantMessage(draft: ConversationReducerState, payload: AddAssist
 
 type UpdateAssistantTextPayload = { runId: string; text: string };
 
+// WHY: replace the existing text part in place (never the whole parts array)
+// so streamed reasoning parts appended alongside survive text updates.
 function updateAssistantText(draft: ConversationReducerState, payload: UpdateAssistantTextPayload) {
   const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
-  if (msg) {
-    msg.parts = [{ type: "text" as const, text: payload.text }];
+  if (!msg) return;
+  const textPart = msg.parts.find((part): part is TextUIPart => part.type === "text");
+  if (textPart) {
+    textPart.text = payload.text;
+    return;
   }
+  msg.parts.push({ type: "text" as const, text: payload.text });
+}
+
+type AppendAssistantReasoningPayload = { runId: string; text: string };
+
+// WHY: reasoning deltas merge into the trailing reasoning part so a delta
+// burst becomes one dimmed block instead of a part per token.
+function appendAssistantReasoning(draft: ConversationReducerState, payload: AppendAssistantReasoningPayload) {
+  const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
+  if (!msg || payload.text === "") return;
+  const last = msg.parts.at(-1);
+  if (last && last.type === "reasoning") {
+    last.text += payload.text;
+    return;
+  }
+  msg.parts.push({ type: "reasoning" as const, text: payload.text });
 }
 
 type StartRunPayload = {

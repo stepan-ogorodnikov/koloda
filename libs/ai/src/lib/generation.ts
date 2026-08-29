@@ -26,8 +26,14 @@ export type ChatStreamRequest = {
   onToolEvent?: OnToolEvent;
 };
 
+/**
+ * A provider stream delta: plain assistant text, or reasoning content pulled
+ * out of reasoning models (rendered as dimmed text, never sent as history).
+ */
+export type ChatStreamChunk = { kind: "text"; text: string } | { kind: "reasoning"; text: string };
+
 export type ChatStreamGenerator = (
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
 ) => Promise<StreamUsage | undefined>;

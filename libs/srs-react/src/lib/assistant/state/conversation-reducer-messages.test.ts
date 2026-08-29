@@ -80,12 +80,46 @@ describe("conversationReducer", () => {
       expect(state.messages[1].parts).toEqual([{ type: "text", text: "Done" }]);
     });
 
+    it("replaces the text part in place, preserving appended reasoning parts", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "thought" }]);
+      state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
+      expect(state.messages[1].parts).toEqual([
+        { type: "text", text: "Done" },
+        { type: "reasoning", text: "thought" },
+      ]);
+    });
+
     it("does nothing when no message matches the runId", () => {
       const state = conversationReducer(initialConversationState, [
         "updateAssistantText",
         { runId: "missing", text: "Nope" },
       ]);
       expect(state.messages).toEqual([]);
+    });
+  });
+
+  describe("appendAssistantReasoning", () => {
+    it("appends a reasoning part to the assistant message", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "thinking" }]);
+      expect(state.messages[1].parts).toEqual([
+        { type: "text", text: "" },
+        { type: "reasoning", text: "thinking" },
+      ]);
+    });
+
+    it("merges consecutive deltas into the trailing reasoning part", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "a " }]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "b" }]);
+      expect(state.messages[1].parts[1]).toEqual({ type: "reasoning", text: "a b" });
+    });
+
+    it("ignores an empty reasoning delta", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "" }]);
+      expect(state.messages[1].parts).toHaveLength(1);
     });
   });
 

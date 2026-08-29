@@ -116,12 +116,12 @@ describe("createConversationRuntime chat tool events", () => {
     const registry = createRunControllerRegistry();
     const executionPort: AssistantExecutionPort = {
       executeChat: async (_input, onChunk, onToolEvent, _signal) => {
-        onChunk("Hel");
+        onChunk({ kind: "text", text: "Hel" });
         onToolEvent({ kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } });
         // WHY: abort mid-stream like a user cancel — everything after the gate
         // (text and tool traffic alike) must not be recorded.
         registry.cancel("run-tool", "user");
-        onChunk("lo");
+        onChunk({ kind: "text", text: "lo" });
         onToolEvent({ kind: "toolResult", callId: "call-1", output: { decks: [] } });
         throw new DOMException("Aborted", "AbortError");
       },

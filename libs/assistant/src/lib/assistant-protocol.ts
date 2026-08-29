@@ -53,6 +53,7 @@ export type RunStartSnapshot = {
 // forward streamed tool activity into run chunks without adaptation.
 export type RunChunk =
   | { kind: "assistantText"; text: string }
+  | { kind: "reasoning"; text: string }
   | { kind: "card"; card: GeneratedCard }
   | { kind: "usage"; usage: StreamUsage }
   | AssistantToolEvent;

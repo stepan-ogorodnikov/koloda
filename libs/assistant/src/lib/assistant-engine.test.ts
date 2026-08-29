@@ -138,7 +138,7 @@ describe("createAssistantEngine", () => {
   it("does not abort in-flight runs when dispose is not called", async () => {
     let resolveStream!: () => void;
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
-      onChunk("chunk");
+      onChunk({ kind: "text", text: "chunk" });
       await new Promise<void>((resolve) => {
         resolveStream = resolve;
       });
@@ -191,7 +191,7 @@ describe("createAssistantEngine", () => {
     });
 
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
-      onChunk("retried");
+      onChunk({ kind: "text", text: "retried" });
       await retryGate;
       return undefined;
     });
@@ -311,11 +311,11 @@ describe("createAssistantEngine", () => {
     chatStreamGenerator.mockImplementation(async (req, onChunk) => {
       const label = (req as { label?: string }).label;
       if (label === "a") {
-        onChunk("from-a");
+        onChunk({ kind: "text", text: "from-a" });
         await gateA;
         return undefined;
       }
-      onChunk("from-b");
+      onChunk({ kind: "text", text: "from-b" });
       await gateB;
       return undefined;
     });
@@ -422,7 +422,7 @@ describe("createAssistantEngine", () => {
 
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
       providerCalls += 1;
-      onChunk(`call-${providerCalls}`);
+      onChunk({ kind: "text", text: `call-${providerCalls}` });
       await firstGate;
       return undefined;
     });
@@ -470,7 +470,7 @@ describe("createAssistantEngine", () => {
         await holdUntilAborted(signal);
         return undefined;
       }
-      onChunk("retried");
+      onChunk({ kind: "text", text: "retried" });
       return undefined;
     });
 
@@ -776,7 +776,7 @@ describe("createAssistantEngine", () => {
 
   it("does not classify unrequested AbortError as user cancellation", async () => {
     chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
-      onChunk("partial");
+      onChunk({ kind: "text", text: "partial" });
       throw new DOMException("Aborted", "AbortError");
     });
 

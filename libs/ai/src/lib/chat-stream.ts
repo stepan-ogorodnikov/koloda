@@ -3,7 +3,7 @@ import { stepCountIs, streamText } from "ai";
 import { bindAssistantTools } from "./assistant-tools";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, wrapAIError } from "./error";
-import type { ChatStreamRequest } from "./generation";
+import type { ChatStreamChunk, ChatStreamRequest } from "./generation";
 import type { StreamUsage } from "./models";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
@@ -16,7 +16,7 @@ const CHAT_TOOL_STEP_BUDGET = 8;
 async function runChatStream(
   modelFactory: (modelId: string) => Parameters<typeof wrapModelWithReasoningExtraction>[0],
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   providerOptions?: ProviderOptions,
 ): Promise<StreamUsage | undefined> {
@@ -53,7 +53,9 @@ async function runChatStream(
   try {
     for await (const part of result.fullStream) {
       if (part.type === "text-delta") {
-        onChunk(part.text);
+        onChunk({ kind: "text", text: part.text });
+      } else if (part.type === "reasoning-delta") {
+        onChunk({ kind: "reasoning", text: part.text });
       } else if (part.type === "tool-call") {
         onToolEvent?.({ kind: "toolCall", call: { id: part.toolCallId, name: part.toolName, input: part.input } });
       } else if (part.type === "tool-result") {
@@ -98,7 +100,7 @@ async function runChatStream(
 
 export function streamChatWithOpenRouter(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { apiKey }: { apiKey: string },
 ) {
@@ -111,7 +113,7 @@ export function streamChatWithOpenRouter(
 
 export function streamChatWithOllama(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
@@ -124,7 +126,7 @@ export function streamChatWithOllama(
 
 export function streamChatWithOllamaCloud(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { apiKey }: { apiKey: string },
 ) {
@@ -137,7 +139,7 @@ export function streamChatWithOllamaCloud(
 
 export function streamChatWithLMStudio(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { baseUrl, apiKey }: { baseUrl: string; apiKey?: string },
 ) {
@@ -150,7 +152,7 @@ export function streamChatWithLMStudio(
 
 export function streamChatWithOpencodeGo(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { apiKey }: { apiKey: string },
 ) {
@@ -166,7 +168,7 @@ export function streamChatWithOpencodeGo(
 
 export function streamChatWithOpencodeZen(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { apiKey }: { apiKey: string },
 ) {

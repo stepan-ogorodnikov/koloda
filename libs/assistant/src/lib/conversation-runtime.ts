@@ -1,4 +1,4 @@
-import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
+import type { AssistantToolEvent, ChatStreamChunk, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
@@ -223,7 +223,7 @@ export function createConversationRuntime(
             return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
           }
           try {
-            const onChunk = (chunk: string) => {
+            const onChunk = (chunk: ChatStreamChunk) => {
               if (!controller.signal.aborted) onValue(chunk);
             };
             // WHY: same abort gate as text — a cancel mid-tool must not record
@@ -268,11 +268,24 @@ export function createConversationRuntime(
           }
         },
         initial: "",
-        onValue: (text: string, chunk: string | AssistantToolEvent) => {
-          // WHY: tool traffic records on the run only — it never enters the
-          // accumulated text that becomes follow-up request history
-          // (card-outputs precedent).
-          if (typeof chunk !== "string") {
+        onValue: (text: string, chunk: ChatStreamChunk | AssistantToolEvent) => {
+          // WHY: reasoning streams to the message as a dimmed part and tool
+          // traffic records on the run only — neither enters the accumulated
+          // text that becomes follow-up request history (card-outputs
+          // precedent).
+          if (chunk.kind === "reasoning") {
+            emit({
+              type: "runChunk",
+              conversationId,
+              runId,
+              chunk: { kind: "reasoning", text: chunk.text },
+            });
+            // WHY: reasoning arrivals dirty the conversation like text so
+            // streaming checkpoints persist the partial dimmed block.
+            callbacks.touch(conversationId);
+            return text;
+          }
+          if (chunk.kind !== "text") {
             emit({
               type: "runChunk",
               conversationId,
@@ -284,7 +297,7 @@ export function createConversationRuntime(
             callbacks.touch(conversationId);
             return text;
           }
-          const currentText = text + chunk;
+          const currentText = text + chunk.text;
           emit({
             type: "runChunk",
             conversationId,

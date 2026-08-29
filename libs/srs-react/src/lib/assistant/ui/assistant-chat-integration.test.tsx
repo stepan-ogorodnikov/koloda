@@ -395,8 +395,8 @@ describe("assistant chat integration (per-conversation state)", () => {
     wire.chatStream.onStart = (_request, onChunk) => {
       // Defer the chunk emission until after the test switches to B.
       setTimeout(() => {
-        onChunk("late chunk");
-        onChunk(" second chunk");
+        onChunk({ kind: "text", text: "late chunk" });
+        onChunk({ kind: "text", text: " second chunk" });
       }, 100);
     };
 
@@ -436,6 +436,64 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(aAssistant).toBeDefined();
     expect(aAssistant?.parts[0]).toEqual({ type: "text", text: "late chunk second chunk" });
     expect(stateB.messages.find((m) => m.role === "assistant")).toBeUndefined();
+  });
+
+  it("reasoning deltas stream into one dimmed part and survive text updates", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.onStart = (_request, onChunk) => {
+      onChunk({ kind: "reasoning", text: "pondering " });
+      onChunk({ kind: "reasoning", text: "the question" });
+      onChunk({ kind: "text", text: "The answer" });
+    };
+
+    const onConversationIdChange = vi.fn();
+    const { result } = renderHook(
+      ({ conversationId }: { conversationId: string | undefined }) =>
+        useAssistantChatTestHarness({ conversationId, onConversationIdChange }),
+      {
+        wrapper: TestWrapper,
+        initialProps: { conversationId: "A" as string | undefined },
+      },
+    );
+
+    let chatPromise!: Promise<void>;
+    await act(async () => {
+      chatPromise = result.current.controller.submit("Hello") as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      wire.chatStream.resolveNext?.();
+      await chatPromise;
+    });
+
+    // The reasoning block merged into one dimmed part and the text part was
+    // updated in place instead of replacing the whole parts array.
+    const stateA = store.get(conversationsAtom)["A"];
+    const aAssistant = stateA.messages.find((m) => m.role === "assistant");
+    expect(aAssistant?.parts).toEqual([
+      { type: "text", text: "The answer" },
+      { type: "reasoning", text: "pondering the question" },
+    ]);
   });
 
   it("save host: dirtying A while viewing B schedules a save for A", async () => {
