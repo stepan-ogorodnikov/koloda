@@ -2,12 +2,12 @@ import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useLayoutEffect, useRef } from "react";
+import { buildWriteConversation } from "./conversation-write-adapter";
 import {
-  buildWriteConversation,
   ensureAssistantPersistenceHost,
   registerAssistantPersistenceWriteAdapter,
-} from "../runs/use-assistant-engine-host";
-import type { AssistantPersistenceWriteAdapter } from "../runs/use-assistant-engine-host";
+} from "../runs/assistant-persistence-host";
+import type { AssistantPersistenceWriteAdapter } from "../runs/assistant-persistence-host";
 import { dismissSaveStatusAtom, saveStatusAtom } from "../state/conversation-store";
 
 export type UseConversationSaveHostReturn = {

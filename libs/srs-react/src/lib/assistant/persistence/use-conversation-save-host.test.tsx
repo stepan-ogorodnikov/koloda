@@ -12,12 +12,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { touchConversationAtom, upsertConversationAtom } from "../state/conversation-store";
+import { ensureAssistantEngine } from "../runs/assistant-engine-instance";
 import {
-  ensureAssistantEngine,
   ensureAssistantPersistenceHost,
   isAssistantPersistenceWriteAdapterReady,
   resetAssistantEngineForTests,
-} from "../runs/use-assistant-engine-host";
+} from "../runs/assistant-persistence-host";
 import { useConversationSaveHost } from "./use-conversation-save-host";
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {

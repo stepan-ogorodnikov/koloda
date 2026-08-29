@@ -20,7 +20,8 @@ import {
 } from "../state/conversation-store";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 import { initialConversationState } from "../state/conversation-reducer";
-import { getAssistantEngine, resetAssistantEngineForTests } from "../runs/use-assistant-engine-host";
+import { getAssistantEngine } from "../runs/assistant-engine-instance";
+import { resetAssistantEngineForTests } from "../runs/assistant-persistence-host";
 import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
 import {
   useAssistantAppShellHosts,

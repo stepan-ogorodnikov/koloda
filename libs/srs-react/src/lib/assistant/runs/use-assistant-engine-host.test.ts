@@ -12,14 +12,14 @@ import {
   touchConversationAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
+import { deleteAssistantConversation } from "../persistence/conversation-write-adapter";
+import { ensureAssistantEngine } from "./assistant-engine-instance";
 import {
-  deleteAssistantConversation,
-  ensureAssistantEngine,
   ensureAssistantPersistenceHost,
   isAssistantPersistenceWriteAdapterReady,
   registerAssistantPersistenceWriteAdapter,
   resetAssistantEngineForTests,
-} from "./use-assistant-engine-host";
+} from "./assistant-persistence-host";
 
 function makeConversation(id: string, overrides: Partial<ConversationReducerState> = {}): ConversationReducerState {
   return {

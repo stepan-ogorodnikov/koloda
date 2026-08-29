@@ -1,6 +1,6 @@
 import { useSetAtom, useStore } from "jotai";
 import { useCallback } from "react";
-import { ensureAssistantPersistenceHost } from "../runs/use-assistant-engine-host";
+import { ensureAssistantPersistenceHost } from "../runs/assistant-persistence-host";
 import { useConversationRestore } from "./use-conversation-restore";
 import { dismissSaveStatusAtom } from "../state/conversation-store";
 import type { BlockedConversationRestore } from "../state/conversation-store";

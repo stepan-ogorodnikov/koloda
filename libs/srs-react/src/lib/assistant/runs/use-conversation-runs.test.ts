@@ -14,11 +14,9 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "../state/conversation-store";
-import {
-  ensureAssistantEngine,
-  resetAssistantEngineForTests,
-  shutdownAssistantGracefully,
-} from "./use-assistant-engine-host";
+import { ensureAssistantEngine } from "./assistant-engine-instance";
+import { resetAssistantEngineForTests } from "./assistant-persistence-host";
+import { shutdownAssistantGracefully } from "./use-assistant-engine-host";
 import { useConversationRuns } from "./use-conversation-runs";
 
 type GetState = () => ConversationReducerState;

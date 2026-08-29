@@ -1,4 +1,4 @@
-import { getAssistantEngine } from "./use-assistant-engine-host";
+import { getAssistantEngine } from "./assistant-engine-instance";
 import type { UseConversationRunsReturn } from "./use-conversation-runs-types";
 
 /**

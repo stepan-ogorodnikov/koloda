@@ -12,7 +12,7 @@ import { aiProfileStateAtom } from "../state/ai-profile-state";
 import { newConversationAtom } from "../state/conversation-actions";
 import { blockedConversationRestoreAtom, clearBlockedConversationRestore } from "../state/conversation-store";
 import type { BlockedConversationRestore } from "../state/conversation-store";
-import { deleteAssistantConversation } from "../runs/use-assistant-engine-host";
+import { deleteAssistantConversation } from "../persistence/conversation-write-adapter";
 
 export type AssistantConversationRecoveryProps = {
   conversationId: string;
