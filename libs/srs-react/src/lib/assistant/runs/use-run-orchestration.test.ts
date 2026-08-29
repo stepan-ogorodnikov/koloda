@@ -418,6 +418,23 @@ describe("useRunOrchestration — retry always chat", () => {
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
   });
+
+  it("retrying a run that is not the visible tail is a no-op", async () => {
+    seedConversation("conv-1");
+    addFailedChatRun("run-1");
+    dispatch(["submitTurn", { runId: "run-2", text: "hello", kind: "chat-text", assistantText: "" }]);
+
+    const { result } = orchestrate();
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    // INVARIANT: Retry is only available on the most recent message pair;
+    // the state layer must reject a non-tail retry even though run-1 itself
+    // is retryable.
+    expect(dispatchCommand).not.toHaveBeenCalled();
+    expect(readState().runs["run-1"].status).toBe("failed");
+  });
 });
 
 describe("useRunOrchestration — handleRevert", () => {

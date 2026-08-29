@@ -5,7 +5,7 @@ import type { AssistantCommand } from "@koloda/assistant";
 import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { userMessageId } from "../state/assistant-messages";
+import { assistantMessageId, userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { findLatestErroredRun, getVisibleMessages, hasRetryableTurn } from "../state/conversation-reducer";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
@@ -62,8 +62,14 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // to the AI must mirror what the user sees, so filter out anything
       // hidden by revert before walking the message list.
       const visibleMessages = getVisibleMessages(currentState.messages, currentState.revertState);
-      const userMessage = visibleMessages.find((m) => m.id === userMessageId(runId));
-      const promptText = userMessage ? getTextMessageContent(userMessage) : "";
+      // INVARIANT: Retry is only available on the most recent message pair
+      // (ASSISTANT-CONVERSATIONS.md §Retry) — the run whose assistant message
+      // ends the visible history. Renderers gate this via `isTail`; this
+      // state-layer check is the backstop for programmatic dispatches.
+      const isTailRun = visibleMessages.at(-1)?.id === assistantMessageId(runId);
+      const userMessage = isTailRun ? visibleMessages.find((m) => m.id === userMessageId(runId)) : undefined;
+      if (!userMessage) return;
+      const promptText = getTextMessageContent(userMessage);
 
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
