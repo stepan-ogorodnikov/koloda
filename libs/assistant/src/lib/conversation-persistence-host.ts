@@ -1,6 +1,6 @@
 import { logAssistantStructured } from "./assistant-observability";
 import { createConversationSaveQueue, SAVE_RETRY_BASE_DELAY_MS } from "./create-conversation-save-queue";
-import type { ConversationDeletion, ConversationSaveQueue } from "./create-conversation-save-queue";
+import type { ConversationDeletion, ConversationSaveQueue, FlushOutcome } from "./create-conversation-save-queue";
 
 /** Best-effort ceiling for in-flight durable writes during graceful shutdown. */
 export const SHUTDOWN_FLUSH_TIMEOUT_MS = 2000;
@@ -170,43 +170,54 @@ export function createConversationPersistenceHost({
     const deadline = Date.now() + timeoutMs;
     // WHY: count failures for this flushAllBounded call only — lifetime
     // consecutiveFailures must not starve exit flushes after earlier autosave
-    // failures, and must not be used as a delta (it resets to 0 on ack, which
-    // would make the attempt cap and failure yield stop working after a
-    // mid-flush success with N+1 still dirty).
+    // failures.
     const flushFailures = new Map<string, number>();
     const failuresDuringFlush = (id: string) => flushFailures.get(id) ?? 0;
 
     while (Date.now() < deadline) {
-      // id → consecutiveFailures() immediately before flushNow for this round.
-      const preFlushConsecutive = new Map<string, number>();
-      // WHY: kick scheduled / backoff flushes each iteration — waitUntilIdle only
-      // blocks on in-flight writes, not on dirty-without-in-flight.
+      // WHY: kick scheduled / backoff flushes each iteration — a dirty queue
+      // without an in-flight write would otherwise never be driven.
+      const kicked = new Map<string, Promise<FlushOutcome>>();
       for (const [id, queue] of queues.entries()) {
         if (tombstonedIds.has(id)) continue;
         if (!queue.isDirty()) continue;
         // INVARIANT: stop re-issuing writes for a conversation once it has
         // failed SHUTDOWN_SAVE_MAX_ATTEMPTS times during this shutdown flush.
         if (failuresDuringFlush(id) >= SHUTDOWN_SAVE_MAX_ATTEMPTS) continue;
-        preFlushConsecutive.set(id, queue.consecutiveFailures());
-        queue.flushNow();
+        kicked.set(id, queue.flushOnce());
       }
 
-      const waits = [...queues.values()].map((queue) => queue.waitUntilIdle());
+      if (kicked.size === 0) {
+        // Nothing to kick — still wait out any in-flight write so shutdown
+        // does not exit mid-write.
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) break;
+        const waits = [...queues.values()].map((queue) => queue.waitUntilIdle());
+        await Promise.race([
+          Promise.all(waits),
+          new Promise<void>((resolve) => {
+            setTimeout(resolve, remaining);
+          }),
+        ]);
+        break;
+      }
+
       const remaining = deadline - Date.now();
       if (remaining <= 0) break;
       await Promise.race([
-        Promise.all(waits),
+        Promise.all(kicked.values()),
         new Promise<void>((resolve) => {
           setTimeout(resolve, remaining);
         }),
       ]);
 
-      for (const [id, before] of preFlushConsecutive) {
+      for (const [id, outcome] of kicked) {
         const queue = queues.get(id);
         if (!queue) continue;
-        // WHY: consecutiveFailures resets to 0 on successful ack — only count
-        // this wait as a flush failure when the counter rose (write threw).
-        if (queue.consecutiveFailures() > before) flushFailures.set(id, failuresDuringFlush(id) + 1);
+        // The deadline race above may have exited before the write settled;
+        // an unresolved flushOnce loses the race and is not counted.
+        const result = await Promise.race([outcome, Promise.resolve("skipped" as const)]);
+        if (result === "failed") flushFailures.set(id, failuresDuringFlush(id) + 1);
       }
 
       const stillRetrying = [...queues.entries()].some(

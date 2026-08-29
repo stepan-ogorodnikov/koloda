@@ -43,9 +43,19 @@ export type CreateConversationSaveQueueOptions = {
   logSaveFailure?: (entry: SaveFailureLog) => void;
 };
 
+/** Outcome of a single `flushOnce` round, reported by the queue itself. */
+export type FlushOutcome = "saved" | "failed" | "skipped";
+
 export type ConversationSaveQueue = {
   notifyDirty: () => void;
   flushNow: () => void;
+  /**
+   * Kick at most one write for the current dirty generation and resolve with
+   * the queue's own outcome for that round ("skipped" when nothing was
+   * written). Lets callers drive bounded flush loops without diffing
+   * internal failure counters.
+   */
+  flushOnce: () => Promise<FlushOutcome>;
   flushIfPending: () => void;
   isDirty: () => boolean;
   /** Consecutive failed writes since the last successful ack. */
@@ -132,7 +142,7 @@ export function createConversationSaveQueue({
 }: CreateConversationSaveQueueOptions): ConversationSaveQueue {
   let dirtyGeneration = 0;
   let ackedGeneration = 0;
-  let inFlight: Promise<void> | null = null;
+  let inFlight: Promise<FlushOutcome> | null = null;
   let disposed = false;
   let tombstoned = false;
   let failureAttempt = 0;
@@ -170,7 +180,7 @@ export function createConversationSaveQueue({
       saveGeneration: generation,
     });
 
-    inFlight = (async () => {
+    inFlight = (async (): Promise<FlushOutcome> => {
       try {
         await write();
         logAssistantStructured({
@@ -184,6 +194,7 @@ export function createConversationSaveQueue({
         }
         failureAttempt = 0;
         clearRetryTimer();
+        return "saved";
       } catch (error) {
         failureAttempt += 1;
         logSaveFailure({
@@ -196,6 +207,7 @@ export function createConversationSaveQueue({
         // WHY: Stay dirty — ackedGeneration unchanged. Retry via backoff rather
         // than waiting for another mutation (idle users would otherwise never save).
         if (!disposed && !tombstoned && dirtyGeneration === generation) scheduleRetry();
+        return "failed";
       } finally {
         inFlight = null;
         // WHY: a newer dirty during this write supersedes backoff — resume via
@@ -231,6 +243,17 @@ export function createConversationSaveQueue({
     scheduler.flushNow();
   };
 
+  const flushOnce = async (): Promise<FlushOutcome> => {
+    if (disposed || tombstoned) return "skipped";
+    if (!isDirty()) return "skipped";
+    // WHY: shutdown must not wait out the backoff timer.
+    clearRetryTimer();
+    scheduler.flushNow();
+    // A concurrent in-flight write (or a tick that started one) resolves with
+    // its own outcome; nothing kicked means this round is skipped.
+    return inFlight ?? "skipped";
+  };
+
   const flushIfPending = () => {
     if (disposed || tombstoned) return;
     scheduler.flushIfPending();
@@ -245,7 +268,7 @@ export function createConversationSaveQueue({
     // WHY: only wait on the in-flight write. Dirty-without-in-flight (scheduled
     // N+1, backoff retry, or a failed write) is driven by timers / flushNow —
     // polling dirty here would microtask-spin when nothing is executing.
-    return inFlight ?? Promise.resolve();
+    return inFlight ? inFlight.then(() => undefined) : Promise.resolve();
   };
 
   const beginDelete = async (): Promise<ConversationDeletion> => {
@@ -305,6 +328,7 @@ export function createConversationSaveQueue({
   return {
     notifyDirty,
     flushNow,
+    flushOnce,
     flushIfPending,
     isDirty,
     consecutiveFailures,
