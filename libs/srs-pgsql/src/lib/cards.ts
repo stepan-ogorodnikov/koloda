@@ -11,7 +11,7 @@ import type {
   ResetCardProgressData,
   UpdateCardData,
 } from "@koloda/srs";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { ZodError } from "zod";
@@ -24,6 +24,20 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
     const result = await db.select().from(cards).where(eq(cards.deckId, deckId)).orderBy(cards.createdAt);
 
     return assertRows(cardRowSchema, result);
+  });
+}
+
+export async function getCardCounts(db: DB): Promise<Record<number, number>> {
+  return throwKnownError("db.get", async () => {
+    const rows = await db
+      .select({ deckId: cards.deckId, count: sql<number>`count(*)` })
+      .from(cards)
+      .groupBy(cards.deckId);
+
+    const counts: Record<number, number> = {};
+    for (const row of rows) counts[row.deckId] = Number(row.count);
+
+    return counts;
   });
 }
 

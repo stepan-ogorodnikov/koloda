@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { addCard, addCards, getCards, resetCardProgress } from "./cards";
+import { addCard, addCards, getCardCounts, getCards, resetCardProgress } from "./cards";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
 import {
@@ -21,6 +21,34 @@ describe("cards repository integration", () => {
 
   afterEach(async () => {
     await testDb.close();
+  });
+
+  it("counts cards grouped by deck", async () => {
+    const { db } = testDb;
+    const first = await seedDeckContext(db);
+    const second = await seedDeckContext(db);
+    await addCard(db, {
+      deckId: first.deck.id,
+      templateId: first.template.id,
+      content: createCardContent(first.template),
+    });
+    await addCard(db, {
+      deckId: first.deck.id,
+      templateId: first.template.id,
+      content: createCardContent(first.template),
+    });
+    await addCard(db, {
+      deckId: second.deck.id,
+      templateId: second.template.id,
+      content: createCardContent(second.template),
+    });
+
+    const counts = await getCardCounts(db);
+
+    expect(counts[first.deck.id]).toBe(2);
+    expect(counts[second.deck.id]).toBe(1);
+    // Decks without cards simply have no entry.
+    expect(counts[999_999]).toBeUndefined();
   });
 
   it("rejects card content when a required template field is empty", async () => {

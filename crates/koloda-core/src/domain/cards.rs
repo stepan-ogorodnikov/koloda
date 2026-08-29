@@ -75,6 +75,13 @@ pub struct Card {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CardCount {
+    pub deck_id: i64,
+    pub count: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct InsertCardData {
     pub deck_id: i64,
     pub template_id: i64,

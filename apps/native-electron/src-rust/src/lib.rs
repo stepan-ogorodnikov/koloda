@@ -82,6 +82,12 @@ impl KolodaDb {
     }
 
     #[napi]
+    pub fn get_card_counts(&self) -> Result<serde_json::Value> {
+        let counts = repo::cards::get_card_counts(&self.db).map_err(to_napi_error)?;
+        to_value(&counts)
+    }
+
+    #[napi]
     pub fn get_card(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
         let id = extract_id(params)?;
         let card = repo::cards::get_card(&self.db, id).map_err(to_napi_error)?;

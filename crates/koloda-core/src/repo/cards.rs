@@ -5,7 +5,7 @@ use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::cards::{
-    Card, CardContent, CardState, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
+    Card, CardContent, CardCount, CardState, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
     UpdateCardData,
 };
 use crate::domain::templates::Template;
@@ -56,6 +56,25 @@ pub fn get_cards(db: &Database, deck_id: i64) -> Result<Vec<Card>, AppError> {
                 .collect::<Result<Vec<_>, _>>()?;
 
             Ok(cards)
+        })
+    })
+}
+
+pub fn get_card_counts(db: &Database) -> Result<Vec<CardCount>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        db.with_conn(|conn| {
+            let mut stmt = conn.prepare("SELECT deck_id, COUNT(*) FROM cards GROUP BY deck_id")?;
+
+            let counts = stmt
+                .query_map([], |row| {
+                    Ok(CardCount {
+                        deck_id: row.get(0)?,
+                        count: row.get(1)?,
+                    })
+                })?
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(counts)
         })
     })
 }

@@ -11,6 +11,28 @@ use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, i
 use crate::common::test_db;
 
 #[test]
+fn get_card_counts_groups_by_deck() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_a = add_deck(&db, algorithm_id, template_id, "Deck A");
+    let deck_b = add_deck(&db, algorithm_id, template_id, "Deck B");
+
+    add_card(&db, deck_a, template_id, "front one");
+    add_card(&db, deck_a, template_id, "front two");
+    add_card(&db, deck_b, template_id, "front three");
+
+    let counts = cards::get_card_counts(&db).unwrap();
+
+    let count_a = counts.iter().find(|c| c.deck_id == deck_a).map(|c| c.count);
+    let count_b = counts.iter().find(|c| c.deck_id == deck_b).map(|c| c.count);
+    assert_eq!(count_a, Some(2));
+    assert_eq!(count_b, Some(1));
+    // Decks without cards simply have no entry.
+    assert!(counts.iter().all(|c| c.deck_id != 999_999));
+}
+
+#[test]
 fn add_card_rejects_missing_deck() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

@@ -2,7 +2,7 @@ import type { AIRuntime, AssistantToolExecutor } from "@koloda/ai";
 import { ASSISTANT_TOOL_SPECS, createAIGenerationClient, fetchModels } from "@koloda/ai";
 import { shapeGetDeckCardsOutput, shapeListDecksOutput, shapeProposeCardsOutput } from "@koloda/ai";
 import type { DB } from "@koloda/srs-pgsql";
-import { getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
+import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
 import { loadAIProfileSecrets } from "./ai";
 
 // INVARIANT: Demo host executor — closes over the PGlite db via the same in-process
@@ -12,13 +12,13 @@ function createDemoToolExecutor(db: DB): AssistantToolExecutor {
     if (name === "list_decks") {
       const decks = await getDecks(db);
       const templates = await getTemplates(db);
-      const cardsPerDeck = await Promise.all(decks.map((deck) => getCards(db, { deckId: deck.id })));
+      const counts = await getCardCounts(db);
       return shapeListDecksOutput(
-        decks.map((deck, index) => ({
+        decks.map((deck) => ({
           id: deck.id,
           title: deck.title,
           templateId: deck.templateId,
-          cardCount: cardsPerDeck[index].length,
+          cardCount: counts[deck.id] ?? 0,
         })),
         templates,
       );

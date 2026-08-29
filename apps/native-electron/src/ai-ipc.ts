@@ -47,6 +47,7 @@ type KolodaDb = {
   getDecks: () => Array<{ id: number; title: string; templateId: number }>;
   getTemplates: () => AssistantToolTemplate[];
   getCards: (params: { deckId: number }) => AssistantToolCard[];
+  getCardCounts: () => Array<{ deckId: number; count: number }>;
 };
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.
@@ -131,13 +132,13 @@ function createChatToolExecutor(db: KolodaDb): AssistantToolExecutor {
     if (name === "list_decks") {
       const decks = db.getDecks();
       const templates = db.getTemplates();
-      const cardCounts = decks.map((deck) => db.getCards({ deckId: deck.id }).length);
+      const counts = new Map(db.getCardCounts().map((row) => [row.deckId, row.count]));
       return shapeListDecksOutput(
-        decks.map((deck, index) => ({
+        decks.map((deck) => ({
           id: deck.id,
           title: deck.title,
           templateId: deck.templateId,
-          cardCount: cardCounts[index],
+          cardCount: counts.get(deck.id) ?? 0,
         })),
         templates,
       );
