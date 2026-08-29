@@ -1,6 +1,4 @@
-import { produce } from "immer";
 import { backfillUserMessageRunIds } from "../state/assistant-messages";
-import { transitionRun } from "../state/conversation-reducer";
 import type { CardStatus, ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
@@ -119,23 +117,4 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     runs,
     messages: messagesWithRunIds,
   };
-}
-
-export function cancelStreamingRuns(state: ConversationReducerState): ConversationReducerState {
-  let changed = false;
-  const next = produce(state, (draft) => {
-    // WHY: same cast as `conversationReducer` — Immer's WritableDraft +
-    // UIMessage-heavy state makes `transitionRun(draft, …)` hit TS2589.
-    const live = draft as ConversationReducerState;
-    for (const run of Object.values(live.runs)) {
-      if (run.status !== "streaming") continue;
-      if (transitionRun(live, run.id, { type: "cancel" })) {
-        changed = true;
-      }
-    }
-    // WHY: clear even if active pointed at a non-streaming id while zombies
-    // streamed — the snapshot must not look "working" after cancel-for-save.
-    if (changed) live.activeRunId = null;
-  });
-  return changed ? next : state;
 }

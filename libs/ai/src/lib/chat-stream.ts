@@ -3,7 +3,7 @@ import { stepCountIs, streamText } from "ai";
 import { bindAssistantTools } from "./assistant-tools";
 import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, wrapAIError } from "./error";
-import type { ChatStreamRequest, Message } from "./generation";
+import type { ChatStreamRequest } from "./generation";
 import type { StreamUsage } from "./models";
 import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
@@ -178,8 +178,4 @@ export function streamChatWithOpencodeZen(
       : undefined;
     return runChatStream((modelId) => opencodeZen(modelId), request, onChunk, abortSignal, providerOptions);
   });
-}
-
-export function getConversationMessages(messages: Message[], prompt: string): Message[] {
-  return [...messages, { role: "user", content: prompt }];
 }
