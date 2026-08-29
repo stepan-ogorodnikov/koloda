@@ -5,7 +5,7 @@ import { transformGeneratedCards } from "@koloda/srs";
 import { Table, createSelectionColumnHelper, useSelectionTable } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-cell";
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
 import { setAssistantCardStatusAtom } from "../state/conversation-actions";
@@ -77,6 +77,23 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       maxSize: 32,
     },
   });
+
+  // WHY: spec (ASSISTANT-CARD-GENERATION.md): all rows start selected. Cards
+  // appended by a second propose_cards arrive after mount, when tanstack has
+  // already consumed `initialState` — select the new indices so the invariant
+  // holds without touching rows the user already deselected.
+  const seenCardCount = useRef(cards.length);
+  useEffect(() => {
+    if (cards.length > seenCardCount.current) {
+      for (const row of table.getRowModel().rows) {
+        const index = Number(row.id);
+        if (index >= seenCardCount.current && !row.getIsSelected() && row.getCanSelect()) {
+          row.toggleSelected(true);
+        }
+      }
+    }
+    seenCardCount.current = cards.length;
+  }, [cards.length, table]);
 
   const selectedRowModel = table.getSelectedRowModel();
   const selectedIndices = selectedRowModel.rows.map((row) => row.index);
