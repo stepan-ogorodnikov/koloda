@@ -115,6 +115,12 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       // permanently drop messages with no replacement run.
       if (isSubmitInFlightByConversationRef.current.has(activeConversationId)) return;
 
+      const promptText = (value ?? "").trim();
+      // INVARIANT: Validate the prompt BEFORE committing revert — an empty
+      // submit in a reverted state would otherwise permanently delete the
+      // hidden messages with no replacement run.
+      if (!promptText) return;
+
       // WHY: Revert is visual until the user submits a new prompt. Commit
       // it now so the hidden messages and their runs are actually
       // removed; the prompt then becomes the latest user message and
@@ -124,8 +130,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         dispatch(["commitRevert"]);
         currentState = readState();
       }
-
-      const promptText = (value ?? "").trim();
 
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;

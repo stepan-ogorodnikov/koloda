@@ -548,6 +548,40 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     expect(dispatchCommand.mock.calls[0]![0]).toMatchObject({ type: "submit" });
   });
 
+  it("an empty submit in a reverted state keeps the hidden messages and revert state", async () => {
+    seedConversation("conv-1");
+    dispatch(["submitTurn", { runId: "run-1", text: "make cards", kind: "chat-text", assistantText: "reply" }]);
+    dispatch(["completeRun", { runId: "run-1" }]);
+    dispatch(["setRevertState", { revertedToUserMessageId: userMessageId("run-1"), preRevertInputText: "draft" }]);
+
+    const dispatchCommand = vi.fn<DispatchCommand>(() => Promise.resolve());
+    const cfg = makeConfig();
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+      }),
+    );
+
+    await act(async () => {
+      await result.current.handleGenerate("");
+    });
+
+    // INVARIANT: prompt validation precedes commitRevert - the hidden pair
+    // survives an empty submit, with no replacement run started.
+    const state = readState();
+    expect(state.revertState).not.toBeNull();
+    expect(state.runs["run-1"]).toBeDefined();
+    expect(state.messages).toHaveLength(2);
+    expect(dispatchCommand).not.toHaveBeenCalled();
+  });
+
   it("revert while submit in-flight: resubmit does not commitRevert until guard clears", async () => {
     seedConversation("conv-1");
     const dispatched: ConversationReducerAction[] = [];
