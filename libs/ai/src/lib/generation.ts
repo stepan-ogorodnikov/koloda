@@ -2,16 +2,13 @@ import { z } from "zod";
 import type { AssistantToolExecutor, OnToolEvent } from "./assistant-tools";
 import type { StreamUsage } from "./models";
 
-export const generateCardsInputSchema = z.object({
+export const chatInputSchema = z.object({
   modelId: z.string().min(1),
-  prompt: z.string().min(1),
   temperature: z.number().min(0).max(2).optional(),
   reasoningEffort: z.string().optional(),
-  deckId: z.int().positive().optional(),
-  templateId: z.int().positive().optional(),
 });
 
-export type GenerateCardsInput = z.input<typeof generateCardsInputSchema>;
+export type ChatInput = z.input<typeof chatInputSchema>;
 
 export type GeneratedCard = { content: Record<string, { text: string }> };
 
@@ -19,7 +16,7 @@ export type Message = { role: "user" | "assistant" | "system"; content: string }
 
 export type ChatStreamRequest = {
   messages: Message[];
-  input: GenerateCardsInput;
+  input: ChatInput;
   systemPromptTemplate?: string;
   /** Tool names the model may call; names only so the request stays IPC-serializable. */
   tools?: string[];

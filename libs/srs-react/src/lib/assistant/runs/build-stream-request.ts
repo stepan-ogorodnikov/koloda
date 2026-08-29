@@ -1,5 +1,5 @@
-import type { AssistantToolName, ChatStreamRequest, GenerateCardsInput, Message } from "@koloda/ai";
-import { ASSISTANT_TOOL_SPECS, generateCardsInputSchema } from "@koloda/ai";
+import type { AssistantToolName, ChatInput, ChatStreamRequest, Message } from "@koloda/ai";
+import { ASSISTANT_TOOL_SPECS, chatInputSchema } from "@koloda/ai";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 
 export type StreamRequestResult = {
@@ -18,9 +18,8 @@ export function buildStreamRequest(
   promptText: string,
   conversationMessages: Message[],
 ): StreamRequestResult {
-  const input: GenerateCardsInput = generateCardsInputSchema.parse({
+  const input: ChatInput = chatInputSchema.parse({
     modelId: cfg.modelId,
-    prompt: promptText,
     temperature: cfg.temperature,
     reasoningEffort: cfg.reasoningEffort,
   });

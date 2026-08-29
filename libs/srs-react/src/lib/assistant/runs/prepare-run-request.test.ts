@@ -52,7 +52,7 @@ describe("prepareRunRequest", () => {
     expect(prepared!.templateFields).toBeNull();
     expect(prepared!.execution).toEqual({ profileId: "prof-1" });
     expect(prepared!.request).toMatchObject({
-      input: { modelId: "model-1", prompt: "hello" },
+      input: { modelId: "model-1" },
       tools: CHAT_TOOLS,
     });
     expect(prepared!.request).not.toHaveProperty("dataContext");
