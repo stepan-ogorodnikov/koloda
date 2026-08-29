@@ -6,7 +6,7 @@ import { invoke } from "./electron";
 export const AI_STREAM_CHANNEL = "ai:stream";
 
 export type AiStreamEvent =
-  | { requestId: string; type: "chunk"; chunk: string }
+  | { requestId: string; type: "chunk"; chunk: ChatStreamChunk }
   | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
   | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
@@ -68,7 +68,7 @@ function waitForStream({ requestId, abortSignal, onChunk, onToolEvent }: WaitFor
 
       switch (event.type) {
         case "chunk":
-          onChunk?.({ kind: "text", text: event.chunk });
+          onChunk?.(event.chunk);
           return;
         case "toolCall":
           onToolEvent?.({ kind: "toolCall", call: event.call });

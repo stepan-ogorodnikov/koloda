@@ -3,6 +3,7 @@ import type {
   AssistantToolCard,
   AssistantToolEvent,
   AssistantToolExecutor,
+  ChatStreamChunk,
   AssistantToolTemplate,
   ChatStreamRequest,
   StreamUsage,
@@ -26,7 +27,7 @@ import { ipcMain } from "electron";
 export const AI_STREAM_CHANNEL = "ai:stream";
 
 export type AiStreamEvent =
-  | { requestId: string; type: "chunk"; chunk: string }
+  | { requestId: string; type: "chunk"; chunk: ChatStreamChunk }
   | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
   | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
   | { requestId: string; type: "done"; usage?: StreamUsage }
@@ -228,7 +229,7 @@ export function registerAiIpc(db: KolodaDb) {
         const client = createAIGenerationClient(secrets);
         const usage = await client.chat(
           bindChatTools(db, sender, requestId, request),
-          (chunk) => {
+          (chunk: ChatStreamChunk) => {
             sendStreamEvent(sender, { requestId, type: "chunk", chunk });
           },
           controller.signal,
