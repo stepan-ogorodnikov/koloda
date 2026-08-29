@@ -1,5 +1,5 @@
 import type { UIMessage, UIMessagePart } from "ai";
-import type { PropsWithChildren } from "react";
+import { memo } from "react";
 import { tv } from "tailwind-variants";
 
 type InterruptedPart = {
@@ -15,7 +15,9 @@ export type AIChatMessageProps = {
   parts: ChatMessagePart[];
 };
 
-export function AIChatMessage({ role, parts }: AIChatMessageProps) {
+// WHY: memoized on props identity  immer keeps untouched messages' parts
+// references stable, so streamed chunks re-render only the tail message.
+export const AIChatMessage = memo(function AIChatMessage({ role, parts }: AIChatMessageProps) {
   const filteredParts = getMessageParts(parts);
 
   return (
@@ -25,7 +27,7 @@ export function AIChatMessage({ role, parts }: AIChatMessageProps) {
       ))}
     </AIChatMessageLayout>
   );
-}
+});
 
 const aiChatMessage = tv({
   base: "flex flex-col gap-4 px-3",
