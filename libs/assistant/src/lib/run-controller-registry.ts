@@ -76,6 +76,9 @@ export function createRunControllerRegistry(): RunControllerRegistry {
       if (controllers.get(runId) === controller) {
         controllers.delete(runId);
       }
+      // WHY: a cancel that loses to success leaves a stamped reason that
+      // nothing consumes; clear it so it cannot leak to a reused runId.
+      abortReasons.delete(runId);
     },
     cancel(runId, reason: RunAbortReason = "user") {
       const controller = controllers.get(runId);

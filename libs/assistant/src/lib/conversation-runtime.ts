@@ -29,6 +29,19 @@ export type ConversationRuntimeTransports = {
   executionPort: AssistantExecutionPort;
 };
 
+/**
+ * Lifecycle phase of a run inside this runtime: queued (serial-queue entry),
+ * awaitingStart (dequeued, before beginRun), inFlight (provider transport).
+ * `requestedReason` is a cancel stamped before the transport can observe it;
+ * `abortReason` is the registry cause stashed by the AbortError path for
+ * `handleStreamResult` to consume.
+ */
+type RunLifecycle = {
+  phase: "queued" | "awaitingStart" | "inFlight";
+  requestedReason?: QueueCancelReason;
+  abortReason?: RunAbortReason;
+};
+
 export type ConversationRuntime = {
   conversationId: string;
   executeChatRun: (runId: string, request: ChatStreamRequest, execution: AssistantExecutionIdentity) => Promise<void>;
@@ -50,19 +63,27 @@ export function createConversationRuntime(
   controllerRegistry: Pick<RunControllerRegistry, "beginRun" | "endRun" | "cancel" | "has" | "takeAbortReason">,
 ): ConversationRuntime {
   const queue = createSerialQueue<void>();
-  // WHY: Cancel can win the race after a task dequeues but before beginRun;
-  // tracking provenance here blocks provider execution without a controller.
-  const cancelBeforeStart = new Map<string, QueueCancelReason>();
-  // WHY: Distinguishes dequeued-not-yet-beginRun from post-abort (controller
-  // already removed) so a second cancel cannot stamp cancelBeforeStart.
-  let runAwaitingStart: string | null = null;
-  // WHY: AbortError catch must stash the registry cause before endRun/finally;
-  // handleStreamResult reads it to choose cancel vs interrupt.
-  const abortedRunReasons = new Map<string, RunAbortReason>();
-  // INVARIANT: At most one active or queued execute/retry per conversation.
-  // Occupancy is claimed synchronously so same-tick duplicate submit/retry
-  // rejects before a second serial-queue entry is created.
-  let outstandingRunId: string | null = null;
+
+  /**
+   * Single per-run lifecycle record. Replaces the four previously separate
+   * race-tracking slots (cancelBeforeStart, runAwaitingStart, abortedRunReasons,
+   * outstandingRunId) so every invariant is inspectable in one place.
+   *
+   * INVARIANT: At most one entry per conversation " occupancy is claimed
+   * synchronously on enqueue (duplicate submit/retry rejects before a second
+   * serial-queue entry is created) and released when the task settles.
+   */
+  const runs = new Map<string, RunLifecycle>();
+
+  /** WHY: Cancel can win the race after a task dequeues but before beginRun;
+   * a stamped requestedReason blocks provider execution without a controller. */
+  const takeRequestedReason = (runId: string): QueueCancelReason | undefined => {
+    const entry = runs.get(runId);
+    if (entry === undefined || entry.requestedReason === undefined) return undefined;
+    const reason = entry.requestedReason;
+    delete entry.requestedReason;
+    return reason;
+  };
 
   const emit = (event: AssistantEvent) => {
     callbacks.emit(event);
@@ -92,12 +113,7 @@ export function createConversationRuntime(
     callbacks.touch(conversationId);
   };
 
-  const takeCancelBeforeStart = (runId: string): QueueCancelReason | undefined => {
-    const reason = cancelBeforeStart.get(runId);
-    if (reason === undefined) return undefined;
-    cancelBeforeStart.delete(runId);
-    return reason;
-  };
+  const takeCancelBeforeStart = takeRequestedReason;
 
   const classifyAbortError = (runId: string): StreamResult => {
     const reason = controllerRegistry.takeAbortReason(runId);
@@ -113,7 +129,10 @@ export function createConversationRuntime(
       callbacks.markReadIfCurrent(conversationId, runId);
       return "error";
     }
-    abortedRunReasons.set(runId, reason);
+    // WHY: stash on the lifecycle record " the registry stamp is consumed
+    // here, but handleStreamResult reads it after endRun/finally.
+    const entry = runs.get(runId);
+    if (entry) entry.abortReason = reason;
     return "aborted";
   };
 
@@ -125,7 +144,8 @@ export function createConversationRuntime(
       return controllerRegistry.beginRun(runId);
     } catch (error) {
       if (error instanceof RunControllerRegistryClosedError) {
-        abortedRunReasons.set(runId, error.reason);
+        const entry = runs.get(runId);
+        if (entry) entry.abortReason = error.reason;
         return null;
       }
       throw error;
@@ -155,8 +175,12 @@ export function createConversationRuntime(
         callbacks.touch(targetConversationId);
         break;
       case "aborted": {
-        const reason = abortedRunReasons.get(runId) ?? takeCancelBeforeStart(runId) ?? "user";
-        abortedRunReasons.delete(runId);
+        const entry = runs.get(runId);
+        const reason = entry?.abortReason ?? entry?.requestedReason ?? "user";
+        if (entry) {
+          entry.abortReason = undefined;
+          entry.requestedReason = undefined;
+        }
         // WHY: Capture streaming-ness before the terminal dispatch. Graceful
         // shutdown interrupts before aborting; a blind touch would schedule a
         // redundant second durable write of the same interrupted snapshot.
@@ -212,12 +236,16 @@ export function createConversationRuntime(
           // WHY: Last-chance gate for cancel that landed after dequeue.
           const gateReason = takeCancelBeforeStart(runId);
           if (gateReason !== undefined) {
-            abortedRunReasons.set(runId, gateReason);
+            {
+              const gateEntry = runs.get(runId);
+              if (gateEntry) gateEntry.abortReason = gateReason;
+            }
             return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
           }
           // INVARIANT: Leaving the awaiting-start gap before beginRun so a
-          // post-abort cancel cannot re-stamp cancelBeforeStart.
-          if (runAwaitingStart === runId) runAwaitingStart = null;
+          // post-abort cancel cannot re-stamp a requestedReason.
+          const gateEntry = runs.get(runId);
+          if (gateEntry && gateEntry.phase === "awaitingStart") gateEntry.phase = "inFlight";
           const controller = beginRunForTransport(runId);
           if (!controller) {
             return { streamResult: "aborted" as const, usage: null as StreamUsage | null };
@@ -363,11 +391,14 @@ export function createConversationRuntime(
   };
 
   const withAwaitingStart = async (runId: string, run: () => Promise<void>): Promise<void> => {
-    runAwaitingStart = runId;
+    const entry = runs.get(runId);
+    if (entry) entry.phase = "awaitingStart";
     try {
       await run();
     } finally {
-      if (runAwaitingStart === runId) runAwaitingStart = null;
+      // WHY: only clear the awaitingStart marker here; occupancy (the entry
+      // itself) is released by the enqueue finally.
+      if (entry && entry.phase === "awaitingStart") entry.phase = "inFlight";
     }
   };
 
@@ -376,7 +407,10 @@ export function createConversationRuntime(
   // INVARIANT: Duplicate/closed fail synchronously so UI can apply submitTurn
   // only after the command is accepted. Do not claim occupancy unless enqueue succeeded.
   const enqueueExclusive = (runId: string, task: () => Promise<void>): Promise<void> => {
-    if (outstandingRunId !== null) throw new AssistantDuplicateRunError(conversationId, runId, outstandingRunId);
+    // INVARIANT: at most one entry per conversation — its key is the
+    // outstanding run; duplicate submit/retry rejects synchronously.
+    const outstanding = runs.keys().next();
+    if (!outstanding.done) throw new AssistantDuplicateRunError(conversationId, runId, outstanding.value);
     let pending: Promise<void>;
     try {
       pending = queue.enqueue(runId, task);
@@ -384,9 +418,9 @@ export function createConversationRuntime(
       if (error instanceof QueueClosedError) throw mapQueueClosed(error);
       throw error;
     }
-    outstandingRunId = runId;
+    runs.set(runId, { phase: "queued" });
     return guardClosed(() => pending).finally(() => {
-      if (outstandingRunId === runId) outstandingRunId = null;
+      runs.delete(runId);
     });
   };
 
@@ -442,21 +476,23 @@ export function createConversationRuntime(
 
   const cancel = (runId: string, reason: QueueCancelReason = "user") => {
     const wasQueued = queue.cancel(runId, reason);
+    const entry = runs.get(runId);
     if (wasQueued) {
       // WHY: Entry will never run — apply terminal state now and do not leave
-      // cancelBeforeStart stamped (a later retry of the same runId must proceed).
+      // a requestedReason stamped (a later retry of the same runId must proceed).
       applyQueuedCancel(runId, reason);
     } else if (
-      runAwaitingStart === runId &&
+      entry &&
+      entry.phase === "awaitingStart" &&
       !controllerRegistry.has(runId) &&
       callbacks.isRunStreaming(conversationId, runId)
     ) {
       // WHY: Dequeued but not yet beginRun — stamp so transport skips the
       // provider, and transition immediately for UI responsiveness.
-      // INVARIANT: runAwaitingStart gates the stamp; a second cancel after the
-      // in-flight controller was removed must not leave cancelBeforeStart for
-      // a later retry that reuses the same runId.
-      cancelBeforeStart.set(runId, reason);
+      // INVARIANT: the awaitingStart phase gates the stamp; a second cancel
+      // after the in-flight controller was removed must not leave a
+      // requestedReason for a later retry that reuses the same runId.
+      entry.requestedReason = reason;
       applyQueuedCancel(runId, reason);
     }
     // else: in-flight or already terminal — abort if present; AbortError path

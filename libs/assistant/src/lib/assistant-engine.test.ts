@@ -818,6 +818,50 @@ describe("createAssistantEngine", () => {
     expect(failedActions).toHaveLength(0);
   });
 
+  it("cancel that loses to success leaves no stale abort provenance for a reused runId", async () => {
+    // First run: cancel is dispatched, but the stream completes successfully
+    // before the abort is observed (cancel loses to success).
+    const signals: AbortSignal[] = [];
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    chatStreamGenerator.mockImplementation(async (_req, _onChunk, _onToolEvent, signal) => {
+      signals.push(signal);
+      await firstGate;
+      return undefined;
+    });
+
+    const firstRun = dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
+    await Promise.resolve();
+    // Wait until the transport holds a live controller so the cancel loses to
+    // success instead of landing on a queued entry.
+    expect(signals).toHaveLength(1);
+    dispatchCancel(engine, "conv-a", "run-1");
+    releaseFirst();
+    await expect(firstRun).resolves.toBeUndefined();
+
+    const successActions = events.filter(
+      (e): e is Extract<AssistantEvent, { type: "runTerminated" }> =>
+        e.type === "runTerminated" && e.outcome.status === "success",
+    );
+    expect(successActions).toHaveLength(1);
+
+    // Second run reuses run-1 with a provider-initiated AbortError: the stale
+    // stamp from the losing cancel must not reclassify it as user cancel.
+    chatStreamGenerator.mockImplementation(async (_req, onChunk) => {
+      onChunk({ kind: "text", text: "partial" });
+      throw new DOMException("Aborted", "AbortError");
+    });
+    await dispatchChat(engine, "conv-a", "run-1", {} as ChatStreamRequest);
+
+    const cancelActions = events.filter(
+      (e): e is Extract<AssistantEvent, { type: "runTerminated" }> =>
+        e.type === "runTerminated" && e.outcome.status === "canceled",
+    );
+    expect(cancelActions).toHaveLength(0);
+  });
+
   it("does not classify shutdown AbortError as user cancellation", async () => {
     const streaming = new Set(["run-1"]);
     engine = createAssistantEngine({
