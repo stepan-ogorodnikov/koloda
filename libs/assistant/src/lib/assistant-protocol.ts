@@ -18,18 +18,12 @@ export type SubmitInput = ImmutableExecutionValue<{
  * request plus its manifest. Opaque to the engine — carried to the
  * `runStarted` event untouched; the store adapter owns the manifest type.
  */
-export type RunDataAccessSnapshot = {
-  context: string;
-  manifest: unknown;
-};
-
 export type RetryInput = ImmutableExecutionValue<{
   runId: string;
   execution: AssistantExecutionIdentity;
   request: ChatStreamRequest;
   templateFields: TemplateFields | null;
   modelName?: string;
-  dataAccess?: RunDataAccessSnapshot;
 }>;
 
 /** Host-supplied interrupt + flush budget for graceful engine teardown. */
@@ -48,12 +42,11 @@ export type AssistantCommand =
   | { type: "cancel"; conversationId: string; runId: string }
   | { type: "shutdown"; input: ShutdownInput };
 
-/** Snapshot carried on retry restart — identity and replayed data access; full run records stay in the store. */
+/** Snapshot carried on retry restart — identity only; full run records stay in the store. */
 export type RunStartSnapshot = {
   runId: string;
   templateFields: TemplateFields | null;
   modelName?: string;
-  dataAccess?: RunDataAccessSnapshot;
 };
 
 // WHY: the tool kinds are `@koloda/ai`'s AssistantToolEvent verbatim so hosts

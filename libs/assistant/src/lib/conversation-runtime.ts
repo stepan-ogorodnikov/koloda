@@ -3,7 +3,7 @@ import { isAbortError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
-import type { AssistantEvent, RunDataAccessSnapshot } from "./assistant-protocol";
+import type { AssistantEvent } from "./assistant-protocol";
 import { displayErrorMessage } from "./display-error";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
@@ -38,7 +38,6 @@ export type ConversationRuntime = {
     templateFields: TemplateFields | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
-    dataAccess: RunDataAccessSnapshot | undefined,
   ) => Promise<void>;
   cancel: (runId: string, reason?: QueueCancelReason) => void;
   close: (reason: QueueCancelReason) => void;
@@ -393,7 +392,6 @@ export function createConversationRuntime(
     templateFields: TemplateFields | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
-    dataAccess: RunDataAccessSnapshot | undefined,
   ): Promise<void> =>
     enqueueExclusive(runId, async () => {
       await withAwaitingStart(runId, async () => {
@@ -416,7 +414,6 @@ export function createConversationRuntime(
             runId,
             templateFields,
             modelName,
-            dataAccess,
           },
         });
 

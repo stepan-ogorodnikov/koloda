@@ -4,7 +4,6 @@ import { buildConversationMessages } from "../state/assistant-messages";
 import type { ConversationReducerState, GenerationRun } from "../state/conversation-reducer";
 import type { StreamRequestResult } from "./build-stream-request";
 import { buildStreamRequest } from "./build-stream-request";
-import type { DataAccessSnapshot } from "./data-access";
 
 /**
  * Framework-free submit/retry preparation: validate config + prompt, build the
@@ -60,17 +59,8 @@ export function toSubmitCommand(conversationId: string, runId: string, prepared:
   };
 }
 
-/**
- * Build the typed engine retry command from a prepared run. `dataAccess` rides
- * the command so restart stores it on the run record as inert metadata
- * (never embedded — ChatStreamRequest has no dataContext).
- */
-export function toRetryCommand(
-  conversationId: string,
-  runId: string,
-  prepared: PreparedRun,
-  dataAccess?: DataAccessSnapshot,
-): AssistantCommand {
+/** Build the typed engine retry command from a prepared run. */
+export function toRetryCommand(conversationId: string, runId: string, prepared: PreparedRun): AssistantCommand {
   return {
     type: "retry",
     conversationId,
@@ -80,7 +70,6 @@ export function toRetryCommand(
       templateFields: prepared.templateFields,
       modelName: prepared.modelName,
       execution: prepared.execution,
-      dataAccess,
     },
   };
 }

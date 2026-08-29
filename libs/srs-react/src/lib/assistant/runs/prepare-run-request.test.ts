@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
 import { createTextMessage, userMessageId } from "../state/assistant-messages";
 import type { GenerationRun } from "../state/conversation-reducer";
-import type { DataAccessSnapshot } from "./data-access";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
 const CHAT_TOOLS = Object.keys(ASSISTANT_TOOL_SPECS);
@@ -103,21 +102,11 @@ describe("toSubmitCommand / toRetryCommand", () => {
     });
   });
 
-  it("builds a retry command carrying the replayed data access snapshot", () => {
+  it("builds a retry command without embedding data access", () => {
     const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
-    const dataAccess: DataAccessSnapshot = {
-      context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
-      manifest: {
-        decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
-        writeTarget: null,
-      },
-    };
+    const command = toRetryCommand("conv-1", "run-1", prepared!);
 
-    const command = toRetryCommand("conv-1", "run-1", prepared!, dataAccess);
-
-    // WHY: identity — the command must carry the exact snapshot object so the
-    // restart stores it on the run record unchanged.
-    expect(command.input.dataAccess).toBe(dataAccess);
+    expect(command.input).not.toHaveProperty("dataAccess");
   });
 });

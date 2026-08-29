@@ -1,6 +1,5 @@
 import type { AssistantEvent } from "@koloda/assistant";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
-import type { DataAccessSnapshot } from "./data-access";
 
 /** Translate engine events into conversation-reducer actions for the Jotai store. */
 export function assistantEventToReducerAction(event: AssistantEvent): ConversationReducerAction {
@@ -12,9 +11,6 @@ export function assistantEventToReducerAction(event: AssistantEvent): Conversati
           runId: event.run.runId,
           templateFields: event.run.templateFields,
           modelName: event.run.modelName,
-          // WHY: the engine carries the snapshot opaquely (`manifest: unknown`);
-          // this adapter is the boundary that restores the store's typed shape.
-          dataAccess: event.run.dataAccess as DataAccessSnapshot | undefined,
         },
       ];
     case "runChunk": {

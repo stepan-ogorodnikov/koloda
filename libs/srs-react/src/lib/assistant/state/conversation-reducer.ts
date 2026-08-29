@@ -210,7 +210,6 @@ export type RunLifecycleEvent =
       type: "restart";
       templateFields: TemplateFields | null;
       modelName?: string;
-      dataAccess?: DataAccessSnapshot;
     };
 
 function stampElapsed(run: GenerationRun) {
@@ -238,10 +237,8 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.startedAt = new Date();
     run.elapsedSeconds = null;
     run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
-    // WHY: retry replays the snapshot recorded at submit; a fresh resolution
-    // (pre-feature run) rides the same restart so later retries replay it.
-    // Absent keeps the stored record authoritative.
-    run.dataAccess = event.dataAccess !== undefined ? event.dataAccess : run.dataAccess;
+    // WHY: restart leaves the stored dataAccess snapshot untouched - retry
+    // reuses the runId, so the recorded snapshot stays authoritative.
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;
@@ -481,7 +478,6 @@ type RestartRunPayload = {
   runId: string;
   templateFields: TemplateFields | null;
   modelName?: string;
-  dataAccess?: DataAccessSnapshot;
 };
 
 function applyRetryAssistantKind(draft: ConversationReducerState, runId: string) {
@@ -500,7 +496,6 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
       type: "restart",
       templateFields: payload.templateFields,
       modelName: payload.modelName,
-      dataAccess: payload.dataAccess,
     })
   ) {
     applyRetryAssistantKind(draft, payload.runId);
@@ -510,7 +505,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
   // WHY: Retry after restore may find the run dropped (normalize removes
   // orphaned failed markers) while the assistant error message
   // remains — recreate the run and rewrite the error marker.
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName, payload.dataAccess);
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
   applyRetryAssistantKind(draft, payload.runId);
   draft.activeRunId = payload.runId;
 }

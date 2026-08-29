@@ -67,10 +67,9 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       isSubmitInFlightByConversationRef.current.add(conversationId);
       try {
-        // WHY: Every retry is chat+tools. Chat never resolves data
-        // access; a stored v1 snapshot stays on the run record as inert
-        // metadata (tools re-read current data).
-        const stored = currentState.runs[runId]?.dataAccess;
+        // WHY: Every retry is chat+tools. Chat never resolves data access;
+        // the stored v1 snapshot on the run record stays authoritative
+        // (tools re-read current data).
         const prepared = prepareRunRequest(cfg, promptText, visibleMessages, currentState.runs);
         if (!prepared) return;
 
@@ -78,7 +77,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
         // WHY: Capture conversation id at request time so a later UI switch
         // cannot retarget restart/stream ownership while retry is queued.
-        await dispatchCommand(toRetryCommand(conversationId, runId, prepared, stored));
+        await dispatchCommand(toRetryCommand(conversationId, runId, prepared));
       } catch (error) {
         // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
         if (error instanceof AssistantDuplicateRunError) return;

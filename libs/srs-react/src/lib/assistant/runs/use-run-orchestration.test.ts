@@ -395,9 +395,9 @@ describe("useRunOrchestration — retry always chat", () => {
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     const command = retryCommand();
-    // WHY: identity — the stored v1 snapshot stays on the run/command as
-    // inert metadata; it must not be copied or re-resolved.
-    expect(command.input.dataAccess).toBe(stored);
+    // WHY: the stored v1 snapshot lives only on the run record as inert
+    // metadata; the retry command never carries it and restart preserves it.
+    expect(command.input).not.toHaveProperty("dataAccess");
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
     expect(readState().runs["run-1"].dataAccess).toBe(stored);
@@ -414,7 +414,7 @@ describe("useRunOrchestration — retry always chat", () => {
 
     expect(dispatchCommand).toHaveBeenCalledTimes(1);
     const command = retryCommand();
-    expect(command.input.dataAccess).toBeUndefined();
+    expect(command.input).not.toHaveProperty("dataAccess");
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
   });

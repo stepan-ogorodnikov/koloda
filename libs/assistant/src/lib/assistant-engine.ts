@@ -2,7 +2,7 @@ import type { ChatStreamRequest } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
-import type { AssistantCommand, RunDataAccessSnapshot, ShutdownInput } from "./assistant-protocol";
+import type { AssistantCommand, ShutdownInput } from "./assistant-protocol";
 import type { ConversationPersistenceHost } from "./conversation-persistence-host";
 import { SHUTDOWN_FLUSH_TIMEOUT_MS } from "./conversation-persistence-host";
 import { createConversationRuntime } from "./conversation-runtime";
@@ -127,7 +127,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     templateFields: ImmutableExecutionValue<TemplateFields> | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
-    dataAccess: RunDataAccessSnapshot | undefined,
   ): Promise<void> => {
     assertRunning();
     // WHY: conversationId is caller-supplied — never inferred from UI-current
@@ -139,9 +138,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
       templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
       modelName,
       captureExecutionValue(execution),
-      // WHY: passed by reference, not captured — the replayed snapshot must
-      // keep object identity with the run record the restart writes it to.
-      dataAccess,
     );
   };
 
@@ -213,7 +209,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
             command.input.templateFields,
             command.input.modelName,
             command.input.execution,
-            command.input.dataAccess,
           );
         case "cancel":
           return cancel(command.conversationId, command.runId);
