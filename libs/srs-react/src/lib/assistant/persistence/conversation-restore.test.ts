@@ -55,6 +55,79 @@ describe("coerceConversationState", () => {
     expect(coerceConversationState(state).status).toBe("ok");
   });
 
+  it("rejects a message with null parts as corrupt instead of reaching the renderer", () => {
+    const row = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+      messages: [
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: null,
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+    };
+    expect(expectCorrupt(row).length).toBeGreaterThan(0);
+  });
+
+  it("rejects a message with a non-string id as corrupt", () => {
+    const row = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+      messages: [{ id: 7, role: "user", parts: [{ type: "text", text: "Hi" }] }],
+    };
+    expect(expectCorrupt(row).length).toBeGreaterThan(0);
+  });
+
+  it("keeps structurally valid messages and rejects malformed cards", () => {
+    const run = {
+      id: "r1",
+      status: "success",
+      cards: [{ content: { "1": { text: "Front" } } }],
+      cardStatuses: {},
+      templateFields: null,
+      startedAt: new Date(1),
+      elapsedSeconds: null,
+    };
+    const okRow = {
+      ...initialConversationState,
+      id: "conv-1",
+      createdAt: new Date(1),
+      messages: [
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hi" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "Reply" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+      runs: { r1: run },
+    };
+    const ok = expectOk(okRow);
+    expect(ok.messages).toHaveLength(2);
+
+    const corruptRow = {
+      ...okRow,
+      runs: { r1: { ...run, cards: [{ content: "oops" }] } },
+    };
+    expect(expectCorrupt(corruptRow).length).toBeGreaterThan(0);
+
+    const nullContentRow = {
+      ...okRow,
+      runs: { r1: { ...run, cards: [{ content: { "1": null } }] } },
+    };
+    expect(expectCorrupt(nullContentRow).length).toBeGreaterThan(0);
+  });
+
   it("classifies an absent row (undefined) as missing", () => {
     expect(coerceConversationState(undefined)).toEqual({ status: "missing" });
   });

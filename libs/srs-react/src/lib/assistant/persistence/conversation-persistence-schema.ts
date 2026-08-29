@@ -39,6 +39,26 @@ import { z } from "zod";
  * persisted, so no real row changes behavior.
  */
 
+// INVARIANT: structural card check. Restore previously cast `cards`
+// unvalidated, so a malformed card reached the renderer and crashed it
+// instead of failing the row as corrupt. Extra fields are tolerated.
+const cardShape = z.object({
+  content: z.record(z.string(), z.object({ text: z.string() })),
+});
+
+// INVARIANT: structural message check. Restore previously cast `messages`
+// unvalidated, so a row with `parts: null` reached the renderer and crashed
+// it instead of failing the row as corrupt. Extra fields are tolerated.
+const messageShape = z.object({
+  id: z.string(),
+  role: z.enum(["user", "assistant"]),
+  parts: z.array(z.unknown()),
+  // WHY: kept unvalidated so the conversation-level superRefine below can
+  // still inspect metadata kinds on the parsed value (generated-cards and
+  // cards-mode markers must keep failing the row as corrupt).
+  metadata: z.unknown().optional(),
+});
+
 function toDate(value: unknown): Date | null {
   if (value instanceof Date) return value;
   if (typeof value === "string") {
@@ -204,7 +224,7 @@ const runSchema: z.ZodType<GenerationRun> = z
     // arbitrary string cast to RunStatus.
     status: runStatusField,
     reason: terminationReasonField,
-    cards: z.array(z.unknown()),
+    cards: z.array(cardShape),
     // INVARIANT: each card status must be one of the four known values — never an
     // arbitrary string cast to CardStatus.
     cardStatuses: z.record(z.string(), cardStatusField),
@@ -294,7 +314,7 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
     id: z.string(),
     createdAt: dateField,
     updatedAt: nullableDateField,
-    messages: z.array(z.unknown()),
+    messages: z.array(messageShape),
     runs: z.record(z.string(), runSchema),
     activeRunId: optionalString,
     dismissedRunErrorId: z.unknown().transform((v) => (v ?? null) as string | null),
