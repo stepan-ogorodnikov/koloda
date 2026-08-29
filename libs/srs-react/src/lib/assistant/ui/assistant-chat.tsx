@@ -107,7 +107,6 @@ export function AssistantChat({
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
     onSubmit: controller.submit,
-    onCancel: controller.cancel,
     onReset: controller.reset,
     isLoading: isProcessing,
     scroll,

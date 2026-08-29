@@ -4,7 +4,6 @@ import type { UseAutoScrollReturn } from "./use-auto-scroll";
 
 export type UseAIChatInputOptions = {
   onSubmit: (value: string) => void | Promise<void>;
-  onCancel?: () => void;
   onReset?: () => void;
   isLoading?: boolean;
   scroll: UseAutoScrollReturn;
@@ -15,7 +14,6 @@ export type UseAIChatInputReturn = {
   setInputValue: (value: string) => void;
   prompt: string;
   canSubmit: boolean;
-  canCancel: boolean;
   submit: () => void;
   handleSubmit: (e: FormEvent) => void;
   handleNewConversation: () => void;
@@ -23,7 +21,6 @@ export type UseAIChatInputReturn = {
 
 export function useAIChatInput({
   onSubmit,
-  onCancel,
   onReset,
   isLoading = false,
   scroll,
@@ -32,7 +29,6 @@ export function useAIChatInput({
   const prompt = inputValue.trim();
 
   const canSubmit = !!prompt && !isLoading;
-  const canCancel = isLoading && !!onCancel;
 
   const submit = () => {
     if (!canSubmit) return;
@@ -58,7 +54,6 @@ export function useAIChatInput({
     setInputValue,
     prompt,
     canSubmit,
-    canCancel,
     submit,
     handleSubmit,
     handleNewConversation,
