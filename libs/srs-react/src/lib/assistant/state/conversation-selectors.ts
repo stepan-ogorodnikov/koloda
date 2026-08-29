@@ -48,6 +48,8 @@ export const assistantContextUsageAtom = atom((get) => {
   return null;
 });
 
+let lastUnreadSet: Set<string> | null = null;
+
 // WHY: Use one derived atom for the whole list instead of per-conversation
 // derived atoms, which would create N subscriptions.
 export const unreadConversationIdsAtom = atom((get) => {
@@ -63,5 +65,15 @@ export const unreadConversationIdsAtom = atom((get) => {
     if (latestRun.id === state.lastReadRunId) continue;
     unread.add(id);
   }
+  // WHY: `conversationsAtom` is rewritten on every streamed chunk; returning
+  // a fresh Set each time would re-render the sidebar at chunk rate even
+  // when unread membership is unchanged. Keep the previous reference while
+  // membership is identical (membership is always compared against the
+  // freshly computed set, so cross-store staleness is impossible).
+  const previous = lastUnreadSet;
+  if (previous !== null && previous.size === unread.size && [...unread].every((id) => previous.has(id))) {
+    return previous;
+  }
+  lastUnreadSet = unread;
   return unread;
 });

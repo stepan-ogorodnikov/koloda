@@ -47,6 +47,27 @@ describe("unreadConversationIdsAtom", () => {
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
   });
 
+  it("returns a stable Set reference while unread membership is unchanged", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { runs: { r1: makeRun("r1", "success") } }));
+    const first = store.get(unreadConversationIdsAtom);
+    expect(first.has("A")).toBe(true);
+
+    // An unrelated store rewrite (any streamed chunk does this) must not
+    // produce a new Set reference while membership is unchanged.
+    store.set(upsertConversationAtom, makeConversation("B"));
+    expect(store.get(unreadConversationIdsAtom)).toBe(first);
+
+    // Membership changes — fresh Set without the read conversation.
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", { runs: { r1: makeRun("r1", "success") }, lastReadRunId: "r1" }),
+    );
+    const third = store.get(unreadConversationIdsAtom);
+    expect(third).not.toBe(first);
+    expect(third.has("A")).toBe(false);
+  });
+
   it("treats failed, canceled, and interrupted runs the same as success for the unread predicate", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A", { runs: { r1: makeRun("r1", "failed") } }));
