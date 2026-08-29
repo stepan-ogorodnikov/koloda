@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
+import { getMessageRunId } from "./assistant-messages";
 import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
 
 export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
@@ -32,22 +33,19 @@ export const assistantConversationHasContextAtom = (id: string) =>
     return state ? state.messages.length > 0 || state.activeRunId !== null : false;
   });
 
+// WHY: The next request's context is the LATEST run's usage — every run's
+// prompt already includes the full history, so summing across runs
+// double-counts and grows quadratically against the context window. Walk the
+// visible message list backwards so "latest" is structural, not key order.
 export const assistantContextUsageAtom = atom((get) => {
-  const runs = get(assistantRunsAtom);
-  let promptTokens = 0;
-  let completionTokens = 0;
-  let hasUsage = false;
-
-  for (const run of Object.values(runs)) {
-    if (run.usage) {
-      hasUsage = true;
-      promptTokens += run.usage.promptTokens;
-      completionTokens += run.usage.completionTokens;
-    }
+  const state = get(assistantConversationStateAtom);
+  const visibleMessages = getVisibleMessages(state.messages, state.revertState);
+  for (let i = visibleMessages.length - 1; i >= 0; i--) {
+    const runId = getMessageRunId(visibleMessages[i]!);
+    const run = runId ? state.runs[runId] : undefined;
+    if (run?.usage) return run.usage;
   }
-
-  if (!hasUsage) return null;
-  return { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens };
+  return null;
 });
 
 // WHY: Use one derived atom for the whole list instead of per-conversation

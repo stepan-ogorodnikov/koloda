@@ -225,9 +225,7 @@ export function AssistantChat({
           <AIModelParameters parameters={modelParameters} onChange={handleModelParameterChange} />
         )}
         <div className="grow min-w-3" />
-        {contextUsage !== undefined && contextLength !== undefined && (
-          <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />
-        )}
+        {contextUsage != null && <AiChatContextUsage usage={contextUsage} contextLength={contextLength} />}
         <AIChatSettingsToggle isOpen={areSettingsOpen} onOpenChange={() => setAreSettingsOpen((prev) => !prev)} />
       </AIChatFooter>
     </section>
