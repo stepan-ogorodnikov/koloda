@@ -1,7 +1,7 @@
 import type { AIRuntime } from "@koloda/ai";
 import { IDLE_SAVE_DEBOUNCE_MS } from "@koloda/assistant";
-import type { Conversation, SetConversationData } from "@koloda/app";
-import { aiRuntimeAtom, queriesAtom } from "@koloda/core-react";
+import type { Conversation, ConversationListItem, SetConversationData } from "@koloda/app";
+import { aiRuntimeAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, renderHook } from "@testing-library/react";
@@ -71,6 +71,7 @@ function createTestWrapper(onWrite?: (id: string) => void) {
 
   return {
     store,
+    queryClient,
     Wrapper: function Wrapper({ children }: PropsWithChildren) {
       return (
         <QueryClientProvider client={queryClient}>
@@ -106,6 +107,46 @@ describe("useConversationSaveHost", () => {
     // Strict Mode may re-render after layout effect; the first render must stay unregistered.
     expect(renderChecks[0]).toBe(false);
     expect(isAssistantPersistenceWriteAdapterReady()).toBe(true);
+  });
+
+  it("title-stable autosave upserts the list cache without a refetch", async () => {
+    const seededList: ConversationListItem[] = [
+      { id: "A", title: "hello", createdAt: "2026-07-01T11:00:00.000Z", updatedAt: null },
+    ];
+    const { store, queryClient, Wrapper } = createTestWrapper();
+    queryClient.setQueryData(queryKeys.conversations.all(), seededList);
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        messages: [
+          {
+            id: "user-r1",
+            role: "user",
+            parts: [{ type: "text", text: "hello" }],
+            metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+          },
+        ],
+      }),
+    );
+    function Probe() {
+      useConversationSaveHost();
+      return null;
+    }
+    render(<Probe />, { wrapper: Wrapper });
+
+    store.set(touchConversationAtom, "A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // WHY: the written row carries the same title, so the list cache must be
+    // updated in place (new array reference) instead of invalidated.
+    const list = queryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
+    expect(list).not.toBe(seededList);
+    expect(list).toHaveLength(1);
+    expect(list![0]!.id).toBe("A");
+    expect(list![0]!.title).toBe("hello");
+    expect(list![0]!.updatedAt).not.toBeNull();
   });
 
   it("unregisters on unmount", () => {

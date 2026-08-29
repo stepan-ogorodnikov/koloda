@@ -1,4 +1,5 @@
 import { queriesAtom, queryKeys } from "@koloda/core-react";
+import type { ConversationListItem } from "@koloda/app";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useLayoutEffect, useRef } from "react";
@@ -57,7 +58,27 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
       setQueryConversation: (rowId, row) => {
         currentQueryClient.setQueryData(queryKeys.conversations.detail(rowId), row);
       },
-      invalidateConversations: () => {
+      // WHY: autosave fires ~1/sec while streaming — a full list refetch per
+      // save is wasted work. Upsert the row in place while its title is stable
+      // (the sidebar only renders titles) and refetch only for new
+      // conversations or title changes, where server-side ordering matters.
+      updateConversationsList: (row) => {
+        const list = currentQueryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
+        const existing = list?.find((item) => item.id === row.id);
+        if (list && existing) {
+          if (existing.title === row.title) {
+            currentQueryClient.setQueryData(
+              queryKeys.conversations.all(),
+              list.map((item) => (item.id === row.id ? { ...item, updatedAt: row.updatedAt } : item)),
+            );
+            return;
+          }
+          currentQueryClient.setQueryData(
+            queryKeys.conversations.all(),
+            list.map((item) => (item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt } : item)),
+          );
+          return;
+        }
         currentQueryClient.invalidateQueries({ queryKey: queryKeys.conversations.all() });
       },
       isTombstoned: (conversationId) => ensureAssistantPersistenceHost(currentStore).isTombstoned(conversationId),

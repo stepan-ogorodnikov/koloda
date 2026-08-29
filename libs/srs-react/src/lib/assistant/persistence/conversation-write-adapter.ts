@@ -19,7 +19,12 @@ export type BuildWriteConversationOptions = {
   setConversationFn: (data: SetConversationData) => Promise<Conversation>;
   setSaveStatus: (status: SaveStatus) => void;
   setQueryConversation: (id: string, row: Conversation) => void;
-  invalidateConversations: () => void;
+  /**
+   * Called with the written row after every successful save. The host decides
+   * how the sidebar list cache follows (upsert on title-stable saves, refetch
+   * for new conversations or title changes).
+   */
+  updateConversationsList: (row: Conversation) => void;
   /** When true, skip the upsert — conversation is mid coordinated delete (#8). */
   isTombstoned: (conversationId: string) => boolean;
 };
@@ -30,7 +35,7 @@ export function buildWriteConversation({
   setConversationFn,
   setSaveStatus,
   setQueryConversation,
-  invalidateConversations,
+  updateConversationsList,
   isTombstoned,
 }: BuildWriteConversationOptions): (conversationId: string) => Promise<boolean> {
   return async (id: string): Promise<boolean> => {
@@ -72,7 +77,7 @@ export function buildWriteConversation({
           isDismissed: false,
         });
       setQueryConversation(row.id, row);
-      invalidateConversations();
+      updateConversationsList(row);
       const savedAt = row.updatedAt ? new Date(row.updatedAt) : null;
       if (savedAt) {
         dispatchToConversationOnStore(store, row.id, (prev) => {
