@@ -183,6 +183,47 @@ describe("conversationReducer", () => {
       });
     });
 
+    it("keeps outputs at or under the persist cap untruncated", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      // Pad so the serialized output lands exactly ON the cap.
+      let payload = "";
+      while (JSON.stringify({ decks: payload }).length < 2000) payload += "x";
+      const output = { decks: payload };
+      expect(JSON.stringify(output).length).toBe(2000);
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      expect(state.runs["r1"].toolCalls?.[0]?.output).toEqual(output);
+    });
+
+    it("bounds outputs one char past the persist cap to a summary + preview", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      let payload = "";
+      while (JSON.stringify({ decks: payload }).length <= 2000) payload += "x";
+      const output = { decks: payload };
+      expect(JSON.stringify(output).length).toBe(2001);
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.output as {
+        truncated: boolean;
+        itemCount: number;
+        preview: string;
+      };
+      expect(stored.truncated).toBe(true);
+      expect(stored.itemCount).toBe(1);
+      expect(stored.preview).toHaveLength(400);
+      expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(output).length);
+    });
+
     it("resolves a running tool call to error with the error payload", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [

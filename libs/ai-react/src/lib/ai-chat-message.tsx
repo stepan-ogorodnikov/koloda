@@ -1,5 +1,6 @@
 import type { UIMessage, UIMessagePart } from "ai";
 import { memo } from "react";
+import type { PropsWithChildren } from "react";
 import { tv } from "tailwind-variants";
 
 type InterruptedPart = {

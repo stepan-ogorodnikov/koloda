@@ -55,7 +55,8 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   const summary = toolCallSummary(call, _);
   const headline = summary ? `${displayName} - ${summary}` : displayName;
   const inputText = formatToolPayload(call.input);
-  const outputText = call.status === "success" ? formatToolPayload(call.output) : "";
+  const bounded = call.status === "success" ? boundedToolOutput(call.output) : null;
+  const outputText = call.status === "success" ? (bounded ? bounded.preview : formatToolPayload(call.output)) : "";
   const errorText = call.status === "error" ? formatToolPayload(call.error) : "";
 
   return (
@@ -75,7 +76,12 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         <div className="mt-1 ml-7 flex flex-col gap-2">
           <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
           {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
-          {outputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.output`)} text={outputText} /> : null}
+          {outputText ? (
+            <ToolPayloadBlock
+              label={bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)}
+              text={outputText}
+            />
+          ) : null}
           {errorText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.failed`)} text={errorText} /> : null}
         </div>
       </details>
@@ -167,6 +173,21 @@ function namedNumber(value: unknown, key: string): number | null {
   if (!value || typeof value !== "object") return null;
   const field = (value as Record<string, unknown>)[key];
   return typeof field === "number" && Number.isFinite(field) ? field : null;
+}
+
+/**
+ * Detects the bounded summary the conversation reducer persists for oversized
+ * tool outputs: the live full output never reaches the run record, only
+ * `{ truncated: true, itemCount, preview }` does.
+ */
+function boundedToolOutput(value: unknown): { itemCount: number; preview: string } | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  if (record.truncated !== true) return null;
+  const itemCount = typeof record.itemCount === "number" && Number.isFinite(record.itemCount) ? record.itemCount : null;
+  const preview = typeof record.preview === "string" ? record.preview : null;
+  if (itemCount === null || preview === null) return null;
+  return { itemCount, preview };
 }
 
 function formatToolPayload(value: unknown): string {

@@ -440,8 +440,28 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
     return;
   }
   call.status = "success";
-  call.output = payload.output;
+  // WHY: card extraction parses the FULL output before the run record's copy
+  // is bounded — truncation must never starve propose_cards.
   applyProposeCardsToRun(draft, payload.runId, call, payload.output);
+  call.output = boundToolOutput(payload.output);
+}
+
+// WHY: tool outputs ride the conversation document, rewritten in full on
+// every autosave. The live tool flow needs the full output, the run record
+// does not — cap what we persist so a tool-heavy conversation cannot grow
+// the blob unboundedly.
+const MAX_TOOL_OUTPUT_CHARS = 2000;
+const MAX_TOOL_OUTPUT_PREVIEW_CHARS = 400;
+
+export function boundToolOutput(output: unknown): unknown {
+  if (output === null || typeof output !== "object") return output;
+  const serialized = JSON.stringify(output);
+  if (serialized === undefined || serialized.length <= MAX_TOOL_OUTPUT_CHARS) return output;
+  return {
+    truncated: true,
+    itemCount: Array.isArray(output) ? output.length : Object.keys(output).length,
+    preview: serialized.slice(0, MAX_TOOL_OUTPUT_PREVIEW_CHARS),
+  };
 }
 
 // WHY: runtime must not parse tool payloads; the call name already lives on the run.
