@@ -79,7 +79,7 @@ describe("revert state in-memory lifecycle", () => {
       // We still want to confirm that a setRevertState dispatch does not
       // stamp it with a fresh date, so we make a run-starting dispatch
       // first to seed a value, then verify revert leaves it alone.
-      dispatchTo(store, "A", ["startRun", { runId: "r99" }]);
+      dispatchTo(store, "A", ["submitTurn", { runId: "r99", text: "hello", kind: "chat-text", assistantText: "" }]);
       const seeded = store.get(assistantConversationStateAtom);
       expect(seeded.updatedAt).not.toBeNull();
       const seededAt = seeded.updatedAt!.getTime();

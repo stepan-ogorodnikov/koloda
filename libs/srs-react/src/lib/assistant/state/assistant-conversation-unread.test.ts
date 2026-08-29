@@ -89,10 +89,8 @@ describe("unreadConversationIdsAtom", () => {
       },
     ]);
     store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "r1",
-      },
+      "submitTurn",
+      { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r1" }]);
     markReadIfCurrentOnStore(store, "A", "r1");
@@ -113,10 +111,8 @@ describe("unreadConversationIdsAtom", () => {
     store.set(setCurrentConversationIdAtom, "A");
 
     store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "r2",
-      },
+      "submitTurn",
+      { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
     store.set(assistantConversationStateAtom, ["completeRun", { runId: "r2" }]);
     markReadIfCurrentOnStore(store, "A", "r2");
@@ -138,7 +134,7 @@ describe("unreadConversationIdsAtom", () => {
     store.set(upsertConversationAtom, makeConversation("B", { runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "B");
 
-    dispatchTo(store, "A", ["startRun", { runId: "r2" }]);
+    dispatchTo(store, "A", ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
 
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
@@ -150,12 +146,12 @@ describe("unreadConversationIdsAtom", () => {
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
+    dispatchTo(store, "A", ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatchTerminal(store, "A", ["runFailed", { runId: "r1", error: { message: "failed" } }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r1");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
 
-    dispatchTo(store, "A", ["startRun", { runId: "r2" }]);
+    dispatchTo(store, "A", ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatchTerminal(store, "A", ["cancelRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);
@@ -289,7 +285,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     store.set(upsertConversationAtom, makeConversation("B", { runs: { r1: makeRun("r1", "success") } }));
     store.set(setCurrentConversationIdAtom, "B");
 
-    dispatchTo(store, "A", ["startRun", { runId: "r2" }]);
+    dispatchTo(store, "A", ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(true);
 
@@ -320,7 +316,7 @@ describe("setCurrentConversationIdAtom mark-read side effect", () => {
     );
     store.set(setCurrentConversationIdAtom, "A");
 
-    dispatchTo(store, "A", ["startRun", { runId: "r2" }]);
+    dispatchTo(store, "A", ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatchTerminal(store, "A", ["completeRun", { runId: "r2" }]);
     expect(store.get(conversationsAtom)["A"].lastReadRunId).toBe("r2");
     expect(store.get(unreadConversationIdsAtom).has("A")).toBe(false);

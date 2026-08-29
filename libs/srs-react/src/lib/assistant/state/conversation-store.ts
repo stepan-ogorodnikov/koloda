@@ -34,7 +34,7 @@ export const currentConversationIdAtom = atom<string | null>(null);
 // explicitly sets `updatedAt: null` for fresh conversations, and that
 // must be preserved. The writable atom handles `newConversation` as a
 // special case before reaching here.
-const RUN_START_ACTIONS = new Set<ConversationReducerAction[0]>(["startRun", "restartRun", "submitTurn"]);
+const RUN_START_ACTIONS = new Set<ConversationReducerAction[0]>(["restartRun", "submitTurn"]);
 
 function applyConversationUpdate(
   prev: ConversationReducerState,
@@ -46,7 +46,7 @@ function applyConversationUpdate(
       : conversationReducer(prev, update);
   if (next === prev) return prev;
 
-  // INVARIANT: Only stamp `updatedAt` on run start (startRun / restartRun / submitTurn). Function-form
+  // INVARIANT: Only stamp `updatedAt` on run start (restartRun / submitTurn). Function-form
   // updaters are used by derived atoms and side-effects that must not bump the timestamp.
   if (typeof update !== "function" && RUN_START_ACTIONS.has(update[0])) {
     return { ...next, updatedAt: new Date() };

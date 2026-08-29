@@ -70,11 +70,39 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     store.set(currentConversationIdAtom, id);
   }
 
+  // Seed a run through the real production path (one atomic submitTurn);
+  // `withUserMessage: false` builds the orphaned-assistant shape that only
+  // restore normalization can produce — no reducer action creates it.
   function addChatRun(runId: string, opts: { withUserMessage?: boolean } = {}) {
     const { withUserMessage = true } = opts;
-    if (withUserMessage) dispatch(["addUserMessage", { runId, text: "hello" }]);
-    dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId }]);
+    if (withUserMessage) {
+      dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "" }]);
+      return;
+    }
+    store.set(upsertConversationAtom, {
+      ...readState(),
+      runs: {
+        ...readState().runs,
+        [runId]: {
+          id: runId,
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [],
+          templateFields: null,
+          startedAt: new Date(1),
+          elapsedSeconds: null,
+        },
+      },
+      messages: [
+        {
+          id: `assistant-${runId}`,
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId },
+        },
+      ],
+    });
   }
 
   function orchestrate(cfg: AssistantConversationConfig) {
@@ -204,9 +232,6 @@ describe("useRunOrchestration — atomic submitTurn", () => {
     const turnActions = dispatched.filter((a) => a[0] === "submitTurn");
     expect(turnActions).toHaveLength(1);
     expect(callOrder).toEqual(["command", "submitTurn"]);
-    expect(dispatched.some((a) => a[0] === "addUserMessage")).toBe(false);
-    expect(dispatched.some((a) => a[0] === "startRun")).toBe(false);
-    expect(dispatched.some((a) => a[0] === "addAssistantMessage")).toBe(false);
 
     const payload = turnActions[0]![1] as {
       text: string;
@@ -332,9 +357,7 @@ describe("useRunOrchestration — retry always chat", () => {
   }
 
   function addFailedChatRun(runId: string, dataAccess?: DataAccessSnapshot) {
-    dispatch(["addUserMessage", { runId, text: "hello" }]);
-    dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId, dataAccess }]);
+    dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "", dataAccess }]);
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 
@@ -417,9 +440,7 @@ describe("useRunOrchestration — handleRevert", () => {
       createdAt: new Date(1),
     });
     store.set(currentConversationIdAtom, "conv-1");
-    dispatch(["addUserMessage", { runId: "run-1", text: "make cards" }]);
-    dispatch(["addAssistantMessage", { runId: "run-1", kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId: "run-1" }]);
+    dispatch(["submitTurn", { runId: "run-1", text: "make cards", kind: "chat-text", assistantText: "" }]);
     dispatch(["completeRun", { runId: "run-1" }]);
 
     const { result } = renderHook(() =>
@@ -466,9 +487,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
   }
 
   function addFailedChatRun(runId: string) {
-    dispatch(["addUserMessage", { runId, text: "hello" }]);
-    dispatch(["addAssistantMessage", { runId, kind: "chat-text", text: "" }]);
-    dispatch(["startRun", { runId }]);
+    dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "" }]);
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 

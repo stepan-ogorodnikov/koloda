@@ -146,18 +146,8 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
     harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-1",
-      },
-    ]);
-    harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      {
-        runId: "run-1",
-        kind: "chat-text",
-        text: "",
-      },
+      "submitTurn",
+      { runId: "run-1", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
 
     let streamStarted = false;
@@ -224,18 +214,8 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
     harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-1",
-      },
-    ]);
-    harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      {
-        runId: "run-1",
-        kind: "chat-text",
-        text: "",
-      },
+      "submitTurn",
+      { runId: "run-1", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk) => {
@@ -262,18 +242,8 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
     harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-A",
-      },
-    ]);
-    harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      {
-        runId: "run-A",
-        kind: "chat-text",
-        text: "",
-      },
+      "submitTurn",
+      { runId: "run-A", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
     harness.store.set(setCurrentConversationIdAtom, "B");
 
@@ -301,10 +271,8 @@ describe("useConversationRuns", () => {
     harness.store.set(upsertConversationAtom, makeConversation("B"));
     harness.store.set(setCurrentConversationIdAtom, "A");
     harness.store.set(assistantConversationStateAtom, [
-      "startRun",
-      {
-        runId: "run-A",
-      },
+      "submitTurn",
+      { runId: "run-A", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
     harness.store.set(setCurrentConversationIdAtom, "B");
 
@@ -337,10 +305,9 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A" }]);
     harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      { runId: "run-A", kind: "chat-text", text: "" },
+      "submitTurn",
+      { runId: "run-A", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
 
     harness.chatStreamGenerator.mockImplementation(async (_request, onChunk, signal) => {
@@ -379,10 +346,9 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-A" }]);
     harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      { runId: "run-A", kind: "chat-text", text: "" },
+      "submitTurn",
+      { runId: "run-A", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
 
     const usage: StreamUsage = {
@@ -678,10 +644,9 @@ describe("useConversationRuns", () => {
     const harness = createHarness();
     harness.store.set(upsertConversationAtom, makeConversation("A"));
     harness.store.set(setCurrentConversationIdAtom, "A");
-    harness.store.set(assistantConversationStateAtom, ["startRun", { runId: "run-1" }]);
     harness.store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      { runId: "run-1", kind: "chat-text", text: "" },
+      "submitTurn",
+      { runId: "run-1", text: "hello", kind: "chat-text", assistantText: "" },
     ]);
 
     harness.chatStreamGenerator.mockImplementation(async (_request, _onChunk, signal) => {

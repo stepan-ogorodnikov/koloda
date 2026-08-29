@@ -25,17 +25,19 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Dispatch via the writable atom (targets current conversation)
     store.set(assistantConversationStateAtom, [
-      "addUserMessage",
+      "submitTurn",
       {
         runId: "r1",
         text: "Hello from A",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
     // The derived atom should reflect the change
     const state = store.get(assistantConversationStateAtom);
     expect(state.id).toBe("A");
-    expect(state.messages).toHaveLength(1);
+    expect(state.messages).toHaveLength(2);
     expect(state.messages[0].role).toBe("user");
   });
 
@@ -49,27 +51,31 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // Add a message to A
     store.set(setCurrentConversationIdAtom, "A");
     store.set(assistantConversationStateAtom, [
-      "addUserMessage",
+      "submitTurn",
       {
         runId: "r1",
         text: "Message in A",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
     // Switch to B and add a message
     store.set(setCurrentConversationIdAtom, "B");
     store.set(assistantConversationStateAtom, [
-      "addUserMessage",
+      "submitTurn",
       {
         runId: "r2",
         text: "Message in B",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
     // Switch back to A — its message should still be there
     store.set(setCurrentConversationIdAtom, "A");
     const stateA = store.get(assistantConversationStateAtom);
-    expect(stateA.messages).toHaveLength(1);
+    expect(stateA.messages).toHaveLength(2);
     expect(stateA.messages[0].parts[0]).toEqual({ type: "text", text: "Message in A" });
   });
 
@@ -82,17 +88,12 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
     store.set(assistantConversationStateAtom, [
-      "startRun",
+      "submitTurn",
       {
         runId: "run-A",
-      },
-    ]);
-    store.set(assistantConversationStateAtom, [
-      "addAssistantMessage",
-      {
-        runId: "run-A",
+        text: "hello",
         kind: "chat-text",
-        text: "",
+        assistantText: "",
       },
     ]);
 
@@ -123,9 +124,12 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // Start a run on A
     store.set(setCurrentConversationIdAtom, "A");
     store.set(assistantConversationStateAtom, [
-      "startRun",
+      "submitTurn",
       {
         runId: "run-A",
+        text: "hello",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
@@ -149,10 +153,12 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Dispatch to a non-existent conversation — should be a no-op
     dispatchTo(store, "UNKNOWN", [
-      "addUserMessage",
+      "submitTurn",
       {
         runId: "r1",
         text: "This should not appear",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
@@ -259,16 +265,18 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     // current (newly-created) conversation. This is the path that
     // ensureConversationId → handleGenerate relies on.
     store.set(assistantConversationStateAtom, [
-      "addUserMessage",
+      "submitTurn",
       {
         runId: "r1",
         text: "Hello",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
 
     const state = store.get(assistantConversationStateAtom);
     expect(state.id).toBe("cold-start");
-    expect(state.messages).toHaveLength(1);
+    expect(state.messages).toHaveLength(2);
     expect(state.messages[0].role).toBe("user");
   });
 
@@ -352,9 +360,12 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
 
     // Start a run on B
     store.set(assistantConversationStateAtom, [
-      "startRun",
+      "submitTurn",
       {
         runId: "run-B",
+        text: "hello",
+        kind: "chat-text",
+        assistantText: "",
       },
     ]);
     expect(store.get(assistantActiveRunIdAtom)).toBe("run-B");
@@ -457,7 +468,7 @@ describe("updatedAt stamping (only on run start)", () => {
 
   function seedUpdatedAt(store: ReturnType<typeof createStore>, id: string) {
     const original = store.get(conversationsAtom)[id]!.updatedAt;
-    dispatchTo(store, id, ["startRun", { runId: "seed" }]);
+    dispatchTo(store, id, ["submitTurn", { runId: "seed", text: "seed", kind: "chat-text", assistantText: "" }]);
     const seeded = store.get(conversationsAtom)[id]!.updatedAt;
     expect(seeded).not.toBeNull();
     expect(seeded).not.toEqual(original);
@@ -470,16 +481,6 @@ describe("updatedAt stamping (only on run start)", () => {
   function advanceClock() {
     vi.advanceTimersByTime(CLOCK_STEP_MS);
   }
-
-  it("startRun bumps updatedAt", () => {
-    const store = createStore();
-    store.set(upsertConversationAtom, makeConversation("A"));
-    store.set(setCurrentConversationIdAtom, "A");
-
-    dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
-    const after = store.get(conversationsAtom)["A"]!;
-    expect(after.updatedAt).not.toBeNull();
-  });
 
   it("submitTurn bumps updatedAt", () => {
     const store = createStore();
@@ -542,8 +543,6 @@ describe("updatedAt stamping (only on run start)", () => {
   // the setup genuinely differs (addCard captures its own startRun bump as baseline;
   // commitRevert needs revert state armed before the timed dispatch).
   const negativeCases: UpdatedAtNegativeCase[] = [
-    { label: "addUserMessage", action: ["addUserMessage", { runId: "r1", text: "Hi" }] },
-    { label: "addAssistantMessage", action: ["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "" }] },
     {
       label: "updateAssistantText (streaming chunk)",
       action: ["updateAssistantText", { runId: "seed", text: "chunk" }],
@@ -552,7 +551,7 @@ describe("updatedAt stamping (only on run start)", () => {
       label: "addCard (streaming chunk)",
       action: ["addCard", { runId: "r1", card: { content: {} } }],
       baseline: (store) => {
-        dispatchTo(store, "A", ["startRun", { runId: "r1" }]);
+        dispatchTo(store, "A", ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]);
         return store.get(conversationsAtom)["A"]!.updatedAt!.getTime();
       },
     },

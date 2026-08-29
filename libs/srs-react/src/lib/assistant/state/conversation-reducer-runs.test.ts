@@ -5,12 +5,15 @@ import type { ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
 describe("conversationReducer", () => {
-  describe("startRun", () => {
+  describe("submitTurn", () => {
     it("creates a new run with streaming status and sets activeRunId", () => {
       vi.useFakeTimers();
       vi.setSystemTime(1000);
 
-      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1" }]);
+      const state = conversationReducer(initialConversationState, [
+        "submitTurn",
+        { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" },
+      ]);
 
       expect(state.activeRunId).toBe("r1");
       expect(state.runs["r1"]).toMatchObject({
@@ -26,13 +29,31 @@ describe("conversationReducer", () => {
       vi.useRealTimers();
     });
 
+    it("adds the user message and the assistant placeholder alongside the run", () => {
+      const state = conversationReducer(initialConversationState, [
+        "submitTurn",
+        { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" },
+      ]);
+
+      expect(state.messages).toHaveLength(2);
+      expect(state.messages[0]).toMatchObject({ id: "user-r1", role: "user" });
+      expect(state.messages[1]).toMatchObject({
+        id: "assistant-r1",
+        role: "assistant",
+        metadata: { kind: "chat-text" },
+      });
+    });
+
     it("stamps templateFields when provided", () => {
       const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
 
       const state = conversationReducer(initialConversationState, [
-        "startRun",
+        "submitTurn",
         {
           runId: "r1",
+          text: "hello",
+          kind: "chat-text",
+          assistantText: "",
           templateFields: fields,
         },
       ]);
@@ -42,9 +63,12 @@ describe("conversationReducer", () => {
 
     it("stamps modelName on the new run when provided", () => {
       const state = conversationReducer(initialConversationState, [
-        "startRun",
+        "submitTurn",
         {
           runId: "r1",
+          text: "hello",
+          kind: "chat-text",
+          assistantText: "",
           modelName: "GPT-4",
         },
       ]);
@@ -53,13 +77,14 @@ describe("conversationReducer", () => {
     });
 
     it("leaves modelName undefined when not provided", () => {
-      const state = conversationReducer(initialConversationState, ["startRun", { runId: "r1" }]);
+      const state = conversationReducer(initialConversationState, [
+        "submitTurn",
+        { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" },
+      ]);
 
       expect(state.runs["r1"].modelName).toBeUndefined();
     });
-  });
 
-  describe("submitTurn", () => {
     it("stores the data access snapshot on the created run", () => {
       const dataAccess: DataAccessSnapshot = {
         context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
@@ -100,7 +125,7 @@ describe("conversationReducer", () => {
 
   describe("addCard", () => {
     it("adds a card to the run's cards array and seeds idle status", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addCard",
         {
@@ -116,7 +141,7 @@ describe("conversationReducer", () => {
 
   describe("addToolCall", () => {
     it("appends a tool call with running status", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -125,7 +150,7 @@ describe("conversationReducer", () => {
     });
 
     it("skips a duplicate tool call id idempotently", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -141,7 +166,7 @@ describe("conversationReducer", () => {
 
   describe("setToolCallResult", () => {
     it("resolves a running tool call to success with its output", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -159,7 +184,7 @@ describe("conversationReducer", () => {
     });
 
     it("resolves a running tool call to error with the error payload", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
@@ -177,7 +202,7 @@ describe("conversationReducer", () => {
     });
 
     it("no-ops on an unmatched callId", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -217,7 +242,7 @@ describe("conversationReducer", () => {
     }
 
     it("maps a successful propose_cards output onto run cards, templateFields, and write targets", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
 
       expect(state.runs["r1"].cards).toEqual([
@@ -240,7 +265,7 @@ describe("conversationReducer", () => {
     });
 
     it("maps field.type from propose_cards onto run.templateFields, including markdown", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       const markdownOutput = {
         ...proposeOutput,
         templateFields: [
@@ -261,7 +286,7 @@ describe("conversationReducer", () => {
     });
 
     it("records an empty accepted list without setting cards, writeTargetDeckId, writeTargetTemplateId, or templateFields", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       const emptyOutput = { ...proposeOutput, cards: [], rejectedCount: 2 };
       state = withProposeCall(state, "call-1", emptyOutput);
 
@@ -273,7 +298,7 @@ describe("conversationReducer", () => {
     });
 
     it("does not apply cards when propose_cards returns an error", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = withProposeCall(state, "call-1", proposeOutput, "Deck not found: 5");
 
       expect(state.runs["r1"].cards).toEqual([]);
@@ -287,7 +312,7 @@ describe("conversationReducer", () => {
     });
 
     it("stores a malformed successful output without applying cards", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = withProposeCall(state, "call-1", { decks: [] });
 
       expect(state.runs["r1"].cards).toEqual([]);
@@ -297,7 +322,7 @@ describe("conversationReducer", () => {
     });
 
     it("keeps the first write target and ignores a later propose_cards for a different deck", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
       const otherDeck = {
         ...proposeOutput,
@@ -318,7 +343,7 @@ describe("conversationReducer", () => {
     });
 
     it("appends cards from a later propose_cards for the same deck without replacing templateFields", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = withProposeCall(state, "call-1", proposeOutput);
       const second = {
         ...proposeOutput,
@@ -351,7 +376,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
 
       vi.setSystemTime(5000);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
@@ -366,8 +391,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run completes", () => {
       let state = reduce([
-        ["startRun", { runId: "r1" }],
-        ["startRun", { runId: "r2" }],
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -389,7 +414,7 @@ describe("conversationReducer", () => {
         cards: [{ fields: { Front: "hola", Back: "hello" } }],
         rejectedCount: 0,
       };
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
@@ -409,7 +434,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
 
       vi.setSystemTime(3000);
       state = conversationReducer(state, [
@@ -430,8 +455,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run fails", () => {
       let state = reduce([
-        ["startRun", { runId: "r1" }],
-        ["startRun", { runId: "r2" }],
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -449,7 +474,7 @@ describe("conversationReducer", () => {
 
   describe("cancelRun", () => {
     it("sets status to canceled with reason user and clears activeRunId", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("canceled");
@@ -463,7 +488,7 @@ describe("conversationReducer", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
 
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
 
       vi.setSystemTime(4000);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
@@ -477,7 +502,7 @@ describe("conversationReducer", () => {
     });
 
     it("records crash_recovery as the interruption reason", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
 
       expect(state.runs["r1"].status).toBe("interrupted");
@@ -486,8 +511,8 @@ describe("conversationReducer", () => {
 
     it("does not clear activeRunId when a different run is interrupted", () => {
       let state = reduce([
-        ["startRun", { runId: "r1" }],
-        ["startRun", { runId: "r2" }],
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
       ]);
       expect(state.activeRunId).toBe("r2");
 
@@ -501,7 +526,7 @@ describe("conversationReducer", () => {
     it("ignores completeRun after the run already finished", () => {
       vi.useFakeTimers();
       vi.setSystemTime(0);
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       vi.setSystemTime(2000);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       const afterFirst = state.runs["r1"];
@@ -517,7 +542,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions after cancel", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       const afterCancel = state.runs["r1"];
 
@@ -529,7 +554,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions after interrupt", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "crash_recovery" }]);
       const afterInterrupt = state.runs["r1"];
 
@@ -541,7 +566,7 @@ describe("conversationReducer", () => {
     });
 
     it("ignores terminal actions for a missing runId", () => {
-      const state = reduce([["startRun", { runId: "r1" }]]);
+      const state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       const next = conversationReducer(state, ["completeRun", { runId: "missing" }]);
       expect(next).toEqual(state);
     });
@@ -554,9 +579,12 @@ describe("conversationReducer", () => {
 
       let state = reduce([
         [
-          "startRun",
+          "submitTurn",
           {
             runId: "r1",
+            text: "hello",
+            kind: "chat-text",
+            assistantText: "",
             templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
@@ -588,7 +616,7 @@ describe("conversationReducer", () => {
     });
 
     it("clears recorded tool calls on restart", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
@@ -617,7 +645,7 @@ describe("conversationReducer", () => {
         cards: [{ fields: { Front: "hola", Back: "hello" } }],
         rejectedCount: 0,
       };
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
@@ -642,7 +670,7 @@ describe("conversationReducer", () => {
     });
 
     it("clears termination reason when restarting a canceled or interrupted run", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       expect(state.runs["r1"].reason).toBe("user");
 
@@ -738,9 +766,12 @@ describe("conversationReducer", () => {
     it("updates templateFields on retry", () => {
       let state = reduce([
         [
-          "startRun",
+          "submitTurn",
           {
             runId: "r1",
+            text: "hello",
+            kind: "chat-text",
+            assistantText: "",
             templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
@@ -760,7 +791,9 @@ describe("conversationReducer", () => {
     });
 
     it("overwrites modelName when a new value is provided", () => {
-      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
+      let state = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
+      ]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -776,7 +809,9 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun omits it", () => {
-      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
+      let state = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
+      ]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -791,7 +826,9 @@ describe("conversationReducer", () => {
     });
 
     it("preserves the existing modelName when restartRun sets it to undefined", () => {
-      let state = reduce([["startRun", { runId: "r1", modelName: "GPT-4" }]]);
+      let state = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
+      ]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
       state = conversationReducer(state, [
@@ -821,7 +858,7 @@ describe("conversationReducer", () => {
 
     it("stores the replayed data access snapshot on restart, keeping identity", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null, dataAccess }]);
@@ -833,7 +870,9 @@ describe("conversationReducer", () => {
 
     it("keeps the stored data access snapshot when the restart carries none", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([["startRun", { runId: "r1", dataAccess }]]);
+      let state = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", dataAccess }],
+      ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
@@ -855,7 +894,7 @@ describe("conversationReducer", () => {
 
   describe("setUsage", () => {
     it("sets usage on the specified run", () => {
-      let state = reduce([["startRun", { runId: "r1" }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       const usage = { promptTokens: 10, completionTokens: 20, totalTokens: 30 };
       state = conversationReducer(state, ["setUsage", { runId: "r1", usage }]);
       expect(state.runs["r1"].usage).toEqual(usage);

@@ -104,10 +104,7 @@ export const initialConversationState: ConversationReducerState = {
 };
 
 const actions = {
-  addUserMessage,
-  addAssistantMessage,
   updateAssistantText,
-  startRun,
   submitTurn,
   rollbackSubmitTurn,
   addCard,

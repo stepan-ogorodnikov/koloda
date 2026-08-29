@@ -3,19 +3,6 @@ import { conversationReducer, getVisibleMessages, initialConversationState } fro
 import { reduce } from "./conversation-reducer.fixtures";
 
 describe("conversationReducer", () => {
-  describe("addUserMessage", () => {
-    it("appends a user message to the messages array", () => {
-      const state = reduce([["addUserMessage", { runId: "r1", text: "Hello" }]]);
-      expect(state.messages).toHaveLength(1);
-      expect(state.messages[0].role).toBe("user");
-      expect(state.messages[0].id).toBe("user-r1");
-      expect(state.messages[0].metadata).toEqual({
-        createdAt: expect.any(String),
-        runId: "r1",
-      });
-    });
-  });
-
   describe("submitTurn", () => {
     it("creates the user message, streaming run, and assistant placeholder in one action", () => {
       const state = reduce([
@@ -33,6 +20,10 @@ describe("conversationReducer", () => {
       expect(state.messages).toHaveLength(2);
       expect(state.messages[0].role).toBe("user");
       expect(state.messages[0].id).toBe("user-r1");
+      expect(state.messages[0].metadata).toEqual({
+        createdAt: expect.any(String),
+        runId: "r1",
+      });
       expect(state.messages[1].role).toBe("assistant");
       expect(state.messages[1].id).toBe("assistant-r1");
       expect(state.activeRunId).toBe("r1");
@@ -82,20 +73,11 @@ describe("conversationReducer", () => {
     });
   });
 
-  describe("addAssistantMessage", () => {
-    it("appends an assistant message with chat-text metadata", () => {
-      const state = reduce([["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "Hi there" }]]);
-      expect(state.messages).toHaveLength(1);
-      expect(state.messages[0].role).toBe("assistant");
-      expect(state.messages[0].id).toBe("assistant-r1");
-    });
-  });
-
   describe("updateAssistantText", () => {
     it("updates the text of the matching assistant message in-place", () => {
-      let state = reduce([["addAssistantMessage", { runId: "r1", kind: "chat-text", text: "..." }]]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "..." }]]);
       state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
-      expect(state.messages[0].parts).toEqual([{ type: "text", text: "Done" }]);
+      expect(state.messages[1].parts).toEqual([{ type: "text", text: "Done" }]);
     });
 
     it("does nothing when no message matches the runId", () => {
@@ -110,7 +92,7 @@ describe("conversationReducer", () => {
   describe("setCardStatus", () => {
     it("updates the status of a card by index", () => {
       let state = reduce([
-        ["startRun", { runId: "r1" }],
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
         ["addCard", { runId: "r1", card: { content: {} } }],
       ]);
       state = conversationReducer(state, ["setCardStatus", { runId: "r1", index: 0, status: "success" }]);
@@ -175,8 +157,7 @@ describe("conversationReducer", () => {
     it("resets to a fresh conversation with the provided id and createdAt", () => {
       const createdAt = new Date(1234);
       let state = reduce([
-        ["addUserMessage", { runId: "r1", text: "Hi" }],
-        ["startRun", { runId: "r1" }],
+        ["submitTurn", { runId: "r1", text: "Hi", kind: "chat-text", assistantText: "" }],
         ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
         ["setAIModel", { modelId: "m2", modelParameters: { reasoning_effort: "low" } }],
         ["setAIModelParameter", { paramType: "reasoning_effort", value: "medium" }],
