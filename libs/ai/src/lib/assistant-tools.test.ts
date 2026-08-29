@@ -575,7 +575,7 @@ describe("chat tool streaming", () => {
     expect(model.doStreamCalls).toHaveLength(2);
     expect(toolResultOutputsOf(1, model)).toEqual([{ type: "json", value: listDecksOutput }]);
     // ...and the final text arrived after the tool traffic, in order.
-    expect(onChunk.mock.calls).toEqual([["You have "], ["2 decks."]]);
+    expect(onChunk.mock.calls).toEqual([[{ kind: "text", text: "You have " }], [{ kind: "text", text: "2 decks." }]]);
     expect(events).toEqual([
       { kind: "toolCall", call: { id: "call-1", name: "list_decks", input: {} } },
       { kind: "toolResult", callId: "call-1", output: listDecksOutput },
@@ -597,7 +597,7 @@ describe("chat tool streaming", () => {
       OLLAMA_OPTIONS,
     );
 
-    expect(onChunk.mock.calls).toEqual([["You have "], ["2 decks."]]);
+    expect(onChunk.mock.calls).toEqual([[{ kind: "text", text: "You have " }], [{ kind: "text", text: "2 decks." }]]);
     expect(onToolEvent).not.toHaveBeenCalled();
     expect(model.doStreamCalls).toHaveLength(1);
     expect(model.doStreamCalls[0]?.tools).toBeUndefined();
@@ -672,6 +672,6 @@ describe("chat tool streaming", () => {
     expect(error).toBeInstanceOf(DOMException);
     expect((error as DOMException).name).toBe("AbortError");
     expect(model.doStreamCalls).toHaveLength(2);
-    expect(onChunk).toHaveBeenCalledWith("Partial ");
+    expect(onChunk).toHaveBeenCalledWith({ kind: "text", text: "Partial " });
   });
 });
