@@ -13,6 +13,26 @@ export type MockChatCompletionOptions = {
   /** How to split `text` into streamed chunks. Default: one chunk per word. */
   chunkBy?: "word" | "all";
   /**
+   * Explicit SSE content deltas; overrides `text`/`chunkBy` when present.
+   * Lets a fixture cut tags mid-chunk (e.g. `<thi` + `nk>`) the way real
+   * models split streamed text.
+   */
+  chunks?: string[];
+  /**
+   * Delay between SSE events in ms. The server writes each SSE event as its
+   * own HTTP chunk with this pause in between; without it the whole body is
+   * written at once.
+   */
+  chunkDelayMs?: number;
+  /**
+   * Token usage reported to the app for this completion (drives the run's
+   * context-usage meter). Default: no usage — the app hides the meter.
+   */
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+  };
+  /**
    * Stream an OpenAI tool-call step instead of assistant text.
    * Used so chat + `propose_cards` can hit the real host executor.
    */
@@ -127,17 +147,23 @@ export async function mockOpenAICompatibleProvider(
 
       if (!stream) {
         res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text)));
+        res.end(JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text, next.usage)));
         return;
       }
 
-      const chunks = next.chunkBy === "all" ? [text] : text.split(/(\s+)/).filter((part) => part.length > 0);
+      const chunks =
+        next.chunks ?? (next.chunkBy === "all" ? [text] : text.split(/(\s+)/).filter((part) => part.length > 0));
       res.writeHead(200, {
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
       });
-      res.end(buildOpenAIChatCompletionSSE(modelId, chunks));
+      const body = buildOpenAIChatCompletionSSE(modelId, chunks, next.usage);
+      if (next.chunkDelayMs != null && next.chunkDelayMs > 0) {
+        await writeSseWithDelays(res, body, next.chunkDelayMs);
+      } else {
+        res.end(body);
+      }
       return;
     }
 
@@ -202,7 +228,45 @@ function readBody(req: http.IncomingMessage): Promise<string> {
   });
 }
 
-export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: string[]): string {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/**
+ * Write the finished SSE body event-by-event with `delayMs` pauses in between.
+ * Splitting the body keeps the paced byte stream identical to the single-write
+ * path (the body already ends with its blank separator line). Writes use the
+ * callback form so an aborted connection reports through the callback instead
+ * of emitting an unhandled 'error' on the response.
+ */
+async function writeSseWithDelays(res: http.ServerResponse, body: string, delayMs: number): Promise<void> {
+  const events = body.split("\n\n").filter((part) => part.length > 0);
+  res.flushHeaders();
+  for (const [index, event] of events.entries()) {
+    if (res.destroyed || res.writableEnded) return;
+    if (index > 0) await sleep(delayMs);
+    if (res.destroyed || res.writableEnded) return;
+    res.write(`${event}\n\n`, () => {});
+  }
+  if (!res.destroyed && !res.writableEnded) res.end();
+}
+
+/** OpenAI wire format for token usage; `total_tokens` is derived. */
+function buildOpenAIUsage(usage: { promptTokens: number; completionTokens: number }) {
+  return {
+    prompt_tokens: usage.promptTokens,
+    completion_tokens: usage.completionTokens,
+    total_tokens: usage.promptTokens + usage.completionTokens,
+  };
+}
+
+export function buildOpenAIChatCompletionSSE(
+  modelId: string,
+  contentChunks: string[],
+  usage?: { promptTokens: number; completionTokens: number },
+): string {
   const lines: string[] = [];
   const id = "chatcmpl-e2e";
   const created = Math.floor(Date.now() / 1000);
@@ -227,6 +291,9 @@ export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: str
       created,
       model: modelId,
       choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      // WHY: the provider reads `usage` off any stream chunk and reports it on
+      // the finish part; LM Studio sends it with the final chunk the same way.
+      ...(usage ? { usage: buildOpenAIUsage(usage) } : {}),
     })}`,
   );
   lines.push("data: [DONE]");
@@ -324,7 +391,11 @@ export function buildOpenAIToolCallJSON(
   };
 }
 
-export function buildOpenAIChatCompletionJSON(modelId: string, content: string) {
+export function buildOpenAIChatCompletionJSON(
+  modelId: string,
+  content: string,
+  usage?: { promptTokens: number; completionTokens: number },
+) {
   return {
     id: "chatcmpl-e2e",
     object: "chat.completion",
@@ -337,5 +408,6 @@ export function buildOpenAIChatCompletionJSON(modelId: string, content: string) 
         finish_reason: "stop",
       },
     ],
+    ...(usage ? { usage: buildOpenAIUsage(usage) } : {}),
   };
 }
