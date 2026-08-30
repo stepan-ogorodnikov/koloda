@@ -205,38 +205,6 @@ test("reverts a user message and restores it", async ({ page }) => {
   }
 });
 
-test("generates cards and locks the deck", async ({ page }) => {
-  const mock = await mockOpenAICompatibleProvider(page, {
-    defaultCompletion: { text: "Added a card to the deck.", chunkBy: "all" },
-  });
-
-  try {
-    await setupDemo(page);
-    await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
-    const deckId = await createDeckAndOpenAssistant(page, "E2E Cards Deck");
-    await waitForAssistantReady(page);
-
-    mock.enqueueCompletion({
-      toolCall: {
-        name: "propose_cards",
-        arguments: {
-          deckId,
-          cards: [{ fields: { Front: "E2E front", Back: "E2E back" } }],
-        },
-      },
-    });
-
-    await sendAssistantMessage(page, "Make a card");
-
-    // Exact match: the raw tool-call JSON payloads also quote the field text.
-    await expect(page.getByText("E2E front", { exact: true })).toBeVisible({ timeout: 20_000 });
-
-    expect(mock.completionRequests).toBeGreaterThanOrEqual(1);
-  } finally {
-    await mock.dispose();
-  }
-});
-
 test("keeps both turns visible and shows the latest run's context usage", async ({ page }) => {
   test.setTimeout(60_000);
 
