@@ -77,6 +77,12 @@ export async function mockOpenAICompatibleProvider(
   options: {
     modelId?: string;
     defaultCompletion?: MockChatCompletionOptions;
+    /**
+     * Completions behavior computed from the raw request body when the FIFO queue
+     * is empty. Lets a fixture reply with text derived from what the model
+     * actually received (e.g. echo tool-result rows back as reply text).
+     */
+    completionFromBody?: (requestBody: string) => MockChatCompletionOptions;
   } = {},
 ): Promise<MockOpenAICompatibleHandle> {
   const modelId = options.modelId ?? E2E_LM_STUDIO_MODEL_ID;
@@ -131,7 +137,12 @@ export async function mockOpenAICompatibleProvider(
 
   const completionsHandler = async (route: Route) => {
     completionRequests += 1;
-    const next = queue.shift() ?? { ...defaultCompletion };
+    const requestBody = route.request().postData() ?? "";
+    // WHY: FIFO entries first keep explicitly scripted steps deterministic; the
+    // body-derived behavior only fills unscripted fall-through steps, and the
+    // static default stays last. Without completionFromBody this resolves
+    // exactly as before.
+    const next = queue.shift() ?? options.completionFromBody?.(requestBody) ?? { ...defaultCompletion };
 
     if (next.hold) {
       await new Promise<void>((resolve) => {
