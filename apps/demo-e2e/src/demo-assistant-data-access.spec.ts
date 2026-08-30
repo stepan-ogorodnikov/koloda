@@ -102,10 +102,11 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     // so the headline count is matched as a pattern, not a hardcoded total.
     const listDecksHeadline = log.getByText(/^List decks - \d+ decks?$/);
     await expect(listDecksHeadline).toBeVisible({ timeout: 20_000 });
-    // WHY substring: the spec says a successful row shows how many cards came
-    // back, but a bounded output has no cards/totalCards keys for the summary
-    // parser — do not assert that headline either way (a fix would flip it).
-    const getDeckCardsRow = log.locator("li").filter({ hasText: "Get deck cards" });
+    // WHY exact: the deck holds exactly the 3 seeded cards, and the run record
+    // preserves the executor's totalCards even though the stored output itself
+    // is bounded to a preview (spec Visibility: a successful row shows how many
+    // cards came back).
+    const getDeckCardsRow = log.locator("li").filter({ hasText: "Get deck cards - 3 cards" });
     await expect(getDeckCardsRow).toBeVisible({ timeout: 20_000 });
     const listDecksRow = log.locator("li").filter({ hasText: /List decks - \d+ decks?/ });
 

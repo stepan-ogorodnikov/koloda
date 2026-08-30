@@ -224,6 +224,47 @@ describe("conversationReducer", () => {
       expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(output).length);
     });
 
+    it("keeps the executor's totalCards on a bounded get_deck_cards output", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: {} } },
+      ]);
+      // get_deck_cards shape: the cards list bloats the serialization past the
+      // cap, and the row headline reads totalCards off the stored copy.
+      const cards = Array.from({ length: 30 }, (_, i) => ({ fields: { Front: `front ${i}${"x".repeat(120)}` } }));
+      const output = { deckTitle: "Deck", totalCards: 30, isCapped: false, cards };
+      expect(JSON.stringify(output).length).toBeGreaterThan(2000);
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.output as {
+        truncated: boolean;
+        itemCount: number;
+        totalCards?: number;
+        cards?: unknown;
+      };
+      expect(stored.truncated).toBe(true);
+      expect(stored.totalCards).toBe(30);
+      expect(stored.cards).toBeUndefined();
+    });
+
+    it("omits totalCards from the bounded record when the output has none", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      let payload = "";
+      while (JSON.stringify({ decks: payload }).length <= 2000) payload += "x";
+      const output = { decks: payload };
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.output as { totalCards?: unknown };
+      expect("totalCards" in stored).toBe(false);
+    });
+
     it("resolves a running tool call to error with the error payload", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
