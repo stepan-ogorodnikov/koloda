@@ -11,6 +11,27 @@ export type MockChatCompletionOptions = {
   /** How to split `text` into streamed chunks. Default: one chunk per word. */
   chunkBy?: "word" | "all";
   /**
+   * Explicit SSE content deltas; overrides `text`/`chunkBy` when present.
+   * Lets a fixture cut tags mid-chunk (e.g. `<thi` + `nk>`) the way real
+   * models split streamed text.
+   */
+  chunks?: string[];
+  /**
+   * Delay between SSE events in ms. `route.fulfill` cannot stream a body, so
+   * the fulfilled response carries a marker header and the page-side fetch
+   * wrapper installed by `mockOpenAICompatibleProvider` re-streams the SSE
+   * events with the requested delay. Default: single fulfill, all events at once.
+   */
+  chunkDelayMs?: number;
+  /**
+   * Token usage reported to the app for this completion (drives the run's
+   * context-usage meter). Default: no usage — the app hides the meter.
+   */
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+  };
+  /**
    * Stream an OpenAI tool-call step instead of assistant text.
    * Used so chat + `propose_cards` can hit the real host executor.
    */
@@ -72,6 +93,35 @@ export async function mockOpenAICompatibleProvider(
   };
 
   let releaseHold: (() => void) | null = null;
+
+  // WHY: `route.fulfill` delivers the whole body at once, so mid-stream UI
+  // states (partial reply text) cannot be asserted. This page-side wrapper
+  // re-streams a fulfilled SSE body event-by-event when the response opts in
+  // via the marker header below; every other response passes through.
+  await page.addInitScript(() => {
+    const pacingHeader = "x-e2e-sse-chunk-delay";
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      const response = await originalFetch(input, init);
+      const chunkDelayMs = Number(response.headers.get(pacingHeader));
+      if (!Number.isFinite(chunkDelayMs) || chunkDelayMs <= 0) return response;
+      const body = await response.text();
+      const events = body.split("\n\n").filter((part) => part.length > 0);
+      const stream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          for (const [index, event] of events.entries()) {
+            if (index > 0) await new Promise((resolve) => setTimeout(resolve, chunkDelayMs));
+            controller.enqueue(encoder.encode(`${event}\n\n`));
+          }
+          controller.close();
+        },
+      });
+      const headers = new Headers(response.headers);
+      headers.delete(pacingHeader);
+      return new Response(stream, { status: response.status, statusText: response.statusText, headers });
+    };
+  });
 
   const completionsHandler = async (route: Route) => {
     completionRequests += 1;
@@ -138,20 +188,25 @@ export async function mockOpenAICompatibleProvider(
         await route.fulfill({
           status: 200,
           contentType: "application/json",
-          body: JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text)),
+          body: JSON.stringify(buildOpenAIChatCompletionJSON(modelId, text, next.usage)),
         });
         return;
       }
 
-      const chunks = next.chunkBy === "all" ? [text] : text.split(/(\s+)/).filter((part) => part.length > 0);
+      const chunks =
+        next.chunks ?? (next.chunkBy === "all" ? [text] : text.split(/(\s+)/).filter((part) => part.length > 0));
+      const headers: Record<string, string> = {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      };
+      if (next.chunkDelayMs != null && next.chunkDelayMs > 0) {
+        headers["x-e2e-sse-chunk-delay"] = String(next.chunkDelayMs);
+      }
       await route.fulfill({
         status: 200,
-        headers: {
-          "Content-Type": "text/event-stream; charset=utf-8",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-        body: buildOpenAIChatCompletionSSE(modelId, chunks),
+        headers,
+        body: buildOpenAIChatCompletionSSE(modelId, chunks, next.usage),
       });
     } catch {
       // Aborted while fulfilling.
@@ -180,7 +235,20 @@ export async function mockOpenAICompatibleProvider(
   };
 }
 
-export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: string[]): string {
+/** OpenAI wire format for token usage; `total_tokens` is derived. */
+function buildOpenAIUsage(usage: { promptTokens: number; completionTokens: number }) {
+  return {
+    prompt_tokens: usage.promptTokens,
+    completion_tokens: usage.completionTokens,
+    total_tokens: usage.promptTokens + usage.completionTokens,
+  };
+}
+
+export function buildOpenAIChatCompletionSSE(
+  modelId: string,
+  contentChunks: string[],
+  usage?: { promptTokens: number; completionTokens: number },
+): string {
   const lines: string[] = [];
   const id = "chatcmpl-e2e";
   const created = Math.floor(Date.now() / 1000);
@@ -205,6 +273,9 @@ export function buildOpenAIChatCompletionSSE(modelId: string, contentChunks: str
       created,
       model: modelId,
       choices: [{ index: 0, delta: {}, finish_reason: "stop" }],
+      // WHY: the provider reads `usage` off any stream chunk and reports it on
+      // the finish part; LM Studio sends it with the final chunk the same way.
+      ...(usage ? { usage: buildOpenAIUsage(usage) } : {}),
     })}`,
   );
   lines.push("data: [DONE]");
@@ -302,7 +373,11 @@ export function buildOpenAIToolCallJSON(
   };
 }
 
-export function buildOpenAIChatCompletionJSON(modelId: string, content: string) {
+export function buildOpenAIChatCompletionJSON(
+  modelId: string,
+  content: string,
+  usage?: { promptTokens: number; completionTokens: number },
+) {
   return {
     id: "chatcmpl-e2e",
     object: "chat.completion",
@@ -315,5 +390,6 @@ export function buildOpenAIChatCompletionJSON(modelId: string, content: string) 
         finish_reason: "stop",
       },
     ],
+    ...(usage ? { usage: buildOpenAIUsage(usage) } : {}),
   };
 }
