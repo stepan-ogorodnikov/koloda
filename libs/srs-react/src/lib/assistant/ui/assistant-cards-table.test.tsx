@@ -3,11 +3,15 @@ import type { Queries } from "@koloda/core-react";
 import type { GeneratedCard } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useAtomValue } from "jotai";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsTable } from "./assistant-cards-table";
+import { useAssistantCardsTable } from "./use-assistant-cards-table";
+import { makeConversation, makeRun } from "../state/assistant-conversation.fixtures";
+import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import type { CardStatus } from "../state/conversation-reducer";
 
 vi.mock("@lingui/react", () => ({
@@ -94,4 +98,56 @@ describe("AssistantCardsTable selection", () => {
     // must be selected too, without dropping the user's existing selection.
     expect(selectionStates()).toEqual([true, true]);
   });
+
+  it("clears the whole selection after a successful add so Add stays disabled", async () => {
+    // Post-add state: statuses are no longer idle, so no row is selectable,
+    // yet the rows still sit in the selection map. TanStack v9 deselect keeps
+    // non-selectable rows, so the add callback must clear the whole map —
+    // otherwise hasSelection stays true and a second Add re-adds duplicates.
+    mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" });
+
+    expect(screen.getByTestId("has-selection").textContent).toBe("true");
+    fireEvent.click(screen.getByTestId("add"));
+
+    await waitFor(() => expect(screen.getByTestId("has-selection").textContent).toBe("false"));
+  });
 });
+
+function SelectionProbe() {
+  const conversationId = useAtomValue(currentConversationIdAtom);
+  const conversations = useAtomValue(conversationsAtom);
+  const run = conversationId ? conversations[conversationId]?.runs.r1 : undefined;
+  const { hasSelection, handleAddCards } = useAssistantCardsTable({
+    runId: "r1",
+    cards: run?.cards ?? [],
+    cardStatuses: run?.cardStatuses ?? {},
+    template,
+    deckId: 1,
+    templateId: 1,
+  });
+
+  return (
+    <div>
+      <button type="button" data-testid="add" onClick={handleAddCards}>
+        add
+      </button>
+      <span data-testid="has-selection">{String(hasSelection)}</span>
+    </div>
+  );
+}
+
+function mountProbe(cards: GeneratedCard[], cardStatuses: Record<number, CardStatus>) {
+  const store = createStore();
+  store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+  const run = { ...makeRun("r1", "success"), cards, cardStatuses };
+  store.set(currentConversationIdAtom, "c1");
+  store.set(conversationsAtom, { c1: makeConversation("c1", { runs: { r1: run } }) });
+
+  const Wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={new QueryClient()}>
+      <JotaiProvider store={store}>{children}</JotaiProvider>
+    </QueryClientProvider>
+  );
+
+  render(<SelectionProbe />, { wrapper: Wrapper });
+}
