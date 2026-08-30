@@ -441,6 +441,22 @@ export async function openAssistantWithDeck(page: Page) {
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
 }
 
+/**
+ * Create a second conversation through the assistant's "New conversation"
+ * button and navigate to it. Requires the current conversation to have
+ * context (messages or an active run) — the button is disabled otherwise,
+ * and an empty conversation cannot be created.
+ */
+export async function startNewConversation(page: Page): Promise<string> {
+  const conversationIdBefore = getConversationIdFromUrl(page);
+  const newConversationButton = page.getByRole("button", { name: "New conversation" });
+  await expect(newConversationButton).toBeEnabled();
+  await newConversationButton.click();
+  await expect(page).not.toHaveURL(new RegExp(`conversationId=${conversationIdBefore}($|&)`));
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+  return getConversationIdFromUrl(page);
+}
+
 /** Simulate graceful app shutdown (`pagehide` with `persisted: false`). */
 export async function dispatchGracefulShutdown(page: Page) {
   await page.evaluate(() => {
