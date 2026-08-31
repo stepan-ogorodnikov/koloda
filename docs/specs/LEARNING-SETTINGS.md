@@ -55,8 +55,12 @@ Each of New, Learn, and Review has:
 
 Total has only a numeric value.
 
-A limit value of zero means no cap for that limit.
-The UI shows that as infinity where limits are displayed.
+A Total of zero means no cap for Total.
+The UI shows that as infinity where Total is displayed.
+
+A New, Learn, or Review value of zero is a hard zero for that type.
+That type has no remaining room under its own limit.
+Any card of that type already studied today is over that type's limit.
 
 When Total is greater than zero, any per-type limit that counts toward Total must not exceed Total.
 Saving with such a value is rejected and the previous settings are kept.

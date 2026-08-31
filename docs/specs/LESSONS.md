@@ -48,17 +48,14 @@ Each count is a badge.
 A badge with a non-zero count starts a lesson of that type for that deck (or for all decks on the aggregate row).
 A badge with zero is disabled and shows "0".
 
-Beside the deck list, the screen shows today's progress.
-
 ## Today's Progress
 
 The lessons screen shows how many cards of each type have already been studied today, against that type's daily limit.
 New, Learn, Review, and Total are each shown.
+The same figures are shown at lesson init; see §Init.
 
 What counts as today and how Total is summed are LEARNING-SETTINGS.md (§Learning Day).
 What a limit of zero means is LEARNING-SETTINGS.md (§Daily Limits).
-
-The same learned-and-limit figures appear on the lesson init screen next to the amount pickers.
 
 Closing a lesson refreshes these figures.
 
