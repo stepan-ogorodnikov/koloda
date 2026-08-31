@@ -138,7 +138,7 @@ msgstr "You don't have any AI profiles"
 msgid "ai.chat.no-profiles.add"
 msgstr "Add profile"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:171
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:170
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
