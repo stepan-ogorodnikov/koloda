@@ -29,19 +29,18 @@ describe("interfaceSettingsValidation", () => {
     });
   });
 
-  // WHY: every field is a strict z.enum over its registry keys, so all five rejections share
-  // one mechanism; one invalid spelling per field pins the schema against loosening to z.string().
-  it("rejects values outside any field's enum", () => {
-    for (const [field, value] of [
-      ["language", "fr"],
-      ["scheme", "blue"],
-      ["lightTheme", "solarized"],
-      ["darkTheme", "solarized"],
-      ["motion", "slow"],
-    ] as const) {
-      const result = interfaceSettingsValidation.safeParse({ [field]: value });
-      expect(result.success, `${field} must reject ${value}`).toBe(false);
-    }
+  // WHY: every field is a strict z.enum over its registry keys; one invalid spelling per field
+  // pins the schema against loosening to z.string() and mirrors Rust error codes.
+  it.each([
+    ["language", "fr", "validation.settings-interface.language"],
+    ["scheme", "blue", "validation.settings-interface.scheme"],
+    ["lightTheme", "solarized", "validation.settings-interface.light-theme"],
+    ["darkTheme", "solarized", "validation.settings-interface.dark-theme"],
+    ["motion", "slow", "validation.settings-interface.motion"],
+  ] as const)("rejects invalid %s with %s", (field, value, code) => {
+    const result = interfaceSettingsValidation.safeParse({ [field]: value });
+    expect(result.success, `${field} must reject ${value}`).toBe(false);
+    expect(result.error?.issues[0]?.message).toBe(code);
   });
 
   it("DEFAULT_INTERFACE_SETTINGS matches parse({})", () => {

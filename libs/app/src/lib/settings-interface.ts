@@ -38,12 +38,22 @@ export const MOTION_SETTINGS: Record<string, MessageDescriptor> = {
   system: msg`motion.system`,
 };
 
+const SCHEME_KEYS = Object.keys(SCHEMES) as [Scheme, ...Scheme[]];
+const LIGHT_THEME_KEYS = Object.keys(LIGHT_THEMES) as [LightTheme, ...LightTheme[]];
+const DARK_THEME_KEYS = Object.keys(DARK_THEMES) as [DarkTheme, ...DarkTheme[]];
+const MOTION_KEYS = Object.keys(MOTION_SETTINGS) as [
+  keyof typeof MOTION_SETTINGS,
+  ...Array<keyof typeof MOTION_SETTINGS>,
+];
+
 export const interfaceSettingsValidation = z.object({
-  language: z.enum(LOCALES).default("en"),
-  scheme: z.enum(Object.keys(SCHEMES)).default("system"),
-  lightTheme: z.enum(Object.keys(LIGHT_THEMES)).default("github-light"),
-  darkTheme: z.enum(Object.keys(DARK_THEMES)).default("github-dark"),
-  motion: z.enum(Object.keys(MOTION_SETTINGS)).default("system"),
+  language: z.enum(LOCALES, { message: "validation.settings-interface.language" }).default("en"),
+  scheme: z.enum(SCHEME_KEYS, { message: "validation.settings-interface.scheme" }).default("system"),
+  lightTheme: z
+    .enum(LIGHT_THEME_KEYS, { message: "validation.settings-interface.light-theme" })
+    .default("github-light"),
+  darkTheme: z.enum(DARK_THEME_KEYS, { message: "validation.settings-interface.dark-theme" }).default("github-dark"),
+  motion: z.enum(MOTION_KEYS, { message: "validation.settings-interface.motion" }).default("system"),
 });
 
 export type InterfaceSettings = z.input<typeof interfaceSettingsValidation>;
