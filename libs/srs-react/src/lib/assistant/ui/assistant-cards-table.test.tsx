@@ -42,7 +42,11 @@ function buildQueries(): Queries {
   } as unknown as Queries;
 }
 
-function Wrapper({ children }: { children: ReactNode }) {
+type WrapperProps = {
+  children: ReactNode;
+};
+
+function Wrapper({ children }: WrapperProps) {
   const store = createStore();
   store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
   const queryClient = new QueryClient();
@@ -143,7 +147,7 @@ function mountProbe(cards: GeneratedCard[], cardStatuses: Record<number, CardSta
   store.set(currentConversationIdAtom, "c1");
   store.set(conversationsAtom, { c1: makeConversation("c1", { runs: { r1: run } }) });
 
-  const Wrapper = ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: WrapperProps) => (
     <QueryClientProvider client={new QueryClient()}>
       <JotaiProvider store={store}>{children}</JotaiProvider>
     </QueryClientProvider>

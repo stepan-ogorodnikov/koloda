@@ -125,8 +125,8 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
           const result = response[i];
           setCardStatus({ runId, index, status: result?.error ? "error" : "success" });
         }
-        // Success rows are no longer selectable, and v9 deselect keeps
-        // non-selectable rows unless deselectAll clears the whole map.
+        // WORKAROUND: Success rows are no longer selectable, and v9 deselect
+        // keeps non-selectable rows unless deselectAll clears the whole map.
         table.toggleAllRowsSelected(false, { deselectAll: true });
       },
       onError: () => {

@@ -9,8 +9,6 @@ import {
 import { useEffect } from "react";
 import { useStore } from "jotai";
 
-export { resetAssistantEngineForTests } from "./assistant-persistence-host";
-
 function interruptAllStreamingRuns(store: AssistantJotaiStore): void {
   const conversations = store.get(conversationsAtom);
   for (const [conversationId, state] of Object.entries(conversations)) {

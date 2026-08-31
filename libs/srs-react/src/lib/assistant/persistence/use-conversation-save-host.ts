@@ -59,9 +59,9 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
           currentQueryClient.setQueryData(queryKeys.conversations.detail(rowId), row);
         },
         // WHY: autosave fires ~1/sec while streaming — a full list refetch per
-        // save is wasted work. Upsert the row in place while its title is stable
-        // (the sidebar only renders titles) and refetch only for new
-        // conversations or title changes, where server-side ordering matters.
+        // save is wasted work. Upsert the existing row in place (title included)
+        // and refetch only when the conversation is new, where list membership
+        // and server-side ordering matter.
         updateConversationsList: (row) => {
           const list = currentQueryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
           const existing = list?.find((item) => item.id === row.id);

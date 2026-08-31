@@ -114,7 +114,7 @@ function watchSaveFailures(page: Page): { waitForCount: (count: number) => Promi
 async function installSqliteWriteFailureSim(userDataDir: string): Promise<SqliteWriteFailureSim> {
   const dbPath = join(userDataDir, "koloda.db");
   let connection: SqliteConnection | null = null;
-  let armed = false;
+  let isArmed = false;
 
   const exec = (sql: string) => {
     const db = connection;
@@ -123,7 +123,7 @@ async function installSqliteWriteFailureSim(userDataDir: string): Promise<Sqlite
   };
 
   const arm = async () => {
-    if (armed) return;
+    if (isArmed) return;
     if (!connection) {
       // The database file exists once the app has booted and seeded; wait for it briefly.
       const openDeadline = Date.now() + 10_000;
@@ -142,7 +142,7 @@ async function installSqliteWriteFailureSim(userDataDir: string): Promise<Sqlite
     while (Date.now() < deadline) {
       try {
         exec("BEGIN IMMEDIATE");
-        armed = true;
+        isArmed = true;
         return;
       } catch {
         await sleep(50);
@@ -152,13 +152,13 @@ async function installSqliteWriteFailureSim(userDataDir: string): Promise<Sqlite
   };
 
   const disarm = async () => {
-    if (!armed) return;
+    if (!isArmed) return;
     exec("ROLLBACK");
-    armed = false;
+    isArmed = false;
   };
 
   const dispose = async () => {
-    if (armed) await disarm();
+    if (isArmed) await disarm();
     connection?.close();
     connection = null;
   };

@@ -94,7 +94,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     const betaRow = proposedRow(page, "Beta front");
     const selectAll = selectAllCheckbox(page);
 
-    // Exact match: the raw tool-call JSON payloads also quote the field text.
+    // WHY: Exact match — the raw tool-call JSON payloads also quote the field text.
     await expect(alphaRow).toBeVisible({ timeout: 20_000 });
     await expect(betaRow).toBeVisible();
     // All rows start selected (ASSISTANT-CARD-GENERATION.md:74).
@@ -209,7 +209,7 @@ test("retries a failed cards run against the current deck state", async ({ page 
     await expect(runOneListDecks).toBeVisible();
     await expect(log.getByText("Propose cards - 1 card", { exact: true })).toBeVisible();
     // Partial output survives the failure (ASSISTANT-CARD-GENERATION.md:82).
-    // Exact match: the tool-call JSON payloads also quote the field text.
+    // WHY: Exact match — the tool-call JSON payloads also quote the field text.
     await expect(log.getByText("First run front", { exact: true })).toBeVisible();
     await expect(log.getByText("Failed to get a response")).toBeVisible();
     await expect(log.getByRole("button", { name: "Retry" })).toBeVisible();
