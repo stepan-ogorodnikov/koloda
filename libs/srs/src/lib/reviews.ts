@@ -7,14 +7,20 @@ import { z } from "zod";
 import { cardValidation } from "./cards";
 import type { Card } from "./cards";
 import type { LessonType } from "./lessons";
+import {
+  REVIEWS_PROGRESS_FIELD_CODES,
+  validateProgressFields,
+  validateReviewRating,
+  validateReviewTime,
+} from "./progress";
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 
-export const reviewValidation = z.object({
+const reviewFieldsSchema = z.object({
   id: z.bigint(),
   cardId: cardValidation.shape.id,
-  rating: z.int().min(0).max(4),
-  state: z.int().min(0).max(3),
+  rating: z.int(),
+  state: z.int(),
   dueAt: z.date(),
   stability: z.number().default(0),
   difficulty: z.number().default(0),
@@ -25,13 +31,21 @@ export const reviewValidation = z.object({
   createdAt: z.date(),
 });
 
+function refineReview(data: z.infer<typeof reviewFieldsSchema>, ctx: z.RefinementCtx) {
+  validateReviewRating(data.rating, ctx);
+  validateProgressFields(data, REVIEWS_PROGRESS_FIELD_CODES, ctx);
+  validateReviewTime(data.time, ctx);
+}
+
+export const reviewValidation = reviewFieldsSchema.superRefine(refineReview);
+
 export const reviewRowSchema = reviewValidation;
 
 export type Review = z.input<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] };
 
-export const insertReviewSchema = reviewValidation.omit({ id: true });
+export const insertReviewSchema = reviewFieldsSchema.omit({ id: true }).superRefine(refineReview);
 
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
 

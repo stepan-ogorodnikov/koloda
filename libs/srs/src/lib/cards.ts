@@ -8,14 +8,16 @@ import { createFSRSAlgorithm } from "./algorithms-fsrs";
 import { deckValidation } from "./decks";
 import type { ReviewFSRS } from "./reviews";
 import type { Template, TemplateFields } from "./templates";
+import type { ProgressFieldValues } from "./progress";
+import { CARDS_PROGRESS_FIELD_CODES, validateProgressFields } from "./progress";
 import { templateValidation } from "./templates";
 
-export const cardValidation = z.object({
+const cardFieldsSchema = z.object({
   id: z.int(),
   deckId: deckValidation.shape.id,
   templateId: templateValidation.shape.id,
   content: z.record(z.string(), z.object({ text: z.string() })),
-  state: z.int().min(0).max(3).default(0),
+  state: z.int().default(0),
   dueAt: z.nullable(z.date()).default(null),
   stability: z.number().default(0),
   difficulty: z.number().default(0),
@@ -26,7 +28,13 @@ export const cardValidation = z.object({
   lastReviewedAt: z.nullable(z.date()).default(null),
 });
 
-export const cardRowSchema = cardValidation.extend(timestampsValidation.shape);
+function refineCardProgress(data: ProgressFieldValues, ctx: z.RefinementCtx) {
+  validateProgressFields(data, CARDS_PROGRESS_FIELD_CODES, ctx);
+}
+
+export const cardValidation = cardFieldsSchema.superRefine(refineCardProgress);
+
+export const cardRowSchema = cardFieldsSchema.safeExtend(timestampsValidation.shape).superRefine(refineCardProgress);
 
 // WHY: z.input keeps insert/update callers free to omit defaulted FSRS fields.
 export type Card = z.input<typeof cardValidation> & z.infer<typeof timestampsValidation>;
@@ -52,7 +60,7 @@ export function getInsertCardSchema(template: Template) {
   return z.object({ ...insertCardSchema.shape, ...contentValidation });
 }
 
-export const insertCardSchema = cardValidation.omit({ id: true });
+export const insertCardSchema = cardFieldsSchema.omit({ id: true }).superRefine(refineCardProgress);
 
 export type InsertCardData = z.input<typeof insertCardSchema>;
 

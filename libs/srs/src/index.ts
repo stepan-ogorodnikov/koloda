@@ -5,5 +5,6 @@ export * from "./lib/cards";
 export * from "./lib/decks";
 export * from "./lib/lessons";
 export * from "./lib/markdown";
+export * from "./lib/progress";
 export * from "./lib/reviews";
 export * from "./lib/templates";
