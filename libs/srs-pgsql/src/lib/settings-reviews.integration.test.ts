@@ -124,7 +124,7 @@ describe("settings and review totals integration", () => {
 
     await insertReview(db, {
       cardId: cardA.id,
-      rating: 0,
+      rating: 1,
       state: 0,
       dueAt: new Date(2026, 0, 10, 4, 0, 0),
       stability: 0,

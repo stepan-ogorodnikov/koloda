@@ -7,12 +7,18 @@ import { z } from "zod";
 import { cardValidation } from "./cards";
 import type { Card } from "./cards";
 import type { LessonType } from "./lessons";
+import type { ProgressFieldValues } from "./progress";
 import {
   REVIEWS_PROGRESS_FIELD_CODES,
   validateProgressFields,
   validateReviewRating,
   validateReviewTime,
 } from "./progress";
+
+type ReviewRefinementValues = ProgressFieldValues & {
+  rating: number;
+  time: number;
+};
 
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 
@@ -31,7 +37,7 @@ const reviewFieldsSchema = z.object({
   createdAt: z.date(),
 });
 
-function refineReview(data: z.infer<typeof reviewFieldsSchema>, ctx: z.RefinementCtx) {
+function refineReview(data: ReviewRefinementValues, ctx: z.RefinementCtx) {
   validateReviewRating(data.rating, ctx);
   validateProgressFields(data, REVIEWS_PROGRESS_FIELD_CODES, ctx);
   validateReviewTime(data.time, ctx);
