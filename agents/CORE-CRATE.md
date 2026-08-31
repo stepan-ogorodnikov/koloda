@@ -38,6 +38,10 @@ This file only tells you where to start.
 
 - Return it from domain validation, not from repo lookup misses.
 - Keep the code string identical to the TS mirror in `libs/app/src/lib/error.ts` (`ErrorCode`).
+- Add the same string as a key in `ERROR_MESSAGES` in that file.
+- Append the string to `RUST_ERROR_CODES` in `libs/app/src/lib/error-parity.test.ts`.
+  That test pins the full `error_codes` set and fails if either side drifts.
+  TS-only `ai.*` keys live only in `ERROR_MESSAGES` (allow-listed in the test).
 
 **Settings slices** — a slice module owns its struct plus `validate()` (and `fill_defaults()` where defaults exist).
 
