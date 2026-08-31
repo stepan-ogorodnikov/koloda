@@ -114,7 +114,9 @@ export function AssistantConversationRecovery({
     if (value) clearDeleteError();
   };
 
-  const message = isAppError(deleteError) ? ERROR_MESSAGES[deleteError.code] : ERROR_MESSAGES["db.delete"];
+  const message = isAppError(deleteError)
+    ? (ERROR_MESSAGES[deleteError.code] ?? ERROR_MESSAGES.unknown)
+    : ERROR_MESSAGES["db.delete"];
 
   return (
     <div className="grow flex flex-col items-center justify-center gap-6 py-12 px-4">

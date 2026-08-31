@@ -70,8 +70,8 @@ type ErrorsItemProps = { error: FormError };
 
 function ErrorsItem({ error }: ErrorsItemProps) {
   const { _ } = useLingui();
-  const content = ERROR_MESSAGES[error.message as ErrorCode];
-  const message = content ? (typeof content === "function" ? _(content(error)) : _(content)) : content;
+  const content = ERROR_MESSAGES[error.message as ErrorCode] ?? ERROR_MESSAGES.unknown;
+  const message = typeof content === "function" ? _(content(error)) : _(content);
 
   return <em className="fg-error not-italic">{message}</em>;
 }

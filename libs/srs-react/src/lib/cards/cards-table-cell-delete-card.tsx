@@ -41,7 +41,9 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
     );
   };
 
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : ERROR_MESSAGES["db.delete"];
+  const message = isAppError(error)
+    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
+    : ERROR_MESSAGES["db.delete"];
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>

@@ -16,7 +16,7 @@ interface QueryErrorProps {
 export function QueryError({ error, onRetry }: QueryErrorProps) {
   const { _ } = useLingui();
   const [isPending, setIsPending] = useState(false);
-  const message = isAppError(error) ? ERROR_MESSAGES[error.code] : msg`query-error.message`;
+  const message = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : msg`query-error.message`;
 
   const handleRetry = useCallback(async () => {
     if (!onRetry || isPending) return;
