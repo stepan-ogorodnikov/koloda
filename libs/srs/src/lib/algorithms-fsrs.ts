@@ -19,16 +19,94 @@ export const FSRS_GRADES = [
   msg`fsrs.grades.easy`,
 ];
 
-const learningStepsValidation = z.array(z.tuple([z.int(), z.literal(["s", "m", "h", "d"])]));
+export const LEARNING_STEP_UNITS = ["s", "m", "h", "d"] as const;
+export const FSRS6_WEIGHT_COUNT = 21;
 
-export const algorithmFSRSValidation = z.object({
+const learningStepValidation = z.tuple([z.number().int(), z.string()]);
+
+const algorithmFSRSBaseValidation = z.object({
   type: z.literal("fsrs"),
-  retention: z.number().min(70).max(99),
+  retention: z.number(),
   weights: z.string(),
   isFuzzEnabled: z.boolean(),
-  learningSteps: learningStepsValidation,
-  relearningSteps: learningStepsValidation,
+  learningSteps: z.array(learningStepValidation),
+  relearningSteps: z.array(learningStepValidation),
   maximumInterval: z.number(),
+});
+
+export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((data, ctx) => {
+  if (data.retention < 70 || data.retention > 99) {
+    ctx.addIssue({
+      code: "custom",
+      message: "validation.algorithm.fsrs.retention",
+      path: ["retention"],
+    });
+  }
+
+  for (let i = 0; i < data.learningSteps.length; i++) {
+    const [amount, unit] = data.learningSteps[i];
+    if (amount <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.algorithm.fsrs.learning-steps.amount",
+        path: ["learningSteps", i, 0],
+      });
+    }
+    if (!LEARNING_STEP_UNITS.includes(unit as (typeof LEARNING_STEP_UNITS)[number])) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.algorithm.fsrs.learning-steps.unit",
+        path: ["learningSteps", i, 1],
+      });
+    }
+  }
+
+  for (let i = 0; i < data.relearningSteps.length; i++) {
+    const [amount, unit] = data.relearningSteps[i];
+    if (amount <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.algorithm.fsrs.relearning-steps.amount",
+        path: ["relearningSteps", i, 0],
+      });
+    }
+    if (!LEARNING_STEP_UNITS.includes(unit as (typeof LEARNING_STEP_UNITS)[number])) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.algorithm.fsrs.relearning-steps.unit",
+        path: ["relearningSteps", i, 1],
+      });
+    }
+  }
+
+  if (data.maximumInterval <= 0) {
+    ctx.addIssue({
+      code: "custom",
+      message: "validation.algorithm.fsrs.maximum-interval",
+      path: ["maximumInterval"],
+    });
+  }
+
+  const weightParts = data.weights.split(",");
+  if (weightParts.length !== FSRS6_WEIGHT_COUNT) {
+    ctx.addIssue({
+      code: "custom",
+      message: "validation.algorithm.fsrs.weights",
+      path: ["weights"],
+    });
+    return;
+  }
+
+  for (const part of weightParts) {
+    if (part.trim().length === 0 || Number.isNaN(Number(part.trim()))) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.algorithm.fsrs.weights",
+        path: ["weights"],
+      });
+      return;
+    }
+  }
 });
 
 export type AlgorithmFSRS = z.infer<typeof algorithmFSRSValidation>;

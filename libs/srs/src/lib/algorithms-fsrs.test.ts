@@ -13,6 +13,18 @@ function createReviewedCard(now: Date) {
   return card;
 }
 
+function validPayload() {
+  return {
+    type: "fsrs" as const,
+    retention: 90,
+    weights: "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+    isFuzzEnabled: true,
+    learningSteps: [] as Array<[number, string]>,
+    relearningSteps: [] as Array<[number, string]>,
+    maximumInterval: 36500,
+  };
+}
+
 describe("createFSRSAlgorithm", () => {
   it("returns a working fsrs instance from the default algorithm", () => {
     const instance = createFSRSAlgorithm(DEFAULT_FSRS_ALGORITHM);
@@ -125,31 +137,150 @@ describe("algorithmFSRSValidation", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects retention below 70", () => {
-    const result = algorithmFSRSValidation.safeParse({
-      ...DEFAULT_FSRS_ALGORITHM,
-      retention: 50,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects retention above 99", () => {
-    const result = algorithmFSRSValidation.safeParse({
-      ...DEFAULT_FSRS_ALGORITHM,
-      retention: 100,
-    });
-    expect(result.success).toBe(false);
+  it("accepts the canonical valid payload", () => {
+    const result = algorithmFSRSValidation.safeParse(validPayload());
+    expect(result.success).toBe(true);
   });
 
   it("accepts retention at boundaries", () => {
-    expect(algorithmFSRSValidation.safeParse({ ...DEFAULT_FSRS_ALGORITHM, retention: 70 }).success).toBe(true);
-    expect(algorithmFSRSValidation.safeParse({ ...DEFAULT_FSRS_ALGORITHM, retention: 99 }).success).toBe(true);
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), retention: 70 }).success).toBe(true);
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), retention: 99 }).success).toBe(true);
+  });
+
+  it("accepts exactly 21 weights", () => {
+    const result = algorithmFSRSValidation.safeParse({
+      ...validPayload(),
+      weights: "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts weights with spaces", () => {
+    const result = algorithmFSRSValidation.safeParse({
+      ...validPayload(),
+      weights:
+        "0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it.each(["s", "m", "h", "d"])("accepts learning step unit %s", (unit) => {
+    const result = algorithmFSRSValidation.safeParse({
+      ...validPayload(),
+      learningSteps: [[10, unit]],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts empty learning and relearning step arrays", () => {
+    const result = algorithmFSRSValidation.safeParse(validPayload());
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts valid relearning steps", () => {
+    const result = algorithmFSRSValidation.safeParse({
+      ...validPayload(),
+      relearningSteps: [
+        [10, "m"],
+        [1, "d"],
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts maximum interval at minimum and large values", () => {
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), maximumInterval: 1 }).success).toBe(true);
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), maximumInterval: 365000 }).success).toBe(true);
+  });
+
+  it("accepts isFuzzEnabled true and false", () => {
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), isFuzzEnabled: true }).success).toBe(true);
+    expect(algorithmFSRSValidation.safeParse({ ...validPayload(), isFuzzEnabled: false }).success).toBe(true);
+  });
+
+  it.each([
+    {
+      name: "retention below minimum",
+      payload: { ...validPayload(), retention: 69.9 },
+      code: "validation.algorithm.fsrs.retention",
+    },
+    {
+      name: "retention above maximum",
+      payload: { ...validPayload(), retention: 99.1 },
+      code: "validation.algorithm.fsrs.retention",
+    },
+    {
+      name: "learning step zero amount",
+      payload: { ...validPayload(), learningSteps: [[0, "m"]] },
+      code: "validation.algorithm.fsrs.learning-steps.amount",
+    },
+    {
+      name: "learning step negative amount",
+      payload: { ...validPayload(), learningSteps: [[-1, "m"]] },
+      code: "validation.algorithm.fsrs.learning-steps.amount",
+    },
+    {
+      name: "learning step invalid unit",
+      payload: { ...validPayload(), learningSteps: [[10, "x"]] },
+      code: "validation.algorithm.fsrs.learning-steps.unit",
+    },
+    {
+      name: "relearning step zero amount",
+      payload: { ...validPayload(), relearningSteps: [[0, "m"]] },
+      code: "validation.algorithm.fsrs.relearning-steps.amount",
+    },
+    {
+      name: "relearning step invalid unit",
+      payload: { ...validPayload(), relearningSteps: [[10, "week"]] },
+      code: "validation.algorithm.fsrs.relearning-steps.unit",
+    },
+    {
+      name: "maximum interval zero",
+      payload: { ...validPayload(), maximumInterval: 0 },
+      code: "validation.algorithm.fsrs.maximum-interval",
+    },
+    {
+      name: "maximum interval negative",
+      payload: { ...validPayload(), maximumInterval: -1 },
+      code: "validation.algorithm.fsrs.maximum-interval",
+    },
+    {
+      name: "weights too few values",
+      payload: { ...validPayload(), weights: "0.5,0.5,0.5" },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
+      name: "weights too many values",
+      payload: {
+        ...validPayload(),
+        weights: "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
+      name: "weights non-numeric",
+      payload: {
+        ...validPayload(),
+        weights: "0.5,invalid,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
+      name: "weights empty string",
+      payload: { ...validPayload(), weights: "" },
+      code: "validation.algorithm.fsrs.weights",
+    },
+  ])("rejects $name with $code", ({ payload, code }) => {
+    const result = algorithmFSRSValidation.safeParse(payload);
+    expect(result.success).toBe(false);
+    const issues = result.success ? [] : result.error.issues;
+    expect(issues.some((issue) => issue.message === code)).toBe(true);
   });
 
   it("rejects non-literal type field", () => {
     const result = algorithmFSRSValidation.safeParse({
       ...DEFAULT_FSRS_ALGORITHM,
-      type: "sm2" as const,
+      type: "sm2",
     });
     expect(result.success).toBe(false);
   });
@@ -158,14 +289,6 @@ describe("algorithmFSRSValidation", () => {
     const result = algorithmFSRSValidation.safeParse({
       ...DEFAULT_FSRS_ALGORITHM,
       isFuzzEnabled: "yes",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid learning step units", () => {
-    const result = algorithmFSRSValidation.safeParse({
-      ...DEFAULT_FSRS_ALGORITHM,
-      learningSteps: [[1, "w"]],
     });
     expect(result.success).toBe(false);
   });
