@@ -1,3 +1,4 @@
+use koloda_core::app::error::error_codes;
 use koloda_core::app::secrets::get_secret_store;
 use koloda_core::domain::ai::AISecrets;
 use koloda_core::repo::ai;
@@ -6,7 +7,7 @@ use std::sync::Arc;
 use crate::common::test_db;
 
 mod test_store {
-    use koloda_core::app::error::AppError;
+    use koloda_core::app::error::{error_codes, AppError};
     use koloda_core::app::secrets::{set_test_secret_store, SecretStore};
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex};
@@ -51,7 +52,10 @@ mod test_store {
 
     impl SecretStore for FailingGetSecretStore {
         fn get(&self, _key: &str) -> Result<Option<String>, AppError> {
-            Err(AppError::new("keyring", Some("simulated keyring failure".to_string())))
+            Err(AppError::new(
+                error_codes::KEYRING,
+                Some("simulated keyring failure".to_string()),
+            ))
         }
         fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
             Ok(())
@@ -81,7 +85,7 @@ mod test_store {
         }
         fn set(&self, _key: &str, _value: &str) -> Result<(), AppError> {
             Err(AppError::new(
-                "keyring",
+                error_codes::KEYRING,
                 Some("simulated keyring set failure".to_string()),
             ))
         }
@@ -118,7 +122,7 @@ mod test_store {
         }
         fn remove(&self, _key: &str) -> Result<(), AppError> {
             Err(AppError::new(
-                "keyring",
+                error_codes::KEYRING,
                 Some("simulated keyring remove failure".to_string()),
             ))
         }
@@ -464,7 +468,11 @@ fn get_ai_profiles_propagates_keyring_error_instead_of_swallowing_it() {
     let result = ai::get_ai_profiles(&db);
 
     let err = result.expect_err("get_ai_profiles must propagate keyring errors, not swallow as None");
-    assert_eq!(err.code, "keyring", "the keyring error code must be preserved");
+    assert_eq!(
+        err.code,
+        error_codes::KEYRING,
+        "the keyring error code must be preserved"
+    );
 
     test_store::teardown(guard);
 }
@@ -483,7 +491,7 @@ fn add_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         None,
     )
     .expect_err("add must fail when keyring set fails");
-    assert_eq!(err.code, "keyring");
+    assert_eq!(err.code, error_codes::KEYRING);
 
     let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
     assert!(profiles.is_empty(), "failed add must not leave a profile in settings");
@@ -518,7 +526,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_set_fails() {
         None,
     )
     .expect_err("update must fail when keyring set fails");
-    assert_eq!(err.code, "keyring");
+    assert_eq!(err.code, error_codes::KEYRING);
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = profiles
@@ -567,7 +575,7 @@ fn update_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
         None,
     )
     .expect_err("update must fail when keyring remove fails");
-    assert_eq!(err.code, "keyring");
+    assert_eq!(err.code, error_codes::KEYRING);
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = profiles
@@ -690,7 +698,7 @@ fn remove_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     test_store::replace_store(test_store::FailingRemoveSecretStore::new(Arc::clone(&data)).into_arc());
 
     let err = ai::remove_ai_profile(&db, &added.id).expect_err("remove must fail when keyring remove fails");
-    assert_eq!(err.code, "keyring");
+    assert_eq!(err.code, error_codes::KEYRING);
 
     let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
     let retrieved = profiles

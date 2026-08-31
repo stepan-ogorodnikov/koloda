@@ -1,4 +1,4 @@
-use crate::app::error::AppError;
+use crate::app::error::{error_codes, AppError};
 use std::sync::{Arc, LazyLock};
 
 #[cfg(debug_assertions)]
@@ -21,7 +21,10 @@ static TEST_SECRET_STORE: LazyLock<RwLock<Option<Arc<dyn SecretStore>>>> = LazyL
 
 #[cfg(debug_assertions)]
 fn test_store_lock_poisoned() -> AppError {
-    AppError::new("secret-store", Some("Test secret store lock poisoned".to_string()))
+    AppError::new(
+        error_codes::SECRET_STORE,
+        Some("Test secret store lock poisoned".to_string()),
+    )
 }
 
 #[cfg(debug_assertions)]
@@ -76,46 +79,58 @@ impl KeyringSecretStore {
     fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
         self.cache
             .read()
-            .map_err(|_poisoned| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
+            .map_err(|_poisoned| AppError::new(error_codes::KEYRING, Some("Secret cache lock poisoned".to_string())))
     }
 
     fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
         self.cache
             .write()
-            .map_err(|_poisoned| AppError::new("keyring", Some("Secret cache lock poisoned".to_string())))
+            .map_err(|_poisoned| AppError::new(error_codes::KEYRING, Some("Secret cache lock poisoned".to_string())))
     }
 
     fn get_from_keyring(&self, key: &str) -> Result<Option<String>, AppError> {
-        let entry = keyring::Entry::new(self.service, key)
-            .map_err(|e| AppError::new("keyring", Some(format!("Failed to create keyring entry: {}", e))))?;
+        let entry = keyring::Entry::new(self.service, key).map_err(|e| {
+            AppError::new(
+                error_codes::KEYRING,
+                Some(format!("Failed to create keyring entry: {}", e)),
+            )
+        })?;
 
         match entry.get_password() {
             Ok(value) => Ok(Some(value)),
             Err(keyring::Error::NoEntry) => Ok(None),
             Err(e) => Err(AppError::new(
-                "keyring",
+                error_codes::KEYRING,
                 Some(format!("Failed to retrieve secret: {}", e)),
             )),
         }
     }
 
     fn set_to_keyring(&self, key: &str, value: &str) -> Result<(), AppError> {
-        let entry = keyring::Entry::new(self.service, key)
-            .map_err(|e| AppError::new("keyring", Some(format!("Failed to create keyring entry: {}", e))))?;
+        let entry = keyring::Entry::new(self.service, key).map_err(|e| {
+            AppError::new(
+                error_codes::KEYRING,
+                Some(format!("Failed to create keyring entry: {}", e)),
+            )
+        })?;
 
         entry
             .set_password(value)
-            .map_err(|e| AppError::new("keyring", Some(format!("Failed to store secret: {}", e))))
+            .map_err(|e| AppError::new(error_codes::KEYRING, Some(format!("Failed to store secret: {}", e))))
     }
 
     fn remove_from_keyring(&self, key: &str) -> Result<(), AppError> {
-        let entry = keyring::Entry::new(self.service, key)
-            .map_err(|e| AppError::new("keyring", Some(format!("Failed to create keyring entry: {}", e))))?;
+        let entry = keyring::Entry::new(self.service, key).map_err(|e| {
+            AppError::new(
+                error_codes::KEYRING,
+                Some(format!("Failed to create keyring entry: {}", e)),
+            )
+        })?;
 
         match entry.delete_credential() {
             Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
             Err(e) => Err(AppError::new(
-                "keyring",
+                error_codes::KEYRING,
                 Some(format!("Failed to delete secret: {}", e)),
             )),
         }
@@ -160,7 +175,7 @@ impl SecretStore for KeyringSecretStore {
 #[cfg(target_os = "windows")]
 mod windows_store {
     use super::SecretStore;
-    use crate::app::error::AppError;
+    use crate::app::error::{error_codes, AppError};
     use std::collections::HashMap;
     use std::ffi::OsStr;
     use std::os::windows::ffi::OsStrExt;
@@ -188,13 +203,19 @@ mod windows_store {
 
         fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
             self.cache.read().map_err(|_poisoned| {
-                AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string()))
+                AppError::new(
+                    error_codes::WINDOWS_CREDENTIALS,
+                    Some("Secret cache lock poisoned".to_string()),
+                )
             })
         }
 
         fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
             self.cache.write().map_err(|_poisoned| {
-                AppError::new("windows-credentials", Some("Secret cache lock poisoned".to_string()))
+                AppError::new(
+                    error_codes::WINDOWS_CREDENTIALS,
+                    Some("Secret cache lock poisoned".to_string()),
+                )
             })
         }
 
@@ -215,7 +236,7 @@ mod windows_store {
                 return match os_error.raw_os_error() {
                     Some(ERROR_NOT_FOUND) => Ok(None),
                     _ => Err(AppError::new(
-                        "windows-credentials",
+                        error_codes::WINDOWS_CREDENTIALS,
                         Some(format!("Failed to read credential '{}': {}", key, os_error)),
                     )),
                 };
@@ -223,7 +244,7 @@ mod windows_store {
 
             if cred_ptr.is_null() {
                 return Err(AppError::new(
-                    "windows-credentials",
+                    error_codes::WINDOWS_CREDENTIALS,
                     Some(format!("Credential API returned null pointer for key '{}'", key)),
                 ));
             }
@@ -235,7 +256,7 @@ mod windows_store {
                 // SAFETY: `cred_ptr` was allocated by CredReadW and must be freed with CredFree.
                 unsafe { CredFree(cred_ptr as *mut _) };
                 return Err(AppError::new(
-                    "windows-credentials",
+                    error_codes::WINDOWS_CREDENTIALS,
                     Some(format!(
                         "Credential API returned empty blob pointer for non-empty key '{}'",
                         key
@@ -253,7 +274,7 @@ mod windows_store {
 
             let value_result = String::from_utf8(blob_bytes).map_err(|e| {
                 AppError::new(
-                    "windows-credentials",
+                    error_codes::WINDOWS_CREDENTIALS,
                     Some(format!("Stored credential for '{}' is not valid UTF-8: {}", key, e)),
                 )
             });
@@ -287,7 +308,7 @@ mod windows_store {
             if result == 0 {
                 let os_error = std::io::Error::last_os_error();
                 return Err(AppError::new(
-                    "windows-credentials",
+                    error_codes::WINDOWS_CREDENTIALS,
                     Some(format!("Failed to write credential '{}': {}", key, os_error)),
                 ));
             }
@@ -305,7 +326,7 @@ mod windows_store {
                 return match os_error.raw_os_error() {
                     Some(ERROR_NOT_FOUND) => Ok(()),
                     _ => Err(AppError::new(
-                        "windows-credentials",
+                        error_codes::WINDOWS_CREDENTIALS,
                         Some(format!("Failed to delete credential '{}': {}", key, os_error)),
                     )),
                 };

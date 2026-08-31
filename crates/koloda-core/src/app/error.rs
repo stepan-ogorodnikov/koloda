@@ -93,6 +93,10 @@ pub mod error_codes {
     pub const VALIDATION_LESSONS_AMOUNTS_NEGATIVE: &str = "validation.lessons.amounts.negative";
 
     pub const VALIDATION_SEED_LEARNING_SETTINGS: &str = "validation.seed.learning-settings";
+
+    pub const KEYRING: &str = "keyring";
+    pub const SECRET_STORE: &str = "secret-store";
+    pub const WINDOWS_CREDENTIALS: &str = "windows-credentials";
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
