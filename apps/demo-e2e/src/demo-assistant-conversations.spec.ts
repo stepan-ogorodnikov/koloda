@@ -5,6 +5,7 @@ import {
   conversationLog,
   createDeckAndOpenAssistant,
   getConversationIdFromUrl,
+  openAssistantWithDeck,
   sendAssistantMessage,
   setupDemo,
   setupPageDefaults,
@@ -427,4 +428,23 @@ test("restores a finished run with its success status after a plain reload", asy
   } finally {
     await mock.dispose();
   }
+});
+
+test("recovers when the stored active conversation id has no row", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  await setupDemo(page);
+  // In production the pointer outlives its row (row deleted elsewhere, DB
+  // reset). The init script re-seeds it on every load, so the /ai navigation
+  // below boots with a stale activeConversationId.
+  await page.addInitScript(() => window.localStorage.setItem("activeConversationId", "e2e-missing-row"));
+
+  await openAssistantWithDeck(page);
+
+  // The route picked up the stale pointer instead of creating a conversation…
+  await expect(page).toHaveURL(/conversationId=e2e-missing-row($|&)/);
+  // …and restoring the missing row lands on an editable fresh conversation
+  // instead of staying on the restoring state forever.
+  await expect(page.getByRole("heading", { name: "Untitled conversation" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
 });

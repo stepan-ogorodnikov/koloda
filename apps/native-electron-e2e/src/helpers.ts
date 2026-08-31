@@ -435,12 +435,6 @@ export async function openAssistantWithConversation(page: Page, conversationId: 
 }
 
 export async function openAssistantWithDeck(page: Page) {
-  // WHY: the stored active id points at the auto-created conversation, which is
-  // persisted only once it has content — without dropping it, `/ai` restores
-  // that missing document and hangs at Loading instead of creating a fresh
-  // conversation. The demo suite gets this for free from its addInitScript
-  // localStorage.clear on every navigation.
-  await page.evaluate(() => window.localStorage.removeItem("activeConversationId"));
   const origin = new URL(page.url()).origin;
   await page.goto(`${origin}/ai`);
   await expect(page).toHaveURL(/\/ai\?conversationId=/);

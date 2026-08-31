@@ -41,6 +41,7 @@ export function useConversationRestore({
   const restoredIdRef = useRef<string | null>(null);
   const { getConversationQuery } = useAtomValue(queriesAtom);
   const blockedStore = useAtomValue(blockedConversationRestoreAtom);
+  const conversations = useAtomValue(conversationsAtom);
   const setBlockedConversationRestore = useSetAtom(blockedConversationRestoreAtom);
   const {
     data: conversationData,
@@ -129,7 +130,11 @@ export function useConversationRestore({
   // the effect writes blocked state, which would flash the editable
   // chat shell for an unreadable row. Skip restoring when the id is
   // already in the store (new/clone) so the prompt panel is not remounted.
-  const hasLiveState = !!conversationId && !!store.get(conversationsAtom)[conversationId];
+  // This must stay a subscribed read (`useAtomValue`), not `store.get`:
+  // the missing-row path upserts a fresh conversation without touching any
+  // other atom this component observes, and a snapshot read would leave the
+  // row painted on its restoring state forever.
+  const hasLiveState = !!conversationId && !!conversations[conversationId];
   const hasBlocked = !!conversationId && !!blockedStore[conversationId];
   return {
     isRestoring:

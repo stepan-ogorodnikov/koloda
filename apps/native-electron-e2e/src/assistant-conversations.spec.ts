@@ -514,3 +514,24 @@ test("restores a finished run with its success status after a plain reload", asy
     await mock.dispose();
   }
 });
+
+test("recovers when the stored active conversation id has no row", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  await setupApp(page);
+  // In production the pointer outlives its row (row deleted elsewhere, DB
+  // reset). Seeding it before the reload makes the /ai navigation below boot
+  // with a stale activeConversationId.
+  await page.evaluate(() => window.localStorage.setItem("activeConversationId", "e2e-missing-row"));
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByText("Learned today", { exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "Assistant", exact: true }).click();
+
+  // The route picked up the stale pointer instead of creating a conversation…
+  await expect(page).toHaveURL(/\/ai\?conversationId=e2e-missing-row($|&)/);
+  // …and restoring the missing row lands on an editable fresh conversation
+  // instead of staying on the restoring state forever.
+  await expect(page.getByRole("heading", { name: "Untitled conversation" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+});
