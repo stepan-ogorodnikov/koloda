@@ -98,6 +98,10 @@ async function runChatStream(
  * Provider-specific chat streaming
  */
 
+export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { openrouter: { reasoning: { effort: reasoningEffort } } } : undefined;
+}
+
 export function streamChatWithOpenRouter(
   request: ChatStreamRequest,
   onChunk: (chunk: ChatStreamChunk) => void,
@@ -107,7 +111,13 @@ export function streamChatWithOpenRouter(
   return wrapAIError(async () => {
     const { createOpenRouter } = await import("@openrouter/ai-sdk-provider");
     const openrouter = createOpenRouter({ apiKey });
-    return runChatStream((modelId) => openrouter(modelId), request, onChunk, abortSignal);
+    return runChatStream(
+      (modelId) => openrouter(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      openRouterProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 
