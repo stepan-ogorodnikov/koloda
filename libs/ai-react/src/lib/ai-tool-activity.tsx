@@ -28,9 +28,7 @@ export type AIToolCallRecord = {
   error?: unknown;
 };
 
-export type AIToolActivityProps = {
-  calls: readonly AIToolCallRecord[];
-};
+export type AIToolActivityProps = { calls: readonly AIToolCallRecord[] };
 
 export function AIToolActivity({ calls }: AIToolActivityProps) {
   const { _ } = useLingui();
@@ -45,9 +43,7 @@ export function AIToolActivity({ calls }: AIToolActivityProps) {
   );
 }
 
-type ToolActivityRowProps = {
-  call: AIToolCallRecord;
-};
+type ToolActivityRowProps = { call: AIToolCallRecord };
 
 function ToolActivityRow({ call }: ToolActivityRowProps) {
   const { _ } = useLingui();
@@ -62,7 +58,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   return (
     <li className="fg-level-4">
       <details>
-        <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+        <summary className="hover:fg-level-2 animate-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
           <span
             className={toolActivityHeadline({
               isError: call.status === "error",
@@ -89,9 +85,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   );
 }
 
-type ToolCallStatusIconProps = {
-  status: AIToolCallRecord["status"];
-};
+type ToolCallStatusIconProps = { status: AIToolCallRecord["status"] };
 
 function ToolCallStatusIcon({ status }: ToolCallStatusIconProps) {
   const { _ } = useLingui();
