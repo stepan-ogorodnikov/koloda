@@ -96,10 +96,23 @@ async function runChatStream(
 
 /*
  * Provider-specific chat streaming
+ *
+ * WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
+ * into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
+ * reasoningEffort). A shared `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
+ * Ollama / LM Studio omit a mapping until their catalogs expose levels.
  */
 
 export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { openrouter: { reasoning: { effort: reasoningEffort } } } : undefined;
+}
+
+export function opencodeGoProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { "opencode-go": { reasoningEffort } } : undefined;
+}
+
+export function opencodeZenProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { "opencode-zen": { reasoningEffort } } : undefined;
 }
 
 export function streamChatWithOpenRouter(
@@ -169,10 +182,13 @@ export function streamChatWithOpencodeGo(
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeGo = createOpenAICompatible({ name: "opencode-go", baseURL: OPENCODE_GO_BASE_URL, apiKey });
-    const providerOptions = request.input.reasoningEffort
-      ? { "opencode-go": { reasoningEffort: request.input.reasoningEffort } }
-      : undefined;
-    return runChatStream((modelId) => opencodeGo(modelId), request, onChunk, abortSignal, providerOptions);
+    return runChatStream(
+      (modelId) => opencodeGo(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      opencodeGoProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 
@@ -185,9 +201,12 @@ export function streamChatWithOpencodeZen(
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const opencodeZen = createOpenAICompatible({ name: "opencode-zen", baseURL: OPENCODE_ZEN_BASE_URL, apiKey });
-    const providerOptions = request.input.reasoningEffort
-      ? { "opencode-zen": { reasoningEffort: request.input.reasoningEffort } }
-      : undefined;
-    return runChatStream((modelId) => opencodeZen(modelId), request, onChunk, abortSignal, providerOptions);
+    return runChatStream(
+      (modelId) => opencodeZen(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      opencodeZenProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
