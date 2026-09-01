@@ -1,4 +1,4 @@
-import { AlertCircleIcon, Wrench01Icon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, Wrench01Icon, ExpandIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Dialog } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
@@ -62,8 +62,11 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         <Button
           variants={{
             style: "ghost",
-            size: "none",
-            class: "justify-start p-0 font-normal whitespace-normal hover:bg-transparent fg-level-4 hover:fg-level-2",
+            class: [
+              "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
+              "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
+              "fg-level-3 hover:fg-level-2 data-pressed:fg-level-2",
+            ],
           }}
         >
           <span
@@ -73,7 +76,10 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
             })}
           >
             <ToolCallStatusIcon status={call.status} />
-            <span>{headline}</span>
+            <div className="flex flex-row items-center gap-3">
+              <span className="font-bold">{displayName}</span>
+              <span>{summary}</span>
+            </div>
           </span>
         </Button>
         <Dialog.Popover
