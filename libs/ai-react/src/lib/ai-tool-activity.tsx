@@ -1,6 +1,7 @@
-import { AlertCircleIcon, Wrench01Icon, ExpandIcon } from "@hugeicons/core-free-icons";
+import { AlertCircleIcon, WrenchIcon, InvestigationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Dialog } from "@koloda/ui";
+import type { IconSvgElement } from "@hugeicons/react";
+import { Button, CardsIcon, Dialog } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -75,9 +76,9 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
               isRunning: call.status === "running",
             })}
           >
-            <ToolCallStatusIcon status={call.status} />
+            <ToolCallStatusIcon name={call.name} status={call.status} />
             <div className="flex flex-row items-center gap-3">
-              <span className="font-bold">{displayName}</span>
+              <span className="font-medium">{displayName}</span>
               <span>{summary}</span>
             </div>
           </span>
@@ -107,15 +108,18 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   );
 }
 
-type ToolCallStatusIconProps = { status: AIToolCallRecord["status"] };
+type ToolCallStatusIconProps = {
+  name: string;
+  status: AIToolCallRecord["status"];
+};
 
-function ToolCallStatusIcon({ status }: ToolCallStatusIconProps) {
+function ToolCallStatusIcon({ name, status }: ToolCallStatusIconProps) {
   const { _ } = useLingui();
 
   if (status === "error") {
     return (
       <HugeiconsIcon
-        className="size-5 min-w-5"
+        className="size-6 min-w-6"
         strokeWidth={1.75}
         icon={AlertCircleIcon}
         aria-label={_(msg`ai.chat.tool-activity.failed`)}
@@ -125,13 +129,20 @@ function ToolCallStatusIcon({ status }: ToolCallStatusIconProps) {
 
   return (
     <HugeiconsIcon
-      className="size-5 min-w-5"
-      strokeWidth={1.5}
-      icon={Wrench01Icon}
+      className="size-6 min-w-6"
+      strokeWidth={1.75}
+      icon={toolCallIcon(name)}
       aria-hidden={status === "running" ? undefined : true}
       aria-label={status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
     />
   );
+}
+
+function toolCallIcon(name: string): IconSvgElement {
+  if (name === "list_decks") return InvestigationIcon;
+  if (name === "get_deck_cards" || name === "propose_cards") return CardsIcon;
+  // WHY: unknown protocol ids still render; they keep the generic search glyph.
+  return WrenchIcon;
 }
 
 type ToolPayloadBlockProps = {

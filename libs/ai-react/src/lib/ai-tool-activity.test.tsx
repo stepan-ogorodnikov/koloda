@@ -42,7 +42,8 @@ describe("AIToolActivity", () => {
       />,
     );
 
-    expect(screen.getByText("ai.chat.tool-activity.list-decks - ai.chat.tool-activity.decks")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.list-decks")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.decks")).toBeTruthy();
     expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
     expect(document.querySelector("svg")).not.toBeNull();
@@ -63,7 +64,8 @@ describe("AIToolActivity", () => {
       />,
     );
 
-    expect(screen.getByText("ai.chat.tool-activity.get-deck-cards - ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.get-deck-cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
   });
 
   it("renders a propose_cards success row from the cards array length", () => {
@@ -81,10 +83,11 @@ describe("AIToolActivity", () => {
       />,
     );
 
-    expect(screen.getByText("ai.chat.tool-activity.propose-cards - ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.propose-cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
   });
 
-  it("shimmers the wrench row while a call is running", () => {
+  it("shimmers the tool row while a call is running", () => {
     const { container } = render(
       <AIToolActivity calls={[call({ id: "c1", name: "list_decks", status: "running", input: {} })]} />,
     );
@@ -102,7 +105,8 @@ describe("AIToolActivity", () => {
     );
 
     expect(screen.getByLabelText("ai.chat.tool-activity.failed")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.list-decks - ai.chat.tool-activity.failed")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.list-decks")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.failed")).toBeTruthy();
   });
 
   it("renders an unknown tool by protocol id", () => {
@@ -131,11 +135,7 @@ describe("AIToolActivity", () => {
 
     expect(document.querySelector("details")).toBeNull();
     expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "ai.chat.tool-activity.get-deck-cards - ai.chat.tool-activity.cards",
-      }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-deck-cards/ }));
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.tool")).toBeTruthy();
     expect(screen.getByText("get_deck_cards")).toBeTruthy();
