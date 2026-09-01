@@ -1,8 +1,9 @@
 /**
  * Structured assistant lifecycle / persistence logs.
  *
- * WHY: Correlate command/event transitions and save retries across
- * conversations without relying on ad-hoc console strings
+ * WHY: Tests correlate command/event transitions and save retries via
+ * `setAssistantStructuredLogger`. The default sink is a no-op so the
+ * app console stays quiet.
  */
 export type AssistantStructuredLog = {
   conversationId: string;
@@ -20,16 +21,7 @@ export type AssistantStructuredLog = {
 
 export type LogAssistantStructured = (entry: AssistantStructuredLog) => void;
 
-// WHY: transitions and saves log on every run event and are noise in a
-// production console. Vite defines `import.meta.env.DEV` in app and test
-// builds, so the default logger is silent outside development; hosts and
-// tests opt in via `setAssistantStructuredLogger`.
-const IS_DEV: boolean = (import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV === true;
-
-export function defaultLogAssistantStructured(entry: AssistantStructuredLog): void {
-  if (!IS_DEV) return;
-  console.info("[assistant.transition]", entry);
-}
+export function defaultLogAssistantStructured(_entry: AssistantStructuredLog): void {}
 
 let logImpl: LogAssistantStructured = defaultLogAssistantStructured;
 

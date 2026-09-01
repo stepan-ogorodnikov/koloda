@@ -39,7 +39,7 @@ export type CreateConversationSaveQueueOptions = {
   debounceMs?: number;
   /** Injected for deterministic backoff tests. Defaults to `Math.random`. */
   random?: () => number;
-  /** Injected for assertions; defaults to structured `[assistant.transition]` logging. */
+  /** Injected for assertions; defaults to the structured logger (silent unless overridden). */
   logSaveFailure?: (entry: SaveFailureLog) => void;
 };
 
