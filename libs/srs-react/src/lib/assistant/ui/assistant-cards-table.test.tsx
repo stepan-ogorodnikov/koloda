@@ -103,17 +103,39 @@ describe("AssistantCardsTable selection", () => {
     expect(selectionStates()).toEqual([true, true]);
   });
 
-  it("clears the whole selection after a successful add so Add stays disabled", async () => {
-    // Post-add state: statuses are no longer idle, so no row is selectable,
-    // yet the rows still sit in the selection map. TanStack v9 deselect keeps
-    // non-selectable rows, so the add callback must clear the whole map —
-    // otherwise hasSelection stays true and a second Add re-adds duplicates.
-    mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" });
+  it("does not select persisted non-idle cards, so Add stays disabled", () => {
+    renderTable([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" });
+
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    expect((screen.getByRole("button", { name: "assistant.add" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("selects only idle rows when restored with mixed statuses", () => {
+    renderTable([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "idle" });
+
+    expect(selectionStates()).toEqual([true]);
+    expect((screen.getByRole("button", { name: "assistant.add" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("clears idle selection after a successful add so Add stays disabled", async () => {
+    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "idle", 1: "idle" }, mutate);
 
     expect(screen.getByTestId("has-selection").textContent).toBe("true");
     fireEvent.click(screen.getByTestId("add"));
 
     await waitFor(() => expect(screen.getByTestId("has-selection").textContent).toBe("false"));
+    expect(mutate).toHaveBeenCalledOnce();
+  });
+
+  it("does not re-add persisted success cards when Add is invoked", async () => {
+    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" }, mutate);
+
+    expect(screen.getByTestId("has-selection").textContent).toBe("false");
+    fireEvent.click(screen.getByTestId("add"));
+
+    await waitFor(() => expect(mutate).not.toHaveBeenCalled());
   });
 });
 
@@ -140,9 +162,18 @@ function SelectionProbe() {
   );
 }
 
-function mountProbe(cards: GeneratedCard[], cardStatuses: Record<number, CardStatus>) {
+function mountProbe(
+  cards: GeneratedCard[],
+  cardStatuses: Record<number, CardStatus>,
+  mutate: () => Promise<{ insertedIds: number[] }> = async () => ({ insertedIds: [] }),
+) {
   const store = createStore();
-  store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+  store.set(
+    queriesAtom as unknown as Parameters<typeof store.set>[0],
+    {
+      addCardsMutation: () => ({ mutationFn: mutate }),
+    } as unknown as Queries,
+  );
   const run = { ...makeRun("r1", "success"), cards, cardStatuses };
   store.set(currentConversationIdAtom, "c1");
   store.set(conversationsAtom, { c1: makeConversation("c1", { runs: { r1: run } }) });

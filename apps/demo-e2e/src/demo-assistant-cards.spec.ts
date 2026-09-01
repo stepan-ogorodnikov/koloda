@@ -140,12 +140,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     // Only idle rows remain selectable, so a cleared selection leaves the
     // select-all header unchecked.
     await expect(selectAll).not.toBeChecked();
-    // The Add button re-disabling after a successful add (ASSISTANT-CARD-GENERATION.md:132-137,
-    // no cards selected) is intentionally not asserted: it currently stays
-    // enabled because TanStack v9's toggleAllRowsSelected(false) keeps the
-    // selection entries of rows whose status is no longer idle, so the hook's
-    // hasSelection never clears. Reported as an app bug — do not pin the
-    // broken state here.
+    await expect(addButton).toBeDisabled();
     await expect(proposalTable(page)).toBeVisible();
 
     // The write-back must hold exactly the selected cards: verify through the

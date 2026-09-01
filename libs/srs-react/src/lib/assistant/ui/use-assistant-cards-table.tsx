@@ -69,7 +69,13 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     getRowId: (_, index) => index.toString(),
     enableRowSelection: (row) => row.original.status === "idle",
     initialState: {
-      rowSelection: Object.fromEntries(cards.map((_, index) => [index.toString(), true])),
+      // Spec: all generated (idle) cards start selected. Restored success /
+      // error / pending rows are not selectable and must not occupy the
+      // selection map — TanStack v9 still reports them as selected, which
+      // would enable Add and re-insert already persisted cards.
+      rowSelection: Object.fromEntries(
+        cards.flatMap((_, index) => ((cardStatuses[index] ?? "idle") === "idle" ? [[index.toString(), true]] : [])),
+      ),
     },
     defaultColumn: {
       minSize: 8,
@@ -96,7 +102,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   }, [cards.length, table]);
 
   const selectedRowModel = table.getSelectedRowModel();
-  const selectedIndices = selectedRowModel.rows.map((row) => row.index);
+  const selectedIndices = selectedRowModel.rows.filter((row) => row.original.status === "idle").map((row) => row.index);
   const hasSelection = selectedIndices.length > 0;
   const isAdding = mutation.isPending;
 
