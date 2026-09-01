@@ -5,12 +5,18 @@ import { OPENCODE_ZEN_BASE_URL } from "../provider-catalog";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
 import { isPresentApiKey } from "../provider-secrets";
+import { loadModelsDevCatalog, overlayReasoningFromModelsDev } from "./models-dev";
 import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 
 export const OPENCODE_ZEN_MODELS_URL = `${OPENCODE_ZEN_BASE_URL}/models`;
 
 export async function fetchOpencodeZenModels(apiKey?: string): Promise<AIModel[]> {
-  return fetchOpenAICompatibleModelsDetailed(`${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`, apiKey);
+  const modelsUrl = `${OPENCODE_ZEN_BASE_URL.replace(/\/$/, "")}/models`;
+  const [models, catalog] = await Promise.all([
+    fetchOpenAICompatibleModelsDetailed(modelsUrl, apiKey),
+    loadModelsDevCatalog(),
+  ]);
+  return overlayReasoningFromModelsDev(models, "opencode", catalog);
 }
 
 function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "opencodeZen" }>): AIGenerationClient {

@@ -1,0 +1,106 @@
+import type { AIModel } from "../models";
+import { resolveReasoningLevelsForModel } from "./openai-compatible";
+
+export const MODELS_DEV_API_URL = "https://models.dev/api.json";
+
+const MODELS_DEV_HEADERS = {
+  Accept: "application/json",
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+};
+
+type ReasoningLevels = {
+  levels: Array<{ effort: string; description: string }>;
+  default: string;
+};
+
+let cache: Record<string, unknown> | null = null;
+let inflight: Promise<Record<string, unknown> | null> | null = null;
+
+export function resetModelsDevCache(): void {
+  cache = null;
+  inflight = null;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function effortLevelsFromCatalogRow(row: unknown): ReasoningLevels | undefined {
+  if (!isPlainObject(row) || !Array.isArray(row.reasoning_options)) return undefined;
+
+  const effort = row.reasoning_options.find(
+    (option): option is Record<string, unknown> => isPlainObject(option) && option.type === "effort",
+  );
+  if (!effort || !Array.isArray(effort.values)) return undefined;
+
+  const values = effort.values.filter((value): value is string => typeof value === "string" && value.length > 0);
+  if (values.length === 0) return undefined;
+
+  const defaultCandidate = [effort.default, effort.default_effort, row.default_effort].find(
+    (value): value is string => typeof value === "string" && values.includes(value),
+  );
+
+  return {
+    levels: values.map((level) => ({ effort: level, description: "" })),
+    default: defaultCandidate ?? values[0],
+  };
+}
+
+function providerModelMap(catalog: unknown, providerKey: string): Record<string, unknown> | null {
+  if (!isPlainObject(catalog)) return null;
+  const provider = catalog[providerKey];
+  if (!isPlainObject(provider) || !isPlainObject(provider.models)) return null;
+  return provider.models;
+}
+
+/** Overlay catalog `effort` values by exact model id; prefix table only when the id is absent or the catalog is unavailable. */
+export function overlayReasoningFromModelsDev(
+  models: AIModel[],
+  providerKey: string,
+  catalog: unknown | null,
+): AIModel[] {
+  const modelMap = providerModelMap(catalog, providerKey);
+
+  return models.map((model) => {
+    let reasoning: ReasoningLevels | undefined;
+    if (!modelMap) {
+      reasoning = resolveReasoningLevelsForModel(model.id);
+    } else if (Object.hasOwn(modelMap, model.id)) {
+      reasoning = effortLevelsFromCatalogRow(modelMap[model.id]);
+    } else {
+      reasoning = resolveReasoningLevelsForModel(model.id);
+    }
+
+    return {
+      ...model,
+      supported_reasoning_levels: model.supported_reasoning_levels ?? reasoning?.levels,
+      default_reasoning_level: model.default_reasoning_level ?? reasoning?.default,
+    };
+  });
+}
+
+async function fetchModelsDevCatalog(): Promise<Record<string, unknown> | null> {
+  try {
+    const response = await fetch(MODELS_DEV_API_URL, { headers: MODELS_DEV_HEADERS });
+    if (!response.ok) return cache;
+    const data: unknown = await response.json();
+    if (!isPlainObject(data)) return cache;
+    cache = data;
+    return cache;
+  } catch {
+    return cache;
+  }
+}
+
+export async function loadModelsDevCatalog(): Promise<Record<string, unknown> | null> {
+  // WHY: api.json is large and changes slowly; reuse a process-lifetime success
+  // instead of downloading it on every OpenCode model list.
+  if (cache) return cache;
+  if (!inflight) {
+    inflight = fetchModelsDevCatalog().finally(() => {
+      inflight = null;
+    });
+  }
+  return inflight;
+}

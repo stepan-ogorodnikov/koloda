@@ -5,12 +5,18 @@ import { OPENCODE_GO_BASE_URL } from "../provider-catalog";
 import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
 import { isPresentApiKey } from "../provider-secrets";
+import { loadModelsDevCatalog, overlayReasoningFromModelsDev } from "./models-dev";
 import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 
 export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
 
 export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]> {
-  return fetchOpenAICompatibleModelsDetailed(`${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`, apiKey);
+  const modelsUrl = `${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`;
+  const [models, catalog] = await Promise.all([
+    fetchOpenAICompatibleModelsDetailed(modelsUrl, apiKey),
+    loadModelsDevCatalog(),
+  ]);
+  return overlayReasoningFromModelsDev(models, "opencode-go", catalog);
 }
 
 function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencodeGo" }>): AIGenerationClient {

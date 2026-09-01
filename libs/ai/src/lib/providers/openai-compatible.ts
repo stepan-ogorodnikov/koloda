@@ -72,10 +72,7 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/**
- * OpenAI-compatible models endpoint with full metadata + hardcoded reasoning
- * for deepseek-* / mimo-* (Opencode Go / Zen).
- */
+/** OpenAI-compatible models endpoint with gateway metadata only. */
 export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, apiKey?: string): Promise<AIModel[]> {
   const response = await throwForAIResponse(
     await fetch(modelsUrl, {
@@ -90,19 +87,16 @@ export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, api
   if (!Array.isArray(data.data)) throw new AIError("ai.invalid-response");
 
   return data.data
-    .map((model) => {
-      const reasoning = resolveReasoningLevelsForModel(model.id);
-      return {
-        id: model.id,
-        name: model.name ?? model.id,
-        description: model.description,
-        context_length: model.context_length ?? model.context_window ?? 0,
-        top_provider: model.top_provider,
-        architecture: model.architecture,
-        supported_parameters: model.supported_parameters,
-        supported_reasoning_levels: model.supported_reasoning_levels ?? reasoning?.levels,
-        default_reasoning_level: model.default_reasoning_level ?? reasoning?.default,
-      };
-    })
+    .map((model) => ({
+      id: model.id,
+      name: model.name ?? model.id,
+      description: model.description,
+      context_length: model.context_length ?? model.context_window ?? 0,
+      top_provider: model.top_provider,
+      architecture: model.architecture,
+      supported_parameters: model.supported_parameters,
+      supported_reasoning_levels: model.supported_reasoning_levels,
+      default_reasoning_level: model.default_reasoning_level,
+    }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }
