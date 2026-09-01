@@ -33,6 +33,32 @@ describe("fetchOllamaCloudModels", () => {
     });
     expect(listMock).toHaveBeenCalledTimes(1);
   });
+
+  it("advertises thinking levels from tags capabilities and omits them otherwise", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [
+        { model: "gpt-oss:120b", name: "gpt-oss:120b", capabilities: ["thinking"] },
+        { model: "llama3.1", name: "llama3.1" },
+      ],
+    });
+
+    const models = await fetchOllamaCloudModels("secret-key");
+
+    expect(models).toEqual([
+      {
+        id: "gpt-oss:120b",
+        name: "gpt-oss:120b",
+        context_length: 0,
+        supported_reasoning_levels: [
+          { effort: "low", description: "" },
+          { effort: "medium", description: "" },
+          { effort: "high", description: "" },
+        ],
+        default_reasoning_level: "medium",
+      },
+      { id: "llama3.1", name: "llama3.1", context_length: 0 },
+    ]);
+  });
 });
 
 describe("ollamaCloudProviderEntry", () => {

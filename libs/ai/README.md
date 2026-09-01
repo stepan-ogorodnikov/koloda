@@ -22,7 +22,7 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Prompts: `prompts.ts` — default chat prompt template and `GENERATION_TEMPERATURE`. Field titles come from tools, not the system prompt. `chat-stream.ts` trims the saved (or default) prompt when sending.
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `getConversationName` (48-char truncation) over Vercel AI SDK `UIMessage`. No state.
 - Errors: `error.ts` — `AIError`, `throwForAIResponse` (HTTP → `AIError`), `wrapAIError`.
-- Reasoning levels: `providers/openrouter.ts` (API-provided); OpenCode Zen/Go join models.dev `effort` options by model id (`opencode` / `opencode-go`), with `resolveReasoningLevelsForModel` as prefix fallback when the catalog is unavailable or the id is missing.
+- Reasoning levels: `providers/openrouter.ts` (API-provided); Ollama/Cloud from `/api/tags` `capabilities` including `thinking` (low/medium/high, default medium); OpenCode Zen/Go join models.dev `effort` options by model id (`opencode` / `opencode-go`), with `resolveReasoningLevelsForModel` as prefix fallback when the catalog is unavailable or the id is missing.
 - Reasoning extraction: `model-reasoning-extraction.ts` — `wrapModelWithReasoningExtraction` strips ` thinking`-tagged chain-of-thought from the text stream.
 - Host runtime contract: `runtime.ts` — `AIRuntime` (`listModels` / `chat` by `profileId`). Hosts implement; shared React injects via `aiRuntimeAtom`.
 - Compatibility: `types.ts` re-exports the domain modules above; prefer importing from the specific files.

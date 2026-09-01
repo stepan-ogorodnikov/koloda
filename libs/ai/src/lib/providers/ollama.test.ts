@@ -46,6 +46,44 @@ describe("fetchOllamaModels", () => {
     expect(listMock).toHaveBeenCalledTimes(1);
   });
 
+  it("advertises low/medium/high thinking levels when capabilities include thinking", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [{ model: "gpt-oss:20b", name: "gpt-oss:20b", capabilities: ["thinking"] }],
+    });
+
+    const models = await fetchOllamaModels("http://localhost:11434");
+
+    expect(models).toEqual([
+      {
+        id: "gpt-oss:20b",
+        name: "gpt-oss:20b",
+        context_length: 0,
+        supported_reasoning_levels: [
+          { effort: "low", description: "" },
+          { effort: "medium", description: "" },
+          { effort: "high", description: "" },
+        ],
+        default_reasoning_level: "medium",
+      },
+    ]);
+  });
+
+  it("omits reasoning levels when capabilities is missing or does not include thinking", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [
+        { model: "llama3.1", name: "Llama 3.1" },
+        { model: "qwen2.5", name: "qwen2.5", capabilities: ["completion"] },
+      ],
+    });
+
+    const models = await fetchOllamaModels("http://localhost:11434");
+
+    expect(models).toEqual([
+      { id: "llama3.1", name: "Llama 3.1", context_length: 0 },
+      { id: "qwen2.5", name: "qwen2.5", context_length: 0 },
+    ]);
+  });
+
   it("maps a models response missing the models field to ai.invalid-response", async () => {
     listMock.mockResolvedValueOnce({});
 

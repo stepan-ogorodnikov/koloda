@@ -99,8 +99,8 @@ async function runChatStream(
  *
  * WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
  * into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
- * reasoningEffort). A shared `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
- * Ollama / LM Studio omit a mapping until their catalogs expose levels.
+ * reasoningEffort vs Ollama think). A shared `{ [name]: { reasoningEffort } }` blob would
+ * drop OpenRouter. LM Studio omits a mapping until its catalog exposes levels.
  */
 
 export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
@@ -113,6 +113,10 @@ export function opencodeGoProviderOptions(reasoningEffort: string | undefined): 
 
 export function opencodeZenProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { "opencode-zen": { reasoningEffort } } : undefined;
+}
+
+export function ollamaProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { ollama: { think: reasoningEffort } } : undefined;
 }
 
 export function streamChatWithOpenRouter(
@@ -143,7 +147,13 @@ export function streamChatWithOllama(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: baseUrl, ...(apiKey ? { apiKey } : {}) });
-    return runChatStream((modelId) => ollama(modelId), request, onChunk, abortSignal);
+    return runChatStream(
+      (modelId) => ollama(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      ollamaProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 
@@ -156,7 +166,13 @@ export function streamChatWithOllamaCloud(
   return wrapAIError(async () => {
     const { createOllama } = await import("ai-sdk-ollama");
     const ollama = createOllama({ baseURL: OLLAMA_CLOUD_BASE_URL, apiKey });
-    return runChatStream((modelId) => ollama(modelId), request, onChunk, abortSignal);
+    return runChatStream(
+      (modelId) => ollama(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      ollamaProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 
