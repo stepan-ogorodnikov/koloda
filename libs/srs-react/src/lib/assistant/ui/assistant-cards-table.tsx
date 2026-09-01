@@ -39,7 +39,7 @@ export function AssistantCardsTable({
   });
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 py-3">
       <div className="w-full pb-2 overflow-x-auto">
         <Table.Root variants={{ class: "w-full" }}>
           <Table.Head table={table} />
