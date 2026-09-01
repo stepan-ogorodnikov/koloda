@@ -11,7 +11,7 @@ import { useConversationRestore } from "./use-conversation-restore";
 
 function buildQueries(): Queries {
   return {
-    // The backends resolve null for an id with no row (deleted elsewhere,
+    // WHY: The backends resolve null for an id with no row (deleted elsewhere,
     // stale localStorage pointer, DB reset) — never an error.
     getConversationQuery: (id: string) => ({
       queryKey: queryKeys.conversations.detail(id),
@@ -39,10 +39,12 @@ function createTestWrapper() {
   };
 }
 
-// Renders the hook output only. The probe must NOT subscribe to
+type RestoreProbeProps = { conversationId: string };
+
+// WHY: Renders the hook output only. The probe must NOT subscribe to
 // conversationsAtom itself: the production chat does not, and an extra
 // subscription would schedule the re-render whose absence is the bug.
-function RestoreProbe({ conversationId }: { conversationId: string }) {
+function RestoreProbe({ conversationId }: RestoreProbeProps) {
   const { isRestoring } = useConversationRestore({ conversationId });
   return <div data-testid="restoring">{String(isRestoring)}</div>;
 }

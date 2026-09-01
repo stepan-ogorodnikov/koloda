@@ -434,7 +434,7 @@ test("recovers when the stored active conversation id has no row", async ({ page
   test.setTimeout(60_000);
 
   await setupDemo(page);
-  // In production the pointer outlives its row (row deleted elsewhere, DB
+  // WHY: In production the pointer outlives its row (row deleted elsewhere, DB
   // reset). The init script re-seeds it on every load, so the /ai navigation
   // below boots with a stale activeConversationId.
   await page.addInitScript(() => window.localStorage.setItem("activeConversationId", "e2e-missing-row"));
