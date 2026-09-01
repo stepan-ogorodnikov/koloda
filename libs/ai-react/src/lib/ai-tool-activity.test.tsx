@@ -9,6 +9,15 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
+vi.mock("@koloda/core-react", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    useAppHotkey: () => {},
+    useHotkeysSettings: () => ({ ui: { close: ["Escape"] } }),
+  };
+});
+
 function call(
   overrides: Partial<AIToolCallRecord> & Pick<AIToolCallRecord, "id" | "name" | "status">,
 ): AIToolCallRecord {
@@ -105,7 +114,7 @@ describe("AIToolActivity", () => {
     expect(screen.queryByText("ai.chat.tool-activity.list-decks")).toBeNull();
   });
 
-  it("expands input and output for inspection", () => {
+  it("opens input and output in a popover", async () => {
     render(
       <AIToolActivity
         calls={[
@@ -120,11 +129,14 @@ describe("AIToolActivity", () => {
       />,
     );
 
-    const details = document.querySelector("details");
-    expect(details).not.toBeNull();
-    expect(details!.open).toBe(false);
-    fireEvent.click(screen.getByText("ai.chat.tool-activity.get-deck-cards - ai.chat.tool-activity.cards"));
-    expect(details!.open).toBe(true);
+    expect(document.querySelector("details")).toBeNull();
+    expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "ai.chat.tool-activity.get-deck-cards - ai.chat.tool-activity.cards",
+      }),
+    );
+    expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.tool")).toBeTruthy();
     expect(screen.getByText("get_deck_cards")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.input")).toBeTruthy();

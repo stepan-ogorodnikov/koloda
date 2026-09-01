@@ -1,5 +1,6 @@
 import { AlertCircleIcon, Wrench01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { Button, Dialog } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -57,8 +58,14 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
 
   return (
     <li className="fg-level-4">
-      <details>
-        <summary className="hover:fg-level-2 animate-colors cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+      <Dialog.Root>
+        <Button
+          variants={{
+            style: "ghost",
+            size: "none",
+            class: "justify-start p-0 font-normal whitespace-normal hover:bg-transparent fg-level-4 hover:fg-level-2",
+          }}
+        >
           <span
             className={toolActivityHeadline({
               isError: call.status === "error",
@@ -68,19 +75,28 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
             <ToolCallStatusIcon status={call.status} />
             <span>{headline}</span>
           </span>
-        </summary>
-        <div className="mt-1 ml-7 flex flex-col gap-2">
-          <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
-          {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
-          {outputText ? (
-            <ToolPayloadBlock
-              label={bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)}
-              text={outputText}
-            />
-          ) : null}
-          {errorText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.failed`)} text={errorText} /> : null}
-        </div>
-      </details>
+        </Button>
+        <Dialog.Popover
+          placement="bottom start"
+          variants={{ class: "max-h-96 w-full max-w-[min(46.5rem,calc(100vw-2rem))]" }}
+        >
+          <Dialog.Body aria-label={headline}>
+            <Dialog.Content variants={{ class: "gap-2" }}>
+              <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
+              {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
+              {outputText ? (
+                <ToolPayloadBlock
+                  label={
+                    bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)
+                  }
+                  text={outputText}
+                />
+              ) : null}
+              {errorText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.failed`)} text={errorText} /> : null}
+            </Dialog.Content>
+          </Dialog.Body>
+        </Dialog.Popover>
+      </Dialog.Root>
     </li>
   );
 }
@@ -120,8 +136,8 @@ type ToolPayloadBlockProps = {
 function ToolPayloadBlock({ label, text }: ToolPayloadBlockProps) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs">{label}</span>
-      <pre className="whitespace-pre-wrap break-all text-xs leading-5">{text}</pre>
+      <span className="font-mono">{label}</span>
+      <pre className="whitespace-pre-wrap break-all">{text}</pre>
     </div>
   );
 }

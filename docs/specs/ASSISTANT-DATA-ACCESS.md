@@ -87,7 +87,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - A successful `propose_cards` also shows how many cards were accepted.
 - A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
-- The user can expand a row to inspect the protocol id, the input, and the output or error.
+- Opening a row shows the protocol id, the input, and the output or error in a popover.
 
 Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
