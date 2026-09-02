@@ -22,6 +22,32 @@
   content: none;
 }
 
+.prose.prose-chat :is(h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 1.5rem;
+  margin-block-end: 0.75rem;
+  line-height: 1.5rem;
+}
+
+.prose.prose-chat :is(h1) {
+  font-size: 1.25rem;
+}
+
+.prose.prose-chat :is(h2) {
+  font-size: 1.125rem;
+}
+
+.prose.prose-chat :is(h3, h4, h5, h6) {
+  font-size: 1rem;
+}
+
+.prose.prose-chat :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-block-start: 0;
+}
+
+.prose.prose-chat :is(h1, h2, h3, h4, h5, h6) + :not(:is(h1, h2, h3, h4, h5, h6)) {
+  margin-block-start: 0;
+}
+
 @utility bg-* {
   background: color-mix(in oklab, --value(--color-bg-*) --modifier(integer)%, transparent);
 }
