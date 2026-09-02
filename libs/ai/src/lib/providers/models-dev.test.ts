@@ -1,12 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AIModel } from "../models";
 import { OPENCODE_ZEN_BASE_URL } from "../provider-catalog";
-import {
-  MODELS_DEV_API_URL,
-  loadModelsDevCatalog,
-  overlayReasoningFromModelsDev,
-  resetModelsDevCache,
-} from "./models-dev";
+import { MODELS_DEV_API_URL, loadModelsDevCatalog, overlayFromModelsDev, resetModelsDevCache } from "./models-dev";
 import { fetchOpencodeZenModels } from "./opencode-zen";
 
 afterEach(() => {
@@ -39,7 +34,7 @@ function catalogFor(providerKey: string, models: Record<string, unknown>): Recor
   return { [providerKey]: { id: providerKey, name: providerKey, env: [], models } };
 }
 
-describe("overlayReasoningFromModelsDev", () => {
+describe("overlayFromModelsDev", () => {
   it("applies catalog effort values and defaults to the first value when no default field is set", () => {
     const catalog = catalogFor("opencode", {
       "deepseek-chat": {
@@ -48,7 +43,7 @@ describe("overlayReasoningFromModelsDev", () => {
       },
     });
 
-    const [model] = overlayReasoningFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
 
     expect(model?.supported_reasoning_levels).toEqual([
       { effort: "low", description: "" },
@@ -65,7 +60,7 @@ describe("overlayReasoningFromModelsDev", () => {
       },
     });
 
-    const [model] = overlayReasoningFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
 
     expect(model?.default_reasoning_level).toBe("high");
   });
@@ -76,11 +71,7 @@ describe("overlayReasoningFromModelsDev", () => {
       "mimo-v2": { reasoning: true },
     });
 
-    const models = overlayReasoningFromModelsDev(
-      [gatewayModel("deepseek-chat"), gatewayModel("mimo-v2")],
-      "opencode",
-      catalog,
-    );
+    const models = overlayFromModelsDev([gatewayModel("deepseek-chat"), gatewayModel("mimo-v2")], "opencode", catalog);
 
     expect(models[0]?.supported_reasoning_levels).toBeUndefined();
     expect(models[0]?.default_reasoning_level).toBeUndefined();
@@ -96,7 +87,7 @@ describe("overlayReasoningFromModelsDev", () => {
       },
     });
 
-    const [model] = overlayReasoningFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
 
     expect(model?.supported_reasoning_levels).toBeUndefined();
   });
@@ -108,7 +99,7 @@ describe("overlayReasoningFromModelsDev", () => {
       },
     });
 
-    const [model] = overlayReasoningFromModelsDev([gatewayModel("deepseek-chat")], "opencode-go", catalog);
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode-go", catalog);
 
     expect(model?.supported_reasoning_levels).toEqual([
       { effort: "low", description: "" },
@@ -122,7 +113,7 @@ describe("overlayReasoningFromModelsDev", () => {
       "other-model": { reasoning_options: [{ type: "effort", values: ["high"] }] },
     });
 
-    const [model] = overlayReasoningFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
 
     expect(model?.supported_reasoning_levels).toEqual(prefixDeepseek.levels);
     expect(model?.default_reasoning_level).toBe(prefixDeepseek.default);
@@ -135,7 +126,7 @@ describe("overlayReasoningFromModelsDev", () => {
       },
     });
 
-    const [model] = overlayReasoningFromModelsDev(
+    const [model] = overlayFromModelsDev(
       [
         gatewayModel("deepseek-chat", {
           supported_reasoning_levels: [{ effort: "gateway", description: "" }],
@@ -148,6 +139,51 @@ describe("overlayReasoningFromModelsDev", () => {
 
     expect(model?.supported_reasoning_levels).toEqual([{ effort: "gateway", description: "" }]);
     expect(model?.default_reasoning_level).toBe("gateway");
+  });
+
+  it("fills context_length and max_completion_tokens from catalog limit when the gateway omitted them", () => {
+    const catalog = catalogFor("opencode", {
+      "deepseek-chat": { limit: { context: 128000, output: 8192 } },
+    });
+
+    const [model] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+
+    expect(model?.context_length).toBe(128000);
+    expect(model?.top_provider).toEqual({ max_completion_tokens: 8192 });
+  });
+
+  it("keeps gateway context_length and max_completion_tokens when already set", () => {
+    const catalog = catalogFor("opencode", {
+      "deepseek-chat": { limit: { context: 128000, output: 8192 } },
+    });
+
+    const [model] = overlayFromModelsDev(
+      [
+        gatewayModel("deepseek-chat", {
+          context_length: 64000,
+          top_provider: { max_completion_tokens: 4096 },
+        }),
+      ],
+      "opencode",
+      catalog,
+    );
+
+    expect(model?.context_length).toBe(64000);
+    expect(model?.top_provider).toEqual({ max_completion_tokens: 4096 });
+  });
+
+  it("does not invent limits when the catalog is missing or the id is not in the catalog", () => {
+    const catalog = catalogFor("opencode", {
+      "other-model": { limit: { context: 128000, output: 8192 } },
+    });
+
+    const [missingId] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", catalog);
+    const [noCatalog] = overlayFromModelsDev([gatewayModel("deepseek-chat")], "opencode", null);
+
+    expect(missingId?.context_length).toBe(0);
+    expect(missingId?.top_provider).toBeUndefined();
+    expect(noCatalog?.context_length).toBe(0);
+    expect(noCatalog?.top_provider).toBeUndefined();
   });
 });
 
@@ -176,6 +212,7 @@ describe("fetchOpencodeZenModels catalog join", () => {
         catalogFor("opencode", {
           "deepseek-chat": {
             reasoning_options: [{ type: "effort", values: ["low", "high", "max"] }],
+            limit: { context: 128000, output: 8192 },
           },
         }),
       ),
@@ -188,8 +225,8 @@ describe("fetchOpencodeZenModels catalog join", () => {
         id: "deepseek-chat",
         name: "DeepSeek Chat",
         description: undefined,
-        context_length: 0,
-        top_provider: undefined,
+        context_length: 128000,
+        top_provider: { max_completion_tokens: 8192 },
         architecture: undefined,
         supported_parameters: undefined,
         supported_reasoning_levels: [
