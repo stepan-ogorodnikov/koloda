@@ -1,6 +1,6 @@
 import type { UIMessage, UIMessagePart } from "ai";
 import { memo } from "react";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { tv } from "tailwind-variants";
 
 type InterruptedPart = {
@@ -14,17 +14,19 @@ export type AIChatMessageProps = {
   role: UIMessage["role"];
   modelName?: string;
   parts: ChatMessagePart[];
+  renderText?: (text: string) => ReactNode;
 };
 
-// WHY: memoized on props identity  immer keeps untouched messages' parts
+// WHY: memoized on props identity — immer keeps untouched messages' parts
 // references stable, so streamed chunks re-render only the tail message.
-export const AIChatMessage = memo(function AIChatMessage({ role, parts }: AIChatMessageProps) {
+export const AIChatMessage = memo(function AIChatMessage({ role, parts, renderText }: AIChatMessageProps) {
   const filteredParts = getMessageParts(parts);
+  const textRenderer = role === "user" ? undefined : renderText;
 
   return (
     <AIChatMessageLayout role={role}>
       {filteredParts.map((part, index) => (
-        <MessagePart key={index} part={part} />
+        <MessagePart key={index} part={part} renderText={textRenderer} />
       ))}
     </AIChatMessageLayout>
   );
@@ -52,9 +54,10 @@ export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps
   );
 }
 
-function MessagePart({ part }: { part: ChatMessagePart }) {
+function MessagePart({ part, renderText }: { part: ChatMessagePart; renderText?: (text: string) => ReactNode }) {
   switch (part.type) {
     case "text":
+      if (renderText) return renderText(part.text);
       return <p className="whitespace-pre-wrap leading-6">{part.text}</p>;
     case "reasoning":
       return <p className="whitespace-pre-wrap leading-6 fg-level-3">{part.text}</p>;

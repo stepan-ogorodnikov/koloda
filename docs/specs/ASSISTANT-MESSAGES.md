@@ -61,7 +61,7 @@ User messages always render as text.
 
 Assistant messages:
 
-- **chat-text**: the streamed text is shown.
+- **chat-text**: the streamed text is shown as rendered markdown.
   A status indicator shows the run state.
   When the same run proposed cards, that turn is mixed:
   tool activity, then the review table, then leftover streamed text, then status.
@@ -174,9 +174,11 @@ The conversation history sent to the AI is rebuilt from the now-shorter message 
 
 ## Message Content
 
-Text is displayed as paragraphs.
+Assistant text is displayed as rendered markdown, including leftover text on a mixed turn.
+User messages are displayed as paragraphs.
 Reasoning is displayed as dimmed text.
 Tool calls and other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
+Proposed cards stay in the review table; leftover markdown does not become cards.
 
 When extracting text for display or history, all text parts are joined with double newlines.
 Leading and trailing whitespace is trimmed.

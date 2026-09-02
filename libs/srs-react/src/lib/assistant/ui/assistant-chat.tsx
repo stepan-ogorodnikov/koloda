@@ -22,6 +22,7 @@ import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useRef, useState } from "react";
 import { AssistantConversationRecovery } from "./assistant-conversation-recovery";
+import { renderAssistantMarkdown } from "./assistant-markdown";
 import { AssistantNoProfiles } from "./assistant-no-profiles";
 import { AssistantSettings } from "./assistant-settings";
 import {
@@ -190,6 +191,7 @@ export function AssistantChat({
             <AIChatMessages
               messages={messages}
               renderMessage={renderMessage}
+              renderText={renderAssistantMarkdown}
               modelName={modelName}
               emptyState={emptyState}
               scroll={scroll}

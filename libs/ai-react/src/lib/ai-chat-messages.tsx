@@ -19,12 +19,20 @@ const scrollViewport = [
 export type AIChatMessagesProps = {
   messages: UIMessage[];
   renderMessage?: (message: UIMessage, content: ReactNode) => ReactNode;
+  renderText?: (text: string) => ReactNode;
   modelName?: string;
   emptyState?: ReactNode;
   scroll: UseAutoScrollReturn;
 };
 
-export function AIChatMessages({ messages, modelName, emptyState = null, renderMessage, scroll }: AIChatMessagesProps) {
+export function AIChatMessages({
+  messages,
+  modelName,
+  emptyState = null,
+  renderMessage,
+  renderText,
+  scroll,
+}: AIChatMessagesProps) {
   const { _ } = useLingui();
   useLayoutHeaderScrollShadow(scroll.scrollViewportRef);
 
@@ -44,7 +52,13 @@ export function AIChatMessages({ messages, modelName, emptyState = null, renderM
             <>
               {messages.map((message) => {
                 const content = (
-                  <AIChatMessage role={message.role} modelName={modelName} parts={message.parts} key={message.id} />
+                  <AIChatMessage
+                    role={message.role}
+                    modelName={modelName}
+                    parts={message.parts}
+                    renderText={renderText}
+                    key={message.id}
+                  />
                 );
                 return (
                   <Fragment key={message.id}>{renderMessage ? renderMessage(message, content) : content}</Fragment>
