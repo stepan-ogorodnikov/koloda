@@ -164,14 +164,31 @@ export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {
 
 If the new fetch/URL is part of the public `@koloda/ai` surface, also re-export the provider module from `libs/ai/src/index.ts`.
 
+Set `supported_reasoning_levels` and `default_reasoning_level` only when this provider reports them.
+That report may come from the models list or from a real catalog join.
+Do not invent a picker from model-name prefixes unless that is an explicit fallback for a missing catalog row.
+A hidden picker is correct when the list does not report levels.
+Product behavior lives in `docs/specs/AI-PROVIDERS.md` (§Reasoning Effort).
+
 ### 5. Chat Streaming (`libs/ai/src/lib/chat-stream.ts`)
 
-Add a thin wrapper that supplies the AI SDK model factory to shared `runChatStream`:
+Add a thin wrapper that supplies the AI SDK model factory to shared `runChatStream`.
+
+`request.input.reasoningEffort` is a provider-agnostic string.
+Each wrapper maps it in a small helper to that SDK's `providerOptions` shape.
+Omit empty values so the provider default still applies.
+Do not reuse a shared `{ [name]: { reasoningEffort } }` blob — OpenRouter needs `reasoning.effort`.
+Copy the helper pattern from the existing wrappers in this file.
+If the catalog never reports levels, omit the mapping until it does.
 
 ```typescript
+export function myProviderProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  return reasoningEffort ? { "my-provider": { reasoningEffort } } : undefined;
+}
+
 export function streamChatWithMyProvider(
   request: ChatStreamRequest,
-  onChunk: (chunk: string) => void,
+  onChunk: (chunk: ChatStreamChunk) => void,
   abortSignal: AbortSignal,
   { apiKey }: { apiKey: string },
 ) {
@@ -182,10 +199,18 @@ export function streamChatWithMyProvider(
       baseURL: "https://api.myprovider.com/v1",
       apiKey,
     });
-    return runChatStream((modelId) => myProvider(modelId), "myProvider", request, onChunk, abortSignal);
+    return runChatStream(
+      (modelId) => myProvider(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      myProviderProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 ```
+
+The `providerOptions` key (`"my-provider"` here) must match the SDK provider `name`.
 
 ### 6. UI Form Config (`libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts`)
 
@@ -247,6 +272,8 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 
 ### 9. Add Tests
 
+- `libs/ai/src/lib/chat-stream.test.ts` — `streamText` gets this wrapper's `providerOptions`, omitted when effort is empty
+- Provider `fetchModels` tests — levels only when the list or catalog join reports them
 - `crates/koloda-core/tests/domain/ai_tests.rs` - Rust unit tests
 - `crates/koloda-core/tests/integration/ai_integration_tests.rs` - Rust integration tests
 - `crates/koloda-core/tests/domain/settings_ai_tests.rs` - Settings validation tests
