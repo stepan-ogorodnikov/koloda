@@ -1,6 +1,6 @@
 import type { AIModel } from "@koloda/ai";
 
-export type FilterProfileModelsForPickerArgs = {
+export type FilterProfileModelsForPickerOptions = {
   models: AIModel[];
   whitelistModelIds?: string[];
   selectedModelId?: string | null;
@@ -17,7 +17,7 @@ export function filterProfileModelsForPicker({
   models,
   whitelistModelIds,
   selectedModelId,
-}: FilterProfileModelsForPickerArgs): AIModel[] {
+}: FilterProfileModelsForPickerOptions): AIModel[] {
   const allowlist = whitelistModelIds === undefined ? null : new Set(whitelistModelIds);
   const result: AIModel[] = [];
 

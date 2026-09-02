@@ -84,14 +84,16 @@ function renderUserMessage(
   );
 }
 
-function renderCardsMessage(options: {
+type RenderCardsMessageOptions = {
   run: AssistantRun;
   runId: string;
   isCurrentRun: boolean;
   isTail: boolean;
   handleRetry: (runId: string) => Promise<void>;
   showStatus?: boolean;
-}) {
+};
+
+function renderCardsMessage(options: RenderCardsMessageOptions) {
   const { run, runId, isCurrentRun, isTail, handleRetry, showStatus } = options;
   const templateFieldsMissing = run.templateFields === null;
   const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
@@ -137,13 +139,15 @@ function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId:
 // success/canceled/interrupted/failed copies had already drifted subtly.
 // Streaming/pending states stay with the callers (the pending condition
 // depends on whether leftover text or a cards table is present).
-function renderRunStatus(options: {
+type RenderRunStatusOptions = {
   run: AssistantRun;
   runId: string;
   isTail: boolean;
   copyAction: ReactNode;
   handleRetry: (runId: string) => Promise<void>;
-}): ReactNode {
+};
+
+function renderRunStatus(options: RenderRunStatusOptions): ReactNode {
   const { run, runId, isTail, copyAction, handleRetry } = options;
   if (run.status === "success") {
     return run.elapsedSeconds !== null ? (
@@ -169,7 +173,7 @@ function renderRunStatus(options: {
   return null;
 }
 
-function renderChatProposal(options: {
+type RenderChatProposalOptions = {
   toolActivity: ReactNode;
   cardsBlock: ReactNode;
   text: string;
@@ -179,7 +183,9 @@ function renderChatProposal(options: {
   runId: string;
   isTail: boolean;
   handleRetry: (runId: string) => Promise<void>;
-}) {
+};
+
+function renderChatProposal(options: RenderChatProposalOptions) {
   const { toolActivity, cardsBlock, text, content, copyAction, run, runId, isTail, handleRetry } = options;
   const status =
     run.status === "streaming" && !text ? (
@@ -198,7 +204,7 @@ function renderChatProposal(options: {
   );
 }
 
-function renderChatMessage(options: {
+type RenderChatMessageOptions = {
   message: UIMessage;
   content: ReactNode;
   run: AssistantRun;
@@ -206,7 +212,9 @@ function renderChatMessage(options: {
   isCurrentRun: boolean;
   isTail: boolean;
   handleRetry: (runId: string) => Promise<void>;
-}) {
+};
+
+function renderChatMessage(options: RenderChatMessageOptions) {
   const { message, content, run, runId, isCurrentRun, isTail, handleRetry } = options;
   const text = getTextMessageContent(message);
   const copyAction = text ? <CopyMessageButton text={text} /> : null;

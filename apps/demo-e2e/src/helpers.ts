@@ -406,7 +406,9 @@ export async function deleteAIProfile(page: Page, profileTitle: string) {
   await page.getByRole("button", { name: "Delete", exact: true }).click();
 }
 
-export async function addLmStudioProfile(page: Page, options: { title?: string; baseUrl: string }) {
+type AddLmStudioProfileOptions = { title?: string; baseUrl: string };
+
+export async function addLmStudioProfile(page: Page, options: AddLmStudioProfileOptions) {
   const title = options.title ?? "E2E LM Studio";
   await openAddAIDialog(page);
   await selectAIProvider(page, "LM Studio");

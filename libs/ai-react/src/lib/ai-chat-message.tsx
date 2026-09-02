@@ -54,7 +54,12 @@ export function AIChatMessageLayout({ role, children }: AIChatMessageLayoutProps
   );
 }
 
-function MessagePart({ part, renderText }: { part: ChatMessagePart; renderText?: (text: string) => ReactNode }) {
+type MessagePartProps = {
+  part: ChatMessagePart;
+  renderText?: (text: string) => ReactNode;
+};
+
+function MessagePart({ part, renderText }: MessagePartProps) {
   switch (part.type) {
     case "text":
       if (renderText) return renderText(part.text);

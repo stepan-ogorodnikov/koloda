@@ -77,17 +77,14 @@ export function AppProviders({ store, basepath, history, activateLanguage, getLa
   );
 }
 
-function AppProvidersInner({
-  activateLanguage,
-  getLanguage,
-  queryClient,
-  router,
-}: {
+type AppProvidersInnerProps = {
   activateLanguage: (locale: string) => Promise<void>;
   getLanguage: () => string;
   queryClient: QueryClient;
   router: ReturnType<typeof createAppRouter>;
-}) {
+};
+
+function AppProvidersInner({ activateLanguage, getLanguage, queryClient, router }: AppProvidersInnerProps) {
   const [lang, setLang] = useAtom(langAtom);
   const [isI18nReady, setIsI18nReady] = useState(false);
 

@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 const period = "flex flex-row gap-0.5";
 
-export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: { seconds: number }) {
+export type AiChatElapsedTimeDisplayProps = { seconds: number };
+
+export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: AiChatElapsedTimeDisplayProps) {
   const { _ } = useLingui();
 
   const sLabel = _(msg`ai.chat.elapsed-time.periods.seconds`);

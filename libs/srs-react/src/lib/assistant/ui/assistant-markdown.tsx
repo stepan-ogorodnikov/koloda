@@ -1,6 +1,8 @@
 import { markdownToHtml } from "@koloda/srs";
 
-export function AssistantMarkdown({ text }: { text: string }) {
+type AssistantMarkdownProps = { text: string };
+
+export function AssistantMarkdown({ text }: AssistantMarkdownProps) {
   const html = markdownToHtml(text);
   return <div className="prose prose-chat max-w-none" dangerouslySetInnerHTML={{ __html: html }} />;
 }

@@ -7,12 +7,9 @@ test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
 });
 
-async function fillAndSubmitDeck(
-  page: Page,
-  dialog: Locator,
-  title: string,
-  options: { preset?: string; template?: string } = {},
-) {
+type FillAndSubmitDeckOptions = { preset?: string; template?: string };
+
+async function fillAndSubmitDeck(page: Page, dialog: Locator, title: string, options: FillAndSubmitDeckOptions = {}) {
   await dialog.getByLabel("Title", { exact: true }).fill(title);
 
   if (options.preset) {

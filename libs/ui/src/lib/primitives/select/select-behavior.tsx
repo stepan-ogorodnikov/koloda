@@ -33,8 +33,10 @@ export function createSelectKeyboardDelegate(stateRef: RefObject<SelectState>): 
   };
 }
 
+type SelectStateBridgeProps = { stateRef: RefObject<SelectState> };
+
 // WHY: Bridge SelectState from RAC context into a ref for the hotkey keyboard delegate.
-export function SelectStateBridge({ stateRef }: { stateRef: RefObject<SelectState> }) {
+export function SelectStateBridge({ stateRef }: SelectStateBridgeProps) {
   const state = useContext(SelectStateContext);
 
   useEffect(() => {

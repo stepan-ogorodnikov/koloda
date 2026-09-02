@@ -21,7 +21,9 @@ function continueKeyPropagation(event: KeyboardEvent<FocusableElement>) {
   (event as AriaKeyboardEvent).continuePropagation?.();
 }
 
-function TooltipFocusable({ children }: { children: ReactElement<TooltipTriggerChildProps> }) {
+type TooltipFocusableProps = { children: ReactElement<TooltipTriggerChildProps> };
+
+function TooltipFocusable({ children }: TooltipFocusableProps) {
   const ref = useObjectRef<FocusableElement>(null);
   const { focusableProps } = useFocusable({}, ref);
   const child = Children.only(children);

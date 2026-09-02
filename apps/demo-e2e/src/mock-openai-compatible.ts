@@ -68,22 +68,24 @@ export type MockOpenAICompatibleHandle = {
   dispose: () => Promise<void>;
 };
 
+export type MockOpenAICompatibleOptions = {
+  modelId?: string;
+  defaultCompletion?: MockChatCompletionOptions;
+  /**
+   * Completions behavior computed from the raw request body when the FIFO queue
+   * is empty. Lets a fixture reply with text derived from what the model
+   * actually received (e.g. echo tool-result rows back as reply text).
+   */
+  completionFromBody?: (requestBody: string) => MockChatCompletionOptions;
+};
+
 /**
  * Intercept LM Studio OpenAI-compatible `/v1/models` and `/v1/chat/completions`.
  * Install before navigating to Assistant so the model list loads from the mock.
  */
 export async function mockOpenAICompatibleProvider(
   page: Page,
-  options: {
-    modelId?: string;
-    defaultCompletion?: MockChatCompletionOptions;
-    /**
-     * Completions behavior computed from the raw request body when the FIFO queue
-     * is empty. Lets a fixture reply with text derived from what the model
-     * actually received (e.g. echo tool-result rows back as reply text).
-     */
-    completionFromBody?: (requestBody: string) => MockChatCompletionOptions;
-  } = {},
+  options: MockOpenAICompatibleOptions = {},
 ): Promise<MockOpenAICompatibleHandle> {
   const modelId = options.modelId ?? E2E_LM_STUDIO_MODEL_ID;
   const queue: MockChatCompletionOptions[] = [];

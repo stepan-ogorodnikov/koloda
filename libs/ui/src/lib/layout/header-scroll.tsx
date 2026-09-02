@@ -10,7 +10,9 @@ type LayoutHeaderScrollContextValue = {
 
 const LayoutHeaderScrollContext = createContext<LayoutHeaderScrollContextValue | null>(null);
 
-export function LayoutHeaderScrollProvider({ children }: { children: ReactNode }) {
+type LayoutHeaderScrollProviderProps = { children: ReactNode };
+
+export function LayoutHeaderScrollProvider({ children }: LayoutHeaderScrollProviderProps) {
   const [reporters, setReporters] = useState<ReadonlyMap<string, boolean>>(() => new Map());
 
   const reportScroll = useCallback((id: string, value: boolean) => {

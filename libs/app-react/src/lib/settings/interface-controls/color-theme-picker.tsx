@@ -52,7 +52,9 @@ function ColorThemePicker({ themes, atom, field, label, ariaLabel, ...props }: C
   );
 }
 
-export function LightThemePicker(props: Partial<SelectProps<{ id: string }>>) {
+type ThemePickerProps = Partial<SelectProps<{ id: string }>>;
+
+export function LightThemePicker(props: ThemePickerProps) {
   const { _ } = useLingui();
 
   return (
@@ -67,7 +69,7 @@ export function LightThemePicker(props: Partial<SelectProps<{ id: string }>>) {
   );
 }
 
-export function DarkThemePicker(props: Partial<SelectProps<{ id: string }>>) {
+export function DarkThemePicker(props: ThemePickerProps) {
   const { _ } = useLingui();
 
   return (
