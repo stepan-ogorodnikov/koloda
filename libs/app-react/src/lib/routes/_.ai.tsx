@@ -100,12 +100,12 @@ function AIRoute() {
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header>
-          <div className="flex flex-row flex-wrap items-center w-full max-w-3xl mx-auto">
-            <Layout.H1 variants={{ class: title ? "" : "fg-disabled" }}>
+          <div className="flex flex-row flex-nowrap items-center min-w-0 w-full max-w-3xl mx-auto">
+            <Layout.H1 variants={{ class: title ? "min-w-0" : "min-w-0 fg-disabled" }}>
               {title || _(CONVERSATION_TITLE_FALLBACK)}
             </Layout.H1>
             {conversationId && (
-              <div className="flex flex-row items-center gap-1 px-2">
+              <div className="flex flex-row shrink-0 items-center gap-1 px-2">
                 <ConversationHeaderMenu conversationId={conversationId} onClone={handleConversationIdChange} />
               </div>
             )}
