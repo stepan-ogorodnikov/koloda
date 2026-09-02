@@ -24,7 +24,7 @@ type QueueEntry<T> = {
   resolve: (value: T | PromiseLike<T>) => void;
   reject: (reason?: unknown) => void;
   cancelReason: QueueCancelReason | null;
-  settled: boolean;
+  isSettled: boolean;
 };
 
 export type SerialQueue<T = void> = {
@@ -41,8 +41,8 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
   const pending = new Map<string, QueueEntry<T>>();
 
   const settleCanceled = (entry: QueueEntry<T>, reason: QueueCancelReason) => {
-    if (entry.settled) return;
-    entry.settled = true;
+    if (entry.isSettled) return;
+    entry.isSettled = true;
     entry.cancelReason = reason;
     // WHY: Callers treat cancel-before-start like an aborted in-flight run —
     // resolve so awaiters do not see a rejection for intentional cancel.
@@ -67,13 +67,13 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
           resolve,
           reject,
           cancelReason: null,
-          settled: false,
+          isSettled: false,
         };
         pending.set(entryKey, entry);
 
         tail = tail.then(async () => {
           pending.delete(entryKey);
-          if (entry.settled) return;
+          if (entry.isSettled) return;
 
           if (entry.cancelReason != null || closed != null) {
             settleCanceled(entry, entry.cancelReason ?? closed!);
@@ -82,13 +82,13 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
 
           try {
             const value = await entry.task();
-            if (!entry.settled) {
-              entry.settled = true;
+            if (!entry.isSettled) {
+              entry.isSettled = true;
               entry.resolve(value);
             }
           } catch (error) {
-            if (!entry.settled) {
-              entry.settled = true;
+            if (!entry.isSettled) {
+              entry.isSettled = true;
               entry.reject(error);
             }
           }
@@ -97,14 +97,14 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
     },
 
     cancel(runId, reason) {
-      let found = false;
+      let hasCanceled = false;
       for (const [key, entry] of pending) {
-        if (entry.runId !== runId || entry.settled) continue;
+        if (entry.runId !== runId || entry.isSettled) continue;
         settleCanceled(entry, reason);
         pending.delete(key);
-        found = true;
+        hasCanceled = true;
       }
-      return found;
+      return hasCanceled;
     },
 
     close(reason) {

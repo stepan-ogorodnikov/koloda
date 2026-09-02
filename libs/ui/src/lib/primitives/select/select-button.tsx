@@ -19,12 +19,12 @@ const selectButton = tv({
 
 export type SelectButtonProps = TWVProps<typeof selectButton> &
   ComponentProps<typeof Button> & {
-    withChevron?: boolean;
+    showChevron?: boolean;
     icon?: ReactNode;
     children?: ReactNode;
   };
 
-export function SelectButton({ variants, withChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
+export function SelectButton({ variants, showChevron = true, icon, children, ref, ...props }: SelectButtonProps) {
   return (
     <Button ref={ref} className={selectButton(variants)} {...props}>
       {children || (
@@ -37,7 +37,7 @@ export function SelectButton({ variants, withChevron = true, icon, children, ref
           )}
         </SelectValue>
       )}
-      {withChevron && (
+      {showChevron && (
         <HugeiconsIcon
           className="size-4 min-w-4 rotate-90"
           strokeWidth={2}

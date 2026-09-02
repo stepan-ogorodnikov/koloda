@@ -75,7 +75,7 @@ describe("TextField", () => {
   it("grows the textarea height to match scrollHeight when under maxRows", () => {
     render(
       <TextField aria-label="Prompt">
-        <TextField.TextArea autoResize maxRows={8} />
+        <TextField.TextArea canAutoResize maxRows={8} />
       </TextField>,
     );
 
@@ -91,7 +91,7 @@ describe("TextField", () => {
   it("clamps auto-resize height to maxRows and enables overflow", () => {
     render(
       <TextField aria-label="Prompt">
-        <TextField.TextArea autoResize maxRows={4} />
+        <TextField.TextArea canAutoResize maxRows={4} />
       </TextField>,
     );
 

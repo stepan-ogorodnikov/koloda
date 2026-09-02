@@ -54,8 +54,8 @@ export function Setup() {
         </OverlayFrameFooter>
       </div>
       <div className="flex flex-row gap-2">
-        <ColorSchemePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
-        <LanguagePicker buttonVariants={{ style: "ghost" }} withChevron={false} isPersisted={false} />
+        <ColorSchemePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
+        <LanguagePicker buttonVariants={{ style: "ghost" }} showChevron={false} isPersisted={false} />
       </div>
     </div>
   );

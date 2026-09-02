@@ -88,13 +88,13 @@ export function DemoSetup() {
       <div className="flex flex-row gap-2">
         <ColorSchemePicker
           buttonVariants={{ style: "ghost" }}
-          withChevron={false}
+          showChevron={false}
           isPersisted={false}
           isDisabled={isPending}
         />
         <LanguagePicker
           buttonVariants={{ style: "ghost" }}
-          withChevron={false}
+          showChevron={false}
           isPersisted={false}
           isDisabled={isPending}
         />

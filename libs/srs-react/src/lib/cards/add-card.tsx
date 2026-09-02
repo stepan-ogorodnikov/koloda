@@ -108,7 +108,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
                             <Label>{title}</Label>
                             <TextField.Content>
                               <TextField.TextArea
-                                autoResize
+                                canAutoResize
                                 rows={1}
                                 maxRows={6}
                                 ref={i === 0 ? firstFieldRef : undefined}

@@ -109,7 +109,7 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
       cards={run.cards}
       cardStatuses={run.cardStatuses}
       template={cardsTemplate}
-      templateUnavailable={templateFieldsMissing}
+      isTemplateUnavailable={templateFieldsMissing}
       deckId={addTargetDeckId}
       templateId={addTargetTemplateId}
       canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null && addTargetTemplateId !== undefined}

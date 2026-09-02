@@ -57,13 +57,13 @@ export const textFieldTextArea = tv({ extend: textFieldInput, base: "h-auto" });
 
 export type TextFieldTextAreaProps = ComponentProps<typeof TextArea> &
   TWVProps<typeof textFieldTextArea> & {
-    autoResize?: boolean;
+    canAutoResize?: boolean;
     maxRows?: number;
   };
 
 export function TextFieldTextArea({
   variants,
-  autoResize,
+  canAutoResize,
   maxRows,
   ref,
   onInput,
@@ -86,7 +86,7 @@ export function TextFieldTextArea({
 
   const adjustHeight = useCallback(() => {
     const el = internalRef.current;
-    if (!el || !autoResize) return;
+    if (!el || !canAutoResize) return;
 
     const style = window.getComputedStyle(el);
     const borderHeight = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
@@ -122,12 +122,12 @@ export function TextFieldTextArea({
     }
 
     el.style.height = `${targetHeight}px`;
-  }, [autoResize, maxRows]);
+  }, [canAutoResize, maxRows]);
 
   useLayoutEffect(() => {
     const el = internalRef.current;
     if (!el) return;
-    if (autoResize) {
+    if (canAutoResize) {
       adjustHeight();
     } else {
       el.style.height = "";

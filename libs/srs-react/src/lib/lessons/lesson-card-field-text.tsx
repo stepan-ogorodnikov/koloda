@@ -37,7 +37,7 @@ export function LessonCardFieldText({
                 e.continuePropagation();
               }}
             >
-              <TextField.TextArea autoResize rows={1} maxRows={10} />
+              <TextField.TextArea canAutoResize rows={1} maxRows={10} />
             </TextField>
           </Fade>
         )}

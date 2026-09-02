@@ -75,10 +75,10 @@ type ReasoningActivityRowProps = { item: AIReasoningRecord };
 
 function ReasoningActivityRow({ item }: ReasoningActivityRowProps) {
   const { _ } = useLingui();
-  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  const [isUserOpen, setIsUserOpen] = useState<boolean | null>(null);
   // WHY: open while tokens are arriving; auto-collapse when the next tool or
   // the answer starts (`status` flips to done) unless the user toggled.
-  const isOpen = userOpen ?? item.status === "running";
+  const isOpen = isUserOpen ?? item.status === "running";
   const displayName =
     item.status === "running" ? _(msg`ai.chat.tool-activity.thinking`) : _(msg`ai.chat.tool-activity.thought`);
 
@@ -94,7 +94,7 @@ function ReasoningActivityRow({ item }: ReasoningActivityRowProps) {
           ],
         }}
         aria-expanded={isOpen}
-        onPress={() => setUserOpen(!isOpen)}
+        onPress={() => setIsUserOpen(!isOpen)}
       >
         <span className={toolActivityHeadline()}>
           <HugeiconsIcon
@@ -272,12 +272,12 @@ function namedNumber(value: unknown, key: string): number | null {
 /**
  * Detects the bounded summary the conversation reducer persists for oversized
  * tool outputs: the live full output never reaches the run record, only
- * `{ truncated: true, itemCount, preview }` does.
+ * `{ isTruncated: true, itemCount, preview }` does.
  */
 function boundedToolOutput(value: unknown): { itemCount: number; preview: string } | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  if (record.truncated !== true) return null;
+  if (record.isTruncated !== true) return null;
   const itemCount = typeof record.itemCount === "number" && Number.isFinite(record.itemCount) ? record.itemCount : null;
   const preview = typeof record.preview === "string" ? record.preview : null;
   if (itemCount === null || preview === null) return null;

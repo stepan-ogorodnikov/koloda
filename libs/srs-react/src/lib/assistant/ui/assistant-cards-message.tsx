@@ -11,7 +11,7 @@ export type AssistantCardsMessageProps = {
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
   template: Template | null | undefined;
-  templateUnavailable?: boolean;
+  isTemplateUnavailable?: boolean;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   canAdd: boolean;
@@ -33,7 +33,7 @@ export function AssistantCardsMessage({
   cards,
   cardStatuses,
   template,
-  templateUnavailable = false,
+  isTemplateUnavailable = false,
   deckId,
   templateId,
   canAdd,
@@ -50,13 +50,13 @@ export function AssistantCardsMessage({
 }: AssistantCardsMessageProps) {
   const { _ } = useLingui();
 
-  if (!template && !templateUnavailable) return null;
+  if (!template && !isTemplateUnavailable) return null;
 
   const isTerminal = isCanceled || isInterrupted || isFailed;
   const isSuccess = !isGenerating && !isTerminal;
   // WHY: Partial cards already received must stay visible beside terminal
   // status (failed / canceled / interrupted); hiding them drops recoverable output.
-  const showCards = !templateUnavailable && !!template && cards.length > 0;
+  const showCards = !isTemplateUnavailable && !!template && cards.length > 0;
 
   return (
     <AIChatMessageLayout role="assistant">
@@ -88,8 +88,8 @@ export function AssistantCardsMessage({
       {showStatus && isSuccess && elapsedSeconds !== undefined && showCards && (
         <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
       )}
-      {isSuccess && templateUnavailable && <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>}
-      {isSuccess && !templateUnavailable && template && !cards.length && (
+      {isSuccess && isTemplateUnavailable && <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>}
+      {isSuccess && !isTemplateUnavailable && template && !cards.length && (
         <p className="fg-level-3">{_(msg`assistant.generated-no-cards`)}</p>
       )}
     </AIChatMessageLayout>

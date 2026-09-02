@@ -94,7 +94,7 @@ export function CardDetails({ card }: CardDetailsProps) {
                   <TextField.Content>
                     <TextField.TextArea
                       variants={{ layout: "form", class: "resize-none" }}
-                      autoResize
+                      canAutoResize
                       rows={1}
                       maxRows={10}
                     />

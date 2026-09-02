@@ -111,7 +111,7 @@ export function Algorithm({ id }: AlgorithmProps) {
             <Label variants={{ layout: "form" }}>{_(msg`algorithm.inputs.weights.label`)}</Label>
             <TextField.TextArea
               variants={{ layout: "form", content: "number", class: "resize-none" }}
-              autoResize
+              canAutoResize
               rows={1}
             />
           </TextField>

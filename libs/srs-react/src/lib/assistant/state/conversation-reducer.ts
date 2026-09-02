@@ -510,7 +510,7 @@ export function boundToolOutput(output: unknown): unknown {
   if (serialized === undefined || serialized.length <= MAX_TOOL_OUTPUT_CHARS) return output;
   const totalCards = (output as Record<string, unknown>).totalCards;
   return {
-    truncated: true,
+    isTruncated: true,
     itemCount: Array.isArray(output) ? output.length : Object.keys(output).length,
     // WHY: the tool-row headline counts cards via totalCards (spec Visibility);
     // without this, any get_deck_cards output past the cap renders name-only.

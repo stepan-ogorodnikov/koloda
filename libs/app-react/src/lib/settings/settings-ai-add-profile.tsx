@@ -28,14 +28,14 @@ export function SettingsAIAddProfile({
   const { addAIProfileMutation } = useAtomValue(queriesAtom);
   const providerIds = useAtomValue(aiProvidersAtom);
   const { mutate, isPending, isSuccess, error, reset } = useMutation(addAIProfileMutation());
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const [isUncontrolledOpen, setIsUncontrolledOpen] = useState(false);
   const [provider, setProvider] = useState<AiProvider>("openrouter");
   const label = _(msg`settings.ai.add`);
   const isControlled = isOpenProp !== undefined;
-  const isOpen = isControlled ? isOpenProp : uncontrolledOpen;
+  const isOpen = isControlled ? isOpenProp : isUncontrolledOpen;
 
   const setIsOpen = (next: boolean) => {
-    if (!isControlled) setUncontrolledOpen(next);
+    if (!isControlled) setIsUncontrolledOpen(next);
     onOpenChangeProp?.(next);
   };
 

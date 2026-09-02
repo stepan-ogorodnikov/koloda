@@ -35,7 +35,7 @@ export function fromPersistedState(persisted: PersistedConversation): Conversati
 }
 
 export function normalizeRestoredConversation(state: ConversationReducerState): ConversationReducerState | null {
-  let normalizedAny = false;
+  let didNormalize = false;
   const runs: Record<string, AssistantRun> = {};
 
   // INVARIANT: Failed (and all other) runs must not be dropped on restore so
@@ -56,7 +56,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
         elapsedSeconds: elapsedSecondsSince(run.startedAt),
       };
       runChanged = true;
-      normalizedAny = true;
+      didNormalize = true;
     }
 
     let statusesChanged = false;
@@ -72,7 +72,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     if (statusesChanged) {
       nextRun = { ...nextRun, cardStatuses: resetStatuses };
       runChanged = true;
-      normalizedAny = true;
+      didNormalize = true;
     }
 
     // WHY: a crash-restored run is terminal; leaving toolCalls as `running`
@@ -89,7 +89,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
         }),
       };
       runChanged = true;
-      normalizedAny = true;
+      didNormalize = true;
     }
 
     if (runChanged) {
@@ -108,16 +108,16 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     startedAtByRunId[runId] = run.startedAt;
   }
   const messagesWithRunIds = backfillUserMessageRunIds(state.messages, startedAtByRunId);
-  if (messagesWithRunIds !== state.messages) normalizedAny = true;
+  if (messagesWithRunIds !== state.messages) didNormalize = true;
 
   const lifted = liftLegacyReasoningParts(messagesWithRunIds, runs);
-  if (lifted.changed) {
-    normalizedAny = true;
+  if (lifted.hasChanges) {
+    didNormalize = true;
     Object.assign(runs, lifted.runs);
   }
 
   if (
-    !normalizedAny &&
+    !didNormalize &&
     state.activeRunId === null &&
     state.dismissedRunErrorId === null &&
     (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
@@ -133,7 +133,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // Failed runs are kept, so a pointer at a failed run survives restore.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
-    messages: lifted.changed ? lifted.messages : messagesWithRunIds,
+    messages: lifted.hasChanges ? lifted.messages : messagesWithRunIds,
   };
 }
 
@@ -147,12 +147,12 @@ function isReasoningPart(part: UIMessage["parts"][number]): part is { type: "rea
 function liftLegacyReasoningParts(
   messages: UIMessage[],
   runs: Record<string, AssistantRun>,
-): { messages: UIMessage[]; runs: Record<string, AssistantRun>; changed: boolean } {
-  let changed = false;
+): { messages: UIMessage[]; runs: Record<string, AssistantRun>; hasChanges: boolean } {
+  let hasChanges = false;
   const nextRuns = { ...runs };
   const nextMessages = messages.map((message) => {
     if (!message.parts.some(isReasoningPart)) return message;
-    changed = true;
+    hasChanges = true;
     const reasoningParts = message.parts.filter(isReasoningPart);
     const runId = getMessageRunId(message);
     if (runId) {
@@ -169,5 +169,7 @@ function liftLegacyReasoningParts(
     }
     return { ...message, parts: message.parts.filter((part) => part.type !== "reasoning") };
   });
-  return changed ? { messages: nextMessages, runs: nextRuns, changed: true } : { messages, runs, changed: false };
+  return hasChanges
+    ? { messages: nextMessages, runs: nextRuns, hasChanges: true }
+    : { messages, runs, hasChanges: false };
 }

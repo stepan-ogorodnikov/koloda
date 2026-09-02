@@ -55,7 +55,7 @@ export function createConversationPersistenceHost({
   // Rollback removes the id; commit leaves it permanent.
   const tombstonedIds = new Set<string>();
   let prevPending: Record<string, number> = { ...getInitialPending() };
-  let disposed = false;
+  let isDisposed = false;
 
   const getQueue = (id: string): ConversationSaveQueue | null => {
     if (tombstonedIds.has(id)) return null;
@@ -80,7 +80,7 @@ export function createConversationPersistenceHost({
   };
 
   const syncFromPending = (next: Record<string, number>) => {
-    if (disposed) return;
+    if (isDisposed) return;
     for (const [id, count] of Object.entries(next)) {
       if (tombstonedIds.has(id)) continue;
       if (count > (prevPending[id] ?? 0)) getQueue(id)?.notifyDirty();
@@ -105,20 +105,20 @@ export function createConversationPersistenceHost({
   const unsub = subscribePendingSaves(syncFromPending);
 
   const flushAllNow = () => {
-    if (disposed) return;
+    if (isDisposed) return;
     for (const queue of queues.values()) {
       queue.flushNow();
     }
   };
 
   const retrySave = (conversationId: string) => {
-    if (disposed) return;
+    if (isDisposed) return;
     if (tombstonedIds.has(conversationId)) return;
     queues.get(conversationId)?.flushNow();
   };
 
   const beginDelete = async (conversationId: string): Promise<ConversationDeletion> => {
-    if (disposed) return { commit: () => {}, rollback: () => {} };
+    if (isDisposed) return { commit: () => {}, rollback: () => {} };
     logAssistantStructured({
       conversationId,
       commandOrEvent: "deleteBegin",
@@ -129,11 +129,11 @@ export function createConversationPersistenceHost({
     const queue = queues.get(conversationId);
     const queueDeletion = queue ? await queue.beginDelete() : null;
 
-    let settled = false;
+    let isSettled = false;
     return {
       commit: () => {
-        if (settled || disposed) return;
-        settled = true;
+        if (isSettled || isDisposed) return;
+        isSettled = true;
         queueDeletion?.commit();
         logAssistantStructured({
           conversationId,
@@ -142,8 +142,8 @@ export function createConversationPersistenceHost({
         // INVARIANT: host tombstone stays — getQueue/notifyDirty stay blocked.
       },
       rollback: () => {
-        if (settled || disposed) return;
-        settled = true;
+        if (isSettled || isDisposed) return;
+        isSettled = true;
         // WHY: remove host tombstone before queue rollback so a scheduled
         // resume (or a concurrent pending sync) can reach getQueue again.
         tombstonedIds.delete(conversationId);
@@ -166,7 +166,7 @@ export function createConversationPersistenceHost({
   const isTombstoned = (conversationId: string) => tombstonedIds.has(conversationId);
 
   const flushAllBounded = async (timeoutMs = SHUTDOWN_FLUSH_TIMEOUT_MS): Promise<void> => {
-    if (disposed) return;
+    if (isDisposed) return;
     const deadline = Date.now() + timeoutMs;
     // WHY: count failures for this flushAllBounded call only — lifetime
     // consecutiveFailures must not starve exit flushes after earlier autosave
@@ -253,8 +253,8 @@ export function createConversationPersistenceHost({
   };
 
   const dispose = () => {
-    if (disposed) return;
-    disposed = true;
+    if (isDisposed) return;
+    isDisposed = true;
     unsub();
     for (const queue of queues.values()) {
       queue.dispose();

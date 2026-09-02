@@ -44,7 +44,7 @@ export function AssistantSettingsPromptEditor({
       <TextField value={templateValue ?? defaultTemplate} aria-label={label} onChange={onChange}>
         <TextField.TextArea
           variants={{ style: "normal", class: "resize-none" }}
-          autoResize
+          canAutoResize
           rows={rows}
           maxRows={maxRows}
         />

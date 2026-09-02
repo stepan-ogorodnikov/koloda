@@ -227,11 +227,11 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
 
       const stored = state.runs["r1"].toolCalls?.[0]?.output as {
-        truncated: boolean;
+        isTruncated: boolean;
         itemCount: number;
         preview: string;
       };
-      expect(stored.truncated).toBe(true);
+      expect(stored.isTruncated).toBe(true);
       expect(stored.itemCount).toBe(1);
       expect(stored.preview).toHaveLength(400);
       expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(output).length);
@@ -252,12 +252,12 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
 
       const stored = state.runs["r1"].toolCalls?.[0]?.output as {
-        truncated: boolean;
+        isTruncated: boolean;
         itemCount: number;
         totalCards?: number;
         cards?: unknown;
       };
-      expect(stored.truncated).toBe(true);
+      expect(stored.isTruncated).toBe(true);
       expect(stored.totalCards).toBe(30);
       expect(stored.cards).toBeUndefined();
     });

@@ -341,17 +341,17 @@ describe("conversations repository integration", () => {
     const writeGate = new Promise<void>((resolve) => {
       releaseWrite = resolve;
     });
-    let tombstoned = false;
+    let isTombstoned = false;
 
     // WHY: mirrors prepareDelete ordering — tombstone, delete, then resume a
     // write that already passed the in-memory existence check.
     const delayedWrite = (async () => {
       await writeGate;
-      if (tombstoned) return;
+      if (isTombstoned) return;
       await setConversation(db, { id, state: stateV2 });
     })();
 
-    tombstoned = true;
+    isTombstoned = true;
     await deleteConversation(db, { id });
     releaseWrite();
     await delayedWrite;

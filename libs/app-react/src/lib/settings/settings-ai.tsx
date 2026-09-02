@@ -29,7 +29,7 @@ export function SettingsAi({ data }: SettingsAiProps) {
         <div className="flex flex-col gap-2">
           {data.map((profile) => {
             const provider = profile.secrets?.provider;
-            const unsupported = provider !== undefined && !providerIds.includes(provider);
+            const isUnsupported = provider !== undefined && !providerIds.includes(provider);
             return (
               <div className="flex flex-col gap-1" key={profile.id}>
                 <div className="flex flex-row items-center gap-4">
@@ -49,7 +49,9 @@ export function SettingsAi({ data }: SettingsAiProps) {
                     </div>
                   </div>
                 </div>
-                {unsupported ? <p className="fg-level-3 text-sm">{_(msg`settings.ai.browser-cors.profile`)}</p> : null}
+                {isUnsupported ? (
+                  <p className="fg-level-3 text-sm">{_(msg`settings.ai.browser-cors.profile`)}</p>
+                ) : null}
               </div>
             );
           })}

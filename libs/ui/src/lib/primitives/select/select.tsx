@@ -27,7 +27,7 @@ export type SelectProps<T extends object> = Omit<SelectRootProps<T>, "children">
   buttonVariants?: SelectButtonProps["variants"];
   popoverVariants?: SelectPopoverProps["variants"];
   listboxVariants?: SelectListBoxProps<T>["variants"];
-  withChevron?: boolean;
+  showChevron?: boolean;
   label?: ReactNode;
   placeholder?: string;
   icon?: ReactNode;
@@ -47,7 +47,7 @@ export function Select<T extends object>({
   buttonVariants,
   popoverVariants,
   listboxVariants,
-  withChevron,
+  showChevron,
   label,
   icon,
   items,
@@ -87,7 +87,7 @@ export function Select<T extends object>({
       )}
       <Select.Button
         variants={{ layout: variants?.layout, ...buttonVariants }}
-        withChevron={withChevron}
+        showChevron={showChevron}
         icon={icon}
         ref={triggerRef}
       />

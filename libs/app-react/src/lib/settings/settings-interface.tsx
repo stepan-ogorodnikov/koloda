@@ -28,7 +28,7 @@ export function SettingsInterface() {
 
   return (
     <FormLayout>
-      <LanguagePicker variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} withIcon={false} />
+      <LanguagePicker variants={{ layout: "form" }} label={_(msg`settings.interface.language`)} showIcon={false} />
       <FormLayout.Section term={_(msg`settings.interface.scheme`)}>
         <ToggleGroup
           selectedKeys={[scheme]}
