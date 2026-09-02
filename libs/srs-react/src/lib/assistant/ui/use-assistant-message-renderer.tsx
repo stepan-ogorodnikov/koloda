@@ -71,7 +71,7 @@ function renderUserMessage(
   timestamp: Date | null,
 ) {
   return (
-    <div className="group self-end flex flex-col items-end gap-1 w-full">
+    <div className="group self-end flex flex-col items-end gap-1 w-full not-first:mt-4">
       {content}
       <div className="flex flex-row items-center justify-end gap-2 mx-3">
         <div className="flex flex-row items-center justify-end gap-1">
