@@ -179,9 +179,10 @@ The allowlist decides what the picker offers; it does not change how a run is se
 ### Reasoning Effort
 
 Some models support a reasoning-effort parameter.
-Supported levels and the default come from the model metadata.
+Supported levels and the default come from the provider for that model.
 The reasoning-effort picker in the conversation UI lists those levels.
-If the model has no supported levels, the picker is hidden.
+If the provider does not report levels for the model, the picker is hidden.
+The app does not invent levels on its own.
 
 Changing the model resets reasoning effort to that model's default.
 A stored reasoning-effort value that does not apply to the newly selected model is ignored.
@@ -196,6 +197,7 @@ See the conversation and card-generation specs for run lifecycle, prompts, strea
 Provider-facing details that matter here:
 
 - The request carries the chosen model and any applicable model parameters.
-- If the model supports reasoning effort and the user set a level, that level is passed through.
+- If the model supports reasoning effort and the user set a level, the run uses that level.
+- If the user did not set a level, the provider's default still applies.
 - All providers stream responses.
 - An unreachable self-hosted base URL surfaces as a network error on first use.
