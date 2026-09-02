@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  lmstudioProviderOptions,
   ollamaProviderOptions,
   openRouterProviderOptions,
   opencodeGoProviderOptions,
@@ -42,6 +43,25 @@ describe("ollamaProviderOptions", () => {
   it("omits providerOptions when effort is missing or empty", () => {
     expect(ollamaProviderOptions(undefined)).toBeUndefined();
     expect(ollamaProviderOptions("")).toBeUndefined();
+  });
+});
+
+describe("lmstudioProviderOptions", () => {
+  it("maps a non-empty effort onto lmstudio reasoningEffort", () => {
+    expect(lmstudioProviderOptions("high")).toEqual({
+      lmstudio: { reasoningEffort: "high" },
+    });
+  });
+
+  it("maps native off onto OpenAI-compatible none", () => {
+    expect(lmstudioProviderOptions("off")).toEqual({
+      lmstudio: { reasoningEffort: "none" },
+    });
+  });
+
+  it("omits providerOptions when effort is missing or empty", () => {
+    expect(lmstudioProviderOptions(undefined)).toBeUndefined();
+    expect(lmstudioProviderOptions("")).toBeUndefined();
   });
 });
 

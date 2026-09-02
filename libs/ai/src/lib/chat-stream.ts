@@ -99,8 +99,8 @@ async function runChatStream(
  *
  * WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
  * into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
- * reasoningEffort vs Ollama think). A shared `{ [name]: { reasoningEffort } }` blob would
- * drop OpenRouter. LM Studio omits a mapping until its catalog exposes levels.
+ * reasoningEffort vs Ollama think vs LM Studio reasoningEffort). A shared
+ * `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
  */
 
 export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
@@ -117,6 +117,12 @@ export function opencodeZenProviderOptions(reasoningEffort: string | undefined):
 
 export function ollamaProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { ollama: { think: reasoningEffort } } : undefined;
+}
+
+export function lmstudioProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
+  // WHY: native catalog uses "off"; /v1/chat/completions reasoning_effort uses "none".
+  if (!reasoningEffort) return undefined;
+  return { lmstudio: { reasoningEffort: reasoningEffort === "off" ? "none" : reasoningEffort } };
 }
 
 export function streamChatWithOpenRouter(
@@ -185,7 +191,13 @@ export function streamChatWithLMStudio(
   return wrapAIError(async () => {
     const { createOpenAICompatible } = await import("@ai-sdk/openai-compatible");
     const lmstudio = createOpenAICompatible({ name: "lmstudio", baseURL: baseUrl, apiKey });
-    return runChatStream((modelId) => lmstudio(modelId), request, onChunk, abortSignal);
+    return runChatStream(
+      (modelId) => lmstudio(modelId),
+      request,
+      onChunk,
+      abortSignal,
+      lmstudioProviderOptions(request.input.reasoningEffort),
+    );
   });
 }
 
