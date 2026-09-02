@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
-import { expect, test } from "./fixtures";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 import type { Locator, Page } from "@playwright/test";
 import {
   addLmStudioProfile,

@@ -11,5 +11,3 @@ export function useConversationRuns(): UseConversationRunsReturn {
 
   return { dispatch: engine.dispatch };
 }
-
-export type { UseConversationRunsReturn } from "./use-conversation-runs-types";

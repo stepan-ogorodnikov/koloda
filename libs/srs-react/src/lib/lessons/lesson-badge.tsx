@@ -2,7 +2,7 @@ import type { Deck, LessonType } from "@koloda/srs";
 import { Button } from "@koloda/ui";
 import { useSetAtom } from "jotai";
 import { tv } from "tailwind-variants";
-import { lessonAtom } from "./lesson";
+import { lessonAtom } from "./lesson-actions";
 
 export const lessonBadge = [
   "group flex items-center w-full h-full px-1 max-wd:py-2 text-left hover:bg-button-hover",

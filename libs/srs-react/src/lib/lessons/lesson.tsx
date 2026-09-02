@@ -1,7 +1,7 @@
 import { Dialog, Fade, overlayFrameContent } from "@koloda/ui";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
-import { lessonAtom, submitLessonSetupAtom } from "./lesson-actions";
+import { submitLessonSetupAtom } from "./lesson-actions";
 import { LessonCompletion } from "./lesson-completion";
 import { LessonFooter } from "./lesson-footer";
 import { LessonHeader } from "./lesson-header";
@@ -10,9 +10,6 @@ import { LessonStudying } from "./lesson-studying";
 import { LessonTermination } from "./lesson-termination";
 import { lessonIsOpenAtom, lessonPhaseAtom } from "./lesson-selectors";
 import { useLessonSession } from "./use-lesson-session";
-
-export type { LessonAtomValue } from "./lesson-reducer";
-export { lessonAtom };
 
 export const lessonContent = overlayFrameContent({ class: "relative items-center justify-center overflow-auto" });
 

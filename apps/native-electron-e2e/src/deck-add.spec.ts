@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures";
 import { createAlgorithm, createTemplate, openNewDeckDialog, setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {

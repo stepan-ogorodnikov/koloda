@@ -1,4 +1,4 @@
-import { test as base, expect, _electron as electron } from "@playwright/test";
+import { test as base, _electron as electron } from "@playwright/test";
 import type { ElectronApplication, Page } from "@playwright/test";
 import { createRequire } from "node:module";
 import { mkdtemp, rm } from "node:fs/promises";
@@ -54,6 +54,3 @@ export const test = base.extend<ElectronFixtures>({
     await provide(page);
   },
 });
-
-export { expect };
-export type { Page };
