@@ -8,6 +8,7 @@ import type {
   CardStatus,
   ConversationReducerState,
   AssistantRun,
+  RunActivity,
   RunStatus,
   RunTerminationReason,
 } from "../state/conversation-reducer";
@@ -213,6 +214,16 @@ const toolCallField = z.object({
   error: z.unknown().optional(),
 });
 
+const reasoningActivityField = z.object({
+  kind: z.literal("reasoning"),
+  id: z.string(),
+  text: z.string(),
+  status: z.enum(["running", "done"]),
+});
+
+// WHY: pre-reasoning rows omit `kind` and must still restore as tool calls.
+const activityField = z.union([reasoningActivityField, toolCallField]);
+
 const runSchema: z.ZodType<AssistantRun> = z
   .object({
     id: z.string(),
@@ -241,7 +252,7 @@ const runSchema: z.ZodType<AssistantRun> = z
     // INVARIANT: optional so rows saved before tool activity restore unchanged;
     // when present it must validate — a malformed array fails the row as
     // corrupt rather than silently dropping tool history from the run.
-    toolCalls: z.array(toolCallField).optional(),
+    toolCalls: z.array(activityField).optional(),
     // INVARIANT: optional so rows saved before proposed-card write targets
     // restore unchanged; when present it must be a positive int — a malformed
     // value fails the row as corrupt rather than silently dropping the target.
@@ -296,7 +307,7 @@ const runSchema: z.ZodType<AssistantRun> = z
       usage: run.usage as StreamUsage | undefined,
       error: run.error,
       dataAccess: run.dataAccess,
-      toolCalls: run.toolCalls,
+      toolCalls: run.toolCalls as RunActivity[] | undefined,
       writeTargetDeckId: run.writeTargetDeckId,
       writeTargetTemplateId: run.writeTargetTemplateId,
     };

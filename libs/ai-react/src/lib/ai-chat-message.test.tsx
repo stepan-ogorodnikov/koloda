@@ -20,6 +20,20 @@ describe("AIChatMessage", () => {
     expect(screen.getByText("Hello world")).toBeDefined();
   });
 
+  it("does not render reasoning parts as message text", () => {
+    render(
+      <AIChatMessage
+        role="assistant"
+        parts={[
+          { type: "text", text: "Visible answer." },
+          { type: "reasoning", text: "Quiet plan." },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Visible answer.")).toBeDefined();
+    expect(screen.queryByText("Quiet plan.")).toBeNull();
+  });
+
   it("uses renderText for assistant text parts", () => {
     render(
       <AIChatMessage

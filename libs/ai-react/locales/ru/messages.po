@@ -13,12 +13,12 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:157
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:161
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:255
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:259
 msgid "{cardCount, plural, other {ai.chat.tool-activity.cards}}"
 msgstr "{cardCount, plural, one {# карточка} few {# карточки} many {# карточек} other {# карточки}}"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:153
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:251
 msgid "{deckCount, plural, other {ai.chat.tool-activity.decks}}"
 msgstr "{deckCount, plural, one {# колода} few {# колоды} many {# колод} other {# колоды}}"
 
@@ -85,7 +85,7 @@ msgstr "Прервано через"
 msgid "ai.chat.message.status.pending"
 msgstr "Обработка"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:36
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:44
 msgid "ai.chat.messages.label"
 msgstr "Поток сообщений"
 
@@ -97,8 +97,8 @@ msgstr "У выбранного профиля отсутствуют необх
 msgid "ai.chat.profile-data-missing.hint"
 msgstr "Перейдите в настройки, чтобы отредактировать профиль и добавить недостающие данные"
 
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:61
-#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:64
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:75
+#: ../../libs/ai-react/src/lib/ai-chat-messages.tsx:78
 msgid "ai.chat.scroll-to-latest.label"
 msgstr "К последнему сообщению"
 
@@ -107,45 +107,54 @@ msgstr "К последнему сообщению"
 msgid "ai.chat.settings.toggle"
 msgstr "Настройки"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:85
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:105
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:147
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:173
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:196
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:245
 msgid "ai.chat.tool-activity.failed"
 msgstr "ошибка"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:139
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:237
 msgid "ai.chat.tool-activity.get-deck-cards"
 msgstr "Карточки колоды"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:78
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:164
 msgid "ai.chat.tool-activity.input"
 msgstr "Ввод"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:40
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:62
 msgid "ai.chat.tool-activity.label"
 msgstr "Вызовы инструментов"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:138
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:236
 msgid "ai.chat.tool-activity.list-decks"
 msgstr "Список колод"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:81
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:168
 msgid "ai.chat.tool-activity.output"
 msgstr "Результат"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:81
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:168
 msgid "ai.chat.tool-activity.output-truncated"
 msgstr "Вывод (сокращён)"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:140
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:238
 msgid "ai.chat.tool-activity.propose-cards"
 msgstr "Предложить карточки"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:116
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:107
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:207
 msgid "ai.chat.tool-activity.running"
 msgstr "Выполняется"
 
-#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:77
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:84
+msgid "ai.chat.tool-activity.thinking"
+msgstr "Размышление"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:85
+msgid "ai.chat.tool-activity.thought"
+msgstr "Размышление"
+
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:163
 msgid "ai.chat.tool-activity.tool"
 msgstr "Инструмент"
 

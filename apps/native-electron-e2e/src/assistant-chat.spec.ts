@@ -393,7 +393,7 @@ test("renders partial reply text while the stream is in flight", async ({ page }
   }
 });
 
-test("shows streamed reasoning as a dimmed text block", async ({ page }) => {
+test("shows streamed reasoning as a thinking activity row", async ({ page }) => {
   const mock = await mockOpenAICompatibleProvider({
     defaultCompletion: { text: "No reasoning here.", chunkBy: "all" },
   });
@@ -410,15 +410,15 @@ test("shows streamed reasoning as a dimmed text block", async ({ page }) => {
     await sendAssistantMessage(page, "Think then answer");
 
     const log = conversationLog(page);
-    // The extracted reasoning renders as a dimmed paragraph of its own, next
-    // to the undimmed reply text.
-    const reasoning = log.locator("p.fg-level-3").filter({ hasText: "Quiet plan." });
-    const reply = log.locator("p:not(.fg-level-3)").filter({ hasText: "Visible answer." });
-    await expect(reasoning).toBeVisible();
-    await expect(reply).toBeVisible();
+    await expect(log.getByText("Visible answer.")).toBeVisible();
+
+    const thought = log.getByRole("button", { name: "Thought" });
+    await expect(thought).toBeVisible();
+    await expect(log.getByText("Quiet plan.")).toHaveCount(0);
+    await thought.click();
+    await expect(log.getByText("Quiet plan.")).toBeVisible();
 
     // Reasoning never renders as plain reply text and the markup never leaks.
-    await expect(log.locator("p:not(.fg-level-3)").filter({ hasText: "Quiet plan." })).toHaveCount(0);
     await expect(log.getByText("<think>")).toHaveCount(0);
     await expect(log.getByText("</think>")).toHaveCount(0);
   } finally {

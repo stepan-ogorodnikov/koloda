@@ -297,10 +297,9 @@ export function createConversationRuntime(
         },
         initial: "",
         onValue: (text: string, chunk: ChatStreamChunk | AssistantToolEvent) => {
-          // WHY: reasoning streams to the message as a dimmed part and tool
-          // traffic records on the run only — neither enters the accumulated
-          // text that becomes follow-up request history (card-outputs
-          // precedent).
+          // WHY: reasoning records on the run activity list (alongside tools)
+          // and never enters the accumulated text that becomes follow-up
+          // request history (card-outputs precedent).
           if (chunk.kind === "reasoning") {
             emit({
               type: "runChunk",
@@ -309,7 +308,7 @@ export function createConversationRuntime(
               chunk: { kind: "reasoning", text: chunk.text },
             });
             // WHY: reasoning arrivals dirty the conversation like text so
-            // streaming checkpoints persist the partial dimmed block.
+            // streaming checkpoints persist the partial thinking row.
             callbacks.touch(conversationId);
             return text;
           }

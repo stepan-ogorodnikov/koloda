@@ -747,6 +747,17 @@ describe("coerceConversationState", () => {
         { id: "call-1", name: "list_decks", input: {}, status: "running" },
       ]);
     });
+
+    it("keeps reasoning activity rows across a save→restore roundtrip", () => {
+      const reasoning = {
+        kind: "reasoning" as const,
+        id: "r1-reasoning-0",
+        text: "Quiet plan.",
+        status: "done" as const,
+      };
+      const coerced = expectOk(makeStateWithRun(baseRun({ toolCalls: [reasoning, fullToolCalls[0]] })));
+      expect(coerced.runs["r1"]?.toolCalls).toEqual([reasoning, fullToolCalls[0]]);
+    });
   });
 
   describe("run writeTargetDeckId coercion", () => {
@@ -1166,6 +1177,74 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"]?.toolCalls).toEqual([
       { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
       { id: "call-2", name: "get_deck_cards", input: { deckId: 3 }, status: "error" },
+    ]);
+  });
+
+  it("marks in-flight reasoning rows as done when converting a streaming run", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [{ kind: "reasoning", id: "r1-reasoning-0", text: "partial thought", status: "running" }],
+          templateFields: null,
+          startedAt: new Date(5000),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+    expect(next.runs["r1"]?.toolCalls).toEqual([
+      { kind: "reasoning", id: "r1-reasoning-0", text: "partial thought", status: "done" },
+    ]);
+  });
+
+  it("lifts legacy message reasoning parts onto the run activity list", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      messages: [
+        {
+          id: "user-r1",
+          role: "user",
+          parts: [{ type: "text", text: "Hello" }],
+          metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+        },
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [
+            { type: "text", text: "Visible answer." },
+            { type: "reasoning", text: "Quiet plan." },
+          ],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+      runs: {
+        r1: {
+          id: "r1",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } }],
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+    expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "Visible answer." }]);
+    expect(next.runs["r1"]?.toolCalls).toEqual([
+      { kind: "reasoning", id: "r1-reasoning-0", text: "Quiet plan.", status: "done" },
+      { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
     ]);
   });
 

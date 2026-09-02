@@ -25,6 +25,15 @@ describe("assistantEventToReducerAction", () => {
       }),
     ).toEqual(["updateAssistantText", { runId: "r1", text: "hi" }]);
 
+    expect(
+      assistantEventToReducerAction({
+        type: "runChunk",
+        conversationId: "c1",
+        runId: "r1",
+        chunk: { kind: "reasoning", text: "plan" },
+      }),
+    ).toEqual(["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+
     const card = { content: { front: { text: "a" } } };
     expect(
       assistantEventToReducerAction({

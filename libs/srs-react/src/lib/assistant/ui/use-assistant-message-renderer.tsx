@@ -210,8 +210,8 @@ function renderChatMessage(options: {
   const { message, content, run, runId, isCurrentRun, isTail, handleRetry } = options;
   const text = getTextMessageContent(message);
   const copyAction = text ? <CopyMessageButton text={text} /> : null;
-  // WHY: tool traffic lives on the run, not message parts — updateAssistantText
-  // replaces parts wholesale, so the widget must read `run.toolCalls`.
+  // WHY: tool + thinking traffic lives on the run, not message parts — the
+  // widget must read `run.toolCalls` so arrival order is preserved.
   const toolActivity = run.toolCalls && run.toolCalls.length > 0 ? <AIToolActivity calls={run.toolCalls} /> : null;
   const cardsBlock =
     run.cards.length > 0

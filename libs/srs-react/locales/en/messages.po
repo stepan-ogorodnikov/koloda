@@ -14,11 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:72
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:74
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:66
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:68
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
@@ -138,7 +138,7 @@ msgstr "You don't have any AI profiles"
 msgid "ai.chat.no-profiles.add"
 msgstr "Add profile"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:170
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-chat.tsx:171
 msgid "ai.chat.restoring"
 msgstr "Loading"
 
@@ -146,24 +146,24 @@ msgstr "Loading"
 msgid "ai.conversation.clone.action"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:201
-#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:90
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:203
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:92
 msgid "ai.conversation.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:198
-#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:87
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:200
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:89
 msgid "ai.conversation.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:189
-#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:82
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:191
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:84
 msgid "ai.conversation.delete.message"
 msgstr "Delete this conversation? This cannot be undone."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:148
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:151
-#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:71
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:150
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:153
+#: ../../libs/srs-react/src/lib/assistant/ui/delete-conversation-button.tsx:73
 msgid "ai.conversation.delete.trigger"
 msgstr "Delete conversation"
 
@@ -171,38 +171,38 @@ msgstr "Delete conversation"
 msgid "ai.conversation.menu.trigger"
 msgstr "Conversation actions"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:126
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:128
 msgid "ai.conversation.recovery.corrupt"
 msgstr "This conversation's saved data is damaged and can't be opened."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:174
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:176
 msgid "ai.conversation.recovery.reset.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:171
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:173
 msgid "ai.conversation.recovery.reset.confirm"
 msgstr "Reset"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:160
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:162
 msgid "ai.conversation.recovery.reset.failed"
 msgstr "Couldn't reset the conversation. Try again."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:162
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:164
 msgid "ai.conversation.recovery.reset.message"
 msgstr "Reset this conversation? The saved data will be discarded and cannot be recovered."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:141
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:144
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:143
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:146
 msgid "ai.conversation.recovery.reset.trigger"
 msgstr "Reset conversation"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:122
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:124
 msgid "ai.conversation.recovery.title"
 msgstr "Can't open this conversation"
 
 #. placeholder {0}: blocked.found
 #. placeholder {1}: blocked.supported
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:125
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:127
 msgid "ai.conversation.recovery.unsupported {0} {1}"
 msgstr "This conversation was saved with format version {0}, but this app supports up to version {1}."
 
@@ -423,19 +423,19 @@ msgstr "Search cards"
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:98
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:100
 msgid "cards-table.selection.clear"
 msgstr "Clear"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:89
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:91
 msgid "cards-table.selection.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:86
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:88
 msgid "cards-table.selection.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:72
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:74
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
@@ -455,7 +455,7 @@ msgstr "Status"
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:81
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:83
 msgid "cards.table.selection.delete-confirm"
 msgstr "Are you sure you want to delete selected cards?"
 
@@ -517,71 +517,71 @@ msgstr "Actions"
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:97
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:99
 msgid "delete-algorithm.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:58
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:60
 msgid "delete-algorithm.cant-delete"
 msgstr "Default preset can't be deleted"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:99
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:101
 msgid "delete-algorithm.confirm"
 msgstr "Delete preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:91
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:93
 msgid "delete-algorithm.message"
 msgstr "Are you sure you want to delete this preset?"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:73
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:75
 msgid "delete-algorithm.successor-message"
 msgstr "If you want to delete this preset, select a successor."
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:77
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:79
 msgid "delete-algorithm.successor.label"
 msgstr "Successor preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:56
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:58
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:71
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:52
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:73
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:54
 msgid "delete-card.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:68
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:54
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:70
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:56
 msgid "delete-card.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:64
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:48
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:66
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:50
 msgid "delete-card.message"
 msgstr "Delete this card with all it's reviews?"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:50
-#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:42
+#: ../../libs/srs-react/src/lib/cards/cards-table-cell-delete-card.tsx:52
+#: ../../libs/srs-react/src/lib/cards/delete-card.tsx:44
 msgid "delete-card.trigger"
 msgstr "Delete card"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:56
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:58
 msgid "delete-deck.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:58
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:60
 msgid "delete-deck.confirm"
 msgstr "Delete deck"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:52
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:54
 msgid "delete-deck.message"
 msgstr "Are you sure you want to delete this deck and all it's cards and reviews?"
 
-#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:46
+#: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:48
 msgid "delete-deck.trigger"
 msgstr "Delete deck"
 
-#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:73
+#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:75
 msgid "delete-template.cancel"
 msgstr "Cancel"
 
@@ -597,15 +597,15 @@ msgstr "This template is locked and can't be deleted"
 msgid "delete-template.cant-delete-used"
 msgstr "This template is used by deck(s) and can't be deleted"
 
-#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:75
+#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:77
 msgid "delete-template.confirm"
 msgstr "Delete template"
 
-#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:69
+#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:71
 msgid "delete-template.message"
 msgstr "Are you sure you want to delete this template?"
 
-#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:57
+#: ../../libs/srs-react/src/lib/templates/delete-template.tsx:59
 msgid "delete-template.trigger"
 msgstr "Delete template"
 

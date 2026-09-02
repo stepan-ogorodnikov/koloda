@@ -39,6 +39,23 @@ export type RunToolCall = {
   error?: unknown;
 };
 
+/**
+ * Chain-of-thought recorded on the same activity list as tools so think →
+ * tool → think stays in arrival order. Not a protocol tool call.
+ */
+export type RunReasoningActivity = {
+  kind: "reasoning";
+  id: string;
+  text: string;
+  status: "running" | "done";
+};
+
+export type RunActivity = RunToolCall | RunReasoningActivity;
+
+export function isReasoningActivity(entry: RunActivity): entry is RunReasoningActivity {
+  return "kind" in entry && entry.kind === "reasoning";
+}
+
 export type AssistantRun = {
   id: string;
   status: RunStatus;
@@ -49,7 +66,9 @@ export type AssistantRun = {
   // WHY: optional so rows saved before tool activity restore unchanged; live
   // runs always initialize the field (`makeRun`). When present, persistence
   // validates the array — a malformed payload fails the row as corrupt.
-  toolCalls?: RunToolCall[];
+  // Reasoning rows (`kind: "reasoning"`) share this list so the activity
+  // widget can interleave thinking with real tool calls.
+  toolCalls?: RunActivity[];
   templateFields: TemplateFields | null;
   // WHY: optional so rows saved before proposed-card write targets restore
   // unchanged; live chat runs set it when `propose_cards` first succeeds.
@@ -159,6 +178,18 @@ function makeRun(
     modelName,
     dataAccess,
   };
+}
+
+function finishRunningReasoning(run: AssistantRun) {
+  const last = run.toolCalls?.at(-1);
+  if (last && isReasoningActivity(last) && last.status === "running") {
+    last.status = "done";
+  }
+}
+
+function ensureActivity(run: AssistantRun): RunActivity[] {
+  if (!run.toolCalls) run.toolCalls = [];
+  return run.toolCalls;
 }
 
 // WHY: `cloneConversationAtom` and restore-time normalization both need to drop run ids
@@ -275,6 +306,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.reason = "user";
     terminationReason = "user";
   }
+  finishRunningReasoning(run);
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
   logAssistantStructured({
@@ -313,31 +345,46 @@ function addAssistantMessage(draft: ConversationReducerState, payload: AddAssist
 type UpdateAssistantTextPayload = { runId: string; text: string };
 
 // WHY: replace the existing text part in place (never the whole parts array)
-// so streamed reasoning parts appended alongside survive text updates.
+// so other parts appended alongside survive text updates.
 function updateAssistantText(draft: ConversationReducerState, payload: UpdateAssistantTextPayload) {
   const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
   if (!msg) return;
   const textPart = msg.parts.find((part): part is TextUIPart => part.type === "text");
   if (textPart) {
     textPart.text = payload.text;
-    return;
+  } else {
+    msg.parts.push({ type: "text" as const, text: payload.text });
   }
-  msg.parts.push({ type: "text" as const, text: payload.text });
+  // WHY: the answer starting is the same signal as a tool call — close the
+  // open thinking row so the activity widget can auto-collapse it.
+  if (payload.text !== "") {
+    const run = draft.runs[payload.runId];
+    if (run) finishRunningReasoning(run);
+  }
 }
 
 type AppendAssistantReasoningPayload = { runId: string; text: string };
 
-// WHY: reasoning deltas merge into the trailing reasoning part so a delta
-// burst becomes one dimmed block instead of a part per token.
+// WHY: reasoning lives on the run activity list (not message parts) so it
+// can sit in arrival order with tool calls. Consecutive deltas merge into
+// the trailing thinking row; a new row starts after a tool.
 function appendAssistantReasoning(draft: ConversationReducerState, payload: AppendAssistantReasoningPayload) {
-  const msg = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
-  if (!msg || payload.text === "") return;
-  const last = msg.parts.at(-1);
-  if (last && last.type === "reasoning") {
+  const run = draft.runs[payload.runId];
+  if (!run || payload.text === "") return;
+  const activity = ensureActivity(run);
+  const last = activity.at(-1);
+  if (last && isReasoningActivity(last)) {
     last.text += payload.text;
+    last.status = "running";
     return;
   }
-  msg.parts.push({ type: "reasoning" as const, text: payload.text });
+  const reasoningCount = activity.filter(isReasoningActivity).length;
+  activity.push({
+    kind: "reasoning",
+    id: `${payload.runId}-reasoning-${reasoningCount}`,
+    text: payload.text,
+    status: "running",
+  });
 }
 
 type StartRunPayload = {
@@ -419,10 +466,12 @@ type AddToolCallPayload = { runId: string; call: Pick<RunToolCall, "id" | "name"
 function addToolCall(draft: ConversationReducerState, payload: AddToolCallPayload) {
   const run = draft.runs[payload.runId];
   if (!run) return;
-  // WHY: runs restored before persistence carried the field lack the array.
-  if (!run.toolCalls) run.toolCalls = [];
-  if (run.toolCalls.some((call) => call.id === payload.call.id)) return;
-  run.toolCalls.push({ ...payload.call, status: "running" });
+  const activity = ensureActivity(run);
+  if (activity.some((call) => call.id === payload.call.id)) return;
+  // WHY: a tool call is the next timeline step — close thinking so the
+  // widget can collapse it before the new tool row appears.
+  finishRunningReasoning(run);
+  activity.push({ ...payload.call, status: "running" });
 }
 
 type SetToolCallResultPayload = { runId: string; callId: string; output?: unknown; error?: unknown };
@@ -432,7 +481,9 @@ type SetToolCallResultPayload = { runId: string; callId: string; output?: unknow
 function setToolCallResult(draft: ConversationReducerState, payload: SetToolCallResultPayload) {
   const run = draft.runs[payload.runId];
   if (!run) return;
-  const call = run.toolCalls?.find((entry) => entry.id === payload.callId);
+  const call = run.toolCalls?.find(
+    (entry): entry is RunToolCall => !isReasoningActivity(entry) && entry.id === payload.callId,
+  );
   if (!call) return;
   if (payload.error !== undefined) {
     call.status = "error";

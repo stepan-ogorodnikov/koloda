@@ -1,5 +1,12 @@
-import { backfillUserMessageRunIds } from "../state/assistant-messages";
-import type { CardStatus, ConversationReducerState, AssistantRun } from "../state/conversation-reducer";
+import type { UIMessage } from "ai";
+import { backfillUserMessageRunIds, getMessageRunId } from "../state/assistant-messages";
+import type {
+  AssistantRun,
+  CardStatus,
+  ConversationReducerState,
+  RunReasoningActivity,
+} from "../state/conversation-reducer";
+import { isReasoningActivity } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
 /** Mirror `stampElapsed` without mutating the source run. */
@@ -69,12 +76,17 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     }
 
     // WHY: a crash-restored run is terminal; leaving toolCalls as `running`
-    // would keep the activity widget spinning after reload.
+    // would keep the activity widget spinning after reload. Partial thinking
+    // is still useful, so in-flight reasoning rows close as `done`.
     const toolCalls = nextRun.toolCalls;
     if (toolCalls?.some((entry) => entry.status === "running")) {
       nextRun = {
         ...nextRun,
-        toolCalls: toolCalls.map((entry) => (entry.status === "running" ? { ...entry, status: "error" } : entry)),
+        toolCalls: toolCalls.map((entry) => {
+          if (entry.status !== "running") return entry;
+          if (isReasoningActivity(entry)) return { ...entry, status: "done" as const };
+          return { ...entry, status: "error" as const };
+        }),
       };
       runChanged = true;
       normalizedAny = true;
@@ -98,6 +110,12 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   const messagesWithRunIds = backfillUserMessageRunIds(state.messages, startedAtByRunId);
   if (messagesWithRunIds !== state.messages) normalizedAny = true;
 
+  const lifted = liftLegacyReasoningParts(messagesWithRunIds, runs);
+  if (lifted.changed) {
+    normalizedAny = true;
+    Object.assign(runs, lifted.runs);
+  }
+
   if (
     !normalizedAny &&
     state.activeRunId === null &&
@@ -115,6 +133,41 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // Failed runs are kept, so a pointer at a failed run survives restore.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,
     runs,
-    messages: messagesWithRunIds,
+    messages: lifted.changed ? lifted.messages : messagesWithRunIds,
   };
+}
+
+function isReasoningPart(part: UIMessage["parts"][number]): part is { type: "reasoning"; text: string } {
+  return part.type === "reasoning" && "text" in part && typeof part.text === "string";
+}
+
+// WHY: pre-activity rows stored thinking as a message part after the answer.
+// Lift those parts onto the run timeline (ahead of any tools) and strip them
+// from the message so restore shows the same widget as a live run.
+function liftLegacyReasoningParts(
+  messages: UIMessage[],
+  runs: Record<string, AssistantRun>,
+): { messages: UIMessage[]; runs: Record<string, AssistantRun>; changed: boolean } {
+  let changed = false;
+  const nextRuns = { ...runs };
+  const nextMessages = messages.map((message) => {
+    if (!message.parts.some(isReasoningPart)) return message;
+    changed = true;
+    const reasoningParts = message.parts.filter(isReasoningPart);
+    const runId = getMessageRunId(message);
+    if (runId) {
+      const run = nextRuns[runId];
+      if (run && !(run.toolCalls ?? []).some(isReasoningActivity)) {
+        const activities: RunReasoningActivity[] = reasoningParts.map((part, index) => ({
+          kind: "reasoning",
+          id: `${runId}-reasoning-${index}`,
+          text: part.text,
+          status: "done",
+        }));
+        nextRuns[runId] = { ...run, toolCalls: [...activities, ...(run.toolCalls ?? [])] };
+      }
+    }
+    return { ...message, parts: message.parts.filter((part) => part.type !== "reasoning") };
+  });
+  return changed ? { messages: nextMessages, runs: nextRuns, changed: true } : { messages, runs, changed: false };
 }

@@ -149,6 +149,19 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].toolCalls).toEqual([{ id: "call-1", name: "list_decks", input: {}, status: "running" }]);
     });
 
+    it("closes a running reasoning row before appending the tool call", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      expect(state.runs["r1"].toolCalls).toEqual([
+        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
+        { id: "call-1", name: "list_decks", input: {}, status: "running" },
+      ]);
+    });
+
     it("skips a duplicate tool call id idempotently", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
@@ -469,6 +482,15 @@ describe("conversationReducer", () => {
       expect(state.activeRunId).toBeNull();
 
       vi.useRealTimers();
+    });
+
+    it("closes a running reasoning row when the run completes", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      expect(state.runs["r1"].toolCalls).toEqual([
+        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
+      ]);
     });
 
     it("does not clear activeRunId when a different run completes", () => {

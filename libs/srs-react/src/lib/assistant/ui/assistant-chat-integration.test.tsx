@@ -439,7 +439,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(stateB.messages.find((m) => m.role === "assistant")).toBeUndefined();
   });
 
-  it("reasoning deltas stream into one dimmed part and survive text updates", async () => {
+  it("reasoning deltas stream into one activity row and survive text updates", async () => {
     setupTestHarness();
     const store = createStore();
     store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
@@ -487,13 +487,11 @@ describe("assistant chat integration (per-conversation state)", () => {
       await chatPromise;
     });
 
-    // The reasoning block merged into one dimmed part and the text part was
-    // updated in place instead of replacing the whole parts array.
     const stateA = store.get(conversationsAtom)["A"];
     const aAssistant = stateA.messages.find((m) => m.role === "assistant");
-    expect(aAssistant?.parts).toEqual([
-      { type: "text", text: "The answer" },
-      { type: "reasoning", text: "pondering the question" },
+    expect(aAssistant?.parts).toEqual([{ type: "text", text: "The answer" }]);
+    expect(stateA.runs[Object.keys(stateA.runs)[0]!]?.toolCalls).toEqual([
+      { kind: "reasoning", id: expect.stringMatching(/-reasoning-0$/), text: "pondering the question", status: "done" },
     ]);
   });
 

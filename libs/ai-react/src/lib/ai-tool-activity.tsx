@@ -1,10 +1,11 @@
-import { AlertCircleIcon, WrenchIcon, InvestigationIcon } from "@hugeicons/core-free-icons";
+import { AiBrain01Icon, AlertCircleIcon, WrenchIcon, InvestigationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import { Button, CardsIcon, Dialog } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useState } from "react";
 import { tv } from "tailwind-variants";
 
 const toolActivityHeadline = tv({
@@ -16,8 +17,16 @@ const toolActivityHeadline = tv({
   defaultVariants: { isError: false, isRunning: false },
 });
 
+const thinkingLabel = tv({
+  base: "font-medium",
+  variants: {
+    isRunning: { true: "animate-shimmer-text--fg-level-4/fg-level-1" },
+  },
+  defaultVariants: { isRunning: false },
+});
+
 /**
- * Tool-call row for the compact activity widget.
+ * Activity row for the compact widget.
  * Shape matches the run-record toolCalls entries; this primitive must not
  * import conversation store types (layer map: ai-react owns UI only).
  */
@@ -30,7 +39,20 @@ export type AIToolCallRecord = {
   error?: unknown;
 };
 
-export type AIToolActivityProps = { calls: readonly AIToolCallRecord[] };
+export type AIReasoningRecord = {
+  kind: "reasoning";
+  id: string;
+  text: string;
+  status: "running" | "done";
+};
+
+export type AIActivityRecord = AIToolCallRecord | AIReasoningRecord;
+
+export function isReasoningRecord(entry: AIActivityRecord): entry is AIReasoningRecord {
+  return "kind" in entry && entry.kind === "reasoning";
+}
+
+export type AIToolActivityProps = { calls: readonly AIActivityRecord[] };
 
 export function AIToolActivity({ calls }: AIToolActivityProps) {
   const { _ } = useLingui();
@@ -38,10 +60,55 @@ export function AIToolActivity({ calls }: AIToolActivityProps) {
 
   return (
     <ul className="flex flex-col gap-1 px-3" aria-label={_(msg`ai.chat.tool-activity.label`)}>
-      {calls.map((call) => (
-        <ToolActivityRow key={call.id} call={call} />
-      ))}
+      {calls.map((call) =>
+        isReasoningRecord(call) ? (
+          <ReasoningActivityRow key={call.id} item={call} />
+        ) : (
+          <ToolActivityRow key={call.id} call={call} />
+        ),
+      )}
     </ul>
+  );
+}
+
+type ReasoningActivityRowProps = { item: AIReasoningRecord };
+
+function ReasoningActivityRow({ item }: ReasoningActivityRowProps) {
+  const { _ } = useLingui();
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  // WHY: open while tokens are arriving; auto-collapse when the next tool or
+  // the answer starts (`status` flips to done) unless the user toggled.
+  const isOpen = userOpen ?? item.status === "running";
+  const displayName =
+    item.status === "running" ? _(msg`ai.chat.tool-activity.thinking`) : _(msg`ai.chat.tool-activity.thought`);
+
+  return (
+    <li className="fg-level-4">
+      <Button
+        variants={{
+          style: "ghost",
+          class: [
+            "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
+            "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
+            "fg-level-3 hover:fg-level-2 data-pressed:fg-level-2",
+          ],
+        }}
+        aria-expanded={isOpen}
+        onPress={() => setUserOpen(!isOpen)}
+      >
+        <span className={toolActivityHeadline()}>
+          <HugeiconsIcon
+            className="size-6 min-w-6"
+            strokeWidth={1.75}
+            icon={AiBrain01Icon}
+            aria-hidden={item.status === "running" ? undefined : true}
+            aria-label={item.status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
+          />
+          <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
+        </span>
+      </Button>
+      {isOpen && item.text ? <p className="py-3 whitespace-pre-wrap leading-6 fg-level-3">{item.text}</p> : null}
+    </li>
   );
 }
 

@@ -60,7 +60,9 @@ function MessagePart({ part, renderText }: { part: ChatMessagePart; renderText?:
       if (renderText) return renderText(part.text);
       return <p className="whitespace-pre-wrap leading-6">{part.text}</p>;
     case "reasoning":
-      return <p className="whitespace-pre-wrap leading-6 fg-level-3">{part.text}</p>;
+      // WHY: thinking renders as an activity row on the run, not as a
+      // dimmed paragraph after the answer. Skip leftover legacy parts.
+      return null;
     case "interrupted":
       return <p className="fg-level-4">{part.text}</p>;
     case "source-url":
@@ -79,5 +81,5 @@ function MessagePart({ part, renderText }: { part: ChatMessagePart; renderText?:
 }
 
 function getMessageParts(parts: ChatMessagePart[]) {
-  return parts.filter((part) => part.type !== "step-start");
+  return parts.filter((part) => part.type !== "step-start" && part.type !== "reasoning");
 }

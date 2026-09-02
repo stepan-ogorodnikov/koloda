@@ -32,8 +32,10 @@ vi.mock("@koloda/ai-react", () => ({
       ) : null}
     </div>
   ),
-  AIToolActivity: ({ calls }: { calls: Array<{ name: string }> }) => (
-    <div data-testid="tool-activity">{calls.map((entry) => entry.name).join(",")}</div>
+  AIToolActivity: ({ calls }: { calls: Array<{ name?: string; kind?: string }> }) => (
+    <div data-testid="tool-activity">
+      {calls.map((entry) => (entry.kind === "reasoning" ? "thinking" : entry.name)).join(",")}
+    </div>
   ),
 }));
 
@@ -142,6 +144,16 @@ describe("useAssistantMessageRenderer", () => {
     };
     mountRenderer({ r1: run }, { assistantText: "" });
     expect(screen.getByTestId("tool-activity").textContent).toBe("list_decks");
+    expect(screen.queryByTestId("status-pending")).toBeNull();
+  });
+
+  it("renders thinking activity on a streaming chat message without pending", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      toolCalls: [{ kind: "reasoning" as const, id: "r1-reasoning-0", text: "plan", status: "running" as const }],
+    };
+    mountRenderer({ r1: run }, { assistantText: "" });
+    expect(screen.getByTestId("tool-activity").textContent).toBe("thinking");
     expect(screen.queryByTestId("status-pending")).toBeNull();
   });
 

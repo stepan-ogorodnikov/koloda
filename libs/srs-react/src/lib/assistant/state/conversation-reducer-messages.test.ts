@@ -80,13 +80,13 @@ describe("conversationReducer", () => {
       expect(state.messages[1].parts).toEqual([{ type: "text", text: "Done" }]);
     });
 
-    it("replaces the text part in place, preserving appended reasoning parts", () => {
+    it("replaces the text part in place without touching the message parts list", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "thought" }]);
       state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
-      expect(state.messages[1].parts).toEqual([
-        { type: "text", text: "Done" },
-        { type: "reasoning", text: "thought" },
+      expect(state.messages[1].parts).toEqual([{ type: "text", text: "Done" }]);
+      expect(state.runs.r1?.toolCalls).toEqual([
+        { kind: "reasoning", id: "r1-reasoning-0", text: "thought", status: "done" },
       ]);
     });
 
@@ -100,26 +100,46 @@ describe("conversationReducer", () => {
   });
 
   describe("appendAssistantReasoning", () => {
-    it("appends a reasoning part to the assistant message", () => {
+    it("records reasoning on the run activity list, not message parts", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "thinking" }]);
-      expect(state.messages[1].parts).toEqual([
-        { type: "text", text: "" },
-        { type: "reasoning", text: "thinking" },
+      expect(state.messages[1].parts).toEqual([{ type: "text", text: "" }]);
+      expect(state.runs.r1?.toolCalls).toEqual([
+        { kind: "reasoning", id: "r1-reasoning-0", text: "thinking", status: "running" },
       ]);
     });
 
-    it("merges consecutive deltas into the trailing reasoning part", () => {
+    it("merges consecutive deltas into the trailing reasoning row", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "a " }]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "b" }]);
-      expect(state.messages[1].parts[1]).toEqual({ type: "reasoning", text: "a b" });
+      expect(state.runs.r1?.toolCalls?.[0]).toEqual({
+        kind: "reasoning",
+        id: "r1-reasoning-0",
+        text: "a b",
+        status: "running",
+      });
+    });
+
+    it("opens a new reasoning row after a tool call", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "next" }]);
+      expect(state.runs.r1?.toolCalls).toEqual([
+        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
+        { id: "call-1", name: "list_decks", input: {}, status: "running" },
+        { kind: "reasoning", id: "r1-reasoning-1", text: "next", status: "running" },
+      ]);
     });
 
     it("ignores an empty reasoning delta", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "" }]);
-      expect(state.messages[1].parts).toHaveLength(1);
+      expect(state.runs.r1?.toolCalls).toEqual([]);
     });
   });
 

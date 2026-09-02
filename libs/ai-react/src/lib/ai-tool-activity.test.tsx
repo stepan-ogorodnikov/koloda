@@ -144,6 +144,31 @@ describe("AIToolActivity", () => {
     expect(screen.getByText(/"deckId": 9/)).toBeTruthy();
   });
 
+  it("streams thinking inline and auto-collapses when done", () => {
+    const { container, rerender } = render(
+      <AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" }]} />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.thinking")).toBeTruthy();
+    expect(screen.getByLabelText("ai.chat.tool-activity.running")).toBeTruthy();
+    expect(screen.getByText("Quiet plan.")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.thinking").className).toContain(
+      "animate-shimmer-text--fg-level-4/fg-level-1",
+    );
+    expect(container.querySelector(".animate-shimmer")).toBeNull();
+
+    rerender(<AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" }]} />);
+
+    expect(screen.getByText("ai.chat.tool-activity.thought")).toBeTruthy();
+    expect(screen.queryByText("Quiet plan.")).toBeNull();
+    expect(screen.getByText("ai.chat.tool-activity.thought").className).not.toContain(
+      "animate-shimmer-text--fg-level-4/fg-level-1",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ }));
+    expect(screen.getByText("Quiet plan.")).toBeTruthy();
+  });
+
   it("renders nothing when there are no calls", () => {
     const { container } = render(<AIToolActivity calls={[]} />);
     expect(container.innerHTML).toBe("");
