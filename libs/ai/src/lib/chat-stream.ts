@@ -120,9 +120,12 @@ export function ollamaProviderOptions(reasoningEffort: string | undefined): Prov
 }
 
 export function lmstudioProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
-  // WHY: native catalog uses "off"; /v1/chat/completions reasoning_effort uses "none".
+  // WHY: native /api/v1/models advertises on/off; /v1/chat/completions only accepts
+  // none|minimal|low|medium|high|xhigh. LM Studio documents medium as "enable".
   if (!reasoningEffort) return undefined;
-  return { lmstudio: { reasoningEffort: reasoningEffort === "off" ? "none" : reasoningEffort } };
+  if (reasoningEffort === "off") return { lmstudio: { reasoningEffort: "none" } };
+  if (reasoningEffort === "on") return { lmstudio: { reasoningEffort: "medium" } };
+  return { lmstudio: { reasoningEffort } };
 }
 
 export function streamChatWithOpenRouter(

@@ -171,9 +171,12 @@ describe("lmstudioProviderOptions", () => {
     });
   });
 
-  it("maps native off onto OpenAI-compatible none", () => {
+  it("maps native off onto OpenAI-compatible none and on onto medium", () => {
     expect(lmstudioProviderOptions("off")).toEqual({
       lmstudio: { reasoningEffort: "none" },
+    });
+    expect(lmstudioProviderOptions("on")).toEqual({
+      lmstudio: { reasoningEffort: "medium" },
     });
   });
 
