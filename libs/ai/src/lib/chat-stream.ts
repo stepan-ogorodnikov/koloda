@@ -94,14 +94,10 @@ async function runChatStream(
   };
 }
 
-/*
- * Provider-specific chat streaming
- *
- * WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
- * into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
- * reasoningEffort vs Ollama think vs LM Studio reasoningEffort). A shared
- * `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
- */
+// WHY: ChatInput.reasoningEffort is a provider-agnostic string. Each wrapper maps it
+// into that SDK's providerOptions shape (OpenRouter reasoning.effort vs OpenCode
+// reasoningEffort vs Ollama think vs LM Studio reasoningEffort). A shared
+// `{ [name]: { reasoningEffort } }` blob would drop OpenRouter.
 
 export function openRouterProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
   return reasoningEffort ? { openrouter: { reasoning: { effort: reasoningEffort } } } : undefined;
@@ -116,7 +112,11 @@ export function opencodeZenProviderOptions(reasoningEffort: string | undefined):
 }
 
 export function ollamaProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {
-  return reasoningEffort ? { ollama: { think: reasoningEffort } } : undefined;
+  if (!reasoningEffort) return undefined;
+  // WHY: generic thinking models advertise on/off; Ollama's think field is boolean there.
+  if (reasoningEffort === "on") return { ollama: { think: true } };
+  if (reasoningEffort === "off") return { ollama: { think: false } };
+  return { ollama: { think: reasoningEffort } };
 }
 
 export function lmstudioProviderOptions(reasoningEffort: string | undefined): ProviderOptions | undefined {

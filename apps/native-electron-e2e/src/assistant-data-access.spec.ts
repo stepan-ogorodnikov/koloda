@@ -110,21 +110,21 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     await expect(getDeckCardsRow).toBeVisible({ timeout: 20_000 });
     const listDecksRow = log.locator("li").filter({ hasText: /List decks - \d+ decks?/ });
 
-    // Open list_decks: its stored copy is well under 2,000 chars, so it shows
+    // WHY: Open list_decks: its stored copy is well under 2,000 chars, so it shows
     // the plain "Output" label — the contrast that proves "Output (truncated)"
     // below is conditional on real size, not on the tool name.
     await listDecksRow.getByRole("button").click();
     const inspectDialog = page.getByRole("dialog");
     await expect(inspectDialog.getByText("Output", { exact: true })).toBeVisible();
-    // The executor really read the DB: the new deck's title and card count sit
-    // in the popover output while the model only sent an empty {} call.
+    // WHY: the executor really read the DB: the new deck's title and card count sit
+    // in the inspect output while the model only sent an empty {} call.
     const listDecksOutputPre = inspectDialog.locator("pre").filter({ hasText: `"${deckTitle}"` });
     await expect(listDecksOutputPre).toContainText('"cardCount": 3');
 
     await page.keyboard.press("Escape");
     await expect(inspectDialog).toBeHidden();
 
-    // Open get_deck_cards: its >2,000-char output was bounded by the run
+    // WHY: Open get_deck_cards: its >2,000-char output was bounded by the run
     // record (MAX_TOOL_OUTPUT_CHARS = 2000), so the label switches to
     // "Output (truncated)" and the pre shows the 400-char compact preview.
     await getDeckCardsRow.getByRole("button").click();

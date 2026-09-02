@@ -69,7 +69,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     getRowId: (_, index) => index.toString(),
     enableRowSelection: (row) => row.original.status === "idle",
     initialState: {
-      // Spec: all generated (idle) cards start selected. Restored success /
+      // WHY: spec: all generated (idle) cards start selected. Restored success /
       // error / pending rows are not selectable and must not occupy the
       // selection map — TanStack v9 still reports them as selected, which
       // would enable Add and re-insert already persisted cards.

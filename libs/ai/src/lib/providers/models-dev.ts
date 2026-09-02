@@ -54,7 +54,6 @@ function providerModelMap(catalog: unknown, providerKey: string): Record<string,
   return provider.models;
 }
 
-/** Overlay catalog `effort` values by exact model id; prefix table only when the id is absent or the catalog is unavailable. */
 export function overlayReasoningFromModelsDev(
   models: AIModel[],
   providerKey: string,
@@ -64,6 +63,8 @@ export function overlayReasoningFromModelsDev(
 
   return models.map((model) => {
     let reasoning: ReasoningLevels | undefined;
+    // WHY: prefix fallback is only for a missing catalog or missing id. An exact
+    // catalog row with no effort must stay empty — do not invent levels from a prefix.
     if (!modelMap) {
       reasoning = resolveReasoningLevelsForModel(model.id);
     } else if (Object.hasOwn(modelMap, model.id)) {

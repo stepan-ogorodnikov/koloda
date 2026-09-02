@@ -46,7 +46,7 @@ describe("fetchOllamaModels", () => {
     expect(listMock).toHaveBeenCalledTimes(1);
   });
 
-  it("advertises low/medium/high thinking levels when capabilities include thinking", async () => {
+  it("advertises low/medium/high thinking levels for gpt-oss when capabilities include thinking", async () => {
     listMock.mockResolvedValueOnce({
       models: [{ model: "gpt-oss:20b", name: "gpt-oss:20b", capabilities: ["thinking"] }],
     });
@@ -64,6 +64,27 @@ describe("fetchOllamaModels", () => {
           { effort: "high", description: "" },
         ],
         default_reasoning_level: "medium",
+      },
+    ]);
+  });
+
+  it("advertises on/off thinking for non-gpt-oss models that only accept a boolean think flag", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [{ model: "qwen3:8b", name: "qwen3:8b", capabilities: ["thinking"] }],
+    });
+
+    const models = await fetchOllamaModels("http://localhost:11434");
+
+    expect(models).toEqual([
+      {
+        id: "qwen3:8b",
+        name: "qwen3:8b",
+        context_length: 0,
+        supported_reasoning_levels: [
+          { effort: "off", description: "" },
+          { effort: "on", description: "" },
+        ],
+        default_reasoning_level: "on",
       },
     ]);
   });

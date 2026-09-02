@@ -5,10 +5,15 @@ import type { AIGenerationClient, AIProviderEntry } from "../provider-registry";
 import type { AISecrets } from "../provider-secrets";
 import { isPresentApiKey } from "../provider-secrets";
 
-const OLLAMA_THINKING_REASONING_LEVELS: NonNullable<AIModel["supported_reasoning_levels"]> = [
+const OLLAMA_GPT_OSS_REASONING_LEVELS: NonNullable<AIModel["supported_reasoning_levels"]> = [
   { effort: "low", description: "" },
   { effort: "medium", description: "" },
   { effort: "high", description: "" },
+];
+
+const OLLAMA_BOOLEAN_THINKING_LEVELS: NonNullable<AIModel["supported_reasoning_levels"]> = [
+  { effort: "off", description: "" },
+  { effort: "on", description: "" },
 ];
 
 // WHY: the ollama list Model type may omit capabilities; /api/tags still sends them.
@@ -16,15 +21,28 @@ function ollamaListCapabilities(model: object): unknown {
   return "capabilities" in model ? model.capabilities : undefined;
 }
 
-// WHY: GPT-OSS intersection advertised when CapabilityThinking is on the list row.
-// Omit fields when the tag is missing so the picker stays hidden — no /api/show.
+function ollamaModelIsGptOss(modelId: string): boolean {
+  return modelId.toLowerCase().includes("gpt-oss");
+}
+
+// WHY: CapabilityThinking only means thought can be enabled. GPT-OSS accepts
+// string effort; other thinking models only accept a boolean think flag — sending
+// low/medium/high to those models fails the request. Omit fields when the tag is
+// missing so the picker stays hidden — no /api/show.
 export function ollamaThinkingReasoningLevels(
+  modelId: string,
   capabilities: unknown,
 ): Pick<AIModel, "supported_reasoning_levels" | "default_reasoning_level"> | undefined {
   if (!Array.isArray(capabilities) || !capabilities.includes("thinking")) return undefined;
+  if (ollamaModelIsGptOss(modelId)) {
+    return {
+      supported_reasoning_levels: OLLAMA_GPT_OSS_REASONING_LEVELS,
+      default_reasoning_level: "medium",
+    };
+  }
   return {
-    supported_reasoning_levels: OLLAMA_THINKING_REASONING_LEVELS,
-    default_reasoning_level: "medium",
+    supported_reasoning_levels: OLLAMA_BOOLEAN_THINKING_LEVELS,
+    default_reasoning_level: "on",
   };
 }
 
@@ -43,7 +61,7 @@ export async function fetchOllamaModels(baseUrl: string, apiKey?: string): Promi
       id: model.model,
       name: model.name ?? model.model,
       context_length: 0,
-      ...ollamaThinkingReasoningLevels(ollamaListCapabilities(model)),
+      ...ollamaThinkingReasoningLevels(model.model, ollamaListCapabilities(model)),
     }))
     .sort((a, b) => a.id.localeCompare(b.id));
 }

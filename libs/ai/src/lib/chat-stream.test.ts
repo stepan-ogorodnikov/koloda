@@ -153,6 +153,11 @@ describe("ollamaProviderOptions", () => {
     });
   });
 
+  it("maps on/off onto boolean Ollama think", () => {
+    expect(ollamaProviderOptions("on")).toEqual({ ollama: { think: true } });
+    expect(ollamaProviderOptions("off")).toEqual({ ollama: { think: false } });
+  });
+
   it("omits providerOptions when effort is missing or empty", () => {
     expect(ollamaProviderOptions(undefined)).toBeUndefined();
     expect(ollamaProviderOptions("")).toBeUndefined();
