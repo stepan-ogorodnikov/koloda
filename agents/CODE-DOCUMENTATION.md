@@ -142,6 +142,16 @@ Example (type):
 pub enum CardState { /* ... */ }
 ```
 
+#### 3. Test Step Comments
+
+Step and section comments in test files — unit tests, integration tests, and
+`apps/*-e2e` specs — are allowed without a tag. A test body is a scenario, not
+an API: its title names the case, and comments labeling setup, action, and
+assertion phases ("Open the edit dialog", "Save") aid scanning a flat sequence
+of statements. Fixture and mock docs may describe their config surface.
+Non-obvious behavior still gets `// WHY:` / `// INVARIANT:` / `// WORKAROUND:`
+tags. Separator banner lines (`// ====`) add no information and stay out.
+
 ## Comments vs. Architecture Decision Records (ADRs)
 
 How do you know if a decision needs a code comment or a full ADR file in `docs/adr/`?
