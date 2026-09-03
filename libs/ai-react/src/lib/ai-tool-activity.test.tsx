@@ -169,6 +169,17 @@ describe("AIToolActivity", () => {
     expect(screen.getByText("Quiet plan.")).toBeTruthy();
   });
 
+  it("uses renderText for reasoning when provided", () => {
+    render(
+      <AIToolActivity
+        renderText={(text) => <div data-testid="custom-reasoning">{text}</div>}
+        calls={[{ kind: "reasoning", id: "r1", text: "**plan**", status: "running" }]}
+      />,
+    );
+
+    expect(screen.getByTestId("custom-reasoning").textContent).toBe("**plan**");
+  });
+
   it("renders nothing when there are no calls", () => {
     const { container } = render(<AIToolActivity calls={[]} />);
     expect(container.innerHTML).toBe("");

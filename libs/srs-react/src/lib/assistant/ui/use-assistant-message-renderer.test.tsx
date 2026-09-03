@@ -32,8 +32,14 @@ vi.mock("@koloda/ai-react", () => ({
       ) : null}
     </div>
   ),
-  AIToolActivity: ({ calls }: { calls: Array<{ name?: string; kind?: string }> }) => (
-    <div data-testid="tool-activity">
+  AIToolActivity: ({
+    calls,
+    renderText,
+  }: {
+    calls: Array<{ name?: string; kind?: string }>;
+    renderText?: (text: string) => React.ReactNode;
+  }) => (
+    <div data-testid="tool-activity" data-has-render-text={renderText ? "true" : "false"}>
       {calls.map((entry) => (entry.kind === "reasoning" ? "thinking" : entry.name)).join(",")}
     </div>
   ),
@@ -154,6 +160,7 @@ describe("useAssistantMessageRenderer", () => {
     };
     mountRenderer({ r1: run }, { assistantText: "" });
     expect(screen.getByTestId("tool-activity").textContent).toBe("thinking");
+    expect(screen.getByTestId("tool-activity").getAttribute("data-has-render-text")).toBe("true");
     expect(screen.queryByTestId("status-pending")).toBeNull();
   });
 

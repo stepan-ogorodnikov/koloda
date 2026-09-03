@@ -6,6 +6,7 @@ import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { tv } from "tailwind-variants";
 
 const toolActivityHeadline = tv({
@@ -52,9 +53,12 @@ export function isReasoningRecord(entry: AIActivityRecord): entry is AIReasoning
   return "kind" in entry && entry.kind === "reasoning";
 }
 
-export type AIToolActivityProps = { calls: readonly AIActivityRecord[] };
+export type AIToolActivityProps = {
+  calls: readonly AIActivityRecord[];
+  renderText?: (text: string) => ReactNode;
+};
 
-export function AIToolActivity({ calls }: AIToolActivityProps) {
+export function AIToolActivity({ calls, renderText }: AIToolActivityProps) {
   const { _ } = useLingui();
   if (calls.length === 0) return null;
 
@@ -62,7 +66,7 @@ export function AIToolActivity({ calls }: AIToolActivityProps) {
     <ul className="flex flex-col gap-1 px-3" aria-label={_(msg`ai.chat.tool-activity.label`)}>
       {calls.map((call) =>
         isReasoningRecord(call) ? (
-          <ReasoningActivityRow key={call.id} item={call} />
+          <ReasoningActivityRow key={call.id} item={call} renderText={renderText} />
         ) : (
           <ToolActivityRow key={call.id} call={call} />
         ),
@@ -71,9 +75,9 @@ export function AIToolActivity({ calls }: AIToolActivityProps) {
   );
 }
 
-type ReasoningActivityRowProps = { item: AIReasoningRecord };
+type ReasoningActivityRowProps = { item: AIReasoningRecord; renderText?: (text: string) => ReactNode };
 
-function ReasoningActivityRow({ item }: ReasoningActivityRowProps) {
+function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
   const { _ } = useLingui();
   const [isUserOpen, setIsUserOpen] = useState<boolean | null>(null);
   // WHY: open while tokens are arriving; auto-collapse when the next tool or
@@ -107,7 +111,13 @@ function ReasoningActivityRow({ item }: ReasoningActivityRowProps) {
           <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
         </span>
       </Button>
-      {isOpen && item.text ? <p className="py-3 whitespace-pre-wrap leading-6 fg-level-3">{item.text}</p> : null}
+      {isOpen && item.text ? (
+        renderText ? (
+          <div className="py-3">{renderText(item.text)}</div>
+        ) : (
+          <p className="py-3 whitespace-pre-wrap leading-6 fg-level-3">{item.text}</p>
+        )
+      ) : null}
     </li>
   );
 }

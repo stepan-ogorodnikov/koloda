@@ -5,6 +5,7 @@ import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
 import { useCallback } from "react";
 import { AssistantCardsMessage } from "./assistant-cards-message";
+import { renderAssistantReasoningMarkdown } from "./assistant-markdown";
 import {
   getChatTextMetadata,
   getErrorMetadata,
@@ -220,7 +221,11 @@ function renderChatMessage(options: RenderChatMessageOptions) {
   const copyAction = text ? <CopyMessageButton text={text} /> : null;
   // WHY: tool + thinking traffic lives on the run, not message parts — the
   // widget must read `run.toolCalls` so arrival order is preserved.
-  const toolActivity = run.toolCalls && run.toolCalls.length > 0 ? <AIToolActivity calls={run.toolCalls} /> : null;
+  // Markdown is injected here so `@koloda/ai-react` stays free of `@koloda/srs`.
+  const toolActivity =
+    run.toolCalls && run.toolCalls.length > 0 ? (
+      <AIToolActivity calls={run.toolCalls} renderText={renderAssistantReasoningMarkdown} />
+    ) : null;
   const cardsBlock =
     run.cards.length > 0
       ? renderCardsMessage({

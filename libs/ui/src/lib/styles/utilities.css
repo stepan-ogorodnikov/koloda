@@ -48,6 +48,19 @@
   margin-block-start: 0;
 }
 
+.prose.prose-chat-muted {
+  --tw-prose-body: var(--fg-level-3);
+  --tw-prose-headings: var(--fg-level-3);
+  --tw-prose-lead: var(--fg-level-3);
+  --tw-prose-bold: var(--fg-level-3);
+  --tw-prose-counters: var(--fg-level-4);
+  --tw-prose-bullets: var(--fg-level-4);
+  --tw-prose-quotes: var(--fg-level-3);
+  --tw-prose-captions: var(--fg-level-4);
+  --tw-prose-code: var(--fg-level-3);
+  --tw-prose-pre-code: var(--fg-level-3);
+}
+
 @utility bg-* {
   background: color-mix(in oklab, --value(--color-bg-*) --modifier(integer)%, transparent);
 }

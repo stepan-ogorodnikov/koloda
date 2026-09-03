@@ -180,6 +180,7 @@ Assistant text is displayed as rendered markdown, including leftover text on a m
 User messages are displayed as paragraphs.
 Reasoning is shown as an activity row on the same assistant message.
 It sits in the same activity list as tool calls, in the order they arrived.
+The reasoning text is displayed as rendered markdown, using the same sanitization as assistant text.
 While the model is thinking, the row is labeled Thinking and the reasoning text is visible.
 When thinking finishes, the row is labeled Thought and the text is collapsed.
 A user toggle is kept if they already opened or closed it.

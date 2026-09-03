@@ -15,4 +15,11 @@ describe("AssistantMarkdown", () => {
   it("does not throw on incomplete streamed markdown", () => {
     expect(() => render(<AssistantMarkdown text={"**bo"} />)).not.toThrow();
   });
+
+  it("applies muted prose for reasoning", () => {
+    const { container } = render(<AssistantMarkdown text={"**bold**"} muted />);
+
+    expect(container.firstElementChild?.className).toContain("prose-chat-muted");
+    expect(screen.getByText("bold").tagName).toBe("STRONG");
+  });
 });
