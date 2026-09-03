@@ -1,5 +1,5 @@
 use koloda_core::domain::settings::SettingsName;
-use koloda_core::domain::settings_ai::AISettings;
+use koloda_core::domain::settings_ai::{AISettings, ChatPromptMode};
 
 #[test]
 fn test_valid_ai_settings_empty_profiles() {
@@ -409,6 +409,7 @@ fn test_assistant_temperature_nan_value_fails_validation() {
     settings.assistant = Some(koloda_core::domain::settings_ai::AssistantSettings {
         temperature: f64::NAN,
         chat_prompt_template: None,
+        chat_prompt_mode: None,
     });
 
     let result = settings.validate();
@@ -444,4 +445,55 @@ fn test_assistant_ignores_unknown_cards_prompt_template() {
         settings.validate().is_ok(),
         "extra cardsPromptTemplate should be ignored"
     );
+}
+
+#[test]
+fn test_assistant_chat_prompt_mode_wire() {
+    struct Case {
+        json: &'static str,
+        template: Option<&'static str>,
+        mode: Option<ChatPromptMode>,
+        label: &'static str,
+    }
+
+    let cases = [
+        Case {
+            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": null } }"#,
+            template: None,
+            mode: None,
+            label: "omitted mode and null template",
+        },
+        Case {
+            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "mine" } }"#,
+            template: Some("mine"),
+            mode: None,
+            label: "omitted mode and a stored custom template",
+        },
+        Case {
+            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "mine", "chatPromptMode": "default" } }"#,
+            template: Some("mine"),
+            mode: Some(ChatPromptMode::Default),
+            label: "explicit default with a stored custom template",
+        },
+        Case {
+            json: r#"{ "profiles": [], "assistant": { "temperature": 0.2, "chatPromptTemplate": "", "chatPromptMode": "custom" } }"#,
+            template: Some(""),
+            mode: Some(ChatPromptMode::Custom),
+            label: "empty custom template",
+        },
+    ];
+
+    for case in cases {
+        let settings: AISettings =
+            serde_json::from_str(case.json).unwrap_or_else(|err| panic!("{}: {err}", case.label));
+        assert!(settings.validate().is_ok(), "{}", case.label);
+        let assistant = settings.assistant.as_ref().expect(case.label);
+        assert_eq!(
+            assistant.chat_prompt_template.as_deref(),
+            case.template,
+            "{}",
+            case.label
+        );
+        assert_eq!(assistant.chat_prompt_mode, case.mode, "{}", case.label);
+    }
 }

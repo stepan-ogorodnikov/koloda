@@ -4,6 +4,8 @@ import {
   aiSettingsValidation,
   assistantSettingsValidation,
   findDuplicateProfileId,
+  resolveChatPromptMode,
+  resolveEffectiveChatPromptTemplate,
 } from "./settings";
 import type { AISettings } from "./settings";
 
@@ -80,5 +82,76 @@ describe("assistantSettingsValidation", () => {
     });
     expect(parsed).toEqual({ temperature: 0.2, chatPromptTemplate: null });
     expect(parsed).not.toHaveProperty("cardsPromptTemplate");
+    expect(parsed).not.toHaveProperty("chatPromptMode");
+  });
+
+  it("keeps an omitted chatPromptMode unset when a custom template is stored", () => {
+    const parsed = assistantSettingsValidation.parse({
+      temperature: 0.2,
+      chatPromptTemplate: "mine",
+    });
+    expect(parsed.chatPromptMode).toBeUndefined();
+    expect(parsed.chatPromptTemplate).toBe("mine");
+  });
+
+  it("keeps an explicit default mode with a stored custom template", () => {
+    const parsed = assistantSettingsValidation.parse({
+      temperature: 0.2,
+      chatPromptTemplate: "mine",
+      chatPromptMode: "default",
+    });
+    expect(parsed).toEqual({
+      temperature: 0.2,
+      chatPromptTemplate: "mine",
+      chatPromptMode: "default",
+    });
+  });
+
+  it("accepts an empty custom template", () => {
+    const parsed = assistantSettingsValidation.parse({
+      temperature: 0.2,
+      chatPromptTemplate: "",
+      chatPromptMode: "custom",
+    });
+    expect(parsed.chatPromptTemplate).toBe("");
+    expect(parsed.chatPromptMode).toBe("custom");
+  });
+});
+
+describe("resolveChatPromptMode", () => {
+  it.each([
+    {
+      name: "omitted mode and null template infers default",
+      input: { chatPromptTemplate: null },
+      mode: "default",
+      effective: null,
+    },
+    {
+      name: "omitted mode and a string infers custom",
+      input: { chatPromptTemplate: "mine" },
+      mode: "custom",
+      effective: "mine",
+    },
+    {
+      name: "explicit default ignores a stored custom string",
+      input: { chatPromptMode: "default" as const, chatPromptTemplate: "mine" },
+      mode: "default",
+      effective: null,
+    },
+    {
+      name: "explicit custom with null template sends empty",
+      input: { chatPromptMode: "custom" as const, chatPromptTemplate: null },
+      mode: "custom",
+      effective: "",
+    },
+    {
+      name: "explicit custom with empty string sends empty",
+      input: { chatPromptMode: "custom" as const, chatPromptTemplate: "" },
+      mode: "custom",
+      effective: "",
+    },
+  ] as const)("$name", ({ input, mode, effective }) => {
+    expect(resolveChatPromptMode(input)).toBe(mode);
+    expect(resolveEffectiveChatPromptTemplate(input)).toBe(effective);
   });
 });

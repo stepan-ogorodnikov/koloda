@@ -22,12 +22,23 @@ fn default_assistant_temperature() -> f64 {
     0.2
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ChatPromptMode {
+    Default,
+    Custom,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssistantSettings {
     #[serde(default = "default_assistant_temperature")]
     pub temperature: f64,
     pub chat_prompt_template: Option<String>,
+    // WHY: Omitted on older settings rows. Inference (null template = default,
+    // any string = custom) lives in TS so existing custom prompts keep working.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chat_prompt_mode: Option<ChatPromptMode>,
 }
 
 impl Default for AssistantSettings {
@@ -35,6 +46,7 @@ impl Default for AssistantSettings {
         Self {
             temperature: 0.2,
             chat_prompt_template: None,
+            chat_prompt_mode: None,
         }
     }
 }

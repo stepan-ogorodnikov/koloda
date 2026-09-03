@@ -16,9 +16,14 @@ export const aiProfileValidation = z.object({
 
 export type AIProfile = z.output<typeof aiProfileValidation>;
 
+export const chatPromptModeSchema = z.enum(["default", "custom"]);
+
+export type ChatPromptMode = z.infer<typeof chatPromptModeSchema>;
+
 export const assistantSettingsValidation = z.object({
   temperature: z.number().min(0).max(2).default(0.2),
   chatPromptTemplate: z.string().nullable().default(null),
+  chatPromptMode: chatPromptModeSchema.optional(),
 });
 
 export type AssistantSettings = z.input<typeof assistantSettingsValidation>;
@@ -26,9 +31,27 @@ export type AssistantSettings = z.input<typeof assistantSettingsValidation>;
 export const assistantSettingsFormSchema = z.object({
   temperature: z.number().min(0).max(2),
   chatPromptTemplate: z.string().nullable(),
+  chatPromptMode: chatPromptModeSchema,
 });
 
 export type AssistantSettingsFormValues = z.infer<typeof assistantSettingsFormSchema>;
+
+export type ChatPromptSettings = {
+  chatPromptMode?: ChatPromptMode;
+  chatPromptTemplate?: string | null;
+};
+
+export function resolveChatPromptMode(settings: ChatPromptSettings): ChatPromptMode {
+  if (settings.chatPromptMode != null) return settings.chatPromptMode;
+  // WHY: omitted mode must follow the saved template so existing custom prompts
+  // keep working; defaulting omitted to "default" would silently switch them.
+  return settings.chatPromptTemplate == null ? "default" : "custom";
+}
+
+export function resolveEffectiveChatPromptTemplate(settings: ChatPromptSettings): string | null {
+  if (resolveChatPromptMode(settings) === "default") return null;
+  return settings.chatPromptTemplate ?? "";
+}
 
 export const aiSettingsValidation = z.object({
   profiles: z.array(aiProfileValidation),
