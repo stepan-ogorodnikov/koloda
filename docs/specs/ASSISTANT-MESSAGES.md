@@ -62,6 +62,8 @@ User messages always render as text.
 Assistant messages:
 
 - **chat-text**: the streamed text is shown as rendered markdown.
+  Reasoning and tool calls appear as activity rows above that text, even when there are no cards.
+  See §Message Content.
   A status indicator shows the run state.
   When the same run proposed cards, that turn is mixed:
   tool activity, then the review table, then leftover streamed text, then status.
@@ -176,8 +178,19 @@ The conversation history sent to the AI is rebuilt from the now-shorter message 
 
 Assistant text is displayed as rendered markdown, including leftover text on a mixed turn.
 User messages are displayed as paragraphs.
-Reasoning is displayed as dimmed text.
-Tool calls and other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
+Reasoning is shown as an activity row on the same assistant message.
+It sits in the same activity list as tool calls, in the order they arrived.
+While the model is thinking, the row is labeled Thinking and the reasoning text is visible.
+When thinking finishes, the row is labeled Thought and the text is collapsed.
+A user toggle is kept if they already opened or closed it.
+The user can expand or collapse the row.
+Consecutive reasoning stays on one row.
+A new row starts after a tool call.
+Empty reasoning is not shown.
+Reasoning is not included in conversation history.
+See ASSISTANT-CONVERSATIONS.md (§Conversation History).
+Tool calls are shown as activity rows; see ASSISTANT-DATA-ACCESS.md (§Visibility).
+Other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
 Proposed cards stay in the review table; leftover markdown does not become cards.
 
 When extracting text for display or history, all text parts are joined with double newlines.

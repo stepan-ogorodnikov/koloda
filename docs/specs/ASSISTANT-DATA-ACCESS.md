@@ -28,6 +28,7 @@ Duplicate prevention is the model's choice to inspect existing cards through a t
 - **Egress** — the tool result leaves the machine toward the provider, in the same run
 - **Tools** — `list_decks`, `get_deck_cards`, and `propose_cards`
 - **Tool activity** — the visible record of tool calls, kept on the run
+  Reasoning rows share that list; see ASSISTANT-MESSAGES.md (§Message Content).
 - **Budgets** — caps on tool output: 200 cards per deck list, 8,000 serialized characters, 200 accepted cards per proposal
 
 Relationships:
@@ -91,6 +92,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 
 Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
+Reasoning uses the same activity list; see ASSISTANT-MESSAGES.md (§Message Content).
 Follow-up requests do not replay prior tool results as history.
 If the model needs current data again, it calls the tools again.
 
@@ -134,5 +136,6 @@ Missing tool activity restores without it.
 A malformed value fails restore as corrupt, not as an empty conversation; see ASSISTANT-CONVERSATIONS.md (§Restore).
 After a crash, a run that was still streaming is interrupted.
 Any tool call that was still running is recorded as failed so it does not keep spinning.
+A reasoning row that was still running is closed as finished so it does not keep spinning.
 Stored access records from before tools are not sent to the model.
 Format versioning follows the conversations spec.
