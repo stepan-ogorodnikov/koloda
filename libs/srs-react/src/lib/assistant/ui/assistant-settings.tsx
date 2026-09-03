@@ -1,5 +1,10 @@
 import type { AssistantSettings as AssistantSettingsType } from "@koloda/ai";
-import { assistantSettingsFormSchema, assistantSettingsValidation, DEFAULT_CHAT_PROMPT_TEMPLATE } from "@koloda/ai";
+import {
+  assistantSettingsFormSchema,
+  assistantSettingsValidation,
+  DEFAULT_CHAT_PROMPT_TEMPLATE,
+  resolveChatPromptMode,
+} from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Label, Slider, useAppForm } from "@koloda/ui";
@@ -21,6 +26,7 @@ export function AssistantSettings() {
   const defaultValues = {
     temperature: assistantSettings?.temperature ?? 0.2,
     chatPromptTemplate: assistantSettings?.chatPromptTemplate ?? null,
+    chatPromptMode: resolveChatPromptMode(assistantSettings ?? {}),
   };
 
   const form = useAppForm({
@@ -47,7 +53,13 @@ export function AssistantSettings() {
   });
 
   useEffect(() => {
-    if (data) form.reset();
+    if (!data) return;
+    const assistant = data.content?.assistant as AssistantSettingsType | undefined;
+    form.reset({
+      temperature: assistant?.temperature ?? 0.2,
+      chatPromptTemplate: assistant?.chatPromptTemplate ?? null,
+      chatPromptMode: resolveChatPromptMode(assistant ?? {}),
+    });
   }, [data, form]);
 
   return (
@@ -59,18 +71,20 @@ export function AssistantSettings() {
         form.handleSubmit();
       }}
     >
-      <form.Field name="chatPromptTemplate">
-        {(field) => (
+      <form.Subscribe selector={(state) => [state.values.chatPromptMode, state.values.chatPromptTemplate]}>
+        {([chatPromptMode, chatPromptTemplate]) => (
           <AssistantSettingsPromptEditor
-            label={_(msg`assistant.settings.system-prompt.chat.label`)}
+            label={_(msg`assistant.settings.system-prompt.label`)}
             rows={1}
             maxRows={6}
-            templateValue={field.state.value}
+            mode={chatPromptMode}
+            templateValue={chatPromptTemplate}
             defaultTemplate={DEFAULT_CHAT_PROMPT_TEMPLATE}
-            onChange={field.handleChange}
+            onModeChange={(mode) => form.setFieldValue("chatPromptMode", mode)}
+            onChange={(value) => form.setFieldValue("chatPromptTemplate", value)}
           />
         )}
-      </form.Field>
+      </form.Subscribe>
       <form.Field name="temperature">
         {(field) => (
           <Slider minValue={0} maxValue={2} step={0.1} value={field.state.value} onChange={field.handleChange}>

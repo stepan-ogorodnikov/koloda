@@ -300,16 +300,23 @@ msgstr "Add cards"
 msgid "assistant.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:33
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:36
-msgid "assistant.settings.prompt.reset"
-msgstr "Reset"
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:71
+msgid "assistant.settings.system-prompt.label"
+msgstr "System prompt"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:65
-msgid "assistant.settings.system-prompt.chat.label"
-msgstr "Chat prompt"
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:53
+msgid "assistant.settings.system-prompt.mode.custom"
+msgstr "Custom"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:77
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:50
+msgid "assistant.settings.system-prompt.mode.default"
+msgstr "Default"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:38
+msgid "assistant.settings.system-prompt.mode.label"
+msgstr "System prompt source"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:85
 msgid "assistant.settings.temperature.label"
 msgstr "Temperature"
 

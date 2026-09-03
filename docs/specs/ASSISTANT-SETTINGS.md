@@ -1,6 +1,6 @@
 # Assistant Settings
 
-Covers assistant settings: the chat prompt template, temperature, and how saved values apply to later runs.
+Covers assistant settings: the system prompt, temperature, and how saved values apply to later runs.
 Does not cover AI profiles, secrets, model picking, conversation lifecycle, card proposal handling, or the streaming transport layer.
 Those are covered by the AI providers, conversations, messages, and card-generation specs.
 
@@ -16,9 +16,10 @@ Whether settings are open is not remembered across reloads.
 
 ## Core Model
 
-- **Chat prompt template** — the system prompt used for every run
+- **System prompt** — the instructions sent with every run
+- **Prompt source** — Default uses the live built-in prompt; Custom uses the user's saved text
 - **Temperature** — sampling temperature sent with every run
-- **Built-in defaults** — the product's default prompt text and temperature when the user has not saved a custom value
+- **Built-in defaults** — the product's default prompt text and temperature
 
 Relationships:
 
@@ -28,26 +29,36 @@ Relationships:
 
 ## Prompt Template
 
-There is one template.
+The user chooses a source: Default or Custom.
 
-It starts from a built-in default until the user customizes it.
-The editor shows the effective text: the saved custom text, or the built-in default when none is saved.
+Default shows the current built-in prompt and is not editable.
+The user can still select and copy the text.
+Choosing Default does not erase a saved custom prompt.
+The assistant uses the live built-in prompt, including later product updates to that text.
 
-The user edits the template as free text in a single editor.
+Custom shows the saved custom prompt and is editable.
+If the user has never saved a custom prompt, switching to Custom copies the current built-in prompt into the editor as a starting point.
+Switching back to Default leaves that custom text in place.
+Discard restores the last saved source and custom text.
+
+A custom prompt that happens to equal today's built-in text stays Custom.
+It does not follow later product updates to the built-in prompt.
+A previously saved custom prompt stays Custom until the user chooses Default.
+
 There is no preview mode.
-Reset fills the editor with the built-in default text.
 
-Saving persists the template and temperature together.
+Saving persists the source, the custom prompt, and temperature together.
 Discard restores the last saved values.
 
-An empty custom template is allowed and is sent as empty after trimming.
+An empty custom prompt is allowed and is sent as empty after trimming.
 Invalid temperature is rejected on save; the previous saved settings remain unchanged.
 
 ## How the Prompt Is Sent
 
 There are no placeholders.
 
-The template is used as written after trimming.
+Default sends the current built-in prompt after trimming.
+Custom sends the saved custom text after trimming.
 Leftover brace placeholders in a previously saved custom prompt stay as literal text.
 
 The built-in default is plain text with no variables.
@@ -67,8 +78,9 @@ Values outside 0–2 cannot be saved.
 A run uses the settings that are current when the run starts.
 Changing settings does not rewrite past messages or past runs.
 Saving does not start a run and does not change the active conversation's messages.
+Unsaved Default or Custom does not affect runs.
 
-If the user has not saved a custom prompt, that run uses the built-in default.
-If a custom prompt is saved, that text is trimmed and used instead.
+If the saved source is Default, that run uses the built-in prompt.
+If the saved source is Custom, that text is trimmed and used instead.
 
 Temperature omitted or unset falls back to 0.2 for the run.
