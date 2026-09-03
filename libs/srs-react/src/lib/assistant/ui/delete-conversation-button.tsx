@@ -71,6 +71,13 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
       <Button
         variants={{ style: "ghost", size: "smallIcon", class: "rounded-md" }}
         aria-label={_(msg`ai.conversation.delete.trigger`)}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onPointerDown={(event) => {
+          event.stopPropagation();
+        }}
       >
         <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={Delete03Icon} aria-hidden="true" />
       </Button>

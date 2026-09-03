@@ -5,8 +5,10 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useRef } from "react";
 import { unreadConversationIdsAtom } from "../state/conversation-selectors";
 import { conversationsAtom } from "../state/conversation-store";
+import { ConversationListTimestamp } from "./conversation-list-timestamp";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;
@@ -51,9 +53,9 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
   );
 }
 
-const conversationItem = [
-  "grow min-w-0 p-2 rounded-lg fg-level-2 text-base whitespace-nowrap truncate focus-ring animate-colors",
-  "group-hover:bg-main-sidebar-link-active current:bg-main-sidebar-link-active current:fg-level-1",
+const conversationLink = [
+  "group flex min-w-0 items-center gap-2 rounded-lg p-1 fg-level-2 text-base animate-colors focus-ring",
+  "hover:bg-main-sidebar-link-active data-current:bg-main-sidebar-link-active data-current:fg-level-1",
 ].join(" ");
 
 type ConversationItemProps = {
@@ -79,6 +81,7 @@ function ConversationItem({
 }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
   const name = conversation.title ?? fallback;
+  const ignoreLinkClickRef = useRef(false);
   // WHY: The active-run pulse is more salient than the unread dot, so it
   // wins when both are true. Keeping the order explicit avoids showing
   // an unread dot for a run the user is actively watching.
@@ -86,28 +89,43 @@ function ConversationItem({
   const showUnread = !showActive && hasUnread;
 
   return (
-    <div className="group relative flex flex-row items-center">
-      <Link
-        className={conversationItem}
-        to="/ai"
-        search={{ conversationId: conversation.id }}
-        viewTransition={isMotionOn}
-        key={conversation.id}
-      >
-        <span className="flex items-center gap-2 min-w-0">
-          <span className="flex items-center justify-center w-4">
-            {showActive ? (
-              <div className="size-2 rounded-full bg-fg-level-4 animate-pulse" aria-label={runningLabel} />
-            ) : showUnread ? (
-              <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
-            ) : null}
-          </span>
-          <span className="truncate">{name}</span>
-        </span>
-      </Link>
-      <div className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 animate-opacity">
-        <DeleteConversationButton id={conversation.id} isActive={isActive} onActiveDeleted={onActiveDeleted} />
+    <Link
+      className={conversationLink}
+      to="/ai"
+      search={{ conversationId: conversation.id }}
+      viewTransition={isMotionOn}
+      onClick={(event) => {
+        if (ignoreLinkClickRef.current || (event.target instanceof Element && event.target.closest("button"))) {
+          event.preventDefault();
+        }
+        ignoreLinkClickRef.current = false;
+      }}
+    >
+      <span className="flex shrink-0 items-center justify-center w-4">
+        {showActive ? (
+          <div className="size-2 rounded-full bg-fg-level-4 animate-pulse" aria-label={runningLabel} />
+        ) : showUnread ? (
+          <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
+        ) : null}
+      </span>
+      <span className="flex-1 min-w-0 truncate">{name}</span>
+      <div className="flex shrink-0 items-center gap-1">
+        <div
+          className="flex w-0 items-center overflow-hidden group-hover:w-8 group-focus-within:w-8"
+          onPointerDownCapture={() => {
+            ignoreLinkClickRef.current = true;
+          }}
+          onClickCapture={(event) => {
+            event.preventDefault();
+          }}
+        >
+          <DeleteConversationButton id={conversation.id} isActive={isActive} onActiveDeleted={onActiveDeleted} />
+        </div>
+        <ConversationListTimestamp
+          className="fg-level-4 text-sm font-medium text-end select-none"
+          timestamp={conversation.updatedAt ?? conversation.createdAt}
+        />
       </div>
-    </div>
+    </Link>
   );
 }

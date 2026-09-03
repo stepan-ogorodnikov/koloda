@@ -167,6 +167,26 @@ msgstr "Удалить этот диалог? Действие нельзя от
 msgid "ai.conversation.delete.trigger"
 msgstr "Удалить диалог"
 
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-list-timestamp.tsx:61
+msgid "ai.conversation.list.time.days {count}"
+msgstr "{count}д"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-list-timestamp.tsx:60
+msgid "ai.conversation.list.time.hours {count}"
+msgstr "{count}ч"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-list-timestamp.tsx:59
+msgid "ai.conversation.list.time.minutes {count}"
+msgstr "{count}м"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-list-timestamp.tsx:62
+msgid "ai.conversation.list.time.months {count}"
+msgstr "{count}мес"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/conversation-list-timestamp.tsx:63
+msgid "ai.conversation.list.time.years {count}"
+msgstr "{count}г"
+
 #: ../../libs/srs-react/src/lib/assistant/ui/conversation-header-menu.tsx:26
 msgid "ai.conversation.menu.trigger"
 msgstr "Действия с диалогом"
@@ -206,15 +226,15 @@ msgstr "Не удалось открыть диалог"
 msgid "ai.conversation.recovery.unsupported {0} {1}"
 msgstr "Этот диалог сохранён в формате версии {0}, а это приложение поддерживает версии до {1}."
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:13
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:14
 msgid "ai.conversation.running"
 msgstr "Выполняется"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:14
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:15
 msgid "ai.conversation.unread"
 msgstr "Не прочитано"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:12
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversations-list.tsx:13
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
 
@@ -300,23 +320,23 @@ msgstr "Добавить карточки"
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:101
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:106
 msgid "assistant.settings.system-prompt.label"
 msgstr "Системный промпт"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:55
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:51
 msgid "assistant.settings.system-prompt.mode.custom"
 msgstr "Свой"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:52
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:48
 msgid "assistant.settings.system-prompt.mode.default"
 msgstr "По умолчанию"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:38
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:34
 msgid "assistant.settings.system-prompt.mode.label"
 msgstr "Источник системного промпта"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:115
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:118
 msgid "assistant.settings.temperature.label"
 msgstr "Температура"
 
