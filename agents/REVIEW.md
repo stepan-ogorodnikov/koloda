@@ -36,6 +36,8 @@ Acceptable anchors:
 - A spec: `docs/specs/LESSONS.md` (Grading).
 - A playbook row: `agents/ASSISTANT-MAP.md` (Fix streaming).
 - A package README boundary: `libs/srs-react/README.md` (Does NOT own).
+- A task file's Plan item: `tasks/live/<slug>.md` or `tasks/archive/<slug>.md`.
+  Cite that item's Goal, Constraints, Done when, or Green.
 - A lint rule from `.oxlintrc.json`.
 
 Free-floating opinion is not a finding.
