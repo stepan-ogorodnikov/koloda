@@ -21,7 +21,7 @@ msgstr "Алгоритмы"
 msgid "color-scheme-picker.label"
 msgstr "Цветовая схема"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:79
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:81
 msgid "dark-theme-picker.label"
 msgstr "Тёмная тема"
 
@@ -53,7 +53,7 @@ msgstr "Сменить сочетание клавиш"
 msgid "language-picker.label"
 msgstr "Язык интерфейса"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:64
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:66
 msgid "light-theme-picker.label"
 msgstr "Светлая тема"
 
@@ -114,7 +114,7 @@ msgstr "Добавить ИИ профиль"
 msgid "settings.ai.browser-cors.note"
 msgstr "Некоторые провайдеры отключены из-за ограничений платформы."
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:52
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:53
 msgid "settings.ai.browser-cors.profile"
 msgstr "Этот провайдер нельзя использовать в браузере."
 
@@ -235,7 +235,7 @@ msgstr "Горячие клавиши"
 msgid "settings.interface"
 msgstr "Интерфейс"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:78
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:80
 msgid "settings.interface.dark-theme"
 msgstr "Тёмная тема"
 
@@ -243,7 +243,7 @@ msgstr "Тёмная тема"
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:63
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:65
 msgid "settings.interface.light-theme"
 msgstr "Светлая тема"
 

@@ -7,11 +7,12 @@ Those are covered by the AI providers, conversations, messages, and card-generat
 ## What are Assistant Settings
 
 Assistant settings are the user's global preferences for how the assistant talks to the model.
-They live beside the chat UI and apply across conversations.
+They are edited in a modal over the assistant chat and apply across conversations.
 They do not belong to a single conversation.
 
-The user toggles settings open from the assistant footer.
-Closing settings returns to the conversation.
+The user opens settings from the assistant footer.
+The conversation stays visible behind the modal, including its title and header menu.
+Closing the modal (close control, Escape, or the backdrop) discards unsaved edits.
 Whether settings are open is not remembered across reloads.
 
 ## Core Model

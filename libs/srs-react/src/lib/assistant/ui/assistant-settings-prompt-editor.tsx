@@ -5,8 +5,6 @@ import { useLingui } from "@lingui/react";
 
 export type AssistantSettingsPromptEditorProps = {
   label: string;
-  rows?: number;
-  maxRows?: number;
   mode: ChatPromptMode;
   templateValue: string | null;
   defaultTemplate: string;
@@ -17,8 +15,6 @@ export type AssistantSettingsPromptEditorProps = {
 
 export function AssistantSettingsPromptEditor({
   label,
-  rows,
-  maxRows,
   mode,
   templateValue,
   defaultTemplate,
@@ -30,7 +26,7 @@ export function AssistantSettingsPromptEditor({
   const isDefault = mode === "default";
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="grow min-h-0 flex flex-col gap-2">
       <div className="flex flex-row items-center justify-between gap-2">
         <span>{label}</span>
         <ToggleGroup
@@ -57,18 +53,14 @@ export function AssistantSettingsPromptEditor({
         </ToggleGroup>
       </div>
       <TextField
+        variants={{ class: "grow min-h-0" }}
         value={isDefault ? defaultTemplate : (templateValue ?? "")}
         aria-label={label}
         isReadOnly={isDefault}
         isDisabled={isDisabled}
         onChange={onChange}
       >
-        <TextField.TextArea
-          variants={{ style: "normal", class: "resize-none" }}
-          canAutoResize
-          rows={rows}
-          maxRows={maxRows}
-        />
+        <TextField.TextArea variants={{ style: "normal", class: "resize-none grow min-h-0 h-full" }} />
       </TextField>
     </div>
   );

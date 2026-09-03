@@ -21,7 +21,7 @@ msgstr "Presets"
 msgid "color-scheme-picker.label"
 msgstr "Color scheme"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:79
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:81
 msgid "dark-theme-picker.label"
 msgstr "Dark theme"
 
@@ -53,7 +53,7 @@ msgstr "Change hotkey"
 msgid "language-picker.label"
 msgstr "Language"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:64
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:66
 msgid "light-theme-picker.label"
 msgstr "Light theme"
 
@@ -114,7 +114,7 @@ msgstr "Add AI Profile"
 msgid "settings.ai.browser-cors.note"
 msgstr "Some providers are disabled due to platform limitations."
 
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:52
+#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:53
 msgid "settings.ai.browser-cors.profile"
 msgstr "This provider cannot be used in the browser."
 
@@ -235,7 +235,7 @@ msgstr "Hotkeys"
 msgid "settings.interface"
 msgstr "Interface"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:78
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:80
 msgid "settings.interface.dark-theme"
 msgstr "Dark theme"
 
@@ -243,7 +243,7 @@ msgstr "Dark theme"
 msgid "settings.interface.language"
 msgstr "Language"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:63
+#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:65
 msgid "settings.interface.light-theme"
 msgstr "Light theme"
 

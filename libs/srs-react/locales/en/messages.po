@@ -300,15 +300,15 @@ msgstr "Add cards"
 msgid "assistant.generated-no-cards"
 msgstr "No cards were generated"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:71
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:101
 msgid "assistant.settings.system-prompt.label"
 msgstr "System prompt"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:53
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:55
 msgid "assistant.settings.system-prompt.mode.custom"
 msgstr "Custom"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:50
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:52
 msgid "assistant.settings.system-prompt.mode.default"
 msgstr "Default"
 
@@ -316,9 +316,13 @@ msgstr "Default"
 msgid "assistant.settings.system-prompt.mode.label"
 msgstr "System prompt source"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:85
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:115
 msgid "assistant.settings.temperature.label"
 msgstr "Temperature"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:85
+msgid "assistant.settings.title"
+msgstr "Assistant settings"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table-select-cell.tsx:60
 msgid "assistant.table.columns.status.error"

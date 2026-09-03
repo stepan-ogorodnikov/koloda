@@ -300,15 +300,15 @@ msgstr "Добавить карточки"
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:71
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:101
 msgid "assistant.settings.system-prompt.label"
 msgstr "Системный промпт"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:53
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:55
 msgid "assistant.settings.system-prompt.mode.custom"
 msgstr "Свой"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:50
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings-prompt-editor.tsx:52
 msgid "assistant.settings.system-prompt.mode.default"
 msgstr "По умолчанию"
 
@@ -316,9 +316,13 @@ msgstr "По умолчанию"
 msgid "assistant.settings.system-prompt.mode.label"
 msgstr "Источник системного промпта"
 
-#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:85
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:115
 msgid "assistant.settings.temperature.label"
 msgstr "Температура"
+
+#: ../../libs/srs-react/src/lib/assistant/ui/assistant-settings.tsx:85
+msgid "assistant.settings.title"
+msgstr "Настройки ассистента"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-cards-table-select-cell.tsx:60
 msgid "assistant.table.columns.status.error"

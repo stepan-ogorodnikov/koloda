@@ -182,10 +182,6 @@ export function AssistantChat({
               onDeleted={onActiveDeleted}
             />
           </Fade>
-        ) : areSettingsOpen ? (
-          <Fade key="settings" className="grow flex flex-col">
-            <AssistantSettings />
-          </Fade>
         ) : (
           <Fade key="chat" className="grow flex flex-col min-h-0">
             <AIChatMessages
@@ -212,6 +208,7 @@ export function AssistantChat({
           </Fade>
         )}
       </AnimatePresence>
+      <AssistantSettings isOpen={areSettingsOpen} onOpenChange={setAreSettingsOpen} />
       <AIChatFooter>
         <AIModelProfilePicker
           profiles={profiles}
