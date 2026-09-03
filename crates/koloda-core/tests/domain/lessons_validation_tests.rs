@@ -48,10 +48,6 @@ fn assert_accepted(section: &str, field: &str, value: Value) {
     );
 }
 
-// ============================================================================
-// SHARED BASELINE
-// ============================================================================
-
 // WHY: Several former zero-ok cases patched fields whose asserted value already equals
 // this baseline (learningSteps/reps/lapses/time), so the unmutated payload subsumes them.
 #[test]
@@ -61,10 +57,6 @@ fn test_lesson_result_valid_payload_passes() {
         .validate()
         .unwrap();
 }
-
-// ============================================================================
-// CARD PROGRESS FIELD BOUNDS (validation.cards-progress.*)
-// ============================================================================
 
 #[test]
 fn test_lesson_result_card_out_of_bounds_values_fail_with_field_codes() {
@@ -105,10 +97,6 @@ fn test_lesson_result_card_boundary_values_pass() {
         assert_accepted("card", field, value.clone());
     }
 }
-
-// ============================================================================
-// REVIEW FIELD BOUNDS (validation.reviews.*)
-// ============================================================================
 
 #[test]
 fn test_lesson_result_review_out_of_bounds_values_fail_with_field_codes() {

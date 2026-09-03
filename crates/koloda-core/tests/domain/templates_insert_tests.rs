@@ -1,9 +1,5 @@
 use koloda_core::domain::templates::InsertTemplateData;
 
-// ============================================================================
-// VALID TEMPLATE
-// ============================================================================
-
 #[test]
 fn test_valid_template_passes() {
     let json = r#"{
@@ -23,10 +19,6 @@ fn test_valid_template_passes() {
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize valid JSON");
     template.validate().unwrap();
 }
-
-// ============================================================================
-// MISSING FIELDS
-// ============================================================================
 
 #[test]
 fn test_empty_fields_fails() {
@@ -95,10 +87,6 @@ fn test_insert_template_missing_content() {
     assert!(result.is_err(), "Should fail when content is missing");
 }
 
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
-
 #[test]
 fn test_template_with_extra_fields_ignored() {
     let json = r#"{
@@ -118,10 +106,6 @@ fn test_template_with_extra_fields_ignored() {
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
     template.validate().unwrap();
 }
-
-// ============================================================================
-// TITLE FIELD
-// ============================================================================
 
 #[test]
 fn test_title_empty_fails() {
@@ -199,10 +183,6 @@ fn test_title_as_number_fails() {
     assert!(result.is_err(), "Should fail when title is a number");
 }
 
-// ============================================================================
-// FIELD TYPE
-// ============================================================================
-
 #[test]
 fn test_field_type_text_ok() {
     let json = r#"{
@@ -274,10 +254,6 @@ fn test_field_type_empty_fails() {
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
     assert!(template.validate().is_err(), "Should fail with empty field type");
 }
-
-// ============================================================================
-// LAYOUT OPERATION
-// ============================================================================
 
 #[test]
 fn test_layout_operation_display_ok() {
@@ -351,10 +327,6 @@ fn test_layout_operation_invalid_fails() {
     assert!(template.validate().is_err(), "Should fail with invalid operation");
 }
 
-// ============================================================================
-// LAYOUT FIELD REFERENCE
-// ============================================================================
-
 #[test]
 fn test_layout_references_nonexistent_field_fails() {
     let json = r#"{
@@ -395,10 +367,6 @@ fn test_layout_references_valid_field_ok() {
     let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
     template.validate().unwrap();
 }
-
-// ============================================================================
-// INVALID TYPE
-// ============================================================================
 
 #[test]
 fn test_fields_as_object_fails() {

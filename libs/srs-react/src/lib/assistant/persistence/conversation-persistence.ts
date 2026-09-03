@@ -9,7 +9,6 @@ import type {
 import { isReasoningActivity } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
-/** Mirror `stampElapsed` without mutating the source run. */
 function elapsedSecondsSince(startedAt: Date): number {
   return Math.floor((Date.now() - startedAt.getTime()) / 1000);
 }

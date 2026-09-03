@@ -181,7 +181,6 @@ export const upsertConversationAtom = atom(null, (_get, set, state: Conversation
   set(conversationsAtom, (prev) => ({ ...prev, [state.id]: state }));
 });
 
-/** Drop a conversation's blocked-restore entry when one exists. */
 export function clearBlockedConversationRestore(
   prev: Record<string, BlockedConversationRestore>,
   id: string,

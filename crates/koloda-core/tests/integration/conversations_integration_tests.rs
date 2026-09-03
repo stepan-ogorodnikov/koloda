@@ -21,10 +21,6 @@ fn set(
     )
 }
 
-// ============================================================================
-// SET CONVERSATION
-// ============================================================================
-
 #[test]
 fn set_conversation_inserts_new_row_with_timestamps() {
     let db = test_db();
@@ -236,10 +232,6 @@ fn set_conversation_accepts_null_state_payload() {
     assert_eq!(stored.state, serde_json::Value::Null);
 }
 
-// ============================================================================
-// GET CONVERSATION
-// ============================================================================
-
 #[test]
 fn get_conversation_returns_none_for_missing_id() {
     let db = test_db();
@@ -260,10 +252,6 @@ fn get_conversation_returns_some_for_existing_id() {
     assert_eq!(result.id, id);
     assert_eq!(result.state, json!({"k": "v"}));
 }
-
-// ============================================================================
-// GET CONVERSATIONS
-// ============================================================================
 
 #[test]
 fn get_conversations_returns_empty_list_when_table_empty() {
@@ -342,10 +330,6 @@ fn get_conversations_groups_rows_with_null_updated_at_after_touched_rows() {
     assert_eq!(result[1].id, "untouched");
     assert!(result[1].updated_at.is_none());
 }
-
-// ============================================================================
-// TITLE COLUMN
-// ============================================================================
 
 #[test]
 fn set_conversation_persists_explicit_title() {
@@ -466,10 +450,6 @@ fn get_conversations_returns_title_on_each_row() {
     assert!(untitled.title.is_none());
 }
 
-// ============================================================================
-// DELETE CONVERSATION
-// ============================================================================
-
 #[test]
 fn delete_conversation_removes_row() {
     let db = test_db();
@@ -557,10 +537,6 @@ fn unconditional_upsert_recreates_row_after_delete() {
         "unconditional upsert recreates the row"
     );
 }
-
-// ============================================================================
-// REPO RETURN TYPE SHAPE
-// ============================================================================
 
 #[test]
 fn get_conversation_row_failure_on_invalid_state_json() {

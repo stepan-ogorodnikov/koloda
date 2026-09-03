@@ -1,7 +1,6 @@
 import type { AssistantEvent } from "@koloda/assistant";
 import type { ConversationReducerAction } from "../state/conversation-reducer";
 
-/** Translate engine events into conversation-reducer actions for the Jotai store. */
 export function assistantEventToReducerAction(event: AssistantEvent): ConversationReducerAction {
   switch (event.type) {
     case "runStarted":

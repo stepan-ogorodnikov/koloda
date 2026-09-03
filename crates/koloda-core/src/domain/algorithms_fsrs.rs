@@ -29,12 +29,10 @@ impl AlgorithmFSRS {
             ));
         }
 
-        // Retention
         if self.retention < 70.0 || self.retention > 99.0 {
             return Err(AppError::new(error_codes::VALIDATION_ALGORITHM_FSRS_RETENTION, None));
         }
 
-        // Learning steps
         for (amount, unit) in &self.learning_steps {
             if *amount <= 0 {
                 return Err(AppError::new(
@@ -50,7 +48,6 @@ impl AlgorithmFSRS {
             }
         }
 
-        // Relearning steps
         for (amount, unit) in &self.relearning_steps {
             if *amount <= 0 {
                 return Err(AppError::new(
@@ -66,7 +63,6 @@ impl AlgorithmFSRS {
             }
         }
 
-        // Maximum interval
         if self.maximum_interval <= 0 {
             return Err(AppError::new(
                 error_codes::VALIDATION_ALGORITHM_FSRS_MAXIMUM_INTERVAL,

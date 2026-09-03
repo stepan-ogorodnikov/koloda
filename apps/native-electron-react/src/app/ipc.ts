@@ -7,16 +7,9 @@
  * rehydrate timestamps from the Rust side.
  */
 
-/**
- * Subset of JSON accepted as an IPC payload.
- */
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
-/**
- * Thrown by {@link toWire} when a value cannot be losslessly serialized
- * (functions, symbols, circular references, unsafe BigInts, invalid Dates).
- */
 export class WireError extends Error {
   override readonly name = "WireError";
   constructor(
@@ -97,10 +90,6 @@ const defaultWireReviver: WireReviver = (path, value) => {
   return reviveDates(value);
 };
 
-/**
- * Recursively rehydrates a JSON-decoded value, applying the supplied reviver
- * at every node. Use to turn wire responses back into domain values.
- */
 export function fromWire<T = unknown>(value: unknown, reviver: WireReviver = defaultWireReviver): T {
   return revive(value, "", reviver) as T;
 }

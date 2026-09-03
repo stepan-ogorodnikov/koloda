@@ -1,10 +1,6 @@
 use koloda_core::domain::decks::InsertDeckData;
 use serde_json::json;
 
-// ============================================================================
-// DECK TITLE BOUNDARIES
-// ============================================================================
-
 #[test]
 fn test_insert_deck_empty_title_fails() {
     let data = json!({

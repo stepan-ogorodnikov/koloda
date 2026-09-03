@@ -1,10 +1,6 @@
 use koloda_core::domain::settings::SettingsName;
 use koloda_core::domain::settings_interface::InterfaceSettings;
 
-// ============================================================================
-// VALID
-// ============================================================================
-
 #[test]
 fn test_valid_interface_settings_full() {
     let json = r#"{
@@ -33,10 +29,6 @@ fn test_missing_themes_default_to_github() {
     settings.validate().unwrap();
 }
 
-// ============================================================================
-// MISSING FIELDS
-// ============================================================================
-
 #[test]
 fn test_missing_required_fields_fail() {
     let base = serde_json::json!({
@@ -56,10 +48,6 @@ fn test_missing_required_fields_fail() {
     }
 }
 
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
-
 #[test]
 fn test_extra_fields_ignored() {
     let json = r#"{
@@ -73,10 +61,6 @@ fn test_extra_fields_ignored() {
     let settings: InterfaceSettings = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
     settings.validate().unwrap();
 }
-
-// ============================================================================
-// INVALID LANGUAGE
-// ============================================================================
 
 #[test]
 fn test_invalid_language_fails() {
@@ -99,10 +83,6 @@ fn test_invalid_language_fails() {
     }
 }
 
-// ============================================================================
-// INVALID SCHEME
-// ============================================================================
-
 #[test]
 fn test_invalid_scheme_fails() {
     // WHY: same membership check as language, so one table covers unknown, empty, and
@@ -123,10 +103,6 @@ fn test_invalid_scheme_fails() {
         );
     }
 }
-
-// ============================================================================
-// INVALID THEMES
-// ============================================================================
 
 #[test]
 fn test_invalid_light_theme_fails() {
@@ -162,10 +138,6 @@ fn test_invalid_dark_theme_fails() {
     );
 }
 
-// ============================================================================
-// INVALID MOTION
-// ============================================================================
-
 #[test]
 fn test_invalid_motion_fails() {
     // WHY: motion joins the same membership-check family; unknown, empty, and capitalized
@@ -186,10 +158,6 @@ fn test_invalid_motion_fails() {
         );
     }
 }
-
-// ============================================================================
-// SETTINGS_NAME DISPATCHER TESTS
-// ============================================================================
 
 #[test]
 fn test_settings_name_interface_validation_with_non_object_content() {

@@ -1,10 +1,6 @@
 use koloda_core::domain::settings::SettingsName;
 use koloda_core::domain::settings_hotkeys::HotkeysSettings;
 
-// ============================================================================
-// VALID SETTINGS TESTS
-// ============================================================================
-
 #[test]
 fn test_valid_hotkeys_settings_full() {
     // WHY: dashboard carries two bindings so this single config also pins that multi-key actions
@@ -29,10 +25,6 @@ fn test_valid_hotkeys_settings_full() {
     settings.validate().unwrap();
 }
 
-// ============================================================================
-// MISSING FIELDS TESTS
-// ============================================================================
-
 #[test]
 fn test_empty_json_object_defaults_all_scopes() {
     // WHY: every scope carries #[serde(default)], so `{}` exercises the default path for all five
@@ -42,10 +34,6 @@ fn test_empty_json_object_defaults_all_scopes() {
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     assert!(settings.validate().is_ok(), "Empty JSON should default all scopes");
 }
-
-// ============================================================================
-// EXTRA FIELDS TESTS
-// ============================================================================
 
 #[test]
 fn test_unknown_action_names_pass_validation() {
@@ -77,10 +65,6 @@ fn test_extra_top_level_fields_ignored() {
         serde_json::from_str(json).expect("Should deserialize ignoring extra top-level fields");
     settings.validate().unwrap();
 }
-
-// ============================================================================
-// DUPLICATE KEY TESTS
-// ============================================================================
 
 #[test]
 fn test_duplicate_keys_fail_with_code() {
@@ -171,10 +155,6 @@ fn test_duplicate_keys_between_ui_and_navigation_fails() {
         "validation.settings-hotkeys.duplicate-keys"
     );
 }
-
-// ============================================================================
-// SETTINGS_NAME DISPATCHER TESTS
-// ============================================================================
 
 #[test]
 fn test_settings_name_hotkeys_validation_with_non_object_content() {

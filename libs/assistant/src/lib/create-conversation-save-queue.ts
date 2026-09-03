@@ -1,9 +1,7 @@
 import { createSaveScheduler, IDLE_SAVE_DEBOUNCE_MS, STREAM_SAVE_THROTTLE_MS } from "./create-save-scheduler";
 import { logAssistantStructured } from "./assistant-observability";
 
-/** Base delay for the first autosave retry after a failed write. */
 export const SAVE_RETRY_BASE_DELAY_MS = 250;
-/** Ceiling for exponential autosave retry delay (jitter applied below this). */
 export const SAVE_RETRY_MAX_DELAY_MS = 30_000;
 
 export type SaveErrorCategory = "aborted" | "network" | "storage" | "unknown";
@@ -43,7 +41,6 @@ export type CreateConversationSaveQueueOptions = {
   logSaveFailure?: (entry: SaveFailureLog) => void;
 };
 
-/** Outcome of a single `flushOnce` round, reported by the queue itself. */
 export type FlushOutcome = "saved" | "failed" | "skipped";
 
 export type ConversationSaveQueue = {
@@ -60,7 +57,6 @@ export type ConversationSaveQueue = {
   isDirty: () => boolean;
   /** Consecutive failed writes since the last successful ack. */
   consecutiveFailures: () => number;
-  /** Cancel a pending backoff retry without disposing the queue. */
   cancelRetry: () => void;
   waitUntilIdle: () => Promise<void>;
   /**

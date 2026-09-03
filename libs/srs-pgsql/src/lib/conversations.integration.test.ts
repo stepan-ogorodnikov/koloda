@@ -275,7 +275,7 @@ describe("conversations repository integration", () => {
     expect(item.id).toBe("conv-list");
     expect(item.title).toBe("Sidebar title");
     expect(item.createdAt).toBeInstanceOf(Date);
-    // The list projection must not ship `state`.
+    // INVARIANT: the list projection must not ship `state`.
     expect("state" in item).toBe(false);
   });
 

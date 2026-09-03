@@ -7,9 +7,6 @@ import { lastUsedOnRunStart } from "./state/ai-profile-sync";
 
 export type UseGlobalAIProfileStateReturn = [AIProfileState, (updater: AIProfileStateUpdater) => void];
 
-/**
- * Write-only access to the persisted last-used profile/model.
- */
 export function useSetGlobalAIProfileState(): (updater: AIProfileStateUpdater) => void {
   const stored = useAtomValue(aiProfileStateAtom);
   const setStored = useSetAtom(aiProfileStateAtom);

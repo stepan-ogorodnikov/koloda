@@ -132,12 +132,10 @@ impl<'de> Deserialize<'de> for CountedDailyLimit {
     }
 }
 
+/// Tuple fields are (hours, minutes).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LearnAheadLimit(
-    pub u32, // hours
-    pub u32, // minutes
-);
+pub struct LearnAheadLimit(pub u32, pub u32);
 
 impl LearnAheadLimit {
     fn validate(&self) -> Result<(), AppError> {

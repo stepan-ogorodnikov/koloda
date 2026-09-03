@@ -105,7 +105,8 @@ impl UpdateTemplateValues {
 
 fn validate_template_content(
     content: &TemplateContent,
-    original: Option<&TemplateContent>, // Some - template is locked, None - not locked
+    // WHY: Some = locked-template update (field lock validation applies), None = create.
+    original: Option<&TemplateContent>,
 ) -> Result<(), AppError> {
     if content.fields.is_empty() {
         return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_FIELDS_TOO_FEW, None));
@@ -153,7 +154,6 @@ fn validate_template_content(
 fn validate_locked_template_fields(original: &[TemplateField], updated: &[TemplateField]) -> Result<(), AppError> {
     let updated_ids: std::collections::HashSet<i64> = updated.iter().map(|f| f.id).collect();
 
-    // Check if all original fields are present
     for orig_field in original {
         if !updated_ids.contains(&orig_field.id) {
             return Err(AppError::new(
@@ -163,17 +163,14 @@ fn validate_locked_template_fields(original: &[TemplateField], updated: &[Templa
         }
     }
 
-    // Check if properties (except 'title') are not changed for existing fields
     for orig_field in original {
         if let Some(updated_field) = updated.iter().find(|f| f.id == orig_field.id) {
-            // Check type property
             if updated_field.field_type != orig_field.field_type {
                 return Err(AppError::new(
                     error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,
                     Some(format!("Cannot change field type for field id: {}", orig_field.id)),
                 ));
             }
-            // Check is_required property
             if updated_field.is_required != orig_field.is_required {
                 return Err(AppError::new(
                     error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,

@@ -1,9 +1,5 @@
 use koloda_core::domain::reviews::InsertReviewData;
 
-// ============================================================================
-// VALID REVIEW
-// ============================================================================
-
 #[test]
 fn test_valid_review_data() {
     let json = r#"{
@@ -163,10 +159,6 @@ fn test_valid_time_positive() {
     data.validate().unwrap();
 }
 
-// ============================================================================
-// RATING FIELD
-// ============================================================================
-
 #[test]
 fn test_rating_below_min_fails() {
     let json = r#"{
@@ -227,10 +219,6 @@ fn test_rating_negative_fails() {
     assert_eq!(result.unwrap_err().code, "validation.reviews.rating");
 }
 
-// ============================================================================
-// STATE FIELD
-// ============================================================================
-
 #[test]
 fn test_state_below_min_fails() {
     let json = r#"{
@@ -271,10 +259,6 @@ fn test_state_above_max_fails() {
     assert_eq!(result.unwrap_err().code, "validation.reviews.state");
 }
 
-// ============================================================================
-// STABILITY FIELD
-// ============================================================================
-
 #[test]
 fn test_stability_negative_fails() {
     let json = r#"{
@@ -294,10 +278,6 @@ fn test_stability_negative_fails() {
     let result = data.validate();
     assert_eq!(result.unwrap_err().code, "validation.reviews.stability");
 }
-
-// ============================================================================
-// DIFFICULTY FIELD
-// ============================================================================
 
 #[test]
 fn test_difficulty_below_min_fails() {
@@ -339,10 +319,6 @@ fn test_difficulty_above_max_fails() {
     assert_eq!(result.unwrap_err().code, "validation.reviews.difficulty");
 }
 
-// ============================================================================
-// SCHEDULED DAYS FIELD
-// ============================================================================
-
 #[test]
 fn test_scheduled_days_negative_fails() {
     let json = r#"{
@@ -363,10 +339,6 @@ fn test_scheduled_days_negative_fails() {
     assert_eq!(result.unwrap_err().code, "validation.reviews.scheduled-days");
 }
 
-// ============================================================================
-// LEARNING STEPS FIELD
-// ============================================================================
-
 #[test]
 fn test_learning_steps_negative_fails() {
     let json = r#"{
@@ -386,10 +358,6 @@ fn test_learning_steps_negative_fails() {
     let result = data.validate();
     assert_eq!(result.unwrap_err().code, "validation.reviews.learning-steps");
 }
-
-// ============================================================================
-// TIME FIELD
-// ============================================================================
 
 #[test]
 fn test_time_negative_fails() {

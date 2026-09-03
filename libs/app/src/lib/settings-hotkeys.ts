@@ -172,7 +172,6 @@ export const hotkeysSettingsValidation = z
     });
   });
 
-/** Checks if all hotkeys within given scope are unique */
 const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {
   if (!scope) return true;
   const allHotkeys = Object.values(scope).flat();
@@ -180,7 +179,6 @@ const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {
   return allHotkeys.length === uniqueHotkeys.size;
 };
 
-/** Gets the error paths for duplicate hotkeys within given scope */
 const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
   if (!scope) return [];
   const hotkeyToLocations = new Map<string, Array<[string, number]>>();

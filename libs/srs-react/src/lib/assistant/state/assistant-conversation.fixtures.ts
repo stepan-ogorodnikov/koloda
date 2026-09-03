@@ -36,7 +36,7 @@ export function dispatchTo(
   dispatchToConversationOnStore(store, id, action);
 }
 
-/** Terminal run action + auto-mark-read when the conversation is current (mirrors stream hooks). */
+// WHY: mirrors the live stream hooks so fixtures stay in parity with production.
 export function dispatchTerminal(
   store: ReturnType<typeof createStore>,
   id: string,

@@ -123,15 +123,6 @@ export function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-/**
- * Wraps an async function to ensure that ui gets known translated error message if any
- * @param code - Fallback error code for unexpected failures
- * @param fn - The async function to execute
- * @returns The result of the function
- * @throws {ZodError} Validation errors go through
- * @throws {AppError} Existing AppErrors (e.g. not-found.*) go through unchanged
- * @throws {AppError} Other errors are converted to AppError with the fallback code
- */
 export async function throwKnownError<T>(code: ErrorCode, fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
@@ -142,14 +133,6 @@ export async function throwKnownError<T>(code: ErrorCode, fn: () => Promise<T>):
   }
 }
 
-/**
- * Converts errors to be consumed by form errors component
- * ZodErrors are converted to a Record with indexed keys
- * AppError is converted to a single entry
- * Other errors are converted to a single entry with a fallback code
- * @param error - The error object
- * @returns A record mapping field indices to arrays of validation issues
- */
 export function toFormErrors(error: unknown): Record<string, StandardSchemaV1Issue[]> {
   if (error instanceof ZodError) {
     return error.issues.reduce<Record<string, StandardSchemaV1Issue[]>>((acc, issue, index) => {

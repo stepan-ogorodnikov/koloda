@@ -391,7 +391,6 @@ export type RestoreIssue = {
   path: string;
   /** Zod issue code (e.g. `"invalid_type"`, `"custom"`). */
   kind: string;
-  /** Human-readable description of the failure. */
   message: string;
 };
 

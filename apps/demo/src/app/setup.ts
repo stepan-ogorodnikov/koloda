@@ -8,10 +8,6 @@ import { sql } from "drizzle-orm";
 import { db, migrations, MIGRATIONS_TABLE } from "./db";
 import { loadSeedData } from "./seed/seed";
 
-/**
- * Gets the current status of the database
- * @returns "blank" if no migrations have been applied, "ok" otherwise
- */
 export async function getStatus() {
   await ensureMigrationsTable();
   const appliedMigrations = await getAppliedMigrations();
@@ -30,10 +26,6 @@ async function ensureMigrationsTable() {
   `);
 }
 
-/**
- * Retrieves the list of applied database migrations
- * @returns Array of migration records
- */
 async function getAppliedMigrations(client: DB = db) {
   const result = await client.execute(sql`SELECT * FROM ${MIGRATIONS_TABLE};`);
   return result?.rows ?? [];
@@ -53,9 +45,6 @@ async function applyPendingMigrations(tx: DB) {
   }
 }
 
-/**
- * Applies missing database migrations
- */
 export async function migrate() {
   await ensureMigrationsTable();
   await db.transaction(async (tx) => {
@@ -66,13 +55,7 @@ export async function migrate() {
 
 type SetupFromScratchData = Partial<InterfaceSettings>;
 
-/**
- * Sets up the application from scratch by applying migrations and seeding
- * locale templates/algorithms/decks inside one transaction. An interrupted
- * setup rolls back migrations too, so status stays "blank".
- * @param data - Configuration data including interface settings
- * @returns Promise resolving to true if setup was successful, false otherwise
- */
+// WHY: one transaction — an interrupted setup rolls back migrations too, so status stays "blank".
 export async function setupFromScratch(settings: SetupFromScratchData) {
   try {
     await ensureMigrationsTable();

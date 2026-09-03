@@ -279,7 +279,7 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
                 ],
             )?;
 
-            // Review INSERT SQL lives in `reviews::insert_review` — single home for
+            // WHY: review INSERT SQL lives in `reviews::insert_review` — single home for
             // review writes so future writers reuse the same statement.
             reviews::insert_review(tx, &data.review, now)?;
 

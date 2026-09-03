@@ -1,6 +1,5 @@
 use koloda_core::domain::ai::{AIProfile, AISecrets};
 
-/// `2026-01-01T00:00:00Z` as epoch millis.
 const TEST_CREATED_AT: i64 = 1_767_225_600_000;
 
 #[test]

@@ -1,10 +1,6 @@
 use koloda_core::app::error::error_codes;
 use koloda_core::domain::lessons::{GetLessonDataParams, LessonAmounts, LessonFilters};
 
-// ============================================================================
-// LESSON AMOUNTS VALIDATION
-// ============================================================================
-
 #[test]
 fn lesson_amounts_zero_ok() {
     let amounts = LessonAmounts {

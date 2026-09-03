@@ -2,10 +2,6 @@ use koloda_core::domain::conversations::Conversation;
 use koloda_core::repo::conversations::SetConversationInput;
 use serde_json::json;
 
-// ============================================================================
-// SERIALIZATION (camelCase)
-// ============================================================================
-
 #[test]
 fn test_conversation_serialization_uses_camel_case_keys_and_iso_timestamps() {
     // WHY: the wire contract is camelCase keys carrying RFC3339 strings; snake_case leakage or
@@ -67,10 +63,6 @@ fn test_conversation_serialization_renders_none_optionals_as_null() {
         );
     }
 }
-
-// ============================================================================
-// DESERIALIZATION
-// ============================================================================
 
 #[test]
 fn test_conversation_deserialization_from_camel_case() {
@@ -223,10 +215,6 @@ fn test_conversation_deserialization_missing_required_field_fails() {
     }
 }
 
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
-
 #[test]
 fn test_conversation_deserialization_ignores_extra_fields() {
     let data = json!({
@@ -244,10 +232,6 @@ fn test_conversation_deserialization_ignores_extra_fields() {
     assert_eq!(conversation.id, "conv-1");
     assert_eq!(conversation.state, json!({}));
 }
-
-// ============================================================================
-// ROUND TRIP
-// ============================================================================
 
 #[test]
 fn test_conversation_round_trip_preserves_state() {

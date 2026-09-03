@@ -35,7 +35,6 @@ export type RunControllerRegistry = {
   beginRun: (runId: string) => AbortController;
   endRun: (runId: string, controller: AbortController) => void;
   cancel: (runId: string, reason?: RunAbortReason) => void;
-  /** Consume the requested abort cause for a run, if any. */
   takeAbortReason: (runId: string) => RunAbortReason | undefined;
   has: (runId: string) => boolean;
   dispose: (reason?: RunAbortReason) => void;

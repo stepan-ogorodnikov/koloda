@@ -133,7 +133,7 @@ pub fn get_todays_review_totals(db: &Database) -> Result<TodaysReviewTotals, App
         let (from, to) = current_learning_day_range(&learning_settings.day_starts_at)?;
         let review_totals = get_review_totals(db, GetReviewTotalsParams { from, to })?;
 
-        // Counted-total fold + over-limit meta are product policy — delegated to domain.
+        // WHY: counted-total fold + over-limit meta are product policy — delegated to domain.
         Ok(calculate_todays_review_totals(
             review_totals,
             learning_settings.daily_limits,

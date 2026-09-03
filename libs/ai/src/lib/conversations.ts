@@ -20,12 +20,8 @@ export function getConversationName(state: ConversationLike, fallback: string) {
   return name ?? fallback;
 }
 
-/**
- * Computes the conversation's displayable title from its first user message.
- * Returns `null` when the conversation has no user message with text content,
- * so callers can distinguish "no title" from the i18n fallback string and
- * avoid persisting the fallback into the database.
- */
+// WHY: returns null instead of the localized fallback so callers can tell
+// "no title" apart and never persist the fallback string into the database.
 export function computeConversationTitle(state: ConversationLike): string | null {
   const firstUser = state.messages.find((m) => m.role === "user");
   if (!firstUser) return null;

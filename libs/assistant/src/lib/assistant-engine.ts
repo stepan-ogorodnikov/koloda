@@ -48,7 +48,6 @@ export class AssistantEngineClosedError extends Error {
 export class AssistantDuplicateRunError extends Error {
   readonly conversationId: string;
   readonly rejectedRunId: string;
-  /** Run id currently occupying the conversation, when known. */
   readonly activeOrQueuedRunId: string | null;
 
   constructor(conversationId: string, rejectedRunId: string, activeOrQueuedRunId: string | null = null) {

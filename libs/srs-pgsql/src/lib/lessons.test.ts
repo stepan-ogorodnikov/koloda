@@ -5,8 +5,8 @@ import { submitLessonResult } from "./lessons";
 
 describe("lessons", () => {
   it("rejects a lesson result whose card id does not match the review cardId", async () => {
-    // Mirrors the Rust test_lesson_result_card_review_id_mismatch_fails rule:
-    // both entities are individually valid; only their id link is broken.
+    // WHY: mirrors the Rust test_lesson_result_card_review_id_mismatch_fails
+    // rule — both entities are individually valid; only their id link is broken.
     const card = {
       id: 7,
       deckId: 1,

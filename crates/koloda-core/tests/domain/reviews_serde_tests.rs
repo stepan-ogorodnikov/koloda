@@ -16,10 +16,6 @@ fn valid_payload() -> Value {
     })
 }
 
-// ============================================================================
-// INSERT REVIEW DATA - SERDE SHAPE CONTRACTS
-// ============================================================================
-
 #[test]
 fn test_missing_required_fields_fail() {
     let required_fields = [

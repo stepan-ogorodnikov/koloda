@@ -27,7 +27,6 @@ export type AIProfileFormValues = {
 
 export type AIProviderFormConfig = {
   fields: AIProfileProviderField[];
-  /** Concrete Zod object used as TanStack Form `onSubmit` validator (Standard Schema). */
   schema: ZodObject<ZodRawShape>;
   toSecrets: (values: AIProfileFormValues) => AISecrets;
   fromSecrets: (secrets: AISecrets | undefined) => Pick<AIProfileFormValues, "baseUrl" | "apiKey">;

@@ -16,10 +16,6 @@ fn valid_payload() -> Value {
     })
 }
 
-// ============================================================================
-// UPDATE CARD PROGRESS - SERDE SHAPE CONTRACTS
-// ============================================================================
-
 #[test]
 fn test_missing_required_fields_fail() {
     let required_fields = [
@@ -86,10 +82,6 @@ fn test_wrong_typed_fields_fail() {
     }
 }
 
-// ============================================================================
-// UPDATE CARD PROGRESS - STATE (Dispatcher)
-// ============================================================================
-
 #[test]
 fn test_update_card_progress_state_all_valid() {
     for state in 0..=3 {
@@ -145,10 +137,6 @@ fn test_update_card_progress_state_negative_fails() {
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.state");
 }
 
-// ============================================================================
-// UPDATE CARD PROGRESS - STABILITY
-// ============================================================================
-
 #[test]
 fn test_update_card_progress_stability_zero_ok() {
     let data = json!({
@@ -186,10 +174,6 @@ fn test_update_card_progress_stability_negative_fails() {
         "validation.cards-progress.stability"
     );
 }
-
-// ============================================================================
-// UPDATE CARD PROGRESS - DIFFICULTY
-// ============================================================================
 
 #[test]
 fn test_update_card_progress_difficulty_min_ok() {
@@ -267,10 +251,6 @@ fn test_update_card_progress_difficulty_above_max_fails() {
     );
 }
 
-// ============================================================================
-// UPDATE CARD PROGRESS - SCHEDULED DAYS
-// ============================================================================
-
 #[test]
 fn test_update_card_progress_scheduled_days_zero_ok() {
     let data = json!({
@@ -308,10 +288,6 @@ fn test_update_card_progress_scheduled_days_negative_fails() {
         "validation.cards-progress.scheduled-days"
     );
 }
-
-// ============================================================================
-// UPDATE CARD PROGRESS - LEARNING STEPS
-// ============================================================================
 
 #[test]
 fn test_update_card_progress_learning_steps_zero_ok() {
@@ -351,10 +327,6 @@ fn test_update_card_progress_learning_steps_negative_fails() {
     );
 }
 
-// ============================================================================
-// UPDATE CARD PROGRESS - REPS
-// ============================================================================
-
 #[test]
 fn test_update_card_progress_reps_zero_ok() {
     let data = json!({
@@ -389,10 +361,6 @@ fn test_update_card_progress_reps_negative_fails() {
     let validation_result = result.unwrap().validate();
     assert_eq!(validation_result.unwrap_err().code, "validation.cards-progress.reps");
 }
-
-// ============================================================================
-// UPDATE CARD PROGRESS - LAPSES
-// ============================================================================
 
 #[test]
 fn test_update_card_progress_lapses_zero_ok() {

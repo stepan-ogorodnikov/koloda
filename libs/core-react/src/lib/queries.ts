@@ -47,7 +47,6 @@ import type { UseMutationOptions } from "@tanstack/react-query";
 import type { QueryKey, QueryOptions } from "@tanstack/react-query";
 import { atom } from "jotai";
 
-/** Query factory result: TanStack `QueryOptions` with a required `queryKey`. */
 export type AppQueryOptions<TData> = Omit<QueryOptions<TData>, "queryKey"> & { queryKey: QueryKey };
 
 export type Queries = {

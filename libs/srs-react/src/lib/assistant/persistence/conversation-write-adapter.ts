@@ -29,7 +29,6 @@ export type BuildWriteConversationOptions = {
   isTombstoned: (conversationId: string) => boolean;
 };
 
-/** Shared durable-write adapter for the engine persistence host. */
 export function buildWriteConversation({
   store,
   setConversationFn,

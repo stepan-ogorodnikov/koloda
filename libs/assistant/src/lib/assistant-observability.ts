@@ -25,7 +25,6 @@ export function defaultLogAssistantStructured(_entry: AssistantStructuredLog): v
 
 let logImpl: LogAssistantStructured = defaultLogAssistantStructured;
 
-/** Override the structured logger (tests). */
 export function setAssistantStructuredLogger(logger: LogAssistantStructured): void {
   logImpl = logger;
 }

@@ -2,10 +2,6 @@ use koloda_core::domain::templates::{
     TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
 
-// ============================================================================
-// HELPER FUNCTION FOR LOCKED TEMPLATE
-// ============================================================================
-
 fn create_original_template_content() -> TemplateContent {
     TemplateContent {
         fields: vec![
@@ -34,10 +30,6 @@ fn create_original_template_content() -> TemplateContent {
         ],
     }
 }
-
-// ============================================================================
-// LOCKED TEMPLATE UPDATE VALIDATION
-// ============================================================================
 
 #[test]
 fn test_locked_template_cannot_remove_fields() {
@@ -159,10 +151,6 @@ fn test_locked_template_can_add_new_fields() {
     let result = values.validate(Some(&original));
     assert!(result.is_ok(), "Should allow adding new fields to locked template");
 }
-
-// ============================================================================
-// UPDATE TEMPLATE DATA
-// ============================================================================
 
 #[test]
 fn test_update_template_data_missing_id() {

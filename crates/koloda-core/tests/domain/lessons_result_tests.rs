@@ -2,10 +2,6 @@ use crate::common::{valid_card_progress_json, valid_review_json};
 use koloda_core::domain::lessons::LessonResultData;
 use serde_json::json;
 
-// ============================================================================
-// LESSON RESULT DATA - MISSING FIELDS
-// ============================================================================
-
 #[test]
 fn test_lesson_result_missing_card() {
     let data = json!({
@@ -24,10 +20,6 @@ fn test_lesson_result_missing_review() {
     result.unwrap_err();
 }
 
-// ============================================================================
-// LESSON RESULT DATA - EXTRA FIELDS
-// ============================================================================
-
 #[test]
 fn test_lesson_result_extra_fields_ok() {
     let data = json!({
@@ -38,10 +30,6 @@ fn test_lesson_result_extra_fields_ok() {
     let result = serde_json::from_value::<LessonResultData>(data);
     result.unwrap();
 }
-
-// ============================================================================
-// LESSON RESULT DATA - INVALID TYPES
-// ============================================================================
 
 #[test]
 fn test_lesson_result_card_invalid_type() {
@@ -62,10 +50,6 @@ fn test_lesson_result_review_invalid_type() {
     let result = serde_json::from_value::<LessonResultData>(data);
     result.unwrap_err();
 }
-
-// ============================================================================
-// LESSON RESULT DATA - VALID
-// ============================================================================
 
 #[test]
 fn test_lesson_result_valid() {
@@ -136,10 +120,6 @@ fn test_lesson_result_all_states_valid() {
         assert!(result.unwrap().validate().is_ok(), "State {} should be valid", state);
     }
 }
-
-// ============================================================================
-// LESSON RESULT DATA - CARD/REVIEW ID MATCH
-// ============================================================================
 
 #[test]
 fn test_lesson_result_card_review_id_mismatch_fails() {

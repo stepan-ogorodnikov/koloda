@@ -1,10 +1,6 @@
 use koloda_core::domain::settings::SettingsName;
 use koloda_core::domain::settings_ai::AISettings;
 
-// ============================================================================
-// VALID SETTINGS
-// ============================================================================
-
 #[test]
 fn test_valid_ai_settings_empty_profiles() {
     let json = r#"{
@@ -208,10 +204,6 @@ fn test_ai_settings_empty_whitelist_model_id_fails() {
     );
 }
 
-// ============================================================================
-// MISSING FIELDS
-// ============================================================================
-
 #[test]
 fn test_missing_profiles_fails() {
     let json = r#"{}"#;
@@ -219,10 +211,6 @@ fn test_missing_profiles_fails() {
     let result: Result<AISettings, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when profiles is missing");
 }
-
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
 
 #[test]
 fn test_ai_settings_extra_fields_ignored() {
@@ -235,10 +223,6 @@ fn test_ai_settings_extra_fields_ignored() {
     settings.validate().unwrap();
 }
 
-// ============================================================================
-// INVALID CONTENT
-// ============================================================================
-
 #[test]
 fn test_profiles_as_object_fails() {
     let json = r#"{
@@ -248,10 +232,6 @@ fn test_profiles_as_object_fails() {
     let result: Result<AISettings, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when profiles is not an array");
 }
-
-// ============================================================================
-// SETTINGS_NAME DISPATCHER
-// ============================================================================
 
 #[test]
 fn test_settings_name_ai_validation_with_non_object_content() {
@@ -288,10 +268,6 @@ fn test_settings_name_ai_validation_valid() {
     let result = SettingsName::Ai.validate(&content);
     result.unwrap();
 }
-
-// ============================================================================
-// DUPLICATE PROFILE IDS
-// ============================================================================
 
 #[test]
 fn test_duplicate_profile_ids_fail() {
@@ -335,10 +311,6 @@ fn test_duplicate_profile_ids_fail_for_input_too() {
     let result = settings.validate_for_input();
     assert!(result.is_err(), "Duplicate profile ids should fail validate_for_input");
 }
-
-// ============================================================================
-// ASSISTANT TEMPERATURE
-// ============================================================================
 
 #[test]
 fn test_assistant_temperature_defaults_when_omitted() {

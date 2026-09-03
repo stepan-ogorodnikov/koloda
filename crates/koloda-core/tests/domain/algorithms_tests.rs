@@ -12,10 +12,6 @@ const VALID_FSRS_CONTENT: &str = r#"{
     "maximumInterval": 36500
 }"#;
 
-// ============================================================================
-// VALID ALGORITHM
-// ============================================================================
-
 #[test]
 fn test_insert_valid_fsrs_algorithm() {
     let json = format!(
@@ -61,10 +57,6 @@ fn test_update_values_direct_validation() {
     values.validate().unwrap();
 }
 
-// ============================================================================
-// MISSING FIELDS
-// ============================================================================
-
 #[test]
 fn test_insert_missing_title_field_fails() {
     let json = format!(
@@ -77,10 +69,6 @@ fn test_insert_missing_title_field_fails() {
     let result: Result<InsertAlgorithmData, _> = serde_json::from_str(&json);
     result.unwrap_err();
 }
-
-// ============================================================================
-// EXTRA FIELDS
-// ============================================================================
 
 #[test]
 fn test_algorithm_with_extra_fields_ignored() {
@@ -97,10 +85,6 @@ fn test_algorithm_with_extra_fields_ignored() {
     let data: InsertAlgorithmData = serde_json::from_str(&json).expect("Should deserialize");
     data.validate().unwrap();
 }
-
-// ============================================================================
-// TITLE FIELD
-// ============================================================================
 
 #[test]
 fn test_title_empty_fails() {
@@ -146,10 +130,6 @@ fn test_title_unicode_ok() {
     assert_eq!(data.title, "Алгоритм ФСРС 🧠");
 }
 
-// ============================================================================
-// ALGORITHM TYPE
-// ============================================================================
-
 #[test]
 fn test_unknown_algorithm_type_fails() {
     let json = r#"{
@@ -183,10 +163,6 @@ fn test_incomplete_non_fsrs_content_fails_to_deserialize() {
     result.unwrap_err();
 }
 
-// ============================================================================
-// CLONE ALGORITHM DATA
-// ============================================================================
-
 #[test]
 fn test_clone_algorithm_valid() {
     let json = r#"{
@@ -218,10 +194,6 @@ fn test_clone_algorithm_missing_source_id_fails() {
     let result: Result<CloneAlgorithmData, _> = serde_json::from_str(json);
     result.unwrap_err();
 }
-
-// ============================================================================
-// DELETE ALGORITHM DATA
-// ============================================================================
 
 #[test]
 fn test_delete_algorithm_with_successor() {

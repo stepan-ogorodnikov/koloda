@@ -14,10 +14,6 @@ fn valid_payload() -> Value {
     })
 }
 
-// ============================================================================
-// INSERT CARD DATA - SERDE SHAPE CONTRACTS
-// ============================================================================
-
 #[test]
 fn test_missing_required_fields_fail() {
     let required_fields = ["deckId", "templateId", "content"];
@@ -77,10 +73,6 @@ fn test_wrong_typed_fields_fail() {
         assert!(result.is_err(), "Should fail when {field} is {offending}");
     }
 }
-
-// ============================================================================
-// INSERT CARD DATA - CONTENT VALIDATION
-// ============================================================================
 
 #[test]
 fn test_insert_card_content_valid_ok() {
@@ -165,10 +157,6 @@ fn test_insert_card_content_unicode_ok() {
     let card_data = result.unwrap();
     card_data.validate(&valid_template_fields()).unwrap();
 }
-
-// ============================================================================
-// INSERT CARD DATA - PROGRESS VALIDATION
-// ============================================================================
 
 fn minimal_insert_card_data() -> serde_json::Value {
     json!({

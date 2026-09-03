@@ -45,7 +45,6 @@ export function prepareRunRequest(
   };
 }
 
-/** Build the typed engine submit command from a prepared run. */
 export function toSubmitCommand(conversationId: string, runId: string, prepared: PreparedRun): AssistantCommand {
   return {
     type: "submit",
@@ -59,7 +58,6 @@ export function toSubmitCommand(conversationId: string, runId: string, prepared:
   };
 }
 
-/** Build the typed engine retry command from a prepared run. */
 export function toRetryCommand(conversationId: string, runId: string, prepared: PreparedRun): AssistantCommand {
   return {
     type: "retry",

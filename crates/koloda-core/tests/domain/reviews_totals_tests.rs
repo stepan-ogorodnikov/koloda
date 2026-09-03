@@ -1,10 +1,6 @@
 use koloda_core::domain::reviews::{calculate_todays_review_totals, ReviewTotals};
 use koloda_core::domain::settings_learning::{CountedDailyLimit, DailyLimits};
 
-// ============================================================================
-// CALCULATE TODAYS REVIEW TOTALS
-// ============================================================================
-
 fn counted_limit(value: u32, counts: bool) -> CountedDailyLimit {
     CountedDailyLimit { value, counts }
 }
