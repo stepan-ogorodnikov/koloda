@@ -13,6 +13,10 @@ This file tells you which those are.
 Find your change type in the table.
 Paste the listed guides into the prompt, plus the task description.
 Nothing else.
+For an audit, use the Auditing section, not the Authoring table alone.
+
+Before routing a change, grep live task files: `rg --crlf -l '^Status: (draft|ready)$' tasks/live`.
+If a hit's Intent or Scope overlaps the intended work, also paste that file and `agents/TASKS.md`.
 
 Load one primary spec, not a cluster.
 If the task crosses that spec's stated out-of-scope, add the sibling it names.
@@ -28,6 +32,8 @@ The listed files are relative to the repo root.
 | Any TS or React edit | `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md` |
 | Change adds or edits tests | add `agents/TESTING.md` |
 | Edit touches `className` | add `agents/CSS.md` |
+| Split multi-commit work into a plan (feature, audit report) | `agents/IMPLEMENTATION-PLAN.md`, `agents/TASKS.md`, plus the area guides the work needs |
+| Start or continue a task file | the task file, `agents/TASKS.md` |
 | Add an AI provider | `agents/ADD-AI-PROVIDER.md`, `docs/specs/AI-PROVIDERS.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/I18N.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Assistant chat (anything) | `agents/ASSISTANT-MAP.md` (it routes to one spec and the files) |
 | Cards (content, state, add/edit/delete, views) | `docs/specs/CARDS.md` |
@@ -69,6 +75,28 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
 | Functional spec diff | `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md` |
+
+## Auditing
+
+Always include `agents/AUDIT.md` and the standing authoring guides:
+`agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/TESTING.md`, `agents/BACKWARDS-COMPATIBILITY.md`.
+Then add the Authoring-table guides for the target, the same way Reviewing does.
+
+Also add:
+
+- `agents/FUNCTIONAL-SPECIFICATIONS.md` when a spec is in scope
+- `agents/CSS.md` when UI is in scope
+- `agents/I18N.md` when user-visible strings are in scope
+- `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when the target crosses TypeScript and Rust
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
+- `agents/ASSISTANT-MAP.md` for assistant
+- the package README for each package in scope
+- `apps/native-electron/IPC.md` when the target includes desktop IPC
+
+One primary spec, one package, or one named cross-cutting question per audit.
+If the target spans more than one primary spec without a single cross-cutting question, split it.
+
+Planning work from a finished audit report is still the Authoring row for a multi-commit plan.
 
 ## Always-available background
 
