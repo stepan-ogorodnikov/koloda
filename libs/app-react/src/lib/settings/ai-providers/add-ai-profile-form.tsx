@@ -1,6 +1,6 @@
 import type { AiProvider } from "@koloda/ai";
-import { toFormErrors } from "@koloda/app";
-import { Button, Dialog, useAppForm } from "@koloda/ui";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
+import { Button, Dialog, ErrorMessage, useAppForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AI_PROVIDER_FORM_CONFIG, getAddDefaultValues } from "./ai-provider-form-config";
@@ -36,7 +36,7 @@ export function AddAIProfileForm({ provider, onSubmit, isPending, error }: AddAI
     >
       <Dialog.Content variants={{ class: "flex flex-col gap-4" }}>
         <AIProfileFormFields form={form} fields={config.fields} mode="add" />
-        {error && <form.Errors errors={toFormErrors(error)} />}
+        {error && <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.add"])} layout="inline" />}
       </Dialog.Content>
       <Dialog.Footer>
         <div className="grow" />
