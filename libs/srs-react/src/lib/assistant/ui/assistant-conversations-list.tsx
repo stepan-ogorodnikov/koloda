@@ -1,6 +1,7 @@
 import type { ConversationListItem } from "@koloda/app";
 import { queriesAtom } from "@koloda/core-react";
 import { Link, QueryState, useMotionSetting } from "@koloda/ui";
+import { tv } from "tailwind-variants";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -58,6 +59,14 @@ const conversationLink = [
   "hover:bg-main-sidebar-link-active data-current:bg-main-sidebar-link-active data-current:fg-level-1",
 ].join(" ");
 
+const conversationTitle = tv({
+  base: "flex-1 min-w-0 truncate",
+  variants: {
+    hasTurns: { false: "fg-level-4" },
+  },
+  defaultVariants: { hasTurns: true },
+});
+
 type ConversationItemProps = {
   conversation: ConversationListItem;
   fallback: string;
@@ -113,7 +122,9 @@ function ConversationItem({
           <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
         ) : null}
       </span>
-      <span className="flex-1 min-w-0 truncate">{name}</span>
+      <span className={conversationTitle({ hasTurns: conversation.hasTurns })} data-has-turns={conversation.hasTurns}>
+        {name}
+      </span>
       <div className="flex shrink-0 items-center gap-1">
         <div
           className="flex w-0 items-center overflow-hidden group-hover:w-8 group-focus-within:w-8"
@@ -124,7 +135,12 @@ function ConversationItem({
             event.preventDefault();
           }}
         >
-          <DeleteConversationButton id={conversation.id} isActive={isActive} onActiveDeleted={onActiveDeleted} />
+          <DeleteConversationButton
+            id={conversation.id}
+            hasTurns={conversation.hasTurns}
+            isActive={isActive}
+            onActiveDeleted={onActiveDeleted}
+          />
         </div>
         <ConversationListTimestamp
           className="fg-level-4 text-sm font-medium text-end select-none"

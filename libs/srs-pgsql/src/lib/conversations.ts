@@ -22,6 +22,11 @@ export async function getConversations(db: DB) {
         title: conversations.title,
         createdAt: conversations.createdAt,
         updatedAt: conversations.updatedAt,
+        hasTurns: sql<boolean>`COALESCE(
+          jsonb_typeof(${conversations.state}->'messages') = 'array'
+          AND jsonb_array_length(${conversations.state}->'messages') > 0,
+          false
+        )`,
       })
       .from(conversations)
       .orderBy(sql`${conversations.updatedAt} DESC NULLS LAST`, sql`${conversations.createdAt} DESC NULLS LAST`);

@@ -1,5 +1,6 @@
-import { queriesAtom, queryKeys } from "@koloda/core-react";
+import { conversationHasTurns } from "@koloda/app";
 import type { ConversationListItem } from "@koloda/app";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom, useStore } from "jotai";
 import { useLayoutEffect, useRef } from "react";
@@ -66,7 +67,8 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
           const list = currentQueryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
           const existing = list?.find((item) => item.id === row.id);
           if (list && existing) {
-            if (existing.title === row.title) {
+            const hasTurns = conversationHasTurns(row.state);
+            if (existing.title === row.title && existing.hasTurns === hasTurns) {
               currentQueryClient.setQueryData(
                 queryKeys.conversations.all(),
                 list.map((item) => (item.id === row.id ? { ...item, updatedAt: row.updatedAt } : item)),
@@ -75,7 +77,9 @@ export function useConversationSaveHost(): UseConversationSaveHostReturn {
             }
             currentQueryClient.setQueryData(
               queryKeys.conversations.all(),
-              list.map((item) => (item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt } : item)),
+              list.map((item) =>
+                item.id === row.id ? { ...item, title: row.title, updatedAt: row.updatedAt, hasTurns } : item,
+              ),
             );
             return;
           }

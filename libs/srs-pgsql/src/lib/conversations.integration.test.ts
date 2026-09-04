@@ -143,6 +143,8 @@ describe("conversations repository integration", () => {
     expect(list).toHaveLength(2);
     expect(list[0].id).toBe("conv-a");
     expect(list[1].id).toBe("conv-b");
+    expect(list[0].hasTurns).toBe(false);
+    expect(list[1].hasTurns).toBe(false);
   });
 
   it("handles complex nested state", async () => {
@@ -275,8 +277,48 @@ describe("conversations repository integration", () => {
     expect(item.id).toBe("conv-list");
     expect(item.title).toBe("Sidebar title");
     expect(item.createdAt).toBeInstanceOf(Date);
+    expect(item.hasTurns).toBe(true);
     // INVARIANT: the list projection must not ship `state`.
     expect("state" in item).toBe(false);
+  });
+
+  it("getConversations sets hasTurns from stored messages", async () => {
+    const { db } = testDb;
+    const createdAt = new Date(1700000000000);
+    await setConversation(db, {
+      id: "draft",
+      title: "soon",
+      state: {
+        id: "draft",
+        createdAt,
+        messages: [],
+        runs: {},
+        activeRunId: null,
+        promptInput: "soon",
+      },
+    });
+    await setConversation(db, {
+      id: "with-turn",
+      title: "hello",
+      state: {
+        id: "with-turn",
+        createdAt,
+        messages: [{ id: "msg-1", role: "user", parts: [{ type: "text", text: "hello" }] }],
+        runs: { r1: { id: "r1", status: "success" } },
+        activeRunId: null,
+      },
+    });
+    await setConversation(db, {
+      id: "no-messages-key",
+      title: null,
+      state: { id: "no-messages-key", createdAt, runs: {} },
+    });
+
+    const list = await getConversations(db);
+    const byId = Object.fromEntries(list.map((item) => [item.id, item]));
+    expect(byId.draft.hasTurns).toBe(false);
+    expect(byId["with-turn"].hasTurns).toBe(true);
+    expect(byId["no-messages-key"].hasTurns).toBe(false);
   });
 
   it("preserves null titles through a null-stored list query", async () => {

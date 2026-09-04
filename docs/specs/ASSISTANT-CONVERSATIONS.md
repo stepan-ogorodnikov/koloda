@@ -58,6 +58,8 @@ Starting a new conversation goes to the AI route with no conversation id and for
 Session reset uses the same route.
 Reloading or a cold visit to the AI route with no conversation id restores the last open conversation, when one is remembered.
 Each row shows a relative age next to the conversation's name, taken from the conversation timestamp.
+A conversation that has never had a submitted run is a draft.
+A draft's name in the list is dimmer than the name of a conversation that already has a turn.
 A working or unread indicator may appear next to the conversation's name.
 
 ### Working Status
@@ -339,11 +341,13 @@ The user is navigated to the cloned conversation.
 ## Delete
 
 The user can delete a conversation from the sidebar.
-Delete asks for confirmation and cannot be undone.
+Delete cannot be undone.
+A draft that has never had a submitted run is deleted immediately, without confirmation.
+Delete still asks for confirmation after a run has been submitted.
 
 ### What Deletion Does
 
-Confirming permanently removes the conversation, its messages, and its runs.
+Deletion permanently removes the conversation, its messages, and its runs.
 The row disappears from the sidebar.
 
 A run that is still streaming in the deleted conversation is canceled as part of deletion.

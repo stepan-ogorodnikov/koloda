@@ -1,12 +1,15 @@
 import type { AddAIProfileData, AIProfile, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AllowedSettings,
+  Conversation,
+  ConversationListItem,
   DeleteConversationData,
   PatchSettingsData,
   SetConversationData,
   SetSettingsData,
   SettingsName,
 } from "@koloda/app";
+import { toConversationListItem } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type {
@@ -69,7 +72,11 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getConversationsQuery: () => ({
     queryKey: queryKeys.conversations.all(),
-    queryFn: () => invoke("cmd_get_conversations"),
+    queryFn: async (): Promise<ConversationListItem[]> => {
+      // INVARIANT: hasTurns is derived here from opaque `state`. Do not parse state in Rust.
+      const rows = await invoke<Conversation[]>("cmd_get_conversations");
+      return rows.map(toConversationListItem);
+    },
   }),
   setConversationMutation: () => ({
     mutationFn: (data: SetConversationData) => invoke("cmd_set_conversation", data),

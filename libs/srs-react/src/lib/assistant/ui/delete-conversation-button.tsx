@@ -14,11 +14,17 @@ import { deleteAssistantConversation } from "../persistence/conversation-write-a
 
 type DeleteConversationButtonProps = {
   id: DeleteConversationData["id"];
+  hasTurns: boolean;
   onActiveDeleted?: () => void;
   isActive?: boolean;
 };
 
-export function DeleteConversationButton({ id, onActiveDeleted, isActive = false }: DeleteConversationButtonProps) {
+export function DeleteConversationButton({
+  id,
+  hasTurns,
+  onActiveDeleted,
+  isActive = false,
+}: DeleteConversationButtonProps) {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const store = useStore();
@@ -45,12 +51,7 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
     },
   });
 
-  const handleOpenChange = (value: boolean) => {
-    setIsOpen(value);
-    if (value) reset();
-  };
-
-  const handleClick = () => {
+  const handleDelete = () => {
     mutate(
       { id },
       {
@@ -58,8 +59,22 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
           setIsOpen(false);
           if (isActive) onActiveDeleted?.();
         },
+        onError: () => {
+          setIsOpen(true);
+        },
       },
     );
+  };
+
+  const handleOpenChange = (value: boolean) => {
+    // WHY: Drafts (no submitted run) skip confirmation. Keep the popover for
+    // delete errors so the existing in-place error UI still has a home.
+    if (value && !hasTurns) {
+      handleDelete();
+      return;
+    }
+    setIsOpen(value);
+    if (value) reset();
   };
 
   const message = isAppError(error)
@@ -92,7 +107,7 @@ export function DeleteConversationButton({ id, onActiveDeleted, isActive = false
               )}
             </AnimatePresence>
             <div className="flex flex-row items-center gap-4">
-              <Button variants={{ style: "primary" }} onPress={handleClick} isDisabled={!!error || isPending}>
+              <Button variants={{ style: "primary" }} onPress={handleDelete} isDisabled={!!error || isPending}>
                 {_(msg`ai.conversation.delete.confirm`)}
               </Button>
               <Button variants={{ style: "ghost" }} slot="close" autoFocus>

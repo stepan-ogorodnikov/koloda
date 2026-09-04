@@ -108,7 +108,7 @@ Out:
   Commit: Persist conversations as soon as they have an id
   Depends on: 1
 
-- [ ] 3. Dim draft titles and skip delete confirmation
+- [x] 3. Dim draft titles and skip delete confirmation
   Goal: A conversation with no submitted run is a draft in the sidebar.
   Its title is dimmer than a conversation that has a turn.
   Delete does not ask for confirmation.
