@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 import { z } from "zod";
-import { AppError, isAbortError, isAppError, throwKnownError, toFormErrors } from "./error";
+import type { ErrorCode } from "./error";
+import { AppError, formatAppError, isAbortError, isAppError, throwKnownError, toFormErrors } from "./error";
 
 describe("AppError", () => {
   it("sets name to AppError", () => {
@@ -99,6 +100,31 @@ describe("throwKnownError", () => {
         throw original;
       }),
     ).rejects.toBe(original);
+  });
+});
+
+describe("formatAppError", () => {
+  const translate = ((message: string) => message) as Parameters<typeof formatAppError>[1];
+
+  it("translates the AppError catalog code and keeps details separate", () => {
+    expect(formatAppError(new AppError("db.delete", "SQLITE_BUSY"), translate)).toEqual({
+      message: "db.delete",
+      details: "SQLITE_BUSY",
+    });
+  });
+
+  it("falls back to unknown when the error code is missing from the catalog", () => {
+    expect(formatAppError(new AppError("not-in-catalog" as ErrorCode), translate)).toEqual({
+      message: "unknown",
+      details: undefined,
+    });
+  });
+
+  it("uses the delete fallback for a plain Error and treats its message as details", () => {
+    expect(formatAppError(new Error("network down"), translate)).toEqual({
+      message: "db.delete",
+      details: "network down",
+    });
   });
 });
 

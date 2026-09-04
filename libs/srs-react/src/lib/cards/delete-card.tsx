@@ -1,7 +1,7 @@
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { DeleteDialog, Fade } from "@koloda/ui";
+import { DeleteDialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,17 +35,15 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
     );
   };
 
-  const message = isAppError(error)
-    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
-
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
       <DeleteDialog.Trigger>{_(msg`delete-card.trigger`)}</DeleteDialog.Trigger>
       <DeleteDialog.Frame>
         <AnimatePresence>
           {error ? (
-            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+            <Fade>
+              <ErrorMessage {...formatAppError(error, _)} />
+            </Fade>
           ) : (
             <Fade>{_(msg`delete-card.message`)}</Fade>
           )}

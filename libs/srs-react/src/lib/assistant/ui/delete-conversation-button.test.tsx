@@ -1,3 +1,4 @@
+import { AppError } from "@koloda/app";
 import type { DeleteConversationData } from "@koloda/app";
 import { queriesAtom } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
@@ -93,5 +94,43 @@ describe("DeleteConversationButton", () => {
     await waitFor(() => {
       expect(deleteFromDb).toHaveBeenCalledWith({ id: "c1" });
     });
+  });
+
+  it("shows the catalog message and keeps AppError details behind the details control", async () => {
+    deleteFromDb.mockRejectedValueOnce(new AppError("db.delete", "SQLITE_BUSY"));
+    renderButton(true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.trigger" }));
+    });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "ai.conversation.delete.confirm" }));
+    });
+
+    expect(await screen.findByText("db.delete")).toBeTruthy();
+    expect(screen.queryByText("SQLITE_BUSY")).toBeNull();
+
+    const trigger = screen.getByRole("button", { name: "error.details" });
+    fireEvent.click(trigger);
+
+    expect(await screen.findByText("SQLITE_BUSY")).toBeTruthy();
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("does not offer details when AppError has none", async () => {
+    deleteFromDb.mockRejectedValueOnce(new AppError("db.delete"));
+    renderButton(true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "ai.conversation.delete.trigger" }));
+    });
+
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "ai.conversation.delete.confirm" }));
+    });
+
+    expect(await screen.findByText("db.delete")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "error.details" })).toBeNull();
   });
 });

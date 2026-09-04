@@ -1,9 +1,9 @@
 import { Cancel01Icon, Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { Button, Dialog, Fade, Number } from "@koloda/ui";
+import { Button, Dialog, ErrorMessage, Fade, Number } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -55,10 +55,6 @@ export function CardsTableSelectionControls({
     );
   };
 
-  const message = isAppError(error)
-    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
-
   return (
     <Fade className="sticky bottom-16 wd:bottom-2 flex justify-center">
       <div className="flex flex-row items-center gap-4 py-2 px-4 rounded-xl border-2 border-main bg-level-1">
@@ -78,7 +74,9 @@ export function CardsTableSelectionControls({
               <Dialog.Content variants={{ class: "items-center gap-2" }}>
                 <AnimatePresence>
                   {error ? (
-                    <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+                    <Fade>
+                      <ErrorMessage {...formatAppError(error, _)} />
+                    </Fade>
                   ) : (
                     <Fade>{_(msg`cards.table.selection.delete-confirm`)}</Fade>
                   )}

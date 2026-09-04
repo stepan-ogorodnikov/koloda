@@ -1,6 +1,6 @@
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { Button, Dialog, Fade } from "@koloda/ui";
+import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -114,10 +114,6 @@ export function AssistantConversationRecovery({
     if (value) clearDeleteError();
   };
 
-  const message = isAppError(deleteError)
-    ? (ERROR_MESSAGES[deleteError.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
-
   return (
     <div className="grow flex flex-col items-center justify-center gap-6 py-12 px-4">
       <div className="flex flex-col items-center gap-2 text-center max-w-md">
@@ -186,7 +182,9 @@ export function AssistantConversationRecovery({
             <Dialog.Content variants={{ class: "items-center gap-4 max-w-[90vw] pt-4 pb-2" }}>
               <AnimatePresence mode="wait">
                 {deleteError ? (
-                  <Fade key="error">{typeof message === "function" ? _(message(deleteError)) : _(message)}</Fade>
+                  <Fade key="error">
+                    <ErrorMessage {...formatAppError(deleteError, _)} />
+                  </Fade>
                 ) : (
                   <Fade key="message">{_(msg`ai.conversation.delete.message`)}</Fade>
                 )}

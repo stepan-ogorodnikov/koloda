@@ -6,17 +6,19 @@ import { Dialog } from "../primitives/overlay/dialog";
 export type ErrorMessageProps = {
   message: string;
   details?: string;
+  layout?: "stack" | "inline";
 };
 
-export function ErrorMessage({ message, details }: ErrorMessageProps) {
+export function ErrorMessage({ message, details, layout = "stack" }: ErrorMessageProps) {
   const { _ } = useLingui();
   const trimmedDetails = details?.trim();
   const hasDetails = Boolean(trimmedDetails);
   const detailsLabel = _(msg`error.details`);
+  const isInline = layout === "inline";
 
   return (
-    <div className="flex flex-col items-center gap-2 max-w-md">
-      <p className="fg-level-2 text-center">{message}</p>
+    <div className={isInline ? "flex flex-row items-center gap-2" : "flex flex-col items-center gap-2 max-w-md"}>
+      <p className={isInline ? "fg-level-2 whitespace-nowrap" : "fg-level-2 text-center"}>{message}</p>
       {hasDetails && (
         <Dialog.Root>
           <Button variants={{ style: "ghost", size: "small", class: "fg-link font-medium" }}>{detailsLabel}</Button>

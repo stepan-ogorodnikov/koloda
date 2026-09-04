@@ -1,8 +1,8 @@
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { defaultTemplateAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
-import { DeleteDialog, Fade, Tooltip } from "@koloda/ui";
+import { DeleteDialog, ErrorMessage, Fade, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -49,10 +49,6 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
       ? msg`delete-template.cant-delete-default`
       : msg`delete-template.cant-delete-used`;
 
-  const message = isAppError(error)
-    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
-
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
       <div className="relative">
@@ -66,7 +62,9 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
       <DeleteDialog.Frame>
         <AnimatePresence>
           {error ? (
-            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+            <Fade>
+              <ErrorMessage {...formatAppError(error, _)} />
+            </Fade>
           ) : (
             <Fade>{_(msg`delete-template.message`)}</Fade>
           )}

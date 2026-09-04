@@ -1,4 +1,5 @@
 import { msg, plural } from "@lingui/core/macro";
+import type { I18nContext } from "@lingui/react";
 import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { ZodError } from "zod";
 
@@ -117,6 +118,18 @@ export class AppError extends Error {
 
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
+}
+
+export function formatAppError(
+  error: unknown,
+  _: I18nContext["_"],
+  fallback: (typeof ERROR_MESSAGES)[ErrorCode] = ERROR_MESSAGES["db.delete"],
+): { message: string; details?: string } {
+  const catalog = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : fallback;
+  const message = typeof catalog === "function" ? _(catalog(error as never)) : _(catalog);
+  const details = isAppError(error) ? error.details : error instanceof Error ? error.message : undefined;
+
+  return { message, details };
 }
 
 export function isAbortError(error: unknown) {

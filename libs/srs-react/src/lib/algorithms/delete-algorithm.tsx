@@ -1,8 +1,8 @@
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { defaultAlgorithmAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm } from "@koloda/srs";
-import { DeleteDialog, Fade, Select, Tooltip } from "@koloda/ui";
+import { DeleteDialog, ErrorMessage, Fade, Select, Tooltip } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,9 +48,6 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
 
   const isDefault = defaultAlgorithm === Number(id);
   const isDisabled = (algorithms && algorithms.length < 2) || isDefault;
-  const message = isAppError(error)
-    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
 
   return (
     <DeleteDialog onOpenChange={handleOpenChange}>
@@ -65,7 +62,9 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
       <DeleteDialog.Frame>
         <AnimatePresence>
           {error ? (
-            <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+            <Fade>
+              <ErrorMessage {...formatAppError(error, _)} />
+            </Fade>
           ) : (
             <Fade>
               {decks && decks.length > 0 ? (

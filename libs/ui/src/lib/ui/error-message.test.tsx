@@ -19,6 +19,16 @@ describe("ErrorMessage", () => {
     expect(screen.queryByRole("button", { name: "error.details" })).toBeNull();
   });
 
+  it("keeps the message and details control on one row when layout is inline", () => {
+    const { container } = render(
+      <ErrorMessage layout="inline" message="Failed to delete data" details="SQLITE_BUSY" />,
+    );
+
+    expect(container.firstElementChild?.className).toContain("flex-row");
+    expect(screen.getByText("Failed to delete data")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "error.details" })).toBeTruthy();
+  });
+
   it("reveals technical details in a popover after the details control is pressed", async () => {
     render(<ErrorMessage message="Failed to load data" details="SQLITE_BUSY" />);
 

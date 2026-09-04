@@ -1,9 +1,9 @@
 import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { Button, Dialog, Fade } from "@koloda/ui";
+import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,10 +41,6 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
     );
   };
 
-  const message = isAppError(error)
-    ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
-    : ERROR_MESSAGES["db.delete"];
-
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={handleOpenChange}>
       <Button
@@ -61,7 +57,9 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
             <div className="flex flex-row items-center gap-4">
               <AnimatePresence>
                 {error ? (
-                  <Fade>{typeof message === "function" ? _(message(error)) : _(message)}</Fade>
+                  <Fade>
+                    <ErrorMessage layout="inline" {...formatAppError(error, _)} />
+                  </Fade>
                 ) : (
                   <Fade>{_(msg`delete-card.message`)}</Fade>
                 )}
