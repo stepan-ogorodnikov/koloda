@@ -11,11 +11,17 @@ How the model reads decks is covered by the data-access spec.
 A conversation is a single threaded interaction between the user and the AI.
 Each conversation has a name, a timestamp, a history of messages and AI runs, and its own unsent prompt.
 
-A conversation starts empty.
-It has no messages and no runs.
+A new conversation starts as the AI route with no conversation id.
+The composer is empty.
+No list row exists yet.
+The first change to the prompt that is not only whitespace assigns an identity and creates the conversation.
+Whitespace-only edits do not assign an identity.
+The composer may hold whitespace until that first non-empty change.
+Creating a conversation sets its timestamp to that moment.
+Later prompt edits do not change the timestamp.
+The next timestamp bump is when a run is submitted.
+
 The prompt input belongs to that conversation and is independent of every other conversation.
-Updating the prompt does not make the conversation active and does not change its timestamp.
-It becomes active when the user sends their first message.
 Every new run is chat.
 The model may propose cards during that run.
 
@@ -46,8 +52,11 @@ The timestamp is bumped only when a new run starts — that is, when the user se
 Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
 Typing in the prompt input does not change the conversation's order in the sidebar.
 If the sidebar has no conversations, nothing is shown.
-The "New Conversation" button is disabled when there are no messages and no active run.
-A second empty conversation cannot be created.
+The "New Conversation" button is disabled only when the open surface has no conversation id.
+It is enabled when viewing any existing conversation, including one that has no messages and no active run.
+Starting a new conversation goes to the AI route with no conversation id and forgets the last open conversation so a reload of that route does not bounce back.
+Session reset uses the same route.
+Reloading or a cold visit to the AI route with no conversation id restores the last open conversation, when one is remembered.
 Each row shows a relative age next to the conversation's name, taken from the conversation timestamp.
 A working or unread indicator may appear next to the conversation's name.
 
@@ -183,7 +192,9 @@ The global record holds the same three fields: profile, model, and model paramet
 The global record is persisted across sessions.
 
 The global AI profile state is used to initialize a new conversation's own AI profile state.
-When the user starts a new conversation, its profile, model, and model parameters are pre-filled from the global record.
+When the open surface has no conversation id, the composer uses the global record.
+Changing the profile, model, or model parameters there updates the global record.
+Those values are copied onto the conversation when it receives an id.
 From that point on, the conversation's own values take over and can diverge from the global one.
 
 **Loading** — on app load, the global record is read from storage.
@@ -339,9 +350,9 @@ A late save cannot bring the conversation back; see Concurrent Behavior.
 
 ### Deleting the Open Conversation
 
-If the deleted conversation is the one currently open, the app starts a fresh empty conversation in its place.
-The new conversation's AI profile state is pre-filled from the global record, like any new conversation.
-The user is navigated to it immediately.
+If the deleted conversation is the one currently open, the app goes to the AI route with no conversation id.
+It does not assign a replacement identity.
+The composer is empty, and the global AI profile state applies, as for any new conversation.
 
 ### Failed Deletion
 

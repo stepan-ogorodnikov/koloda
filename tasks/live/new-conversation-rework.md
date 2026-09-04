@@ -63,7 +63,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Assign conversation identity on the first non-whitespace prompt
+- [x] 1. Assign conversation identity on the first non-whitespace prompt
   Goal: Stop minting an id when the AI route loads.
   New conversation navigates to the AI route with no `conversationId` and clears the stored active id so the cold-start restore does not bounce the user back.
   Reload or a cold visit to the param-less route still restores the last stored active id, as today.

@@ -50,6 +50,7 @@ export type RenderAddProfileDialogProps = {
 export type AssistantChatProps = {
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
+  onStartNewConversation: () => void;
   /** Called when the active conversation is deleted so the route can navigate away. */
   onActiveDeleted?: () => void;
   onPrevConversation?: () => void;
@@ -60,6 +61,7 @@ export type AssistantChatProps = {
 export function AssistantChat({
   conversationId,
   onConversationIdChange,
+  onStartNewConversation,
   onActiveDeleted,
   onPrevConversation,
   onNextConversation,
@@ -68,7 +70,14 @@ export function AssistantChat({
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
   const promptInput = useAtomValue(assistantPromptInputAtom);
-  const setPromptInput = useSetAtom(setAssistantPromptInputAtom);
+  const applyPromptInput = useSetAtom(setAssistantPromptInputAtom);
+  const setPromptInput = useCallback(
+    (text: string) => {
+      const mintedId = applyPromptInput(text);
+      if (mintedId) onConversationIdChange(mintedId);
+    },
+    [applyPromptInput, onConversationIdChange],
+  );
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
@@ -104,6 +113,7 @@ export function AssistantChat({
   const { controller } = useAssistantSession({
     conversationId,
     onConversationIdChange,
+    onStartNewConversation,
     profileId,
     modelId,
     modelName,

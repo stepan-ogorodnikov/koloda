@@ -421,9 +421,9 @@ export async function addLmStudioProfile(page: Page, options: AddLmStudioProfile
 }
 
 /**
- * Open Assistant with a real conversation. Visiting `/ai` with no conversationId
- * and no stored active id creates a conversation and replaces the URL with
- * `?conversationId=`.
+ * Open Assistant. Visiting `/ai` with no conversationId stays on that route
+ * until the user types a non-whitespace prompt (or a stored active id is
+ * restored). Do not require `conversationId` in the URL before the user types.
  */
 export function getConversationIdFromUrl(page: Page): string {
   const match = page.url().match(/conversationId=([^&]+)/);
@@ -439,24 +439,19 @@ export async function openAssistantWithConversation(page: Page, conversationId: 
 
 export async function openAssistantWithDeck(page: Page) {
   await page.goto(`/ai`);
-  await expect(page).toHaveURL(/\/ai\?conversationId=/);
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
 }
 
 /**
- * Create a second conversation through the assistant's "New conversation"
- * button and navigate to it. Requires the current conversation to have
- * context (messages or an active run) — the button is disabled otherwise,
- * and an empty conversation cannot be created.
+ * Open a new conversation through the assistant's "New conversation" button.
+ * Lands on the AI route with no conversationId.
  */
-export async function startNewConversation(page: Page): Promise<string> {
-  const conversationIdBefore = getConversationIdFromUrl(page);
+export async function startNewConversation(page: Page): Promise<void> {
   const newConversationButton = page.getByRole("button", { name: "New conversation" });
   await expect(newConversationButton).toBeEnabled();
   await newConversationButton.click();
-  await expect(page).not.toHaveURL(new RegExp(`conversationId=${conversationIdBefore}($|&)`));
+  await expect(page).not.toHaveURL(/conversationId=/);
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
-  return getConversationIdFromUrl(page);
 }
 
 /** Simulate graceful app shutdown (`pagehide` with `persisted: false`). */

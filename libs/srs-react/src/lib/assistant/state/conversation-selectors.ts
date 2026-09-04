@@ -1,7 +1,12 @@
 import { atom } from "jotai";
 import { findLatestErroredRun, getVisibleMessages } from "./conversation-reducer";
 import { getMessageRunId } from "./assistant-messages";
-import { assistantConversationStateAtom, conversationsAtom } from "./conversation-store";
+import {
+  assistantConversationStateAtom,
+  conversationsAtom,
+  currentConversationIdAtom,
+  unassignedPromptInputAtom,
+} from "./conversation-store";
 
 export const assistantErroredRunAtom = atom((get) => findLatestErroredRun(get(assistantConversationStateAtom)));
 
@@ -11,7 +16,10 @@ export const assistantMessagesAtom = atom((get) => {
 });
 
 export const assistantRevertStateAtom = atom((get) => get(assistantConversationStateAtom).revertState);
-export const assistantPromptInputAtom = atom((get) => get(assistantConversationStateAtom).promptInput);
+export const assistantPromptInputAtom = atom((get) => {
+  if (!get(currentConversationIdAtom)) return get(unassignedPromptInputAtom);
+  return get(assistantConversationStateAtom).promptInput;
+});
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);
@@ -27,6 +35,8 @@ export const assistantHasContextAtom = atom((get) => {
   const state = get(assistantConversationStateAtom);
   return state.messages.length > 0 || state.activeRunId !== null;
 });
+
+export const assistantCanStartNewConversationAtom = atom((get) => get(currentConversationIdAtom) != null);
 
 export const assistantConversationHasContextAtom = (id: string) =>
   atom((get) => {

@@ -4,6 +4,7 @@ import { useAIModels, useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 import { modelChangeSync, parameterChangeSync, profileChangeSync } from "./state/ai-profile-sync";
+import { aiProfileStateAtom } from "./state/ai-profile-state";
 import {
   setAssistantAIModelAtom,
   setAssistantAIModelParameterAtom,
@@ -14,6 +15,7 @@ import {
   assistantAIModelParametersAtom,
   assistantProfileIdAtom,
 } from "./state/conversation-selectors";
+import { currentConversationIdAtom } from "./state/conversation-store";
 import { useSetGlobalAIProfileState } from "./use-global-ai-profile-state";
 
 export type UseAssistantProfileSelectionReturn = {
@@ -37,14 +39,25 @@ export type UseAssistantProfileSelectionReturn = {
 
 type HandleModelProfileChangeParams = { profileId: string; modelId: string };
 
+const emptyModelParameters: Partial<Record<ModelParameter["type"], string>> = {};
+
 /**
  * Chat-tree owner of per-conversation AI selection + dual-write to global last-used.
  * Sole `useAIProfiles` subscriber in the chat tree (pass `profiles` into the picker).
  */
 export function useAssistantProfileSelection(): UseAssistantProfileSelectionReturn {
-  const storedProfileId = useAtomValue(assistantProfileIdAtom);
-  const storedModelId = useAtomValue(assistantAIModelIdAtom);
-  const storedModelParameters = useAtomValue(assistantAIModelParametersAtom);
+  const conversationId = useAtomValue(currentConversationIdAtom);
+  const conversationProfileId = useAtomValue(assistantProfileIdAtom);
+  const conversationModelId = useAtomValue(assistantAIModelIdAtom);
+  const conversationModelParameters = useAtomValue(assistantAIModelParametersAtom);
+  const globalAIProfileState = useAtomValue(aiProfileStateAtom);
+
+  const hasConversation = conversationId != null;
+  const storedProfileId = hasConversation ? conversationProfileId : (globalAIProfileState?.profileId ?? null);
+  const storedModelId = hasConversation ? conversationModelId : (globalAIProfileState?.modelId ?? null);
+  const storedModelParameters = hasConversation
+    ? conversationModelParameters
+    : (globalAIProfileState?.modelParameters ?? emptyModelParameters);
 
   const setAIProfile = useSetAtom(setAssistantAIProfileAtom);
   const setAIModel = useSetAtom(setAssistantAIModelAtom);
@@ -65,13 +78,20 @@ export function useAssistantProfileSelection(): UseAssistantProfileSelectionRetu
 
   useEffect(() => {
     if (defaultProfileId && !storedProfileId) {
-      setAIProfile({
+      const payload = {
         profileId: defaultProfileId,
         modelId: null,
         modelParameters: {},
-      });
+      };
+      if (hasConversation) {
+        setAIProfile(payload);
+      } else {
+        // WHY: Param-less has no conversation row. The same default write must
+        // still land on the global record so the picker is not a no-op.
+        setGlobalAIProfileState(payload);
+      }
     }
-  }, [defaultProfileId, storedProfileId, setAIProfile]);
+  }, [defaultProfileId, storedProfileId, setAIProfile, setGlobalAIProfileState, hasConversation]);
 
   const resolvedModelId = useMemo(() => {
     if (!storedProfileId) return "";

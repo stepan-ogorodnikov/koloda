@@ -1,3 +1,5 @@
+import { useSetAtom } from "jotai";
+import { startParamlessConversationAtom } from "../state/conversation-actions";
 import { useAssistantProfileSelection } from "../use-assistant-profile-selection";
 import { useAssistantEngineHost } from "../runs/use-assistant-engine-host";
 import { useAssistantSession } from "../runs/use-assistant-session";
@@ -7,6 +9,7 @@ import { useConversationSaveHost } from "../persistence/use-conversation-save-ho
 export type UseAssistantChatTestHarnessOptions = {
   conversationId: string | undefined;
   onConversationIdChange: (id: string) => void;
+  onStartNewConversation?: () => void;
 };
 
 /**
@@ -26,8 +29,10 @@ export function useAssistantAppShellHosts(): void {
 export function useAssistantChatSessionHarness({
   conversationId,
   onConversationIdChange,
+  onStartNewConversation,
 }: UseAssistantChatTestHarnessOptions) {
   const { profileId, modelId, modelName, modelParameters } = useAssistantProfileSelection();
+  const startParamlessConversation = useSetAtom(startParamlessConversationAtom);
 
   // Mounted for restore / save-error dismiss coverage even when the suite
   // only drives RunController.
@@ -36,6 +41,7 @@ export function useAssistantChatSessionHarness({
   const { controller } = useAssistantSession({
     conversationId,
     onConversationIdChange,
+    onStartNewConversation: onStartNewConversation ?? startParamlessConversation,
     profileId,
     modelId,
     modelName,
@@ -52,8 +58,9 @@ export function useAssistantChatSessionHarness({
 export function useAssistantChatTestHarness({
   conversationId,
   onConversationIdChange,
+  onStartNewConversation,
 }: UseAssistantChatTestHarnessOptions) {
   useAssistantAppShellHosts();
 
-  return useAssistantChatSessionHarness({ conversationId, onConversationIdChange });
+  return useAssistantChatSessionHarness({ conversationId, onConversationIdChange, onStartNewConversation });
 }

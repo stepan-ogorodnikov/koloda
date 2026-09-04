@@ -6,8 +6,7 @@ import {
   AssistantNewConversationButton,
   CONVERSATION_TITLE_FALLBACK,
   ConversationHeaderMenu,
-  newConversationAtom,
-  useGlobalAIProfileState,
+  startParamlessConversationAtom,
 } from "@koloda/srs-react";
 import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -15,7 +14,7 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SettingsAIAddProfile } from "../settings/settings-ai-add-profile";
 
 export const Route = createFileRoute("/_/ai")({
@@ -38,32 +37,23 @@ function AIRoute() {
   useLayoutHeaderScrollShadow(ref);
   const navigate = Route.useNavigate();
   const { conversationId } = Route.useSearch();
-  const newConversation = useSetAtom(newConversationAtom);
+  const startParamlessConversation = useSetAtom(startParamlessConversationAtom);
   const { getConversationsQuery } = useAtomValue(queriesAtom);
   const conversationsQuery = useQuery(getConversationsQuery());
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
   const { title } =
     useMemo(() => conversations.find((c) => c.id === conversationId), [conversations, conversationId]) || {};
-  const [globalAIProfileState] = useGlobalAIProfileState();
-  const creatingConversationRef = useRef(false);
 
   useEffect(() => {
     if (conversationId) {
       setActiveConversationId(conversationId);
-      creatingConversationRef.current = false;
       return;
     }
     const stored = getActiveConversationId();
     if (stored) {
       navigate({ search: { conversationId: stored }, replace: true });
-      return;
     }
-    if (creatingConversationRef.current) return;
-    creatingConversationRef.current = true;
-    const id = newConversation(globalAIProfileState);
-    setActiveConversationId(id);
-    navigate({ search: { conversationId: id }, replace: true });
-  }, [conversationId, navigate, newConversation, globalAIProfileState]);
+  }, [conversationId, navigate]);
 
   const handleConversationIdChange = useCallback(
     (id: string) => {
@@ -73,12 +63,15 @@ function AIRoute() {
     [navigate],
   );
 
-  const handleActiveConversationDeleted = useCallback(() => {
+  // WHY: Clear the stored active id before navigating to param-less /ai.
+  // Restore only runs when a stored id exists, so this is what distinguishes
+  // New / delete-of-open / session reset from a cold visit that should bounce
+  // back to the last conversation.
+  const handleStartNewConversation = useCallback(() => {
     clearActiveConversationId();
-    const id = newConversation(globalAIProfileState);
-    setActiveConversationId(id);
-    navigate({ search: { conversationId: id }, replace: true });
-  }, [navigate, newConversation, globalAIProfileState]);
+    startParamlessConversation();
+    navigate({ search: {}, replace: true });
+  }, [navigate, startParamlessConversation]);
 
   const handlePrevConversation = useCallback(() => {
     if (!conversationId || conversations.length === 0) return;
@@ -95,8 +88,8 @@ function AIRoute() {
   return (
     <>
       <Layout.Sidebar>
-        <AssistantNewConversationButton onConversationIdChange={handleConversationIdChange} />
-        <AssistantConversationsList activeId={conversationId} onActiveDeleted={handleActiveConversationDeleted} />
+        <AssistantNewConversationButton onStartNewConversation={handleStartNewConversation} />
+        <AssistantConversationsList activeId={conversationId} onActiveDeleted={handleStartNewConversation} />
       </Layout.Sidebar>
       <Layout.Content isAlwaysVisible>
         <Layout.Header>
@@ -115,7 +108,8 @@ function AIRoute() {
           <AssistantChat
             conversationId={conversationId}
             onConversationIdChange={handleConversationIdChange}
-            onActiveDeleted={handleActiveConversationDeleted}
+            onActiveDeleted={handleStartNewConversation}
+            onStartNewConversation={handleStartNewConversation}
             onPrevConversation={handlePrevConversation}
             onNextConversation={handleNextConversation}
             renderAddProfileDialog={(props) => <SettingsAIAddProfile trigger="none" {...props} />}

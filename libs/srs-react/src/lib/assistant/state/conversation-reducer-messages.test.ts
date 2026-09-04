@@ -239,7 +239,7 @@ describe("conversationReducer", () => {
       expect(state).toEqual({
         id: "new-id",
         createdAt,
-        updatedAt: null,
+        updatedAt: createdAt,
         messages: [],
         runs: {},
         activeRunId: null,

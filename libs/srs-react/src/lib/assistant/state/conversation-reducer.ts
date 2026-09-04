@@ -688,7 +688,9 @@ type NewConversationPayload = {
 function newConversation(draft: ConversationReducerState, payload: NewConversationPayload) {
   draft.id = payload.id;
   draft.createdAt = payload.createdAt;
-  draft.updatedAt = null;
+  // INVARIANT: Create stamps updatedAt once, equal to createdAt. Later prompt
+  // and title edits must not bump it; the next bump is a submitted run.
+  draft.updatedAt = payload.createdAt;
   draft.messages = [];
   draft.runs = {};
   draft.activeRunId = null;

@@ -3,6 +3,7 @@ import { generateUUID } from "@koloda/app";
 import { atom } from "jotai";
 import { dropRuns } from "./conversation-reducer";
 import type { CardStatus, ConversationReducerState } from "./conversation-reducer";
+import { aiProfileStateAtom } from "./ai-profile-state";
 import {
   assistantConversationStateAtom,
   touchAtom,
@@ -10,6 +11,8 @@ import {
   conversationsAtom,
   currentConversationIdAtom,
   pendingSaveByConversationAtom,
+  setCurrentConversationIdAtom,
+  unassignedPromptInputAtom,
 } from "./conversation-store";
 
 // WHY: Called after coordinated delete (`beginDelete` → DB delete → commit →
@@ -76,8 +79,43 @@ export const newConversationAtom = atom(null, (_get, set, payload: NewConversati
   return id;
 });
 
-export const setAssistantPromptInputAtom = atom(null, (_get, set, text: string) => {
+// WHY: New conversation, delete-of-open, and session reset share this path.
+// Clearing current id without inserting a replacement is what keeps the
+// param-less route from minting. Restore must not do this on its own — a
+// mint-on-prompt write can land before the URL catches up.
+export const startParamlessConversationAtom = atom(null, (_get, set) => {
+  set(setCurrentConversationIdAtom, null);
+  set(unassignedPromptInputAtom, "");
+});
+
+export const setAssistantPromptInputAtom = atom(null, (get, set, text: string): string | null => {
+  const id = get(currentConversationIdAtom);
+  if (id) {
+    set(assistantConversationStateAtom, ["setPromptInput", text]);
+    return null;
+  }
+
+  if (text.trim() === "") {
+    set(unassignedPromptInputAtom, text);
+    return null;
+  }
+
+  const mintedId = generateUUID();
+  const createdAt = new Date();
+  const stored = get(aiProfileStateAtom);
+  set(unassignedPromptInputAtom, "");
+  set(assistantConversationStateAtom, [
+    "newConversation",
+    {
+      id: mintedId,
+      createdAt,
+      profileId: stored?.profileId,
+      modelId: stored?.modelId,
+      modelParameters: stored?.modelParameters,
+    },
+  ]);
   set(assistantConversationStateAtom, ["setPromptInput", text]);
+  return mintedId;
 });
 
 export const setAssistantCardStatusAtom = atom(

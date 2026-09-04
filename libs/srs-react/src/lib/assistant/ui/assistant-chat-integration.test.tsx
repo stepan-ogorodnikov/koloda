@@ -1437,7 +1437,7 @@ describe("assistant chat restore policy (blocked rows)", () => {
     expect(state.id).toBe("corrupt");
     expect(state.messages).toHaveLength(0);
     expect(state.runs).toEqual({});
-    expect(state.updatedAt).toBeNull();
+    expect(state.updatedAt).toBe(state.createdAt);
 
     view.unmount();
   });

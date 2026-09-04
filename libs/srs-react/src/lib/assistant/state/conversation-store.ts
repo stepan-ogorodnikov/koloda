@@ -30,10 +30,15 @@ export const blockedConversationRestoreAtom = atom<Record<string, BlockedConvers
 // INVARIANT: Exported for clone/store actions that switch current id without mark-as-read.
 export const currentConversationIdAtom = atom<string | null>(null);
 
+// WHY: Param-less composer has no conversation row. Whitespace-only edits live
+// here until the first trimmed-non-empty prompt mints an id. Do not insert a
+// conversation for these values.
+export const unassignedPromptInputAtom = atom("");
+
 // INVARIANT: `newConversation` must NOT go through this helper — the reducer
-// explicitly sets `updatedAt: null` for fresh conversations, and that
-// must be preserved. The writable atom handles `newConversation` as a
-// special case before reaching here.
+// sets `updatedAt` to the same `createdAt` it was given, and that must not be
+// replaced by a second clock read. The writable atom handles `newConversation`
+// as a special case before reaching here.
 const RUN_START_ACTIONS = new Set<ConversationReducerAction[0]>(["restartRun", "submitTurn"]);
 
 function applyConversationUpdate(
@@ -63,9 +68,9 @@ export const assistantConversationStateAtom = atom(
   },
   (get, set, update: ConversationReducerAction | ((prev: ConversationReducerState) => ConversationReducerState)) => {
     // WHY: newConversation carries its own target id. We must insert the
-    // fresh entry and switch the current id even on cold start (when
-    // currentConversationIdAtom is null). The reducer sets updatedAt: null
-    // for fresh conversations, which is what we want — we do NOT stamp it.
+    // fresh entry and switch the current id even when currentConversationIdAtom
+    // is null (mint-on-prompt / ensureConversationId). The reducer sets
+    // updatedAt equal to createdAt; we do not stamp a second time.
     if (typeof update !== "function" && update[0] === "newConversation") {
       const store = get(conversationsAtom);
       const next = conversationReducer(store[update[1].id] ?? initialConversationState, update);
