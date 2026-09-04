@@ -8,11 +8,13 @@ import {
   conversationLog,
   createDeckAndOpenAssistant,
   getConversationIdFromUrl,
+  openAssistantWithDeck,
   sendAssistantMessage,
   setupApp,
   setupPageDefaults,
   startNewConversation,
   waitForAssistantReady,
+  waitForConversationIdFromUrl,
 } from "./helpers";
 import { mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
@@ -33,7 +35,7 @@ function unreadMarker(row: Locator): Locator {
 }
 
 function rowDeleteTrigger(row: Locator): Locator {
-  return row.locator("xpath=..").getByRole("button", { name: "Delete conversation" });
+  return row.getByRole("button", { name: "Delete conversation" });
 }
 
 type SqliteWriteFailureSim = {
@@ -535,4 +537,131 @@ test("recovers when the stored active conversation id has no row", async ({ page
   // instead of staying on the restoring state forever.
   await expect(page.getByRole("heading", { name: "Untitled conversation" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+});
+
+test("types a draft that mints an id, follows the prompt, Untitled when wiped, and deletes without confirmation", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+
+  await setupApp(page);
+  await openAssistantWithDeck(page);
+  await expect(page).not.toHaveURL(/conversationId=/);
+
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+  await prompt.fill("   ");
+  await expect(page).not.toHaveURL(/conversationId=/);
+
+  await prompt.fill("Live draft title");
+  await waitForConversationIdFromUrl(page);
+
+  const draftRow = sidebarRow(page, "Live draft title");
+  await expect(draftRow).toBeVisible({ timeout: 15_000 });
+  await expect(draftRow.locator("[data-has-turns]")).toHaveAttribute("data-has-turns", "false");
+  const header = page.getByRole("heading", { name: "Live draft title" });
+  await expect(header).toBeVisible();
+  await expect(header).not.toHaveAttribute("data-has-turns");
+
+  await prompt.clear();
+  const untitledRow = sidebarRow(page, "Untitled conversation");
+  await expect(untitledRow).toBeVisible();
+  await expect(untitledRow.locator("[data-has-turns]")).toHaveAttribute("data-has-turns", "false");
+
+  await untitledRow.hover();
+  await rowDeleteTrigger(untitledRow).click();
+  await expect(page.getByText("Delete this conversation? This cannot be undone.")).toHaveCount(0);
+  await expect(untitledRow).toHaveCount(0);
+  await expect(page).not.toHaveURL(/conversationId=/);
+});
+
+test("still confirms when deleting a conversation that has a turn", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  const mock = await mockOpenAICompatibleProvider({
+    defaultCompletion: { text: "Reply after the turn.", chunkBy: "all" },
+  });
+
+  try {
+    await setupApp(page);
+    await addLmStudioProfile(page, { baseUrl: mock.baseUrl });
+    await createDeckAndOpenAssistant(page);
+    await waitForAssistantReady(page);
+
+    await sendAssistantMessage(page, "Turn then delete");
+    const row = sidebarRow(page, "Turn then delete");
+    await expect(row).toBeVisible({ timeout: 15_000 });
+    await expect(row.locator("[data-has-turns]")).toHaveAttribute("data-has-turns", "true");
+    await expect(conversationLog(page).getByText("Reply after the turn.")).toBeVisible({ timeout: 20_000 });
+
+    await row.hover();
+    await rowDeleteTrigger(row).click();
+    const confirmDialog = page.getByRole("dialog");
+    await expect(confirmDialog.getByText("Delete this conversation? This cannot be undone.")).toBeVisible();
+    await confirmDialog.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(confirmDialog).not.toBeVisible();
+    await expect(row).toBeVisible();
+  } finally {
+    await mock.dispose();
+  }
+});
+
+test("reloads the param-less AI route onto the last active conversation", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  await setupApp(page);
+  await openAssistantWithDeck(page);
+
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+  await prompt.fill("Last active draft");
+  const activeId = await waitForConversationIdFromUrl(page);
+  const row = sidebarRow(page, "Last active draft");
+  await expect(row).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(1_500);
+
+  await openAssistantWithDeck(page);
+  await expect(page).toHaveURL(new RegExp(`conversationId=${activeId}($|&)`));
+  await expect(row).toBeVisible();
+});
+
+test("New conversation stays on the param-less route after a reload", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  await setupApp(page);
+  await openAssistantWithDeck(page);
+
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+  await prompt.fill("Draft before new");
+  await waitForConversationIdFromUrl(page);
+  await expect(sidebarRow(page, "Draft before new")).toBeVisible({ timeout: 15_000 });
+
+  await startNewConversation(page);
+  expect(await page.evaluate(() => window.localStorage.getItem("activeConversationId"))).toBeNull();
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("textbox", { name: "Prompt input" })).toBeVisible();
+  await expect(page).not.toHaveURL(/conversationId=/);
+});
+
+test("can keep more than one draft at once", async ({ page }) => {
+  test.setTimeout(60_000);
+
+  await setupApp(page);
+  await openAssistantWithDeck(page);
+
+  const prompt = page.getByRole("textbox", { name: "Prompt input" });
+  await prompt.fill("Draft alpha");
+  const firstId = await waitForConversationIdFromUrl(page);
+  await expect(sidebarRow(page, "Draft alpha")).toBeVisible({ timeout: 15_000 });
+
+  await startNewConversation(page);
+  await prompt.fill("Draft beta");
+  const secondId = await waitForConversationIdFromUrl(page);
+  expect(secondId).not.toBe(firstId);
+
+  const alpha = sidebarRow(page, "Draft alpha");
+  const beta = sidebarRow(page, "Draft beta");
+  await expect(alpha).toBeVisible();
+  await expect(beta).toBeVisible();
+  await expect(alpha.locator("[data-has-turns]")).toHaveAttribute("data-has-turns", "false");
+  await expect(beta.locator("[data-has-turns]")).toHaveAttribute("data-has-turns", "false");
 });

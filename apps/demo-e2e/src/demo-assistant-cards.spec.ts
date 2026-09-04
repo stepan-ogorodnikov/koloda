@@ -7,13 +7,13 @@ import {
   createDeck,
   createDeckAndOpenAssistant,
   expectDeckCardCount,
-  getConversationIdFromUrl,
   openAssistantWithConversation,
   openSection,
   sendAssistantMessage,
   setupDemo,
   setupPageDefaults,
   waitForAssistantReady,
+  waitForConversationIdFromUrl,
 } from "./helpers";
 import { E2E_LM_STUDIO_BASE_URL, mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
@@ -176,7 +176,6 @@ test("retries a failed cards run against the current deck state", async ({ page 
     await addLmStudioProfile(page, { baseUrl: E2E_LM_STUDIO_BASE_URL });
     const deckId = await createDeckAndOpenAssistant(page, "E2E Cards Deck");
     await waitForAssistantReady(page);
-    const conversationId = getConversationIdFromUrl(page);
 
     const log = conversationLog(page);
 
@@ -193,6 +192,7 @@ test("retries a failed cards run against the current deck state", async ({ page 
     mock.enqueueCompletion({ status: 500 });
 
     await sendAssistantMessage(page, "Propose a card");
+    const conversationId = await waitForConversationIdFromUrl(page);
 
     // The tools really executed. The demo seed ships several decks, so the
     // first run's deck count is read from the tool row headline instead of

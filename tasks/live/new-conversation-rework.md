@@ -126,7 +126,7 @@ Out:
   Commit: Treat unsent conversations as drafts in the sidebar
   Depends on: 2
 
-- [ ] 4. Cover the draft conversation lifecycle in e2e
+- [x] 4. Cover the draft conversation lifecycle in e2e
   Goal: In both `apps/demo-e2e` and `apps/native-electron-e2e`, a user can open New conversation (param-less URL), type, see the id in the URL and a live title in the list, wipe the prompt and see Untitled, delete that draft without a confirmation dialog, and still confirm when deleting a conversation that has a turn.
   Reload of the param-less route restores the last active conversation when one is stored.
   Many drafts can exist.
