@@ -2,8 +2,9 @@ import { AiMagicIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AIProfile } from "@koloda/ai";
 import { useAIProfilesModels } from "@koloda/ai-react";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
-import { Button, Checkbox, Dialog, SearchField, ToggleGroup } from "@koloda/ui";
+import { Button, Checkbox, Dialog, ErrorMessage, SearchField, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -74,7 +75,6 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>
-            {error && <p className="px-4 pt-2 fg-error">{error.details || error.message}</p>}
             <Dialog.Content variants={{ class: "flex flex-col gap-3 min-h-0" }}>
               <SearchField
                 aria-label={_(msg`settings.ai.models.search.label`)}
@@ -146,6 +146,7 @@ export function SettingsAIProfileModels({ profile }: SettingsAIProfileModelsProp
                   ))
                 )}
               </div>
+              {error && <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.update"])} />}
             </Dialog.Content>
             <Dialog.Footer>
               <div className="grow" />

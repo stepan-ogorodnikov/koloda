@@ -57,7 +57,6 @@ export function SettingsAIEditProfile({ profile }: SettingsAIEditProfileProps) {
               <div className="grow" />
               <Dialog.Close slot="close" />
             </Dialog.Header>
-            {error && <p className="fg-error">{error.details || error.message}</p>}
             <EditAIProfileForm
               provider={provider}
               profile={profile}
