@@ -1,6 +1,6 @@
 # New conversation rework
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -137,3 +137,5 @@ Out:
   Depends on: 3
 
 ## Outcome
+
+New conversation is the param-less AI route. The first non-whitespace prompt assigns an id, persists the row, and shows it in the list with a live title. Drafts stay until deleted, skip confirm, and use a dimmer list title. Reload of `/ai` still restores the last active conversation; New and delete-of-open do not bounce back.
