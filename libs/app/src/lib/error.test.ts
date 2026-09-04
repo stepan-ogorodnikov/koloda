@@ -148,6 +148,7 @@ describe("toFormErrors", () => {
     expect(errors["0"]).toHaveLength(1);
     expect(errors["0"][0].message).toBe("db.get");
     expect(errors["0"][0].path).toEqual(["0"]);
+    expect(errors["0"][0].details).toBe("details");
   });
 
   it("converts plain Error to unknown fallback", () => {
@@ -157,5 +158,6 @@ describe("toFormErrors", () => {
     expect(errors["0"]).toHaveLength(1);
     expect(errors["0"][0].message).toBe("unknown");
     expect(errors["0"][0].path).toEqual(["0"]);
+    expect(errors["0"][0].details).toBe("something happened");
   });
 });

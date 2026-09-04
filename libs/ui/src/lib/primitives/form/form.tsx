@@ -1,13 +1,13 @@
 import { ERROR_MESSAGES } from "@koloda/app";
-import type { ErrorCode, FormError, ZodIssue } from "@koloda/app";
+import type { ErrorCode, FormError } from "@koloda/app";
 import { useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import { AnimatePresence, LayoutGroup } from "motion/react";
 import type { PropsWithChildren } from "react";
+import { ErrorMessage } from "../../ui/error-message";
 import { Fade } from "../animations/fade";
 import { Button } from "./button";
 import type { ButtonProps } from "./button";
@@ -48,7 +48,7 @@ function UpdatedAt({ timestamp }: FormTimestampProps) {
 }
 
 type FormErrorsProps = {
-  errors: Record<number | string, StandardSchemaV1Issue[]> | ZodIssue[] | undefined;
+  errors: Record<number | string, FormError[]> | FormError[] | undefined;
 };
 
 export function Errors({ errors }: FormErrorsProps) {
@@ -73,7 +73,7 @@ function ErrorsItem({ error }: ErrorsItemProps) {
   const content = ERROR_MESSAGES[error.message as ErrorCode] ?? ERROR_MESSAGES.unknown;
   const message = typeof content === "function" ? _(content(error)) : _(content);
 
-  return <em className="fg-error not-italic">{message}</em>;
+  return <ErrorMessage layout="inline" message={message} details={error.details} />;
 }
 
 function SubmitButton(props: ButtonProps) {

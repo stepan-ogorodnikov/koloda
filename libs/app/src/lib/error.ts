@@ -4,7 +4,7 @@ import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { ZodError } from "zod";
 
 export type ZodIssue = ZodError["issues"][number];
-export type FormError = StandardSchemaV1Issue | ZodIssue;
+export type FormError = (StandardSchemaV1Issue | ZodIssue) & { details?: string };
 
 export const ERROR_MESSAGES = {
   unknown: msg`unknown`,
@@ -146,9 +146,9 @@ export async function throwKnownError<T>(code: ErrorCode, fn: () => Promise<T>):
   }
 }
 
-export function toFormErrors(error: unknown): Record<string, StandardSchemaV1Issue[]> {
+export function toFormErrors(error: unknown): Record<string, FormError[]> {
   if (error instanceof ZodError) {
-    return error.issues.reduce<Record<string, StandardSchemaV1Issue[]>>((acc, issue, index) => {
+    return error.issues.reduce<Record<string, FormError[]>>((acc, issue, index) => {
       const key = index.toString();
       acc[key] = [{ ...issue, message: issue.message, path: issue.path.map(String) }];
       return acc;
@@ -156,7 +156,9 @@ export function toFormErrors(error: unknown): Record<string, StandardSchemaV1Iss
   }
 
   const message = isAppError(error) ? error.code : "unknown";
+  const details = isAppError(error) ? error.details : error instanceof Error ? error.message : undefined;
+
   return {
-    "0": [{ message, path: ["0"] }],
+    "0": [{ message, path: ["0"], ...(details ? { details } : {}) }],
   };
 }

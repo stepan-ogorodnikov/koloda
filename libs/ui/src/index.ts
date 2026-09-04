@@ -20,7 +20,6 @@ export * from "./lib/primitives/form/button";
 export * from "./lib/primitives/form/checkbox";
 export * from "./lib/primitives/form/field-group";
 export * from "./lib/primitives/form/form";
-export * from "./lib/primitives/form/form-errors";
 export * from "./lib/primitives/form/form-layout";
 export * from "./lib/primitives/form/label";
 export * from "./lib/primitives/form/number-field";

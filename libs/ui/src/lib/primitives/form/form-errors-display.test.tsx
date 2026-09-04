@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Errors } from "./form";
@@ -21,5 +21,19 @@ describe("Errors", () => {
     render(<Errors errors={[{ message: "db.get", path: ["title"] }]} />);
 
     expect(screen.getByRole("alert").textContent).toBe("db.get");
+  });
+
+  it("keeps AppError details behind the details control", async () => {
+    render(<Errors errors={[{ message: "db.add", path: ["0"], details: "SQLITE_BUSY" }]} />);
+
+    const message = screen.getByText("db.add");
+    expect(message.closest("div")?.className).toContain("flex-row");
+    expect(screen.queryByText("SQLITE_BUSY")).toBeNull();
+
+    const trigger = screen.getByRole("button", { name: "error.details" });
+    fireEvent.click(trigger);
+
+    expect(await screen.findByText("SQLITE_BUSY")).toBeTruthy();
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
   });
 });
