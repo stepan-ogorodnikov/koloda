@@ -81,6 +81,11 @@ function ConversationItem({
 }: ConversationItemProps) {
   const isMotionOn = useMotionSetting();
   const name = conversation.title ?? fallback;
+  // WHY: Delete sits inside a row Link. Hover-reveal can collapse and the
+  // confirmation dialog can retarget the pointer before click, so button-only
+  // stopPropagation still navigates. The pointerdown ref, click-capture
+  // preventDefault, and closest("button") check are one trap — dropping any
+  // piece re-enables navigation on delete.
   const ignoreLinkClickRef = useRef(false);
   // WHY: The active-run pulse is more salient than the unread dot, so it
   // wins when both are true. Keeping the order explicit avoids showing

@@ -44,6 +44,7 @@ Picking a different AI profile, model, or model parameter does not change the co
 If the sidebar has no conversations, nothing is shown.
 The "New Conversation" button is disabled when there are no messages and no active run.
 A second empty conversation cannot be created.
+Each row shows a relative age next to the conversation's name, taken from the conversation timestamp.
 A working or unread indicator may appear next to the conversation's name.
 
 ### Working Status

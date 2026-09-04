@@ -1,15 +1,21 @@
 import { markdownToHtml } from "@koloda/srs";
+import { tv } from "tailwind-variants";
 
-type AssistantMarkdownProps = { text: string; muted?: boolean };
+const assistantMarkdown = tv({
+  base: "prose prose-chat max-w-none",
+  variants: {
+    isMuted: { true: "prose-chat-muted" },
+  },
+  defaultVariants: {
+    isMuted: false,
+  },
+});
 
-export function AssistantMarkdown({ text, muted = false }: AssistantMarkdownProps) {
+type AssistantMarkdownProps = { text: string; isMuted?: boolean };
+
+export function AssistantMarkdown({ text, isMuted = false }: AssistantMarkdownProps) {
   const html = markdownToHtml(text);
-  return (
-    <div
-      className={muted ? "prose prose-chat prose-chat-muted max-w-none" : "prose prose-chat max-w-none"}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
-  );
+  return <div className={assistantMarkdown({ isMuted })} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 // WHY: module-level so `AIChatMessage` / `AIToolActivity` see a stable
@@ -20,5 +26,5 @@ export function renderAssistantMarkdown(text: string) {
 }
 
 export function renderAssistantReasoningMarkdown(text: string) {
-  return <AssistantMarkdown text={text} muted />;
+  return <AssistantMarkdown text={text} isMuted />;
 }

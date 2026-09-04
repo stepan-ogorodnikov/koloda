@@ -17,7 +17,7 @@ describe("AssistantMarkdown", () => {
   });
 
   it("applies muted prose for reasoning", () => {
-    const { container } = render(<AssistantMarkdown text={"**bold**"} muted />);
+    const { container } = render(<AssistantMarkdown text={"**bold**"} isMuted />);
 
     expect(container.firstElementChild?.className).toContain("prose-chat-muted");
     expect(screen.getByText("bold").tagName).toBe("STRONG");
