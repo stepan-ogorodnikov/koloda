@@ -76,6 +76,10 @@ export const newConversationAtom = atom(null, (_get, set, payload: NewConversati
   return id;
 });
 
+export const setAssistantPromptInputAtom = atom(null, (_get, set, text: string) => {
+  set(assistantConversationStateAtom, ["setPromptInput", text]);
+});
+
 export const setAssistantCardStatusAtom = atom(
   null,
   (get, set, payload: { runId: string; index: number; status: CardStatus }) => {
@@ -142,6 +146,9 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     activeRunId: null,
     dismissedRunErrorId: null,
     lastReadRunId: latestClonedRunId,
+    // WHY: Clone copies the thread, not the unsent composer. Spec lists
+    // messages, completed runs, AI profile, and name — not prompt input.
+    promptInput: "",
     revertState: null,
   };
 

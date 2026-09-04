@@ -17,7 +17,7 @@ import {
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence } from "motion/react";
 import type { ReactNode } from "react";
 import { useCallback, useRef, useState } from "react";
@@ -25,11 +25,13 @@ import { AssistantConversationRecovery } from "./assistant-conversation-recovery
 import { renderAssistantMarkdown } from "./assistant-markdown";
 import { AssistantNoProfiles } from "./assistant-no-profiles";
 import { AssistantSettings } from "./assistant-settings";
+import { setAssistantPromptInputAtom } from "../state/conversation-actions";
 import {
   assistantContextUsageAtom,
   assistantErroredRunAtom,
   assistantIsProcessingAtom,
   assistantMessagesAtom,
+  assistantPromptInputAtom,
   assistantRevertStateAtom,
 } from "../state/conversation-selectors";
 import { saveStatusAtom } from "../state/conversation-store";
@@ -65,6 +67,8 @@ export function AssistantChat({
 }: AssistantChatProps) {
   const { _ } = useLingui();
   const messages = useAtomValue(assistantMessagesAtom);
+  const promptInput = useAtomValue(assistantPromptInputAtom);
+  const setPromptInput = useSetAtom(setAssistantPromptInputAtom);
   const isProcessing = useAtomValue(assistantIsProcessingAtom);
   const contextUsage = useAtomValue(assistantContextUsageAtom);
   const erroredRun = useAtomValue(assistantErroredRunAtom);
@@ -107,6 +111,8 @@ export function AssistantChat({
   });
 
   const { inputValue, setInputValue, prompt, submit, handleSubmit, handleNewConversation } = useAIChatInput({
+    value: promptInput,
+    onChange: setPromptInput,
     onSubmit: controller.submit,
     onReset: controller.reset,
     isLoading: isProcessing,

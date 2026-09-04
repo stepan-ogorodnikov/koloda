@@ -1,8 +1,9 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
 import type { UseAutoScrollReturn } from "./use-auto-scroll";
 
 export type UseAIChatInputOptions = {
+  value: string;
+  onChange: (value: string) => void;
   onSubmit: (value: string) => void | Promise<void>;
   onReset?: () => void;
   isLoading?: boolean;
@@ -20,13 +21,14 @@ export type UseAIChatInputReturn = {
 };
 
 export function useAIChatInput({
+  value,
+  onChange,
   onSubmit,
   onReset,
   isLoading = false,
   scroll,
 }: UseAIChatInputOptions): UseAIChatInputReturn {
-  const [inputValue, setInputValue] = useState("");
-  const prompt = inputValue.trim();
+  const prompt = value.trim();
 
   const canSubmit = !!prompt && !isLoading;
 
@@ -34,7 +36,7 @@ export function useAIChatInput({
     if (!canSubmit) return;
     const shouldFollow = scroll.prepareSubmit();
     onSubmit(prompt);
-    setInputValue("");
+    onChange("");
     if (shouldFollow) scroll.startFollowingLatest("smooth");
   };
 
@@ -43,15 +45,17 @@ export function useAIChatInput({
     submit();
   };
 
+  // WHY: Composer text lives on the conversation being left. Clearing it
+  // here would wipe that conversation's draft; the new conversation starts
+  // with an empty `promptInput` of its own.
   const handleNewConversation = () => {
-    setInputValue("");
     scroll.resetScroll();
     onReset?.();
   };
 
   return {
-    inputValue,
-    setInputValue,
+    inputValue: value,
+    setInputValue: onChange,
     prompt,
     canSubmit,
     submit,

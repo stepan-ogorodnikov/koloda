@@ -9,21 +9,24 @@ How the model reads decks is covered by the data-access spec.
 ## What is a Conversation
 
 A conversation is a single threaded interaction between the user and the AI.
-Each conversation has a name, a timestamp, and a history of messages and AI runs.
+Each conversation has a name, a timestamp, a history of messages and AI runs, and its own unsent prompt.
 
 A conversation starts empty.
 It has no messages and no runs.
+The prompt input belongs to that conversation and is independent of every other conversation.
+Updating the prompt does not make the conversation active and does not change its timestamp.
 It becomes active when the user sends their first message.
 Every new run is chat.
 The model may propose cards during that run.
 
 ## Core Model
 
-- **Conversation** — one thread with a name, a timestamp, its messages, runs, and AI profile state
+- **Conversation** — one thread with a name, a timestamp, its messages, runs, AI profile state, and unsent prompt
 - **Message** — one half of an exchange; every user message is paired with an assistant message
 - **Run** — one AI request with a lifecycle: streaming, then success, failed, canceled, or interrupted
 - **AI profile state** — the profile, model, and model parameters; stored per conversation and once globally
 - **Write target** — the deck and template an accepted proposal targeted; kept per run
+- **Prompt input** — the unsent composer text for this conversation
 - **Revert state** — in-memory only; hides messages from a past user message onward
 
 Relationships:
@@ -41,6 +44,7 @@ Relationships:
 Conversations are listed in the sidebar, sorted by most recently updated.
 The timestamp is bumped only when a new run starts — that is, when the user sends a message or retries the most recent run.
 Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
+Typing in the prompt input does not change the conversation's order in the sidebar.
 If the sidebar has no conversations, nothing is shown.
 The "New Conversation" button is disabled when there are no messages and no active run.
 A second empty conversation cannot be created.
@@ -220,6 +224,9 @@ Everything is saved as-is, including failed runs and their error messages.
 
 Empty conversations — with no messages and no active run — are never persisted.
 They exist only in memory until the user sends a message.
+Composer text on an empty conversation does not make it persistable.
+Typing in the prompt does not schedule a save and does not bump the conversation timestamp.
+When a conversation is saved for another reason, the current composer text is stored with it.
 
 ### Active Conversation
 
@@ -309,6 +316,7 @@ The following are copied into the new conversation:
 - The conversation ID — the clone gets a new ID
 - Unread status — the clone starts as read
 - Active streaming state — any in-progress run is not copied
+- Prompt input — the clone starts with an empty composer
 
 ### Clone Trigger
 

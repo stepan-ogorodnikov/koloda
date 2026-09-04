@@ -11,6 +11,7 @@ export const assistantMessagesAtom = atom((get) => {
 });
 
 export const assistantRevertStateAtom = atom((get) => get(assistantConversationStateAtom).revertState);
+export const assistantPromptInputAtom = atom((get) => get(assistantConversationStateAtom).promptInput);
 export const assistantRunsAtom = atom((get) => get(assistantConversationStateAtom).runs);
 export const assistantActiveRunIdAtom = atom((get) => get(assistantConversationStateAtom).activeRunId);
 export const assistantProfileIdAtom = atom((get) => get(assistantConversationStateAtom).profileId);

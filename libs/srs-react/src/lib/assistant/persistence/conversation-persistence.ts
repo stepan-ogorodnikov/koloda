@@ -17,6 +17,8 @@ function elapsedSecondsSince(startedAt: Date): number {
  * DB-writable conversation fields.
  * No `revertState` — revert is in-memory only
  * (ASSISTANT-CONVERSATIONS.md §Revert / §Persistence).
+ * `promptInput` is persisted with the rest of the conversation; typing it
+ * does not by itself schedule a save or stamp `updatedAt`.
  * `schemaVersion` is persistence-boundary only (not live reducer state).
  */
 export type PersistedConversation = Omit<ConversationReducerState, "revertState"> & {

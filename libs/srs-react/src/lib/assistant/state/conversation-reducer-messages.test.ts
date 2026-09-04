@@ -32,6 +32,23 @@ describe("conversationReducer", () => {
         status: "streaming",
         modelName: "GPT-x",
       });
+      expect(state.promptInput).toBe("");
+    });
+
+    it("clears promptInput on submit", () => {
+      const state = reduce([
+        ["setPromptInput", "Hello"],
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "Hello",
+            kind: "chat-text",
+            assistantText: "",
+          },
+        ],
+      ]);
+      expect(state.promptInput).toBe("");
     });
   });
 
@@ -212,6 +229,7 @@ describe("conversationReducer", () => {
       const createdAt = new Date(1234);
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "Hi", kind: "chat-text", assistantText: "" }],
+        ["setPromptInput", "leftover draft"],
         ["setAIProfile", { profileId: "p1", modelId: "m1", modelParameters: { reasoning_effort: "high" } }],
         ["setAIModel", { modelId: "m2", modelParameters: { reasoning_effort: "low" } }],
         ["setAIModelParameter", { paramType: "reasoning_effort", value: "medium" }],
@@ -230,8 +248,22 @@ describe("conversationReducer", () => {
         modelId: null,
         modelParameters: {},
         lastReadRunId: null,
+        promptInput: "",
         revertState: null,
       });
+    });
+  });
+
+  describe("setPromptInput", () => {
+    it("stores composer text on the conversation", () => {
+      const state = reduce([["setPromptInput", "draft"]]);
+      expect(state.promptInput).toBe("draft");
+    });
+
+    it("is a no-op when the text is unchanged", () => {
+      const first = reduce([["setPromptInput", "draft"]]);
+      const second = conversationReducer(first, ["setPromptInput", "draft"]);
+      expect(second).toBe(first);
     });
   });
 

@@ -10,8 +10,12 @@ import {
   setCurrentConversationIdAtom,
   upsertConversationAtom,
 } from "./conversation-store";
-import { assistantActiveRunIdAtom, assistantConversationHasContextAtom } from "./conversation-selectors";
-import { setAssistantAIProfileAtom } from "./conversation-actions";
+import {
+  assistantActiveRunIdAtom,
+  assistantConversationHasContextAtom,
+  assistantHasContextAtom,
+} from "./conversation-selectors";
+import { setAssistantAIProfileAtom, setAssistantPromptInputAtom } from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
@@ -77,6 +81,24 @@ describe("assistantConversationStateAtom (per-conversation store)", () => {
     const stateA = store.get(assistantConversationStateAtom);
     expect(stateA.messages).toHaveLength(2);
     expect(stateA.messages[0].parts[0]).toEqual({ type: "text", text: "Message in A" });
+  });
+
+  it("switching conversations preserves each conversation's prompt input", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(upsertConversationAtom, makeConversation("B"));
+
+    store.set(setCurrentConversationIdAtom, "A");
+    store.set(assistantConversationStateAtom, ["setPromptInput", "draft A"]);
+
+    store.set(setCurrentConversationIdAtom, "B");
+    store.set(assistantConversationStateAtom, ["setPromptInput", "draft B"]);
+
+    store.set(setCurrentConversationIdAtom, "A");
+    expect(store.get(assistantConversationStateAtom).promptInput).toBe("draft A");
+
+    store.set(setCurrentConversationIdAtom, "B");
+    expect(store.get(assistantConversationStateAtom).promptInput).toBe("draft B");
   });
 
   it("background-stream dispatch via dispatchToConversation does not affect the current conversation", () => {
@@ -448,6 +470,16 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     store.set(setCurrentConversationIdAtom, "A");
     expect(store.get(pendingSaveAtom)).toBe(2);
   });
+
+  it("setAssistantPromptInputAtom does not bump the pending-save counter", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    store.set(setAssistantPromptInputAtom, "draft");
+    expect(store.get(pendingSaveAtom)).toBe(0);
+    expect(store.get(assistantConversationStateAtom).promptInput).toBe("draft");
+  });
 });
 
 describe("updatedAt stamping (only on run start)", () => {
@@ -559,6 +591,7 @@ describe("updatedAt stamping (only on run start)", () => {
     { label: "cancelRun", action: ["cancelRun", { runId: "seed" }] },
     { label: "dismissRunError", action: ["dismissRunError", { runId: "seed" }] },
     { label: "setAIProfile", action: ["setAIProfile", { profileId: "p1", modelId: "m1" }] },
+    { label: "setPromptInput", action: ["setPromptInput", "draft"] },
     {
       label: "commitRevert",
       action: ["commitRevert"],
@@ -618,6 +651,14 @@ describe("assistantConversationHasContextAtom", () => {
 
     expect(store.get(assistantConversationHasContextAtom("A"))).toBe(true);
     expect(store.get(assistantConversationHasContextAtom("B"))).toBe(false);
+  });
+
+  it("does not treat promptInput as context", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { promptInput: "draft" }));
+    store.set(setCurrentConversationIdAtom, "A");
+    expect(store.get(assistantHasContextAtom)).toBe(false);
+    expect(store.get(assistantConversationHasContextAtom("A"))).toBe(false);
   });
 });
 

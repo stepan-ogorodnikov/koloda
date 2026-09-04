@@ -333,6 +333,12 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
     modelId: optionalString,
     modelParameters: modelParametersField,
     lastReadRunId: optionalString,
+    // WHY: optional so rows saved before per-conversation composer text
+    // restore with an empty input; a present non-string fails the row.
+    promptInput: z
+      .string()
+      .nullish()
+      .transform((v) => v ?? ""),
     // WHY: Live conversations have no mode. Historical `"chat"` is stripped;
     // `"cards"` (and any other value) fails the row as corrupt — not rewritten
     // into chat.
@@ -378,6 +384,7 @@ const persistedConversationStateSchema: z.ZodType<PersistedConversation> = z
       modelId: state.modelId,
       modelParameters: state.modelParameters,
       lastReadRunId: state.lastReadRunId,
+      promptInput: state.promptInput,
     }),
   );
 

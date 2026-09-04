@@ -104,6 +104,16 @@ describe("cloneConversationAtom", () => {
     expect(clone.messages).toEqual(messages);
   });
 
+  it("does not copy promptInput from the source", () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("A", { promptInput: "unsent draft" }));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const newId = store.set(cloneConversationAtom, { sourceId: "A" })!;
+    expect(store.get(conversationsAtom)[newId].promptInput).toBe("");
+    expect(store.get(conversationsAtom)["A"].promptInput).toBe("unsent draft");
+  });
+
   it("copies completed runs (success, failed, canceled, interrupted) into the clone", () => {
     const store = createStore();
     store.set(

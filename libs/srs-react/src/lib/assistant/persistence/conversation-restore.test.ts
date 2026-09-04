@@ -39,6 +39,17 @@ describe("toPersistedState / fromPersistedState", () => {
     expect(fromPersistedState(persisted)).not.toHaveProperty("schemaVersion");
   });
 
+  it("keeps promptInput on the way out and the way in", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      promptInput: "unsent",
+    };
+    const persisted = toPersistedState(state);
+    expect(persisted.promptInput).toBe("unsent");
+    expect(fromPersistedState(persisted).promptInput).toBe("unsent");
+  });
+
   it("does not write leftover conversation deckId", () => {
     const persisted = toPersistedState(initialConversationState);
     expect(persisted).not.toHaveProperty("deckId");
@@ -254,6 +265,49 @@ describe("coerceConversationState", () => {
           id: "conv-1",
           createdAt: new Date(1),
           lastReadRunId: {},
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+  });
+
+  describe("promptInput coercion", () => {
+    it("defaults promptInput to empty when the field is missing", () => {
+      const { promptInput: _omit, ...row } = {
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+      };
+      const coerced = expectOk(row);
+      expect(coerced.promptInput).toBe("");
+    });
+
+    it("preserves a string promptInput", () => {
+      const coerced = expectOk({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        promptInput: "unsent",
+      });
+      expect(coerced.promptInput).toBe("unsent");
+    });
+
+    it("coerces a null promptInput to empty", () => {
+      const coerced = expectOk({
+        ...initialConversationState,
+        id: "conv-1",
+        createdAt: new Date(1),
+        promptInput: null,
+      });
+      expect(coerced.promptInput).toBe("");
+    });
+
+    it("rejects a non-string promptInput as corrupt", () => {
+      expect(
+        expectCorrupt({
+          ...initialConversationState,
+          id: "conv-1",
+          createdAt: new Date(1),
+          promptInput: 42,
         }).length,
       ).toBeGreaterThan(0);
     });

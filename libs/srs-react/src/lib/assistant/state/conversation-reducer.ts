@@ -104,6 +104,10 @@ export type ConversationReducerState = {
   // run's id differs from this pointer. The pointer is cleared when the
   // referenced run is dropped so the unread predicate stays correct.
   lastReadRunId: string | null;
+  // WHY: The composer belongs to the conversation, not the chat shell.
+  // Switching conversations must restore this text. Updating it must not
+  // stamp `updatedAt` — it is not a turn.
+  promptInput: string;
   revertState: RevertState | null;
 };
 
@@ -119,6 +123,7 @@ export const initialConversationState: ConversationReducerState = {
   modelId: null,
   modelParameters: {},
   lastReadRunId: null,
+  promptInput: "",
   revertState: null,
 };
 
@@ -143,6 +148,7 @@ const actions = {
   dismissRunError,
   markRead,
   newConversation,
+  setPromptInput,
   setRevertState,
   commitRevert,
 };
@@ -425,6 +431,7 @@ function submitTurn(draft: ConversationReducerState, payload: SubmitTurnPayload)
     kind: payload.kind,
     text: payload.assistantText,
   });
+  draft.promptInput = "";
 }
 
 type RollbackSubmitTurnPayload = { runId: string };
@@ -690,7 +697,13 @@ function newConversation(draft: ConversationReducerState, payload: NewConversati
   draft.modelId = payload.modelId ?? null;
   draft.modelParameters = payload.modelParameters ?? {};
   draft.lastReadRunId = null;
+  draft.promptInput = "";
   draft.revertState = null;
+}
+
+function setPromptInput(draft: ConversationReducerState, payload: string) {
+  if (draft.promptInput === payload) return;
+  draft.promptInput = payload;
 }
 
 // WHY: The payload is the revert state itself (not a wrapper object) so
