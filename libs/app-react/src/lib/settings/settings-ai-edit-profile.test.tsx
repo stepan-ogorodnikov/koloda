@@ -85,7 +85,7 @@ describe("SettingsAIEditProfile", () => {
     });
 
     const message = await screen.findByText("db.update");
-    expect(message.closest("div")?.className).toContain("flex-col");
+    expect(message.closest("div")?.className).toContain("flex-row");
     expect(screen.queryByText("SQLITE_BUSY")).toBeNull();
 
     const trigger = screen.getByRole("button", { name: "error.details" });

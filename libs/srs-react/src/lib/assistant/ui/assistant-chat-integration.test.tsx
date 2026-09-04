@@ -355,7 +355,7 @@ describe("assistant chat integration (per-conversation state)", () => {
     const bRunIds = Object.keys(stateB.runs);
     const bLatestRun = stateB.runs[bRunIds[bRunIds.length - 1]!];
     expect(bLatestRun.status).toBe("failed");
-    expect(bLatestRun.error).toEqual({ message: "stream blew up" });
+    expect(bLatestRun.error).toEqual({ message: "unknown", details: "stream blew up" });
 
     // A is unaffected — A's run is still streaming, and A's runs have no
     // error attached.
