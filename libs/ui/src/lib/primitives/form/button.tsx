@@ -11,6 +11,12 @@ export const button = tv({
   ],
   variants: {
     style: {
+      inline: [
+        "inline-flex bg-transparent fg-link",
+        "hover:bg-transparent hover:fg-link-hover",
+        "data-pressed:bg-transparent data-pressed:fg-link-hover",
+        "disabled:fg-disabled",
+      ],
       ghost: [
         "bg-transparent fg-level-2",
         "hover:bg-button-hover",
@@ -37,6 +43,7 @@ export const button = tv({
     },
     size: {
       none: "rounded-lg",
+      inline: "px-0 rounded-sm",
       default: "h-10 px-4 rounded-lg",
       small: "h-8 px-3 rounded-md",
       icon: "h-10 min-w-10 p-2 rounded-lg",
