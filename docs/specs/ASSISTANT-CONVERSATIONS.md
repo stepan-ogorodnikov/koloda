@@ -39,7 +39,7 @@ Relationships:
 
 - A user message, its assistant message, and their run form one turn.
 - Only one run can be active per conversation at a time.
-- Empty conversations are never saved.
+- A conversation is saved once it has an identity, including when it has no messages and no active run.
 - Revert filters what the UI and the next request see; deletion happens only on the next submit.
   See ASSISTANT-MESSAGES.md (§Reverting the Conversation).
 - Write targets belong to runs, not conversations; see ASSISTANT-CARD-GENERATION.md (§How Cards Are Proposed).
@@ -104,7 +104,9 @@ Messages that don't belong to any run are also excluded.
 
 The conversation is named after the first user message, truncated to 255 characters.
 If the message is longer, it's trimmed with an ellipsis.
-If there are no user messages yet, the name defaults to "Untitled".
+If there are no user messages yet, the name follows the unsent prompt, using the same trimming.
+If that prompt is empty or only whitespace, the name is Untitled.
+After the first user message exists, later prompt edits do not change the name.
 
 ## Runs
 
@@ -233,11 +235,10 @@ Everything is saved as-is, including failed runs and their error messages.
 
 ### What Doesn't Get Saved
 
-Empty conversations — with no messages and no active run — are never persisted.
-They exist only in memory until the user sends a message.
-Composer text on an empty conversation does not make it persistable.
-Typing in the prompt does not schedule a save and does not bump the conversation timestamp.
-When a conversation is saved for another reason, the current composer text is stored with it.
+A conversation that has not yet been given an identity is not saved.
+Clearing the composer does not remove a conversation that already has an identity.
+Typing in the prompt schedules a save and does not bump the conversation timestamp.
+The current composer text is stored with the conversation.
 
 ### Active Conversation
 
@@ -379,7 +380,7 @@ Reloading the app clears the revert state.
 ### Deletion on New Prompt
 
 See ASSISTANT-MESSAGES.md (§Re-trigger) for how submit deletes the hidden turns.
-If that deletion leaves no messages, the conversation is not saved.
+If that deletion leaves no messages, the conversation is still saved.
 Runs that remain keep their write targets.
 
 ### Cloning a Reverted Conversation

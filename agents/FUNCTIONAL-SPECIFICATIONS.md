@@ -58,7 +58,7 @@ Name a control when the user must find it ("the conversation menu").
 Do not describe bubbles, alignment, panel placement, or wide-versus-narrow layout unless that layout *is* the behavior.
 
 **No persistence archaeology.**
-Say that empty conversations are never saved.
+Say that a conversation without an identity is not saved.
 Do not name `schemaVersion`, debounce milliseconds, or how old documents are rejected on restore.
 
 ## Formatting
@@ -153,7 +153,7 @@ Do not write a spec that only makes sense as part of a bundle.
 - [ ] No UI chrome (alignment, bubbles, layout breakpoints) unless that layout is the behavior
 - [ ] Written from the user's perspective
 - [ ] Describes behavior, not implementation
-- [ ] Explains what does not happen (e.g., "empty conversations are never persisted")
+- [ ] Explains what does not happen (e.g., "clearing the composer does not delete the conversation")
 - [ ] Can be read without opening the code
 - [ ] Filename is the topic, with no redundant parent prefix
 - [ ] A typical task can load this spec alone

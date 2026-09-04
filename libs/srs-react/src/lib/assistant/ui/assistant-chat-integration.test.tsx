@@ -1666,6 +1666,10 @@ describe("assistant chat restore policy (blocked rows)", () => {
     expect(state.messages).toHaveLength(0);
     expect(store.get(blockedConversationRestoreAtom)["missing"]).toBeUndefined();
 
+    const savesBeforeSubmit = wire.setConversationCalls.filter((c) => c.id === "missing");
+    expect(savesBeforeSubmit.length).toBeGreaterThanOrEqual(1);
+    expect(savesBeforeSubmit[0]?.title).toBeNull();
+
     // The fresh conversation is editable and saves like any other.
     await act(async () => {
       void controllerRef.current!.submit("Hello missing");
@@ -1676,7 +1680,6 @@ describe("assistant chat restore policy (blocked rows)", () => {
     });
 
     const savesForMissing = wire.setConversationCalls.filter((c) => c.id === "missing");
-    expect(savesForMissing.length).toBeGreaterThanOrEqual(1);
-    expect(savesForMissing[0]?.title).toBe("Hello missing");
+    expect(savesForMissing.some((c) => c.title === "Hello missing")).toBe(true);
   });
 });

@@ -27,7 +27,7 @@ export type CreateConversationSaveQueueOptions = {
   conversationId: string;
   /**
    * Perform the durable write for the latest snapshot.
-   * Return `false` to skip (e.g. empty conversation) — that still counts as an ack
+   * Return `false` to skip (e.g. tombstoned) — that still counts as an ack
    * when no newer dirty arrived during the write.
    * Throw to fail — dirty stays set and a bounded backoff retry is scheduled.
    */

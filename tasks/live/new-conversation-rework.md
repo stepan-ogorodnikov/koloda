@@ -89,7 +89,7 @@ Out:
   Commit: Assign conversation ids when the prompt first has text
   Depends on: none
 
-- [ ] 2. Persist drafts and live-update their titles from the prompt
+- [x] 2. Persist drafts and live-update their titles from the prompt
   Goal: Once a conversation has an id, save it, including when it has no messages and no active run.
   Clearing the composer does not delete the row.
   `setPromptInput` schedules a save and does not stamp `updatedAt`.

@@ -41,9 +41,9 @@ export function buildWriteConversation({
     if (isTombstoned(id)) return false;
     const state = store.get(conversationsAtom)[id];
     if (!state) return false;
-    // WHY: Composer text belongs to the conversation but is not a turn.
-    // An empty conversation with only `promptInput` must stay unsaved.
-    if (state.messages.length === 0 && state.activeRunId === null) return false;
+    // INVARIANT: Every conversation with an id is persistable, including
+    // drafts with no messages and no active run. Clearing the composer must
+    // not skip the write — that would drop the row on the next save.
 
     // WHY: persist the live snapshot as-is — including in-flight `streaming`
     // checkpoints. Restore converts orphaned streaming runs to

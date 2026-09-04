@@ -471,14 +471,20 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     expect(store.get(pendingSaveAtom)).toBe(2);
   });
 
-  it("setAssistantPromptInputAtom does not bump the pending-save counter", () => {
+  it("setAssistantPromptInputAtom bumps the pending-save counter", () => {
     const store = createStore();
     store.set(upsertConversationAtom, makeConversation("A"));
     store.set(setCurrentConversationIdAtom, "A");
 
     store.set(setAssistantPromptInputAtom, "draft");
-    expect(store.get(pendingSaveAtom)).toBe(0);
+    expect(store.get(pendingSaveAtom)).toBe(1);
     expect(store.get(assistantConversationStateAtom).promptInput).toBe("draft");
+
+    store.set(setAssistantPromptInputAtom, "draft");
+    expect(store.get(pendingSaveAtom)).toBe(1);
+
+    store.set(setAssistantPromptInputAtom, "draft two");
+    expect(store.get(pendingSaveAtom)).toBe(2);
   });
 });
 
@@ -627,6 +633,18 @@ describe("updatedAt stamping (only on run start)", () => {
 
     dispatchTo(store, "A", row.action);
     expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(ts);
+  });
+
+  it("prompt edits after create do not bump updatedAt", () => {
+    const store = createStore();
+    const createdAt = new Date(10_000);
+    store.set(upsertConversationAtom, makeConversation("A", { createdAt, updatedAt: createdAt }));
+    store.set(setCurrentConversationIdAtom, "A");
+    advanceClock();
+    store.set(setAssistantPromptInputAtom, "draft");
+    advanceClock();
+    store.set(setAssistantPromptInputAtom, "draft two");
+    expect(store.get(conversationsAtom)["A"]!.updatedAt!.getTime()).toBe(10_000);
   });
 });
 

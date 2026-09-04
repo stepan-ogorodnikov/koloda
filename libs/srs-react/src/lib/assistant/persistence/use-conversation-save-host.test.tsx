@@ -149,6 +149,38 @@ describe("useConversationSaveHost", () => {
     expect(list![0]!.updatedAt).not.toBeNull();
   });
 
+  it("prompt title changes upsert the list cache title in place", async () => {
+    const seededList: ConversationListItem[] = [
+      { id: "A", title: "hello", createdAt: "2026-07-01T11:00:00.000Z", updatedAt: "2026-07-01T11:00:00.000Z" },
+    ];
+    const { store, queryClient, Wrapper } = createTestWrapper();
+    queryClient.setQueryData(queryKeys.conversations.all(), seededList);
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        messages: [],
+        activeRunId: null,
+        promptInput: "hello world",
+      }),
+    );
+    function Probe() {
+      useConversationSaveHost();
+      return null;
+    }
+    render(<Probe />, { wrapper: Wrapper });
+
+    store.set(touchConversationAtom, "A");
+    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const list = queryClient.getQueryData<ConversationListItem[]>(queryKeys.conversations.all());
+    expect(list).not.toBe(seededList);
+    expect(list).toHaveLength(1);
+    expect(list![0]!.id).toBe("A");
+    expect(list![0]!.title).toBe("hello world");
+  });
+
   it("unregisters on unmount", () => {
     const { Wrapper } = createTestWrapper();
     const { unmount } = renderHook(() => useConversationSaveHost(), { wrapper: Wrapper });

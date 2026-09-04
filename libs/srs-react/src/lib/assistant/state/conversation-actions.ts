@@ -91,7 +91,11 @@ export const startParamlessConversationAtom = atom(null, (_get, set) => {
 export const setAssistantPromptInputAtom = atom(null, (get, set, text: string): string | null => {
   const id = get(currentConversationIdAtom);
   if (id) {
+    const prev = get(assistantConversationStateAtom).promptInput;
     set(assistantConversationStateAtom, ["setPromptInput", text]);
+    // WHY: Prompt edits persist the draft (composer + live title) but must
+    // not stamp `updatedAt`. touchAtom dirties the save queue; run start owns the clock.
+    if (prev !== text) set(touchAtom);
     return null;
   }
 
@@ -115,6 +119,7 @@ export const setAssistantPromptInputAtom = atom(null, (get, set, text: string): 
     },
   ]);
   set(assistantConversationStateAtom, ["setPromptInput", text]);
+  set(touchAtom);
   return mintedId;
 });
 

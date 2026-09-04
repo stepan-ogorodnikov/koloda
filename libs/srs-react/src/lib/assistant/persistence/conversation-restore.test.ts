@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { computeConversationTitle } from "@koloda/ai";
 import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
 import type { RestoreIssue } from "./conversation-persistence-schema";
@@ -48,6 +49,40 @@ describe("toPersistedState / fromPersistedState", () => {
     const persisted = toPersistedState(state);
     expect(persisted.promptInput).toBe("unsent");
     expect(fromPersistedState(persisted).promptInput).toBe("unsent");
+  });
+
+  it("round-trips a draft with no messages so the title can follow the prompt", () => {
+    const createdAt = new Date(1);
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "draft-1",
+      createdAt,
+      updatedAt: createdAt,
+      messages: [],
+      activeRunId: null,
+      promptInput: "  live   title  ",
+    };
+    const restored = expectOk(JSON.parse(JSON.stringify(toPersistedState(state))) as unknown);
+    expect(restored.messages).toHaveLength(0);
+    expect(restored.activeRunId).toBeNull();
+    expect(restored.promptInput).toBe("  live   title  ");
+    expect(computeConversationTitle(restored)).toBe("live title");
+  });
+
+  it("round-trips a wiped prompt as an empty composer with a null title", () => {
+    const createdAt = new Date(1);
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "draft-1",
+      createdAt,
+      updatedAt: createdAt,
+      messages: [],
+      activeRunId: null,
+      promptInput: "   \n",
+    };
+    const restored = expectOk(JSON.parse(JSON.stringify(toPersistedState(state))) as unknown);
+    expect(restored.promptInput).toBe("   \n");
+    expect(computeConversationTitle(restored)).toBeNull();
   });
 
   it("does not write leftover conversation deckId", () => {
