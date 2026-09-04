@@ -81,6 +81,10 @@ msgstr "Провайдер вернул некорректный ответ"
 msgid "ai.network"
 msgstr "Не удалось связаться с провайдером (ошибка сети или блокировка CORS в браузере)"
 
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.aborted"
+msgstr "Провайдер прервал запрос"
+
 #: ../../libs/app/src/lib/error.ts:27
 msgid "db.add"
 msgstr "Не удалось выполнить операцию"

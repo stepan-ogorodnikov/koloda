@@ -126,6 +126,13 @@ describe("formatAppError", () => {
       details: "network down",
     });
   });
+
+  it("falls back to the generic AI HTTP catalog for unlisted status codes", () => {
+    expect(formatAppError(new AppError("ai.http.418" as ErrorCode, "I'm a teapot"), translate)).toEqual({
+      message: "ai.http 418",
+      details: "I'm a teapot",
+    });
+  });
 });
 
 describe("toFormErrors", () => {

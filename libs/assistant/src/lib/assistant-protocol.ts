@@ -58,9 +58,14 @@ export type RunChunk =
   | { kind: "usage"; usage: StreamUsage }
   | AssistantToolEvent;
 
+export type AssistantRunError = {
+  message: string;
+  details?: string;
+};
+
 export type RunOutcome =
   | { status: "success" }
-  | { status: "failed"; error: { message: string } }
+  | { status: "failed"; error: AssistantRunError }
   | { status: "canceled"; reason: "user" }
   | { status: "interrupted"; reason: "app_shutdown" };
 

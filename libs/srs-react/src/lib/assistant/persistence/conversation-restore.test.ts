@@ -1379,6 +1379,29 @@ describe("normalizeRestoredConversation", () => {
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
+  it("preserves generate error details across a save→restore roundtrip", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "failed",
+          error: { message: "ai.http.401", details: "Unauthorized" },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 2,
+        },
+      },
+    };
+
+    const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+    const restored = expectOk(persisted);
+    expect(restored.runs["r1"]?.error).toEqual({ message: "ai.http.401", details: "Unauthorized" });
+  });
+
   it("preserves failed chat runs with cards and chat-text metadata without rewriting", () => {
     const cards = [{ content: { "1": { text: "A" } } }];
     const state: ConversationReducerState = {

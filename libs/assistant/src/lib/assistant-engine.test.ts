@@ -789,7 +789,7 @@ describe("createAssistantEngine", () => {
     expect(failedActions[0]?.conversationId).toBe("conv-a");
     expect(failedActions[0]).toMatchObject({
       runId: "run-1",
-      outcome: { status: "failed", error: { message: "Provider aborted the request" } },
+      outcome: { status: "failed", error: { message: "ai.aborted" } },
     });
   });
 

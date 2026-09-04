@@ -7,7 +7,7 @@ import type { ConversationReducerAction, ConversationReducerState } from "./conv
 
 export type SaveStatus = {
   conversationId: string | null;
-  message: string | null;
+  error: Error | null;
   isDismissed: boolean;
 };
 
@@ -123,7 +123,7 @@ export function markReadIfCurrentOnStore(store: Store, id: string, runId: string
 
 export const saveStatusAtom = atom<SaveStatus>({
   conversationId: null as string | null,
-  message: null as string | null,
+  error: null as Error | null,
   isDismissed: false,
 });
 

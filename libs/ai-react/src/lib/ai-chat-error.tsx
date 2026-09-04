@@ -1,6 +1,6 @@
 import { Cancel01Icon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, Fade } from "@koloda/ui";
+import { Button, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { AnimatePresence } from "motion/react";
@@ -11,20 +11,23 @@ const aiChatError = [
 ].join(" ");
 
 export type AIChatErrorProps = {
-  error?: string | null;
+  message: string;
+  details?: string;
   isDismissed?: boolean;
   onDismiss?: () => void;
   onRetry?: () => void;
 };
 
-export function AIChatError({ error, isDismissed, onDismiss, onRetry }: AIChatErrorProps) {
+export function AIChatError({ message, details, isDismissed, onDismiss, onRetry }: AIChatErrorProps) {
   const { _ } = useLingui();
 
   return (
     <AnimatePresence>
-      {error && !isDismissed && (
-        <Fade className={aiChatError}>
-          <em className="grow min-w-0 fg-error not-italic break-all">{error}</em>
+      {message && !isDismissed && (
+        <Fade className={aiChatError} role="alert">
+          <div className="grow min-w-0">
+            <ErrorMessage layout="inline" message={message} details={details} />
+          </div>
           {onRetry && (
             <Button
               variants={{ style: "ghost", size: "small", class: "fg-link hover:fg-link-hover shrink-0" }}

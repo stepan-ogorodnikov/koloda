@@ -137,14 +137,14 @@ const templateFieldsField = z.union([z.null(), z.array(z.unknown())]);
 /** Tolerate an untyped passthrough value (e.g. `usage`). */
 const passthroughField = z.unknown();
 
-/** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message }`. */
-const errorField = z
-  .unknown()
-  .transform((error): { message: string } | undefined =>
-    error && typeof error === "object"
-      ? { message: String((error as Record<string, unknown>).message ?? "") }
-      : undefined,
-  );
+/** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message, details? }`. */
+const errorField = z.unknown().transform((error): { message: string; details?: string } | undefined => {
+  if (!error || typeof error !== "object") return undefined;
+  const record = error as Record<string, unknown>;
+  const message = String(record.message ?? "");
+  const details = typeof record.details === "string" && record.details.trim() ? record.details : undefined;
+  return details ? { message, details } : { message };
+});
 
 /** `reason`: absent/null/undefined → omit; known string → passthrough; else fail. */
 const terminationReasonField = z

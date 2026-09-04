@@ -81,6 +81,10 @@ msgstr "AI provider returned an invalid response"
 msgid "ai.network"
 msgstr "Could not reach the AI provider (network error or browser CORS block)"
 
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.aborted"
+msgstr "The AI provider aborted the request"
+
 #: ../../libs/app/src/lib/error.ts:27
 msgid "db.add"
 msgstr "Failed to add data"

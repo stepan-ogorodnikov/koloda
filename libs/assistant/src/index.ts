@@ -15,6 +15,7 @@ export type {
   RunStartSnapshot,
   ShutdownInput,
   SubmitInput,
+  AssistantRunError,
 } from "./lib/assistant-protocol";
 export {
   createConversationPersistenceHost,
@@ -54,7 +55,6 @@ export { createSerialQueue, QueueClosedError } from "./lib/serial-queue";
 export type { QueueCancelReason, SerialQueue } from "./lib/serial-queue";
 export { runStream } from "./lib/run-stream";
 export type { RunExecution } from "./lib/run-stream";
-export { displayErrorMessage } from "./lib/display-error";
 export {
   defaultLogAssistantStructured,
   logAssistantStructured,

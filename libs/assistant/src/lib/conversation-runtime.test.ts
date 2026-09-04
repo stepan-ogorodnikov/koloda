@@ -1,4 +1,5 @@
 import type { AssistantToolEvent, ChatStreamRequest } from "@koloda/ai";
+import { AIError } from "@koloda/ai";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionPort } from "./assistant-execution-port";
@@ -214,6 +215,37 @@ describe("createConversationRuntime chat tool events", () => {
       conversationId: "conv-a",
       runId: "run-tool",
       outcome: { status: "success" },
+    });
+  });
+
+  it("stores generate failures as a catalog code plus technical details", async () => {
+    const events: AssistantEvent[] = [];
+    const executionPort: AssistantExecutionPort = {
+      executeChat: async () => {
+        throw new AIError("ai.http.401", "Unauthorized");
+      },
+    };
+
+    const runtime = createConversationRuntime(
+      "conv-a",
+      {
+        emit: (event) => events.push(event),
+        markReadIfCurrent: vi.fn(),
+        touch: vi.fn(),
+        isRunStreaming: () => true,
+        readConversationState: () => ({ runs: {} }),
+      },
+      { executionPort },
+      createRunControllerRegistry(),
+    );
+
+    await runtime.executeChatRun("run-fail", {} as ChatStreamRequest, TEST_EXECUTION);
+
+    expect(events).toContainEqual({
+      type: "runTerminated",
+      conversationId: "conv-a",
+      runId: "run-fail",
+      outcome: { status: "failed", error: { message: "ai.http.401", details: "Unauthorized" } },
     });
   });
 });

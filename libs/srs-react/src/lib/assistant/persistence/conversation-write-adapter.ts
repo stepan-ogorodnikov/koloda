@@ -74,7 +74,7 @@ export function buildWriteConversation({
       if (currentId === row.id)
         setSaveStatus({
           conversationId: row.id,
-          message: null,
+          error: null,
           isDismissed: false,
         });
       setQueryConversation(row.id, row);
@@ -94,7 +94,7 @@ export function buildWriteConversation({
       if (currentId === id) {
         setSaveStatus({
           conversationId: id,
-          message: (error as Error).message,
+          error: error instanceof Error ? error : new Error(String(error)),
           isDismissed: false,
         });
       }

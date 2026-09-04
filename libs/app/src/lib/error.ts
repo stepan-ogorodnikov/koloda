@@ -11,6 +11,7 @@ export const ERROR_MESSAGES = {
   "ai.http": ({ status }: any) => msg`ai.http ${status}`,
   "ai.network": msg`ai.network`,
   "ai.invalid-response": msg`ai.invalid-response`,
+  "ai.aborted": msg`ai.aborted`,
   "ai.http.400": msg`ai.http.400`,
   "ai.http.401": msg`ai.http.401`,
   "ai.http.402": msg`ai.http.402`,
@@ -120,12 +121,27 @@ export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
 
+export function getAIHttpErrorMessageDescriptor(code: string) {
+  if (!code.startsWith("ai.http.")) return null;
+
+  const directMessage = ERROR_MESSAGES[code as ErrorCode];
+  if (directMessage) return directMessage;
+
+  const status = Number(code.slice("ai.http.".length));
+
+  return typeof status === "number" && !Number.isNaN(status)
+    ? ERROR_MESSAGES["ai.http"]({ status })
+    : ERROR_MESSAGES.unknown;
+}
+
 export function formatAppError(
   error: unknown,
   _: I18nContext["_"],
   fallback: (typeof ERROR_MESSAGES)[ErrorCode] = ERROR_MESSAGES["db.delete"],
 ): { message: string; details?: string } {
-  const catalog = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : fallback;
+  const catalog = isAppError(error)
+    ? (getAIHttpErrorMessageDescriptor(error.code) ?? ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)
+    : fallback;
   const message = typeof catalog === "function" ? _(catalog(error as never)) : _(catalog);
   const details = isAppError(error) ? error.details : error instanceof Error ? error.message : undefined;
 

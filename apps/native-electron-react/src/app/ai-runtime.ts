@@ -19,7 +19,7 @@ function isAiStreamEvent(value: unknown): value is AiStreamEvent {
 }
 
 // WHY: `invoke` throws AppError whose `.message` is the code (details live on
-// `.details`). Assistant UI stores `error.message`, so convert to AIError here.
+// `.details`). Convert to AIError so conversation-runtime can map via toAIAppError.
 function toRuntimeError(error: unknown): AIError {
   if (isAIError(error)) return error;
   if (isAppError(error)) {

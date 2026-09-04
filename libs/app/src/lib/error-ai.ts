@@ -1,32 +1,26 @@
 import { toAIError } from "@koloda/ai";
 import type { I18nContext } from "@lingui/react";
-import { AppError, ERROR_MESSAGES } from "./error";
+import { AppError, ERROR_MESSAGES, formatAppError, getAIHttpErrorMessageDescriptor } from "./error";
 import type { ErrorCode } from "./error";
 
-export function getGenerateErrorMessage(error: Error | null, _: I18nContext["_"]) {
+export type FormattedError = { message: string; details?: string };
+
+export function formatGenerateError(
+  error: Error | { message: string; details?: string } | null | undefined,
+  _: I18nContext["_"],
+): FormattedError | null {
   if (!error) return null;
-
-  const appError = error instanceof AppError ? error : (toAIAppError(error) as AppError);
-
-  if (appError.code === "unknown" && appError.details) return appError.details;
-
-  const content =
-    getAIHttpErrorMessageDescriptor(appError.code) ?? ERROR_MESSAGES[appError.code] ?? ERROR_MESSAGES.unknown;
-
-  return typeof content === "function" ? _(content(appError)) : _(content);
+  return formatAppError(toGenerateAppError(error), _, ERROR_MESSAGES.unknown);
 }
 
-export function getAIHttpErrorMessageDescriptor(code: string) {
-  if (!code.startsWith("ai.http.")) return null;
+function toGenerateAppError(error: Error | { message: string; details?: string }): AppError {
+  if (error instanceof AppError) return error;
+  if (error instanceof Error) return toAIAppError(error) as AppError;
 
-  const directMessage = ERROR_MESSAGES[code as ErrorCode];
-  if (directMessage) return directMessage;
-
-  const status = Number(code.slice("ai.http.".length));
-
-  return typeof status === "number" && !Number.isNaN(status)
-    ? ERROR_MESSAGES["ai.http"]({ status })
-    : ERROR_MESSAGES.unknown;
+  const code = error.message;
+  const isKnownCode = Boolean(getAIHttpErrorMessageDescriptor(code) ?? ERROR_MESSAGES[code as ErrorCode]);
+  if (isKnownCode) return new AppError(code as ErrorCode, error.details);
+  return new AppError("unknown", error.details ?? error.message);
 }
 
 export function toAIAppError(error: unknown): Error {

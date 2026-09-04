@@ -20,7 +20,7 @@ const errorMessageText = tv({
   variants: {
     layout: {
       stack: "text-center",
-      inline: "whitespace-nowrap",
+      inline: "min-w-0",
     },
   },
   defaultVariants: { layout: "stack" },

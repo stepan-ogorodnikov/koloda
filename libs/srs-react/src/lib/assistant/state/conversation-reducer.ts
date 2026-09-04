@@ -1,6 +1,7 @@
 import { generatedCardsFromProposeOutput, isProposeCardsOutput } from "@koloda/ai";
 import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
 import { logAssistantStructured } from "@koloda/assistant";
+import type { AssistantRunError } from "@koloda/assistant";
 import { dispatchReducerAction } from "@koloda/core-react";
 import type { ReducerAction } from "@koloda/core-react";
 import type { TemplateFields } from "@koloda/srs";
@@ -75,7 +76,7 @@ export type AssistantRun = {
   // When present, persistence requires a positive int — malformed fails the row.
   writeTargetDeckId?: number;
   writeTargetTemplateId?: number;
-  error?: { message: string };
+  error?: AssistantRunError;
   startedAt: Date;
   elapsedSeconds: number | null;
   modelName?: string;
@@ -241,7 +242,7 @@ function clearActiveIfRun(draft: ConversationReducerState, runId: string) {
 
 export type RunLifecycleEvent =
   | { type: "complete" }
-  | { type: "fail"; error: { message: string } }
+  | { type: "fail"; error: AssistantRunError }
   | { type: "cancel" }
   | { type: "interrupt"; reason: InterruptedReason }
   | {
@@ -562,7 +563,7 @@ function completeRun(draft: ConversationReducerState, payload: RunIdPayload) {
   transitionRun(draft, payload.runId, { type: "complete" });
 }
 
-type RunFailedPayload = { runId: string; error: { message: string } };
+type RunFailedPayload = { runId: string; error: AssistantRunError };
 
 function runFailed(draft: ConversationReducerState, payload: RunFailedPayload) {
   transitionRun(draft, payload.runId, { type: "fail", error: payload.error });

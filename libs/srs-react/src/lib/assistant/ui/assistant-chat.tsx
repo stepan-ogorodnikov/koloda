@@ -14,6 +14,7 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
+import { ERROR_MESSAGES, formatAppError, formatGenerateError } from "@koloda/app";
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -168,8 +169,11 @@ export function AssistantChat({
     onNextConversation,
   });
 
-  const generateErr = erroredRun?.error?.message ?? null;
-  const saveErr = saveStatus.conversationId === conversationId && !saveStatus.isDismissed ? saveStatus.message : null;
+  const generateErr = formatGenerateError(erroredRun?.error, _);
+  const saveErr =
+    saveStatus.conversationId === conversationId && !saveStatus.isDismissed && saveStatus.error
+      ? formatAppError(saveStatus.error, _, ERROR_MESSAGES["db.update"])
+      : null;
   const hasNoProfiles = !areProfilesLoading && profiles.length === 0;
   const showNoProfilesEmpty = hasNoProfiles && renderAddProfileDialog != null;
   const emptyState = showNoProfilesEmpty ? <AssistantNoProfiles onAddProfile={openAddProfile} /> : null;
@@ -209,8 +213,8 @@ export function AssistantChat({
               scroll={scroll}
             />
             <AIChatMissingSecrets show={showMissingSecretsWarning} missingLabels={missingSecretFieldLabels} />
-            {generateErr && <AIChatError error={generateErr} onDismiss={controller.dismissGenerate} />}
-            {saveErr && <AIChatError error={saveErr} onDismiss={handleDismissSave} onRetry={retrySave} />}
+            {generateErr && <AIChatError {...generateErr} onDismiss={controller.dismissGenerate} />}
+            {saveErr && <AIChatError {...saveErr} onDismiss={handleDismissSave} onRetry={retrySave} />}
             {revertState && <RevertBanner onRestore={handleRestore} />}
             <AIChatPromptPanel onSubmit={handleSubmit}>
               <AIChatPromptInput value={inputValue} onChange={setInputValue} onSubmit={submit} />

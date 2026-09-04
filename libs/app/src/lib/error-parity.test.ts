@@ -91,6 +91,7 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http",
   "ai.network",
   "ai.invalid-response",
+  "ai.aborted",
   "ai.http.400",
   "ai.http.401",
   "ai.http.402",

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getAIHttpErrorMessageDescriptor, toAIAppError } from "./error-ai";
+import { AppError, getAIHttpErrorMessageDescriptor } from "./error";
+import { formatGenerateError, toAIAppError } from "./error-ai";
 
 describe("ai-error", () => {
+  const translate = ((message: string) => message) as Parameters<typeof formatGenerateError>[1];
+
   it("resolves direct and fallback AI http message descriptors", () => {
     expect(getAIHttpErrorMessageDescriptor("ai.http.404")).toBe("ai.http.404");
     expect(getAIHttpErrorMessageDescriptor("ai.http.418")).toBe("ai.http 418");
@@ -22,5 +25,26 @@ describe("ai-error", () => {
       details: "bad json",
     });
     expect(() => toAIAppError(new DOMException("Aborted", "AbortError"))).toThrow("Aborted");
+  });
+
+  it("translates a stored generate error code and keeps details separate", () => {
+    expect(formatGenerateError({ message: "ai.http.401", details: "Unauthorized" }, translate)).toEqual({
+      message: "ai.http.401",
+      details: "Unauthorized",
+    });
+  });
+
+  it("treats a legacy flattened display string as details behind unknown", () => {
+    expect(formatGenerateError({ message: "Provider aborted the request" }, translate)).toEqual({
+      message: "unknown",
+      details: "Provider aborted the request",
+    });
+  });
+
+  it("does not promote unknown AppError details into the headline", () => {
+    expect(formatGenerateError(new AppError("unknown", "SQLITE_BUSY"), translate)).toEqual({
+      message: "unknown",
+      details: "SQLITE_BUSY",
+    });
   });
 });

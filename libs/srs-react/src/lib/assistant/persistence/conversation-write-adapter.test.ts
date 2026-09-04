@@ -1,8 +1,9 @@
+import { AppError } from "@koloda/app";
 import type { Conversation, SetConversationData } from "@koloda/app";
 import { createStore } from "jotai";
 import { describe, expect, it, vi } from "vitest";
 import { makeConversation } from "../state/assistant-conversation.fixtures";
-import { conversationsAtom, upsertConversationAtom } from "../state/conversation-store";
+import { conversationsAtom, currentConversationIdAtom, upsertConversationAtom } from "../state/conversation-store";
 import { buildWriteConversation } from "./conversation-write-adapter";
 
 function makeRow(data: SetConversationData): Conversation {
@@ -143,5 +144,30 @@ describe("buildWriteConversation", () => {
 
     expect(await write("draft-1")).toBe(false);
     expect(setConversationFn).not.toHaveBeenCalled();
+  });
+
+  it("stores the thrown Error on save failure so the chat banner can format it", async () => {
+    const store = createStore();
+    store.set(upsertConversationAtom, makeConversation("draft-1", { promptInput: "hello" }));
+    store.set(currentConversationIdAtom, "draft-1");
+    const failure = new AppError("db.update", "SQLITE_BUSY");
+    const setSaveStatus = vi.fn();
+    const write = buildWriteConversation({
+      store,
+      setConversationFn: vi.fn(async () => {
+        throw failure;
+      }),
+      setSaveStatus,
+      setQueryConversation: vi.fn(),
+      updateConversationsList: vi.fn(),
+      isTombstoned: () => false,
+    });
+
+    await expect(write("draft-1")).rejects.toBe(failure);
+    expect(setSaveStatus).toHaveBeenCalledWith({
+      conversationId: "draft-1",
+      error: failure,
+      isDismissed: false,
+    });
   });
 });

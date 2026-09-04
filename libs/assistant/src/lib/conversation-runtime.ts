@@ -1,10 +1,9 @@
 import type { AssistantToolEvent, ChatStreamChunk, ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import { isAbortError } from "@koloda/app";
+import { isAbortError, isAppError, toAIAppError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
-import type { AssistantEvent } from "./assistant-protocol";
-import { displayErrorMessage } from "./display-error";
+import type { AssistantEvent, AssistantRunError } from "./assistant-protocol";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
 import { runStream } from "./run-stream";
@@ -124,7 +123,7 @@ export function createConversationRuntime(
         type: "runTerminated",
         conversationId,
         runId,
-        outcome: { status: "failed", error: { message: "Provider aborted the request" } },
+        outcome: { status: "failed", error: { message: "ai.aborted" } },
       });
       callbacks.markReadIfCurrent(conversationId, runId);
       return "error";
@@ -287,7 +286,7 @@ export function createConversationRuntime(
               type: "runTerminated",
               conversationId,
               runId,
-              outcome: { status: "failed", error: { message: displayErrorMessage(error) } },
+              outcome: { status: "failed", error: toRunError(error) },
             });
             callbacks.markReadIfCurrent(conversationId, runId);
             return { streamResult: "error" as const, usage: null as StreamUsage | null };
@@ -513,4 +512,10 @@ export function createConversationRuntime(
     cancel,
     close,
   };
+}
+
+function toRunError(error: Error): AssistantRunError {
+  const appError = toAIAppError(error);
+  if (!isAppError(appError)) return { message: "unknown", details: error.message };
+  return appError.details ? { message: appError.code, details: appError.details } : { message: appError.code };
 }
