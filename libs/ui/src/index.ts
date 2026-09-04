@@ -50,6 +50,7 @@ export * from "./lib/primitives/tabs";
 export * from "./lib/types";
 export * from "./lib/ui/add-hotkey-button";
 export * from "./lib/ui/delete-dialog";
+export * from "./lib/ui/error-message";
 export * from "./lib/ui/hotkey";
 export * from "./lib/ui/hotkey-recorder";
 export * from "./lib/ui/not-found";

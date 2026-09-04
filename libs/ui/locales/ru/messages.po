@@ -21,6 +21,10 @@ msgstr "Перетащите для изменения порядка распо
 msgid "drag-handle.label"
 msgstr "Контроллер перетаскивания"
 
+#: ../../libs/ui/src/lib/ui/error-message.tsx:15
+msgid "error.details"
+msgstr "Подробности"
+
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
@@ -71,11 +75,11 @@ msgstr "Запрашиваемые данные не существуют"
 msgid "not-found.title"
 msgstr "Не найдено"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:19
+#: ../../libs/ui/src/lib/ui/query-error.tsx:20
 msgid "query-error.message"
 msgstr "Ошибка загрузки"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:53
+#: ../../libs/ui/src/lib/ui/query-error.tsx:58
 msgid "query-error.retry"
 msgstr "Повторить"
 

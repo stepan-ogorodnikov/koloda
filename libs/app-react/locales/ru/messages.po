@@ -326,7 +326,7 @@ msgstr "Настройки"
 msgid "templates.title"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:30
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:29
 msgid "title.ai"
 msgstr "Ассистент"
 

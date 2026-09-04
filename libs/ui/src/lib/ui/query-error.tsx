@@ -5,18 +5,23 @@ import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCallback, useState } from "react";
 import { Button } from "../primitives/form/button";
+import { ErrorMessage } from "./error-message";
 
 const RETRY_DELAY_MS = 125;
 
-interface QueryErrorProps {
+export type QueryErrorProps = {
   error?: Error;
   onRetry?: () => Promise<unknown>;
-}
+};
 
 export function QueryError({ error, onRetry }: QueryErrorProps) {
   const { _ } = useLingui();
   const [isPending, setIsPending] = useState(false);
-  const message = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : msg`query-error.message`;
+  const catalog = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : msg`query-error.message`;
+  const message = typeof catalog === "function" ? _(catalog(error)) : _(catalog);
+  // WHY: AppError.message is the catalog code. The short user text comes from
+  // ERROR_MESSAGES; technical text is `.details`. For plain Error, `.message` is details.
+  const details = isAppError(error) ? error.details : error?.message;
 
   const handleRetry = useCallback(async () => {
     if (!onRetry || isPending) return;
@@ -39,7 +44,7 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
           icon={BadgeAlertIcon}
           aria-hidden="true"
         />
-        <p className="fg-level-2 text-center">{typeof message === "function" ? _(message(error)) : _(message)}</p>
+        <ErrorMessage message={message} details={details} />
         {onRetry && (
           <Button
             variants={{ style: "ghost", class: `fg-link ${isPending ? "pointer-events-none opacity-50" : ""}` }}

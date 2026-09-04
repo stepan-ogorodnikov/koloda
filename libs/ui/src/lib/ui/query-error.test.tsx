@@ -19,9 +19,26 @@ describe("QueryError", () => {
     expect(screen.getByText("unknown")).toBeTruthy();
   });
 
-  it("renders the generic query error message for non-AppError failures", () => {
+  it("shows the catalog message and keeps AppError details behind the details control", () => {
+    render(<QueryError error={new AppError("db.get", "SQLITE_BUSY")} />);
+
+    expect(screen.getByText("db.get")).toBeTruthy();
+    expect(screen.queryByText("SQLITE_BUSY")).toBeNull();
+    expect(screen.getByRole("button", { name: "error.details" })).toBeTruthy();
+  });
+
+  it("does not offer details when AppError has none", () => {
+    render(<QueryError error={new AppError("db.get")} />);
+
+    expect(screen.getByText("db.get")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "error.details" })).toBeNull();
+  });
+
+  it("treats a plain Error message as technical details, not the headline", () => {
     render(<QueryError error={new Error("network down")} />);
 
     expect(screen.getByText("query-error.message")).toBeTruthy();
+    expect(screen.queryByText("network down")).toBeNull();
+    expect(screen.getByRole("button", { name: "error.details" })).toBeTruthy();
   });
 });

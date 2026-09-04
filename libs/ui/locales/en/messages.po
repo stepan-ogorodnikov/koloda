@@ -21,6 +21,10 @@ msgstr "Drag to reorder this item"
 msgid "drag-handle.label"
 msgstr "Drag handle"
 
+#: ../../libs/ui/src/lib/ui/error-message.tsx:15
+msgid "error.details"
+msgstr "Details"
+
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:33
 msgid "form.createdAt {0}"
@@ -71,11 +75,11 @@ msgstr "Content you're trying to access doesn't exist"
 msgid "not-found.title"
 msgstr "Not found"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:19
+#: ../../libs/ui/src/lib/ui/query-error.tsx:20
 msgid "query-error.message"
 msgstr "Something went wrong"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:53
+#: ../../libs/ui/src/lib/ui/query-error.tsx:58
 msgid "query-error.retry"
 msgstr "Retry"
 
