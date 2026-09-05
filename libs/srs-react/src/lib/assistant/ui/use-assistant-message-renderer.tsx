@@ -12,6 +12,7 @@ import {
   getMessageRunId,
   getUserMessageCreatedAt,
   makeHistoricalTemplate,
+  serializeGeneratedCards,
 } from "../state/assistant-messages";
 import type { AssistantRun } from "../state/conversation-reducer";
 import { assistantActiveRunIdAtom, assistantMessagesAtom, assistantRunsAtom } from "../state/conversation-selectors";
@@ -218,7 +219,14 @@ type RenderChatMessageOptions = {
 function renderChatMessage(options: RenderChatMessageOptions) {
   const { message, content, run, runId, isCurrentRun, isTail, handleRetry } = options;
   const text = getTextMessageContent(message);
-  const copyAction = text ? <CopyMessageButton text={text} /> : null;
+  // WHY: copy mirrors the rendered turn — cards first, leftover text second —
+  // reusing the history serialization so multi-line card markdown survives.
+  const cardsCopy =
+    run.cards.length > 0 && run.templateFields
+      ? serializeGeneratedCards(run.cards, makeHistoricalTemplate(run.templateFields))
+      : null;
+  const copyText = [cardsCopy, text].filter(Boolean).join("\n\n");
+  const copyAction = copyText ? <CopyMessageButton text={copyText} /> : null;
   // WHY: tool + thinking traffic lives on the run, not message parts — the
   // widget must read `run.toolCalls` so arrival order is preserved.
   // Markdown is injected here so `@koloda/ai-react` stays free of `@koloda/srs`.

@@ -23,8 +23,10 @@ vi.mock("@koloda/ai-react", () => ({
     canRetry?: boolean;
     onRetry?: () => void;
     elapsedSeconds?: number;
+    actions?: React.ReactNode;
   }) => (
     <div data-testid={`status-${props.state}`}>
+      {props.actions}
       {props.canRetry ? (
         <button type="button" onClick={props.onRetry}>
           retry
@@ -46,7 +48,7 @@ vi.mock("@koloda/ai-react", () => ({
 }));
 
 vi.mock("./copy-message-button", () => ({
-  CopyMessageButton: () => null,
+  CopyMessageButton: ({ text }: { text: string }) => <div data-testid="copy-button" data-text={text} />,
 }));
 
 vi.mock("./assistant-cards-message", () => ({
@@ -303,5 +305,44 @@ describe("useAssistantMessageRenderer", () => {
     expect(table.getAttribute("data-can-add")).toBe("true");
     expect(table.getAttribute("data-deck-id")).toBe("5");
     expect(table.getAttribute("data-template-id")).toBe("3");
+  });
+
+  it("copies cards serialized before leftover text on a chat proposal", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard, sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run });
+    expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe(
+      ["## Card 1", "**Front**: Q", "**Back**: A", "", "## Card 2", "**Front**: Q", "**Back**: A", "", "Hello"].join(
+        "\n",
+      ),
+    );
+  });
+
+  it("copies serialized cards on a cards-only message", () => {
+    const run = {
+      ...makeRun("r1", "success"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: 5,
+    };
+    mountRenderer({ r1: run }, { assistantText: "" });
+    expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe(
+      ["## Card 1", "**Front**: Q", "**Back**: A"].join("\n"),
+    );
+  });
+
+  it("copies only text on a chat message without cards", () => {
+    mountRenderer({ r1: makeRun("r1", "success") });
+    expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe("Hello");
+  });
+
+  it("copies only text when the template fields are unavailable", () => {
+    const run = { ...makeRun("r1", "success"), cards: [sampleCard], templateFields: null };
+    mountRenderer({ r1: run });
+    expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe("Hello");
   });
 });
