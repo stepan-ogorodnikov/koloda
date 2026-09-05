@@ -193,7 +193,7 @@ msgstr "Действия с диалогом"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:124
 msgid "ai.conversation.recovery.corrupt"
-msgstr "Сохранённые данные этого диалога повреждены и не могут быть открыты."
+msgstr "Данные этого диалога повреждены"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:172
 msgid "ai.conversation.recovery.reset.cancel"

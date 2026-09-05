@@ -116,21 +116,19 @@ export function AssistantConversationRecovery({
 
   return (
     <div className="grow flex flex-col items-center justify-center gap-6 py-12 px-4">
-      <div className="flex flex-col items-center gap-2 text-center max-w-md">
+      <div className="flex flex-col items-center gap-4 text-center max-w-md">
         <p className="text-xl/6 font-bold fg-level-4">{_(msg`ai.conversation.recovery.title`)}</p>
-        <p className="fg-level-2">
-          {blocked.status === "unsupportedVersion"
-            ? _(msg`ai.conversation.recovery.unsupported ${blocked.found} ${blocked.supported}`)
-            : _(msg`ai.conversation.recovery.corrupt`)}
-        </p>
-        {blocked.status === "corrupt" && blocked.issues.length > 0 && (
-          <ul className="text-sm fg-level-3 list-disc text-left">
-            {blocked.issues.slice(0, 3).map((issue, index) => (
-              <li key={`${issue.path}:${index}`}>
-                {issue.message} <span className="fg-level-4">({issue.path})</span>
-              </li>
-            ))}
-          </ul>
+        {/* WHY: Raw zod issue text is English-only diagnostics; keep it behind
+            the details toggle so the recovery headline stays translated. */}
+        {blocked.status === "unsupportedVersion" ? (
+          <p className="fg-level-2">
+            {_(msg`ai.conversation.recovery.unsupported ${blocked.found} ${blocked.supported}`)}
+          </p>
+        ) : (
+          <ErrorMessage
+            message={_(msg`ai.conversation.recovery.corrupt`)}
+            details={blocked.issues.map((issue) => `${issue.path}: ${issue.message}`).join("\n")}
+          />
         )}
       </div>
       <div className="flex flex-row items-center gap-4">

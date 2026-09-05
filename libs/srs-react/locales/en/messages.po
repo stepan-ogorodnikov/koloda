@@ -193,7 +193,7 @@ msgstr "Conversation actions"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:124
 msgid "ai.conversation.recovery.corrupt"
-msgstr "This conversation's saved data is damaged and can't be opened."
+msgstr "This conversation's data is damaged"
 
 #: ../../libs/srs-react/src/lib/assistant/ui/assistant-conversation-recovery.tsx:172
 msgid "ai.conversation.recovery.reset.cancel"
