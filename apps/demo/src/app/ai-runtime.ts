@@ -23,7 +23,10 @@ export function createDemoAIRuntime(db: DB): AIRuntime {
   return {
     listModels: async (profileId) => {
       const secrets = await loadAIProfileSecrets(db, profileId);
-      return secrets ? await fetchModels(secrets) : [];
+      // WHY: Match the native host — a missing/secretless profile is an error,
+      // not an empty catalog, so the picker shows its error row instead of "No models".
+      if (!secrets) throw new AppError("not-found.ai-profile", "No secrets loaded for AI profile");
+      return fetchModels(secrets);
     },
     // WHY: Demo has no IPC transport — ignore host requestId (logs already recorded it).
     chat: async (profileId, request, onChunk, abortSignal, _requestId) => {
