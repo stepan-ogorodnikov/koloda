@@ -4,6 +4,7 @@ import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent, AssistantRunError } from "./assistant-protocol";
+import { boundRunErrorDetails } from "./assistant-protocol";
 import type { RunAbortReason, RunControllerRegistry } from "./run-controller-registry";
 import { RunControllerRegistryClosedError } from "./run-controller-registry";
 import { runStream } from "./run-stream";
@@ -516,6 +517,8 @@ export function createConversationRuntime(
 
 function toRunError(error: Error): AssistantRunError {
   const appError = toAIAppError(error);
-  if (!isAppError(appError)) return { message: "unknown", details: error.message };
-  return appError.details ? { message: appError.code, details: appError.details } : { message: appError.code };
+  if (!isAppError(appError)) return { message: "unknown", details: boundRunErrorDetails(error.message) };
+  return appError.details
+    ? { message: appError.code, details: boundRunErrorDetails(appError.details) }
+    : { message: appError.code };
 }

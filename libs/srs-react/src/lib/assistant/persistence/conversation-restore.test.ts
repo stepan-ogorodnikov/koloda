@@ -769,7 +769,7 @@ describe("coerceConversationState", () => {
         name: "get_deck_cards",
         input: { deckId: 3 },
         status: "error" as const,
-        error: { message: "deck missing" },
+        error: "deck missing",
       },
     ];
 
@@ -846,6 +846,30 @@ describe("coerceConversationState", () => {
       };
       const coerced = expectOk(makeStateWithRun(baseRun({ toolCalls: [reasoning, fullToolCalls[0]] })));
       expect(coerced.runs["r1"]?.toolCalls).toEqual([reasoning, fullToolCalls[0]]);
+    });
+
+    it("heals a legacy object tool error into a bounded string", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "error", error: { message: "boom" } }],
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.toolCalls).toEqual([
+        { id: "call-1", name: "list_decks", input: {}, status: "error", error: "boom" },
+      ]);
+    });
+
+    it("caps an oversized tool error string on restore", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "error", error: "x".repeat(2001) }],
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.toolCalls?.[0]?.error).toBe(`${"x".repeat(2000)}…`);
     });
   });
 
@@ -1400,6 +1424,32 @@ describe("normalizeRestoredConversation", () => {
     const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
     const restored = expectOk(persisted);
     expect(restored.runs["r1"]?.error).toEqual({ message: "ai.http.401", details: "Unauthorized" });
+  });
+
+  it("caps oversized generate error details on restore", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "failed",
+          error: { message: "ai.http.500", details: "x".repeat(20_000) },
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 2,
+        },
+      },
+    };
+
+    const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+    const restored = expectOk(persisted);
+    expect(restored.runs["r1"]?.error).toEqual({
+      message: "ai.http.500",
+      details: `${"x".repeat(16_000)}…`,
+    });
   });
 
   it("preserves failed chat runs with cards and chat-text metadata without rewriting", () => {

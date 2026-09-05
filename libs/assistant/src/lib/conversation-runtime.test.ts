@@ -248,4 +248,35 @@ describe("createConversationRuntime chat tool events", () => {
       outcome: { status: "failed", error: { message: "ai.http.401", details: "Unauthorized" } },
     });
   });
+
+  it("caps oversized unknown-failure details at the storage backstop", async () => {
+    const events: AssistantEvent[] = [];
+    const executionPort: AssistantExecutionPort = {
+      executeChat: async () => {
+        throw new Error("x".repeat(20_000));
+      },
+    };
+
+    const runtime = createConversationRuntime(
+      "conv-a",
+      {
+        emit: (event) => events.push(event),
+        markReadIfCurrent: vi.fn(),
+        touch: vi.fn(),
+        isRunStreaming: () => true,
+        readConversationState: () => ({ runs: {} }),
+      },
+      { executionPort },
+      createRunControllerRegistry(),
+    );
+
+    await runtime.executeChatRun("run-fail-capped", {} as ChatStreamRequest, TEST_EXECUTION);
+
+    expect(events).toContainEqual({
+      type: "runTerminated",
+      conversationId: "conv-a",
+      runId: "run-fail-capped",
+      outcome: { status: "failed", error: { message: "unknown", details: `${"x".repeat(16_000)}…` } },
+    });
+  });
 });

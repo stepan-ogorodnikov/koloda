@@ -1,4 +1,5 @@
 import type { GeneratedCard, ModelParameter, StreamUsage } from "@koloda/ai";
+import { boundRunErrorDetails } from "@koloda/assistant";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import type { PersistedConversation } from "./conversation-persistence";
@@ -12,6 +13,7 @@ import type {
   RunStatus,
   RunTerminationReason,
 } from "../state/conversation-reducer";
+import { boundToolError } from "../state/conversation-reducer";
 import { z } from "zod";
 
 /**
@@ -137,12 +139,15 @@ const templateFieldsField = z.union([z.null(), z.array(z.unknown())]);
 /** Tolerate an untyped passthrough value (e.g. `usage`). */
 const passthroughField = z.unknown();
 
-/** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message, details? }`. */
+/** `error`: a falsy/absent value → `undefined`; a truthy object → `{ message, details? }`.
+ * Details are re-capped on restore so rows saved before the storage backstop
+ * heal instead of keeping an oversized payload alive across sessions. */
 const errorField = z.unknown().transform((error): { message: string; details?: string } | undefined => {
   if (!error || typeof error !== "object") return undefined;
   const record = error as Record<string, unknown>;
   const message = String(record.message ?? "");
-  const details = typeof record.details === "string" && record.details.trim() ? record.details : undefined;
+  const details =
+    typeof record.details === "string" && record.details.trim() ? boundRunErrorDetails(record.details) : undefined;
   return details ? { message, details } : { message };
 });
 
@@ -211,7 +216,12 @@ const toolCallField = z.object({
   input: z.unknown(),
   status: toolCallStatusField,
   output: z.unknown().optional(),
-  error: z.unknown().optional(),
+  // WHY: rows saved before `RunToolCall.error` became a bounded string may
+  // hold an arbitrary error object — coerce to the live shape on restore.
+  error: z
+    .unknown()
+    .optional()
+    .transform((error) => (error === undefined ? undefined : boundToolError(error))),
 });
 
 const reasoningActivityField = z.object({

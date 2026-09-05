@@ -63,6 +63,18 @@ export type AssistantRunError = {
   details?: string;
 };
 
+// WHY: details carry raw exception/provider text, and run errors ride the
+// persisted conversation blob rewritten on every autosave. Not a shaping
+// budget (provider bodies are already capped in @koloda/ai) — a backstop
+// against a pathological payload growing storage unboundedly.
+export const MAX_RUN_ERROR_DETAILS_CHARS = 16_000;
+
+export function boundRunErrorDetails(details: string | undefined): string | undefined {
+  if (details === undefined) return undefined;
+  if (details.length <= MAX_RUN_ERROR_DETAILS_CHARS) return details;
+  return `${details.slice(0, MAX_RUN_ERROR_DETAILS_CHARS)}…`;
+}
+
 export type RunOutcome =
   | { status: "success" }
   | { status: "failed"; error: AssistantRunError }

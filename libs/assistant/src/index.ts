@@ -17,6 +17,7 @@ export type {
   SubmitInput,
   AssistantRunError,
 } from "./lib/assistant-protocol";
+export { boundRunErrorDetails, MAX_RUN_ERROR_DETAILS_CHARS } from "./lib/assistant-protocol";
 export {
   createConversationPersistenceHost,
   SHUTDOWN_FLUSH_TIMEOUT_MS,

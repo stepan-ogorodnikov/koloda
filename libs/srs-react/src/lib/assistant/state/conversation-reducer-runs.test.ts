@@ -296,6 +296,60 @@ describe("conversationReducer", () => {
       });
     });
 
+    it("flattens an Error-instance tool failure to its message", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", error: new Error("Deck not found: 9") },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({ status: "error", error: "Deck not found: 9" });
+    });
+
+    it("flattens an object tool failure to a bounded string", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", error: { code: 500, message: "Storage unavailable" } },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe("Storage unavailable");
+    });
+
+    it("stringifies an object tool failure without a message", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", error: { code: 500 } },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe('{"code":500}');
+    });
+
+    it("caps an oversized tool error with a truncation marker", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      const error = "x".repeat(2001);
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", error }]);
+
+      expect(state.runs["r1"].toolCalls?.[0]?.error).toBe(`${"x".repeat(2000)}…`);
+    });
+
     it("no-ops on an unmatched callId", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [

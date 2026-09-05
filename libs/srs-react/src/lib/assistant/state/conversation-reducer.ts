@@ -37,7 +37,9 @@ export type RunToolCall = {
   input: unknown;
   status: ToolCallStatus;
   output?: unknown;
-  error?: unknown;
+  // WHY: always a bounded string (`boundToolError`) so a tool failure cannot
+  // grow the persisted blob with an arbitrary error object.
+  error?: string;
 };
 
 /**
@@ -495,7 +497,7 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
   if (!call) return;
   if (payload.error !== undefined) {
     call.status = "error";
-    call.error = payload.error;
+    call.error = boundToolError(payload.error);
     return;
   }
   call.status = "success";
@@ -525,6 +527,35 @@ export function boundToolOutput(output: unknown): unknown {
     ...(typeof totalCards === "number" && Number.isFinite(totalCards) ? { totalCards } : {}),
     preview: serialized.slice(0, MAX_TOOL_OUTPUT_PREVIEW_CHARS),
   };
+}
+
+const MAX_TOOL_ERROR_CHARS = 2000;
+
+// WHY: tool errors arrive as arbitrary stream values — a raw AI SDK error part
+// on the browser path, a pre-flattened string over Electron IPC. Store a
+// bounded string so a tool failure cannot grow the persisted blob with an
+// unbounded error object.
+export function boundToolError(error: unknown): string {
+  let text: string;
+  if (typeof error === "string") {
+    text = error;
+  } else if (error instanceof Error) {
+    text = error.message || String(error);
+  } else if (typeof error === "object" && error !== null) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message) {
+      text = message;
+    } else {
+      try {
+        text = JSON.stringify(error) ?? String(error);
+      } catch {
+        text = String(error);
+      }
+    }
+  } else {
+    text = String(error);
+  }
+  return text.length <= MAX_TOOL_ERROR_CHARS ? text : `${text.slice(0, MAX_TOOL_ERROR_CHARS)}…`;
 }
 
 // WHY: runtime must not parse tool payloads; the call name already lives on the run.
