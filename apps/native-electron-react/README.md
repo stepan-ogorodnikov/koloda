@@ -19,7 +19,8 @@ Normally booted by `nx run native-electron:serve`; runs standalone in a browser 
 
 ## Architectural Map
 
-- Entry: `src/main.tsx` — hash history under `file://`, zoom controls, close coordination.
+- Entry: `src/main.tsx` — hash history under `file://`, close coordination.
+- Zoom: `src/app/use-electron-zoom.ts` — ctrl/⌘ ±/0 and ctrl+wheel, level persisted across restarts.
 - IPC bridge: `src/app/electron.ts` — typed `window.electronAPI` wrapper; IPC error payloads become `AppError`.
 - Wire format: `src/app/ipc.ts` — `toWire`/`fromWire` (Date to epoch ms, BigInt checks) for NAPI-safe payloads.
 - AI runtime: `src/app/ai-runtime.ts` — streaming chat over the `ai:stream` channel; errors map to `AIError`.

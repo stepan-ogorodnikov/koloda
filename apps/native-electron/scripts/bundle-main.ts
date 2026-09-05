@@ -14,8 +14,8 @@ await build({
   external: ["electron", /\.node$/],
   // WHY: CJS output has no real `import.meta`; map to Node CJS equivalents so
   // `createRequire` and path joins keep working (dev still runs src via tsx/esm).
-  // Do NOT define import.meta.dirname → `__dirname`: main.ts does
-  // `const __dirname = import.meta.dirname`, which becomes a TDZ self-init after
+  // Do NOT define import.meta.dirname → `__dirname`: a module-level
+  // `const __dirname = import.meta.dirname` becomes a TDZ self-init after
   // the bundler renames the binding (`const __dirname$1 = __dirname$1`).
   transform: {
     define: {

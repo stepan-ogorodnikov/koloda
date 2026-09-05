@@ -30,7 +30,7 @@ This file only tells you where to start.
   Larger entities split these by concern.
   Register new modules in `tests/domain/main.rs` / `tests/integration/main.rs`; do not add a new `tests/*.rs` crate root.
 - Register the command in `apps/native-electron/src-rust/src/lib.rs`.
-- Expose it as `ipcMain.handle("cmd_*", …)` in `apps/native-electron/src/main.ts` —
+- Expose it as `ipcMain.handle("cmd_*", …)` in `apps/native-electron/src/data-ipc.ts` —
   the `#[napi]` method alone is not reachable from the renderer.
 - TS reaches it via `invoke("cmd_*")` in `apps/native-electron-react/src/app/queries.ts`.
 

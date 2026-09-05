@@ -19,10 +19,15 @@ The addon (`src-rust/`) is a thin `koloda-core` façade — the TS/Rust mirrorin
 
 ## Architectural Map
 
-- Main: `src/main.ts` — user-data paths (`KOLODA_USER_DATA` override; per-platform defaults),
-  `window-state.json` and `ui-prefs.json` persistence in user data, hidden-titlebar window creation,
-  packaged-mode reload blocking, and CORS-permissive https handling for renderer fetches
-  (skipped under `KOLODA_E2E` because it breaks Playwright route mocks).
+- Main: `src/main.ts` — bootstrap only: user-data paths (`KOLODA_USER_DATA` override; per-platform
+  defaults), native addon loading, IPC registration, window creation. `src/env.ts` holds the dev
+  flag and the main entry dir behind dev/packaged path joins.
+- Window: `src/window.ts` — hidden-titlebar window creation, packaged-mode reload blocking,
+  titlebar overlay/button metrics, close-coordination wiring.
+- Window state & UI prefs: `src/window-state.ts` / `src/ui-prefs.ts` — `window-state.json` bounds and
+  `ui-prefs.json` colors persisted in user data.
+- Window IPC: `src/window-ipc.ts` — `window:*` channels plus the shutdown ack. See `IPC.md`.
+- Data IPC: `src/data-ipc.ts` — `cmd_*` channels over the NAPI addon. See `IPC.md`.
 - AI IPC: `src/ai-ipc.ts` — model listing, streaming chat with per-request abort, main-side tool executor. See `IPC.md`.
 - Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack so the renderer flushes before destroy.
 - Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`: generic `invoke`/`on` plus `webFrame` zoom controls.
