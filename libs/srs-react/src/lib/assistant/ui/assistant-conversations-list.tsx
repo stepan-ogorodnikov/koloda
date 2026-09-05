@@ -62,9 +62,9 @@ const conversationLink = [
 const conversationTitle = tv({
   base: "flex-1 min-w-0 truncate",
   variants: {
-    hasTurns: { false: "fg-level-4" },
+    isDraft: { true: "fg-level-4" },
   },
-  defaultVariants: { hasTurns: true },
+  defaultVariants: { isDraft: false },
 });
 
 type ConversationItemProps = {
@@ -122,7 +122,7 @@ function ConversationItem({
           <div className="size-2 rounded-full bg-fg-link" aria-label={unreadLabel} />
         ) : null}
       </span>
-      <span className={conversationTitle({ hasTurns: conversation.hasTurns })} data-has-turns={conversation.hasTurns}>
+      <span className={conversationTitle({ isDraft: !conversation.hasTurns })} data-has-turns={conversation.hasTurns}>
         {name}
       </span>
       <div className="flex shrink-0 items-center gap-1">

@@ -431,7 +431,6 @@ export function getConversationIdFromUrl(page: Page): string {
   return decodeURIComponent(match[1]);
 }
 
-/** Wait until the AI route has minted a conversationId, then return it. */
 export async function waitForConversationIdFromUrl(page: Page): Promise<string> {
   await expect(page).toHaveURL(/conversationId=/);
   return getConversationIdFromUrl(page);
