@@ -30,6 +30,8 @@ export function useAIChatValidation({
     !isLoading &&
     hasRequiredSecrets &&
     !isModelsLoading &&
+    // WHY: The model picker already surfaces model-list fetch errors (error row + retry).
+    // No chat-level banner; submit just stays disabled until the list loads.
     !isModelsError
   );
   const canCancel = isLoading;

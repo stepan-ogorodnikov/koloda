@@ -137,7 +137,8 @@ Each provider exposes a list of models fetched at runtime.
 The app fetches models when the user opens the model picker in a conversation, and whenever else the list is needed for that profile.
 The list is sorted alphabetically by display name.
 
-If the model list response is malformed, the error is surfaced to the user.
+If the fetch fails or the response is malformed, the error is surfaced to the user in the model picker: the profile section shows an error row with a retry action.
+A conversation adds no separate banner for this failure; sending is disabled while the profile's model list has not loaded successfully.
 
 ### Allowlist
 
