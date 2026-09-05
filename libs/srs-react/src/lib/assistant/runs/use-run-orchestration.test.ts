@@ -836,9 +836,36 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     );
 
     await act(async () => {
-      await expect(result.current.handleGenerate("closed")).rejects.toMatchObject({
-        name: "AssistantEngineClosedError",
-      });
+      await expect(result.current.handleGenerate("closed")).resolves.toBeUndefined();
+    });
+
+    expect(readState().messages).toHaveLength(0);
+    expect(readState().runs).toEqual({});
+    expect(readState().activeRunId).toBeNull();
+  });
+
+  it("async closed-engine submit rolls back the optimistic turn", async () => {
+    seedConversation("conv-1");
+    const dispatchCommand = vi.fn<DispatchCommand>(async () => {
+      throw new AssistantEngineClosedError("closed");
+    });
+
+    const cfg = makeConfig();
+    const { result } = renderHook(() =>
+      useRunOrchestration({
+        configRef: { current: cfg },
+        readState,
+        dispatch,
+        dispatchLocal: vi.fn(),
+        rememberLastUsedAIProfile: vi.fn(),
+        cancelActiveRun: vi.fn(),
+        dispatchCommand,
+        ensureConversationId: () => "conv-1",
+      }),
+    );
+
+    await act(async () => {
+      await expect(result.current.handleGenerate("closed-async")).resolves.toBeUndefined();
     });
 
     expect(readState().messages).toHaveLength(0);
@@ -872,7 +899,7 @@ describe("useRunOrchestration — submit in-flight guard", () => {
     });
   });
 
-  it("rethrows non-duplicate errors from submit command", async () => {
+  it("logs non-duplicate errors from submit command instead of rethrowing", async () => {
     seedConversation("conv-1");
     const dispatchCommand = vi.fn<DispatchCommand>(async () => {
       throw new Error("transport blew up");
@@ -892,16 +919,21 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       }),
     );
 
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     await act(async () => {
-      await expect(result.current.handleGenerate("fail")).rejects.toThrow("transport blew up");
+      await expect(result.current.handleGenerate("fail")).resolves.toBeUndefined();
     });
-
+    expect(consoleError).toHaveBeenCalledWith(
+      "Assistant command dispatch failed",
+      expect.objectContaining({ message: "transport blew up" }),
+    );
+    consoleError.mockRestore();
     expect(readState().messages).toHaveLength(0);
     expect(readState().runs).toEqual({});
     expect(readState().activeRunId).toBeNull();
   });
 
-  it("rethrows non-duplicate errors from retry command", async () => {
+  it("logs non-duplicate errors from retry command instead of rethrowing", async () => {
     seedConversation("conv-1");
     addFailedChatRun("run-1");
     const dispatchCommand = vi.fn<DispatchCommand>(async () => {
@@ -922,8 +954,15 @@ describe("useRunOrchestration — submit in-flight guard", () => {
       }),
     );
 
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     await act(async () => {
-      await expect(result.current.handleRetry("run-1")).rejects.toThrow("retry transport blew up");
+      await expect(result.current.handleRetry("run-1")).resolves.toBeUndefined();
     });
+
+    expect(consoleError).toHaveBeenCalledWith(
+      "Assistant command dispatch failed",
+      expect.objectContaining({ message: "retry transport blew up" }),
+    );
+    consoleError.mockRestore();
   });
 });

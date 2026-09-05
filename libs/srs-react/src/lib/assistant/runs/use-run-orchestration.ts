@@ -1,6 +1,6 @@
 import { getTextMessageContent } from "@koloda/ai";
 import { generateUUID } from "@koloda/app";
-import { AssistantDuplicateRunError } from "@koloda/assistant";
+import { AssistantDuplicateRunError, AssistantEngineClosedError } from "@koloda/assistant";
 import type { AssistantCommand } from "@koloda/assistant";
 import type { RefObject } from "react";
 import { useCallback, useRef } from "react";
@@ -9,6 +9,18 @@ import { assistantMessageId, userMessageId } from "../state/assistant-messages";
 import type { ConversationReducerAction, ConversationReducerState } from "../state/conversation-reducer";
 import { findLatestErroredRun, getVisibleMessages, hasRetryableTurn } from "../state/conversation-reducer";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
+
+// WHY: dispatchCommand rejections are engine verdicts, not transport failures
+// — duplicate is a no-op and engine-closed means teardown is already
+// abandoning the run. Real provider failures never reject here: the runtime
+// converts them to runTerminated failed events, which the UI already
+// surfaces. Anything else is an internal bug; log it instead of rethrowing —
+// submit/retry callers are fire-and-forget, so a rethrow is always an
+// unhandled rejection no one can act on.
+function logUnexpectedDispatchError(error: unknown): void {
+  if (error instanceof AssistantDuplicateRunError || error instanceof AssistantEngineClosedError) return;
+  console.error("Assistant command dispatch failed", error);
+}
 
 // INVARIANT: Session-only orchestration — UI talks to RunController; only `useAssistantSession` assembles these deps.
 type UseRunOrchestrationOptions = {
@@ -85,9 +97,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         // cannot retarget restart/stream ownership while retry is queued.
         await dispatchCommand(toRetryCommand(conversationId, runId, prepared));
       } catch (error) {
-        // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
-        if (error instanceof AssistantDuplicateRunError) return;
-        throw error;
+        logUnexpectedDispatchError(error);
       } finally {
         isSubmitInFlightByConversationRef.current.delete(conversationId);
       }
@@ -163,9 +173,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
         await pending;
       } catch (error) {
         if (submittedRunId) dispatch(["rollbackSubmitTurn", { runId: submittedRunId }]);
-        // WHY: Typed engine rejection — ignore; do not surface as a transport failure.
-        if (error instanceof AssistantDuplicateRunError) return;
-        throw error;
+        logUnexpectedDispatchError(error);
       } finally {
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);
       }
