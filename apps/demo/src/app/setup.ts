@@ -57,73 +57,66 @@ type SetupFromScratchData = Partial<InterfaceSettings>;
 
 // WHY: one transaction — an interrupted setup rolls back migrations too, so status stays "blank".
 export async function setupFromScratch(settings: SetupFromScratchData) {
-  try {
-    await ensureMigrationsTable();
-    const seed = await loadSeedData(settings.language ?? "en");
+  await ensureMigrationsTable();
+  const seed = await loadSeedData(settings.language ?? "en");
 
-    await db.transaction(async (tx) => {
-      // WORKAROUND: Drizzle's PgliteTransaction is not assignable to DB (PgliteDatabase) but shares the execute/insert surface used by helpers.
-      const client = tx as unknown as DB;
+  await db.transaction(async (tx) => {
+    // WORKAROUND: Drizzle's PgliteTransaction is not assignable to DB (PgliteDatabase) but shares the execute/insert surface used by helpers.
+    const client = tx as unknown as DB;
 
-      await applyPendingMigrations(client);
+    await applyPendingMigrations(client);
 
-      const algorithmIds = new Map<string, number>();
-      for (const algorithm of seed.algorithms) {
-        const returning = await addAlgorithm(client, { title: algorithm.title, content: algorithm.content });
-        if (!returning?.id) throw new AppError("db.add");
-        algorithmIds.set(algorithm.id, returning.id);
-      }
+    const algorithmIds = new Map<string, number>();
+    for (const algorithm of seed.algorithms) {
+      const returning = await addAlgorithm(client, { title: algorithm.title, content: algorithm.content });
+      if (!returning?.id) throw new AppError("db.add");
+      algorithmIds.set(algorithm.id, returning.id);
+    }
 
-      const templateIds = new Map<string, number>();
-      for (const template of seed.templates) {
-        const returning = await addTemplate(client, { title: template.title, content: template.content });
-        if (!returning?.id) throw new AppError("db.add");
-        templateIds.set(template.id, returning.id);
-      }
+    const templateIds = new Map<string, number>();
+    for (const template of seed.templates) {
+      const returning = await addTemplate(client, { title: template.title, content: template.content });
+      if (!returning?.id) throw new AppError("db.add");
+      templateIds.set(template.id, returning.id);
+    }
 
-      const algorithm = algorithmIds.get("simple");
-      const template = templateIds.get("type");
-      if (!algorithm || !template) throw new AppError("db.add");
+    const algorithm = algorithmIds.get("simple");
+    const template = templateIds.get("type");
+    if (!algorithm || !template) throw new AppError("db.add");
 
-      await setSettings(client, {
-        name: "interface",
-        content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }),
-      });
-      await setSettings(client, {
-        name: "learning",
-        content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
-      });
-      await setSettings(client, {
-        name: "hotkeys",
-        content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS),
-      });
-
-      for (const sample of seed.decks) {
-        const algorithmId = algorithmIds.get(sample.algorithm);
-        const templateId = templateIds.get(sample.template);
-        if (!algorithmId || !templateId) throw new AppError("db.add");
-
-        const deck = await addDeck(client, { title: sample.title, algorithmId, templateId });
-        if (!deck?.id) throw new AppError("db.add");
-
-        const results = await addCards(
-          client,
-          sample.cards.map((card) => ({
-            deckId: deck.id,
-            templateId,
-            content: {
-              "1": { text: card.front },
-              "2": { text: card.back },
-            },
-          })),
-        );
-        if (results.some((result) => result.error)) throw new AppError("db.add");
-      }
+    await setSettings(client, {
+      name: "interface",
+      content: interfaceSettingsValidation.parse({ ...DEFAULT_INTERFACE_SETTINGS, ...settings }),
+    });
+    await setSettings(client, {
+      name: "learning",
+      content: learningSettingsValidation.parse({ ...DEFAULT_LEARNING_SETTINGS, defaults: { algorithm, template } }),
+    });
+    await setSettings(client, {
+      name: "hotkeys",
+      content: hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS),
     });
 
-    return true;
-  } catch (e) {
-    console.error(e);
-    return false;
-  }
+    for (const sample of seed.decks) {
+      const algorithmId = algorithmIds.get(sample.algorithm);
+      const templateId = templateIds.get(sample.template);
+      if (!algorithmId || !templateId) throw new AppError("db.add");
+
+      const deck = await addDeck(client, { title: sample.title, algorithmId, templateId });
+      if (!deck?.id) throw new AppError("db.add");
+
+      const results = await addCards(
+        client,
+        sample.cards.map((card) => ({
+          deckId: deck.id,
+          templateId,
+          content: {
+            "1": { text: card.front },
+            "2": { text: card.back },
+          },
+        })),
+      );
+      if (results.some((result) => result.error)) throw new AppError("db.add");
+    }
+  });
 }

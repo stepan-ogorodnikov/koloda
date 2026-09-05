@@ -1,7 +1,11 @@
+import { Refresh04Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/app-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
   Button,
+  ErrorMessage,
   overlayFrame,
   OverlayFrameContent,
   OverlayFrameFooter,
@@ -20,19 +24,19 @@ export function Setup() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { mutate } = useMutation(appSetupMutationOptions);
+  const { mutate, isPending, isError, error } = useMutation(appSetupMutationOptions);
   const language = useAtomValue(langAtom);
   const scheme = useAtomValue(schemeAtom);
+  const setupError = isError && error ? formatAppError(error, _, ERROR_MESSAGES.unknown) : null;
 
   const handleClick = () => {
+    if (isPending) return;
     mutate(
       { language, scheme, t: _ },
       {
-        onSuccess: (result) => {
-          if (result) {
-            queryClient.resetQueries({ queryKey: ["app"] });
-            navigate({ to: "/dashboard" });
-          }
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["app"] });
+          navigate({ to: "/dashboard" });
         },
       },
     );
@@ -45,10 +49,22 @@ export function Setup() {
           <OverlayFrameTitle>{_(msg`app.setup.header`)}</OverlayFrameTitle>
         </OverlayFrameHeader>
         <OverlayFrameContent variants={{ class: "justify-center gap-4 min-h-32 text-center" }}>
-          <p>{_(msg`app.setup.message`)}</p>
+          {setupError ? (
+            <ErrorMessage message={setupError.message} details={setupError.details} />
+          ) : (
+            <p>{_(msg`app.setup.message`)}</p>
+          )}
         </OverlayFrameContent>
         <OverlayFrameFooter variants={{ class: "justify-center" }}>
-          <Button variants={{ style: "primary" }} onClick={handleClick}>
+          <Button variants={{ style: "primary" }} onClick={handleClick} isDisabled={isPending}>
+            {isPending && (
+              <HugeiconsIcon
+                className="size-5 min-w-5 animate-spin"
+                strokeWidth={1.75}
+                icon={Refresh04Icon}
+                aria-hidden="true"
+              />
+            )}
             {_(msg`app.setup.submit`)}
           </Button>
         </OverlayFrameFooter>

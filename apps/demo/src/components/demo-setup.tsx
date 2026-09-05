@@ -1,9 +1,11 @@
 import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { ColorSchemePicker, LanguagePicker } from "@koloda/app-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
   Button,
+  ErrorMessage,
   overlayFrame,
   OverlayFrameContent,
   OverlayFrameFooter,
@@ -23,22 +25,21 @@ export function DemoSetup() {
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { mutate, isPending } = useMutation(demoSetupMutationOptions);
+  const { mutate, isPending, isError, error } = useMutation(demoSetupMutationOptions);
   const language = useAtomValue(langAtom);
   const scheme = useAtomValue(schemeAtom);
   const support = getDemoBrowserSupport();
   const canSubmit = support.canRun && !isPending;
+  const setupError = isError && error ? formatAppError(error, _, ERROR_MESSAGES.unknown) : null;
 
   const handleClick = () => {
     if (!canSubmit) return;
     mutate(
       { language, scheme },
       {
-        onSuccess: (result) => {
-          if (result) {
-            queryClient.resetQueries({ queryKey: ["app"] });
-            navigate({ to: "/dashboard" });
-          }
+        onSuccess: () => {
+          queryClient.resetQueries({ queryKey: ["app"] });
+          navigate({ to: "/dashboard" });
         },
       },
     );
@@ -53,6 +54,8 @@ export function DemoSetup() {
         <OverlayFrameContent variants={{ class: "justify-center gap-3 py-8 text-center text-balance" }}>
           {isPending ? (
             <p className="animate-shimmer-text--fg-level-4/fg-level-1">{_(msg`demo.setup.loading`)}</p>
+          ) : setupError ? (
+            <ErrorMessage message={setupError.message} details={setupError.details} />
           ) : (
             <>
               <p>{_(msg`demo.setup.storage`)}</p>

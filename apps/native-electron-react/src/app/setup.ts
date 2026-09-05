@@ -12,13 +12,7 @@ import { invoke } from "./electron";
 type DbStatus = "blank" | "ok";
 
 export async function getStatus() {
-  try {
-    const status = await invoke<DbStatus>("get_db_status");
-    return status;
-  } catch (error) {
-    console.error("Failed to get database status:", error);
-    return "blank";
-  }
+  return invoke<DbStatus>("get_db_status");
 }
 
 type seedParams = Partial<InterfaceSettings> & { t: I18nContext["_"] };
@@ -33,26 +27,19 @@ type SeedData = {
   };
 };
 
-export async function seedDB({ t, ...settings }: seedParams): Promise<boolean> {
-  try {
-    const status = await getStatus();
-    if (status === "ok") return true;
+export async function seedDB({ t, ...settings }: seedParams): Promise<void> {
+  const status = await getStatus();
+  if (status === "ok") return;
 
-    const title = t(msg`app.setup.default-title`);
-    const data: SeedData = {
-      algorithm: { title, content: DEFAULT_FSRS_ALGORITHM },
-      template: { ...DEFAULT_TEMPLATE, title },
-      settings: {
-        interface: { ...DEFAULT_INTERFACE_SETTINGS, ...settings },
-        learning: DEFAULT_LEARNING_SETTINGS,
-        hotkeys: DEFAULT_HOTKEYS_SETTINGS,
-      },
-    };
-    await invoke("seed_db", { data });
-
-    return true;
-  } catch (error) {
-    console.error("Failed to setup from scratch:", error);
-    return false;
-  }
+  const title = t(msg`app.setup.default-title`);
+  const data: SeedData = {
+    algorithm: { title, content: DEFAULT_FSRS_ALGORITHM },
+    template: { ...DEFAULT_TEMPLATE, title },
+    settings: {
+      interface: { ...DEFAULT_INTERFACE_SETTINGS, ...settings },
+      learning: DEFAULT_LEARNING_SETTINGS,
+      hotkeys: DEFAULT_HOTKEYS_SETTINGS,
+    },
+  };
+  await invoke("seed_db", { data });
 }
