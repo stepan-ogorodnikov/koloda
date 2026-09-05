@@ -18,9 +18,11 @@ Unit tests live in the app projects (`demo:test-unit`), not here.
 ## Architectural Map
 
 - Config: `playwright.config.ts` — single worker, serial specs, `en-US` / light scheme, failure-only artifacts.
-- Helpers: `src/helpers.ts` — seeded `localStorage` defaults (English, light, motion off), the first-setup drive,
-  and the shared CRUD, lesson, hotkey, AI profile, and assistant flows every spec composes.
-- AI mock: `src/mock-openai-compatible.ts` — intercepts `/v1/models` and `/v1/chat/completions` with `page.route`.
+- Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
+  suite's platform points: defaults seeded via an init script before first load and the web bootstrap copy
+  ("Setting up a demo"); slider helpers are demo-only.
+- AI mock: `src/mock-openai-compatible.ts` — `page.route` transport around the shared protocol in `libs/e2e`,
+  intercepting `/v1/models` and `/v1/chat/completions`.
   Same-origin base URL (`http://127.0.0.1:4300/v1`) so browser fetch never hits CORS.
   Serves SSE streams, tool calls, held responses, and failures from a FIFO queue per test.
 - Specs: `src/demo-*.spec.ts` — smoke, settings, decks, cards, templates, presets, lessons, hotkeys,

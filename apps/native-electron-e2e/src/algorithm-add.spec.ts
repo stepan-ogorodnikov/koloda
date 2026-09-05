@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { openNewAlgorithmDialog, setupApp, setupPageDefaults } from "./helpers";
+import { openNewPresetDialog, setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("validates required title and adds an algorithm", async ({ page }) => {
   await setupApp(page);
-  const dialog = await openNewAlgorithmDialog(page);
+  const dialog = await openNewPresetDialog(page);
 
   // Validation: empty title
   const titleField = dialog.getByLabel("Title", { exact: true });

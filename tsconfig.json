@@ -47,6 +47,9 @@
     },
     {
       "path": "./libs/assistant"
+    },
+    {
+      "path": "./libs/e2e"
     }
   ],
   "compilerOptions": {

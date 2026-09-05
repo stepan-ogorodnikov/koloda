@@ -1,9 +1,8 @@
-import type { Page } from "@playwright/test";
-import { applyPageDefaults, bootstrapApp } from "@koloda/e2e";
-
 export {
   addCard,
   addLmStudioProfile,
+  applyPageDefaults,
+  bootstrapApp,
   cardRows,
   conversationLog,
   createAlgorithm,
@@ -22,6 +21,7 @@ export {
   fillAIProfileTitle,
   getConversationIdFromUrl,
   getHotkeyByLabel,
+  getNavigation,
   gradeLessonCards,
   openAddAIDialog,
   openAssistantWithConversation,
@@ -35,6 +35,7 @@ export {
   openNewTemplateDialog,
   openSection,
   reorderWithKeyboard,
+  saveLearningSettings,
   selectAIProvider,
   sendAssistantMessage,
   setLearnAheadLimit,
@@ -44,12 +45,12 @@ export {
   submitEditAIDialog,
   waitForAssistantReady,
   waitForConversationIdFromUrl,
-} from "@koloda/e2e";
-
-export async function setupPageDefaults(page: Page) {
-  await applyPageDefaults(page, "after-load");
-}
-
-export async function setupApp(page: Page) {
-  await bootstrapApp(page, "Setting up your database");
-}
+} from "./ui-flows";
+export {
+  buildOpenAIChatCompletionJSON,
+  buildOpenAIChatCompletionSSE,
+  buildOpenAIToolCallJSON,
+  buildOpenAIToolCallSSE,
+  E2E_LM_STUDIO_MODEL_ID,
+} from "./ai-mock";
+export type { MockChatCompletionOptions, MockOpenAICompatibleHandle, MockOpenAICompatibleOptions } from "./ai-mock";

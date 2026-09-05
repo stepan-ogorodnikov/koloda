@@ -12,5 +12,13 @@
     ],
     "ignoreDeprecations": "6.0"
   },
-  "include": ["playwright.config.ts", "src/**/*.ts"]
+  "include": [
+    "playwright.config.ts",
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../libs/e2e"
+    }
+  ]
 }

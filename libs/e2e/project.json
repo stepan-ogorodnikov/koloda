@@ -1,0 +1,9 @@
+{
+  "name": "@koloda/e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/e2e/src",
+  "projectType": "library",
+  "tags": [
+    "type:e2e"
+  ]
+}

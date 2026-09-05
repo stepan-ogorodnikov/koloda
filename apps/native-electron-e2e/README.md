@@ -21,9 +21,11 @@ The web counterpart is `apps/demo-e2e`; the spec sets mirror each other flow for
 - Config: `playwright.config.ts` — single worker, serial specs, `en-US` / light scheme, failure-only artifacts.
 - Fixtures: `src/fixtures.ts` — `_electron.launch` per test with a throwaway `KOLODA_USER_DATA` temp dir (isolated SQLite),
   `KOLODA_E2E=1`, and the first window as `page`.
-- Helpers: `src/helpers.ts` — seeded `localStorage` defaults (English, light, motion off), the first-setup drive,
-  and the shared CRUD, lesson, hotkey, AI profile, and assistant flows every spec composes.
-- AI mock: `src/mock-openai-compatible.ts` — a real Node HTTP server, not `page.route` interception.
+- Helpers: `src/helpers.ts` — re-exports the shared UI flows from `libs/e2e` (`@koloda/e2e`) and wraps this
+  suite's platform points: defaults written into the already-loaded window followed by a reload, and the
+  desktop bootstrap copy ("Setting up your database").
+- AI mock: `src/mock-openai-compatible.ts` — a real Node HTTP server, not `page.route` interception,
+  built on the shared protocol in `libs/e2e`.
   AI HTTP runs in the Electron main process, invisible to renderer route interception;
   the handle returns the `baseUrl` to enter as the LM Studio profile.
   Serves SSE streams, tool calls, held responses, and failures from a FIFO queue per test.

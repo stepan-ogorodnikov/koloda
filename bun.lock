@@ -134,6 +134,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@koloda/ai": "workspace:*",
+        "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
         "@koloda/core-react": "workspace:*",
         "@koloda/srs-react": "workspace:*",
@@ -157,6 +158,10 @@
         "@koloda/app": "workspace:*",
         "@koloda/srs": "workspace:*",
       },
+    },
+    "libs/e2e": {
+      "name": "@koloda/e2e",
+      "version": "0.0.1",
     },
     "libs/srs": {
       "name": "@koloda/srs",
@@ -604,6 +609,8 @@
     "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
 
     "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
+
+    "@koloda/e2e": ["@koloda/e2e@workspace:libs/e2e"],
 
     "@koloda/native-electron": ["@koloda/native-electron@workspace:apps/native-electron"],
 
