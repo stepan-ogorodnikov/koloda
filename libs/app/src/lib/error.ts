@@ -137,7 +137,7 @@ export function getAIHttpErrorMessageDescriptor(code: string) {
 export function formatAppError(
   error: unknown,
   _: I18nContext["_"],
-  fallback: (typeof ERROR_MESSAGES)[ErrorCode] = ERROR_MESSAGES["db.delete"],
+  fallback: (typeof ERROR_MESSAGES)[ErrorCode] = ERROR_MESSAGES.unknown,
 ): { message: string; details?: string } {
   const catalog = isAppError(error)
     ? (getAIHttpErrorMessageDescriptor(error.code) ?? ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown)

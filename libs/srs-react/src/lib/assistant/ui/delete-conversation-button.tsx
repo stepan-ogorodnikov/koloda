@@ -1,6 +1,6 @@
 import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import type { DeleteConversationData } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
@@ -98,7 +98,7 @@ export function DeleteConversationButton({
             <AnimatePresence mode="wait">
               {error ? (
                 <Fade key="error">
-                  <ErrorMessage {...formatAppError(error, _)} />
+                  <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
                 </Fade>
               ) : (
                 <Fade key="message">{_(msg`ai.conversation.delete.message`)}</Fade>

@@ -13,18 +13,18 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/app/setup.ts:41
+#: src/app/setup.ts:34
 msgid "app.setup.default-title"
 msgstr "По умолчанию"
 
-#: src/components/setup.tsx:45
+#: src/components/setup.tsx:49
 msgid "app.setup.header"
 msgstr "Настройка базы данных"
 
-#: src/components/setup.tsx:48
+#: src/components/setup.tsx:55
 msgid "app.setup.message"
 msgstr "Похоже, это первый запуск приложения. Давайте создадим базу данных."
 
-#: src/components/setup.tsx:52
+#: src/components/setup.tsx:68
 msgid "app.setup.submit"
 msgstr "Начать работу"

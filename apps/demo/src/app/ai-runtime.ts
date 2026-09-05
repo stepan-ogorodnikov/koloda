@@ -1,5 +1,6 @@
 import type { AIRuntime } from "@koloda/ai";
 import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
+import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/srs-pgsql";
 import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
 import { loadAIProfileSecrets } from "./ai";
@@ -27,7 +28,7 @@ export function createDemoAIRuntime(db: DB): AIRuntime {
     // WHY: Demo has no IPC transport — ignore host requestId (logs already recorded it).
     chat: async (profileId, request, onChunk, abortSignal, _requestId) => {
       const secrets = await loadAIProfileSecrets(db, profileId);
-      if (!secrets) throw new Error("No secrets loaded for AI profile");
+      if (!secrets) throw new AppError("not-found.ai-profile", "No secrets loaded for AI profile");
       const client = createAIGenerationClient(secrets);
       // Demo is in-process: the executor binds directly and onToolEvent passes through untouched.
       const requestWithExecutor =

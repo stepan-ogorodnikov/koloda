@@ -23,7 +23,7 @@ msgstr "Провайдер прервал запрос"
 
 #: ../../libs/app/src/lib/error.ts:11
 msgid "ai.http {status}"
-msgstr "{status}"
+msgstr "Запрос завершился с ошибкой {status}"
 
 #: ../../libs/app/src/lib/error.ts:15
 msgid "ai.http.400"

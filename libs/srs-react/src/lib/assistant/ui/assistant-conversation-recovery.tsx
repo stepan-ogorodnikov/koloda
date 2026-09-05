@@ -1,4 +1,4 @@
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -183,7 +183,7 @@ export function AssistantConversationRecovery({
               <AnimatePresence mode="wait">
                 {deleteError ? (
                   <Fade key="error">
-                    <ErrorMessage {...formatAppError(deleteError, _)} />
+                    <ErrorMessage {...formatAppError(deleteError, _, ERROR_MESSAGES["db.delete"])} />
                   </Fade>
                 ) : (
                   <Fade key="message">{_(msg`ai.conversation.delete.message`)}</Fade>

@@ -1,4 +1,4 @@
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { defaultTemplateAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
@@ -63,7 +63,7 @@ export function DeleteTemplate({ id, isLocked }: DeleteTemplateProps) {
         <AnimatePresence>
           {error ? (
             <Fade>
-              <ErrorMessage {...formatAppError(error, _)} />
+              <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
             </Fade>
           ) : (
             <Fade>{_(msg`delete-template.message`)}</Fade>

@@ -1,4 +1,4 @@
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { defaultAlgorithmAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Algorithm } from "@koloda/srs";
@@ -63,7 +63,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
         <AnimatePresence>
           {error ? (
             <Fade>
-              <ErrorMessage {...formatAppError(error, _)} />
+              <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
             </Fade>
           ) : (
             <Fade>

@@ -120,9 +120,9 @@ describe("formatAppError", () => {
     });
   });
 
-  it("uses the delete fallback for a plain Error and treats its message as details", () => {
+  it("falls back to unknown for a plain Error and treats its message as details", () => {
     expect(formatAppError(new Error("network down"), translate)).toEqual({
-      message: "db.delete",
+      message: "unknown",
       details: "network down",
     });
   });

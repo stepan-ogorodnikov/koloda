@@ -1,4 +1,4 @@
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
 import { DeleteDialog, ErrorMessage, Fade } from "@koloda/ui";
@@ -42,7 +42,7 @@ export function DeleteCard({ id, deckId }: DeleteDeckProps) {
         <AnimatePresence>
           {error ? (
             <Fade>
-              <ErrorMessage {...formatAppError(error, _)} />
+              <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
             </Fade>
           ) : (
             <Fade>{_(msg`delete-card.message`)}</Fade>

@@ -1,6 +1,6 @@
 import { Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
 import { Button, Dialog, ErrorMessage, Fade } from "@koloda/ui";
@@ -58,7 +58,7 @@ export function CardsTableCellDeleteCard({ id, deckId }: CardsTableCellDeleteCar
               <AnimatePresence>
                 {error ? (
                   <Fade>
-                    <ErrorMessage layout="inline" {...formatAppError(error, _)} />
+                    <ErrorMessage layout="inline" {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
                   </Fade>
                 ) : (
                   <Fade>{_(msg`delete-card.message`)}</Fade>

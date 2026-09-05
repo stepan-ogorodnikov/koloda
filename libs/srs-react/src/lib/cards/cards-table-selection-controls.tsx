@@ -1,6 +1,6 @@
 import { Cancel01Icon, Delete03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { formatAppError } from "@koloda/app";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
 import { Button, Dialog, ErrorMessage, Fade, Number } from "@koloda/ui";
@@ -75,7 +75,7 @@ export function CardsTableSelectionControls({
                 <AnimatePresence>
                   {error ? (
                     <Fade>
-                      <ErrorMessage {...formatAppError(error, _)} />
+                      <ErrorMessage {...formatAppError(error, _, ERROR_MESSAGES["db.delete"])} />
                     </Fade>
                   ) : (
                     <Fade>{_(msg`cards.table.selection.delete-confirm`)}</Fade>
