@@ -21,7 +21,7 @@ msgstr "Drag to reorder this item"
 msgid "drag-handle.label"
 msgstr "Drag handle"
 
-#: ../../libs/ui/src/lib/ui/error-message.tsx:15
+#: ../../libs/ui/src/lib/ui/error-message.tsx:39
 msgid "error.details"
 msgstr "Details"
 

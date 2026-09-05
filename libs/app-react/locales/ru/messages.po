@@ -81,6 +81,18 @@ msgstr "Настройки"
 msgid "nav.templates"
 msgstr "Шаблоны"
 
+#: ../../libs/app-react/src/lib/components/route-error.tsx:18
+msgid "route-error.message"
+msgstr "Произошла ошибка"
+
+#: ../../libs/app-react/src/lib/components/route-error.tsx:29
+msgid "route-error.reload"
+msgstr "Перезагрузить приложение"
+
+#: ../../libs/app-react/src/lib/components/route-error.tsx:26
+msgid "route-error.retry"
+msgstr "Попробовать снова"
+
 #: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
 msgid "scheme.dark"
 msgstr "Тёмная"
@@ -131,7 +143,7 @@ msgid "settings.ai.delete.message"
 msgstr "Вы уверены, что хотите удалить этот профиль?"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:153
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:154
 msgid "settings.ai.edit.submit"
 msgstr "Сохранить"
 
@@ -180,11 +192,11 @@ msgstr "Поиск по моделям"
 msgid "settings.ai.models.search.placeholder"
 msgstr "Поиск по моделям"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:73
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:74
 msgid "settings.ai.models.title"
 msgstr "Модели"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:66
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:67
 msgid "settings.ai.models.trigger"
 msgstr "Модели"
 

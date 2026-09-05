@@ -1,5 +1,6 @@
 export * from "./lib/app-providers";
 export * from "./lib/components/app";
+export * from "./lib/components/route-error";
 export * from "./lib/hooks/use-app-hotkeys";
 export * from "./lib/hooks/use-global-sync";
 export * from "./lib/routes/__root";

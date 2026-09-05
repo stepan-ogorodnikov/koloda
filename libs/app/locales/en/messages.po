@@ -13,173 +13,173 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:51
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Title can't be longer than {maximum, plural, other {# characters}}"
 
-#: ../../libs/app/src/lib/error.ts:10
-msgid "ai.http {status}"
-msgstr "Request failed with status {status}"
-
-#: ../../libs/app/src/lib/error.ts:13
-msgid "ai.http.400"
-msgstr "The Request is invalid"
-
 #: ../../libs/app/src/lib/error.ts:14
-msgid "ai.http.401"
-msgstr "Authentication failed. Check your API key"
-
-#: ../../libs/app/src/lib/error.ts:15
-msgid "ai.http.402"
-msgstr "AI provider requires payment or available credits"
-
-#: ../../libs/app/src/lib/error.ts:16
-msgid "ai.http.403"
-msgstr "Access to this AI model or provider is forbidden"
-
-#: ../../libs/app/src/lib/error.ts:17
-msgid "ai.http.404"
-msgstr "The endpoint or model was not found"
-
-#: ../../libs/app/src/lib/error.ts:18
-msgid "ai.http.408"
-msgstr "The request timed out"
-
-#: ../../libs/app/src/lib/error.ts:19
-msgid "ai.http.413"
-msgstr "The request is too large"
-
-#: ../../libs/app/src/lib/error.ts:20
-msgid "ai.http.422"
-msgstr "AI provider could not process this request"
-
-#: ../../libs/app/src/lib/error.ts:21
-msgid "ai.http.429"
-msgstr "Too many requests. Try again in a moment"
-
-#: ../../libs/app/src/lib/error.ts:22
-msgid "ai.http.500"
-msgstr "AI provider failed to process the request"
-
-#: ../../libs/app/src/lib/error.ts:23
-msgid "ai.http.502"
-msgstr "AI provider is temporarily unreachable"
-
-#: ../../libs/app/src/lib/error.ts:24
-msgid "ai.http.503"
-msgstr "AI provider is temporarily unavailable"
-
-#: ../../libs/app/src/lib/error.ts:25
-msgid "ai.http.504"
-msgstr "AI provider took too long to respond"
-
-#: ../../libs/app/src/lib/error.ts:12
-msgid "ai.invalid-response"
-msgstr "AI provider returned an invalid response"
-
-#: ../../libs/app/src/lib/error.ts:11
-msgid "ai.network"
-msgstr "Could not reach the AI provider (network error or browser CORS block)"
-
-#: ../../libs/app/src/lib/error.ts:13
 msgid "ai.aborted"
 msgstr "The AI provider aborted the request"
 
+#: ../../libs/app/src/lib/error.ts:11
+msgid "ai.http {status}"
+msgstr "Request failed with status {status}"
+
+#: ../../libs/app/src/lib/error.ts:15
+msgid "ai.http.400"
+msgstr "The Request is invalid"
+
+#: ../../libs/app/src/lib/error.ts:16
+msgid "ai.http.401"
+msgstr "Authentication failed. Check your API key"
+
+#: ../../libs/app/src/lib/error.ts:17
+msgid "ai.http.402"
+msgstr "AI provider requires payment or available credits"
+
+#: ../../libs/app/src/lib/error.ts:18
+msgid "ai.http.403"
+msgstr "Access to this AI model or provider is forbidden"
+
+#: ../../libs/app/src/lib/error.ts:19
+msgid "ai.http.404"
+msgstr "The endpoint or model was not found"
+
+#: ../../libs/app/src/lib/error.ts:20
+msgid "ai.http.408"
+msgstr "The request timed out"
+
+#: ../../libs/app/src/lib/error.ts:21
+msgid "ai.http.413"
+msgstr "The request is too large"
+
+#: ../../libs/app/src/lib/error.ts:22
+msgid "ai.http.422"
+msgstr "AI provider could not process this request"
+
+#: ../../libs/app/src/lib/error.ts:23
+msgid "ai.http.429"
+msgstr "Too many requests. Try again in a moment"
+
+#: ../../libs/app/src/lib/error.ts:24
+msgid "ai.http.500"
+msgstr "AI provider failed to process the request"
+
+#: ../../libs/app/src/lib/error.ts:25
+msgid "ai.http.502"
+msgstr "AI provider is temporarily unreachable"
+
+#: ../../libs/app/src/lib/error.ts:26
+msgid "ai.http.503"
+msgstr "AI provider is temporarily unavailable"
+
 #: ../../libs/app/src/lib/error.ts:27
+msgid "ai.http.504"
+msgstr "AI provider took too long to respond"
+
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.invalid-response"
+msgstr "AI provider returned an invalid response"
+
+#: ../../libs/app/src/lib/error.ts:12
+msgid "ai.network"
+msgstr "Could not reach the AI provider (network error or browser CORS block)"
+
+#: ../../libs/app/src/lib/error.ts:29
 msgid "db.add"
 msgstr "Failed to add data"
 
-#: ../../libs/app/src/lib/error.ts:30
+#: ../../libs/app/src/lib/error.ts:32
 msgid "db.clone"
 msgstr "Failed to clone data"
 
-#: ../../libs/app/src/lib/error.ts:29
+#: ../../libs/app/src/lib/error.ts:31
 msgid "db.delete"
 msgstr "Failed to delete data"
 
-#: ../../libs/app/src/lib/error.ts:26
+#: ../../libs/app/src/lib/error.ts:28
 msgid "db.get"
 msgstr "Failed to load data"
 
-#: ../../libs/app/src/lib/error.ts:28
+#: ../../libs/app/src/lib/error.ts:30
 msgid "db.update"
 msgstr "Failed to update data"
 
-#: ../../libs/app/src/lib/error.ts:84
-#: ../../libs/app/src/lib/error.ts:92
+#: ../../libs/app/src/lib/error.ts:86
+#: ../../libs/app/src/lib/error.ts:94
 msgid "Difficulty must be between 0 and 10"
 msgstr "Difficulty must be between 0 and 10"
 
-#: ../../libs/app/src/lib/error.ts:97
+#: ../../libs/app/src/lib/error.ts:99
 msgid "Failed to access the system keyring"
 msgstr "Failed to access the system keyring"
 
-#: ../../libs/app/src/lib/error.ts:99
+#: ../../libs/app/src/lib/error.ts:101
 msgid "Failed to access Windows credentials"
 msgstr "Failed to access Windows credentials"
 
-#: ../../libs/app/src/lib/error.ts:82
+#: ../../libs/app/src/lib/error.ts:84
 msgid "Invalid card state"
 msgstr "Invalid card state"
 
-#: ../../libs/app/src/lib/error.ts:60
+#: ../../libs/app/src/lib/error.ts:62
 msgid "Invalid color scheme"
 msgstr "Invalid color scheme"
 
-#: ../../libs/app/src/lib/error.ts:62
+#: ../../libs/app/src/lib/error.ts:64
 msgid "Invalid dark theme"
 msgstr "Invalid dark theme"
 
-#: ../../libs/app/src/lib/error.ts:70
+#: ../../libs/app/src/lib/error.ts:72
 msgid "Invalid FSRS weights"
 msgstr "Invalid FSRS weights"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:61
 msgid "Invalid language"
 msgstr "Invalid language"
 
-#: ../../libs/app/src/lib/error.ts:96
+#: ../../libs/app/src/lib/error.ts:98
 msgid "Invalid learning settings"
 msgstr "Invalid learning settings"
 
-#: ../../libs/app/src/lib/error.ts:66
+#: ../../libs/app/src/lib/error.ts:68
 msgid "Invalid learning step unit"
 msgstr "Invalid learning step unit"
 
-#: ../../libs/app/src/lib/error.ts:61
+#: ../../libs/app/src/lib/error.ts:63
 msgid "Invalid light theme"
 msgstr "Invalid light theme"
 
-#: ../../libs/app/src/lib/error.ts:63
+#: ../../libs/app/src/lib/error.ts:65
 msgid "Invalid motion setting"
 msgstr "Invalid motion setting"
 
-#: ../../libs/app/src/lib/error.ts:68
+#: ../../libs/app/src/lib/error.ts:70
 msgid "Invalid relearning step unit"
 msgstr "Invalid relearning step unit"
 
-#: ../../libs/app/src/lib/error.ts:89
+#: ../../libs/app/src/lib/error.ts:91
 msgid "Invalid review rating"
 msgstr "Invalid review rating"
 
-#: ../../libs/app/src/lib/error.ts:90
+#: ../../libs/app/src/lib/error.ts:92
 msgid "Invalid review state"
 msgstr "Invalid review state"
 
-#: ../../libs/app/src/lib/error.ts:88
+#: ../../libs/app/src/lib/error.ts:90
 msgid "Lapses must be non-negative"
 msgstr "Lapses must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:65
+#: ../../libs/app/src/lib/error.ts:67
 msgid "Learning step amount must be greater than zero"
 msgstr "Learning step amount must be greater than zero"
 
-#: ../../libs/app/src/lib/error.ts:86
-#: ../../libs/app/src/lib/error.ts:94
+#: ../../libs/app/src/lib/error.ts:88
+#: ../../libs/app/src/lib/error.ts:96
 msgid "Learning steps must be non-negative"
 msgstr "Learning steps must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:69
+#: ../../libs/app/src/lib/error.ts:71
 msgid "Maximum interval must be greater than zero"
 msgstr "Maximum interval must be greater than zero"
 
@@ -195,88 +195,88 @@ msgstr "Enabled"
 msgid "motion.system"
 msgstr "Automatic"
 
-#: ../../libs/app/src/lib/error.ts:46
+#: ../../libs/app/src/lib/error.ts:48
 msgid "not-found.ai-profile"
 msgstr "AI profile not found"
 
-#: ../../libs/app/src/lib/error.ts:31
+#: ../../libs/app/src/lib/error.ts:33
 msgid "not-found.algorithms.clone.source"
 msgstr "Source preset not found"
 
-#: ../../libs/app/src/lib/error.ts:33
+#: ../../libs/app/src/lib/error.ts:35
 msgid "not-found.algorithms.delete.successor"
 msgstr "Successor preset not found"
 
-#: ../../libs/app/src/lib/error.ts:32
+#: ../../libs/app/src/lib/error.ts:34
 msgid "not-found.algorithms.update.algorithm"
 msgstr "Preset not found"
 
-#: ../../libs/app/src/lib/error.ts:36
+#: ../../libs/app/src/lib/error.ts:38
 msgid "not-found.cards.add.deck"
 msgstr "Deck not found"
 
-#: ../../libs/app/src/lib/error.ts:37
+#: ../../libs/app/src/lib/error.ts:39
 msgid "not-found.cards.add.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:39
+#: ../../libs/app/src/lib/error.ts:41
 msgid "not-found.cards.reset.card"
 msgstr "Card not found"
 
-#: ../../libs/app/src/lib/error.ts:38
+#: ../../libs/app/src/lib/error.ts:40
 msgid "not-found.cards.update.card"
 msgstr "Card not found"
 
-#: ../../libs/app/src/lib/error.ts:40
+#: ../../libs/app/src/lib/error.ts:42
 msgid "not-found.cards.update.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:41
+#: ../../libs/app/src/lib/error.ts:43
 msgid "not-found.decks.add.algorithm"
 msgstr "Preset not found"
 
-#: ../../libs/app/src/lib/error.ts:42
+#: ../../libs/app/src/lib/error.ts:44
 msgid "not-found.decks.add.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:44
+#: ../../libs/app/src/lib/error.ts:46
 msgid "not-found.decks.update.algorithm"
 msgstr "Preset not found"
 
-#: ../../libs/app/src/lib/error.ts:43
+#: ../../libs/app/src/lib/error.ts:45
 msgid "not-found.decks.update.deck"
 msgstr "Deck not found"
 
-#: ../../libs/app/src/lib/error.ts:45
+#: ../../libs/app/src/lib/error.ts:47
 msgid "not-found.decks.update.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:34
+#: ../../libs/app/src/lib/error.ts:36
 msgid "not-found.templates.clone.source"
 msgstr "Source template not found"
 
-#: ../../libs/app/src/lib/error.ts:35
+#: ../../libs/app/src/lib/error.ts:37
 msgid "not-found.templates.update.template"
 msgstr "Template not found"
 
-#: ../../libs/app/src/lib/error.ts:67
+#: ../../libs/app/src/lib/error.ts:69
 msgid "Relearning step amount must be greater than zero"
 msgstr "Relearning step amount must be greater than zero"
 
-#: ../../libs/app/src/lib/error.ts:87
+#: ../../libs/app/src/lib/error.ts:89
 msgid "Reps must be non-negative"
 msgstr "Reps must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:64
+#: ../../libs/app/src/lib/error.ts:66
 msgid "Retention must be between 70% and 99%"
 msgstr "Retention must be between 70% and 99%"
 
-#: ../../libs/app/src/lib/error.ts:95
+#: ../../libs/app/src/lib/error.ts:97
 msgid "Review time must be non-negative"
 msgstr "Review time must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:85
-#: ../../libs/app/src/lib/error.ts:93
+#: ../../libs/app/src/lib/error.ts:87
+#: ../../libs/app/src/lib/error.ts:95
 msgid "Scheduled days must be non-negative"
 msgstr "Scheduled days must be non-negative"
 
@@ -292,7 +292,7 @@ msgstr "Light"
 msgid "scheme.system"
 msgstr "System"
 
-#: ../../libs/app/src/lib/error.ts:98
+#: ../../libs/app/src/lib/error.ts:100
 msgid "Secret store is unavailable"
 msgstr "Secret store is unavailable"
 
@@ -440,95 +440,95 @@ msgstr "Toggle color scheme"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Toggle sidebar"
 
-#: ../../libs/app/src/lib/error.ts:83
-#: ../../libs/app/src/lib/error.ts:91
+#: ../../libs/app/src/lib/error.ts:85
+#: ../../libs/app/src/lib/error.ts:93
 msgid "Stability must be non-negative"
 msgstr "Stability must be non-negative"
 
-#: ../../libs/app/src/lib/error.ts:9
+#: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"
 msgstr "An error occurred"
 
-#: ../../libs/app/src/lib/error.ts:75
+#: ../../libs/app/src/lib/error.ts:77
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Failed to generate unique profile id"
 
-#: ../../libs/app/src/lib/error.ts:76
+#: ../../libs/app/src/lib/error.ts:78
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Temperature must be between 0 and 2"
 
-#: ../../libs/app/src/lib/error.ts:81
+#: ../../libs/app/src/lib/error.ts:83
 msgid "validation.cards.content.field-empty"
 msgstr "This field can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:49
 msgid "validation.common.title.too-short"
 msgstr "Title can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:59
 msgid "validation.lessons.amounts.negative"
 msgstr "Amount can't be negative"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:58
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "Card id and review card id don't match"
 
-#: ../../libs/app/src/lib/error.ts:74
+#: ../../libs/app/src/lib/error.ts:76
 msgid "validation.settings-ai.profiles.whitelist-model-ids"
 msgstr "Model id can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:71
+#: ../../libs/app/src/lib/error.ts:73
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key can't be empty"
 
-#: ../../libs/app/src/lib/error.ts:72
+#: ../../libs/app/src/lib/error.ts:74
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Invalid URL"
 
-#: ../../libs/app/src/lib/error.ts:73
+#: ../../libs/app/src/lib/error.ts:75
 msgid "validation.settings-ai.providers.id"
 msgstr "Profile id is required"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:60
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "There are conflicting hotkeys"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Learn can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Review can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "New can't be more than total"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:57
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Start of the day is incorrect"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Hours must be between 0 and 48"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:56
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Minutes must be between 0 and 59"
 
-#: ../../libs/app/src/lib/error.ts:80
+#: ../../libs/app/src/lib/error.ts:82
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
-#: ../../libs/app/src/lib/error.ts:77
+#: ../../libs/app/src/lib/error.ts:79
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
 
-#: ../../libs/app/src/lib/error.ts:78
+#: ../../libs/app/src/lib/error.ts:80
 msgid "validation.templates.layout.too-few"
 msgstr "There has to be at least one layout item"
 
-#: ../../libs/app/src/lib/error.ts:79
+#: ../../libs/app/src/lib/error.ts:81
 msgid "validation.templates.update-locked"
 msgstr "Cannot update locked template"

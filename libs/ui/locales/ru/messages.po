@@ -21,7 +21,7 @@ msgstr "Перетащите для изменения порядка распо
 msgid "drag-handle.label"
 msgstr "Контроллер перетаскивания"
 
-#: ../../libs/ui/src/lib/ui/error-message.tsx:15
+#: ../../libs/ui/src/lib/ui/error-message.tsx:39
 msgid "error.details"
 msgstr "Подробности"
 

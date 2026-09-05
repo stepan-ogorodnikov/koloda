@@ -81,6 +81,18 @@ msgstr "Settings"
 msgid "nav.templates"
 msgstr "Templates"
 
+#: ../../libs/app-react/src/lib/components/route-error.tsx:18
+msgid "route-error.message"
+msgstr "Something went wrong"
+
+#: ../../libs/app-react/src/lib/components/route-error.tsx:29
+msgid "route-error.reload"
+msgstr "Reload app"
+
+#: ../../libs/app-react/src/lib/components/route-error.tsx:26
+msgid "route-error.retry"
+msgstr "Try again"
+
 #: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
 msgid "scheme.dark"
 msgstr "Dark"
@@ -131,7 +143,7 @@ msgid "settings.ai.delete.message"
 msgstr "Are you sure you want to delete this profile?"
 
 #: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:153
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:154
 msgid "settings.ai.edit.submit"
 msgstr "Save"
 
@@ -180,11 +192,11 @@ msgstr "Search models"
 msgid "settings.ai.models.search.placeholder"
 msgstr "Search models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:73
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:74
 msgid "settings.ai.models.title"
 msgstr "Models"
 
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:66
+#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:67
 msgid "settings.ai.models.trigger"
 msgstr "Models"
 

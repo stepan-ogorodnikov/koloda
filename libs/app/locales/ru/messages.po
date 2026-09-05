@@ -13,173 +13,173 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: ../../libs/app/src/lib/error.ts:49
+#: ../../libs/app/src/lib/error.ts:51
 msgid "{maximum, plural, other {validation.common.title.too-long}}"
 msgstr "Название не может быть длиннее {maximum, plural, one {# символа} few {# символов} many {# символов} other {# символов}}"
 
-#: ../../libs/app/src/lib/error.ts:10
-msgid "ai.http {status}"
-msgstr "{status}"
-
-#: ../../libs/app/src/lib/error.ts:13
-msgid "ai.http.400"
-msgstr "Некорректный формат запроса"
-
 #: ../../libs/app/src/lib/error.ts:14
-msgid "ai.http.401"
-msgstr "Ошибка авторизации. Проверьте учётные данные"
-
-#: ../../libs/app/src/lib/error.ts:15
-msgid "ai.http.402"
-msgstr "Для провайдера нужна оплата или доступные кредиты"
-
-#: ../../libs/app/src/lib/error.ts:16
-msgid "ai.http.403"
-msgstr "Нет доступа к этой модели или провайдеру"
-
-#: ../../libs/app/src/lib/error.ts:17
-msgid "ai.http.404"
-msgstr "Эндпоинт или модель не найдены"
-
-#: ../../libs/app/src/lib/error.ts:18
-msgid "ai.http.408"
-msgstr "Таймаут запроса"
-
-#: ../../libs/app/src/lib/error.ts:19
-msgid "ai.http.413"
-msgstr "Слишком большой запрос"
-
-#: ../../libs/app/src/lib/error.ts:20
-msgid "ai.http.422"
-msgstr "Провайдер не смог обработать этот запрос"
-
-#: ../../libs/app/src/lib/error.ts:21
-msgid "ai.http.429"
-msgstr "Слишком много запросов. Попробуйте чуть позже"
-
-#: ../../libs/app/src/lib/error.ts:22
-msgid "ai.http.500"
-msgstr "Провайдер не смог обработать запрос"
-
-#: ../../libs/app/src/lib/error.ts:23
-msgid "ai.http.502"
-msgstr "Провайдер временно недоступен"
-
-#: ../../libs/app/src/lib/error.ts:24
-msgid "ai.http.503"
-msgstr "Сервис временно недоступен"
-
-#: ../../libs/app/src/lib/error.ts:25
-msgid "ai.http.504"
-msgstr "Провайдер слишком долго отвечает"
-
-#: ../../libs/app/src/lib/error.ts:12
-msgid "ai.invalid-response"
-msgstr "Провайдер вернул некорректный ответ"
-
-#: ../../libs/app/src/lib/error.ts:11
-msgid "ai.network"
-msgstr "Не удалось связаться с провайдером (ошибка сети или блокировка CORS в браузере)"
-
-#: ../../libs/app/src/lib/error.ts:13
 msgid "ai.aborted"
 msgstr "Провайдер прервал запрос"
 
+#: ../../libs/app/src/lib/error.ts:11
+msgid "ai.http {status}"
+msgstr "{status}"
+
+#: ../../libs/app/src/lib/error.ts:15
+msgid "ai.http.400"
+msgstr "Некорректный формат запроса"
+
+#: ../../libs/app/src/lib/error.ts:16
+msgid "ai.http.401"
+msgstr "Ошибка авторизации. Проверьте учётные данные"
+
+#: ../../libs/app/src/lib/error.ts:17
+msgid "ai.http.402"
+msgstr "Для провайдера нужна оплата или доступные кредиты"
+
+#: ../../libs/app/src/lib/error.ts:18
+msgid "ai.http.403"
+msgstr "Нет доступа к этой модели или провайдеру"
+
+#: ../../libs/app/src/lib/error.ts:19
+msgid "ai.http.404"
+msgstr "Эндпоинт или модель не найдены"
+
+#: ../../libs/app/src/lib/error.ts:20
+msgid "ai.http.408"
+msgstr "Таймаут запроса"
+
+#: ../../libs/app/src/lib/error.ts:21
+msgid "ai.http.413"
+msgstr "Слишком большой запрос"
+
+#: ../../libs/app/src/lib/error.ts:22
+msgid "ai.http.422"
+msgstr "Провайдер не смог обработать этот запрос"
+
+#: ../../libs/app/src/lib/error.ts:23
+msgid "ai.http.429"
+msgstr "Слишком много запросов. Попробуйте чуть позже"
+
+#: ../../libs/app/src/lib/error.ts:24
+msgid "ai.http.500"
+msgstr "Провайдер не смог обработать запрос"
+
+#: ../../libs/app/src/lib/error.ts:25
+msgid "ai.http.502"
+msgstr "Провайдер временно недоступен"
+
+#: ../../libs/app/src/lib/error.ts:26
+msgid "ai.http.503"
+msgstr "Сервис временно недоступен"
+
 #: ../../libs/app/src/lib/error.ts:27
+msgid "ai.http.504"
+msgstr "Провайдер слишком долго отвечает"
+
+#: ../../libs/app/src/lib/error.ts:13
+msgid "ai.invalid-response"
+msgstr "Провайдер вернул некорректный ответ"
+
+#: ../../libs/app/src/lib/error.ts:12
+msgid "ai.network"
+msgstr "Не удалось связаться с провайдером (ошибка сети или блокировка CORS в браузере)"
+
+#: ../../libs/app/src/lib/error.ts:29
 msgid "db.add"
 msgstr "Не удалось выполнить операцию"
 
-#: ../../libs/app/src/lib/error.ts:30
+#: ../../libs/app/src/lib/error.ts:32
 msgid "db.clone"
 msgstr "Не удалось выполнить операцию"
 
-#: ../../libs/app/src/lib/error.ts:29
+#: ../../libs/app/src/lib/error.ts:31
 msgid "db.delete"
 msgstr "Не удалось выполнить операцию"
 
-#: ../../libs/app/src/lib/error.ts:26
+#: ../../libs/app/src/lib/error.ts:28
 msgid "db.get"
 msgstr "Не удалось загрузить данные"
 
-#: ../../libs/app/src/lib/error.ts:28
+#: ../../libs/app/src/lib/error.ts:30
 msgid "db.update"
 msgstr "Не удалось обновить данные"
 
-#: ../../libs/app/src/lib/error.ts:84
-#: ../../libs/app/src/lib/error.ts:92
+#: ../../libs/app/src/lib/error.ts:86
+#: ../../libs/app/src/lib/error.ts:94
 msgid "Difficulty must be between 0 and 10"
 msgstr "Сложность должна быть от 0 до 10"
 
-#: ../../libs/app/src/lib/error.ts:97
+#: ../../libs/app/src/lib/error.ts:99
 msgid "Failed to access the system keyring"
 msgstr "Не удалось получить доступ к системному хранилищу ключей"
 
-#: ../../libs/app/src/lib/error.ts:99
+#: ../../libs/app/src/lib/error.ts:101
 msgid "Failed to access Windows credentials"
 msgstr "Не удалось получить доступ к учётным данным Windows"
 
-#: ../../libs/app/src/lib/error.ts:82
+#: ../../libs/app/src/lib/error.ts:84
 msgid "Invalid card state"
 msgstr "Недопустимое состояние карточки"
 
-#: ../../libs/app/src/lib/error.ts:60
+#: ../../libs/app/src/lib/error.ts:62
 msgid "Invalid color scheme"
 msgstr "Недопустимая цветовая схема"
 
-#: ../../libs/app/src/lib/error.ts:62
+#: ../../libs/app/src/lib/error.ts:64
 msgid "Invalid dark theme"
 msgstr "Недопустимая тёмная тема"
 
-#: ../../libs/app/src/lib/error.ts:70
+#: ../../libs/app/src/lib/error.ts:72
 msgid "Invalid FSRS weights"
 msgstr "Недопустимые веса FSRS"
 
-#: ../../libs/app/src/lib/error.ts:59
+#: ../../libs/app/src/lib/error.ts:61
 msgid "Invalid language"
 msgstr "Недопустимый язык"
 
-#: ../../libs/app/src/lib/error.ts:96
+#: ../../libs/app/src/lib/error.ts:98
 msgid "Invalid learning settings"
 msgstr "Недопустимые настройки обучения"
 
-#: ../../libs/app/src/lib/error.ts:66
+#: ../../libs/app/src/lib/error.ts:68
 msgid "Invalid learning step unit"
 msgstr "Недопустимая единица шага обучения"
 
-#: ../../libs/app/src/lib/error.ts:61
+#: ../../libs/app/src/lib/error.ts:63
 msgid "Invalid light theme"
 msgstr "Недопустимая светлая тема"
 
-#: ../../libs/app/src/lib/error.ts:63
+#: ../../libs/app/src/lib/error.ts:65
 msgid "Invalid motion setting"
 msgstr "Недопустимая настройка анимации"
 
-#: ../../libs/app/src/lib/error.ts:68
+#: ../../libs/app/src/lib/error.ts:70
 msgid "Invalid relearning step unit"
 msgstr "Недопустимая единица шага переобучения"
 
-#: ../../libs/app/src/lib/error.ts:89
+#: ../../libs/app/src/lib/error.ts:91
 msgid "Invalid review rating"
 msgstr "Недопустимая оценка повторения"
 
-#: ../../libs/app/src/lib/error.ts:90
+#: ../../libs/app/src/lib/error.ts:92
 msgid "Invalid review state"
 msgstr "Недопустимое состояние повторения"
 
-#: ../../libs/app/src/lib/error.ts:88
+#: ../../libs/app/src/lib/error.ts:90
 msgid "Lapses must be non-negative"
 msgstr "Количество провалов не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:65
+#: ../../libs/app/src/lib/error.ts:67
 msgid "Learning step amount must be greater than zero"
 msgstr "Длительность шага обучения должна быть больше нуля"
 
-#: ../../libs/app/src/lib/error.ts:86
-#: ../../libs/app/src/lib/error.ts:94
+#: ../../libs/app/src/lib/error.ts:88
+#: ../../libs/app/src/lib/error.ts:96
 msgid "Learning steps must be non-negative"
 msgstr "Количество шагов обучения не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:69
+#: ../../libs/app/src/lib/error.ts:71
 msgid "Maximum interval must be greater than zero"
 msgstr "Максимальный интервал должен быть больше нуля"
 
@@ -195,88 +195,88 @@ msgstr "Включено"
 msgid "motion.system"
 msgstr "Как в системе"
 
-#: ../../libs/app/src/lib/error.ts:46
+#: ../../libs/app/src/lib/error.ts:48
 msgid "not-found.ai-profile"
 msgstr "Профиль не найден"
 
-#: ../../libs/app/src/lib/error.ts:31
+#: ../../libs/app/src/lib/error.ts:33
 msgid "not-found.algorithms.clone.source"
 msgstr "Исходный алгоритм не найден"
 
-#: ../../libs/app/src/lib/error.ts:33
+#: ../../libs/app/src/lib/error.ts:35
 msgid "not-found.algorithms.delete.successor"
 msgstr "Алгоритм-наследник не найден"
 
-#: ../../libs/app/src/lib/error.ts:32
+#: ../../libs/app/src/lib/error.ts:34
 msgid "not-found.algorithms.update.algorithm"
 msgstr "Алгоритм не найден"
 
-#: ../../libs/app/src/lib/error.ts:36
+#: ../../libs/app/src/lib/error.ts:38
 msgid "not-found.cards.add.deck"
 msgstr "Колода не найдена"
 
-#: ../../libs/app/src/lib/error.ts:37
+#: ../../libs/app/src/lib/error.ts:39
 msgid "not-found.cards.add.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:39
+#: ../../libs/app/src/lib/error.ts:41
 msgid "not-found.cards.reset.card"
 msgstr "Карточка не найдена"
 
-#: ../../libs/app/src/lib/error.ts:38
+#: ../../libs/app/src/lib/error.ts:40
 msgid "not-found.cards.update.card"
 msgstr "Карточка не найдена"
 
-#: ../../libs/app/src/lib/error.ts:40
+#: ../../libs/app/src/lib/error.ts:42
 msgid "not-found.cards.update.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:41
+#: ../../libs/app/src/lib/error.ts:43
 msgid "not-found.decks.add.algorithm"
 msgstr "Алгоритм не найден"
 
-#: ../../libs/app/src/lib/error.ts:42
+#: ../../libs/app/src/lib/error.ts:44
 msgid "not-found.decks.add.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:44
+#: ../../libs/app/src/lib/error.ts:46
 msgid "not-found.decks.update.algorithm"
 msgstr "Алгоритм не найден"
 
-#: ../../libs/app/src/lib/error.ts:43
+#: ../../libs/app/src/lib/error.ts:45
 msgid "not-found.decks.update.deck"
 msgstr "Колода не найдена"
 
-#: ../../libs/app/src/lib/error.ts:45
+#: ../../libs/app/src/lib/error.ts:47
 msgid "not-found.decks.update.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:34
+#: ../../libs/app/src/lib/error.ts:36
 msgid "not-found.templates.clone.source"
 msgstr "Исходный шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:35
+#: ../../libs/app/src/lib/error.ts:37
 msgid "not-found.templates.update.template"
 msgstr "Шаблон не найден"
 
-#: ../../libs/app/src/lib/error.ts:67
+#: ../../libs/app/src/lib/error.ts:69
 msgid "Relearning step amount must be greater than zero"
 msgstr "Длительность шага переобучения должна быть больше нуля"
 
-#: ../../libs/app/src/lib/error.ts:87
+#: ../../libs/app/src/lib/error.ts:89
 msgid "Reps must be non-negative"
 msgstr "Количество повторений не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:64
+#: ../../libs/app/src/lib/error.ts:66
 msgid "Retention must be between 70% and 99%"
 msgstr "Удержание должно быть от 70% до 99%"
 
-#: ../../libs/app/src/lib/error.ts:95
+#: ../../libs/app/src/lib/error.ts:97
 msgid "Review time must be non-negative"
 msgstr "Время повторения не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:85
-#: ../../libs/app/src/lib/error.ts:93
+#: ../../libs/app/src/lib/error.ts:87
+#: ../../libs/app/src/lib/error.ts:95
 msgid "Scheduled days must be non-negative"
 msgstr "Запланированные дни не могут быть отрицательными"
 
@@ -292,7 +292,7 @@ msgstr "Светлая"
 msgid "scheme.system"
 msgstr "Системная"
 
-#: ../../libs/app/src/lib/error.ts:98
+#: ../../libs/app/src/lib/error.ts:100
 msgid "Secret store is unavailable"
 msgstr "Хранилище секретов недоступно"
 
@@ -440,95 +440,95 @@ msgstr "Переключить цветовую схему"
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Переключить боковую панель"
 
-#: ../../libs/app/src/lib/error.ts:83
-#: ../../libs/app/src/lib/error.ts:91
+#: ../../libs/app/src/lib/error.ts:85
+#: ../../libs/app/src/lib/error.ts:93
 msgid "Stability must be non-negative"
 msgstr "Стабильность не может быть отрицательной"
 
-#: ../../libs/app/src/lib/error.ts:9
+#: ../../libs/app/src/lib/error.ts:10
 msgid "unknown"
 msgstr "Произошла ошибка"
 
-#: ../../libs/app/src/lib/error.ts:75
+#: ../../libs/app/src/lib/error.ts:77
 msgid "validation.ai-providers.profile-id.duplicate"
 msgstr "Не удалось создать уникальный идентификатор профиля"
 
-#: ../../libs/app/src/lib/error.ts:76
+#: ../../libs/app/src/lib/error.ts:78
 msgid "validation.assistant-settings.temperature-range"
 msgstr "Температура должна быть от 0 до 2"
 
-#: ../../libs/app/src/lib/error.ts:81
+#: ../../libs/app/src/lib/error.ts:83
 msgid "validation.cards.content.field-empty"
 msgstr "Это поле не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:47
+#: ../../libs/app/src/lib/error.ts:49
 msgid "validation.common.title.too-short"
 msgstr "Название не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:57
+#: ../../libs/app/src/lib/error.ts:59
 msgid "validation.lessons.amounts.negative"
 msgstr "Количество не может быть отрицательным"
 
-#: ../../libs/app/src/lib/error.ts:56
+#: ../../libs/app/src/lib/error.ts:58
 msgid "validation.lessons.result.card-review-mismatch"
 msgstr "ID карточки и записи не совпадает"
 
-#: ../../libs/app/src/lib/error.ts:74
+#: ../../libs/app/src/lib/error.ts:76
 msgid "validation.settings-ai.profiles.whitelist-model-ids"
 msgstr "ID модели не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:71
+#: ../../libs/app/src/lib/error.ts:73
 msgid "validation.settings-ai.providers.apiKey"
 msgstr "API key не может быть пустым"
 
-#: ../../libs/app/src/lib/error.ts:72
+#: ../../libs/app/src/lib/error.ts:74
 msgid "validation.settings-ai.providers.baseUrl"
 msgstr "Некорректный URL"
 
-#: ../../libs/app/src/lib/error.ts:73
+#: ../../libs/app/src/lib/error.ts:75
 msgid "validation.settings-ai.providers.id"
 msgstr "Идентификатор профиля обязателен"
 
-#: ../../libs/app/src/lib/error.ts:58
+#: ../../libs/app/src/lib/error.ts:60
 msgid "validation.settings-hotkeys.duplicate-keys"
 msgstr "Есть конфликтующие комбинации клавиш"
 
-#: ../../libs/app/src/lib/error.ts:51
+#: ../../libs/app/src/lib/error.ts:53
 msgid "validation.settings-learning.daily-limits.learn-exceeds-total"
 msgstr "Лимит карточек заучивания не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:52
+#: ../../libs/app/src/lib/error.ts:54
 msgid "validation.settings-learning.daily-limits.review-exceeds-total"
 msgstr "Лимит карточек повтора не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:50
+#: ../../libs/app/src/lib/error.ts:52
 msgid "validation.settings-learning.daily-limits.untouched-exceeds-total"
 msgstr "Лимит новых карточек не может быть больше общего лимита"
 
-#: ../../libs/app/src/lib/error.ts:55
+#: ../../libs/app/src/lib/error.ts:57
 msgid "validation.settings-learning.day-starts-at"
 msgstr "Неверный формат настройки начала дня"
 
-#: ../../libs/app/src/lib/error.ts:53
+#: ../../libs/app/src/lib/error.ts:55
 msgid "validation.settings-learning.learn-ahead-limit.hours-range"
 msgstr "Часы должны быть от 0 до 48"
 
-#: ../../libs/app/src/lib/error.ts:54
+#: ../../libs/app/src/lib/error.ts:56
 msgid "validation.settings-learning.learn-ahead-limit.minutes-range"
 msgstr "Минуты должны быть от 0 до 59"
 
-#: ../../libs/app/src/lib/error.ts:80
+#: ../../libs/app/src/lib/error.ts:82
 msgid "validation.templates.delete-locked"
 msgstr "Нельзя удалить заблокированный шаблон"
 
-#: ../../libs/app/src/lib/error.ts:77
+#: ../../libs/app/src/lib/error.ts:79
 msgid "validation.templates.fields.too-few"
 msgstr "Необходимо хотя бы одно поле"
 
-#: ../../libs/app/src/lib/error.ts:78
+#: ../../libs/app/src/lib/error.ts:80
 msgid "validation.templates.layout.too-few"
 msgstr "Раскладка не может быть пустой"
 
-#: ../../libs/app/src/lib/error.ts:79
+#: ../../libs/app/src/lib/error.ts:81
 msgid "validation.templates.update-locked"
 msgstr "Нельзя обновить заблокированный шаблон"

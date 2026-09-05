@@ -49,11 +49,11 @@ msgstr "м"
 msgid "ai.chat.elapsed-time.periods.seconds"
 msgstr "с"
 
-#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:40
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:43
 msgid "ai.chat.error.close"
 msgstr "Скрыть ошибки"
 
-#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:34
+#: ../../libs/ai-react/src/lib/ai-chat-error.tsx:37
 msgid "ai.chat.error.retry-save"
 msgstr "Повторить сохранение"
 

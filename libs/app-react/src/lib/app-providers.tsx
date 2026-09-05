@@ -12,6 +12,7 @@ import type { createHashHistory } from "@tanstack/react-router";
 import { Provider as JotaiProvider, useAtom } from "jotai";
 import type { createStore } from "jotai";
 import { StrictMode, useEffect, useState } from "react";
+import { RouteError } from "./components/route-error";
 import { routeTree } from "./routeTree.gen";
 
 type Store = ReturnType<typeof createStore>;
@@ -41,6 +42,7 @@ function createAppRouter(
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     defaultNotFoundComponent: NotFound,
+    defaultErrorComponent: RouteError,
   });
 }
 
