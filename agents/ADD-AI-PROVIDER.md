@@ -131,7 +131,7 @@ function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvi
 
 export const myProviderEntry: AIProviderEntry = {
   id: "myProvider",
-  // true if page-origin fetch can call this API (CORS). Otherwise false (Electron only).
+  // true if page-origin fetch can call this API (CORS). Otherwise false (Electron still works: provider calls run in main, where CORS does not apply).
   worksInBrowser: true,
   createClient: (secrets) => createMyProviderClient(secrets as Extract<AISecrets, { provider: "myProvider" }>),
   fetchModels: (secrets) => {
@@ -268,7 +268,7 @@ Check that the add dialog renders the new fields and the edit dialog prefills th
 
 Do not edit app stores. Desktop uses `AI_PROVIDERS`; demo uses `listProvidersThatWorkInBrowser()`.
 
-Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and Electron, and is listed but disabled in demo’s add-profile picker.
+Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and still works in Electron (provider HTTP runs in the main process, where CORS does not apply), and is listed but disabled in demo’s add-profile picker.
 
 ### 9. Add Tests
 
