@@ -11,7 +11,14 @@
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     },
+    "./app-error": {
+      "types": "./src/lib/error-ai.ts",
+      "import": "./src/lib/error-ai.ts",
+      "default": "./src/lib/error-ai.ts"
+    },
     "./package.json": "./package.json"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@koloda/app": "workspace:*"
+  }
 }

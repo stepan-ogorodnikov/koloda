@@ -14,7 +14,8 @@ import {
   useAIChatValidation,
   useAutoScroll,
 } from "@koloda/ai-react";
-import { ERROR_MESSAGES, formatAppError, formatGenerateError } from "@koloda/app";
+import { formatGenerateError } from "@koloda/ai/app-error";
+import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { Fade, QueryError } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

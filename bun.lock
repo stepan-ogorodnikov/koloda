@@ -112,6 +112,9 @@
     "libs/ai": {
       "name": "@koloda/ai",
       "version": "0.0.1",
+      "dependencies": {
+        "@koloda/app": "workspace:*",
+      },
     },
     "libs/ai-react": {
       "name": "@koloda/ai-react",

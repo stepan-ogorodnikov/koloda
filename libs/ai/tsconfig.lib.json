@@ -29,5 +29,9 @@
     "src/**/test-setup.ts"
   ],
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../app/tsconfig.lib.json"
+    }
+  ]
 }

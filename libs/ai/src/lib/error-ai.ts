@@ -1,7 +1,15 @@
-import { toAIError } from "@koloda/ai";
+// Bridge from AIError to the shared AppError table: classification via
+// `toAIError`, then wrap/format for display. Renderer-only.
+//
+// WHY: exported via the `./app-error` subpath, not the root barrel. The main
+// process imports the root (`ai-ipc.ts`, bundled by `bundle-main.ts`), and this
+// module pulls `@koloda/app` whose `error.ts` uses `@lingui/core/macro` — a
+// compile-time macro with no runtime export outside the vite/vitest plugins.
+// Re-exporting it from the root would crash main at startup.
+import { AppError, ERROR_MESSAGES, formatAppError, getAIHttpErrorMessageDescriptor } from "@koloda/app";
+import { toAIError } from "./error";
+import type { ErrorCode } from "@koloda/app";
 import type { I18nContext } from "@lingui/react";
-import { AppError, ERROR_MESSAGES, formatAppError, getAIHttpErrorMessageDescriptor } from "./error";
-import type { ErrorCode } from "./error";
 
 export type FormattedError = { message: string; details?: string };
 

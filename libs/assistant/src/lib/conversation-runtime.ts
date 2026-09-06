@@ -1,5 +1,6 @@
 import type { AssistantToolEvent, ChatStreamChunk, ChatStreamRequest, StreamUsage } from "@koloda/ai";
-import { isAbortError, isAppError, toAIAppError } from "@koloda/app";
+import { toAIAppError } from "@koloda/ai/app-error";
+import { isAbortError, isAppError } from "@koloda/app";
 import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";

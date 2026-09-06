@@ -20,13 +20,13 @@ export {
   AppError,
   ERROR_MESSAGES,
   formatAppError,
+  getAIHttpErrorMessageDescriptor,
   isAbortError,
   isAppError,
   throwKnownError,
   toFormErrors,
 } from "./lib/error";
 export type { ErrorCode, FormError, ZodIssue } from "./lib/error";
-export { formatGenerateError, toAIAppError } from "./lib/error-ai";
 export {
   DEFAULT_HOTKEYS_SETTINGS,
   HOTKEYS_LABELS,

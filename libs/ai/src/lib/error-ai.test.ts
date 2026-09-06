@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AppError, getAIHttpErrorMessageDescriptor } from "./error";
+import { AppError, getAIHttpErrorMessageDescriptor } from "@koloda/app";
 import { formatGenerateError, toAIAppError } from "./error-ai";
 
 describe("ai-error", () => {
