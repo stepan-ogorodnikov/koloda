@@ -1,16 +1,9 @@
 import type { AIRuntime, ChatStreamChunk, ChatStreamRequest, OnToolEvent, StreamUsage } from "@koloda/ai";
 import { AIError, isAIError } from "@koloda/ai";
 import { isAppError } from "@koloda/app";
+import type { AiStreamEvent } from "@koloda/native-ipc";
+import { AI_STREAM_CHANNEL } from "@koloda/native-ipc";
 import { invoke } from "./electron";
-
-export const AI_STREAM_CHANNEL = "ai:stream";
-
-export type AiStreamEvent =
-  | { requestId: string; type: "chunk"; chunk: ChatStreamChunk }
-  | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
-  | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
-  | { requestId: string; type: "done"; usage?: StreamUsage }
-  | { requestId: string; type: "error"; code: string; message: string };
 
 function isAiStreamEvent(value: unknown): value is AiStreamEvent {
   if (!value || typeof value !== "object") return false;

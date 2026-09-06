@@ -19,7 +19,8 @@ vi.mock("@koloda/app", () => {
   };
 });
 
-import { AI_STREAM_CHANNEL, createElectronAIRuntime } from "./ai-runtime";
+import { AI_STREAM_CHANNEL } from "@koloda/native-ipc";
+import { createElectronAIRuntime } from "./ai-runtime";
 
 type InvokeFn = (cmd: string, args?: unknown) => Promise<unknown>;
 

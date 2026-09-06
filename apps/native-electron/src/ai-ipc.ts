@@ -5,7 +5,6 @@ import type {
   ChatStreamChunk,
   ChatStreamRequest,
   AssistantToolTemplate,
-  StreamUsage,
 } from "@koloda/ai";
 import {
   AIError,
@@ -17,27 +16,10 @@ import {
   toAIError,
   wrapAIError,
 } from "@koloda/ai";
+import type { AiStreamEvent, IpcArgs } from "@koloda/native-ipc";
+import { AI_STREAM_CHANNEL } from "@koloda/native-ipc";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { ipcMain } from "electron";
-
-export const AI_STREAM_CHANNEL = "ai:stream";
-
-export type AiStreamEvent =
-  | { requestId: string; type: "chunk"; chunk: ChatStreamChunk }
-  | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
-  | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
-  | { requestId: string; type: "done"; usage?: StreamUsage }
-  | { requestId: string; type: "error"; code: string; message: string };
-
-type AiListModelsArgs = { profileId: string };
-
-type AiChatStreamArgs = {
-  requestId: string;
-  profileId: string;
-  request: ChatStreamRequest;
-};
-
-type AiAbortArgs = { requestId: string };
 
 type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
@@ -164,7 +146,7 @@ function bindChatTools(
 }
 
 export function registerAiIpc(db: KolodaDb) {
-  ipcMain.handle("cmd_ai_list_models", async (_event, args: AiListModelsArgs) => {
+  ipcMain.handle("cmd_ai_list_models", async (_event, args: IpcArgs<"cmd_ai_list_models">) => {
     try {
       const secrets = loadSecrets(db, args.profileId);
       return await wrapAIError(() => fetchModels(secrets));
@@ -173,7 +155,7 @@ export function registerAiIpc(db: KolodaDb) {
     }
   });
 
-  ipcMain.handle("cmd_ai_chat_stream", (event: IpcMainInvokeEvent, args: AiChatStreamArgs) => {
+  ipcMain.handle("cmd_ai_chat_stream", (event: IpcMainInvokeEvent, args: IpcArgs<"cmd_ai_chat_stream">) => {
     const { requestId, profileId, request } = args;
     const sender = event.sender;
     // WHY: Register before any work so cmd_ai_abort during start binds to this run.
@@ -219,8 +201,7 @@ export function registerAiIpc(db: KolodaDb) {
     })();
   });
 
-  ipcMain.handle("cmd_ai_abort", (_event, args: AiAbortArgs) => {
+  ipcMain.handle("cmd_ai_abort", (_event, args: IpcArgs<"cmd_ai_abort">) => {
     activeControllers.get(args.requestId)?.abort();
-    return true;
   });
 }

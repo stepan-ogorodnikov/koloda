@@ -1,16 +1,17 @@
 import { ipcMain } from "electron";
-import type { DataChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
+import type { DataOnlyChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
 import { registerAiIpc } from "./ai-ipc";
 import type { KolodaDb } from "./koloda-db";
 
 type DataHandler = (
   db: KolodaDb,
-  args: IpcArgs<DataChannel>,
-) => IpcResult<DataChannel> | Promise<IpcResult<DataChannel>>;
+  args: IpcArgs<DataOnlyChannel>,
+) => IpcResult<DataOnlyChannel> | Promise<IpcResult<DataOnlyChannel>>;
 
-// One entry per `DataIpc` channel. The `satisfies` below fails the build when a
-// channel has no entry or a handler's args/result drift from the contract; the
-// per-entry `IpcArgs<C>` annotations give each handler its checked arg type.
+// One entry per non-AI `DataIpc` channel (AI channels register in `ai-ipc.ts`).
+// The `satisfies` below fails the build when a channel has no entry or a
+// handler's args/result drift from the contract; the per-entry `IpcArgs<C>`
+// annotations give each handler its checked arg type.
 const dataHandlers = {
   get_db_status: (db) => db.getDbStatus(),
   seed_db: async (db, { data }: IpcArgs<"seed_db">): Promise<IpcResult<"seed_db">> => {
@@ -70,14 +71,14 @@ const dataHandlers = {
   cmd_add_ai_profile: (db, { data }: IpcArgs<"cmd_add_ai_profile">) => db.addAiProfile(data),
   cmd_update_ai_profile: (db, { data }: IpcArgs<"cmd_update_ai_profile">) => db.updateAiProfile(data),
   cmd_remove_ai_profile: (db, { data }: IpcArgs<"cmd_remove_ai_profile">) => db.removeAiProfile(data),
-} satisfies { [C in DataChannel]: (db: KolodaDb, args: IpcArgs<C>) => IpcResult<C> | Promise<IpcResult<C>> };
+} satisfies { [C in DataOnlyChannel]: (db: KolodaDb, args: IpcArgs<C>) => IpcResult<C> | Promise<IpcResult<C>> };
 
 export function registerDataIpc(db: KolodaDb) {
   // WHY: `Object.entries` erases the key type, so re-anchor each pair to the
-  // contract union. `satisfies` above proves every key is a `DataChannel` and
-  // every handler matches its channel, so this cast only widens the type.
-  for (const [channel, handler] of Object.entries(dataHandlers) as [DataChannel, DataHandler][]) {
-    ipcMain.handle(channel, (_event, args: IpcArgs<DataChannel>) => handler(db, args));
+  // contract union. `satisfies` above proves every key is a `DataOnlyChannel`
+  // and every handler matches its channel, so this cast only widens the type.
+  for (const [channel, handler] of Object.entries(dataHandlers) as [DataOnlyChannel, DataHandler][]) {
+    ipcMain.handle(channel, (_event, args: IpcArgs<DataOnlyChannel>) => handler(db, args));
   }
 
   // INVARIANT: AI provider calls + secret loads stay in main. Do not add cmd_* for getAiProfileSecrets.

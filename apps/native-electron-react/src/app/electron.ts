@@ -1,5 +1,6 @@
 import { AppError } from "@koloda/app";
 import type { ErrorCode } from "@koloda/app";
+import type { DataChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
 import { fromWire, toWire } from "./ipc";
 
 declare global {
@@ -60,11 +61,14 @@ function parseElectronError(error: unknown): ConstructorParameters<typeof AppErr
   return ["unknown", error instanceof Error ? error.message : String(error)];
 }
 
-export async function invoke<T>(cmd: string, args?: unknown): Promise<T> {
+// WHY: `cmd` is a contract key, so channel names and arg/result shapes are
+// machine-checked against `DataIpc` (`@koloda/native-ipc`). Channels with
+// `args: undefined` still pass `undefined` explicitly.
+export async function invoke<C extends DataChannel>(channel: C, args: IpcArgs<C>): Promise<IpcResult<C>> {
   try {
     const wire = args === undefined ? args : toWire(args);
-    const raw = await window.electronAPI.invoke<unknown>(cmd, wire);
-    return fromWire<T>(raw);
+    const raw = await window.electronAPI.invoke<unknown>(channel, wire);
+    return fromWire<IpcResult<C>>(raw);
   } catch (error) {
     throw new AppError(...parseElectronError(error));
   }

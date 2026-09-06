@@ -53,6 +53,9 @@
     },
     {
       "path": "../../libs/ai/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/native-ipc/tsconfig.lib.json"
     }
   ]
 }

@@ -1,14 +1,25 @@
-// Machine-checked contract for the desktop data IPC surface
-// (`apps/native-electron/src/data-ipc.ts` <-> renderer `invoke`).
+// Machine-checked contract for the full desktop renderer<->main command surface:
+// data commands (`apps/native-electron/src/data-ipc.ts`), AI commands
+// (`src/ai-ipc.ts`), and the `AI_STREAM_CHANNEL` push channel, all consumed by
+// the renderer through `invoke`.
 //
 // Each channel maps to `{ args; result }` — the shapes crossing
-// `window.electronAPI.invoke` before `toWire`/`fromWire` coercion. Arg
-// conventions mirror the `KolodaDb` NAPI signatures: `{ params }` for reads,
+// `window.electronAPI.invoke` before `toWire`/`fromWire` coercion. Data-command
+// arg conventions mirror the `KolodaDb` NAPI signatures: `{ params }` for reads,
 // `{ data }` for writes, or the plain object where the method takes one.
 //
 // INVARIANT: there is deliberately no channel for AI profile secrets. Secrets
 // load main-side only (`ai-ipc.ts`); do not add a `cmd_*` entry for them.
-import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type {
+  AddAIProfileData,
+  AIModel,
+  AIProfile,
+  ChatStreamChunk,
+  ChatStreamRequest,
+  RemoveAIProfileData,
+  StreamUsage,
+  UpdateAIProfileData,
+} from "@koloda/ai";
 import type {
   AllowedSettings,
   Conversation,
@@ -89,6 +100,23 @@ export type ReviewTotals = {
   total: number;
 };
 
+/**
+ * Main-to-renderer push channel for AI streaming (see `AiStreamEvent`).
+ * Single source of truth for `ai-ipc.ts` and the renderer runtime adapter.
+ */
+export const AI_STREAM_CHANNEL = "ai:stream";
+
+/**
+ * Events streamed main-to-renderer on `AI_STREAM_CHANNEL`, all keyed by
+ * `requestId` so concurrent runs can be correlated and aborted individually.
+ */
+export type AiStreamEvent =
+  | { requestId: string; type: "chunk"; chunk: ChatStreamChunk }
+  | { requestId: string; type: "toolCall"; call: { id: string; name: string; input: unknown } }
+  | { requestId: string; type: "toolResult"; callId: string; output?: unknown; error?: string }
+  | { requestId: string; type: "done"; usage?: StreamUsage }
+  | { requestId: string; type: "error"; code: string; message: string };
+
 export interface DataIpc {
   get_db_status: { args: undefined; result: DbStatus };
   seed_db: { args: { data: SeedDbData }; result: true };
@@ -147,9 +175,25 @@ export interface DataIpc {
   cmd_add_ai_profile: { args: { data: AddAIProfileData }; result: AIProfile };
   cmd_update_ai_profile: { args: { data: UpdateAIProfileData }; result: AIProfile };
   cmd_remove_ai_profile: { args: { data: RemoveAIProfileData }; result: void };
+
+  // AI assistant commands (`ai-ipc.ts`). Secrets load main-side only.
+  // `cmd_ai_chat_stream` returns immediately; the run streams events on
+  // `AI_STREAM_CHANNEL`, all keyed by `requestId`.
+  cmd_ai_list_models: { args: { profileId: string }; result: AIModel[] };
+  cmd_ai_chat_stream: { args: { requestId: string; profileId: string; request: ChatStreamRequest }; result: void };
+  cmd_ai_abort: { args: { requestId: string }; result: void };
 }
 
 export type DataChannel = keyof DataIpc;
+
+/**
+ * Channels registered by `ai-ipc.ts` (secrets-capable main-side glue) rather
+ * than by the data handler table in `data-ipc.ts`.
+ */
+export type AiChannel = "cmd_ai_list_models" | "cmd_ai_chat_stream" | "cmd_ai_abort";
+
+/** Channels served by the `KolodaDb`-backed handler table in `data-ipc.ts`. */
+export type DataOnlyChannel = Exclude<DataChannel, AiChannel>;
 
 export type IpcArgs<C extends DataChannel> = DataIpc[C]["args"];
 

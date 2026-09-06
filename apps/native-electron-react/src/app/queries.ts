@@ -1,7 +1,6 @@
-import type { AddAIProfileData, AIProfile, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { AddAIProfileData, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
   AllowedSettings,
-  Conversation,
   ConversationListItem,
   DeleteConversationData,
   PatchSettingsData,
@@ -29,14 +28,10 @@ import type {
   InsertCardData,
   InsertDeckData,
   InsertTemplateData,
-  LessonsResult,
-  LessonData,
   LessonFilters,
   LessonResultData,
   ResetCardProgressData,
-  Review,
   Template,
-  TodaysReviewTotals,
   UpdateAlgorithmData,
   UpdateCardData,
   UpdateDeckData,
@@ -58,13 +53,16 @@ export const appSetupMutationOptions = { mutationFn: seedDB };
 export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   getSettingsQuery: <T extends SettingsName>(name: T) => ({
     queryKey: queryKeys.settings.detail(name),
-    queryFn: () => invoke<AllowedSettings<T>>("cmd_get_settings", { name }),
+    // WHY: the contract types the result per channel (`AllowedSettings<SettingsName>`);
+    // `Queries` narrows it to the requested `T`, so the adapter asserts here.
+    queryFn: async () => (await invoke("cmd_get_settings", { name })) as AllowedSettings<T> | null,
   }),
   setSettingsMutation: <T extends SettingsName>() => ({
-    mutationFn: (data: SetSettingsData<T>) => invoke("cmd_set_settings", data),
+    // Same per-channel vs per-`T` narrowing as getSettingsQuery.
+    mutationFn: async (data: SetSettingsData<T>) => (await invoke("cmd_set_settings", data)) as AllowedSettings<T>,
   }),
   patchSettingsMutation: <T extends SettingsName>() => ({
-    mutationFn: (data: PatchSettingsData<T>) => invoke("cmd_patch_settings", data),
+    mutationFn: async (data: PatchSettingsData<T>) => (await invoke("cmd_patch_settings", data)) as AllowedSettings<T>,
   }),
   getConversationQuery: (id: string) => ({
     queryKey: queryKeys.conversations.detail(id),
@@ -74,7 +72,7 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
     queryKey: queryKeys.conversations.all(),
     queryFn: async (): Promise<ConversationListItem[]> => {
       // INVARIANT: hasTurns is derived here from opaque `state`. Do not parse state in Rust.
-      const rows = await invoke<Conversation[]>("cmd_get_conversations");
+      const rows = await invoke("cmd_get_conversations", undefined);
       return rows.map(toConversationListItem);
     },
   }),
@@ -86,7 +84,7 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getAlgorithmsQuery: () => ({
     queryKey: queryKeys.algorithms.all(),
-    queryFn: () => invoke("cmd_get_algorithms"),
+    queryFn: () => invoke("cmd_get_algorithms", undefined),
   }),
   getAlgorithmQuery: (id: Algorithm["id"]) => ({
     queryKey: queryKeys.algorithms.detail(id),
@@ -110,7 +108,7 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getDecksQuery: () => ({
     queryKey: queryKeys.decks.all(),
-    queryFn: () => invoke("cmd_get_decks"),
+    queryFn: () => invoke("cmd_get_decks", undefined),
   }),
   getDeckQuery: (id: Deck["id"]) => ({
     queryKey: queryKeys.decks.detail(id),
@@ -127,7 +125,7 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getTemplatesQuery: () => ({
     queryKey: queryKeys.templates.all(),
-    queryFn: () => invoke("cmd_get_templates"),
+    queryFn: () => invoke("cmd_get_templates", undefined),
   }),
   getTemplateQuery: (id: Template["id"]) => ({
     queryKey: queryKeys.templates.detail(id),
@@ -173,18 +171,23 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getLessonsQuery: (filters?: LessonFilters) => ({
     queryKey: queryKeys.lessons.all(filters),
-    queryFn: () => invoke<LessonsResult>("cmd_get_lessons", { params: { dueAt: Date.now(), filters } }),
+    queryFn: () => invoke("cmd_get_lessons", { params: { dueAt: Date.now(), filters } }),
   }),
   getTodayReviewTotalsQuery: () => ({
     queryKey: queryKeys.lessons.todayReviewTotals(),
-    queryFn: () => invoke<TodaysReviewTotals>("cmd_get_todays_review_totals"),
+    queryFn: () => invoke("cmd_get_todays_review_totals", undefined),
   }),
   getLessonDataQuery: (params: GetLessonDataParams) => ({
     queryKey: queryKeys.lessons.data(params),
-    queryFn: () => invoke<LessonData>("cmd_get_lesson_data", { params }),
+    queryFn: () => invoke("cmd_get_lesson_data", { params }),
   }),
   submitLessonResultMutation: () => ({
-    mutationFn: (data: LessonResultData) => invoke<Review>("cmd_submit_lesson_result", { data }),
+    // WHY: Rust replies `Result<()>` (contract `void`); `Queries` keeps
+    // `Review | undefined`, so the adapter adapts instead of promising a Review.
+    mutationFn: async (data: LessonResultData) => {
+      await invoke("cmd_submit_lesson_result", { data });
+      return undefined;
+    },
   }),
   getReviewsQuery: (data: GetReviewsData) => ({
     queryKey: queryKeys.reviews.card(data),
@@ -192,13 +195,20 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
   }),
   getAIProfilesQuery: () => ({
     queryKey: queryKeys.ai.profiles(),
-    queryFn: () => invoke<AIProfile[]>("cmd_get_ai_profiles"),
+    queryFn: () => invoke("cmd_get_ai_profiles", undefined),
   }),
   addAIProfileMutation: () => ({
-    mutationFn: (data: AddAIProfileData) => invoke("cmd_add_ai_profile", { data }),
+    // WHY: the contract returns the stored AIProfile, but `Queries` declares
+    // `void` (no consumer reads the value) — the adapter drops it.
+    mutationFn: async (data: AddAIProfileData) => {
+      await invoke("cmd_add_ai_profile", { data });
+    },
   }),
   updateAIProfileMutation: () => ({
-    mutationFn: (data: UpdateAIProfileData) => invoke("cmd_update_ai_profile", { data }),
+    // Same void-vs-AIProfile adaptation as addAIProfileMutation.
+    mutationFn: async (data: UpdateAIProfileData) => {
+      await invoke("cmd_update_ai_profile", { data });
+    },
   }),
   removeAIProfileMutation: () => ({
     mutationFn: (data: RemoveAIProfileData) => invoke("cmd_remove_ai_profile", { data }),

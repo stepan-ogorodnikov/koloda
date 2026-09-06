@@ -1,4 +1,7 @@
 import { contextBridge, ipcRenderer, webFrame } from "electron";
+// TYPE-ONLY on purpose: preload is compiled standalone by swc, which erases this
+// import — it must never become a runtime dependency on a workspace lib.
+import type { DataChannel, IpcArgs, IpcResult } from "@koloda/native-ipc";
 
 const ZOOM_STEP = 0.5;
 const MIN_ZOOM = -3;
@@ -22,7 +25,7 @@ function setZoomLevel(level: number) {
 }
 
 contextBridge.exposeInMainWorld("electronAPI", {
-  invoke: <T>(cmd: string, args?: unknown): Promise<T> => ipcRenderer.invoke(cmd, args),
+  invoke: <C extends DataChannel>(cmd: C, args?: IpcArgs<C>): Promise<IpcResult<C>> => ipcRenderer.invoke(cmd, args),
   on: (channel: string, callback: (...args: unknown[]) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);
     ipcRenderer.on(channel, listener);

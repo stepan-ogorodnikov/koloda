@@ -3,7 +3,10 @@
 The channel contract between the desktop renderer (`apps/native-electron-react`) and this main process.
 Update this file in the same change as any handler.
 
-All renderer-to-main calls go through one generic `window.electronAPI.invoke(cmd, args)` from the preload.
+All renderer-to-main calls go through one `window.electronAPI.invoke(cmd, args)` from the preload.
+The renderer wraps it in a typed `invoke` (`apps/native-electron-react/src/app/electron.ts`) whose
+channel keys, args, and results are enforced by the contract below; the preload keeps the same
+signature via a type-only import (erased when swc compiles it standalone).
 Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` subscriptions.
 
 ## Conventions
@@ -15,7 +18,8 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
 - Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
   or the plain object where the method takes one.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
-  (`@koloda/native-ipc`), which both processes compile against.
+  (`@koloda/native-ipc`), which both processes compile against. The contract covers the full renderer command
+  surface: data commands, AI commands, and the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`).
 
 ## Data Commands
 
@@ -41,9 +45,12 @@ Secrets load main-side only; see the AI streaming section.
 
 ## AI Streaming (`src/ai-ipc.ts`)
 
+The three commands and the `AiStreamEvent` union are part of the `DataIpc` contract in
+`@koloda/native-ipc`; this section records the behavior around them.
+
 - `cmd_ai_list_models` `{ profileId }` — model list; secrets load in main, never cross IPC.
 - `cmd_ai_chat_stream` `{ requestId, profileId, request }` — returns immediately; the run streams events
-  on the `ai:stream` channel, all keyed by `requestId`:
+  on the `ai:stream` channel (`AI_STREAM_CHANNEL` from the contract), all keyed by `requestId`:
   - `chunk` — assistant text delta
   - `toolCall` — the model invoked an assistant tool
   - `toolResult` — tool output or error text (raw errors do not survive structured clone)
