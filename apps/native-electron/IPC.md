@@ -14,6 +14,8 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
   `Date` as epoch ms, `BigInt` bounds-checked to safe integers.
 - Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
   or the plain object where the method takes one.
+- Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
+  (`@koloda/native-ipc`), which both processes compile against.
 
 ## Data Commands
 
