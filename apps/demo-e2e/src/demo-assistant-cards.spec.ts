@@ -42,9 +42,12 @@ function selectAllCheckbox(page: Page): Locator {
   return proposalTable(page).locator("thead").getByRole("checkbox");
 }
 
-/** The tool row headline the app builds for a successful `list_decks` call. */
+/**
+ * The accessible name of a successful `list_decks` tool row: label and summary
+ * render as separate spans, so the accname joins them with a space.
+ */
 function listDecksHeadlineText(deckTotal: number): string {
-  return `List decks - ${deckTotal} deck${deckTotal === 1 ? "" : "s"}`;
+  return `List decks ${deckTotal} deck${deckTotal === 1 ? "" : "s"}`;
 }
 
 test("adds exactly the selected proposed cards to the deck", async ({ page }) => {
@@ -106,6 +109,9 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     await expect(betaRow.getByRole("checkbox")).not.toBeChecked();
     await expect(selectAll).not.toBeChecked();
 
+    // The request reaches the mock asynchronously, and release() is a no-op
+    // until then — wait for the hold so the release cannot race the request.
+    await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();
 
     const gammaRow = proposedRow(page, "Gamma front");
@@ -121,8 +127,8 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     await expect(selectAll).toHaveJSProperty("indeterminate", true);
 
     // Both tool calls executed and were recorded separately (unique ids).
-    await expect(log.getByText("Propose cards - 2 cards", { exact: true })).toBeVisible();
-    await expect(log.getByText("Propose cards - 1 card", { exact: true })).toBeVisible();
+    await expect(log.getByRole("button", { name: "Propose cards 2 cards", exact: true })).toBeVisible();
+    await expect(log.getByRole("button", { name: "Propose cards 1 card", exact: true })).toBeVisible();
     await expect(log.getByText("Proposed three cards.")).toBeVisible();
 
     // Add is gated on the run no longer being the current one.
@@ -197,12 +203,12 @@ test("retries a failed cards run against the current deck state", async ({ page 
     // The tools really executed. The demo seed ships several decks, so the
     // first run's deck count is read from the tool row headline instead of
     // being hardcoded — the retried run below must see exactly one more deck.
-    const listDecksHeadline = log.getByText(/^List decks - \d+ decks?$/);
+    const listDecksHeadline = log.getByRole("button", { name: /^List decks \d+ decks?$/ });
     await expect(listDecksHeadline).toBeVisible({ timeout: 20_000 });
     const deckCount = Number((await listDecksHeadline.textContent())?.match(/\d+/)?.[0]);
-    const runOneListDecks = log.getByText(listDecksHeadlineText(deckCount), { exact: true });
+    const runOneListDecks = log.getByRole("button", { name: listDecksHeadlineText(deckCount), exact: true });
     await expect(runOneListDecks).toBeVisible();
-    await expect(log.getByText("Propose cards - 1 card", { exact: true })).toBeVisible();
+    await expect(log.getByRole("button", { name: "Propose cards 1 card", exact: true })).toBeVisible();
     // Partial output survives the failure (ASSISTANT-CARD-GENERATION.md:82).
     // Exact match: the tool-call JSON payloads also quote the field text.
     await expect(log.getByText("First run front", { exact: true })).toBeVisible();
@@ -242,7 +248,7 @@ test("retries a failed cards run against the current deck state", async ({ page 
     // deck was created after the original run failed, so the list_decks count
     // grows by exactly one and REPLACES the previous tool row instead of
     // replaying a snapshot (ASSISTANT-DATA-ACCESS.md:115-117).
-    await expect(log.getByText(listDecksHeadlineText(deckCount + 1), { exact: true })).toBeVisible({
+    await expect(log.getByRole("button", { name: listDecksHeadlineText(deckCount + 1), exact: true })).toBeVisible({
       timeout: 20_000,
     });
     await expect(runOneListDecks).toHaveCount(0);

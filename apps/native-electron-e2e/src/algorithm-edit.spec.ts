@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { createAlgorithm, openSection, setupApp, setupPageDefaults } from "./helpers";
+import { createAlgorithm, openSection, setSliderValue, setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
@@ -21,10 +21,7 @@ test("creates an algorithm, modifies parameters, and verifies persistence", asyn
   await titleField.blur();
 
   // Change retention
-  const retentionField = page.getByRole("textbox", { name: "Retention" });
-  await retentionField.click();
-  await retentionField.fill("85");
-  await retentionField.blur();
+  await setSliderValue(page, "Retention", 85);
 
   // Save changes
   const saveButton = page.locator("form").getByRole("button", { name: "Save", exact: true });
@@ -39,5 +36,5 @@ test("creates an algorithm, modifies parameters, and verifies persistence", asyn
   await expect(page).toHaveURL(/\/algorithms\/\d+$/);
 
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
-  await expect(page.getByRole("textbox", { name: "Retention" })).toHaveValue("85");
+  await expect(page.getByRole("slider", { name: "Retention" })).toHaveValue("85");
 });

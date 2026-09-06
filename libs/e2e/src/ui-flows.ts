@@ -369,7 +369,11 @@ export async function dragTo(page: Page, source: Locator, target: Locator) {
   const targetX = targetBox.x + targetBox.width / 2;
   const targetY = targetBox.y + targetBox.height / 2;
 
-  await page.mouse.move(sourceX, sourceY);
+  // WHY: dnd-kit binds drag activation to the handle element, so the press must
+  // land on it. Right after a section mounts, the renderer can still hit-test
+  // the handle's center to the document root, and a press there starts nothing.
+  // hover() retries until the handle is the hit target at the point.
+  await source.hover();
   await page.mouse.down();
   await page.mouse.move(sourceX, sourceY + 20, { steps: 3 });
   await page.waitForTimeout(150);
@@ -386,6 +390,31 @@ export async function reorderWithKeyboard(handle: Locator, direction: "up" | "do
     await handle.press(direction === "up" ? "ArrowUp" : "ArrowDown");
   }
   await handle.press("Enter");
+}
+
+/**
+ * Sliders (e.g. Retention) are react-aria components backed by a visually
+ * hidden <input type="range">. Pointer clicks on them are intercepted by the
+ * track container, so values are changed by focusing the input and stepping
+ * with arrow keys (native range inputs step by `step`, which is 1 here).
+ */
+export async function setSliderValue(page: Page, name: string, target: number) {
+  const thumb = page.getByRole("slider", { name });
+  await expect(thumb).toBeAttached();
+  await thumb.focus();
+  const current = Number(await thumb.inputValue());
+  if (current === target) return;
+  const key = target > current ? "ArrowRight" : "ArrowLeft";
+  for (let i = 0; i < Math.abs(target - current); i++) {
+    await page.keyboard.press(key);
+  }
+  await expect(thumb).toHaveValue(String(target));
+}
+
+export async function getSliderValue(page: Page, name: string) {
+  const thumb = page.getByRole("slider", { name });
+  await expect(thumb).toBeAttached();
+  return Number(await thumb.inputValue());
 }
 
 export async function openAddAIDialog(page: Page) {

@@ -110,6 +110,9 @@ test("creates a conversation row from the first message, shows working status wh
     await expect(firstRow).toBeVisible({ timeout: 15_000 });
     await expect(workingMarker(firstRow)).toBeVisible();
 
+    // The request reaches the mock asynchronously, and release() is a no-op
+    // until then — wait for the hold so the release cannot race the request.
+    await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();
     const log = conversationLog(page);
     await expect(log.getByText("Reply for the first conversation.")).toBeVisible({ timeout: 20_000 });
@@ -181,6 +184,9 @@ test("marks a background-finished conversation unread until it is opened", async
     await expect(log.getByText("Second prompt")).toBeVisible({ timeout: 15_000 });
     await expect(workingMarker(firstRow)).toBeVisible();
 
+    // The request reaches the mock asynchronously, and release() is a no-op
+    // until then — wait for the hold so the release cannot race the request.
+    await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();
 
     // The run finished while another conversation was open, so it is unread.
@@ -280,6 +286,10 @@ test("shows a failed delete error in the popover and keeps the conversation", as
     await expect(conversationLog(page).getByText("Reply for the undeleted conversation.")).toBeVisible({
       timeout: 20_000,
     });
+    // WHY: the sidebar row's hasTurns only flips once the first save flushes,
+    // and a draft row (hasTurns=false) deletes without confirmation — arming
+    // the failure sim before that flip would skip the confirm dialog entirely.
+    await expect(row.locator('[data-has-turns="true"]')).toBeVisible({ timeout: 15_000 });
 
     await setIdbWriteFailureArmed(page, true);
 

@@ -62,6 +62,13 @@ export type MockOpenAICompatibleHandle = {
   baseUrl: string;
   /** Completions requests observed so far. */
   completionRequests: number;
+  /**
+   * Whether a completions response is currently held pending `release()`.
+   * Release is a no-op while this is false, so tests that release a response
+   * held right after sending a message must wait for this first — the request
+   * only reaches the mock asynchronously (Electron main-process fetch).
+   */
+  isHolding: () => boolean;
   /** Resolve a held completions response (no-op if not holding). */
   release: () => void;
   /** Queue the next completions behavior (FIFO). Falls back to `defaultCompletion`. */

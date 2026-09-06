@@ -148,6 +148,7 @@ export async function mockOpenAICompatibleProvider(
     get completionRequests() {
       return completionRequests;
     },
+    isHolding: () => releaseHold !== null,
     release: () => releaseHold?.(),
     enqueueCompletion: (opts) => {
       queue.push({ ...opts });

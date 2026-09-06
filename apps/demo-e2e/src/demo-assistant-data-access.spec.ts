@@ -59,6 +59,9 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
   // — the unescaped pretty form never appears in the raw body.
   const deckTitleRow = 'deckTitle\\":\\"E2E Data Deck';
   const rows = [deckTitleRow, dataFront("A"), dataFront("B"), dataFront("C")];
+  // WHY: the chat renders replies as markdown, which consumes the wire form's
+  // `\"` backslash escapes — the visible reply shows the unescaped form.
+  const asRendered = (reply: string) => reply.replaceAll('\\"', '"');
 
   const mock = await mockOpenAICompatibleProvider(page, {
     // WHY: the user prompt avoids every row string, so a row can only reach the
@@ -100,20 +103,19 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
 
     // WHY dynamic: the demo seed ships 6 decks and this test creates one more,
     // so the headline count is matched as a pattern, not a hardcoded total.
-    const listDecksHeadline = log.getByText(/^List decks - \d+ decks?$/);
-    await expect(listDecksHeadline).toBeVisible({ timeout: 20_000 });
+    const listDecksRow = log.getByRole("button", { name: /^List decks \d+ decks?$/ });
+    await expect(listDecksRow).toBeVisible({ timeout: 20_000 });
     // WHY exact: the deck holds exactly the 3 seeded cards, and the run record
     // preserves the executor's totalCards even though the stored output itself
     // is bounded to a preview (spec Visibility: a successful row shows how many
     // cards came back).
-    const getDeckCardsRow = log.locator("li").filter({ hasText: "Get deck cards - 3 cards" });
+    const getDeckCardsRow = log.getByRole("button", { name: "Get deck cards 3 cards" });
     await expect(getDeckCardsRow).toBeVisible({ timeout: 20_000 });
-    const listDecksRow = log.locator("li").filter({ hasText: /List decks - \d+ decks?/ });
 
     // WHY: Open list_decks: its stored copy is well under 2,000 chars, so it shows
     // the plain "Output" label — the contrast that proves "Output (truncated)"
     // below is conditional on real size, not on the tool name.
-    await listDecksRow.getByRole("button").click();
+    await listDecksRow.click();
     const inspectDialog = page.getByRole("dialog");
     await expect(inspectDialog.getByText("Output", { exact: true })).toBeVisible();
     // WHY: the executor really read the DB: the new deck's title and card count sit
@@ -127,7 +129,7 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     // WHY: Open get_deck_cards: its >2,000-char output was bounded by the run
     // record (MAX_TOOL_OUTPUT_CHARS = 2000), so the label switches to
     // "Output (truncated)" and the pre shows the 400-char compact preview.
-    await getDeckCardsRow.getByRole("button").click();
+    await getDeckCardsRow.click();
     await expect(inspectDialog.getByText("Output (truncated)", { exact: true })).toBeVisible();
     // WHY compact: the preview is the head of the compact serialized output —
     // the model itself still received the full ~3,300-char output under its
@@ -137,7 +139,7 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     await expect(previewPre).toContainText('"Front":"Data front A');
 
     // Every seeded row egressed to the model and came back in the reply text.
-    await expect(log.getByText(`I found: ${rows.join(", ")}`)).toBeVisible({ timeout: 20_000 });
+    await expect(log.getByText(asRendered(`I found: ${rows.join(", ")}`))).toBeVisible({ timeout: 20_000 });
 
     // WHY: one model request per stream step — initial + one follow-up per
     // executed tool call. The reply step's FIFO slot is empty, so it is the one
