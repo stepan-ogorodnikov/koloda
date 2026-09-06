@@ -7,12 +7,14 @@ use crate::domain::progress::{
     validate_difficulty, validate_learning_steps, validate_scheduled_days, validate_stability, validate_state,
 };
 use crate::domain::settings_learning::DailyLimits;
-use crate::domain::time::{deserialize_optional_timestamp, serialize_optional_timestamp, serialize_timestamp};
+use crate::domain::time::{
+    deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
+};
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Review {
     pub id: i64,
@@ -31,7 +33,10 @@ pub struct Review {
     pub learning_steps: i32,
     pub time: i32,
     pub is_ignored: bool,
-    #[serde(serialize_with = "serialize_timestamp")]
+    // WHY: also accepts the RFC 3339 string `serialize_timestamp` emits, so the wire
+    // shape round-trips — `Review` is output-only today, but the asymmetry would
+    // otherwise hide from the serde wire tests.
+    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
 }
 
