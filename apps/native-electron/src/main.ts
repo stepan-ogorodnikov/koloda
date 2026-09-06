@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { registerDataIpc } from "./data-ipc";
 import { appDir, isDev } from "./env";
+import type { KolodaDb } from "./koloda-db";
 import { createWindow } from "./window";
 import { registerWindowIpc } from "./window-ipc";
 
@@ -22,7 +23,7 @@ function configureUserData() {
   }
 }
 
-function loadNativeAddon(): { KolodaDb: new (dbPath: string) => any } {
+function loadNativeAddon(): { KolodaDb: new (dbPath: string) => KolodaDb } {
   const req = createRequire(import.meta.url);
   const addonPath = isDev ? join(appDir, "..", "dist", "koloda_electron.node") : join(appDir, "koloda_electron.node");
   return req(addonPath);

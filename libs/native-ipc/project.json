@@ -1,0 +1,7 @@
+{
+  "name": "@koloda/native-ipc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
+  "sourceRoot": "libs/native-ipc/src",
+  "projectType": "library"
+}

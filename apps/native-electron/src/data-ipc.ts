@@ -1,7 +1,8 @@
 import { ipcMain } from "electron";
 import { registerAiIpc } from "./ai-ipc";
+import type { KolodaDb } from "./koloda-db";
 
-export function registerDataIpc(db: any) {
+export function registerDataIpc(db: KolodaDb) {
   ipcMain.handle("get_db_status", async () => db.getDbStatus());
 
   ipcMain.handle("seed_db", async (_event, { data }: any) => {
@@ -63,5 +64,8 @@ export function registerDataIpc(db: any) {
   ipcMain.handle("cmd_remove_ai_profile", async (_event, { data }: any) => db.removeAiProfile(data));
 
   // INVARIANT: AI provider calls + secret loads stay in main. Do not add cmd_* for getAiProfileSecrets.
-  registerAiIpc(db);
+  // WHY: ai-ipc is the single main-side secrets consumer. The addon instance
+  // carries `getAiProfileSecrets`, which `KolodaDb` deliberately omits so data
+  // handlers cannot reach secrets; restore the ai-ipc surface at this one call.
+  registerAiIpc(db as KolodaDb & Parameters<typeof registerAiIpc>[0]);
 }

@@ -163,6 +163,15 @@
       "name": "@koloda/e2e",
       "version": "0.0.1",
     },
+    "libs/native-ipc": {
+      "name": "@koloda/native-ipc",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/srs": "workspace:*",
+      },
+    },
     "libs/srs": {
       "name": "@koloda/srs",
       "version": "0.0.1",
@@ -615,6 +624,8 @@
     "@koloda/native-electron": ["@koloda/native-electron@workspace:apps/native-electron"],
 
     "@koloda/native-electron-react": ["@koloda/native-electron-react@workspace:apps/native-electron-react"],
+
+    "@koloda/native-ipc": ["@koloda/native-ipc@workspace:libs/native-ipc"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 

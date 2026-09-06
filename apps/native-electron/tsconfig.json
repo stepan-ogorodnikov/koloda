@@ -34,6 +34,15 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
+      "path": "../../libs/native-ipc"
+    },
+    {
+      "path": "../../libs/srs"
+    },
+    {
+      "path": "../../libs/app"
+    },
+    {
       "path": "../../libs/ai"
     }
   ]
