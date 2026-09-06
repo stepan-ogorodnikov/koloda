@@ -5,17 +5,24 @@ use serde::{Deserialize, Serialize};
 use crate::app::error::AppError;
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::common::validate_title;
-use crate::domain::time::{serialize_optional_timestamp, serialize_timestamp};
+use crate::domain::time::{
+    deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
+};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Algorithm {
     pub id: i64,
     pub title: String,
     pub content: AlgorithmFSRS,
-    #[serde(serialize_with = "serialize_timestamp")]
+    // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
+    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
-    #[serde(default, serialize_with = "serialize_optional_timestamp")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_timestamp",
+        serialize_with = "serialize_optional_timestamp"
+    )]
     pub updated_at: Option<i64>,
 }
 

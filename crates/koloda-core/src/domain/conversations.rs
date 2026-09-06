@@ -10,7 +10,7 @@ use crate::domain::time::{
     serialize_timestamp,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Conversation {
     pub id: String,

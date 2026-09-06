@@ -7,7 +7,7 @@ use crate::app::error::{error_codes, AppError};
 pub const LEARNING_STEP_UNITS: &[&str] = &["s", "m", "h", "d"];
 pub const FSRS6_WEIGHT_COUNT: usize = 21;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AlgorithmFSRS {
     #[serde(rename = "type")]

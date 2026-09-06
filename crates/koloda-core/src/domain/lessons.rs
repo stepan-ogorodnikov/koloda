@@ -8,7 +8,10 @@ use crate::app::error::AppError;
 use crate::domain::cards::{Card, UpdateCardProgress};
 use crate::domain::decks::Deck;
 use crate::domain::reviews::InsertReviewData;
-use crate::domain::time::{default_now, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp};
+use crate::domain::time::{
+    default_now, deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp,
+    serialize_timestamp,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -28,7 +31,7 @@ pub struct LessonsResult {
     pub decks: Vec<LessonDeck>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonFilters {
     pub deck_ids: Option<Vec<i64>>,
@@ -52,7 +55,7 @@ impl LessonAmounts {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonTemplateLayoutItem {
     pub field: Option<TemplateField>,
@@ -60,16 +63,21 @@ pub struct LessonTemplateLayoutItem {
     pub field_id: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonTemplate {
     pub id: i64,
     pub title: String,
     pub fields: Vec<TemplateField>,
     pub layout: Vec<LessonTemplateLayoutItem>,
-    #[serde(serialize_with = "serialize_timestamp")]
+    // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
+    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
-    #[serde(default, serialize_with = "serialize_optional_timestamp")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_optional_timestamp",
+        serialize_with = "serialize_optional_timestamp"
+    )]
     pub updated_at: Option<i64>,
 }
 

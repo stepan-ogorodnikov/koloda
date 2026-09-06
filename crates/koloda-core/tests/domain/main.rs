@@ -2,18 +2,23 @@
 #[path = "../common/mod.rs"]
 mod common;
 
+mod ai_serde_tests;
 mod ai_tests;
 mod algorithms_fsrs_tests;
+mod algorithms_serde_tests;
 mod algorithms_tests;
 mod cards_insert_tests;
 mod cards_progress_tests;
 mod cards_serde_tests;
 mod cards_values_tests;
+mod conversations_serde_tests;
 mod conversations_tests;
+mod decks_serde_tests;
 mod decks_title_tests;
 mod learning_day_tests;
 mod lessons_amounts_tests;
 mod lessons_result_tests;
+mod lessons_serde_tests;
 mod lessons_validation_tests;
 mod reviews_serde_tests;
 mod reviews_totals_tests;
@@ -25,4 +30,5 @@ mod settings_interface_tests;
 mod settings_learning_tests;
 mod settings_serde_tests;
 mod templates_insert_tests;
+mod templates_serde_tests;
 mod templates_update_tests;
