@@ -21,17 +21,14 @@ import type {
   UpdateAIProfileData,
 } from "@koloda/ai";
 import type {
-  AllowedSettings,
   Conversation,
   DeleteConversationData,
   HotkeysSettings,
   InterfaceSettings,
   LearningSettings,
-  PatchSettingsData,
   SetConversationData,
-  SetSettingsData,
-  SettingsName,
 } from "@koloda/app";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
   Card,

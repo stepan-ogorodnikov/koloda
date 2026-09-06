@@ -58,6 +58,9 @@
       "path": "../../libs/app/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/settings/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/srs-pgsql/tsconfig.lib.json"
     },
     {

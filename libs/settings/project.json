@@ -1,0 +1,7 @@
+{
+  "name": "@koloda/settings",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
+  "sourceRoot": "libs/settings/src",
+  "projectType": "library"
+}

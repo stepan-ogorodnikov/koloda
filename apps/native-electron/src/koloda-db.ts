@@ -9,15 +9,8 @@
 // no data handler can reach them through this interface. Do not add it here,
 // and do not register a renderer `cmd_*` for it.
 import type { AddAIProfileData, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type {
-  AllowedSettings,
-  Conversation,
-  DeleteConversationData,
-  PatchSettingsData,
-  SetConversationData,
-  SetSettingsData,
-  SettingsName,
-} from "@koloda/app";
+import type { Conversation, DeleteConversationData, SetConversationData } from "@koloda/app";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
   Card,

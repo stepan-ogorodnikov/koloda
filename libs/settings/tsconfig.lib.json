@@ -28,21 +28,13 @@
     "src/**/*.test.jsx",
     "src/**/test-setup.ts"
   ],
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": ["src/**/*.ts"],
   "references": [
     {
       "path": "../ai/tsconfig.lib.json"
     },
     {
       "path": "../app/tsconfig.lib.json"
-    },
-    {
-      "path": "../settings/tsconfig.lib.json"
-    },
-    {
-      "path": "../srs/tsconfig.lib.json"
     }
   ]
 }

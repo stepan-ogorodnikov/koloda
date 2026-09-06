@@ -125,9 +125,6 @@
     "libs/app": {
       "name": "@koloda/app",
       "version": "0.0.1",
-      "dependencies": {
-        "@koloda/ai": "workspace:*",
-      },
     },
     "libs/app-react": {
       "name": "@koloda/app-react",
@@ -137,6 +134,7 @@
         "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
         "@koloda/core-react": "workspace:*",
+        "@koloda/settings": "workspace:*",
         "@koloda/srs-react": "workspace:*",
         "@koloda/ui": "workspace:*",
       },
@@ -156,6 +154,7 @@
       "dependencies": {
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/settings": "workspace:*",
         "@koloda/srs": "workspace:*",
       },
     },
@@ -169,7 +168,16 @@
       "dependencies": {
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/settings": "workspace:*",
         "@koloda/srs": "workspace:*",
+      },
+    },
+    "libs/settings": {
+      "name": "@koloda/settings",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/app": "workspace:*",
       },
     },
     "libs/srs": {
@@ -178,6 +186,7 @@
       "dependencies": {
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/settings": "workspace:*",
       },
     },
     "libs/srs-pgsql": {
@@ -185,6 +194,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@koloda/app": "workspace:*",
+        "@koloda/settings": "workspace:*",
         "@koloda/srs": "workspace:*",
       },
     },
@@ -626,6 +636,8 @@
     "@koloda/native-electron-react": ["@koloda/native-electron-react@workspace:apps/native-electron-react"],
 
     "@koloda/native-ipc": ["@koloda/native-ipc@workspace:libs/native-ipc"],
+
+    "@koloda/settings": ["@koloda/settings@workspace:libs/settings"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 

@@ -1,13 +1,6 @@
 import type { AddAIProfileData, AIRuntime, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import type {
-  AllowedSettings,
-  ConversationListItem,
-  DeleteConversationData,
-  PatchSettingsData,
-  SetConversationData,
-  SetSettingsData,
-  SettingsName,
-} from "@koloda/app";
+import type { ConversationListItem, DeleteConversationData, SetConversationData } from "@koloda/app";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import { toConversationListItem } from "@koloda/app";
 import { queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";

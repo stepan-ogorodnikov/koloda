@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@koloda/app": "workspace:*",
+    "@koloda/settings": "workspace:*",
     "@koloda/ai": "workspace:*",
     "@koloda/ai-react": "workspace:*",
     "@koloda/core-react": "workspace:*",

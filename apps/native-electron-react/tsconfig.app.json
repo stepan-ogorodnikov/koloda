@@ -52,6 +52,9 @@
       "path": "../../libs/app/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/settings/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/ai/tsconfig.lib.json"
     },
     {

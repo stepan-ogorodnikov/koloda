@@ -14,6 +14,7 @@ export type {
   SetConversationData,
 } from "./lib/conversations";
 export { timestampsValidation } from "./lib/db";
+export type { Timestamps } from "./lib/db";
 export { getAppPlatform } from "./lib/environment";
 export {
   AppError,
@@ -26,8 +27,6 @@ export {
 } from "./lib/error";
 export type { ErrorCode, FormError, ZodIssue } from "./lib/error";
 export { formatGenerateError, toAIAppError } from "./lib/error-ai";
-export { allowedSettings, settingsRowEnvelopeSchema, settingsRowSchema } from "./lib/settings";
-export type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "./lib/settings";
 export {
   DEFAULT_HOTKEYS_SETTINGS,
   HOTKEYS_LABELS,

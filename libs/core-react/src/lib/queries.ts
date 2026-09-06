@@ -1,15 +1,12 @@
 import type { AddAIProfileData, AIModel, AIProfile, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import type {
-  AllowedSettings,
   AppError,
   Conversation,
   ConversationListItem,
   DeleteConversationData,
-  PatchSettingsData,
   SetConversationData,
-  SetSettingsData,
-  SettingsName,
 } from "@koloda/app";
+import type { AllowedSettings, PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
   Card,

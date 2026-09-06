@@ -1,4 +1,4 @@
-import type { SettingsName } from "@koloda/app";
+import type { SettingsName } from "@koloda/settings";
 import type {
   Algorithm,
   Deck,

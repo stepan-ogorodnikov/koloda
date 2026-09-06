@@ -1,11 +1,14 @@
+// Registry mapping each settings row name to its Zod schema. Sits above the
+// domain libs: it composes app's shell schemas with ai's provider settings.
 import { aiSettingsValidation } from "@koloda/ai";
+import {
+  hotkeysSettingsValidation,
+  interfaceSettingsValidation,
+  learningSettingsValidation,
+  timestampsValidation,
+} from "@koloda/app";
 import { z } from "zod";
-import { timestampsValidation } from "./db";
-import type { Timestamps } from "./db";
-import { hotkeysSettingsValidation } from "./settings-hotkeys";
-import { interfaceSettingsValidation } from "./settings-interface";
-import { learningSettingsValidation } from "./settings-learning";
-import type { DeepPartial } from "./utility";
+import type { DeepPartial, Timestamps } from "@koloda/app";
 
 export const allowedSettings = {
   interface: interfaceSettingsValidation,

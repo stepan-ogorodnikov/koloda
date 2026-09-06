@@ -1,4 +1,4 @@
-import type { AllowedSettings } from "@koloda/app";
+import type { AllowedSettings } from "@koloda/settings";
 import { queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab, useMotionSetting } from "@koloda/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

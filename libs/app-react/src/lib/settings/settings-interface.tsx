@@ -1,5 +1,5 @@
 import { MOTION_SETTINGS } from "@koloda/app";
-import type { AllowedSettings } from "@koloda/app";
+import type { AllowedSettings } from "@koloda/settings";
 import { schemeAtom } from "@koloda/core-react";
 import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";

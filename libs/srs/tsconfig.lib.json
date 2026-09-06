@@ -35,6 +35,9 @@
     },
     {
       "path": "../app/tsconfig.lib.json"
+    },
+    {
+      "path": "../settings/tsconfig.lib.json"
     }
   ]
 }

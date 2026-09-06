@@ -13,7 +13,5 @@
     },
     "./package.json": "./package.json"
   },
-  "dependencies": {
-    "@koloda/ai": "workspace:*"
-  }
+  "dependencies": {}
 }
