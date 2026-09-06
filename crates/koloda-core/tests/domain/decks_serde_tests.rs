@@ -45,7 +45,7 @@ fn test_deck_serializes_null_updated_at() {
 
 #[test]
 fn test_deck_json_round_trips() {
-    let value = serde_json::to_value(&deck_fixture()).unwrap();
+    let value = serde_json::to_value(deck_fixture()).unwrap();
 
     let back: Deck = serde_json::from_value(value).unwrap();
 
@@ -67,7 +67,7 @@ fn test_deck_input_shapes() {
     serde_json::from_value::<InsertDeckData>(payload).expect("canonical insert payload should deserialize");
 
     // The update `values` envelope is required as a whole.
-    assert!(serde_json::from_value::<UpdateDeckData>(json!({ "id": 5 })).is_err());
+    serde_json::from_value::<UpdateDeckData>(json!({ "id": 5 })).unwrap_err();
     assert!(
         serde_json::from_value::<UpdateDeckData>(json!({ "id": 5, "values": { "title": "x" } })).is_err(),
         "values needs algorithmId and templateId too"

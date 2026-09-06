@@ -63,20 +63,16 @@ fn test_redacted_profile_keeps_empty_allowlist_and_null_key() {
 fn test_secret_key_deserialization_contract() {
     // Redacted rows: `null` deserializes to no key.
     let redacted: AISecrets = serde_json::from_value(json!({ "provider": "openrouter", "apiKey": null })).unwrap();
-    assert_eq!(openrouter_key(&redacted), None);
+    assert_eq!(redacted.provider(), "openrouter");
+    assert_eq!(redacted.api_key(), None);
 
     // WHY: legacy rows stored `""` for absent keys; they must keep deserializing.
     let legacy: AISecrets = serde_json::from_value(json!({ "provider": "openrouter", "apiKey": "" })).unwrap();
-    assert_eq!(openrouter_key(&legacy), None);
+    assert_eq!(legacy.provider(), "openrouter");
+    assert_eq!(legacy.api_key(), None);
 
     // Snake-case alias accepted for hand-edited/older settings payloads.
     let alias: AISecrets = serde_json::from_value(json!({ "provider": "openrouter", "api_key": "sk-1" })).unwrap();
-    assert_eq!(openrouter_key(&alias), Some("sk-1".to_string()));
-}
-
-fn openrouter_key(secrets: &AISecrets) -> Option<String> {
-    match secrets {
-        AISecrets::OpenRouter { api_key } => api_key.clone(),
-        other => panic!("expected OpenRouter secrets, got {other:?}"),
-    }
+    assert_eq!(alias.provider(), "openrouter");
+    assert_eq!(alias.api_key(), Some("sk-1"));
 }

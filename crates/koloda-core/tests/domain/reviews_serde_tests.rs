@@ -151,7 +151,7 @@ fn test_review_serializes_null_due_at() {
 
 #[test]
 fn test_review_json_round_trips() {
-    let value = serde_json::to_value(&review_fixture()).unwrap();
+    let value = serde_json::to_value(review_fixture()).unwrap();
 
     let back: Review = serde_json::from_value(value).unwrap();
 

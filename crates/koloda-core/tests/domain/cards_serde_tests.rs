@@ -89,7 +89,7 @@ fn test_card_serializes_null_optional_fields() {
 
 #[test]
 fn test_card_json_round_trips() {
-    let value = serde_json::to_value(&card_fixture()).unwrap();
+    let value = serde_json::to_value(card_fixture()).unwrap();
 
     let back: Card = serde_json::from_value(value).unwrap();
 
@@ -193,8 +193,8 @@ fn test_update_card_data_wire_envelope() {
     assert_eq!(data.values.content["1"].text, "updated");
 
     // The `values` envelope is required as a whole.
-    assert!(serde_json::from_value::<UpdateCardData>(json!({ "id": 5 })).is_err());
-    assert!(serde_json::from_value::<UpdateCardData>(json!({ "id": 5, "values": {} })).is_err());
+    serde_json::from_value::<UpdateCardData>(json!({ "id": 5 })).unwrap_err();
+    serde_json::from_value::<UpdateCardData>(json!({ "id": 5, "values": {} })).unwrap_err();
 }
 
 /// Pins the batch-add wire shape: success items serialize as `{}` (no `error`
