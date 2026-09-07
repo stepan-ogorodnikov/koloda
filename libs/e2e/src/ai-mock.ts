@@ -2,7 +2,7 @@
  * Transport-independent half of the OpenAI-compatible AI mock: the option and
  * handle contracts plus the SSE/JSON wire builders. Each e2e suite supplies its
  * own transport around these (see the suites' `mock-openai-compatible.ts`):
- * demo intercepts with Playwright `page.route`, Electron runs a real Node HTTP
+ * web intercepts with Playwright `page.route`, Electron runs a real Node HTTP
  * server because main-process AI fetch is invisible to route interception.
  */
 

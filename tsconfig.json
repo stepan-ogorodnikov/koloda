@@ -4,7 +4,7 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/demo"
+      "path": "./apps/web"
     },
     {
       "path": "./libs/ui"
@@ -34,7 +34,7 @@
       "path": "./libs/ai-react"
     },
     {
-      "path": "./apps/demo-e2e"
+      "path": "./apps/web-e2e"
     },
     {
       "path": "./libs/app"

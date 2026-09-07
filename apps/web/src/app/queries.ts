@@ -1,0 +1,193 @@
+import type { AddAIProfileData, AIRuntime } from "@koloda/ai";
+import type { RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
+import type { DeleteConversationData, SetConversationData } from "@koloda/app";
+import type { PatchSettingsData, SetSettingsData, SettingsName } from "@koloda/settings";
+import { queryKeys } from "@koloda/core-react";
+import type { Queries } from "@koloda/core-react";
+import type {
+  Algorithm,
+  CloneAlgorithmData,
+  CloneTemplateData,
+  Deck,
+  DeleteAlgorithmData,
+  DeleteCardData,
+  DeleteCardsData,
+  DeleteDeckData,
+  DeleteTemplateData,
+  GetCardsParams,
+  GetLessonDataParams,
+  GetReviewsData,
+  InsertAlgorithmData,
+  InsertCardData,
+  InsertDeckData,
+  InsertTemplateData,
+  LessonFilters,
+  LessonResultData,
+  ResetCardProgressData,
+  Template,
+  UpdateAlgorithmData,
+  UpdateCardData,
+  UpdateDeckData,
+  UpdateTemplateData,
+} from "@koloda/srs";
+import type { DB } from "@koloda/db-pglite";
+import {
+  addAlgorithm,
+  addCard,
+  addCards,
+  addDeck,
+  addTemplate,
+  cloneAlgorithm,
+  cloneTemplate,
+  deleteAlgorithm,
+  deleteCard,
+  deleteCards,
+  deleteConversation,
+  deleteDeck,
+  deleteTemplate,
+  getAlgorithm,
+  getAlgorithmDecks,
+  getAlgorithms,
+  getCards,
+  getConversation,
+  getConversations,
+  getDeck,
+  getDecks,
+  getLessonData,
+  getLessons,
+  getReviews,
+  getSettings,
+  getTemplate,
+  getTemplateDecks,
+  getTemplates,
+  getTodaysReviewTotals,
+  patchSettings,
+  resetCardProgress,
+  setConversation,
+  setSettings,
+  submitLessonResult,
+  updateAlgorithm,
+  updateCard,
+  updateDeck,
+  updateTemplate,
+} from "@koloda/db-pglite";
+import { addAIProfile, getAIProfiles, removeAIProfile, updateAIProfile } from "./ai";
+import { getStatus, setupFromScratch } from "./setup";
+
+export const webAppQueryOptions = {
+  queryKey: ["app"],
+  queryFn: getStatus,
+  refetchOnReconnect: false,
+  refetchOnWindowFocus: false,
+  staleTime: Infinity,
+};
+
+export const webSetupMutationOptions = { mutationFn: setupFromScratch };
+
+export const queriesFn = (db: DB, aiRuntime: AIRuntime): Queries => ({
+  getSettingsQuery: <T extends SettingsName>(name: T) => ({
+    queryKey: queryKeys.settings.detail(name),
+    queryFn: () => getSettings<T>(db, name),
+  }),
+  setSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: (data: SetSettingsData<T>) => setSettings<T>(db, data),
+  }),
+  patchSettingsMutation: <T extends SettingsName>() => ({
+    mutationFn: (data: PatchSettingsData<T>) => patchSettings<T>(db, data),
+  }),
+  getConversationQuery: (id: string) => ({
+    queryKey: queryKeys.conversations.detail(id),
+    queryFn: () => getConversation(db, id),
+  }),
+  getConversationsQuery: () => ({
+    queryKey: queryKeys.conversations.all(),
+    queryFn: () => getConversations(db),
+  }),
+  setConversationMutation: () => ({
+    mutationFn: (data: SetConversationData) => setConversation(db, data),
+  }),
+  deleteConversationMutation: () => ({
+    mutationFn: (data: DeleteConversationData) => deleteConversation(db, data),
+  }),
+  getAlgorithmsQuery: () => ({
+    queryKey: queryKeys.algorithms.all(),
+    queryFn: () => getAlgorithms(db),
+  }),
+  getAlgorithmQuery: (id: Algorithm["id"]) => ({
+    queryKey: queryKeys.algorithms.detail(id),
+    queryFn: () => getAlgorithm(db, id),
+  }),
+  addAlgorithmMutation: () => ({ mutationFn: (data: InsertAlgorithmData) => addAlgorithm(db, data) }),
+  cloneAlgorithmMutation: () => ({ mutationFn: (data: CloneAlgorithmData) => cloneAlgorithm(db, data) }),
+  updateAlgorithmMutation: () => ({ mutationFn: (data: UpdateAlgorithmData) => updateAlgorithm(db, data) }),
+  deleteAlgorithmMutation: () => ({ mutationFn: (data: DeleteAlgorithmData) => deleteAlgorithm(db, data) }),
+  getAlgorithmDecksQuery: (id: Algorithm["id"]) => ({
+    queryKey: queryKeys.algorithms.decks(id),
+    queryFn: () => getAlgorithmDecks(db, id),
+  }),
+  getDecksQuery: () => ({
+    queryKey: queryKeys.decks.all(),
+    queryFn: () => getDecks(db),
+  }),
+  getDeckQuery: (id: Deck["id"]) => ({
+    queryKey: queryKeys.decks.detail(id),
+    queryFn: () => getDeck(db, id),
+  }),
+  addDeckMutation: () => ({ mutationFn: (data: InsertDeckData) => addDeck(db, data) }),
+  addCardsMutation: () => ({ mutationFn: (data: InsertCardData[]) => addCards(db, data) }),
+  updateDeckMutation: () => ({ mutationFn: (data: UpdateDeckData) => updateDeck(db, data) }),
+  deleteDeckMutation: () => ({ mutationFn: (data: DeleteDeckData) => deleteDeck(db, data) }),
+  getTemplatesQuery: () => ({
+    queryKey: queryKeys.templates.all(),
+    queryFn: () => getTemplates(db),
+  }),
+  getTemplateQuery: (id: Template["id"]) => ({
+    queryKey: queryKeys.templates.detail(id),
+    queryFn: () => getTemplate(db, id),
+  }),
+  addTemplateMutation: () => ({ mutationFn: (data: InsertTemplateData) => addTemplate(db, data) }),
+  cloneTemplateMutation: () => ({ mutationFn: (data: CloneTemplateData) => cloneTemplate(db, data) }),
+  updateTemplateMutation: () => ({ mutationFn: (data: UpdateTemplateData) => updateTemplate(db, data) }),
+  deleteTemplateMutation: () => ({ mutationFn: (data: DeleteTemplateData) => deleteTemplate(db, data) }),
+  getTemplateDecksQuery: (data: DeleteDeckData) => ({
+    queryKey: queryKeys.templates.decks(data.id),
+    queryFn: () => getTemplateDecks(db, data),
+  }),
+  getCardsQuery: (params: GetCardsParams) => ({
+    queryKey: queryKeys.cards.deck(params),
+    queryFn: () => getCards(db, params),
+  }),
+  addCardMutation: () => ({ mutationFn: (data: InsertCardData) => addCard(db, data) }),
+  updateCardMutation: () => ({ mutationFn: (data: UpdateCardData) => updateCard(db, data) }),
+  deleteCardMutation: () => ({ mutationFn: (data: DeleteCardData) => deleteCard(db, data) }),
+  deleteCardsMutation: () => ({ mutationFn: (data: DeleteCardsData) => deleteCards(db, data) }),
+  resetCardProgressMutation: () => ({ mutationFn: (data: ResetCardProgressData) => resetCardProgress(db, data) }),
+  getLessonsQuery: (filters?: LessonFilters) => ({
+    queryKey: queryKeys.lessons.all(filters),
+    queryFn: () => getLessons(db, new Date(), filters),
+  }),
+  getTodayReviewTotalsQuery: () => ({
+    queryKey: queryKeys.lessons.todayReviewTotals(),
+    queryFn: () => getTodaysReviewTotals(db),
+  }),
+  getLessonDataQuery: (params: GetLessonDataParams) => ({
+    queryKey: queryKeys.lessons.data(params),
+    queryFn: () => getLessonData(db, new Date(), params.filters, params.amounts),
+  }),
+  submitLessonResultMutation: () => ({ mutationFn: (data: LessonResultData) => submitLessonResult(db, data) }),
+  getReviewsQuery: (data: GetReviewsData) => ({
+    queryKey: queryKeys.reviews.card(data),
+    queryFn: () => getReviews(db, data),
+  }),
+  addAIProfileMutation: () => ({ mutationFn: (data: AddAIProfileData) => addAIProfile(db, data) }),
+  updateAIProfileMutation: () => ({ mutationFn: (data: UpdateAIProfileData) => updateAIProfile(db, data) }),
+  removeAIProfileMutation: () => ({ mutationFn: (data: RemoveAIProfileData) => removeAIProfile(db, data) }),
+  getAIProfileModelsQuery: (profileId: string) => ({
+    queryKey: queryKeys.ai.models(profileId),
+    queryFn: () => aiRuntime.listModels(profileId),
+  }),
+  getAIProfilesQuery: () => ({
+    queryKey: queryKeys.ai.profiles(),
+    queryFn: () => getAIProfiles(db),
+  }),
+});

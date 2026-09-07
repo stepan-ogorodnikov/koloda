@@ -8,7 +8,7 @@ One spec file per user flow; no app code is mocked except the AI provider.
 Tests `apps/native-electron` (main process) and `apps/native-electron-react` (renderer) together.
 The `e2e` target builds the Rust addon and compiles the preload first, then serves the renderer dev server on port 3000
 and launches Electron from `apps/native-electron` — the full stack, no bundling shortcuts.
-The web counterpart is `apps/demo-e2e`; the spec sets mirror each other flow for flow.
+The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
 
 ## How to run
 
@@ -36,9 +36,9 @@ The web counterpart is `apps/demo-e2e`; the spec sets mirror each other flow for
 
 - Main-process build, preload, and bundling — `apps/native-electron` targets
 - The renderer under test — `apps/native-electron-react`
-- The web suite — `apps/demo-e2e`
+- The web suite — `apps/web-e2e`
 
 ## Read next
 
 - `apps/native-electron/README.md` — the Electron host
-- `apps/demo-e2e/README.md` — the mirrored web suite
+- `apps/web-e2e/README.md` — the mirrored web suite

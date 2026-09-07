@@ -60,7 +60,7 @@ The tests are part of the audited surface.
    - Rust: `cargo test`
    - Desktop unit: `nx run native-electron:test:unit`
    - Desktop e2e: `nx run native-electron:test:e2e`
-   - Web e2e: `nx run demo-e2e:e2e`
+   - Web e2e: `nx run web-e2e:e2e`
    Record which command ran.
 
 A pattern-matched finding is not a finding.

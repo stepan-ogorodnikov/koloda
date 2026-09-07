@@ -40,12 +40,12 @@ describe("Queries contract", () => {
     ).toContain("unexpected: extraMethod");
   });
 
-  it("keeps demo and electron adapters aligned with QUERIES_METHODS", () => {
+  it("keeps web and electron adapters aligned with QUERIES_METHODS", () => {
     const expected = [...QUERIES_METHODS].sort();
-    const demo = extractAdapterMethods("apps/demo/src/app/queries.ts");
+    const web = extractAdapterMethods("apps/web/src/app/queries.ts");
     const electron = extractAdapterMethods("apps/native-electron-react/src/app/queries.ts");
 
-    expect(demo).toEqual(expected);
+    expect(web).toEqual(expected);
     expect(electron).toEqual(expected);
   });
 });

@@ -45,7 +45,7 @@ Conversation documents and reducer policy still live in `@koloda/assistant-react
 - Repository writes / TanStack Query cache updates — `@koloda/assistant-react` (`useConversationSaveHost` write adapter)
 - `RunController` UI facade / submit orchestration — `@koloda/assistant-react` (`assistant/runs/`; validation + request prep in `prepare-run-request.ts`; command acceptance then `submitTurn` in `use-run-orchestration.ts`)
 - Chat UI, cards table, settings screens — `@koloda/assistant-react` (`assistant/ui/`)
-- Provider HTTP / `AIRuntime` host adapters — `@koloda/ai` + Electron/demo hosts
+- Provider HTTP / `AIRuntime` host adapters — `@koloda/ai` + Electron/web hosts
 - Generic presentational chat chrome — `@koloda/ai-react`
 
 ## Command ingress and duplicate runs
@@ -60,7 +60,7 @@ UI disable-submit is not sufficient.
 
 ## Graceful shutdown
 
-On real unload `pagehide` / `beforeunload`, the application-shell host dispatches a typed `shutdown` command via `shutdownAssistantGracefully` (best-effort in browsers/demo — the platform does not await flush promises).
+On real unload `pagehide` / `beforeunload`, the application-shell host dispatches a typed `shutdown` command via `shutdownAssistantGracefully` (best-effort in browsers/web — the platform does not await flush promises).
 A bfcache `pagehide` (`PageTransitionEvent.persisted === true`) skips terminal shutdown so a later `pageshow` can reuse the same engine.
 Electron additionally runs a main-process window-close handshake (`apps/native-electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`).
 Concurrent unload + IPC callers share one engine shutdown promise (single-flight) so acknowledgement waits for the joined flush:

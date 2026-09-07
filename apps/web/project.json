@@ -1,0 +1,48 @@
+{
+  "name": "@koloda/web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web/src",
+  "projectType": "application",
+  "tags": [
+    "type:app",
+    "platform:web"
+  ],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx playwright test --config apps/web-e2e/playwright.config.ts"
+      }
+    },
+    "test-unit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config apps/web/vitest.config.mjs --configLoader runner"
+      }
+    },
+    "lingui-extract": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui extract"
+      }
+    },
+    "linge": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui extract --clean"
+      }
+    },
+    "lingui-compile": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui compile"
+      }
+    },
+    "lingc": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "lingui compile"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import type { ChatStreamChunk, ChatStreamRequest } from "./generation";
 import type { AIModel, StreamUsage } from "./models";
 
-// INVARIANT: Host adapters implement this (Electron main / demo). Shared React
+// INVARIANT: Host adapters implement this (Electron main / web). Shared React
 // must call by `profileId` only — never with usable secrets. Method shapes mirror
 // `AIGenerationClient` so adapters can wrap `createAIGenerationClient`.
 export type AIRuntime = {

@@ -16,8 +16,8 @@
     "check:commit": "nx run-many -t lint",
     "check:push": "nx run-many -t lint,typecheck",
     "check:rust": "cargo clippy --workspace --all-targets -- -D warnings",
-    "check:demo-deploy": "bun run check:push && bun run test:libs && bun run check:workspace-deps",
-    "check:demo-all": "bun run check:demo-deploy && nx run demo-e2e:e2e",
+    "check:web-deploy": "bun run check:push && bun run test:libs && bun run check:workspace-deps",
+    "check:web-all": "bun run check:web-deploy && nx run web-e2e:e2e",
     "prepare": "git config core.hooksPath tools/hooks"
   },
   "dependencies": {

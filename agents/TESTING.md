@@ -2,7 +2,7 @@
 
 This guide defines which tests to write when implementing a change.
 It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
-The Playwright e2e suites are out of scope; they follow their own specs in `apps/demo-e2e` and `apps/native-electron-e2e`.
+The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/native-electron-e2e`.
 
 ## The survival question
 
@@ -27,7 +27,7 @@ If it would still pass, redesign the test before writing it.
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
 | Rust unit | Domain validation, serde wire contracts | `crates/koloda/tests/domain/<entity>_tests.rs` |
 | Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda/tests/integration/<entity>_integration_tests.rs`, `libs/db-pglite/src/lib/*.integration.test.ts` |
-| E2e | User flows | `apps/demo-e2e`, `apps/native-electron-e2e` |
+| E2e | User flows | `apps/web-e2e`, `apps/native-electron-e2e` |
 
 - Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
 - Do not re-test a validator through the repo layer unless the repo adds persistence-specific behavior.

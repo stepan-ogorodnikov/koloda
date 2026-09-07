@@ -207,7 +207,7 @@ const scrollViewport = [
 <div className={scrollViewport} />
 ```
 
-Reference: `apps/demo/src/components/titlebar.tsx`, `libs/ai-react/src/lib/ai-chat-messages.tsx`.
+Reference: `apps/web/src/components/titlebar.tsx`, `libs/ai-react/src/lib/ai-chat-messages.tsx`.
 
 Short, single-concern class lists may stay inline.
 Roughly one visual idea.

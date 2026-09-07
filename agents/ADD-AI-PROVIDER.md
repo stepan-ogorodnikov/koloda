@@ -266,9 +266,9 @@ Check that the add dialog renders the new fields and the edit dialog prefills th
 
 ### 8. Host enablement
 
-Do not edit app stores. Desktop uses `AI_PROVIDERS`; demo uses `listProvidersThatWorkInBrowser()`.
+Do not edit app stores. Desktop uses `AI_PROVIDERS`; web uses `listProvidersThatWorkInBrowser()`.
 
-Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and still works in Electron (provider HTTP runs in the main process, where CORS does not apply), and is listed but disabled in demo’s add-profile picker.
+Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and still works in Electron (provider HTTP runs in the main process, where CORS does not apply), and is listed but disabled in web’s add-profile picker.
 
 ### 9. Add Tests
 
@@ -292,4 +292,4 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 | Add Form | `libs/settings-react/src/lib/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
 | Edit Form | `libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |
 | Settings | `libs/settings-react/src/lib/settings-ai-*-profile.tsx` | Add/edit dialogs (provider picker, wiring) |
-| App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Demo: `listProvidersThatWorkInBrowser()` |
+| App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Web: `listProvidersThatWorkInBrowser()` |

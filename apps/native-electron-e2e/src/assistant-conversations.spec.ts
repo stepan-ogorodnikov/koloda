@@ -448,7 +448,7 @@ test("shows a save error banner that retry persists and dismiss hides without sa
     const retrySaveButton = page.getByRole("button", { name: "Retry save" });
     await expect(retrySaveButton).toBeVisible({ timeout: 20_000 });
 
-    // WHY: mirrors the demo's "let the backoff climb" wait, but state-gated:
+    // WHY: mirrors the web suite's "let the backoff climb" wait, but state-gated:
     // retry N is scheduled 250ms * 2^(N-1) * jitter (0.5–1) after failure N,
     // so once the 4th failure is logged the next retry is >=1s out and no
     // background retry can fire between disarming the failure and the click.

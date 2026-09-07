@@ -1,6 +1,6 @@
 # e2e
 
-Shared Playwright support code for the two e2e suites, `apps/demo-e2e` (web) and
+Shared Playwright support code for the two e2e suites, `apps/web-e2e` (web) and
 `apps/native-electron-e2e` (desktop). The suites drive the same app UI, so the
 page flows and the AI-mock wire format are defined once here; only the platform
 differences live in the suites themselves.
@@ -21,10 +21,10 @@ and it must never gain runtime dependencies.
 
 ## What stays per-suite (on purpose)
 
-- `playwright.config.ts` and the launch layer: demo boots a vite `webServer`;
+- `playwright.config.ts` and the launch layer: web boots a vite `webServer`;
   Electron launches the real shell via `_electron.launch` with an isolated
   `KOLODA_USER_DATA`.
-- The AI-mock transport around `src/ai-mock.ts`: demo uses `page.route` plus a
+- The AI-mock transport around `src/ai-mock.ts`: web uses `page.route` plus a
   page-side SSE re-streamer; Electron uses a real Node HTTP server because
   main-process AI fetch is invisible to route interception.
 - The suites' `helpers.ts` facades re-export the shared flows and wrap the
@@ -32,4 +32,4 @@ and it must never gain runtime dependencies.
 
 ## Read next
 
-- `apps/demo-e2e/README.md` and `apps/native-electron-e2e/README.md` — the consumers
+- `apps/web-e2e/README.md` and `apps/native-electron-e2e/README.md` — the consumers

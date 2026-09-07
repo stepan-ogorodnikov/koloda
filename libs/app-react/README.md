@@ -5,7 +5,7 @@ Composes feature screens from `@koloda/srs-react`, `@koloda/assistant-react`, an
 
 ## Where it sits
 
-Consumed by `apps/demo` and `apps/native-electron-react` (import `routeTree`).
+Consumed by `apps/web` and `apps/native-electron-react` (import `routeTree`).
 Depends on `@koloda/app`, `@koloda/settings`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`, `@koloda/core-react`, and `@koloda/ui`.
 Each app must set `appEntryAtom` before routes render and inject its `Queries` implementation.
 

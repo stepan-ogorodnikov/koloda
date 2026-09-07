@@ -23,7 +23,7 @@ Keep two persistence stacks on purpose:
 
 | Platform | Engine | Ownership | Schema / migrations |
 | --- | --- | --- | --- |
-| Web (`apps/demo`) | PGlite (PostgreSQL) | `@koloda/db-pglite` in-process | `libs/db-pglite` schema → `drizzle/pgsql/` |
+| Web (`apps/web`) | PGlite (PostgreSQL) | `@koloda/db-pglite` in-process | `libs/db-pglite` schema → `drizzle/pgsql/` |
 | Desktop (Electron) | SQLite | `koloda` via NAPI | Refinery SQL in `koloda` (`src/migrations/`) |
 
 Do not collapse to a single dialect “for simplicity.”

@@ -92,10 +92,6 @@
         "vitest": "4.1.9",
       },
     },
-    "apps/demo": {
-      "name": "@koloda/demo",
-      "version": "0.0.1",
-    },
     "apps/native-electron": {
       "name": "@koloda/native-electron",
       "version": "0.0.1",
@@ -107,6 +103,10 @@
     },
     "apps/native-electron-react": {
       "name": "@koloda/native-electron-react",
+      "version": "0.0.1",
+    },
+    "apps/web": {
+      "name": "@koloda/web",
       "version": "0.0.1",
     },
     "libs/ai": {
@@ -653,8 +653,6 @@
 
     "@koloda/db-pglite": ["@koloda/db-pglite@workspace:libs/db-pglite"],
 
-    "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
-
     "@koloda/e2e": ["@koloda/e2e@workspace:libs/e2e"],
 
     "@koloda/native-electron": ["@koloda/native-electron@workspace:apps/native-electron"],
@@ -672,6 +670,8 @@
     "@koloda/srs-react": ["@koloda/srs-react@workspace:libs/srs-react"],
 
     "@koloda/ui": ["@koloda/ui@workspace:libs/ui"],
+
+    "@koloda/web": ["@koloda/web@workspace:apps/web"],
 
     "@lingui/babel-plugin-extract-messages": ["@lingui/babel-plugin-extract-messages@5.6.0", "", {}, "sha512-FrTHNisLmH1X23d1ISOFLgChjr6lO+vpDa21enCA7ehTJHWjtxy6YP4rXrX5MWfsozmLFloJsizpNU69OC3e1w=="],
 

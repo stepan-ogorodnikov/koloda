@@ -1,0 +1,33 @@
+{
+  "name": "web-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web-e2e/src",
+  "projectType": "application",
+  "tags": [
+    "type:e2e",
+    "platform:web"
+  ],
+  "implicitDependencies": [
+    "@koloda/web"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx tsc --project apps/web-e2e/tsconfig.json --noEmit"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx playwright test --config apps/web-e2e/playwright.config.ts"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx playwright test --config apps/web-e2e/playwright.config.ts"
+      }
+    }
+  }
+}

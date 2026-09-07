@@ -1,11 +1,11 @@
 # @koloda/db-pglite
 
-PostgreSQL/PGlite persistence for the web demo: Drizzle schema, typed `DB`, and async repos for SRS entities, settings, and conversations.
+PostgreSQL/PGlite persistence for the web host: Drizzle schema, typed `DB`, and async repos for SRS entities, settings, and conversations.
 Validates through `@koloda/srs` / `@koloda/app` schemas on write. On read, raw SQL always goes through mandatory `parse*` helpers; typed Drizzle paths use gated `assert*` tripwires (`parse-rows.ts` + `*RowSchema`) that skip parsing in production.
 
 ## Where it sits
 
-Consumed by `apps/demo` (`queries.ts`, `db.ts`, `ai.ts`).
+Consumed by `apps/web` (`queries.ts`, `db.ts`, `ai.ts`).
 Desktop apps do not use this package; they call `koloda` via NAPI.
 Depends on `@koloda/app` and `@koloda/srs`.
 

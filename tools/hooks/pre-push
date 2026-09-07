@@ -18,7 +18,7 @@ fi
 
 # Tests last (slowest, whole-change). Not nx-cached — a flat ~50s cost per
 # push. TS libs via vitest (PGlite/in-memory SQLite, self-contained; the
-# Playwright e2e suites are a separate, manual/demo-deploy boundary).
+# Playwright e2e suites are a separate, manual/web-deploy boundary).
 # Rust: the TS <-> Rust twin rule (agents/TESTING.md) means both sides must
 # actually run, not just be claimed green.
 bun run test:libs || exit 1

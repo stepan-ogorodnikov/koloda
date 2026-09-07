@@ -49,7 +49,7 @@ nx run native-electron:test:unit
 nx run native-electron:test:e2e
 
 # Web Playwright e2e
-nx run demo-e2e:e2e
+nx run web-e2e:e2e
 
 # Rust (workspace: koloda + Electron NAPI crate)
 cargo test
@@ -59,8 +59,8 @@ cargo test
 
 ```
 apps/
-  demo/                   # Web app (Live demo)
-  demo-e2e/               # E2E tests for web app (Playwright)
+  web/                    # PGlite web host
+  web-e2e/                # E2E tests for web host (Playwright)
   native-electron/        # Desktop app backend (Electron / Rust NAPI)
   native-electron-e2e/    # E2E tests for desktop app (Playwright)
   native-electron-react/  # Desktop app frontend (React / Electron)
