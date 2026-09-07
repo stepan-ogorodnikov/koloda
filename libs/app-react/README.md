@@ -24,7 +24,7 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
 
 - SRS domain logic — `@koloda/srs`
 - Assistant conversation store / run orchestration — `@koloda/srs-react/.../assistant`
-- DB repos or schema — `@koloda/srs-pgsql`, `koloda-core`
+- DB repos or schema — `@koloda/db-pglite`, `koloda-core`
 - Provider HTTP — `@koloda/ai`
 - Layout primitives — `@koloda/ui`
 

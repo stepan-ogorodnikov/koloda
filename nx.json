@@ -29,7 +29,7 @@
       },
       "exclude": [
         "libs/srs/*",
-        "libs/srs-pgsql/*",
+        "libs/db-pglite/*",
         "libs/ai/*"
       ]
     },
@@ -50,7 +50,7 @@
       "plugin": "@nx/js/typescript",
       "include": [
         "libs/srs/*",
-        "libs/srs-pgsql/*",
+        "libs/db-pglite/*",
         "libs/ai/*"
       ],
       "options": {

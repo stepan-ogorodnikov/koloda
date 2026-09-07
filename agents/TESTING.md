@@ -26,7 +26,7 @@ If it would still pass, redesign the test before writing it.
 | --- | --- | --- |
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
 | Rust unit | Domain validation, serde wire contracts | `crates/koloda-core/tests/domain/<entity>_tests.rs` |
-| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda-core/tests/integration/<entity>_integration_tests.rs`, `libs/srs-pgsql/src/lib/*.integration.test.ts` |
+| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda-core/tests/integration/<entity>_integration_tests.rs`, `libs/db-pglite/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/demo-e2e`, `apps/native-electron-e2e` |
 
 - Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.

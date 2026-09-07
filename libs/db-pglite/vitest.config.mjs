@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  cacheDir: "../../node_modules/.vite/libs/srs-pgsql",
+  cacheDir: "../../node_modules/.vite/libs/db-pglite",
   resolve: {
     tsconfigPaths: true,
     alias: {
@@ -14,6 +14,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["libs/srs-pgsql/src/**/*.test.ts"],
+    include: ["libs/db-pglite/src/**/*.test.ts"],
   },
 });

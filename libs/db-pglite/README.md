@@ -1,4 +1,4 @@
-# @koloda/srs-pgsql
+# @koloda/db-pglite
 
 PostgreSQL/PGlite persistence for the web demo: Drizzle schema, typed `DB`, and async repos for SRS entities, settings, and conversations.
 Validates through `@koloda/srs` / `@koloda/app` schemas on write. On read, raw SQL always goes through mandatory `parse*` helpers; typed Drizzle paths use gated `assert*` tripwires (`parse-rows.ts` + `*RowSchema`) that skip parsing in production.

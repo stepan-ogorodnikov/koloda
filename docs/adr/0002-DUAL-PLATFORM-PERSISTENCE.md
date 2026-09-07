@@ -11,7 +11,7 @@ When a desktop app was added, SQLite was chosen instead — a better fit for an 
 
 Desktop persistence therefore lives in Rust (`koloda-core` over SQLite), exposed to Electron via NAPI
 (see `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`).
-Web persistence stays in-process TypeScript (`@koloda/srs-pgsql` over PGlite).
+Web persistence stays in-process TypeScript (`@koloda/db-pglite` over PGlite).
 
 Shared UI talks to data through the `Queries` contract (`@koloda/core-react`); each app injects its backend.
 `agents/DB.md` describes the schema/migration workflow.
@@ -23,7 +23,7 @@ Keep two persistence stacks on purpose:
 
 | Platform | Engine | Ownership | Schema / migrations |
 | --- | --- | --- | --- |
-| Web (`apps/demo`) | PGlite (PostgreSQL) | `@koloda/srs-pgsql` in-process | `libs/srs-pgsql` schema → `drizzle/pgsql/` |
+| Web (`apps/demo`) | PGlite (PostgreSQL) | `@koloda/db-pglite` in-process | `libs/db-pglite` schema → `drizzle/pgsql/` |
 | Desktop (Electron) | SQLite | `koloda-core` via NAPI | Refinery SQL in `koloda-core` (`src/migrations/`) |
 
 Do not collapse to a single dialect “for simplicity.”
@@ -46,5 +46,5 @@ Then generate PG migrations and hand-write the matching Refinery SQL (see `agent
 
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why Rust/domain mirroring exists beside the TS web path
 - `agents/DB.md` — PG Drizzle generate, dialect map, Refinery port rules
-- `libs/srs-pgsql/README.md`, `crates/koloda-core/README.md`
+- `libs/db-pglite/README.md`, `crates/koloda-core/README.md`
 - `libs/core-react/README.md` — `Queries` injection per app

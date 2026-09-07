@@ -3,7 +3,7 @@
 Why two engines and ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`.
 
 - **Dual engines** (ADR 0002).
-  Web uses PGlite/Postgres via `@koloda/srs-pgsql`.
+  Web uses PGlite/Postgres via `@koloda/db-pglite`.
   Desktop uses SQLite via `koloda-core` Refinery.
 - **Drizzle is PG-only**: `drizzle.config.pgsql.ts` generates into `drizzle/pgsql/`.
 - **Generate migrations**: `bun run db:generate` (PostgreSQL only).
@@ -17,7 +17,7 @@ Why two engines and ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PER
 
 When modifying database schema:
 
-1. **Update the PG schema**: `libs/srs-pgsql/src/lib/schema.ts` (web).
+1. **Update the PG schema**: `libs/db-pglite/src/lib/schema.ts` (web).
 2. **Update shared types** in `libs/srs/src/lib/` if new fields need validation.
 3. **Update Rust domain types** in `crates/koloda-core/src/domain/` for desktop.
 4. **Generate PG migrations**: `bun run db:generate`.

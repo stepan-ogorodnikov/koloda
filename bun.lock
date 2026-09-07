@@ -161,6 +161,15 @@
         "@koloda/srs": "workspace:*",
       },
     },
+    "libs/db-pglite": {
+      "name": "@koloda/db-pglite",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/app": "workspace:*",
+        "@koloda/settings": "workspace:*",
+        "@koloda/srs": "workspace:*",
+      },
+    },
     "libs/e2e": {
       "name": "@koloda/e2e",
       "version": "0.0.1",
@@ -190,15 +199,6 @@
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
         "@koloda/settings": "workspace:*",
-      },
-    },
-    "libs/srs-pgsql": {
-      "name": "@koloda/srs-pgsql",
-      "version": "0.0.1",
-      "dependencies": {
-        "@koloda/app": "workspace:*",
-        "@koloda/settings": "workspace:*",
-        "@koloda/srs": "workspace:*",
       },
     },
     "libs/srs-react": {
@@ -626,6 +626,8 @@
 
     "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
 
+    "@koloda/db-pglite": ["@koloda/db-pglite@workspace:libs/db-pglite"],
+
     "@koloda/demo": ["@koloda/demo@workspace:apps/demo"],
 
     "@koloda/e2e": ["@koloda/e2e@workspace:libs/e2e"],
@@ -639,8 +641,6 @@
     "@koloda/settings": ["@koloda/settings@workspace:libs/settings"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
-
-    "@koloda/srs-pgsql": ["@koloda/srs-pgsql@workspace:libs/srs-pgsql"],
 
     "@koloda/srs-react": ["@koloda/srs-react@workspace:libs/srs-react"],
 

@@ -23,7 +23,7 @@ Persistence mirrors the desktop's SQLite core through the shared `@koloda/srs` d
 - Entry: `src/main.tsx` — mounts `AppProviders` from `@koloda/app-react` with the store and i18n.
 - Store wiring: `src/app/store.ts` — jotai store, UI preferences, locale detection (stored lang, then navigator), demo AI runtime.
 - Database: `src/app/db.ts` — PGlite at `idb://koloda` with the drizzle schema and migration files.
-- Queries: `src/app/queries.ts` — the `Queries` contract implemented in-process via `@koloda/srs-pgsql`.
+- Queries: `src/app/queries.ts` — the `Queries` contract implemented in-process via `@koloda/db-pglite`.
 - Setup: `src/app/setup.ts` — status check, migrations, and the one-transaction first setup with seed content.
 - Seed content: `src/app/seed/<locale>/` — starter algorithms, templates, and decks per language.
 - AI: `src/app/ai.ts` — profiles persisted in the ai settings slice, secrets redacted on read.
@@ -34,7 +34,7 @@ Persistence mirrors the desktop's SQLite core through the shared `@koloda/srs` d
 ### Does NOT own (prevent scope creep)
 
 - Screens, routes, settings UI — `@koloda/app-react`
-- Domain and scheduling — `@koloda/srs`; persistence schema — `@koloda/srs-pgsql`
+- Domain and scheduling — `@koloda/srs`; persistence schema — `@koloda/db-pglite`
 - The desktop Electron host — `apps/native-electron` and `apps/native-electron-react`
 - E2E harness — `apps/demo-e2e`
 

@@ -21,7 +21,7 @@ Desktop mirrors live in `crates/koloda-core/src/domain/` (settings, hotkeys, con
 
 - React UI or TanStack Query — `@koloda/app-react`, `@koloda/core-react`
 - SRS domain / FSRS — `@koloda/srs`
-- Persistence schema or repos — `@koloda/srs-pgsql`, `koloda-core`
+- Persistence schema or repos — `@koloda/db-pglite`, `koloda-core`
 - Provider HTTP or error bridging — `@koloda/ai`
 - The settings registry — `@koloda/settings`
 

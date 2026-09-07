@@ -1,8 +1,8 @@
 import type { AddAIProfileData, AIProfile, AISecrets, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import { aiSettingsValidation, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import type { DB } from "@koloda/srs-pgsql";
-import { getSettings, setSettings } from "@koloda/srs-pgsql";
+import type { DB } from "@koloda/db-pglite";
+import { getSettings, setSettings } from "@koloda/db-pglite";
 import { produce } from "immer";
 
 function profileHasSecrets(secrets?: AISecrets): boolean {

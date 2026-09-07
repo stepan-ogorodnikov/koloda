@@ -1,8 +1,8 @@
 import type { AIRuntime, AISecrets } from "@koloda/ai";
 import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import type { DB } from "@koloda/srs-pgsql";
-import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/srs-pgsql";
+import type { DB } from "@koloda/db-pglite";
+import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-pglite";
 import { loadAIProfileSecrets } from "./ai";
 
 // INVARIANT: Demo host executor — closes over the PGlite db via the same in-process

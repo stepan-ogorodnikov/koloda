@@ -71,8 +71,8 @@ libs/
   app-react/              # App shell, routing, settings UI, global hooks
   assistant/              # Assistant application layer (run execution, save scheduling)
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
+  db-pglite/              # PGlite persistence (web)
   srs/                    # SRS domain logic
-  srs-pgsql/              # PostgreSQL backend (web)
   srs-react/              # SRS domain React UI
   ui/                     # Styles and UI primitives
 crates/

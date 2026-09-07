@@ -1,14 +1,14 @@
 {
-  "name": "srs-pgsql",
+  "name": "@koloda/db-pglite",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "tags": ["type:lib"],
-  "sourceRoot": "libs/srs-pgsql/src",
+  "sourceRoot": "libs/db-pglite/src",
   "projectType": "library",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "bunx vitest run --config libs/srs-pgsql/vitest.config.mjs --configLoader runner"
+        "command": "bunx vitest run --config libs/db-pglite/vitest.config.mjs --configLoader runner"
       },
       "inputs": ["default", "^default"]
     }

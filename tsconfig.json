@@ -19,7 +19,7 @@
       "path": "./libs/srs-react"
     },
     {
-      "path": "./libs/srs-pgsql"
+      "path": "./libs/db-pglite"
     },
     {
       "path": "./libs/core-react"
