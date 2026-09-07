@@ -9,10 +9,9 @@ import {
   getConversationIdFromUrl,
   openAssistantWithConversation,
   sendAssistantMessage,
-  setupApp,
-  setupPageDefaults,
   waitForAssistantReady,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 import { mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {
@@ -54,7 +53,7 @@ test("sends a message and shows the mocked assistant reply", async ({ page }) =>
 
 test("cancels an in-flight stream", async ({ page }) => {
   const mock = await mockOpenAICompatibleProvider({
-    defaultCompletion: { hold: true },
+    defaultCompletion: { shouldHold: true },
   });
 
   try {
@@ -82,7 +81,7 @@ test("cancels an in-flight stream", async ({ page }) => {
 
 test("interrupts an in-flight stream on graceful shutdown", async ({ page }) => {
   const mock = await mockOpenAICompatibleProvider({
-    defaultCompletion: { hold: true },
+    defaultCompletion: { shouldHold: true },
   });
 
   try {
@@ -112,7 +111,7 @@ test("restores an interrupted stream after crash recovery", async ({ page }) => 
   test.setTimeout(60_000);
 
   const mock = await mockOpenAICompatibleProvider({
-    defaultCompletion: { hold: true },
+    defaultCompletion: { shouldHold: true },
   });
 
   try {

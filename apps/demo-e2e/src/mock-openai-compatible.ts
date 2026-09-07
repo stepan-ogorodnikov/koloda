@@ -78,7 +78,7 @@ export async function mockOpenAICompatibleProvider(
     // exactly as before.
     const next = queue.shift() ?? options.completionFromBody?.(requestBody) ?? { ...defaultCompletion };
 
-    if (next.hold) {
+    if (next.shouldHold) {
       await new Promise<void>((resolve) => {
         releaseHold = resolve;
       });

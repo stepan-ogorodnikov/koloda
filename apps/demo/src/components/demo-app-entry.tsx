@@ -11,8 +11,9 @@ export function DemoAppEntry() {
   return (
     <Layout titlebar={<Titlebar />}>
       {isError && <QueryError error={error} onRetry={() => refetch()} />}
-      {data === "blank" && <DemoSetup />}
-      {data === "ok" && <Outlet />}
+      {/* WHY: React Query keeps prior data on a failed refetch, so blank/ok must not render beside the error. */}
+      {!isError && data === "blank" && <DemoSetup />}
+      {!isError && data === "ok" && <Outlet />}
     </Layout>
   );
 }

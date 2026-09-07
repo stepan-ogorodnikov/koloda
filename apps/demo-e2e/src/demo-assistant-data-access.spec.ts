@@ -8,10 +8,9 @@ import {
   openAssistantWithDeck,
   openSection,
   sendAssistantMessage,
-  setupDemo,
-  setupPageDefaults,
   waitForAssistantReady,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 import { E2E_LM_STUDIO_BASE_URL, mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {

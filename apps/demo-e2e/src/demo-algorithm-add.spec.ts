@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { openNewPresetDialog, setupDemo, setupPageDefaults } from "./helpers";
+import { openNewPresetDialog } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

@@ -48,7 +48,7 @@ export async function mockOpenAICompatibleProvider(
       // exactly as before.
       const next = queue.shift() ?? options.completionFromBody?.(bodyText) ?? { ...defaultCompletion };
 
-      if (next.hold) {
+      if (next.shouldHold) {
         const aborted = await waitForHoldOrAbort(req);
         releaseHold = null;
         if (aborted || res.writableEnded) return;

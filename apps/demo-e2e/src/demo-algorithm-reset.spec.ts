@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { createAlgorithm, getSliderValue, setSliderValue, setupDemo, setupPageDefaults } from "./helpers";
+import { createAlgorithm, getSliderValue, setSliderValue } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

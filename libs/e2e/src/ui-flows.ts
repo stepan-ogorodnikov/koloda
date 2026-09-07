@@ -538,7 +538,7 @@ export async function waitForAssistantReady(page: Page) {
 
   await prompt.fill("ping");
 
-  // Auto-resolve may already have a model; if Send stays disabled, pick one explicitly.
+  // WHY: Auto-resolve may already have a model; if Send stays disabled, pick one explicitly.
   try {
     await expect(sendButton).toBeEnabled({ timeout: 5_000 });
   } catch {

@@ -1,13 +1,7 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import {
-  fillAIProfileTitle,
-  openAddAIDialog,
-  selectAIProvider,
-  setupApp,
-  setupPageDefaults,
-  submitAddAIDialog,
-} from "./helpers";
+import { fillAIProfileTitle, openAddAIDialog, selectAIProvider, submitAddAIDialog } from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

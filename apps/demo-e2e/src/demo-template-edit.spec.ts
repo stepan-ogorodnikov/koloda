@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { createTemplate, openSection, setupDemo, setupPageDefaults } from "./helpers";
+import { createTemplate, openSection } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

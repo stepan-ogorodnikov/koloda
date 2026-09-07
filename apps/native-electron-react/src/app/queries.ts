@@ -51,7 +51,6 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
     queryFn: async () => (await invoke("cmd_get_settings", { name })) as AllowedSettings<T> | null,
   }),
   setSettingsMutation: <T extends SettingsName>() => ({
-    // Same per-channel vs per-`T` narrowing as getSettingsQuery.
     mutationFn: async (data: SetSettingsData<T>) => (await invoke("cmd_set_settings", data)) as AllowedSettings<T>,
   }),
   patchSettingsMutation: <T extends SettingsName>() => ({
@@ -198,7 +197,6 @@ export const queriesFn = (aiRuntime: AIRuntime): Queries => ({
     },
   }),
   updateAIProfileMutation: () => ({
-    // Same void-vs-AIProfile adaptation as addAIProfileMutation.
     mutationFn: async (data: UpdateAIProfileData) => {
       await invoke("cmd_update_ai_profile", { data });
     },

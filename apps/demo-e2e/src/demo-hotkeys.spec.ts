@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { openLearningSettings, setupDemo, setupPageDefaults } from "./helpers";
+import { openLearningSettings } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

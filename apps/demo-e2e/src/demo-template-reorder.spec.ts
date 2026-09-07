@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { createTemplate, dragTo, openSection, reorderWithKeyboard, setupDemo, setupPageDefaults } from "./helpers";
+import { createTemplate, dragTo, openSection, reorderWithKeyboard } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

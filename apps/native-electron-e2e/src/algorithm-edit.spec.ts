@@ -1,6 +1,7 @@
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { createAlgorithm, openSection, setSliderValue, setupApp, setupPageDefaults } from "./helpers";
+import { createAlgorithm, openSection, setSliderValue } from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

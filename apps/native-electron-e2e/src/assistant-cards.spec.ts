@@ -11,11 +11,10 @@ import {
   openAssistantWithConversation,
   openSection,
   sendAssistantMessage,
-  setupApp,
-  setupPageDefaults,
   waitForAssistantReady,
   waitForConversationIdFromUrl,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 import { mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {
@@ -81,7 +80,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     // Held: the run stays streaming, so the deselection below cannot race the
     // second proposal's append.
     mock.enqueueCompletion({
-      hold: true,
+      shouldHold: true,
       toolCall: {
         name: "propose_cards",
         arguments: {
@@ -110,7 +109,7 @@ test("adds exactly the selected proposed cards to the deck", async ({ page }) =>
     await expect(betaRow.getByRole("checkbox")).not.toBeChecked();
     await expect(selectAll).not.toBeChecked();
 
-    // The request reaches the mock asynchronously, and release() is a no-op
+    // WHY: The request reaches the mock asynchronously, and release() is a no-op
     // until then — wait for the hold so the release cannot race the request.
     await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();

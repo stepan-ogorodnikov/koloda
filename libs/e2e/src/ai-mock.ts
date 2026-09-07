@@ -50,7 +50,7 @@ export type MockChatCompletionOptions = {
    * Hold the response without fulfilling until `release()` is called.
    * Used for cancel / in-flight assertions.
    */
-  hold?: boolean;
+  shouldHold?: boolean;
   /** HTTP status for the completions response (non-2xx for failure tests). */
   status?: number;
   /** JSON error body when `status` is not OK. */

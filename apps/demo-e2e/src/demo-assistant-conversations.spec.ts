@@ -7,12 +7,11 @@ import {
   getConversationIdFromUrl,
   openAssistantWithDeck,
   sendAssistantMessage,
-  setupDemo,
-  setupPageDefaults,
   startNewConversation,
   waitForAssistantReady,
   waitForConversationIdFromUrl,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 import { E2E_LM_STUDIO_BASE_URL, mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {
@@ -101,7 +100,7 @@ test("creates a conversation row from the first message, shows working status wh
     await createDeckAndOpenAssistant(page);
     await waitForAssistantReady(page);
 
-    mock.enqueueCompletion({ text: "Reply for the first conversation.", chunkBy: "all", hold: true });
+    mock.enqueueCompletion({ text: "Reply for the first conversation.", chunkBy: "all", shouldHold: true });
     await sendAssistantMessage(page, "First conversation prompt");
 
     // The row only exists once the first save flushed (streaming saves are
@@ -110,7 +109,7 @@ test("creates a conversation row from the first message, shows working status wh
     await expect(firstRow).toBeVisible({ timeout: 15_000 });
     await expect(workingMarker(firstRow)).toBeVisible();
 
-    // The request reaches the mock asynchronously, and release() is a no-op
+    // WHY: The request reaches the mock asynchronously, and release() is a no-op
     // until then — wait for the hold so the release cannot race the request.
     await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();
@@ -173,7 +172,7 @@ test("marks a background-finished conversation unread until it is opened", async
     await expect(log.getByText("First prompt")).toBeVisible({ timeout: 15_000 });
     await waitForAssistantReady(page);
 
-    mock.enqueueCompletion({ text: "Reply for the unread prompt.", chunkBy: "all", hold: true });
+    mock.enqueueCompletion({ text: "Reply for the unread prompt.", chunkBy: "all", shouldHold: true });
     await sendAssistantMessage(page, "Unread marker prompt");
     await expect(workingMarker(firstRow)).toBeVisible();
 
@@ -184,7 +183,7 @@ test("marks a background-finished conversation unread until it is opened", async
     await expect(log.getByText("Second prompt")).toBeVisible({ timeout: 15_000 });
     await expect(workingMarker(firstRow)).toBeVisible();
 
-    // The request reaches the mock asynchronously, and release() is a no-op
+    // WHY: The request reaches the mock asynchronously, and release() is a no-op
     // until then — wait for the hold so the release cannot race the request.
     await expect.poll(() => mock.isHolding()).toBe(true);
     mock.release();

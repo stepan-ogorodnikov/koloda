@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { editHotkey, getHotkeyByLabel, openHotkeysSettings, setupDemo, setupPageDefaults } from "./helpers";
+import { editHotkey, getHotkeyByLabel, openHotkeysSettings } from "@koloda/e2e";
+import { setupDemo, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

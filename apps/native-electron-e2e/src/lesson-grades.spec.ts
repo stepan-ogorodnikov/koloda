@@ -6,10 +6,9 @@ import {
   gradeLessonCards,
   openSection,
   setLearnAheadLimit,
-  setupApp,
-  setupPageDefaults,
   startDeckLesson,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);

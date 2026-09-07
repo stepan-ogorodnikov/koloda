@@ -10,7 +10,7 @@ export { Fade } from "./lib/primitives/animations/fade";
 export { Number } from "./lib/primitives/animations/number";
 export { Draggable } from "./lib/primitives/dnd/draggable";
 export { Button } from "./lib/primitives/form/button";
-// TS2883: referenced by srs-react's public component types, must stay nameable via the barrel.
+// WHY: TS2883: referenced by srs-react's public component types, must stay nameable via the barrel.
 export type { ButtonProps } from "./lib/primitives/form/button";
 export { Checkbox } from "./lib/primitives/form/checkbox";
 export { FieldGroup } from "./lib/primitives/form/field-group";
@@ -20,7 +20,7 @@ export { Label } from "./lib/primitives/form/label";
 export { NumberField } from "./lib/primitives/form/number-field";
 export { Slider } from "./lib/primitives/form/slider";
 export { Switch } from "./lib/primitives/form/switch";
-// TS2883: referenced by srs-react's public component types, must stay nameable via the barrel.
+// WHY: TS2883: referenced by srs-react's public component types, must stay nameable via the barrel.
 export { FormTextField, TextField } from "./lib/primitives/form/text-field";
 export { TimeField } from "./lib/primitives/form/time-field";
 export { ToggleGroup } from "./lib/primitives/form/toggle-group";

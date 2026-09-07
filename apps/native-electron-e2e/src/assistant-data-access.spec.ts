@@ -9,10 +9,9 @@ import {
   openAssistantWithDeck,
   openSection,
   sendAssistantMessage,
-  setupApp,
-  setupPageDefaults,
   waitForAssistantReady,
-} from "./helpers";
+} from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 import { mockOpenAICompatibleProvider } from "./mock-openai-compatible";
 
 test.beforeEach(async ({ page }) => {

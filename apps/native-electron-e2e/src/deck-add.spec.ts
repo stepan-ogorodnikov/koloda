@@ -1,7 +1,8 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { test } from "./fixtures";
-import { createAlgorithm, createTemplate, openNewDeckDialog, setupApp, setupPageDefaults } from "./helpers";
+import { createAlgorithm, createTemplate, openNewDeckDialog } from "@koloda/e2e";
+import { setupApp, setupPageDefaults } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await setupPageDefaults(page);
