@@ -8,7 +8,8 @@
     "platform:desktop"
   ],
   "implicitDependencies": [
-    "@koloda/electron-react"
+    "@koloda/electron-react",
+    "koloda"
   ],
   "targets": {
     "build-rust": {

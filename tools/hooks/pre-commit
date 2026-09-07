@@ -3,7 +3,8 @@
 #
 # Commit boundary: local, per-file checks — fast, true regardless of the rest
 # of the change, so intermediate commits of a bigger change still pass them.
-# Whole-program checks (typecheck, clippy) live at the push boundary (pre-push).
+# Whole-program checks (typecheck, rust tests) live at the push boundary (pre-push).
+# Clippy is `koloda:lint`, cached with the other lint targets.
 # Escape hatch: git commit --no-verify.
 
 command -v bun >/dev/null 2>&1 || exit 0

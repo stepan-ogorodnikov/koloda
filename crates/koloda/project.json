@@ -1,0 +1,35 @@
+{
+  "name": "koloda",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "crates/koloda/src",
+  "projectType": "library",
+  "tags": ["lang:rust"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["rust", "{workspaceRoot}/apps/electron/src-rust/**/*"],
+      "outputs": ["{workspaceRoot}/dist/target/koloda/lint"],
+      "options": {
+        "command": "cargo clippy --workspace --all-targets -- -D warnings",
+        "forwardAllArgs": false,
+        "env": {
+          "CARGO_TARGET_DIR": "dist/target/koloda/lint"
+        }
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["rust"],
+      "outputs": ["{workspaceRoot}/dist/target/koloda/test"],
+      "options": {
+        "command": "cargo test -p koloda",
+        "forwardAllArgs": false,
+        "env": {
+          "CARGO_TARGET_DIR": "dist/target/koloda/test"
+        }
+      }
+    }
+  }
+}

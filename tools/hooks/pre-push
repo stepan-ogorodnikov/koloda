@@ -8,21 +8,9 @@
 
 command -v bun >/dev/null 2>&1 || exit 0
 
-# TypeScript: lint + typecheck across the workspace (nx-cached, fast).
+# TypeScript lint + typecheck, plus cached Rust clippy and `koloda` tests.
 bun run check:push || exit 1
 
-# Rust: clippy, warnings denied.
-if command -v cargo >/dev/null 2>&1; then
-  bun run check:rust || exit 1
-fi
-
-# Tests last (slowest, whole-change). Not nx-cached — a flat ~50s cost per
-# push. TS libs via vitest (PGlite/in-memory SQLite, self-contained; the
+# TS libs via vitest (PGlite/in-memory SQLite, self-contained; the
 # Playwright e2e suites are a separate, manual/web-deploy boundary).
-# Rust: the TS <-> Rust twin rule (agents/TESTING.md) means both sides must
-# actually run, not just be claimed green.
 bun run test:libs || exit 1
-
-if command -v cargo >/dev/null 2>&1; then
-  cargo test -p koloda || exit 1
-fi
