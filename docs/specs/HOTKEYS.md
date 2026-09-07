@@ -104,9 +104,10 @@ When the user saves hotkey settings, the configuration is validated:
 
 1. No duplicate bindings within any scope
 2. No binding in a non-UI scope conflicts with a UI binding
-3. All hotkey names are valid (unknown names are rejected)
+3. Unknown hotkey names are dropped and are not persisted
 
-If validation fails, the save is rejected and the user sees an error.
+The save still succeeds after unknown names are dropped.
+If duplicate-binding validation fails, the save is rejected and the user sees an error.
 
 ### Default Bindings
 
@@ -119,5 +120,9 @@ Hotkey settings are saved to the database.
 They persist across sessions.
 
 If a save fails, the in-memory bindings revert to the last saved state.
-If the stored settings are invalid (corrupted data, missing keys), the defaults are used.
+If the stored settings are invalid (corrupted data), the defaults are used.
 The invalid settings are replaced with defaults silently.
+
+When stored settings contain unknown action names (for example a retired hotkey), those names are dropped.
+Known actions and their bindings are kept.
+Missing known actions are filled with no bindings.

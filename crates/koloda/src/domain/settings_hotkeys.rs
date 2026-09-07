@@ -84,20 +84,20 @@ impl HotkeysSettings {
     }
 
     pub fn fill_defaults(&mut self) {
-        for key in FORM_KEYS {
-            self.form.entry(key.to_string()).or_default();
-        }
-        for key in UI_KEYS {
-            self.ui.entry(key.to_string()).or_default();
-        }
-        for key in NAVIGATION_KEYS {
-            self.navigation.entry(key.to_string()).or_default();
-        }
-        for key in GRADES_KEYS {
-            self.grades.entry(key.to_string()).or_default();
-        }
-        for key in AI_KEYS {
-            self.ai.entry(key.to_string()).or_default();
-        }
+        fill_scope(&mut self.form, FORM_KEYS);
+        fill_scope(&mut self.ui, UI_KEYS);
+        fill_scope(&mut self.navigation, NAVIGATION_KEYS);
+        fill_scope(&mut self.grades, GRADES_KEYS);
+        fill_scope(&mut self.ai, AI_KEYS);
+    }
+}
+
+fn fill_scope(scope: &mut HashMap<String, Vec<String>>, known: &[&str]) {
+    // WHY: unknown action names are dropped here to match `@koloda/app` Zod (retired keys, e.g.
+    // `toggleCardsMode`). Do not reject them in `validate()` — `get_settings` normalizes on read
+    // and would fail legacy rows.
+    scope.retain(|key, _| known.contains(&key.as_str()));
+    for key in known {
+        scope.entry(key.to_string()).or_default();
     }
 }

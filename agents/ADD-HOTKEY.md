@@ -30,8 +30,9 @@
    - Add scope to ui hotkey duplicate check
    - Add scope to fill_defaults()
 
-4. **Add tests** (`libs/app/src/lib/settings-hotkeys.test.ts`):
+4. **Add tests** (`libs/app/src/lib/settings-hotkeys.test.ts` and `crates/koloda/tests/domain/settings_hotkeys_tests.rs`):
    - Update first test case to include new scope/key
+   - Update the twin key-list pins in both files (must change together when a key is added)
    - Add test cases for new hotkey if needed
 
 5. **Register handler**:

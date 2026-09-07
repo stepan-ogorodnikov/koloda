@@ -6,6 +6,30 @@ function getIssuePaths(result: ReturnType<typeof hotkeysSettingsValidation.safeP
   return result.error.issues.map((issue) => issue.path);
 }
 
+// INVARIANT: TS↔Rust twin (agents/TESTING.md) — per-scope action ids must stay in sync with
+// the Rust `*_KEYS` arrays in `crates/koloda/src/domain/settings_hotkeys.rs`, pinned by
+// `test_hotkeys_scope_action_ids_match_ts` in `crates/koloda/tests/domain/settings_hotkeys_tests.rs`.
+// Adding a hotkey requires touching both pins (agents/ADD-HOTKEY.md).
+const RUST_HOTKEY_ACTION_IDS = {
+  form: ["submit", "reset"],
+  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls", "toggleColorScheme"],
+  navigation: ["dashboard", "decks", "algorithms", "templates", "settings", "ai"],
+  grades: ["again", "hard", "normal", "easy"],
+  ai: [
+    "cancel",
+    "focusPrompt",
+    "newConversation",
+    "openModelPicker",
+    "previousConversation",
+    "nextConversation",
+    "toggleSettings",
+    "scrollUp",
+    "scrollDown",
+    "scrollToTop",
+    "scrollToBottom",
+  ],
+} as const;
+
 describe("settings-hotkeys", () => {
   it("fills missing scopes with empty hotkey arrays", () => {
     expect(hotkeysSettingsValidation.parse({})).toEqual({
@@ -125,4 +149,11 @@ describe("settings-hotkeys", () => {
     expect(parsed.ai).not.toHaveProperty("clearDeck");
     expect(parsed).toEqual(DEFAULT_HOTKEYS_SETTINGS);
   });
+
+  it.each(Object.entries(RUST_HOTKEY_ACTION_IDS) as [keyof typeof RUST_HOTKEY_ACTION_IDS, readonly string[]][])(
+    "scope %s action ids match the pinned Rust *_KEYS list",
+    (scope, rustKeys) => {
+      expect(Object.keys(DEFAULT_HOTKEYS_SETTINGS[scope]).sort()).toEqual([...rustKeys].sort());
+    },
+  );
 });
