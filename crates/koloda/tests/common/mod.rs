@@ -253,7 +253,7 @@ pub fn valid_review_json() -> serde_json::Value {
         "cardId": 1,
         "rating": 1,
         "state": 0,
-        "dueAt": null,
+        "dueAt": 1000000000,
         "stability": 5.0,
         "difficulty": 5.0,
         "scheduledDays": 1,

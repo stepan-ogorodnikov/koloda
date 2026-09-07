@@ -393,7 +393,7 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
                 card_id,
                 rating: 3,
                 state: 2,
-                due_at: Some(1_900_000_000_000),
+                due_at: 1_900_000_000_000,
                 stability: 5.0,
                 difficulty: 5.0,
                 scheduled_days: 3,

@@ -7,9 +7,7 @@ use crate::domain::progress::{
     validate_difficulty, validate_learning_steps, validate_scheduled_days, validate_stability, validate_state,
 };
 use crate::domain::settings_learning::DailyLimits;
-use crate::domain::time::{
-    deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
-};
+use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
 const RATING_MIN: i32 = 1;
 const RATING_MAX: i32 = 4;
@@ -21,12 +19,10 @@ pub struct Review {
     pub card_id: i64,
     pub rating: i32,
     pub state: i32,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_timestamp",
-        serialize_with = "serialize_optional_timestamp"
-    )]
-    pub due_at: Option<i64>,
+    // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
+    // FSRS always supplies `due`. Do not restore `Option<i64>` because the SQLite column is nullable.
+    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
+    pub due_at: i64,
     pub stability: f64,
     pub difficulty: f64,
     pub scheduled_days: i32,
@@ -46,8 +42,10 @@ pub struct InsertReviewData {
     pub card_id: i64,
     pub rating: i32,
     pub state: i32,
-    #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
-    pub due_at: Option<i64>,
+    // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
+    // FSRS always supplies `due`. Do not restore `Option<i64>` because the SQLite column is nullable.
+    #[serde(deserialize_with = "deserialize_timestamp")]
+    pub due_at: i64,
     pub stability: f64,
     pub difficulty: f64,
     pub scheduled_days: i32,

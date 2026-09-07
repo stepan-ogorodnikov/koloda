@@ -18,6 +18,8 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
         card_id: row.get(1)?,
         rating: row.get(2)?,
         state: row.get(3)?,
+        // INVARIANT: column is nullable in V1; do not change `Review.due_at` back to
+        // `Option` to "match SQL". A SQL NULL fails this mapping (same as web Zod).
         due_at: row.get(4)?,
         stability: row.get(5)?,
         difficulty: row.get(6)?,
@@ -46,6 +48,8 @@ pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64
             data.card_id,
             data.rating,
             data.state,
+            // WHY: NULL here desyncs desktop IPC from web `z.date()`;
+            // insert must persist the FSRS due.
             data.due_at,
             data.stability,
             data.difficulty,

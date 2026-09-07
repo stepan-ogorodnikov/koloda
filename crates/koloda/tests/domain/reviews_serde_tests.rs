@@ -8,6 +8,7 @@ fn valid_payload() -> Value {
         "cardId": 1,
         "rating": 1,
         "state": 0,
+        "dueAt": 1_000_000_000,
         "stability": 5.0,
         "difficulty": 5.0,
         "scheduledDays": 0,
@@ -23,6 +24,7 @@ fn test_missing_required_fields_fail() {
         "cardId",
         "rating",
         "state",
+        "dueAt",
         "stability",
         "difficulty",
         "scheduledDays",
@@ -42,10 +44,10 @@ fn test_missing_required_fields_fail() {
     let result: Result<InsertReviewData, _> = serde_json::from_value(json!({}));
     assert!(result.is_err(), "Should fail when every field is missing");
 
-    // WHY: only `dueAt` carries an explicit `#[serde(default)]`,
-    // so absence must deserialize to `None` instead of failing.
-    let data: InsertReviewData = serde_json::from_value(valid_payload()).expect("`dueAt` should default when absent");
-    assert_eq!(data.due_at, None);
+    let mut review_json = serde_json::to_value(review_fixture()).unwrap();
+    review_json.as_object_mut().unwrap().remove("dueAt");
+    let result: Result<Review, _> = serde_json::from_value(review_json);
+    assert!(result.is_err(), "Should fail when Review dueAt is missing");
 }
 
 #[test]
@@ -53,15 +55,11 @@ fn test_wrong_typed_fields_fail() {
     // WHY: Unknown fields carry no declared type and are tolerated (no `deny_unknown_fields`),
     // so extra members must never reject an otherwise valid payload.
     let mut payload = valid_payload();
-    payload["dueAt"] = json!(null);
     payload["unknownField"] = json!("ignored");
 
     let data: InsertReviewData = serde_json::from_value(payload).expect("Should deserialize ignoring extra fields");
-    assert_eq!(data.due_at, None);
     data.validate().unwrap();
 
-    // `dueAt` tolerates `null` and ISO 8601 strings (`deserialize_optional_timestamp`),
-    // so only a non-ISO string must reject.
     let mistyped_fields = [
         ("cardId", json!("not-a-number")),
         ("cardId", json!(null)),
@@ -70,6 +68,7 @@ fn test_wrong_typed_fields_fail() {
         ("state", json!("not-a-number")),
         ("state", json!(null)),
         ("dueAt", json!("not-a-timestamp")),
+        ("dueAt", json!(null)),
         ("stability", json!("not-a-number")),
         ("stability", json!(null)),
         ("difficulty", json!("not-a-number")),
@@ -100,7 +99,7 @@ fn review_fixture() -> Review {
         card_id: 7,
         rating: 3,
         state: 2,
-        due_at: Some(1_700_000_000_000),
+        due_at: 1_700_000_000_000,
         stability: 12.5,
         difficulty: 4.75,
         scheduled_days: 9,
@@ -137,16 +136,18 @@ fn test_review_serializes_wire_shape() {
     );
 }
 
-/// WHY: `dueAt` is `null`, not omitted, when unset — the key must stay present.
+/// WHY: review `dueAt` is a required timestamp — JSON `null` must fail on both DTOs.
 #[test]
-fn test_review_serializes_null_due_at() {
-    let mut review = review_fixture();
-    review.due_at = None;
+fn test_review_rejects_null_due_at() {
+    let mut insert_payload = valid_payload();
+    insert_payload["dueAt"] = json!(null);
+    let insert: Result<InsertReviewData, _> = serde_json::from_value(insert_payload);
+    assert!(insert.is_err(), "InsertReviewData must reject JSON null dueAt");
 
-    let value = serde_json::to_value(&review).unwrap();
-
-    assert_eq!(value.get("dueAt"), Some(&Value::Null));
-    assert_eq!(value.as_object().unwrap().len(), 12, "key set must not change");
+    let mut review_json = serde_json::to_value(review_fixture()).unwrap();
+    review_json["dueAt"] = json!(null);
+    let review: Result<Review, _> = serde_json::from_value(review_json);
+    assert!(review.is_err(), "Review must reject JSON null dueAt");
 }
 
 #[test]

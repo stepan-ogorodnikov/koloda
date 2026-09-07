@@ -195,4 +195,17 @@ describe("review validation", () => {
       expect(result.success, `${field} = ${value}`).toBe(true);
     }
   });
+
+  it("rejects null dueAt", () => {
+    expect(reviewValidation.safeParse(validReview({ dueAt: null })).success).toBe(false);
+    expect(insertReviewSchema.safeParse(validInsertReview({ dueAt: null })).success).toBe(false);
+  });
+
+  it("rejects omitted dueAt", () => {
+    const { dueAt: _rowDueAt, ...rowWithout } = validReview();
+    expect(reviewValidation.safeParse(rowWithout).success).toBe(false);
+
+    const { dueAt: _insertDueAt, ...insertWithout } = validInsertReview();
+    expect(insertReviewSchema.safeParse(insertWithout).success).toBe(false);
+  });
 });

@@ -34,7 +34,7 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
                 card_id,
                 rating: 3,
                 state: 2,
-                due_at: Some(1_900_000_000_000),
+                due_at: 1_900_000_000_000,
                 stability: 5.0,
                 difficulty: 5.0,
                 scheduled_days: 3,
@@ -58,6 +58,7 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
     assert_eq!(saved_reviews.len(), 1);
     assert_eq!(saved_reviews[0].card_id, card_id);
     assert_eq!(saved_reviews[0].rating, 3);
+    assert_eq!(saved_reviews[0].due_at, 1_900_000_000_000);
 }
 
 #[test]
@@ -87,7 +88,7 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
                 card_id: card_id + 9_999,
                 rating: 3,
                 state: 2,
-                due_at: Some(1_900_000_000_000),
+                due_at: 1_900_000_000_000,
                 stability: 5.0,
                 difficulty: 5.0,
                 scheduled_days: 3,
