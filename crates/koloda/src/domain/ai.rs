@@ -164,6 +164,35 @@ impl AISecrets {
         Ok(())
     }
 
+    // WHY: TypeScript `z.url()` requires a parseable URL so desktop cannot persist a host
+    // the web form rejects. Empty, whitespace-only, and `not-a-url` all fail `Url::parse`;
+    // do not simplify this back to `trim().is_empty()`.
+    fn require_base_url_for_input(base_url: &str, provider: &str) -> Result<(), AppError> {
+        if url::Url::parse(base_url).is_ok() {
+            Ok(())
+        } else {
+            Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
+                Some(format!("{provider}.baseUrl is required")),
+            ))
+        }
+    }
+
+    fn require_stored_base_url(base_url: &str, provider: &str) -> Result<(), AppError> {
+        // WHY: Empty stored `baseUrl` is leftover from older rows; do not reject `""`.
+        if base_url.is_empty() {
+            return Ok(());
+        }
+        if url::Url::parse(base_url).is_ok() {
+            Ok(())
+        } else {
+            Err(AppError::new(
+                error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
+                Some(format!("{provider}.baseUrl cannot be whitespace only")),
+            ))
+        }
+    }
+
     // WHY: `validate` on secrets is input-strict (full values). Do not retarget to storage rules.
     pub fn validate(&self) -> Result<(), AppError> {
         self.validate_for_input()
@@ -172,24 +201,8 @@ impl AISecrets {
     pub fn validate_for_input(&self) -> Result<(), AppError> {
         match self {
             AISecrets::OpenRouter { api_key } => Self::require_api_key_for_input(api_key, "openrouter"),
-            AISecrets::Ollama { base_url, .. } => {
-                if base_url.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
-                        Some("ollama.baseUrl is required".to_string()),
-                    ));
-                }
-                Ok(())
-            }
-            AISecrets::LmStudio { base_url, .. } => {
-                if base_url.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
-                        Some("lmstudio.baseUrl is required".to_string()),
-                    ));
-                }
-                Ok(())
-            }
+            AISecrets::Ollama { base_url, .. } => Self::require_base_url_for_input(base_url, "ollama"),
+            AISecrets::LmStudio { base_url, .. } => Self::require_base_url_for_input(base_url, "lmstudio"),
             AISecrets::OpencodeGo { api_key } => Self::require_api_key_for_input(api_key, "opencodeGo"),
             AISecrets::OpencodeZen { api_key } => Self::require_api_key_for_input(api_key, "opencodeZen"),
             AISecrets::OllamaCloud { api_key } => Self::require_api_key_for_input(api_key, "ollamaCloud"),
@@ -203,21 +216,11 @@ impl AISecrets {
         match self {
             AISecrets::OpenRouter { api_key } => Self::reject_stored_api_key(api_key, "openrouter"),
             AISecrets::Ollama { base_url, api_key } => {
-                if !base_url.is_empty() && base_url.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
-                        Some("ollama.baseUrl cannot be whitespace only".to_string()),
-                    ));
-                }
+                Self::require_stored_base_url(base_url, "ollama")?;
                 Self::reject_stored_api_key(api_key, "ollama")
             }
             AISecrets::LmStudio { base_url, api_key } => {
-                if !base_url.is_empty() && base_url.trim().is_empty() {
-                    return Err(AppError::new(
-                        error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL,
-                        Some("lmstudio.baseUrl cannot be whitespace only".to_string()),
-                    ));
-                }
+                Self::require_stored_base_url(base_url, "lmstudio")?;
                 Self::reject_stored_api_key(api_key, "lmstudio")
             }
             AISecrets::OpencodeGo { api_key } => Self::reject_stored_api_key(api_key, "opencodeGo"),

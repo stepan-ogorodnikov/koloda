@@ -52,6 +52,51 @@ fn test_lmstudio_validate_empty_base_url_fails() {
     assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
 }
 
+// WHY: Ollama and LmStudio share the same `z.url()` twin; one table covers both providers
+// so a parse-guard regression cannot hide on only one arm.
+type LocalProviderRow = (&'static str, fn(String) -> AISecrets);
+const LOCAL_PROVIDER_ROWS: &[LocalProviderRow] = &[
+    ("ollama", |base_url| AISecrets::Ollama {
+        base_url,
+        api_key: None,
+    }),
+    ("lmstudio", |base_url| AISecrets::LmStudio {
+        base_url,
+        api_key: None,
+    }),
+];
+
+#[test]
+fn test_local_providers_input_rejects_non_url_base_url() {
+    for &(provider, build) in LOCAL_PROVIDER_ROWS {
+        let secrets = build("not-a-url".to_string());
+        let via_validate = secrets.validate();
+        assert_eq!(
+            via_validate.unwrap_err().code,
+            "validation.settings-ai.providers.baseUrl",
+            "{provider} validate must reject a non-URL baseUrl"
+        );
+        let via_input = secrets.validate_for_input();
+        assert_eq!(
+            via_input.unwrap_err().code,
+            "validation.settings-ai.providers.baseUrl",
+            "{provider} validate_for_input must reject a non-URL baseUrl"
+        );
+    }
+}
+
+#[test]
+fn test_local_providers_storage_rejects_non_url_base_url() {
+    for &(provider, build) in LOCAL_PROVIDER_ROWS {
+        let result = build("not-a-url".to_string()).validate_for_storage();
+        assert_eq!(
+            result.unwrap_err().code,
+            "validation.settings-ai.providers.baseUrl",
+            "{provider} validate_for_storage must reject a non-URL baseUrl"
+        );
+    }
+}
+
 #[test]
 fn test_ai_secrets_openrouter_deserialize_api_key_alias() {
     let json = r#"{

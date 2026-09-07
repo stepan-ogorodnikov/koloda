@@ -27,6 +27,7 @@ strum = "0.27"
 strum_macros = "0.27"
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4"] }
+url = "2.5"
 
 [target.'cfg(not(windows))'.dependencies]
 keyring = "3"
