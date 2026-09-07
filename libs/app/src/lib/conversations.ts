@@ -25,7 +25,7 @@ export const conversationListItemSchema = conversationIdentitySchema.extend({
 });
 
 export const conversationRowSchema = conversationIdentitySchema.extend({
-  // WHY: Conversation state is validated at restore (srs-react), not at the DB boundary.
+  // WHY: Conversation state is validated at restore (assistant-react), not at the DB boundary.
   state: z.unknown(),
 });
 

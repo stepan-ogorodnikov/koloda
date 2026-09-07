@@ -1,4 +1,4 @@
-import { shutdownAssistantGracefully } from "@koloda/srs-react";
+import { shutdownAssistantGracefully } from "@koloda/assistant-react";
 import type { createStore } from "jotai";
 
 // INVARIANT: Channel names must match apps/native-electron/src/window-close-coordinator.ts.

@@ -1,12 +1,12 @@
 # @koloda/app-react
 
 Application shell: TanStack Router tree, primary nav layout, global settings pages, AI provider profile forms, and global hotkey wiring.
-Composes feature screens from `@koloda/srs-react`; does not own SRS domain or assistant conversation state.
+Composes feature screens from `@koloda/srs-react` and `@koloda/assistant-react`; does not own SRS domain or assistant conversation state.
 
 ## Where it sits
 
 Consumed by `apps/demo` and `apps/native-electron-react` (import `routeTree`).
-Depends on `@koloda/app`, `@koloda/srs-react`, `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`.
+Depends on `@koloda/app`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`.
 Each app must set `appEntryAtom` before routes render and inject its `Queries` implementation.
 
 ## Architectural Map
@@ -23,7 +23,7 @@ Each app must set `appEntryAtom` before routes render and inject its `Queries` i
 ### Does NOT own (prevent scope creep)
 
 - SRS domain logic — `@koloda/srs`
-- Assistant conversation store / run orchestration — `@koloda/srs-react/.../assistant`
+- Assistant conversation store / run orchestration — `@koloda/assistant-react`
 - DB repos or schema — `@koloda/db-pglite`, `koloda-core`
 - Provider HTTP — `@koloda/ai`
 - Layout primitives — `@koloda/ui`

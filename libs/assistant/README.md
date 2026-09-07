@@ -5,9 +5,9 @@ No React, no Jotai, no TanStack Query, no UI, no repository I/O.
 
 ## Where it sits
 
-Consumed by `@koloda/srs-react` via an application-shell engine host (`useAssistantEngineHost`) that injects store callbacks, a required `AssistantExecutionPort`, and a durable-write adapter for persistence.
+Consumed by `@koloda/assistant-react` via an application-shell engine host (`useAssistantEngineHost`) that injects store callbacks, a required `AssistantExecutionPort`, and a durable-write adapter for persistence.
 Depends on `@koloda/ai` (stream/request types), `@koloda/app` (abort/error helpers), and `@koloda/srs` (template fields for proposed cards).
-Conversation documents and reducer policy still live in `@koloda/srs-react`; this package owns run **execution lifetime**, **per-conversation save queue scheduling**, and **graceful shutdown** so chat unmount does not abort background streams or dispose pending flushes.
+Conversation documents and reducer policy still live in `@koloda/assistant-react`; this package owns run **execution lifetime**, **per-conversation save queue scheduling**, and **graceful shutdown** so chat unmount does not abort background streams or dispose pending flushes.
 
 **Ownership source of truth for assistant chat:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing assistant edits.
 
@@ -18,7 +18,7 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
   Runtime `executeChatRun` / `retryRun` are private.
   Non-execution lifecycle: `setPersistenceHost` / `disposeConversation` / `dispose`.
 - Protocol: `assistant-protocol.ts` — framework-free `AssistantCommand` and `AssistantEvent` contracts.
-  Store adapters (e.g. Jotai in `@koloda/srs-react`) translate events into reducer actions; the engine never emits reducer tuples.
+  Store adapters (e.g. Jotai in `@koloda/assistant-react`) translate events into reducer actions; the engine never emits reducer tuples.
 - Execution identity / port: `assistant-execution-port.ts` — each submit/retry command carries immutable non-secret `AssistantExecutionIdentity` (`profileId`).
   `ConversationRuntimeTransports.executionPort` is **required**.
   The host port resolves credentials from `profileId` at call time.
@@ -41,17 +41,17 @@ Conversation documents and reducer policy still live in `@koloda/srs-react`; thi
 
 ### Does NOT own (prevent scope creep)
 
-- Conversation reducer, Jotai store, dirty tracking — `@koloda/srs-react` (`assistant/state/`)
-- Repository writes / TanStack Query cache updates — `@koloda/srs-react` (`useConversationSaveHost` write adapter)
-- `RunController` UI facade / submit orchestration — `@koloda/srs-react` (`assistant/runs/`; validation + request prep in `prepare-run-request.ts`; command acceptance then `submitTurn` in `use-run-orchestration.ts`)
-- Chat UI, cards table, settings screens — `@koloda/srs-react` (`assistant/ui/`)
+- Conversation reducer, Jotai store, dirty tracking — `@koloda/assistant-react` (`assistant/state/`)
+- Repository writes / TanStack Query cache updates — `@koloda/assistant-react` (`useConversationSaveHost` write adapter)
+- `RunController` UI facade / submit orchestration — `@koloda/assistant-react` (`assistant/runs/`; validation + request prep in `prepare-run-request.ts`; command acceptance then `submitTurn` in `use-run-orchestration.ts`)
+- Chat UI, cards table, settings screens — `@koloda/assistant-react` (`assistant/ui/`)
 - Provider HTTP / `AIRuntime` host adapters — `@koloda/ai` + Electron/demo hosts
 - Generic presentational chat chrome — `@koloda/ai-react`
 
 ## Command ingress and duplicate runs
 
 Production submit/retry/cancel/shutdown all go through `engine.dispatch`.
-`@koloda/srs-react` prepares the command in `prepare-run-request.ts`, then `useRunOrchestration` calls `dispatch` and only then applies `submitTurn`.
+`@koloda/assistant-react` prepares the command in `prepare-run-request.ts`, then `useRunOrchestration` calls `dispatch` and only then applies `submitTurn`.
 A synchronous reject (duplicate or closed engine) must not leave a streaming placeholder; `rollbackSubmitTurn` covers a later async reject.
 
 The runtime claims occupancy only after enqueue succeeds.
@@ -69,7 +69,7 @@ Concurrent unload + IPC callers share one engine shutdown promise (single-flight
 2. Abort all in-flight stream controllers.
 3. `flushAllBounded(SHUTDOWN_FLUSH_TIMEOUT_MS)` — best-effort durable flush within **2000 ms**; in-flight writes may still complete after the timeout.
 
-Orphaned `streaming` checkpoints left on disk after a crash are normalized to `interrupted` / `crash_recovery` on restore (`@koloda/srs-react`).
+Orphaned `streaming` checkpoints left on disk after a crash are normalized to `interrupted` / `crash_recovery` on restore (`@koloda/assistant-react`).
 
 ## Read next
 

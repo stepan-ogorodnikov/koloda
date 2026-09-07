@@ -136,6 +136,7 @@
         "@koloda/ai": "workspace:*",
         "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
+        "@koloda/assistant-react": "workspace:*",
         "@koloda/core-react": "workspace:*",
         "@koloda/settings": "workspace:*",
         "@koloda/srs-react": "workspace:*",
@@ -149,6 +150,19 @@
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
         "@koloda/srs": "workspace:*",
+      },
+    },
+    "libs/assistant-react": {
+      "name": "@koloda/assistant-react",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/ai-react": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/assistant": "workspace:*",
+        "@koloda/core-react": "workspace:*",
+        "@koloda/srs": "workspace:*",
+        "@koloda/ui": "workspace:*",
       },
     },
     "libs/core-react": {
@@ -205,10 +219,7 @@
       "name": "@koloda/srs-react",
       "version": "0.0.1",
       "dependencies": {
-        "@koloda/ai": "workspace:*",
-        "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
-        "@koloda/assistant": "workspace:*",
         "@koloda/core-react": "workspace:*",
         "@koloda/srs": "workspace:*",
         "@koloda/ui": "workspace:*",
@@ -623,6 +634,8 @@
     "@koloda/app-react": ["@koloda/app-react@workspace:libs/app-react"],
 
     "@koloda/assistant": ["@koloda/assistant@workspace:libs/assistant"],
+
+    "@koloda/assistant-react": ["@koloda/assistant-react@workspace:libs/assistant-react"],
 
     "@koloda/core-react": ["@koloda/core-react@workspace:libs/core-react"],
 

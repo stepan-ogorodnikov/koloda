@@ -70,6 +70,7 @@ libs/
   app/                    # Generic app infrastructure (error types, utilities, interface settings)
   app-react/              # App shell, routing, settings UI, global hooks
   assistant/              # Assistant application layer (run execution, save scheduling)
+  assistant-react/        # Assistant chat React UI
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
   db-pglite/              # PGlite persistence (web)
   srs/                    # SRS domain logic

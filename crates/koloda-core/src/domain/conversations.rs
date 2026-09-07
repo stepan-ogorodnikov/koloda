@@ -16,7 +16,7 @@ pub struct Conversation {
     pub id: String,
     pub title: Option<String>,
     // INVARIANT: `state` is an opaque assistant UI blob owned by TS
-    // (`libs/srs-react/.../conversation-reducer`, persistence coerce/normalize).
+    // (`libs/assistant-react/.../conversation-reducer`, persistence coerce/normalize).
     // Rust stores and returns it without interpreting shape.
     pub state: Value,
     #[serde(

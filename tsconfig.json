@@ -19,6 +19,9 @@
       "path": "./libs/srs-react"
     },
     {
+      "path": "./libs/assistant-react"
+    },
+    {
       "path": "./libs/db-pglite"
     },
     {

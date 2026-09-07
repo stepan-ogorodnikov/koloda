@@ -5,7 +5,7 @@ Framework-agnostic — no React, no DB access, no conversation state.
 
 ## Where it sits
 
-Consumed by `@koloda/db-pglite` (repo validation), `@koloda/srs-react`, `@koloda/core-react` (query types), and app query layers.
+Consumed by `@koloda/db-pglite` (repo validation), `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/core-react` (query types), and app query layers.
 Depends on `@koloda/app` and `@koloda/ai`.
 Desktop mirrors live in `crates/koloda-core/src/domain/`; keep TS and Rust aligned when fields change.
 
@@ -21,7 +21,7 @@ Desktop mirrors live in `crates/koloda-core/src/domain/`; keep TS and Rust align
 ### Does NOT own (prevent scope creep)
 
 - DB access or schema — `@koloda/db-pglite`, `koloda-core`
-- React screens or conversation/run state — `@koloda/srs-react`
+- React screens or conversation/run state — `@koloda/srs-react`, `@koloda/assistant-react`
 - AI streaming / providers — `@koloda/ai`
 
 ## Read next

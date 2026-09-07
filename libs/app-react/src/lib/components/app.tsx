@@ -7,7 +7,7 @@ import {
   Settings05Icon,
 } from "@hugeicons/core-free-icons";
 import { useHotkeysStatus } from "@koloda/core-react";
-import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/srs-react";
+import { useAssistantEngineHost, useConversationSaveHost } from "@koloda/assistant-react";
 import { Layout } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import type { PropsWithChildren } from "react";

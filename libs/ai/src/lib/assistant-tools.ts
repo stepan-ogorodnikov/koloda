@@ -369,7 +369,7 @@ export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutpu
 }
 
 // WHY: hosts and the model speak field titles; GeneratedCard content is keyed
-// by field id. Mapping lives here so srs-react does not duplicate the table.
+// by field id. Mapping lives here so assistant-react does not duplicate the table.
 export function generatedCardsFromProposeOutput(output: ProposeCardsOutput): GeneratedCard[] {
   return output.cards.map((card) => ({
     content: Object.fromEntries(

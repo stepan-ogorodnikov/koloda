@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const shutdownAssistantGracefully = vi.fn(async () => {});
 
-vi.mock("@koloda/srs-react", () => ({
+vi.mock("@koloda/assistant-react", () => ({
   shutdownAssistantGracefully: (...args: unknown[]) => shutdownAssistantGracefully(...args),
 }));
 

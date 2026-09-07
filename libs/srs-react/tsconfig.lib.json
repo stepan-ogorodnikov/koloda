@@ -36,16 +36,7 @@
   ],
   "references": [
     {
-      "path": "../assistant/tsconfig.lib.json"
-    },
-    {
       "path": "../app/tsconfig.lib.json"
-    },
-    {
-      "path": "../ai/tsconfig.lib.json"
-    },
-    {
-      "path": "../ai-react/tsconfig.lib.json"
     },
     {
       "path": "../core-react/tsconfig.lib.json"

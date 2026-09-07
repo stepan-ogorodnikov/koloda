@@ -21,7 +21,7 @@ Depends on `@koloda/app` and `@koloda/srs`.
 
 - Domain business rules — `@koloda/srs`
 - SQLite / Refinery migrations — `crates/koloda-core` only
-- React UI — `@koloda/srs-react`
+- React UI — `@koloda/srs-react`, `@koloda/assistant-react`
 - Provider HTTP — `@koloda/ai`
 
 ## Read next

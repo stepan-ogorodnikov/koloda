@@ -7,7 +7,7 @@ import {
   CONVERSATION_TITLE_FALLBACK,
   ConversationHeaderMenu,
   startParamlessConversationAtom,
-} from "@koloda/srs-react";
+} from "@koloda/assistant-react";
 import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";

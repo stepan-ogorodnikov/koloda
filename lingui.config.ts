@@ -23,6 +23,10 @@ const config: LinguiConfig = {
       include: ["../../libs/srs-react/src"],
     },
     {
+      path: "../../libs/assistant-react/locales/{locale}/messages",
+      include: ["../../libs/assistant-react/src"],
+    },
+    {
       path: "../../libs/ui/locales/{locale}/messages",
       include: ["../../libs/ui/src"],
     },

@@ -1,0 +1,16 @@
+{
+  "name": "@koloda/assistant-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
+  "sourceRoot": "libs/assistant-react/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/assistant-react/vitest.config.mjs --configLoader runner"
+      },
+      "inputs": ["default", "^default"]
+    }
+  }
+}

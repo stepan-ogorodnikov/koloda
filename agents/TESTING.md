@@ -134,11 +134,11 @@ Match these files when the shape fits:
 
 - `crates/koloda-core/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
 - `libs/assistant/src/lib/assistant-engine.test.ts` — gated-deferred interleavings for async coordination.
-- `libs/srs-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
+- `libs/assistant-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/native-electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
 - `crates/koloda-core/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
-- `libs/srs-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
+- `libs/assistant-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
 - `crates/koloda-core/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape, null-vs-omitted keys, serde round-trip.
 - `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
 
