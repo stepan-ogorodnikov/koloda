@@ -19,7 +19,7 @@ Depends on `@koloda/app`, `@koloda/srs`, `@koloda/core-react`, and `@koloda/ui`.
 - Provider HTTP / client factory — `@koloda/ai`
 - Generic streaming transport hooks and presentational chat chrome — `@koloda/ai-react`
 - App routing, global settings pages, global hotkeys — `@koloda/app-react`
-- Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda-core`
+- Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda`
 - Layout primitives — `@koloda/ui`
 
 ## Read next

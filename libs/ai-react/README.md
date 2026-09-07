@@ -21,7 +21,7 @@ Consumed by `@koloda/assistant-react` (and apps that compose those surfaces). De
 - Conversation / run lifecycle state — `libs/assistant-react/.../assistant`
 - Revert — `libs/assistant-react/.../assistant`
 - Provider HTTP calls — `@koloda/ai`
-- Secrets storage / redaction — `crates/koloda-core`
+- Secrets storage / redaction — `crates/koloda`
 - Persistence schema — `drizzle/`
 - SRS deck data — `libs/srs`
 

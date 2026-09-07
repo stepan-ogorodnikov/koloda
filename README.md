@@ -51,7 +51,7 @@ nx run native-electron:test:e2e
 # Web Playwright e2e
 nx run demo-e2e:e2e
 
-# Rust (workspace: koloda-core + Electron NAPI crate)
+# Rust (workspace: koloda + Electron NAPI crate)
 cargo test
 ```
 
@@ -77,5 +77,5 @@ libs/
   srs-react/              # SRS domain React UI
   ui/                     # Styles and UI primitives
 crates/
-  koloda-core/            # Shared Rust backend (domain logic, DB, migrations)
+  koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)
 ```

@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 workspace = true
 
 [dependencies]
-koloda-core = { path = "../../../crates/koloda-core" }
+koloda = { path = "../../../crates/koloda" }
 napi = { version = "2", features = ["napi6", "serde-json"] }
 napi-derive = "2"
 serde = { version = "1.0", features = ["derive"] }

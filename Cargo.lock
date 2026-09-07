@@ -442,7 +442,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "koloda-core"
+name = "koloda"
 version = "0.0.1"
 dependencies = [
  "chrono",
@@ -463,7 +463,7 @@ dependencies = [
 name = "koloda-electron"
 version = "0.0.1"
 dependencies = [
- "koloda-core",
+ "koloda",
  "napi",
  "napi-build",
  "napi-derive",

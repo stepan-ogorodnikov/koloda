@@ -7,7 +7,7 @@ No React, no DB drivers, no domain scheduling.
 
 Consumed by nearly every lib and app.
 Depends on nothing; the settings registry that composes these schemas with ai's lives in `@koloda/settings`.
-Desktop mirrors live in `crates/koloda-core/src/domain/` (settings, hotkeys, conversations, errors).
+Desktop mirrors live in `crates/koloda/src/domain/` (settings, hotkeys, conversations, errors).
 
 ## Architectural Map
 
@@ -21,7 +21,7 @@ Desktop mirrors live in `crates/koloda-core/src/domain/` (settings, hotkeys, con
 
 - React UI or TanStack Query — `@koloda/app-react`, `@koloda/core-react`
 - SRS domain / FSRS — `@koloda/srs`
-- Persistence schema or repos — `@koloda/db-pglite`, `koloda-core`
+- Persistence schema or repos — `@koloda/db-pglite`, `koloda`
 - Provider HTTP or error bridging — `@koloda/ai`
 - The settings registry — `@koloda/settings`
 

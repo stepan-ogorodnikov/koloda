@@ -6,7 +6,7 @@ Validates through `@koloda/srs` / `@koloda/app` schemas on write. On read, raw S
 ## Where it sits
 
 Consumed by `apps/demo` (`queries.ts`, `db.ts`, `ai.ts`).
-Desktop apps do not use this package; they call `koloda-core` via NAPI.
+Desktop apps do not use this package; they call `koloda` via NAPI.
 Depends on `@koloda/app` and `@koloda/srs`.
 
 ## Architectural Map
@@ -20,7 +20,7 @@ Depends on `@koloda/app` and `@koloda/srs`.
 ### Does NOT own (prevent scope creep)
 
 - Domain business rules — `@koloda/srs`
-- SQLite / Refinery migrations — `crates/koloda-core` only
+- SQLite / Refinery migrations — `crates/koloda` only
 - React UI — `@koloda/srs-react`, `@koloda/assistant-react`
 - Provider HTTP — `@koloda/ai`
 

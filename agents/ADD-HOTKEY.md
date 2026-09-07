@@ -23,7 +23,7 @@
    - Add default in `DEFAULT_HOTKEYS_SETTINGS` (if needed)
    - Add to validation (ai scope in hotkeysSettingsValidation)
 
-3. **Add Rust validation** (`crates/koloda-core/src/domain/settings_hotkeys.rs`):
+3. **Add Rust validation** (`crates/koloda/src/domain/settings_hotkeys.rs`):
    - Add the key to corresponding `*_KEYS` constant
    - Add scope field to HotkeysSettings struct
    - Add scope to validate() iteration

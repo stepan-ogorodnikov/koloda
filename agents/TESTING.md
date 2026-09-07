@@ -1,7 +1,7 @@
 # Testing Guide for AI Agents
 
 This guide defines which tests to write when implementing a change.
-It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda-core`.
+It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
 The Playwright e2e suites are out of scope; they follow their own specs in `apps/demo-e2e` and `apps/native-electron-e2e`.
 
 ## The survival question
@@ -25,8 +25,8 @@ If it would still pass, redesign the test before writing it.
 | Layer | Owns | Location |
 | --- | --- | --- |
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
-| Rust unit | Domain validation, serde wire contracts | `crates/koloda-core/tests/domain/<entity>_tests.rs` |
-| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda-core/tests/integration/<entity>_integration_tests.rs`, `libs/db-pglite/src/lib/*.integration.test.ts` |
+| Rust unit | Domain validation, serde wire contracts | `crates/koloda/tests/domain/<entity>_tests.rs` |
+| Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda/tests/integration/<entity>_integration_tests.rs`, `libs/db-pglite/src/lib/*.integration.test.ts` |
 | E2e | User flows | `apps/demo-e2e`, `apps/native-electron-e2e` |
 
 - Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
@@ -35,7 +35,7 @@ If it would still pass, redesign the test before writing it.
   This is the only check that catches SQL↔struct column-mapping drift — validators and unit tests never see it.
   Trimming CRUD permutations must never remove an entity's last roundtrip.
 - Do not add a unit test that shadows a Playwright spec; the flow belongs to e2e.
-- Rust file pairs follow `agents/CORE-CRATE.md` (Entity CRUD notes).
+- Rust file pairs follow `agents/RUST.md` (Entity CRUD notes).
   New files go under `tests/domain/` or `tests/integration/` and must be listed in `tests/domain/main.rs` or `tests/integration/main.rs`.
 
 ## Write tests for
@@ -60,7 +60,7 @@ An intermittent failure is a bug — fix it before merging rather than retrying.
 
 Mirrored domain logic (`docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`) must carry the same boundary tests on both sides.
 A rule tested in only one implementation will regress in the other.
-When you add a boundary case in `libs/srs` or `libs/app`, add its twin in `crates/koloda-core`, and vice versa.
+When you add a boundary case in `libs/srs` or `libs/app`, add its twin in `crates/koloda`, and vice versa.
 
 ## Banned patterns
 
@@ -132,20 +132,20 @@ Coverage must never dip between two commits.
 
 Match these files when the shape fits:
 
-- `crates/koloda-core/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
+- `crates/koloda/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
 - `libs/assistant/src/lib/assistant-engine.test.ts` — gated-deferred interleavings for async coordination.
 - `libs/assistant-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
 - `apps/native-electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
-- `crates/koloda-core/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
+- `crates/koloda/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
 - `libs/assistant-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.
-- `crates/koloda-core/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape, null-vs-omitted keys, serde round-trip.
+- `crates/koloda/tests/domain/cards_serde_tests.rs` — NAPI wire pins: exact JSON shape, null-vs-omitted keys, serde round-trip.
 - `libs/app/src/lib/error-parity.test.ts` — parses Rust `error_codes` from source vs `ERROR_MESSAGES` keys (`ai.*` TS-only allow-list).
 
 ## Running
 
 - All TS lib tests: `bun run test:libs`.
 - One TS lib: `bunx vitest run --config libs/<name>/vitest.config.mjs --configLoader runner [filter]`.
-- Rust: `cargo test -p koloda-core`.
-  Domain vs persistence: `cargo test -p koloda-core --test domain` / `--test integration`.
+- Rust: `cargo test -p koloda`.
+  Domain vs persistence: `cargo test -p koloda --test domain` / `--test integration`.
   The integration harness is self-contained (in-memory SQLite); no external services.

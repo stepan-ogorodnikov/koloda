@@ -24,5 +24,5 @@ fi
 bun run test:libs || exit 1
 
 if command -v cargo >/dev/null 2>&1; then
-  cargo test -p koloda-core || exit 1
+  cargo test -p koloda || exit 1
 fi

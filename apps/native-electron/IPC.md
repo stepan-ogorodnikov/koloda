@@ -23,7 +23,7 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
 
 ## Data Commands
 
-Each handler maps 1:1 to a `KolodaDb` NAPI method backed by `crates/koloda-core` repos over SQLite.
+Each handler maps 1:1 to a `KolodaDb` NAPI method backed by `crates/koloda` repos over SQLite.
 The full method list lives in `src-rust/src/lib.rs`.
 
 - Lifecycle: `get_db_status`, `seed_db`

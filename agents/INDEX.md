@@ -43,7 +43,7 @@ The listed files are relative to the repo root.
 | Algorithms / presets | `docs/specs/ALGORITHMS.md` |
 | Learning settings (defaults, daily limits, day boundary, learn-ahead limit) | `docs/specs/LEARNING-SETTINGS.md` |
 | Database schema change | `agents/DB.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`, `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` |
-| Change inside `crates/koloda-core` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/CORE-CRATE.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
+| Change inside `crates/koloda` (Rust domain, repos, settings slices, FSRS, reviews) | `agents/RUST.md`, `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` |
 | Add a color theme | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings change (language, scheme, themes, motion) | `docs/specs/INTERFACE-SETTINGS.md`, `agents/I18N.md` |
 | Add a hotkey | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |
@@ -70,7 +70,7 @@ Then add the same guides the author used for that change type, so the reviewer a
 | Algorithms diff | `docs/specs/ALGORITHMS.md` |
 | Learning settings diff | `docs/specs/LEARNING-SETTINGS.md` |
 | Schema change diff | `agents/DB.md`, `docs/adr/0001`, `docs/adr/0002` |
-| koloda-core diff | `agents/CORE-CRATE.md`, `docs/adr/0001` |
+| `crates/koloda` / `koloda` crate diff | `agents/RUST.md`, `docs/adr/0001` |
 | Theme diff | `agents/ADD-COLOR-THEME.md`, `docs/specs/INTERFACE-SETTINGS.md` |
 | Interface settings diff | `docs/specs/INTERFACE-SETTINGS.md` |
 | Hotkey diff | `agents/ADD-HOTKEY.md`, `docs/specs/HOTKEYS.md`, `agents/I18N.md` |

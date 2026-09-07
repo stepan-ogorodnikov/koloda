@@ -1,13 +1,13 @@
 # @koloda/native-electron
 
 Electron host: the main process, the preload bridge, and the Rust NAPI addon that owns the desktop database.
-No UI — the renderer is `apps/native-electron-react`; no domain logic — that lives in `crates/koloda-core`.
+No UI — the renderer is `apps/native-electron-react`; no domain logic — that lives in `crates/koloda`.
 
 ## Where it sits
 
 Owns the window, app lifecycle, and every main-process IPC channel (`IPC.md`).
 Data access and AI provider calls happen here; AI secrets never reach the renderer.
-The addon (`src-rust/`) is a thin `koloda-core` façade — the TS/Rust mirroring rationale is ADR 0001.
+The addon (`src-rust/`) is a thin `koloda` façade — the TS/Rust mirroring rationale is ADR 0001.
 
 ## How to run
 
@@ -31,7 +31,7 @@ The addon (`src-rust/`) is a thin `koloda-core` façade — the TS/Rust mirrorin
 - AI IPC: `src/ai-ipc.ts` — model listing, streaming chat with per-request abort, main-side tool executor. See `IPC.md`.
 - Close handshake: `src/window-close-coordinator.ts` — bounded 2500 ms shutdown request/ack so the renderer flushes before destroy.
 - Preload: `src/preload.ts` — `contextBridge` exposes `electronAPI`: generic `invoke`/`on` plus `webFrame` zoom controls.
-- Rust addon: `src-rust/` — `koloda-electron` cdylib; `KolodaDb` NAPI façade over `koloda-core` (SQLite at `<userData>/koloda.db`).
+- Rust addon: `src-rust/` — `koloda-electron` cdylib; `KolodaDb` NAPI façade over `koloda` (SQLite at `<userData>/koloda.db`).
 - Bundling scripts: `scripts/` —
   - `bundle-main.ts` — rolldown bundle of `src/main.ts` to a single CJS `dist/main.cjs` for the release asar
     (AI SDK deps inlined; `import.meta` remapped to CJS equivalents)
@@ -44,7 +44,7 @@ The addon (`src-rust/`) is a thin `koloda-core` façade — the TS/Rust mirrorin
 ### Does NOT own (prevent scope creep)
 
 - UI and routes — `apps/native-electron-react`
-- Domain, validation, scheduling — `crates/koloda-core` (mirrors `@koloda/srs` / `@koloda/app`)
+- Domain, validation, scheduling — `crates/koloda` (mirrors `@koloda/srs` / `@koloda/app`)
 - AI SDK shaping, budgets, and provider clients — `@koloda/ai` (main only hosts them)
 - E2E — `apps/native-electron-e2e`
 
@@ -53,4 +53,4 @@ The addon (`src-rust/`) is a thin `koloda-core` façade — the TS/Rust mirrorin
 - `IPC.md` — the full renderer ↔ main channel contract
 - `apps/native-electron-react/README.md` — the renderer
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
-- `agents/CORE-CRATE.md` — the domain crate below the addon
+- `agents/RUST.md` — the domain crate below the addon

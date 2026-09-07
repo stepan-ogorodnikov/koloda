@@ -64,7 +64,7 @@ export const insertCardSchema = cardFieldsSchema.omit({ id: true }).superRefine(
 
 export type InsertCardData = z.input<typeof insertCardSchema>;
 
-// Mirrors koloda-core `AddCardsItemResult`: success items omit `error`, failures
+// Mirrors koloda `AddCardsItemResult`: success items omit `error`, failures
 // carry the structured `{ code, details? }` using AppError-catalog codes.
 export type InsertCardsItemError = {
   code: string;

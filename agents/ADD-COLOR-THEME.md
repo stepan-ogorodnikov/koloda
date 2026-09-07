@@ -141,7 +141,7 @@ export const DARK_THEMES: Record<string, string> = {
 The id is the settings value and the `data-*-theme` attribute.
 The string is the picker label (not i18n’d today).
 
-**Rust** — `crates/koloda-core/src/domain/settings_interface.rs`:
+**Rust** — `crates/koloda/src/domain/settings_interface.rs`:
 
 ```rust
 pub const LIGHT_THEMES: &[&str] = &[/* … */, "my-light"];
@@ -190,4 +190,4 @@ Do not change app `store.ts` seed values unless that is requested.
 - `libs/ui/src/lib/styles/themes/<id>.css`
 - `libs/ui/src/lib/styles/scheme-light.css` / `scheme-dark.css`
 - `libs/app/src/lib/settings-interface.ts`
-- `crates/koloda-core/src/domain/settings_interface.rs`
+- `crates/koloda/src/domain/settings_interface.rs`

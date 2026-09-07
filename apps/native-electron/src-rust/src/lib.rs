@@ -1,10 +1,10 @@
-use koloda_core::app::db::Database;
-use koloda_core::app::error::AppError;
-use koloda_core::app::init::{self as init_mod, SeedData};
-use koloda_core::domain::lessons::GetLessonsParams;
-use koloda_core::domain::reviews::GetReviewTotalsParams;
-use koloda_core::domain::settings::SettingsName;
-use koloda_core::repo;
+use koloda::app::db::Database;
+use koloda::app::error::AppError;
+use koloda::app::init::{self as init_mod, SeedData};
+use koloda::domain::lessons::GetLessonsParams;
+use koloda::domain::reviews::GetReviewTotalsParams;
+use koloda::domain::settings::SettingsName;
+use koloda::repo;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -62,8 +62,8 @@ impl KolodaDb {
     pub fn get_db_status(&self) -> Result<String> {
         let status = init_mod::get_db_status(&self.db).map_err(to_napi_error)?;
         Ok(match status {
-            koloda_core::app::init::DbStatus::Blank => "blank".to_string(),
-            koloda_core::app::init::DbStatus::Ok => "ok".to_string(),
+            koloda::app::init::DbStatus::Blank => "blank".to_string(),
+            koloda::app::init::DbStatus::Ok => "ok".to_string(),
         })
     }
 
@@ -75,7 +75,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn get_cards(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: koloda_core::domain::cards::GetCardsParams =
+        let params: koloda::domain::cards::GetCardsParams =
             serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
         let cards = repo::cards::get_cards(&self.db, params.deck_id).map_err(to_napi_error)?;
         to_value(&cards)
@@ -387,7 +387,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda_core::domain::ai::AddProfileData =
+        let data: koloda::domain::ai::AddProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets, data.whitelist_model_ids)
             .map_err(to_napi_error)?;
@@ -396,7 +396,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda_core::domain::ai::UpdateProfileData =
+        let data: koloda::domain::ai::UpdateProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         let profile =
             repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets, data.whitelist_model_ids)
@@ -406,7 +406,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn remove_ai_profile(&self, data: serde_json::Value) -> Result<()> {
-        let data: koloda_core::domain::ai::RemoveProfileData =
+        let data: koloda::domain::ai::RemoveProfileData =
             serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         repo::ai::remove_ai_profile(&self.db, &data.id).map_err(to_napi_error)
     }

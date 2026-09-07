@@ -1,0 +1,264 @@
+#![allow(dead_code, reason = "shared test helpers are not all used by every including test")]
+
+use koloda::app::db::Database;
+use serde_json::json;
+
+pub mod fixtures;
+
+pub fn test_db() -> Database {
+    Database::in_memory().expect("in-memory database should initialize")
+}
+
+pub fn fsrs_algorithm_content() -> koloda::domain::algorithms_fsrs::AlgorithmFSRS {
+    serde_json::from_value(json!({
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "0.4197,1.1869,3.0412,15.2441,7.1434,0.6477,1.0007,0.0754,1.6598,0.1719,1.1178,1.4699,0.134,0.016,1.7101,0.1543,0.9369,2.9664,0.714,0.201,0.0059",
+        "isFuzzEnabled": true,
+        "learningSteps": [[10, "m"], [1, "d"]],
+        "relearningSteps": [[10, "m"]],
+        "maximumInterval": 36500,
+    }))
+    .expect("valid FSRS fixture")
+}
+
+pub fn fsrs_content() -> koloda::domain::algorithms_fsrs::AlgorithmFSRS {
+    fsrs_algorithm_content()
+}
+
+pub fn card_content(
+    front: &str,
+    back: &str,
+) -> std::collections::HashMap<String, koloda::domain::cards::CardContentField> {
+    std::collections::HashMap::from([
+        (
+            "1".to_string(),
+            koloda::domain::cards::CardContentField {
+                text: front.to_string(),
+            },
+        ),
+        (
+            "2".to_string(),
+            koloda::domain::cards::CardContentField { text: back.to_string() },
+        ),
+    ])
+}
+
+pub fn simple_template_content() -> koloda::domain::templates::TemplateContent {
+    use koloda::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
+
+    TemplateContent {
+        fields: vec![
+            TemplateField {
+                id: 1,
+                title: "Front".to_string(),
+                field_type: "text".to_string(),
+                is_required: true,
+            },
+            TemplateField {
+                id: 2,
+                title: "Back".to_string(),
+                field_type: "text".to_string(),
+                is_required: false,
+            },
+        ],
+        layout: vec![
+            TemplateLayoutItem {
+                field: 1,
+                operation: "display".to_string(),
+            },
+            TemplateLayoutItem {
+                field: 2,
+                operation: "reveal".to_string(),
+            },
+        ],
+    }
+}
+
+pub fn simple_template() -> koloda::domain::templates::InsertTemplateData {
+    use koloda::domain::templates::InsertTemplateData;
+
+    InsertTemplateData {
+        title: "Basic".to_string(),
+        content: simple_template_content(),
+    }
+}
+
+pub fn interface_settings(language: &str, scheme: &str, motion: &str) -> serde_json::Value {
+    json!({
+        "language": language,
+        "scheme": scheme,
+        "lightTheme": "github-light",
+        "darkTheme": "github-dark",
+        "motion": motion,
+    })
+}
+
+pub fn counted_daily_limit(value: u32, counts: bool) -> serde_json::Value {
+    json!({
+        "value": value,
+        "counts": counts,
+    })
+}
+
+pub fn learning_settings(total: u32, untouched: u32, learn: u32, review: u32) -> serde_json::Value {
+    json!({
+        "defaults": {},
+        "dailyLimits": {
+            "total": total,
+            "untouched": counted_daily_limit(untouched, true),
+            "learn": counted_daily_limit(learn, true),
+            "review": counted_daily_limit(review, true),
+        },
+        "dayStartsAt": "04:00",
+        "learnAheadLimit": [4, 0],
+    })
+}
+
+pub fn learning_settings_with_day_start(
+    total: u32,
+    untouched: u32,
+    learn: u32,
+    review: u32,
+    day_starts_at: &str,
+) -> serde_json::Value {
+    json!({
+        "defaults": {},
+        "dailyLimits": {
+            "total": total,
+            "untouched": counted_daily_limit(untouched, true),
+            "learn": counted_daily_limit(learn, true),
+            "review": counted_daily_limit(review, true),
+        },
+        "dayStartsAt": day_starts_at,
+        "learnAheadLimit": [4, 0],
+    })
+}
+
+pub fn hotkeys_settings() -> serde_json::Value {
+    json!({
+        "ui": {
+            "focusNext": ["Alt+J"],
+            "focusPrev": ["Alt+K"],
+            "nextTab": ["J"],
+            "prevTab": ["K"],
+        },
+        "navigation": {
+            "dashboard": ["H"],
+            "decks": ["D"],
+            "algorithms": ["P"],
+            "templates": ["T"],
+            "settings": ["Mod+,"],
+        },
+        "grades": {
+            "again": ["1"],
+            "hard": ["2"],
+            "normal": ["3"],
+            "easy": ["4"],
+        },
+    })
+}
+
+pub fn seed_data(algorithm_title: &str, template_title: &str) -> koloda::app::init::SeedData {
+    use koloda::app::init::SeedSettings;
+    use koloda::domain::algorithms::InsertAlgorithmData;
+    use koloda::domain::templates::InsertTemplateData;
+
+    koloda::app::init::SeedData {
+        algorithm: InsertAlgorithmData {
+            title: algorithm_title.to_string(),
+            content: fsrs_algorithm_content(),
+        },
+        template: InsertTemplateData {
+            title: template_title.to_string(),
+            content: simple_template_content(),
+        },
+        settings: SeedSettings {
+            interface: interface_settings("en", "system", "system"),
+            learning: learning_settings(100, 20, 30, 50),
+            hotkeys: hotkeys_settings(),
+        },
+    }
+}
+
+pub fn valid_template_fields() -> [koloda::domain::templates::TemplateField; 2] {
+    use koloda::domain::templates::TemplateField;
+
+    [
+        TemplateField {
+            id: 1,
+            title: "Front".to_string(),
+            field_type: "text".to_string(),
+            is_required: true,
+        },
+        TemplateField {
+            id: 2,
+            title: "Back".to_string(),
+            field_type: "text".to_string(),
+            is_required: false,
+        },
+    ]
+}
+
+pub fn valid_card_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" },
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn empty_required_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "" },
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn missing_required_field_content() -> serde_json::Value {
+    json!({
+        "2": { "text": "Back text" }
+    })
+}
+
+pub fn empty_optional_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" },
+        "2": { "text": "" }
+    })
+}
+
+pub fn missing_optional_field_content() -> serde_json::Value {
+    json!({
+        "1": { "text": "Front text" }
+    })
+}
+
+pub fn valid_card_progress_json() -> serde_json::Value {
+    json!({
+        "id": 1,
+        "state": 0,
+        "dueAt": 1000000000,
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "scheduledDays": 1,
+        "learningSteps": 0,
+        "reps": 0,
+        "lapses": 0,
+        "lastReviewedAt": null
+    })
+}
+
+pub fn valid_review_json() -> serde_json::Value {
+    json!({
+        "cardId": 1,
+        "rating": 1,
+        "state": 0,
+        "dueAt": null,
+        "stability": 5.0,
+        "difficulty": 5.0,
+        "scheduledDays": 1,
+        "learningSteps": 0,
+        "time": 0,
+        "isIgnored": false
+    })
+}

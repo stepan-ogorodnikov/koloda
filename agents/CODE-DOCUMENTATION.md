@@ -163,7 +163,7 @@ How do you know if a decision needs a code comment or a full ADR file in `docs/a
   ADRs bridge that gap.
 
 Index: `docs/adr/README.md`.
-Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches both TS domain and `koloda-core`.
+Start with `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` when a change touches both TS domain and `koloda`.
 
 Summary Checklist for Agents
 

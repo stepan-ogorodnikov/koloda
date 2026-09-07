@@ -41,7 +41,7 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
 ]);
 ```
 
-### 2. Rust Domain (`crates/koloda-core/src/domain/ai.rs`)
+### 2. Rust Domain (`crates/koloda/src/domain/ai.rs`)
 
 Add provider to Rust constants and enum:
 
@@ -71,7 +71,7 @@ AISecrets::MyProvider { api_key } => Self::require_api_key_for_input(api_key, "m
 AISecrets::MyProvider { api_key } => Self::reject_stored_api_key(api_key, "myProvider"),
 ```
 
-### 3. Rust Repository (`crates/koloda-core/src/repo/ai.rs`)
+### 3. Rust Repository (`crates/koloda/src/repo/ai.rs`)
 
 Add redaction and reconstruction for secrets:
 
@@ -274,9 +274,9 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 
 - `libs/ai/src/lib/chat-stream.test.ts` — `streamText` gets this wrapper's `providerOptions`, omitted when effort is empty
 - Provider `fetchModels` tests — levels only when the list or catalog join reports them
-- `crates/koloda-core/tests/domain/ai_tests.rs` - Rust unit tests
-- `crates/koloda-core/tests/integration/ai_integration_tests.rs` - Rust integration tests
-- `crates/koloda-core/tests/domain/settings_ai_tests.rs` - Settings validation tests
+- `crates/koloda/tests/domain/ai_tests.rs` - Rust unit tests
+- `crates/koloda/tests/integration/ai_integration_tests.rs` - Rust integration tests
+- `crates/koloda/tests/domain/settings_ai_tests.rs` - Settings validation tests
 
 ## Key Files Reference
 
@@ -284,8 +284,8 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 |-------|------|---------|
 | Catalog | `libs/ai/src/lib/provider-catalog.ts` | Provider labels, IDs, base URLs |
 | Secrets | `libs/ai/src/lib/provider-secrets.ts` | Per-provider zod schemas, `AISecrets` |
-| Rust Domain | `crates/koloda-core/src/domain/ai.rs` | Provider enum, validation |
-| Rust Repo | `crates/koloda-core/src/repo/ai.rs` | Secret redaction/reconstruction |
+| Rust Domain | `crates/koloda/src/domain/ai.rs` | Provider enum, validation |
+| Rust Repo | `crates/koloda/src/repo/ai.rs` | Secret redaction/reconstruction |
 | Registry | `libs/ai/src/lib/providers/<provider>.ts` + `provider-registry.ts` | Per-provider client/fetch; types + wiring table |
 | Streaming | `libs/ai/src/lib/chat-stream.ts` | Chat stream implementation |
 | Form Config | `libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts` | Per-provider fields, schema, secrets mapping |

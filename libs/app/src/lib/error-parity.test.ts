@@ -5,14 +5,14 @@ import { describe, expect, it } from "vitest";
 import { ERROR_MESSAGES } from "./error";
 
 // INVARIANT: TS↔Rust twin (agents/TESTING.md) — every `error_codes` string in
-// `crates/koloda-core/src/app/error.rs` must have a matching key in
+// `crates/koloda/src/app/error.rs` must have a matching key in
 // `ERROR_MESSAGES` (`libs/app/src/lib/error.ts`). The Rust list is parsed from
 // the source file at test time (no pinned copy), so a code added on the Rust
 // side fails here until the message table catches up. TS-only `ai.*` keys are
-// allow-listed below; they are produced client-side, not by koloda-core.
+// allow-listed below; they are produced client-side, not by koloda.
 //
 // When adding a Rust error code:
-// 1. Add `pub const …` to `error_codes` in `crates/koloda-core/src/app/error.rs`
+// 1. Add `pub const …` to `error_codes` in `crates/koloda/src/app/error.rs`
 // 2. Add the same string key to `ERROR_MESSAGES` in `libs/app/src/lib/error.ts`
 const TS_ONLY_ERROR_CODES = [
   "ai.http",
@@ -34,10 +34,7 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.504",
 ] as const;
 
-const RUST_ERROR_RS = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../crates/koloda-core/src/app/error.rs",
-);
+const RUST_ERROR_RS = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/app/error.rs");
 
 function rustErrorCodes(): string[] {
   const source = readFileSync(RUST_ERROR_RS, "utf8");

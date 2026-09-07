@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-/** Mirrors `koloda-core` `domain/progress.rs` bounds. */
+/** Mirrors `koloda` `domain/progress.rs` bounds. */
 export const DIFFICULTY_MIN = 0;
 export const DIFFICULTY_MAX = 10;
 export const CARD_STATE_MIN = 0;

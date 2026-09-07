@@ -4,9 +4,9 @@ import { AI_PROVIDER_REGISTRY } from "./provider-registry";
 
 // INVARIANT: TS↔Rust twin (agents/TESTING.md) — these ids must stay in sync
 // with the `AISecrets` serde provider tags in
-// `crates/koloda-core/src/domain/ai.rs`, pinned by
+// `crates/koloda/src/domain/ai.rs`, pinned by
 // `ai_secrets_provider_tags_match_ts_registry` in
-// `crates/koloda-core/tests/domain/ai_tests.rs`. Adding a provider requires
+// `crates/koloda/tests/domain/ai_tests.rs`. Adding a provider requires
 // touching both pins (agents/ADD-AI-PROVIDER.md).
 const RUST_AI_SECRETS_PROVIDER_TAGS = ["openrouter", "ollama", "lmstudio", "opencodeGo", "opencodeZen", "ollamaCloud"];
 
