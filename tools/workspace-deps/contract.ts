@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { basename, join, relative, sep } from "node:path";
 import ts from "typescript";
+import { LAYER_TABLE_PATH, buildLayerMap, compareDirection, staleLayerEntries } from "./layers.ts";
+import type { DirectionIssue, Layer, PackageKind } from "./layers.ts";
 
 export type ReferenceKind = "import" | "export" | "import-equals" | "dynamic-import" | "require";
 
@@ -33,8 +35,15 @@ export type LibraryCheckResult = {
   missing: string[];
   phantom: string[];
   badVersions: ManifestIssue[];
+  forbidden: DirectionIssue[];
+  isUnclassified: boolean;
   references: WorkspaceReference[];
   unresolvable: UnresolvableReference[];
+};
+
+export type WorkspaceCheckResult = {
+  results: LibraryCheckResult[];
+  staleLayers: string[];
 };
 
 const SOURCE_EXT = /\.(ts|tsx|js|jsx|mjs|cjs)$/;
@@ -195,18 +204,66 @@ function walkProductionSources(pkgDir: string): string[] {
   return out;
 }
 
-export function checkLibrary(pkgDir: string, root: string): LibraryCheckResult | null {
-  const packageJsonPath = join(pkgDir, "package.json");
-  if (!existsSync(packageJsonPath)) return null;
+type DiscoveredPackage = {
+  name: string;
+  kind: PackageKind;
+  pkgDir: string;
+  manifestPath: string | null;
+  declared: Record<string, string>;
+};
 
-  let pkg: { name?: string; dependencies?: Record<string, string> };
+function readManifest(packageJsonPath: string): { name?: string; dependencies?: Record<string, string> } | null {
   try {
-    pkg = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+    return JSON.parse(readFileSync(packageJsonPath, "utf8"));
   } catch {
     return null;
   }
-  if (!pkg.name?.startsWith(KOLODA_PREFIX)) return null;
+}
 
+function discoverWorkspacePackages(root: string): DiscoveredPackage[] {
+  const discovered: DiscoveredPackage[] = [];
+
+  for (const kind of ["lib", "app"] as const) {
+    const parent = join(root, kind === "lib" ? "libs" : "apps");
+    if (!existsSync(parent)) continue;
+
+    for (const entry of readdirSync(parent)) {
+      const pkgDir = join(parent, entry);
+      if (!statSync(pkgDir).isDirectory()) continue;
+
+      const packageJsonPath = join(pkgDir, "package.json");
+      if (existsSync(packageJsonPath)) {
+        const pkg = readManifest(packageJsonPath);
+        if (!pkg?.name?.startsWith(KOLODA_PREFIX)) continue;
+        discovered.push({
+          name: pkg.name,
+          kind,
+          pkgDir,
+          manifestPath: packageJsonPath,
+          declared: pkg.dependencies ?? {},
+        });
+        continue;
+      }
+
+      if (kind === "app") {
+        discovered.push({
+          name: `${KOLODA_PREFIX}${basename(pkgDir)}`,
+          kind,
+          pkgDir,
+          manifestPath: null,
+          declared: {},
+        });
+      }
+    }
+  }
+
+  return discovered;
+}
+
+function collectPackageSources(
+  pkgDir: string,
+  root: string,
+): { references: WorkspaceReference[]; unresolvable: UnresolvableReference[] } {
   const references: WorkspaceReference[] = [];
   const unresolvable: UnresolvableReference[] = [];
 
@@ -217,54 +274,96 @@ export function checkLibrary(pkgDir: string, root: string): LibraryCheckResult |
     unresolvable.push(...collected.unresolvable);
   }
 
-  const { missing, phantom, badVersions } = compareDependencies({
+  return { references, unresolvable };
+}
+
+function checkDiscoveredPackage(
+  pkg: DiscoveredPackage,
+  root: string,
+  layers: ReadonlyMap<string, Layer | null>,
+): LibraryCheckResult {
+  const { references, unresolvable } = collectPackageSources(pkg.pkgDir, root);
+  const compared = compareDependencies({
     selfName: pkg.name,
-    declared: pkg.dependencies ?? {},
+    declared: pkg.declared,
     references,
   });
+  const { isUnclassified, forbidden } = compareDirection({
+    selfName: pkg.name,
+    imported: compared.imported,
+    layers,
+  });
+
+  const packageJsonPath = pkg.manifestPath
+    ? relative(root, pkg.manifestPath).split(sep).join("/")
+    : relative(root, pkg.pkgDir).split(sep).join("/");
+
+  const isLib = pkg.kind === "lib";
 
   return {
     name: pkg.name,
-    packageJsonPath: relative(root, packageJsonPath).split(sep).join("/"),
-    missing,
-    phantom,
-    badVersions,
+    packageJsonPath,
+    missing: isLib ? compared.missing : [],
+    phantom: isLib ? compared.phantom : [],
+    badVersions: isLib ? compared.badVersions : [],
+    forbidden,
+    isUnclassified,
     references,
-    unresolvable,
+    unresolvable: isLib ? unresolvable : [],
   };
 }
 
-export function checkWorkspace(root: string): LibraryCheckResult[] {
-  const libsRoot = join(root, "libs");
-  const results: LibraryCheckResult[] = [];
+export function checkWorkspace(root: string): WorkspaceCheckResult {
+  const discovered = discoverWorkspacePackages(root);
+  const layers = buildLayerMap(discovered);
+  const results = discovered
+    .map((pkg) => checkDiscoveredPackage(pkg, root, layers))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  for (const entry of readdirSync(libsRoot)) {
-    const pkgDir = join(libsRoot, entry);
-    if (!statSync(pkgDir).isDirectory()) continue;
-    const result = checkLibrary(pkgDir, root);
-    if (result) results.push(result);
-  }
-
-  return results.sort((a, b) => a.name.localeCompare(b.name));
+  return {
+    results,
+    staleLayers: staleLayerEntries(discovered.map((pkg) => pkg.name)),
+  };
 }
 
-export function formatCheckFailures(results: LibraryCheckResult[]): string | null {
-  const failing = results.filter(
-    (r) => r.missing.length || r.phantom.length || r.badVersions.length || r.unresolvable.length,
+function hasPackageFailure(result: LibraryCheckResult): boolean {
+  return Boolean(
+    result.missing.length ||
+    result.phantom.length ||
+    result.badVersions.length ||
+    result.unresolvable.length ||
+    result.forbidden.length ||
+    result.isUnclassified,
   );
-  if (failing.length === 0) return null;
+}
 
-  const lines: string[] = ["Workspace dependency mismatches:", ""];
+function evidenceFor(result: LibraryCheckResult, packageName: string): WorkspaceReference[] {
+  return result.references
+    .filter((ref) => ref.packageName === packageName)
+    .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column);
+}
+
+export function formatCheckFailures(results: LibraryCheckResult[], staleLayers: string[] = []): string | null {
+  const failing = results.filter(hasPackageFailure);
+  if (failing.length === 0 && staleLayers.length === 0) return null;
+
+  const lines: string[] = ["Workspace dependency check failed:", ""];
+
+  for (const name of staleLayers) {
+    lines.push(`stale layer: ${name} is listed in ${LAYER_TABLE_PATH} but was not found under libs/ or apps/`);
+  }
+  if (staleLayers.length) lines.push("");
 
   for (const result of failing) {
     lines.push(`${result.name} (${result.packageJsonPath})`);
 
+    if (result.isUnclassified) {
+      lines.push(`  unclassified: add this package to ${LAYER_TABLE_PATH}`);
+    }
+
     for (const name of result.missing) {
-      const evidence = result.references
-        .filter((ref) => ref.packageName === name)
-        .sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column);
       lines.push(`  missing:  ${name}`);
-      for (const ref of evidence) {
+      for (const ref of evidenceFor(result, name)) {
         lines.push(`    ${ref.file}:${ref.line}:${ref.column} (${ref.kind}) ${ref.specifier}`);
       }
     }
@@ -275,6 +374,13 @@ export function formatCheckFailures(results: LibraryCheckResult[]): string | nul
 
     for (const issue of result.badVersions) {
       lines.push(`  version:  ${issue.dependency} is "${issue.version}" (expected "workspace:*")`);
+    }
+
+    for (const issue of result.forbidden) {
+      lines.push(`  forbidden: ${issue.reason}`);
+      for (const ref of evidenceFor(result, issue.dependency)) {
+        lines.push(`    ${ref.file}:${ref.line}:${ref.column} (${ref.kind}) ${ref.specifier}`);
+      }
     }
 
     for (const ref of result.unresolvable) {

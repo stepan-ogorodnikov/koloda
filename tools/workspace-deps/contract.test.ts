@@ -175,6 +175,8 @@ describe("formatCheckFailures", () => {
       missing: ["@koloda/ai"],
       phantom: ["@koloda/srs"],
       badVersions: [{ packageName: "@koloda/app", dependency: "@koloda/ui", version: "*" }],
+      forbidden: [],
+      isUnclassified: false,
       references: [
         {
           packageName: "@koloda/ai",
@@ -198,7 +200,7 @@ describe("formatCheckFailures", () => {
 
     expect(formatCheckFailures([result])).toBe(
       [
-        "Workspace dependency mismatches:",
+        "Workspace dependency check failed:",
         "",
         "@koloda/app (libs/app/package.json)",
         "  missing:  @koloda/ai",
@@ -206,6 +208,71 @@ describe("formatCheckFailures", () => {
         "  phantom:  @koloda/srs",
         '  version:  @koloda/ui is "*" (expected "workspace:*")',
         "  unresolvable: libs/app/src/lib/load.ts:4:16 (dynamic-import) non-literal module specifier; workspace imports must use a literal specifier",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("emits direction and stale-layer diagnostics", () => {
+    const result: LibraryCheckResult = {
+      name: "@koloda/srs-react",
+      packageJsonPath: "libs/srs-react/package.json",
+      missing: [],
+      phantom: [],
+      badVersions: [],
+      forbidden: [
+        {
+          dependency: "@koloda/db-pglite",
+          reason: "@koloda/db-pglite is exclusive to @koloda/web",
+        },
+      ],
+      isUnclassified: false,
+      references: [
+        {
+          packageName: "@koloda/db-pglite",
+          specifier: "@koloda/db-pglite",
+          file: "libs/srs-react/src/lib/foo.ts",
+          line: 1,
+          column: 10,
+          kind: "import",
+        },
+      ],
+      unresolvable: [],
+    };
+
+    expect(formatCheckFailures([result], ["@koloda/demo"])).toBe(
+      [
+        "Workspace dependency check failed:",
+        "",
+        "stale layer: @koloda/demo is listed in tools/workspace-deps/layers.ts but was not found under libs/ or apps/",
+        "",
+        "@koloda/srs-react (libs/srs-react/package.json)",
+        "  forbidden: @koloda/db-pglite is exclusive to @koloda/web",
+        "    libs/srs-react/src/lib/foo.ts:1:10 (import) @koloda/db-pglite",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("emits unclassified diagnostics", () => {
+    const result: LibraryCheckResult = {
+      name: "@koloda/mystery",
+      packageJsonPath: "libs/mystery/package.json",
+      missing: [],
+      phantom: [],
+      badVersions: [],
+      forbidden: [],
+      isUnclassified: true,
+      references: [],
+      unresolvable: [],
+    };
+
+    expect(formatCheckFailures([result])).toBe(
+      [
+        "Workspace dependency check failed:",
+        "",
+        "@koloda/mystery (libs/mystery/package.json)",
+        "  unclassified: add this package to tools/workspace-deps/layers.ts",
         "",
       ].join("\n"),
     );
