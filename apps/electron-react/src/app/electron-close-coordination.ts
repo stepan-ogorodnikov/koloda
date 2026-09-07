@@ -1,7 +1,7 @@
 import { shutdownAssistantGracefully } from "@koloda/assistant-react";
 import type { createStore } from "jotai";
 
-// INVARIANT: Channel names must match apps/native-electron/src/window-close-coordinator.ts.
+// INVARIANT: Channel names must match apps/electron/src/window-close-coordinator.ts.
 const APP_SHUTDOWN_REQUEST_CHANNEL = "app:shutdown-request";
 const APP_SHUTDOWN_ACK_CHANNEL = "app:shutdown-ack";
 

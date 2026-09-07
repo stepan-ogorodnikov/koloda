@@ -14,7 +14,7 @@ export default defineConfig({
     timeout: 15_000,
   },
   reporter: "list",
-  outputDir: "../../dist/apps/native-electron-e2e/test-results",
+  outputDir: "../../dist/apps/electron-e2e/test-results",
   use: {
     locale: "en-US",
     colorScheme: "light",
@@ -23,7 +23,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: {
-    command: `bunx vite --config apps/native-electron-react/vite.config.ts --host 127.0.0.1 --port ${port} --strictPort`,
+    command: `bunx vite --config apps/electron-react/vite.config.ts --host 127.0.0.1 --port ${port} --strictPort`,
     cwd: resolve(__dirname, "../.."),
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,

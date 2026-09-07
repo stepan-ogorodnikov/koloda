@@ -107,8 +107,8 @@ export function createWindow() {
   if (isDev) {
     win.loadURL("http://localhost:3000");
   } else {
-    // WHY: Hash `/` so TanStack starts on the index route under file:// (see native-electron-react main.tsx).
-    win.loadFile(join(appDir, "../native-electron-react/index.html"), { hash: "/" });
+    // WHY: Hash `/` so TanStack starts on the index route under file:// (see electron-react main.tsx).
+    win.loadFile(join(appDir, "../electron-react/index.html"), { hash: "/" });
   }
 
   return win;

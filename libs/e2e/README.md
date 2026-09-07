@@ -1,7 +1,7 @@
 # e2e
 
 Shared Playwright support code for the two e2e suites, `apps/web-e2e` (web) and
-`apps/native-electron-e2e` (desktop). The suites drive the same app UI, so the
+`apps/electron-e2e` (desktop). The suites drive the same app UI, so the
 page flows and the AI-mock wire format are defined once here; only the platform
 differences live in the suites themselves.
 
@@ -32,4 +32,4 @@ and it must never gain runtime dependencies.
 
 ## Read next
 
-- `apps/web-e2e/README.md` and `apps/native-electron-e2e/README.md` — the consumers
+- `apps/web-e2e/README.md` and `apps/electron-e2e/README.md` — the consumers

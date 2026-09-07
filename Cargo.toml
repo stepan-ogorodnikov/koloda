@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "crates/koloda",
-    "apps/native-electron/src-rust",
+    "apps/electron/src-rust",
 ]
 resolver = "2"
 

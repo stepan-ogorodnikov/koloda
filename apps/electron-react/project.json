@@ -1,11 +1,11 @@
 {
-  "name": "@koloda/native-electron-react",
+  "name": "@koloda/electron-react",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "tags": [
     "type:app",
     "platform:desktop"
   ],
-  "sourceRoot": "apps/native-electron-react/src",
+  "sourceRoot": "apps/electron-react/src",
   "projectType": "application",
   "targets": {
     "build": {
@@ -56,7 +56,7 @@
         "^default"
       ],
       "options": {
-        "command": "bunx vitest run --config apps/native-electron-react/vitest.config.mjs --configLoader runner"
+        "command": "bunx vitest run --config apps/electron-react/vitest.config.mjs --configLoader runner"
       },
       "configurations": {}
     }

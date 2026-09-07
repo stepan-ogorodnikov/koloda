@@ -62,7 +62,7 @@ UI disable-submit is not sufficient.
 
 On real unload `pagehide` / `beforeunload`, the application-shell host dispatches a typed `shutdown` command via `shutdownAssistantGracefully` (best-effort in browsers/web — the platform does not await flush promises).
 A bfcache `pagehide` (`PageTransitionEvent.persisted === true`) skips terminal shutdown so a later `pageshow` can reuse the same engine.
-Electron additionally runs a main-process window-close handshake (`apps/native-electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`).
+Electron additionally runs a main-process window-close handshake (`apps/electron` `window-close-coordinator` + renderer `installElectronCloseCoordination`) that requests shutdown, awaits a bounded ack, then allows close (or force-destroys after `WINDOW_CLOSE_SHUTDOWN_TIMEOUT_MS`).
 Concurrent unload + IPC callers share one engine shutdown promise (single-flight) so acknowledgement waits for the joined flush:
 
 1. Interrupt every `streaming` run in memory (`interrupted` / `app_shutdown`) and dirty the originating conversation.

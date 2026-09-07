@@ -6,7 +6,7 @@ One spec file per user flow; no app code is mocked except the AI provider.
 ## Where it sits
 
 Tests `apps/web` exclusively; the suite boots the web dev server itself on `127.0.0.1:4300`.
-The desktop counterpart is `apps/native-electron-e2e` — the two spec sets mirror each other flow for flow.
+The desktop counterpart is `apps/electron-e2e` — the two spec sets mirror each other flow for flow.
 Unit tests live in the app projects (`@koloda/web:test-unit`), not here.
 
 ## How to run
@@ -32,9 +32,9 @@ Unit tests live in the app projects (`@koloda/web:test-unit`), not here.
 
 - The app under test — `apps/web`
 - Unit tests — `@koloda/web:test-unit` in the app project
-- The desktop suite — `apps/native-electron-e2e`
+- The desktop suite — `apps/electron-e2e`
 
 ## Read next
 
 - `apps/web/README.md` — the app under test
-- `apps/native-electron-e2e/README.md` — the mirrored desktop suite
+- `apps/electron-e2e/README.md` — the mirrored desktop suite

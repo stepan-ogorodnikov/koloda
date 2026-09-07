@@ -1,7 +1,7 @@
-# @koloda/native-electron
+# @koloda/electron
 
 Electron host: the main process, the preload bridge, and the Rust NAPI addon that owns the desktop database.
-No UI — the renderer is `apps/native-electron-react`; no domain logic — that lives in `crates/koloda`.
+No UI — the renderer is `apps/electron-react`; no domain logic — that lives in `crates/koloda`.
 
 ## Where it sits
 
@@ -11,11 +11,11 @@ The addon (`src-rust/`) is a thin `koloda` façade — the TS/Rust mirroring rat
 
 ## How to run
 
-- `nx run native-electron:serve` — dev: boots the renderer dev server, builds the Rust addon, compiles the preload, launches Electron
-- `nx run native-electron:build` — packaged installer via electron-builder into `dist-pack/`
-- `nx run native-electron:build-rust` — `cargo build` of the addon plus copy into `dist/`
-- `nx run native-electron:test` — unit + renderer unit + e2e; `-c unit` / `-c e2e` select a subset
-- `nx run native-electron:typecheck`, `nx run native-electron:lint`
+- `nx run @koloda/electron:serve` — dev: boots the renderer dev server, builds the Rust addon, compiles the preload, launches Electron
+- `nx run @koloda/electron:build` — packaged installer via electron-builder into `dist-pack/`
+- `nx run @koloda/electron:build-rust` — `cargo build` of the addon plus copy into `dist/`
+- `nx run @koloda/electron:test` — unit + renderer unit + e2e; `-c unit` / `-c e2e` select a subset
+- `nx run @koloda/electron:typecheck`, `nx run @koloda/electron:lint`
 
 ## Architectural Map
 
@@ -38,19 +38,19 @@ The addon (`src-rust/`) is a thin `koloda` façade — the TS/Rust mirroring rat
   - `copy-native-addon.ts` — dev: copies the cargo-built addon into `dist/` (honors `CARGO_TARGET_DIR`)
   - `copy-native-release.ts` — packaged: same copy from the fixed workspace `target/release` path
 - Packaging: `electron-builder.yml` — `dist/` flattened into the asar root beside `preload.js` and the `.node` addon,
-  the built renderer included from workspace `dist/apps/native-electron-react` as extra resources;
+  the built renderer included from workspace `dist/apps/electron-react` as extra resources;
   NSIS (win), dmg/zip (mac), AppImage/deb (linux).
 
 ### Does NOT own (prevent scope creep)
 
-- UI and routes — `apps/native-electron-react`
+- UI and routes — `apps/electron-react`
 - Domain, validation, scheduling — `crates/koloda` (mirrors `@koloda/srs` / `@koloda/app`)
 - AI SDK shaping, budgets, and provider clients — `@koloda/ai` (main only hosts them)
-- E2E — `apps/native-electron-e2e`
+- E2E — `apps/electron-e2e`
 
 ## Read next
 
 - `IPC.md` — the full renderer ↔ main channel contract
-- `apps/native-electron-react/README.md` — the renderer
+- `apps/electron-react/README.md` — the renderer
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist
 - `agents/RUST.md` — the domain crate below the addon

@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
 /**
- * UI flow helpers shared by both e2e suites (apps/web-e2e, apps/native-electron-e2e).
+ * UI flow helpers shared by both e2e suites (apps/web-e2e, apps/electron-e2e).
  * The suites drive the same app UI, so the flows are identical; the platform
  * differences (how defaults are seeded, bootstrap copy, launch/fixtures, AI-mock
  * transport) live in each suite's `helpers.ts` / `mock-openai-compatible.ts` facade.

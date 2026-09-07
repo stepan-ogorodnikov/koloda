@@ -4,7 +4,7 @@ Assistant chat React layer: conversation store, session/`RunController`, persist
 
 ## Where it sits
 
-Consumed by `@koloda/app-react` and `apps/native-electron-react` (graceful shutdown).
+Consumed by `@koloda/app-react` and `apps/electron-react` (graceful shutdown).
 Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
 Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`; run execution lifetime lives in `@koloda/assistant`; this package owns conversation policy and React hosts.
 

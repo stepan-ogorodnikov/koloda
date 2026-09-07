@@ -1,14 +1,14 @@
 {
-  "name": "@koloda/native-electron",
+  "name": "@koloda/electron",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/native-electron/src",
+  "sourceRoot": "apps/electron/src",
   "projectType": "application",
   "tags": [
     "type:app",
     "platform:desktop"
   ],
   "implicitDependencies": [
-    "native-electron-react"
+    "@koloda/electron-react"
   ],
   "targets": {
     "build-rust": {
@@ -22,7 +22,7 @@
           "bunx tsx scripts/copy-native-addon.ts"
         ],
         "parallel": false,
-        "cwd": "apps/native-electron"
+        "cwd": "apps/electron"
       }
     },
     "serve": {
@@ -31,7 +31,7 @@
         {
           "target": "serve",
           "projects": [
-            "native-electron-react"
+            "@koloda/electron-react"
           ],
           "params": "forward"
         },
@@ -45,7 +45,7 @@
           "electron -r tsx/esm ."
         ],
         "parallel": false,
-        "cwd": "apps/native-electron"
+        "cwd": "apps/electron"
       }
     },
     "build": {
@@ -54,7 +54,7 @@
         {
           "target": "build",
           "projects": [
-            "native-electron-react"
+            "@koloda/electron-react"
           ],
           "params": "forward"
         },
@@ -70,7 +70,7 @@
           "node ../../node_modules/electron-builder/cli.js"
         ],
         "parallel": false,
-        "cwd": "apps/native-electron"
+        "cwd": "apps/electron"
       },
       "configurations": {
         "production": {}
@@ -80,22 +80,22 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "bunx vitest run --config apps/native-electron/vitest.config.mjs --configLoader runner",
-          "bunx nx run native-electron-react:test",
-          "bunx nx run native-electron-e2e:e2e"
+          "bunx vitest run --config apps/electron/vitest.config.mjs --configLoader runner",
+          "bunx nx run @koloda/electron-react:test",
+          "bunx nx run electron-e2e:e2e"
         ],
         "parallel": false
       },
       "configurations": {
         "unit": {
           "commands": [
-            "bunx vitest run --config apps/native-electron/vitest.config.mjs --configLoader runner",
-            "bunx nx run native-electron-react:test"
+            "bunx vitest run --config apps/electron/vitest.config.mjs --configLoader runner",
+            "bunx nx run @koloda/electron-react:test"
           ]
         },
         "e2e": {
           "commands": [
-            "bunx nx run native-electron-e2e:e2e"
+            "bunx nx run electron-e2e:e2e"
           ]
         }
       }
@@ -104,14 +104,14 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc --build --emitDeclarationOnly",
-        "cwd": "apps/native-electron"
+        "cwd": "apps/electron"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "command": "oxlint --deny correctness",
-        "cwd": "apps/native-electron"
+        "cwd": "apps/electron"
       }
     }
   }

@@ -4,7 +4,7 @@ Global settings screens: interface, learning, hotkeys, AI profiles, and the setu
 
 ## Where it sits
 
-Consumed by `@koloda/app-react` routes and by `apps/web` / `apps/native-electron-react` setup screens.
+Consumed by `@koloda/app-react` routes and by `apps/web` / `apps/electron-react` setup screens.
 Depends on `@koloda/settings`, `@koloda/app`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/core-react`, `@koloda/srs-react`, and `@koloda/ui`.
 The Zod registry stays in `@koloda/settings`; this package owns the forms that edit those rows.
 

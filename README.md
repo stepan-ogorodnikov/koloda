@@ -20,13 +20,13 @@ bun install
 ### Dev server (desktop — Electron)
 
 ```bash
-nx serve native-electron
+nx serve electron
 ```
 
 ### Build (desktop — Electron)
 
 ```bash
-nx build native-electron
+nx build electron
 ```
 
 ## Tech Stack
@@ -44,9 +44,9 @@ nx build native-electron
 bun run test:libs
 
 # Desktop: Electron IPC unit tests + Playwright e2e
-nx test native-electron
-nx run native-electron:test:unit
-nx run native-electron:test:e2e
+nx test electron
+nx run @koloda/electron:test:unit
+nx run @koloda/electron:test:e2e
 
 # Web Playwright e2e
 nx run web-e2e:e2e
@@ -61,9 +61,9 @@ cargo test
 apps/
   web/                    # PGlite web host
   web-e2e/                # E2E tests for web host (Playwright)
-  native-electron/        # Desktop app backend (Electron / Rust NAPI)
-  native-electron-e2e/    # E2E tests for desktop app (Playwright)
-  native-electron-react/  # Desktop app frontend (React / Electron)
+  electron/               # Desktop main process (Electron / Rust NAPI)
+  electron-react/         # Desktop renderer (React / Electron)
+  electron-e2e/           # E2E tests for desktop app (Playwright)
 libs/
   ai/                     # Domain lib for AI features
   ai-react/               # AI features React UI

@@ -11,7 +11,7 @@ Why two engines and ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PER
   Embedded via `refinery::embed_migrations!("src/migrations")` in `crates/koloda/src/migrations/mod.rs`.
 - There is no TypeScript SQLite schema. Drizzle does not emit SQLite migrations.
 - **Rust core owns the desktop schema**.
-  `apps/native-electron/src-rust` consumes `koloda`; it does not define migrations.
+  `apps/electron/src-rust` consumes `koloda`; it does not define migrations.
 
 #### Schema Change Workflow
 

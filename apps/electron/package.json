@@ -1,5 +1,5 @@
 {
-  "name": "@koloda/native-electron",
+  "name": "@koloda/electron",
   "version": "0.0.1",
   "private": true,
   "type": "module",

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = resolve(__dirname, "../../..");
-const electronAppDir = resolve(workspaceRoot, "apps/native-electron");
+const electronAppDir = resolve(workspaceRoot, "apps/electron");
 const electronExecutable = require("electron") as string;
 
 type ElectronFixtures = {

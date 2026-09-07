@@ -92,8 +92,8 @@
         "vitest": "4.1.9",
       },
     },
-    "apps/native-electron": {
-      "name": "@koloda/native-electron",
+    "apps/electron": {
+      "name": "@koloda/electron",
       "version": "0.0.1",
       "devDependencies": {
         "@koloda/ai": "workspace:*",
@@ -101,8 +101,8 @@
         "electron-builder": "^25.1.8",
       },
     },
-    "apps/native-electron-react": {
-      "name": "@koloda/native-electron-react",
+    "apps/electron-react": {
+      "name": "@koloda/electron-react",
       "version": "0.0.1",
     },
     "apps/web": {
@@ -655,9 +655,9 @@
 
     "@koloda/e2e": ["@koloda/e2e@workspace:libs/e2e"],
 
-    "@koloda/native-electron": ["@koloda/native-electron@workspace:apps/native-electron"],
+    "@koloda/electron": ["@koloda/electron@workspace:apps/electron"],
 
-    "@koloda/native-electron-react": ["@koloda/native-electron-react@workspace:apps/native-electron-react"],
+    "@koloda/electron-react": ["@koloda/electron-react@workspace:apps/electron-react"],
 
     "@koloda/native-ipc": ["@koloda/native-ipc@workspace:libs/native-ipc"],
 

@@ -91,7 +91,7 @@ Also add:
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` when the target includes persistence
 - `agents/ASSISTANT-MAP.md` for assistant
 - the package README for each package in scope
-- `apps/native-electron/IPC.md` when the target includes desktop IPC
+- `apps/electron/IPC.md` when the target includes desktop IPC
 
 One primary spec, one package, or one named cross-cutting question per audit.
 If the target spans more than one primary spec without a single cross-cutting question, split it.
@@ -107,7 +107,7 @@ Consult them yourself when a change crosses a boundary.
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — why TS and Rust both exist.
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why two DB engines exist.
 - `libs/*/README.md`, `apps/*/README.md` — per-package "Where it sits" and "Does NOT own" boundaries.
-- `apps/native-electron/IPC.md` — the desktop renderer ↔ main IPC channel contract.
+- `apps/electron/IPC.md` — the desktop renderer ↔ main IPC channel contract.
 
 ## Rule to remember
 

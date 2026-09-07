@@ -1,20 +1,20 @@
-# native-electron-e2e
+# electron-e2e
 
 Playwright suite for the desktop app: launches the real Electron shell with the real Rust core and a fresh database per test.
 One spec file per user flow; no app code is mocked except the AI provider.
 
 ## Where it sits
 
-Tests `apps/native-electron` (main process) and `apps/native-electron-react` (renderer) together.
+Tests `apps/electron` (main process) and `apps/electron-react` (renderer) together.
 The `e2e` target builds the Rust addon and compiles the preload first, then serves the renderer dev server on port 3000
-and launches Electron from `apps/native-electron` — the full stack, no bundling shortcuts.
+and launches Electron from `apps/electron` — the full stack, no bundling shortcuts.
 The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for flow.
 
 ## How to run
 
-- `nx run native-electron-e2e:e2e` — full suite (builds the Rust addon and preload, serves the renderer, launches Electron)
-- `nx run native-electron-e2e:typecheck` — typecheck only
-- Also part of `nx run native-electron:test`
+- `nx run electron-e2e:e2e` — full suite (builds the Rust addon and preload, serves the renderer, launches Electron)
+- `nx run electron-e2e:typecheck` — typecheck only
+- Also part of `nx run @koloda/electron:test`
 
 ## Architectural Map
 
@@ -34,11 +34,11 @@ The web counterpart is `apps/web-e2e`; the spec sets mirror each other flow for 
 
 ### Does NOT own (prevent scope creep)
 
-- Main-process build, preload, and bundling — `apps/native-electron` targets
-- The renderer under test — `apps/native-electron-react`
+- Main-process build, preload, and bundling — `apps/electron` targets
+- The renderer under test — `apps/electron-react`
 - The web suite — `apps/web-e2e`
 
 ## Read next
 
-- `apps/native-electron/README.md` — the Electron host
+- `apps/electron/README.md` — the Electron host
 - `apps/web-e2e/README.md` — the mirrored web suite

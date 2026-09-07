@@ -1,5 +1,5 @@
 // Machine-checked contract for the full desktop renderer<->main command surface:
-// data commands (`apps/native-electron/src/data-ipc.ts`), AI commands
+// data commands (`apps/electron/src/data-ipc.ts`), AI commands
 // (`src/ai-ipc.ts`), and the `AI_STREAM_CHANNEL` push channel, all consumed by
 // the renderer through `invoke`.
 //

@@ -2,7 +2,7 @@
 
 This guide defines which tests to write when implementing a change.
 It covers unit and integration tests across `libs/`, `apps/`, and `crates/koloda`.
-The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/native-electron-e2e`.
+The Playwright e2e suites are out of scope; they follow their own specs in `apps/web-e2e` and `apps/electron-e2e`.
 
 ## The survival question
 
@@ -27,7 +27,7 @@ If it would still pass, redesign the test before writing it.
 | TS unit | Domain rules, boundary semantics, state transitions, async coordination | Colocated `*.test.ts(x)` |
 | Rust unit | Domain validation, serde wire contracts | `crates/koloda/tests/domain/<entity>_tests.rs` |
 | Integration | Persistence constraints: FK, cascade, rollback, transactions, SQL semantics | `crates/koloda/tests/integration/<entity>_integration_tests.rs`, `libs/db-pglite/src/lib/*.integration.test.ts` |
-| E2e | User flows | `apps/web-e2e`, `apps/native-electron-e2e` |
+| E2e | User flows | `apps/web-e2e`, `apps/electron-e2e` |
 
 - Every rule has exactly one test home per implementation; the TS ↔ Rust twins required below are mirror coverage, not duplicates.
 - Do not re-test a validator through the repo layer unless the repo adds persistence-specific behavior.
@@ -135,7 +135,7 @@ Match these files when the shape fits:
 - `crates/koloda/tests/domain/reviews_totals_tests.rs` — boundary semantics for limit policy.
 - `libs/assistant/src/lib/assistant-engine.test.ts` — gated-deferred interleavings for async coordination.
 - `libs/assistant-react/src/lib/assistant/persistence/conversation-restore.test.ts` — wire-compat restore scenarios.
-- `apps/native-electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
+- `apps/electron/src/window-close-coordinator.test.ts` — state-machine race coverage.
 - `libs/ai/src/lib/prompts.test.ts` — prose-prompt guards.
 - `crates/koloda/tests/domain/lessons_validation_tests.rs` — shared-baseline reject/boundary tables asserting per-field error codes.
 - `libs/assistant-react/src/lib/assistant/state/assistant-conversation-store.test.ts` — typed it.each negative-case table with per-row setup hooks.

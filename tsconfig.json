@@ -46,10 +46,10 @@
       "path": "./libs/settings-react"
     },
     {
-      "path": "./apps/native-electron-react"
+      "path": "./apps/electron-react"
     },
     {
-      "path": "./apps/native-electron-e2e"
+      "path": "./apps/electron-e2e"
     },
     {
       "path": "./libs/assistant"

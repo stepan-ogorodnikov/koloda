@@ -43,7 +43,7 @@ describe("Queries contract", () => {
   it("keeps web and electron adapters aligned with QUERIES_METHODS", () => {
     const expected = [...QUERIES_METHODS].sort();
     const web = extractAdapterMethods("apps/web/src/app/queries.ts");
-    const electron = extractAdapterMethods("apps/native-electron-react/src/app/queries.ts");
+    const electron = extractAdapterMethods("apps/electron-react/src/app/queries.ts");
 
     expect(web).toEqual(expected);
     expect(electron).toEqual(expected);

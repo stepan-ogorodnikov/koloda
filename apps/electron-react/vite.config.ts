@@ -15,7 +15,7 @@ export default defineConfig(({ command }) => ({
   // WHY: Packaged Electron loads via file://; absolute "/" assets resolve to the
   // drive root and the window stays blank. Dev server still uses absolute paths.
   base: command === "build" ? "./" : "/",
-  cacheDir: "../../node_modules/.vite/apps/native-electron-react",
+  cacheDir: "../../node_modules/.vite/apps/electron-react",
   server: {
     port: 3000,
     host: "localhost",
@@ -45,7 +45,7 @@ export default defineConfig(({ command }) => ({
     lingui(),
   ],
   build: {
-    outDir: "../../dist/apps/native-electron-react",
+    outDir: "../../dist/apps/electron-react",
     emptyOutDir: true,
     reportCompressedSize: true,
   },

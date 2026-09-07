@@ -32,7 +32,7 @@ Also load, when the target needs them:
 - `agents/ASSISTANT-MAP.md` — assistant
 - `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md` — the target crosses TypeScript and Rust
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — the target includes persistence
-- `apps/native-electron/IPC.md` — desktop IPC
+- `apps/electron/IPC.md` — desktop IPC
 - the playbook for a half-finished recipe:
   `agents/ADD-AI-PROVIDER.md`, `agents/ADD-HOTKEY.md`, `agents/ADD-COLOR-THEME.md`, `agents/DB.md`
 
@@ -58,8 +58,8 @@ The tests are part of the audited surface.
 7. When the audit questions correctness or coverage, run the named command for that target, not the whole monorepo:
    - TypeScript libs: `bun run test:libs`
    - Rust: `cargo test`
-   - Desktop unit: `nx run native-electron:test:unit`
-   - Desktop e2e: `nx run native-electron:test:e2e`
+   - Desktop unit: `nx run @koloda/electron:test:unit`
+   - Desktop e2e: `nx run @koloda/electron:test:e2e`
    - Web e2e: `nx run web-e2e:e2e`
    Record which command ran.
 
@@ -84,7 +84,7 @@ This list is the point of the audit:
 
 - Mirror desync — Zod / TS domain vs Rust domain disagree (`docs/adr/0001`).
 - Dialect desync — PGlite vs SQLite / Refinery columns or behavior disagree (`docs/adr/0002`, `agents/DB.md`).
-- IPC drift — `apps/native-electron/IPC.md` vs main or renderer.
+- IPC drift — `apps/electron/IPC.md` vs main or renderer.
 - Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
 - Leftover shims — deprecated wrappers, adapters, unused exports (`agents/BACKWARDS-COMPATIBILITY.md`).

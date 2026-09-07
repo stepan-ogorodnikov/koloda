@@ -1,10 +1,10 @@
 # Electron IPC Surface
 
-The channel contract between the desktop renderer (`apps/native-electron-react`) and this main process.
+The channel contract between the desktop renderer (`apps/electron-react`) and this main process.
 Update this file in the same change as any handler.
 
 All renderer-to-main calls go through one `window.electronAPI.invoke(cmd, args)` from the preload.
-The renderer wraps it in a typed `invoke` (`apps/native-electron-react/src/app/electron.ts`) whose
+The renderer wraps it in a typed `invoke` (`apps/electron-react/src/app/electron.ts`) whose
 channel keys, args, and results are enforced by the contract below; the preload keeps the same
 signature via a type-only import (erased when swc compiles it standalone).
 Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` subscriptions.

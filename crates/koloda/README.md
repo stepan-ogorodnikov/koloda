@@ -6,7 +6,7 @@ Not an npm package — consumed by Electron (NAPI) command layer.
 
 ## Where it sits
 
-Consumed by `apps/native-electron`.
+Consumed by `apps/electron`.
 TS apps reach it through `invoke("cmd_*")` in their `queries.ts`.
 Mirrors `@koloda/srs` + `@koloda/app` domain types and the repo surface of `@koloda/db-pglite`.
 Rust is the source of truth for the AI provider enum and secrets redaction; `@koloda/ai` mirrors those.

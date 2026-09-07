@@ -3,6 +3,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["apps/native-electron/src/**/*.test.ts"],
+    include: ["apps/electron-react/src/**/*.test.ts"],
   },
 });
