@@ -74,7 +74,6 @@ libs/
   srs/                    # SRS domain logic
   srs-pgsql/              # PostgreSQL backend (web)
   srs-react/              # SRS domain React UI
-  srs-sqlite/             # SQLite schema (desktop)
   ui/                     # Styles and UI primitives
 crates/
   koloda-core/            # Shared Rust backend (domain logic, DB, migrations)

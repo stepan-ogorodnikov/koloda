@@ -20,7 +20,7 @@ Desktop mirrors live in `crates/koloda-core/src/domain/`; keep TS and Rust align
 
 ### Does NOT own (prevent scope creep)
 
-- DB access or Drizzle schema — `@koloda/srs-pgsql`, `@koloda/srs-sqlite`, `koloda-core`
+- DB access or schema — `@koloda/srs-pgsql`, `koloda-core`
 - React screens or conversation/run state — `@koloda/srs-react`
 - AI streaming / providers — `@koloda/ai`
 

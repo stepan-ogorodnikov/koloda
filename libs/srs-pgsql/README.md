@@ -20,12 +20,12 @@ Depends on `@koloda/app` and `@koloda/srs`.
 ### Does NOT own (prevent scope creep)
 
 - Domain business rules — `@koloda/srs`
-- SQLite schema / Refinery migrations — `@koloda/srs-sqlite`, `crates/koloda-core`
+- SQLite / Refinery migrations — `crates/koloda-core` only
 - React UI — `@koloda/srs-react`
 - Provider HTTP — `@koloda/ai`
 
 ## Read next
 
 - `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — why web owns PGlite in-process
-- `agents/DB.md` — dual-dialect schema workflow and Rust Refinery port
+- `agents/DB.md` — PG Drizzle generate and Refinery port (no SQLite Drizzle)
 - `drizzle.config.pgsql.ts`, `drizzle/pgsql/` — generated PG migrations

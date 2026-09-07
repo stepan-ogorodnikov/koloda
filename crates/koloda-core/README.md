@@ -16,13 +16,13 @@ Rust is the source of truth for the AI provider enum and secrets redaction; `@ko
 - Repos: `repo/` — SQLite repos parallel to `@koloda/srs-pgsql` (plus AI secrets redaction/reconstruction). Owns `rusqlite` adapters (e.g. `FromSql` for `SettingsName`).
 - App runtime: `app/` — DB connection (`parse_json_column` for JSON TEXT columns), init/seed, keyring secrets, clock/UUID helpers.
 - Shared errors: `app::error` (`AppError` + `error_codes`) is the intentional crate-wide error type. Domain validation returns it so codes stay aligned with `@koloda/app`; domain must not import `rusqlite`.
-- Migrations: `migrations/` — Refinery SQL embedded via `embed_migrations!`; hand-ported from `drizzle/sqlite/`.
+- Migrations: `migrations/` — owned Refinery SQL embedded via `embed_migrations!`.
+  Written from the PG schema using the `agents/DB.md` dialect map.
 
 ### Does NOT own (prevent scope creep)
 
 - React UI or TanStack Query — TS libs and apps
 - PGlite / Drizzle PG schema — `@koloda/srs-pgsql`
-- SQLite Drizzle schema generation input — `@koloda/srs-sqlite` (then `drizzle/sqlite/`)
 - Vercel AI SDK streaming — `@koloda/ai`
 
 ## Read next

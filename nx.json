@@ -30,7 +30,6 @@
       "exclude": [
         "libs/srs/*",
         "libs/srs-pgsql/*",
-        "libs/srs-sqlite/*",
         "libs/ai/*"
       ]
     },
@@ -52,7 +51,6 @@
       "include": [
         "libs/srs/*",
         "libs/srs-pgsql/*",
-        "libs/srs-sqlite/*",
         "libs/ai/*"
       ],
       "options": {

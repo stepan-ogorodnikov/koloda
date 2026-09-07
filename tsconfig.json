@@ -22,9 +22,6 @@
       "path": "./libs/srs-pgsql"
     },
     {
-      "path": "./libs/srs-sqlite"
-    },
-    {
       "path": "./libs/core-react"
     },
     {
