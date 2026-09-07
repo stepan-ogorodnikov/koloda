@@ -46,6 +46,9 @@
       "path": "../../libs/app-react/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/settings-react/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/ui/tsconfig.lib.json"
     },
     {

@@ -34,7 +34,7 @@ Normally booted by `nx run native-electron:serve`; runs standalone in a browser 
 
 - Electron main process, preload, and bundling — `apps/native-electron`
 - Domain logic and SQLite persistence — `crates/koloda`, mirroring `@koloda/srs` (ADR 0001)
-- Screens, routes, settings UI — `@koloda/app-react`
+- Screens, routes — `@koloda/app-react`; settings screens and setup pickers — `@koloda/settings-react`
 - E2E harness — `apps/native-electron-e2e`
 
 ## Read next

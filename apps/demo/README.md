@@ -33,7 +33,7 @@ Persistence mirrors the desktop's SQLite core through the shared `@koloda/srs` d
 
 ### Does NOT own (prevent scope creep)
 
-- Screens, routes, settings UI — `@koloda/app-react`
+- Screens, routes — `@koloda/app-react`; settings screens and setup pickers — `@koloda/settings-react`
 - Domain and scheduling — `@koloda/srs`; persistence schema — `@koloda/db-pglite`
 - The desktop Electron host — `apps/native-electron` and `apps/native-electron-react`
 - E2E harness — `apps/demo-e2e`

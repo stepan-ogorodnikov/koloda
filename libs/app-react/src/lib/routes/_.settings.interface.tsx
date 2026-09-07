@@ -3,7 +3,7 @@ import { Layout, useLayoutHeaderScrollShadow, useRouteFocus } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { createFileRoute } from "@tanstack/react-router";
-import { SettingsInterface } from "../settings/settings-interface";
+import { SettingsInterface } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/interface")({
   component: SettingsInterfaceRoute,

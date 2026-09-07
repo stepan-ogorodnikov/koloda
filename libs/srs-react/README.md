@@ -18,7 +18,8 @@ Depends on `@koloda/app`, `@koloda/srs`, `@koloda/core-react`, and `@koloda/ui`.
 - Framework-free run execution lifetime — `@koloda/assistant`
 - Provider HTTP / client factory — `@koloda/ai`
 - Generic streaming transport hooks and presentational chat chrome — `@koloda/ai-react`
-- App routing, global settings pages, global hotkeys — `@koloda/app-react`
+- App routing, global hotkeys — `@koloda/app-react`
+- Global settings screens — `@koloda/settings-react`
 - Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda`
 - Layout primitives — `@koloda/ui`
 

@@ -15,7 +15,7 @@ Mirrors the settings rows in `crates/koloda` (settings repo); row names must sta
 
 - The domain schemas themselves — interface/learning/hotkeys live in `@koloda/app`, AI profiles in `@koloda/ai`
 - Settings persistence or repos — `@koloda/db-pglite`, `koloda`
-- Settings UI — `@koloda/app-react`
+- Settings UI — `@koloda/settings-react`
 
 ## Read next
 

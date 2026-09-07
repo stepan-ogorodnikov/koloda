@@ -43,6 +43,9 @@
       "path": "./libs/settings"
     },
     {
+      "path": "./libs/settings-react"
+    },
+    {
       "path": "./apps/native-electron-react"
     },
     {

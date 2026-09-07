@@ -68,13 +68,14 @@ libs/
   ai/                     # Domain lib for AI features
   ai-react/               # AI features React UI
   app/                    # Generic app infrastructure (error types, utilities, interface settings)
-  app-react/              # App shell, routing, settings UI, global hooks
+  app-react/              # App shell, routing, global hooks
   assistant/              # Assistant application layer (run execution, save scheduling)
   assistant-react/        # Assistant chat React UI
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
   db-pglite/              # PGlite persistence (web)
   srs/                    # SRS domain logic
   srs-react/              # SRS domain React UI
+  settings-react/         # Global settings screens
   ui/                     # Styles and UI primitives
 crates/
   koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)

@@ -1,0 +1,16 @@
+{
+  "name": "@koloda/settings-react",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "tags": ["type:lib"],
+  "sourceRoot": "libs/settings-react/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bunx vitest run --config libs/settings-react/vitest.config.mjs --configLoader runner"
+      },
+      "inputs": ["default", "^default"]
+    }
+  }
+}

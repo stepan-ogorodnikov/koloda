@@ -17,14 +17,6 @@ msgstr ""
 msgid "algorithms.title"
 msgstr "Алгоритмы"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-scheme-picker.tsx:31
-msgid "color-scheme-picker.label"
-msgstr "Цветовая схема"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:81
-msgid "dark-theme-picker.label"
-msgstr "Тёмная тема"
-
 #: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
 msgid "deck.tabs.cards"
 msgstr "Карточки"
@@ -40,22 +32,6 @@ msgstr "Вкладки колоды"
 #: ../../libs/app-react/src/lib/routes/_.decks.tsx:32
 msgid "decks.title"
 msgstr "Колоды"
-
-#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:37
-msgid "hotkey-recorder.delete-button.label"
-msgstr "Удалить сочетание клавиш"
-
-#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:31
-msgid "hotkey-recorder.edit-button.label"
-msgstr "Сменить сочетание клавиш"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/language-picker.tsx:28
-msgid "language-picker.label"
-msgstr "Язык интерфейса"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:66
-msgid "light-theme-picker.label"
-msgstr "Светлая тема"
 
 #: ../../libs/app-react/src/lib/components/app.tsx:23
 msgid "nav.ai"
@@ -93,149 +69,10 @@ msgstr "Перезагрузить приложение"
 msgid "route-error.retry"
 msgstr "Попробовать снова"
 
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
-msgid "scheme.dark"
-msgstr "Тёмная"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:41
-msgid "scheme.light"
-msgstr "Светлая"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:43
-msgid "scheme.system"
-msgstr "Системная"
-
 #: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "ИИ"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:33
-msgid "settings.ai.add"
-msgstr "Добавить профиль"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-form.tsx:46
-msgid "settings.ai.add.submit"
-msgstr "Добавить"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:75
-msgid "settings.ai.add.title"
-msgstr "Добавить ИИ профиль"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:25
-msgid "settings.ai.browser-cors.note"
-msgstr "Некоторые провайдеры отключены из-за ограничений платформы."
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:53
-msgid "settings.ai.browser-cors.profile"
-msgstr "Этот провайдер нельзя использовать в браузере."
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:52
-msgid "settings.ai.delete.cancel"
-msgstr "Отмена"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:49
-msgid "settings.ai.delete.confirm"
-msgstr "Удалить"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:47
-msgid "settings.ai.delete.message"
-msgstr "Вы уверены, что хотите удалить этот профиль?"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:154
-msgid "settings.ai.edit.submit"
-msgstr "Сохранить"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:56
-msgid "settings.ai.edit.title"
-msgstr "Редактировать ИИ профиль"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:47
-msgid "settings.ai.edit.trigger"
-msgstr "Редактировать профиль"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:129
-msgid "settings.ai.models.empty"
-msgstr "Нет моделей"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:112
-msgid "settings.ai.models.error"
-msgstr "Ошибка"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:108
-msgid "settings.ai.models.loading"
-msgstr "Загрузка"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:102
-msgid "settings.ai.models.mode.all"
-msgstr "Все"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:93
-msgid "settings.ai.models.mode.label"
-msgstr "Список моделей"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:103
-msgid "settings.ai.models.mode.selected"
-msgstr "Выбранные"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:115
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:124
-msgid "settings.ai.models.retry"
-msgstr "Обновить"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:80
-msgid "settings.ai.models.search.label"
-msgstr "Поиск по моделям"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:87
-msgid "settings.ai.models.search.placeholder"
-msgstr "Поиск по моделям"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:74
-msgid "settings.ai.models.title"
-msgstr "Модели"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:67
-msgid "settings.ai.models.trigger"
-msgstr "Модели"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:43
-msgid "settings.ai.profiles.api-key.label"
-msgstr "API key"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:42
-msgid "settings.ai.profiles.base-url.label"
-msgstr "Базовый URL"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:38
-msgid "settings.ai.profiles.delete.trigger"
-msgstr "Удалить профиль"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
-msgid "settings.ai.profiles.empty"
-msgstr "Нет профилей"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:81
-msgid "settings.ai.profiles.provider.label"
-msgstr "Провайдер"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:50
-msgid "settings.ai.profiles.replace"
-msgstr "Заменить"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:22
-msgid "settings.ai.profiles.title"
-msgstr "Профили ИИ"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:40
-msgid "settings.ai.profiles.title.label"
-msgstr "Название"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:33
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:37
-msgid "settings.ai.profiles.title.placeholder"
-msgstr "Без названия"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
@@ -247,88 +84,10 @@ msgstr "Горячие клавиши"
 msgid "settings.interface"
 msgstr "Интерфейс"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:80
-msgid "settings.interface.dark-theme"
-msgstr "Тёмная тема"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:31
-msgid "settings.interface.language"
-msgstr "Язык интерфейса"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:65
-msgid "settings.interface.light-theme"
-msgstr "Светлая тема"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:48
-msgid "settings.interface.motion"
-msgstr "Анимации"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:32
-msgid "settings.interface.scheme"
-msgstr "Цветовая схема"
-
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Изучение"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:175
-msgid "settings.learning.day-starts-at"
-msgstr "Начало дня"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:57
-msgid "settings.learning.defaults.algorithm"
-msgstr "Алгоритм по умолчанию"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:67
-msgid "settings.learning.defaults.template"
-msgstr "Шаблон по умолчанию"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:137
-msgid "settings.learning.learn-ahead-limit"
-msgstr "Лимит изучения наперёд"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:143
-msgid "settings.learning.learn-ahead-limit.hours.label"
-msgstr "Часы"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:150
-msgid "settings.learning.learn-ahead-limit.hours.suffix"
-msgstr "ч"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:158
-msgid "settings.learning.learn-ahead-limit.minutes.label"
-msgstr "Минуты"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:165
-msgid "settings.learning.learn-ahead-limit.minutes.suffix"
-msgstr "м"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:73
-msgid "settings.learning.limits"
-msgstr "Дневные лимиты"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:95
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:113
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:131
-msgid "settings.learning.limits.counts-towards-total"
-msgstr "Идёт в счёт всего"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:104
-msgid "settings.learning.limits.learn"
-msgstr "Заучивание"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:122
-msgid "settings.learning.limits.review"
-msgstr "Повтор"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:77
-msgid "settings.learning.limits.total"
-msgstr "Всего"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:86
-msgid "settings.learning.limits.untouched"
-msgstr "Новые"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:31
 msgid "settings.title"

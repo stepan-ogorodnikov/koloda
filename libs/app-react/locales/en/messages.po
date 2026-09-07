@@ -17,14 +17,6 @@ msgstr ""
 msgid "algorithms.title"
 msgstr "Presets"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-scheme-picker.tsx:31
-msgid "color-scheme-picker.label"
-msgstr "Color scheme"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:81
-msgid "dark-theme-picker.label"
-msgstr "Dark theme"
-
 #: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
 msgid "deck.tabs.cards"
 msgstr "Cards"
@@ -40,22 +32,6 @@ msgstr "Deck tabs"
 #: ../../libs/app-react/src/lib/routes/_.decks.tsx:32
 msgid "decks.title"
 msgstr "Decks"
-
-#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:37
-msgid "hotkey-recorder.delete-button.label"
-msgstr "Delete hotkey"
-
-#: ../../libs/app-react/src/lib/settings/settings-hotkeys-hotkey.tsx:31
-msgid "hotkey-recorder.edit-button.label"
-msgstr "Change hotkey"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/language-picker.tsx:28
-msgid "language-picker.label"
-msgstr "Language"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:66
-msgid "light-theme-picker.label"
-msgstr "Light theme"
 
 #: ../../libs/app-react/src/lib/components/app.tsx:23
 msgid "nav.ai"
@@ -93,149 +69,10 @@ msgstr "Reload app"
 msgid "route-error.retry"
 msgstr "Try again"
 
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:42
-msgid "scheme.dark"
-msgstr "Dark"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:41
-msgid "scheme.light"
-msgstr "Light"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:43
-msgid "scheme.system"
-msgstr "System"
-
 #: ../../libs/app-react/src/lib/routes/_.settings.ai.tsx:31
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:18
 msgid "settings.ai"
 msgstr "AI"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:33
-msgid "settings.ai.add"
-msgstr "Add profile"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/add-ai-profile-form.tsx:46
-msgid "settings.ai.add.submit"
-msgstr "Add"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:75
-msgid "settings.ai.add.title"
-msgstr "Add AI Profile"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:25
-msgid "settings.ai.browser-cors.note"
-msgstr "Some providers are disabled due to platform limitations."
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:53
-msgid "settings.ai.browser-cors.profile"
-msgstr "This provider cannot be used in the browser."
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:52
-msgid "settings.ai.delete.cancel"
-msgstr "Cancel"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:49
-msgid "settings.ai.delete.confirm"
-msgstr "Delete"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:47
-msgid "settings.ai.delete.message"
-msgstr "Are you sure you want to delete this profile?"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx:63
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:154
-msgid "settings.ai.edit.submit"
-msgstr "Save"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:56
-msgid "settings.ai.edit.title"
-msgstr "Edit AI profile"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-edit-profile.tsx:47
-msgid "settings.ai.edit.trigger"
-msgstr "Edit profile"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:129
-msgid "settings.ai.models.empty"
-msgstr "No models"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:112
-msgid "settings.ai.models.error"
-msgstr "Error"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:108
-msgid "settings.ai.models.loading"
-msgstr "Loading"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:102
-msgid "settings.ai.models.mode.all"
-msgstr "All"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:93
-msgid "settings.ai.models.mode.label"
-msgstr "Model list"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:103
-msgid "settings.ai.models.mode.selected"
-msgstr "Selected"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:115
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:124
-msgid "settings.ai.models.retry"
-msgstr "Retry"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:80
-msgid "settings.ai.models.search.label"
-msgstr "Search models"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:87
-msgid "settings.ai.models.search.placeholder"
-msgstr "Search models"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:74
-msgid "settings.ai.models.title"
-msgstr "Models"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-profile-models.tsx:67
-msgid "settings.ai.models.trigger"
-msgstr "Models"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:43
-msgid "settings.ai.profiles.api-key.label"
-msgstr "API key"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:42
-msgid "settings.ai.profiles.base-url.label"
-msgstr "Base URL"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-delete-profile.tsx:38
-msgid "settings.ai.profiles.delete.trigger"
-msgstr "Delete profile"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:27
-msgid "settings.ai.profiles.empty"
-msgstr "No profiles"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai-add-profile.tsx:81
-msgid "settings.ai.profiles.provider.label"
-msgstr "Provider"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-secrets-field.tsx:50
-msgid "settings.ai.profiles.replace"
-msgstr "Replace with a new value"
-
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:22
-msgid "settings.ai.profiles.title"
-msgstr "AI Profiles"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:40
-msgid "settings.ai.profiles.title.label"
-msgstr "Title"
-
-#: ../../libs/app-react/src/lib/settings/ai-providers/ai-profile-form-fields.tsx:33
-#: ../../libs/app-react/src/lib/settings/settings-ai.tsx:37
-msgid "settings.ai.profiles.title.placeholder"
-msgstr "Untitled"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.hotkeys.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:17
@@ -247,88 +84,10 @@ msgstr "Hotkeys"
 msgid "settings.interface"
 msgstr "Interface"
 
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:80
-msgid "settings.interface.dark-theme"
-msgstr "Dark theme"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:31
-msgid "settings.interface.language"
-msgstr "Language"
-
-#: ../../libs/app-react/src/lib/settings/interface-controls/color-theme-picker.tsx:65
-msgid "settings.interface.light-theme"
-msgstr "Light theme"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:48
-msgid "settings.interface.motion"
-msgstr "Animations"
-
-#: ../../libs/app-react/src/lib/settings/settings-interface.tsx:32
-msgid "settings.interface.scheme"
-msgstr "Color scheme"
-
 #: ../../libs/app-react/src/lib/routes/_.settings.learning.tsx:32
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:16
 msgid "settings.learning"
 msgstr "Learning"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:175
-msgid "settings.learning.day-starts-at"
-msgstr "Start of the day"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:57
-msgid "settings.learning.defaults.algorithm"
-msgstr "Default algorithm"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:67
-msgid "settings.learning.defaults.template"
-msgstr "Default template"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:137
-msgid "settings.learning.learn-ahead-limit"
-msgstr "Learn ahead limit"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:143
-msgid "settings.learning.learn-ahead-limit.hours.label"
-msgstr "Hours"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:150
-msgid "settings.learning.learn-ahead-limit.hours.suffix"
-msgstr "h"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:158
-msgid "settings.learning.learn-ahead-limit.minutes.label"
-msgstr "Minutes"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:165
-msgid "settings.learning.learn-ahead-limit.minutes.suffix"
-msgstr "m"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:73
-msgid "settings.learning.limits"
-msgstr "Daily limits"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:95
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:113
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:131
-msgid "settings.learning.limits.counts-towards-total"
-msgstr "Counts towards total"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:104
-msgid "settings.learning.limits.learn"
-msgstr "Learn"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:122
-msgid "settings.learning.limits.review"
-msgstr "Review"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:77
-msgid "settings.learning.limits.total"
-msgstr "Total"
-
-#: ../../libs/app-react/src/lib/settings/settings-learning.tsx:86
-msgid "settings.learning.limits.untouched"
-msgstr "New"
 
 #: ../../libs/app-react/src/lib/routes/_.settings.tsx:31
 msgid "settings.title"

@@ -133,12 +133,11 @@
       "name": "@koloda/app-react",
       "version": "0.0.1",
       "dependencies": {
-        "@koloda/ai": "workspace:*",
-        "@koloda/ai-react": "workspace:*",
         "@koloda/app": "workspace:*",
         "@koloda/assistant-react": "workspace:*",
         "@koloda/core-react": "workspace:*",
         "@koloda/settings": "workspace:*",
+        "@koloda/settings-react": "workspace:*",
         "@koloda/srs-react": "workspace:*",
         "@koloda/ui": "workspace:*",
       },
@@ -204,6 +203,19 @@
       "dependencies": {
         "@koloda/ai": "workspace:*",
         "@koloda/app": "workspace:*",
+      },
+    },
+    "libs/settings-react": {
+      "name": "@koloda/settings-react",
+      "version": "0.0.1",
+      "dependencies": {
+        "@koloda/ai": "workspace:*",
+        "@koloda/ai-react": "workspace:*",
+        "@koloda/app": "workspace:*",
+        "@koloda/core-react": "workspace:*",
+        "@koloda/settings": "workspace:*",
+        "@koloda/srs-react": "workspace:*",
+        "@koloda/ui": "workspace:*",
       },
     },
     "libs/srs": {
@@ -652,6 +664,8 @@
     "@koloda/native-ipc": ["@koloda/native-ipc@workspace:libs/native-ipc"],
 
     "@koloda/settings": ["@koloda/settings@workspace:libs/settings"],
+
+    "@koloda/settings-react": ["@koloda/settings-react@workspace:libs/settings-react"],
 
     "@koloda/srs": ["@koloda/srs@workspace:libs/srs"],
 

@@ -1,6 +1,8 @@
 {
-  "name": "@koloda/app-react",
+  "name": "@koloda/settings-react",
   "version": "0.0.1",
+  "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -12,11 +14,11 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
+    "@koloda/ai": "workspace:*",
+    "@koloda/ai-react": "workspace:*",
     "@koloda/app": "workspace:*",
-    "@koloda/assistant-react": "workspace:*",
     "@koloda/core-react": "workspace:*",
     "@koloda/settings": "workspace:*",
-    "@koloda/settings-react": "workspace:*",
     "@koloda/srs-react": "workspace:*",
     "@koloda/ui": "workspace:*"
   }

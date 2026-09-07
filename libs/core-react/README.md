@@ -5,7 +5,7 @@ No feature screens and no concrete DB backends.
 
 ## Where it sits
 
-Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/ui` (form/overlay/titlebar hotkeys), and apps that inject a concrete `queriesFn` into `queriesAtom`.
+Consumed by `@koloda/app-react`, `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`, `@koloda/ui` (form/overlay/titlebar hotkeys), and apps that inject a concrete `queriesFn` into `queriesAtom`.
 Depends on `@koloda/app`, `@koloda/srs`, and `@koloda/ai` for types only.
 Demo implements `Queries` with `@koloda/db-pglite`; desktop implements it via Electron `invoke` → `koloda`.
 
@@ -21,7 +21,7 @@ Demo implements `Queries` with `@koloda/db-pglite`; desktop implements it via El
 
 - Concrete query implementations — each app's `queries.ts`
 - UI primitives / layout chrome — `@koloda/ui` (may call these hotkey hooks; that is intentional)
-- SRS / assistant feature UI — `@koloda/srs-react`, `@koloda/assistant-react`
+- SRS / assistant / settings feature UI — `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/settings-react`
 - DB repos or schema — `@koloda/db-pglite`, `koloda`
 
 ## Read next

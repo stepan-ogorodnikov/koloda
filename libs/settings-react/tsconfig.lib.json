@@ -19,6 +19,7 @@
     "jest.config.ts",
     "src/**/*.spec.ts",
     "src/**/*.test.ts",
+    "src/**/*.fixtures.ts",
     "src/**/*.spec.tsx",
     "src/**/*.test.tsx",
     "src/**/*.spec.js",
@@ -35,25 +36,25 @@
   ],
   "references": [
     {
-      "path": "../ui/tsconfig.lib.json"
-    },
-    {
-      "path": "../assistant-react/tsconfig.lib.json"
-    },
-    {
-      "path": "../srs-react/tsconfig.lib.json"
-    },
-    {
-      "path": "../settings-react/tsconfig.lib.json"
-    },
-    {
-      "path": "../core-react/tsconfig.lib.json"
+      "path": "../settings/tsconfig.lib.json"
     },
     {
       "path": "../app/tsconfig.lib.json"
     },
     {
-      "path": "../settings/tsconfig.lib.json"
+      "path": "../ai/tsconfig.lib.json"
+    },
+    {
+      "path": "../ai-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../core-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../srs-react/tsconfig.lib.json"
+    },
+    {
+      "path": "../ui/tsconfig.lib.json"
     }
   ]
 }

@@ -212,7 +212,7 @@ export function streamChatWithMyProvider(
 
 The `providerOptions` key (`"my-provider"` here) must match the SDK provider `name`.
 
-### 6. UI Form Config (`libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts`)
+### 6. UI Form Config (`libs/settings-react/src/lib/ai-providers/ai-provider-form-config.ts`)
 
 The add and edit profile forms are generic.
 `AddAIProfileForm` and `EditAIProfileForm` look up a declarative `AIProviderFormConfig` in `AI_PROVIDER_FORM_CONFIG`.
@@ -288,8 +288,8 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 | Rust Repo | `crates/koloda/src/repo/ai.rs` | Secret redaction/reconstruction |
 | Registry | `libs/ai/src/lib/providers/<provider>.ts` + `provider-registry.ts` | Per-provider client/fetch; types + wiring table |
 | Streaming | `libs/ai/src/lib/chat-stream.ts` | Chat stream implementation |
-| Form Config | `libs/app-react/src/lib/settings/ai-providers/ai-provider-form-config.ts` | Per-provider fields, schema, secrets mapping |
-| Add Form | `libs/app-react/src/lib/settings/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
-| Edit Form | `libs/app-react/src/lib/settings/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |
-| Settings | `libs/app-react/src/lib/settings/settings-ai-*-profile.tsx` | Add/edit dialogs (provider picker, wiring) |
+| Form Config | `libs/settings-react/src/lib/ai-providers/ai-provider-form-config.ts` | Per-provider fields, schema, secrets mapping |
+| Add Form | `libs/settings-react/src/lib/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
+| Edit Form | `libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |
+| Settings | `libs/settings-react/src/lib/settings-ai-*-profile.tsx` | Add/edit dialogs (provider picker, wiring) |
 | App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Demo: `listProvidersThatWorkInBrowser()` |

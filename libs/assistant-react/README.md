@@ -20,7 +20,8 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 - Framework-free run orchestration, persistence scheduling, AbortController lifetime, graceful shutdown — `@koloda/assistant` (wired via `useAssistantEngineHost`)
 - Provider HTTP / client factory — `@koloda/ai`
 - Generic streaming transport hooks and presentational chat chrome — `@koloda/ai-react`
-- App routing, global settings pages, global hotkeys, application-shell assistant host mount — `@koloda/app-react`
+- App routing, global hotkeys, application-shell assistant host mount — `@koloda/app-react`
+- Global settings screens — `@koloda/settings-react`
 - SRS screens — `@koloda/srs-react`
 - Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda`
 - Layout primitives — `@koloda/ui`

@@ -7,7 +7,7 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue } from "jotai";
-import { SettingsHotkeys } from "../settings/settings-hotkeys";
+import { SettingsHotkeys } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/hotkeys")({
   component: SettingsHotkeysRoute,

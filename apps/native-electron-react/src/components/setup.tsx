@@ -1,7 +1,7 @@
 import { Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
-import { ColorSchemePicker, LanguagePicker } from "@koloda/app-react";
+import { ColorSchemePicker, LanguagePicker } from "@koloda/settings-react";
 import { langAtom, schemeAtom } from "@koloda/core-react";
 import {
   Button,

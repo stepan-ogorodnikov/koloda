@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
-import { SettingsAIAddProfile } from "../settings/settings-ai-add-profile";
+import { SettingsAIAddProfile } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/ai")({
   component: AIRoute,
