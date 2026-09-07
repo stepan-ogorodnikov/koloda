@@ -25,12 +25,15 @@ export async function getReviews(db: DB, { cardId }: GetReviewsData) {
 
 export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps) {
   return throwKnownError("db.get", async () => {
+    // WHY: Today's totals are a created_at log for the learning-day window, not cards due now.
+    // due_at on a review row is the next schedule after that grade; it is often after `to`.
+    // Do not add due_at to these FILTERs — that undercounts Learn/Review vs desktop (`get_review_totals`).
     const result = await db.execute(sql`
       SELECT
         COUNT(*) FILTER (WHERE state = 0) AS untouched,
-        COUNT(*) FILTER (WHERE state IN (1,3) AND due_at < ${to}) AS learn,
-        COUNT(*) FILTER (WHERE state = 2 AND due_at < ${to}) AS review,
-        COUNT(*) FILTER (WHERE state IN (0,1,2,3) AND due_at < ${to}) AS total
+        COUNT(*) FILTER (WHERE state IN (1,3)) AS learn,
+        COUNT(*) FILTER (WHERE state = 2) AS review,
+        COUNT(*) FILTER (WHERE state IN (0,1,2,3)) AS total
       FROM reviews
       WHERE is_ignored = false
         AND created_at >= ${from}
