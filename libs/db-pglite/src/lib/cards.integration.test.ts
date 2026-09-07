@@ -88,6 +88,41 @@ describe("cards repository integration", () => {
     });
   });
 
+  it("addCard rejects a missing deck", async () => {
+    const { db } = testDb;
+    const { template } = await seedDeckContext(db);
+
+    await expect(
+      addCard(db, {
+        deckId: 999_999,
+        templateId: template.id,
+        content: createCardContent(template),
+      }),
+    ).rejects.toMatchObject({ code: "not-found.cards.add.deck" });
+  });
+
+  it("addCards rejects a missing deck per item", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+
+    const result = await addCards(db, [
+      {
+        deckId: 999_999,
+        templateId: template.id,
+        content: createCardContent(template),
+      },
+      {
+        deckId: 999_999,
+        templateId: 999_999,
+        content: createCardContent(template),
+      },
+    ]);
+
+    expect(result[0]?.error).toEqual({ code: "not-found.cards.add.deck" });
+    expect(result[1]?.error).toEqual({ code: "not-found.cards.add.deck" });
+    expect(await getCards(db, { deckId: deck.id })).toEqual([]);
+  });
+
   it("returns per-card results for partial batch insert success", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);

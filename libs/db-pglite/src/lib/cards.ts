@@ -12,11 +12,12 @@ import type {
   UpdateCardData,
 } from "@koloda/srs";
 import { eq, inArray, sql } from "drizzle-orm";
+import { getDeck, getDecks } from "./decks";
 import { withUpdatedAt } from "./db";
 import type { DB } from "./db";
 import { ZodError } from "zod";
 import { assertRow, assertRowOrUndefined, assertRows } from "./parse-rows";
-import { cards, reviews } from "./schema";
+import { cards, decks, reviews } from "./schema";
 import { getTemplate, getTemplatesByIds } from "./templates";
 
 export async function getCards(db: DB, { deckId }: GetCardsParams) {
@@ -51,6 +52,8 @@ async function getCard(db: DB, id: Card["id"]) {
 
 export async function addCard(db: DB, data: InsertCardData) {
   return throwKnownError("db.add", async () => {
+    const deck = await getDeck(db, data.deckId);
+    if (!deck) throw new AppError("not-found.cards.add.deck", `Deck id: ${data.deckId}`);
     const template = await getTemplate(db, data.templateId);
     if (!template) throw new AppError("not-found.cards.add.template");
     const schema = getInsertCardSchema(template);
@@ -79,6 +82,9 @@ function toInsertCardsItemError(e: unknown): InsertCardsItemError {
 export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCardsResponse> {
   if (data.length === 0) return [];
 
+  const distinctDeckIds = [...new Set(data.map((c) => c.deckId))];
+  const foundDeckIds = new Set((await getDecks(db, inArray(decks.id, distinctDeckIds))).map((d) => d.id));
+
   const distinctIds = [...new Set(data.map((c) => c.templateId))];
   const templates = await getTemplatesByIds(db, distinctIds);
 
@@ -86,6 +92,11 @@ export async function addCards(db: DB, data: InsertCardData[]): Promise<InsertCa
 
   for (let i = 0; i < data.length; i++) {
     const card = data[i];
+    // INVARIANT: same order as desktop `add_cards`; a row missing both must report deck, not template.
+    if (!foundDeckIds.has(card.deckId)) {
+      results.push({ error: { code: "not-found.cards.add.deck" } });
+      continue;
+    }
     const template = templates.get(card.templateId);
     if (!template) {
       results.push({ error: { code: "not-found.cards.add.template" } });
