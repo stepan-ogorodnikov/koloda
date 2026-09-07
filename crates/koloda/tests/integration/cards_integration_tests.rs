@@ -242,6 +242,121 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
 }
 
 #[test]
+fn add_card_omitted_stability_and_difficulty_persists_zero() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+
+    let added = cards::add_card(
+        &db,
+        InsertCardData {
+            deck_id,
+            template_id,
+            content: card_content("question", "answer"),
+            state: None,
+            due_at: None,
+            stability: None,
+            difficulty: None,
+            scheduled_days: None,
+            learning_steps: None,
+            reps: None,
+            lapses: None,
+            last_reviewed_at: None,
+        },
+    )
+    .expect("card should be created");
+
+    assert!(
+        added.stability.abs() < f64::EPSILON,
+        "omitted stability should persist as 0, got {}",
+        added.stability
+    );
+    assert!(
+        added.difficulty.abs() < f64::EPSILON,
+        "omitted difficulty should persist as 0, got {}",
+        added.difficulty
+    );
+
+    let fetched = cards::get_card(&db, added.id)
+        .expect("card lookup should succeed")
+        .expect("card should exist");
+    assert!(
+        fetched.stability.abs() < f64::EPSILON,
+        "stored stability should be 0, got {}",
+        fetched.stability
+    );
+    assert!(
+        fetched.difficulty.abs() < f64::EPSILON,
+        "stored difficulty should be 0, got {}",
+        fetched.difficulty
+    );
+
+    // Pin stored SQL is 0, not NULL — get_card_row also coerces legacy NULL to 0.
+    db.with_conn(|conn| {
+        let (stability, difficulty): (Option<f64>, Option<f64>) = conn.query_row(
+            "SELECT stability, difficulty FROM cards WHERE id = ?1",
+            rusqlite::params![added.id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?;
+        assert_eq!(stability, Some(0.0));
+        assert_eq!(difficulty, Some(0.0));
+        Ok(())
+    })
+    .expect("stored columns should be 0, not NULL");
+}
+
+#[test]
+fn get_card_reads_null_stability_and_difficulty_as_zero() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let content = serde_json::to_string(&card_content("q", "a")).expect("content should serialize");
+
+    let card_id = db
+        .with_conn(|conn| {
+            conn.execute(
+                r#"
+                INSERT INTO cards (deck_id, template_id, content, state, due_at, stability, difficulty,
+                                  scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at)
+                VALUES (?1, ?2, ?3, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 1700000000000, NULL)
+                "#,
+                rusqlite::params![deck_id, template_id, content],
+            )?;
+            Ok(conn.last_insert_rowid())
+        })
+        .expect("legacy NULL row should insert");
+
+    let fetched = cards::get_card(&db, card_id)
+        .expect("card lookup should succeed")
+        .expect("card should exist");
+    assert!(
+        fetched.stability.abs() < f64::EPSILON,
+        "legacy NULL stability should read as 0, got {}",
+        fetched.stability
+    );
+    assert!(
+        fetched.difficulty.abs() < f64::EPSILON,
+        "legacy NULL difficulty should read as 0, got {}",
+        fetched.difficulty
+    );
+
+    let listed = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    assert_eq!(listed.len(), 1);
+    assert!(
+        listed[0].stability.abs() < f64::EPSILON,
+        "listed legacy NULL stability should read as 0, got {}",
+        listed[0].stability
+    );
+    assert!(
+        listed[0].difficulty.abs() < f64::EPSILON,
+        "listed legacy NULL difficulty should read as 0, got {}",
+        listed[0].difficulty
+    );
+}
+
+#[test]
 fn reset_card_progress_fails_with_not_found_when_card_is_missing() {
     let db = test_db();
 
@@ -297,6 +412,16 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     assert_eq!(reset.lapses, 0);
     assert_eq!(reset.scheduled_days, 0);
     assert_eq!(reset.learning_steps, 0);
+    assert!(
+        reset.stability.abs() < f64::EPSILON,
+        "reset stability should be 0, got {}",
+        reset.stability
+    );
+    assert!(
+        reset.difficulty.abs() < f64::EPSILON,
+        "reset difficulty should be 0, got {}",
+        reset.difficulty
+    );
     assert_eq!(reset.due_at, None);
     assert_eq!(reset.last_reviewed_at, None);
 

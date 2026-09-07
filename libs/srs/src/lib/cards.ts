@@ -19,6 +19,7 @@ const cardFieldsSchema = z.object({
   content: z.record(z.string(), z.object({ text: z.string() })),
   state: z.int().default(0),
   dueAt: z.nullable(z.date()).default(null),
+  // INVARIANT: desktop Card is `f64`; untouched is 0. Do not make these nullable.
   stability: z.number().default(0),
   difficulty: z.number().default(0),
   scheduledDays: z.int().default(0),

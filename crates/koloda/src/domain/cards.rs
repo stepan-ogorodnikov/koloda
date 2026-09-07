@@ -63,8 +63,13 @@ pub struct Card {
         serialize_with = "serialize_optional_timestamp"
     )]
     pub due_at: Option<i64>,
-    pub stability: Option<f64>,
-    pub difficulty: Option<f64>,
+    // INVARIANT: wire/DTO are numbers; untouched is 0, never JSON null.
+    // Twin of `@koloda/srs` `z.number().default(0)` and CARDS.md §Scheduling Data.
+    // Do not restore `Option<f64>` because the SQLite column is nullable.
+    #[serde(default)]
+    pub stability: f64,
+    #[serde(default)]
+    pub difficulty: f64,
     pub scheduled_days: i32,
     pub learning_steps: i32,
     pub reps: i32,

@@ -26,8 +26,10 @@ pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
         content,
         state: row.get(4)?,
         due_at: row.get(5)?,
-        stability: row.get(6)?,
-        difficulty: row.get(7)?,
+        // INVARIANT: column is nullable in V1; existing rows may be NULL from the old insert.
+        // Load NULL as 0.0. Do not change Card.stability/difficulty back to Option to "match SQL".
+        stability: row.get::<_, Option<f64>>(6)?.unwrap_or(0.0),
+        difficulty: row.get::<_, Option<f64>>(7)?.unwrap_or(0.0),
         scheduled_days: row.get(8)?,
         learning_steps: row.get(9)?,
         reps: row.get(10)?,
@@ -133,8 +135,10 @@ pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
                     serde_json::to_string(&data.content)?,
                     data.state.unwrap_or(0),
                     data.due_at,
-                    data.stability,
-                    data.difficulty,
+                    // WHY: NULL here desyncs desktop IPC from web `z.number()`;
+                    // omitted InsertCardData must persist 0, not SQL NULL.
+                    data.stability.unwrap_or(0.0),
+                    data.difficulty.unwrap_or(0.0),
                     data.scheduled_days.unwrap_or(0),
                     data.learning_steps.unwrap_or(0),
                     data.reps.unwrap_or(0),
@@ -228,8 +232,8 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
                 serde_json::to_string(&data.content)?,
                 data.state.unwrap_or(0),
                 data.due_at,
-                data.stability,
-                data.difficulty,
+                data.stability.unwrap_or(0.0),
+                data.difficulty.unwrap_or(0.0),
                 data.scheduled_days.unwrap_or(0),
                 data.learning_steps.unwrap_or(0),
                 data.reps.unwrap_or(0),

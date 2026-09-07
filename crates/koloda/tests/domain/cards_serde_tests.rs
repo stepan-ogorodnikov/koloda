@@ -27,8 +27,8 @@ fn card_fixture() -> Card {
         .collect(),
         state: 2,
         due_at: Some(1_700_000_000_000),
-        stability: Some(12.5),
-        difficulty: Some(4.75),
+        stability: 12.5,
+        difficulty: 4.75,
         scheduled_days: 9,
         learning_steps: 1,
         reps: 3,
@@ -70,21 +70,54 @@ fn test_card_serializes_wire_shape() {
 }
 
 /// WHY: unset optionals serialize as `null`, not omitted keys.
+/// `stability`/`difficulty` are numbers (untouched is `0`), never JSON null.
 #[test]
 fn test_card_serializes_null_optional_fields() {
     let mut card = card_fixture();
     card.due_at = None;
-    card.stability = None;
-    card.difficulty = None;
     card.last_reviewed_at = None;
     card.updated_at = None;
 
     let value = serde_json::to_value(&card).unwrap();
 
-    for key in ["dueAt", "stability", "difficulty", "lastReviewedAt", "updatedAt"] {
+    for key in ["dueAt", "lastReviewedAt", "updatedAt"] {
         assert_eq!(value.get(key), Some(&Value::Null), "{key} must be present and null");
     }
+    assert_eq!(value.get("stability"), Some(&json!(12.5)));
+    assert_eq!(value.get("difficulty"), Some(&json!(4.75)));
     assert_eq!(value.as_object().unwrap().len(), 15, "key set must not change");
+}
+
+#[test]
+fn test_card_rejects_null_stability_and_difficulty() {
+    let value = serde_json::to_value(card_fixture()).unwrap();
+
+    for key in ["stability", "difficulty"] {
+        let mut payload = value.clone();
+        payload[key] = json!(null);
+        assert!(
+            serde_json::from_value::<Card>(payload).is_err(),
+            "{key}: JSON null must fail (twin of z.number())"
+        );
+    }
+}
+
+#[test]
+fn test_card_deserializes_omitted_stability_and_difficulty_as_zero() {
+    let mut omitted = serde_json::to_value(card_fixture()).unwrap();
+    omitted.as_object_mut().unwrap().remove("stability");
+    omitted.as_object_mut().unwrap().remove("difficulty");
+    let card: Card = serde_json::from_value(omitted).expect("omitted keys default to 0");
+    assert!(
+        card.stability.abs() < f64::EPSILON,
+        "omitted stability should default to 0, got {}",
+        card.stability
+    );
+    assert!(
+        card.difficulty.abs() < f64::EPSILON,
+        "omitted difficulty should default to 0, got {}",
+        card.difficulty
+    );
 }
 
 #[test]

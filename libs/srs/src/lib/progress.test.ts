@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
-import { cardValidation, insertCardSchema } from "./cards";
+import { cardRowSchema, cardValidation, insertCardSchema } from "./cards";
 import { insertReviewSchema, reviewValidation } from "./reviews";
 
 const DEFAULT_DATE = new Date("2024-01-01T00:00:00.000Z");
@@ -97,6 +97,37 @@ describe("card progress validation", () => {
       const result = cardValidation.safeParse(validCardProgress({ [field]: value }));
       expect(result.success, `${field} = ${value}`).toBe(true);
     }
+  });
+
+  it("defaults omitted stability and difficulty to 0", () => {
+    const { stability: _s, difficulty: _d, ...insertWithout } = validInsertCard();
+    const inserted = insertCardSchema.parse(insertWithout);
+    expect(inserted.stability).toBe(0);
+    expect(inserted.difficulty).toBe(0);
+
+    const { stability: _rowS, difficulty: _rowD, ...rowWithout } = validCardProgress();
+    const row = cardRowSchema.parse({ ...rowWithout, createdAt: DEFAULT_DATE, updatedAt: null });
+    expect(row.stability).toBe(0);
+    expect(row.difficulty).toBe(0);
+  });
+
+  it("rejects null stability and difficulty", () => {
+    expect(cardValidation.safeParse(validCardProgress({ stability: null })).success).toBe(false);
+    expect(cardValidation.safeParse(validCardProgress({ difficulty: null })).success).toBe(false);
+    expect(
+      cardRowSchema.safeParse({
+        ...validCardProgress({ stability: null }),
+        createdAt: DEFAULT_DATE,
+        updatedAt: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      cardRowSchema.safeParse({
+        ...validCardProgress({ difficulty: null }),
+        createdAt: DEFAULT_DATE,
+        updatedAt: null,
+      }).success,
+    ).toBe(false);
   });
 });
 

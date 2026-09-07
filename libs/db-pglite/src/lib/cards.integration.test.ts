@@ -51,6 +51,20 @@ describe("cards repository integration", () => {
     expect(counts[999_999]).toBeUndefined();
   });
 
+  it("persists omitted stability and difficulty as 0", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+
+    const card = await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+    });
+
+    expect(card.stability).toBe(0);
+    expect(card.difficulty).toBe(0);
+  });
+
   it("rejects card content when a required template field is empty", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
