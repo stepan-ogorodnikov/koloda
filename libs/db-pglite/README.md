@@ -7,7 +7,7 @@ Validates through `@koloda/srs` / `@koloda/app` schemas on write. On read, raw S
 
 Consumed by `apps/web` (`queries.ts`, `db.ts`, `ai.ts`).
 Desktop apps do not use this package; they call `koloda` via NAPI.
-Depends on `@koloda/app` and `@koloda/srs`.
+Depends on `@koloda/app`, `@koloda/settings`, and `@koloda/srs`.
 
 ## Architectural Map
 

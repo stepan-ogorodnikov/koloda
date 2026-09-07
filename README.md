@@ -73,9 +73,10 @@ libs/
   assistant-react/        # Assistant chat React UI
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
   db-pglite/              # PGlite persistence (web)
+  settings/               # Settings row registry (Zod)
+  settings-react/         # Global settings screens
   srs/                    # SRS domain logic
   srs-react/              # SRS domain React UI
-  settings-react/         # Global settings screens
   ui/                     # Styles and UI primitives
 crates/
   koloda/                 # Desktop Rust backend (domain, repos, SQLite/Refinery, keyring)

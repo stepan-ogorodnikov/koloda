@@ -47,7 +47,7 @@ This file only tells you where to start.
 
 - `src/domain/settings.rs` holds the `SettingsName` variant and the arms in both `validate()` and `normalize()`.
 - Storage is generic in `src/repo/settings.rs`; slices never touch SQL.
-- Mirror the schema in `libs/app/src/lib/settings.ts` (`allowedSettings`).
+- Mirror the registry in `libs/settings/src/index.ts` (`allowedSettings`).
 - The hotkeys slice has a dedicated walkthrough: `agents/ADD-HOTKEY.md`.
 
 **FSRS bucketing** — build every state predicate from the helpers in `src/repo/fsrs_sql.rs`
