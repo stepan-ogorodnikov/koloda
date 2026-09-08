@@ -88,7 +88,11 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - A successful `propose_cards` also shows how many cards were accepted.
 - A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
-- Opening a row shows the protocol id, the input, and the output or error.
+- Expanding a row shows the protocol id, the input, and the output or error.
+- Tool rows start collapsed, including while a call is running.
+- The user can expand or collapse the row.
+- Long payloads scroll inside the expanded region so they do not stretch the message.
+- The disclosed payload sits in a bordered container; the row and reasoning do not.
 
 Those rows live on the run, not in the conversation history sent on later turns.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).

@@ -190,7 +190,7 @@ A new row starts after a tool call.
 Empty reasoning is not shown.
 Reasoning is not included in conversation history.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History).
-Tool calls are shown as activity rows; see ASSISTANT-DATA-ACCESS.md (§Visibility).
+Tool calls use the same expand and collapse control as reasoning; the disclosed payload is bordered. See ASSISTANT-DATA-ACCESS.md (§Visibility).
 Other non-text parts are shown as metadata lines, except step-start parts, which are hidden.
 Proposed cards stay in the review table; leftover markdown does not become cards.
 

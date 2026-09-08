@@ -1,7 +1,7 @@
 import { AiBrain01Icon, AlertCircleIcon, WrenchIcon, InvestigationIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { Button, CardsIcon, Dialog } from "@koloda/ui";
+import { Button, CardsIcon } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -25,6 +25,20 @@ const thinkingLabel = tv({
   },
   defaultVariants: { isRunning: false },
 });
+
+const toolActivityTriggerClass = [
+  "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
+  "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
+  "fg-level-3 hover:fg-level-2 data-pressed:fg-level-2",
+];
+
+// WHY: the fold sits in the chat flow, so an uncapped JSON dump would shove the
+// answer down. Reasoning prose is uncapped; this scroller is not.
+// The border frames only the disclosed payload; the trigger row stays a ghost fold.
+const toolActivityPayloadClass = [
+  "max-h-96 mt-1 p-3 overflow-y-auto overscroll-y-contain",
+  "rounded-lg border-2 border-main bg-level-1",
+].join(" ");
 
 /**
  * Activity row for the compact widget.
@@ -89,14 +103,7 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
   return (
     <li className="fg-level-4">
       <Button
-        variants={{
-          style: "ghost",
-          class: [
-            "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
-            "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
-            "fg-level-3 hover:fg-level-2 data-pressed:fg-level-2",
-          ],
-        }}
+        variants={{ style: "ghost", class: toolActivityTriggerClass }}
         aria-expanded={isOpen}
         onPress={() => setIsUserOpen(!isOpen)}
       >
@@ -126,9 +133,11 @@ type ToolActivityRowProps = { call: AIToolCallRecord };
 
 function ToolActivityRow({ call }: ToolActivityRowProps) {
   const { _ } = useLingui();
+  // WHY: tool payloads stay collapsed until the user opens them. Reasoning
+  // auto-opens while tokens arrive; a JSON dump must not.
+  const [isOpen, setIsOpen] = useState(false);
   const displayName = toolCallLabel(call.name, _);
   const summary = toolCallSummary(call, _);
-  const headline = summary ? `${displayName} - ${summary}` : displayName;
   const inputText = formatToolPayload(call.input);
   const bounded = call.status === "success" ? boundedToolOutput(call.output) : null;
   const outputText = call.status === "success" ? (bounded ? bounded.preview : formatToolPayload(call.output)) : "";
@@ -136,51 +145,39 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
 
   return (
     <li className="fg-level-4">
-      <Dialog.Root>
-        <Button
-          variants={{
-            style: "ghost",
-            class: [
-              "group/tool justify-start px-1 -mx-1 whitespace-normal font-normal animate-colors",
-              "hover:bg-transparent data-pressed:bg-transparent data-pressed:shadow-none",
-              "fg-level-3 hover:fg-level-2 data-pressed:fg-level-2",
-            ],
-          }}
+      <Button
+        variants={{ style: "ghost", class: toolActivityTriggerClass }}
+        aria-expanded={isOpen}
+        onPress={() => setIsOpen(!isOpen)}
+      >
+        <span
+          className={toolActivityHeadline({
+            isError: call.status === "error",
+            isRunning: call.status === "running",
+          })}
         >
-          <span
-            className={toolActivityHeadline({
-              isError: call.status === "error",
-              isRunning: call.status === "running",
-            })}
-          >
-            <ToolCallStatusIcon name={call.name} status={call.status} />
-            <div className="flex flex-row items-center gap-3">
-              <span className="font-medium">{displayName}</span>
-              <span>{summary}</span>
-            </div>
-          </span>
-        </Button>
-        <Dialog.Popover
-          placement="bottom start"
-          variants={{ class: "max-h-96 w-full max-w-[min(46.5rem,calc(100vw-2rem))]" }}
-        >
-          <Dialog.Body aria-label={headline}>
-            <Dialog.Content variants={{ class: "gap-2" }}>
-              <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
-              {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
-              {outputText ? (
-                <ToolPayloadBlock
-                  label={
-                    bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)
-                  }
-                  text={outputText}
-                />
-              ) : null}
-              {errorText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.failed`)} text={errorText} /> : null}
-            </Dialog.Content>
-          </Dialog.Body>
-        </Dialog.Popover>
-      </Dialog.Root>
+          <ToolCallStatusIcon name={call.name} status={call.status} />
+          <div className="flex flex-row items-center gap-3">
+            <span className="font-medium">{displayName}</span>
+            <span>{summary}</span>
+          </div>
+        </span>
+      </Button>
+      {isOpen ? (
+        <div className={toolActivityPayloadClass}>
+          <div className="flex flex-col gap-2">
+            <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
+            {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
+            {outputText ? (
+              <ToolPayloadBlock
+                label={bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)}
+                text={outputText}
+              />
+            ) : null}
+            {errorText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.failed`)} text={errorText} /> : null}
+          </div>
+        </div>
+      ) : null}
     </li>
   );
 }

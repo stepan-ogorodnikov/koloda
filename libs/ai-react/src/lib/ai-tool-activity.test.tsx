@@ -9,15 +9,6 @@ vi.mock("@lingui/react", () => ({
   }),
 }));
 
-vi.mock("@koloda/core-react", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAppHotkey: () => {},
-    useHotkeysSettings: () => ({ ui: { close: ["Escape"] } }),
-  };
-});
-
 function call(
   overrides: Partial<AIToolCallRecord> & Pick<AIToolCallRecord, "id" | "name" | "status">,
 ): AIToolCallRecord {
@@ -118,7 +109,7 @@ describe("AIToolActivity", () => {
     expect(screen.queryByText("ai.chat.tool-activity.list-decks")).toBeNull();
   });
 
-  it("opens input and output in a popover", async () => {
+  it("expands input and output below the row and collapses on a second press", () => {
     render(
       <AIToolActivity
         calls={[
@@ -133,15 +124,52 @@ describe("AIToolActivity", () => {
       />,
     );
 
-    expect(document.querySelector("details")).toBeNull();
+    const trigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-deck-cards/ });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.get-deck-cards/ }));
-    expect(await screen.findByRole("dialog")).toBeTruthy();
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByText("ai.chat.tool-activity.tool")).toBeTruthy();
     expect(screen.getByText("get_deck_cards")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.input")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.output")).toBeTruthy();
     expect(screen.getByText(/"deckId": 9/)).toBeTruthy();
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
+  });
+
+  it("frames the disclosed tool payload and leaves the row and reasoning unframed", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          { kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" },
+          call({ id: "c1", name: "list_decks", status: "success", output: { decks: [] } }),
+        ]}
+      />,
+    );
+
+    const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
+    const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
+    expect(toolTrigger.closest("li")?.className).not.toContain("border-main");
+    expect(reasoningTrigger.closest("li")?.className).not.toContain("border-main");
+    expect(screen.getByText("Quiet plan.").className).not.toContain("border-main");
+
+    fireEvent.click(toolTrigger);
+    expect(screen.getByText("ai.chat.tool-activity.input").closest(".border-main")).not.toBeNull();
+  });
+
+  it("keeps a running tool row collapsed until opened", () => {
+    render(<AIToolActivity calls={[call({ id: "c1", name: "list_decks", status: "running", input: { q: 1 } })]} />);
+
+    expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ }));
+    expect(screen.getByText("ai.chat.tool-activity.input")).toBeTruthy();
+    expect(screen.getByText(/"q": 1/)).toBeTruthy();
   });
 
   it("streams thinking inline and auto-collapses when done", () => {

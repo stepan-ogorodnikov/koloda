@@ -112,29 +112,32 @@ test("answers from real deck rows through read-only tools", async ({ page }) => 
     const getDeckCardsRow = log.getByRole("button", { name: "Get deck cards 3 cards" });
     await expect(getDeckCardsRow).toBeVisible({ timeout: 20_000 });
 
-    // WHY: Open list_decks: its stored copy is well under 2,000 chars, so it shows
+    // WHY: Expand list_decks: its stored copy is well under 2,000 chars, so it shows
     // the plain "Output" label — the contrast that proves "Output (truncated)"
     // below is conditional on real size, not on the tool name.
     await listDecksRow.click();
-    const inspectDialog = page.getByRole("dialog");
-    await expect(inspectDialog.getByText("Output", { exact: true })).toBeVisible();
+    await expect(listDecksRow).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(log.getByText("Output", { exact: true })).toBeVisible();
     // WHY: the executor really read the DB: the new deck's title and card count sit
     // in the inspect output while the model only sent an empty {} call.
-    const listDecksOutputPre = inspectDialog.locator("pre").filter({ hasText: `"${deckTitle}"` });
+    const listDecksOutputPre = log.locator("pre").filter({ hasText: `"${deckTitle}"` });
     await expect(listDecksOutputPre).toContainText('"cardCount": 3');
 
-    await page.keyboard.press("Escape");
-    await expect(inspectDialog).toBeHidden();
+    await listDecksRow.click();
+    await expect(listDecksRow).toHaveAttribute("aria-expanded", "false");
+    await expect(log.getByText("Output", { exact: true })).toHaveCount(0);
 
-    // WHY: Open get_deck_cards: its >2,000-char output was bounded by the run
+    // WHY: Expand get_deck_cards: its >2,000-char output was bounded by the run
     // record (MAX_TOOL_OUTPUT_CHARS = 2000), so the label switches to
     // "Output (truncated)" and the pre shows the 400-char compact preview.
     await getDeckCardsRow.click();
-    await expect(inspectDialog.getByText("Output (truncated)", { exact: true })).toBeVisible();
+    await expect(getDeckCardsRow).toHaveAttribute("aria-expanded", "true");
+    await expect(log.getByText("Output (truncated)", { exact: true })).toBeVisible();
     // WHY compact: the preview is the head of the compact serialized output —
     // the model itself still received the full ~3,300-char output under its
     // 8,000-char budget; the truncation is a run-record copy limit only.
-    const previewPre = inspectDialog.locator("pre").filter({ hasText: '"deckTitle":"E2E Data Deck"' });
+    const previewPre = log.locator("pre").filter({ hasText: '"deckTitle":"E2E Data Deck"' });
     await expect(previewPre).toContainText('"totalCards":3');
     await expect(previewPre).toContainText('"Front":"Data front A');
 
