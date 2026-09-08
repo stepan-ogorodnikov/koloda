@@ -43,13 +43,11 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
 
 ### 2. Rust Domain (`crates/koloda/src/domain/ai.rs`)
 
-Add provider to Rust constants and enum:
+Do **not** add a Rust `AI_PROVIDERS` const. The catalog list is TypeScript (`libs/ai/src/lib/provider-catalog.ts` → `AI_PROVIDERS`), used by host enablement in step 8.
+
+Add a serde-tagged `AISecrets` variant and match arms. rustc exhaustiveness is the checklist — a missing arm is a compile error, not a runtime surprise.
 
 ```rust
-// Add to AI_PROVIDERS constant
-pub const AI_PROVIDERS: &[&str] = &["openrouter", "ollama", "lmstudio", "myProvider"];
-
-// Add variant to AISecrets enum
 #[serde(rename = "myProvider")]
 MyProvider {
     // INVARIANT: `None` = redacted/absent in settings JSON (`"apiKey": null`).
@@ -59,15 +57,15 @@ MyProvider {
     // base_url: String,
 },
 
-// Add to provider() method
+// provider()
 AISecrets::MyProvider { .. } => "myProvider",
 
-// api_key() already covers Option via the shared match arms — include MyProvider there.
+// api_key() — extend the existing or-pattern (api-key-only) or the `{ api_key, .. }` arm (baseUrl).
 
-// Add validation in validate_for_input()
+// validate_for_input() — require_api_key_for_input and/or require_base_url_for_input
 AISecrets::MyProvider { api_key } => Self::require_api_key_for_input(api_key, "myProvider"),
 
-// Add validation in validate_for_storage()
+// validate_for_storage() — reject_stored_api_key and, if baseUrl, require_stored_base_url
 AISecrets::MyProvider { api_key } => Self::reject_stored_api_key(api_key, "myProvider"),
 ```
 
@@ -266,12 +264,13 @@ Check that the add dialog renders the new fields and the edit dialog prefills th
 
 ### 8. Host enablement
 
-Do not edit app stores. Desktop uses `AI_PROVIDERS`; web uses `listProvidersThatWorkInBrowser()`.
+Do not edit app stores. Desktop uses `AI_PROVIDERS` from `@koloda/ai` (`provider-catalog.ts`); web uses `listProvidersThatWorkInBrowser()`.
 
 Set `worksInBrowser: true` only if the provider’s HTTP API can be called from a browser page origin (CORS headers). Use `false` when it cannot — the provider stays in the catalog and still works in Electron (provider HTTP runs in the main process, where CORS does not apply), and is listed but disabled in web’s add-profile picker.
 
 ### 9. Add Tests
 
+- Twin tag pins (must change together, same idea as `agents/ADD-HOTKEY.md`): `ai_secrets_provider_tags_match_ts_registry` in `crates/koloda/tests/domain/ai_tests.rs` (new variant in the `variants` array **and** the expected tag literal list) and `RUST_AI_SECRETS_PROVIDER_TAGS` in `libs/ai/src/lib/provider-registry.test.ts`
 - `libs/ai/src/lib/chat-stream.test.ts` — `streamText` gets this wrapper's `providerOptions`, omitted when effort is empty
 - Provider `fetchModels` tests — levels only when the list or catalog join reports them
 - `crates/koloda/tests/domain/ai_tests.rs` - Rust unit tests
@@ -292,4 +291,4 @@ Set `worksInBrowser: true` only if the provider’s HTTP API can be called from 
 | Add Form | `libs/settings-react/src/lib/ai-providers/add-ai-profile-form.tsx` | Generic add form (renders the config) |
 | Edit Form | `libs/settings-react/src/lib/ai-providers/edit-ai-profile-form.tsx` | Generic edit form (renders the config) |
 | Settings | `libs/settings-react/src/lib/settings-ai-*-profile.tsx` | Add/edit dialogs (provider picker, wiring) |
-| App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS`. Web: `listProvidersThatWorkInBrowser()` |
+| App Stores | `apps/*/src/app/store.ts` | Desktop: `AI_PROVIDERS` from `@koloda/ai` (`provider-catalog.ts`). Web: `listProvidersThatWorkInBrowser()` |
