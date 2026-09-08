@@ -6,6 +6,7 @@ import type { CardStatus, ConversationReducerState } from "./conversation-reduce
 import { aiProfileStateAtom } from "./ai-profile-state";
 import {
   assistantConversationStateAtom,
+  dispatchToConversation,
   touchAtom,
   touchConversationAtom,
   conversationsAtom,
@@ -125,12 +126,14 @@ export const setAssistantPromptInputAtom = atom(null, (get, set, text: string): 
 
 export const setAssistantCardStatusAtom = atom(
   null,
-  (get, set, payload: { runId: string; index: number; status: CardStatus }) => {
-    const id = get(currentConversationIdAtom);
-    set(assistantConversationStateAtom, ["setCardStatus", payload]);
-    // WHY: Card status edits are on the current conversation; touch by id so
-    // the dirty write shares the same path as background run events.
-    if (id) set(touchConversationAtom, id);
+  (get, set, payload: { conversationId: string; runId: string; index: number; status: CardStatus }) => {
+    const { conversationId, runId, index, status } = payload;
+    // INVARIANT: Add can finish after the user has switched conversations.
+    // Status writes target the originating conversation, not the one now
+    // on screen (ASSISTANT-CONVERSATIONS.md Concurrent Behavior).
+    if (!(conversationId in get(conversationsAtom))) return;
+    dispatchToConversation(conversationId, ["setCardStatus", { runId, index, status }])(get, set);
+    set(touchConversationAtom, conversationId);
   },
 );
 

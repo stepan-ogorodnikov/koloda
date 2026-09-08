@@ -15,7 +15,11 @@ import {
   assistantConversationHasContextAtom,
   assistantHasContextAtom,
 } from "./conversation-selectors";
-import { setAssistantAIProfileAtom, setAssistantPromptInputAtom } from "./conversation-actions";
+import {
+  setAssistantAIProfileAtom,
+  setAssistantCardStatusAtom,
+  setAssistantPromptInputAtom,
+} from "./conversation-actions";
 import { dispatchTo, makeConversation, makeRun } from "./assistant-conversation.fixtures";
 import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 
@@ -449,6 +453,49 @@ describe("pendingSaveAtom (per-conversation counter)", () => {
     expect(pending["B"] ?? 0).toBe(0);
     // Viewing B — derived pendingSave still reflects B only.
     expect(store.get(pendingSaveAtom)).toBe(0);
+  });
+
+  it("setAssistantCardStatusAtom writes and dirties the originating conversation, not the current one", () => {
+    const store = createStore();
+    const cards = [{ content: { "1": { text: "Q" } } }];
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        runs: { r1: { ...makeRun("r1", "success"), cards, cardStatuses: { 0: "pending" } } },
+      }),
+    );
+    store.set(
+      upsertConversationAtom,
+      makeConversation("B", {
+        runs: { r1: { ...makeRun("r1", "success"), cards, cardStatuses: { 0: "idle" } } },
+      }),
+    );
+    store.set(setCurrentConversationIdAtom, "B");
+    const pendingOnB = store.get(pendingSaveByConversationAtom)["B"] ?? 0;
+
+    store.set(setAssistantCardStatusAtom, { conversationId: "A", runId: "r1", index: 0, status: "success" });
+
+    expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("success");
+    expect(store.get(conversationsAtom)["B"]?.runs["r1"]?.cardStatuses[0]).toBe("idle");
+    expect(store.get(pendingSaveByConversationAtom)["A"]).toBe(1);
+    expect(store.get(pendingSaveByConversationAtom)["B"] ?? 0).toBe(pendingOnB);
+  });
+
+  it("setAssistantCardStatusAtom ignores an unknown conversation id", () => {
+    const store = createStore();
+    const cards = [{ content: { "1": { text: "Q" } } }];
+    store.set(
+      upsertConversationAtom,
+      makeConversation("A", {
+        runs: { r1: { ...makeRun("r1", "success"), cards, cardStatuses: { 0: "pending" } } },
+      }),
+    );
+    store.set(setCurrentConversationIdAtom, "A");
+
+    store.set(setAssistantCardStatusAtom, { conversationId: "missing", runId: "r1", index: 0, status: "success" });
+
+    expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("pending");
+    expect(store.get(pendingSaveByConversationAtom)["missing"]).toBeUndefined();
   });
 
   it("write atoms (e.g. setAssistantAIProfileAtom) bump the current conversation's counter", () => {

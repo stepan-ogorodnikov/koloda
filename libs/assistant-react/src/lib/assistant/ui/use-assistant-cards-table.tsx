@@ -10,6 +10,7 @@ import { AssistantCardsTableSelectCell } from "./assistant-cards-table-select-ce
 import { AssistantCardsTableSelectHeader } from "./assistant-cards-table-select-header";
 import { setAssistantCardStatusAtom } from "../state/conversation-actions";
 import type { CardStatus } from "../state/conversation-reducer";
+import { currentConversationIdAtom } from "../state/conversation-store";
 
 export type CardWithStatus = GeneratedCard & { status: CardStatus };
 
@@ -30,6 +31,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const { addCardsMutation } = useAtomValue(queriesAtom);
   const mutation = useMutation(addCardsMutation());
   const setCardStatus = useSetAtom(setAssistantCardStatusAtom);
+  const conversationId = useAtomValue(currentConversationIdAtom);
 
   const cardsWithStatus: CardWithStatus[] = useMemo(
     () => cards.map((card, index) => ({ ...card, status: cardStatuses[index] ?? "idle" })),
@@ -107,7 +109,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const isAdding = mutation.isPending;
 
   const handleAddCards = useCallback(() => {
-    if (!template || !deckId || !templateId || selectedIndices.length === 0) return;
+    if (!conversationId || !template || !deckId || !templateId || selectedIndices.length === 0) return;
 
     const cardsToCreate = selectedIndices
       .map((index) => cardsWithStatus[index])
@@ -118,7 +120,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     if (cardsToCreate.length === 0) return;
 
     for (const index of selectedIndices) {
-      setCardStatus({ runId, index, status: "pending" });
+      setCardStatus({ conversationId, runId, index, status: "pending" });
     }
 
     mutation.mutate(cardsToCreate, {
@@ -129,7 +131,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
         for (let i = 0; i < selectedIndices.length; i++) {
           const index = selectedIndices[i];
           const result = response[i];
-          setCardStatus({ runId, index, status: result?.error ? "error" : "success" });
+          setCardStatus({ conversationId, runId, index, status: result?.error ? "error" : "success" });
         }
         // WORKAROUND: Success rows are no longer selectable, and v9 deselect
         // keeps non-selectable rows unless deselectAll clears the whole map.
@@ -137,11 +139,12 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       },
       onError: () => {
         for (const index of selectedIndices) {
-          setCardStatus({ runId, index, status: "error" });
+          setCardStatus({ conversationId, runId, index, status: "error" });
         }
       },
     });
   }, [
+    conversationId,
     runId,
     template,
     selectedIndices,

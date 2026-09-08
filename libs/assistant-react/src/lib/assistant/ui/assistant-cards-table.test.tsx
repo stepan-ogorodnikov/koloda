@@ -137,6 +137,52 @@ describe("AssistantCardsTable selection", () => {
 
     await waitFor(() => expect(mutate).not.toHaveBeenCalled());
   });
+
+  it("settles add statuses on the originating conversation after switching away", async () => {
+    let resolveMutate!: (value: { insertedIds: number[] }) => void;
+    const mutate = vi.fn(
+      () =>
+        new Promise<{ insertedIds: number[] }>((resolve) => {
+          resolveMutate = resolve;
+        }),
+    );
+
+    const store = createStore();
+    store.set(
+      queriesAtom as unknown as Parameters<typeof store.set>[0],
+      {
+        addCardsMutation: () => ({ mutationFn: mutate }),
+      } as unknown as Queries,
+    );
+    const cards = [makeCard("Front A")];
+    store.set(currentConversationIdAtom, "A");
+    store.set(conversationsAtom, {
+      A: makeConversation("A", {
+        runs: { r1: { ...makeRun("r1", "success"), cards, cardStatuses: { 0: "idle" } } },
+      }),
+      B: makeConversation("B"),
+    });
+
+    const Wrapper = ({ children }: WrapperProps) => (
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+        <JotaiProvider store={store}>{children}</JotaiProvider>
+      </QueryClientProvider>
+    );
+
+    render(<SelectionProbe />, { wrapper: Wrapper });
+    fireEvent.click(screen.getByTestId("add"));
+
+    expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("pending");
+    await waitFor(() => expect(mutate).toHaveBeenCalledOnce());
+
+    store.set(currentConversationIdAtom, "B");
+    resolveMutate({ insertedIds: [1] });
+
+    await waitFor(() => {
+      expect(store.get(conversationsAtom)["A"]?.runs["r1"]?.cardStatuses[0]).toBe("success");
+    });
+    expect(store.get(conversationsAtom)["B"]?.runs["r1"]).toBeUndefined();
+  });
 });
 
 function SelectionProbe() {
