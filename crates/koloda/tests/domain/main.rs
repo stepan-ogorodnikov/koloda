@@ -32,3 +32,4 @@ mod settings_serde_tests;
 mod templates_insert_tests;
 mod templates_serde_tests;
 mod templates_update_tests;
+mod time_tests;

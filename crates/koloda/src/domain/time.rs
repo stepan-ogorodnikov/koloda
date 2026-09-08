@@ -1,6 +1,8 @@
 //! ISO-8601 ↔ epoch-ms serde helpers shared by domain DTOs.
 //!
-//! Wire JSON uses RFC3339 strings; SQLite stores integers. Do not mix shapes across layers.
+//! Deserialize: epoch-ms number (IPC `toWire`) and RFC3339 / ISO-8601 string (so
+//! `serialize_timestamp` output round-trips). Serialize: RFC3339 string. SQLite: i64 epoch ms.
+//! Do not accept `{value|timestamp|time}` objects (Tauri leftover; not on the NAPI wire).
 
 use serde::{de::Visitor, Deserializer, Serializer};
 
@@ -48,20 +50,6 @@ fn parse_timestamp<E: serde::de::Error>(value: &str) -> Result<i64, E> {
     parse_iso_timestamp(value).map_err(serde::de::Error::custom)
 }
 
-fn visit_map_timestamp<'de, M>(mut map: M) -> Result<i64, M::Error>
-where
-    M: serde::de::MapAccess<'de>,
-{
-    while let Some(key) = map.next_key::<String>()? {
-        if key == "value" || key == "timestamp" || key == "time" {
-            return map.next_value::<i64>();
-        } else {
-            map.next_value::<serde_json::Value>()?;
-        }
-    }
-    Err(serde::de::Error::custom("No timestamp field found in map"))
-}
-
 pub fn deserialize_timestamp<'de, D>(deserializer: D) -> Result<i64, D::Error>
 where
     D: Deserializer<'de>,
@@ -72,7 +60,7 @@ where
         type Value = i64;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a Date object, ISO 8601 string, or i64 timestamp")
+            formatter.write_str("an epoch-ms integer or ISO-8601 string")
         }
 
         fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
@@ -93,13 +81,6 @@ where
         {
             parse_timestamp(value)
         }
-
-        fn visit_map<M>(self, map: M) -> Result<Self::Value, M::Error>
-        where
-            M: serde::de::MapAccess<'de>,
-        {
-            visit_map_timestamp(map)
-        }
     }
 
     deserializer.deserialize_any(TimestampVisitor)
@@ -115,7 +96,7 @@ where
         type Value = Option<i64>;
 
         fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a Date object, ISO 8601 string, or i64 timestamp")
+            formatter.write_str("an epoch-ms integer or ISO-8601 string")
         }
 
         fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E> {
@@ -146,16 +127,6 @@ where
             D: Deserializer<'de>,
         {
             deserializer.deserialize_any(OptionalTimestampVisitor)
-        }
-
-        fn visit_map<M>(self, map: M) -> Result<Self::Value, M::Error>
-        where
-            M: serde::de::MapAccess<'de>,
-        {
-            match visit_map_timestamp(map) {
-                Ok(ts) => Ok(Some(ts)),
-                Err(e) => Err(e),
-            }
         }
     }
 
