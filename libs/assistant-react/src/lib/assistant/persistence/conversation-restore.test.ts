@@ -1509,7 +1509,7 @@ describe("normalizeRestoredConversation", () => {
     ]);
   });
 
-  it("preserves failed runs and assistant message parts, clearing dismissedRunErrorId", () => {
+  it("preserves failed runs, error payloads, and dismissedRunErrorId", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -1543,12 +1543,8 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
-    expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply before fail" }]);
-    expect(next.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
-    expect(next.dismissedRunErrorId).toBeNull();
+    expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(findLatestErroredRun(state)).toBeNull();
   });
 
   it("preserves generate error details across a save→restore roundtrip", () => {
@@ -1635,15 +1631,11 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
-    expect(next.runs["r1"]?.cards).toEqual(cards);
-    expect(next.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
-    expect(next.dismissedRunErrorId).toBeNull();
+    expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(findLatestErroredRun(state)).toBeNull();
   });
 
-  it("returns null when a failed run needs no other restore normalization", () => {
+  it("keeps an undismissed run.error so the error panel can show after reload", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -1672,6 +1664,7 @@ describe("normalizeRestoredConversation", () => {
     };
 
     expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(findLatestErroredRun(state)?.id).toBe("r1");
   });
 
   it("leaves successful runs unchanged and preserves their messages", () => {
@@ -1898,16 +1891,12 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.runs).toEqual(state.runs);
-    expect(next.messages[3]?.parts).toEqual([{ type: "text", text: "partial before fail" }]);
-    expect(next.messages[3]?.metadata).toEqual({ kind: "chat-text", runId: "r2" });
-    expect(next.activeRunId).toBeNull();
-    expect(next.dismissedRunErrorId).toBeNull();
+    expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(state.runs["r2"]?.error).toEqual({ message: "Network error" });
+    expect(findLatestErroredRun(state)).toBeNull();
   });
 
-  it("clears dismissedRunErrorId while keeping the failed run", () => {
+  it("preserves dismissedRunErrorId so a dismissed failure stays hidden", () => {
     const state: ConversationReducerState = {
       ...initialConversationState,
       id: "conv-1",
@@ -1927,9 +1916,59 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
+    expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(findLatestErroredRun(state)).toBeNull();
+  });
+
+  it("keeps dismissedRunErrorId when other restore normalization runs", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      dismissedRunErrorId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "failed",
+          error: { message: "Timeout" },
+          cards: [{ content: { "1": { text: "A" } } }],
+          cardStatuses: { 0: "pending" },
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
     const next = normalizeRestoredConversation(state)!;
 
-    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
+    expect(next.runs["r1"]?.error).toEqual({ message: "Timeout" });
+    expect(next.runs["r1"]?.cardStatuses).toEqual({ 0: "idle" });
+    expect(next.dismissedRunErrorId).toBe("r1");
+    expect(findLatestErroredRun(next)).toBeNull();
+  });
+
+  it("clears dismissedRunErrorId when its run is gone", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: null,
+      dismissedRunErrorId: "missing",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1000),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+
     expect(next.dismissedRunErrorId).toBeNull();
   });
 
@@ -1980,10 +2019,9 @@ describe("normalizeRestoredConversation", () => {
       },
     };
 
-    const next = normalizeRestoredConversation(state)!;
-
-    expect(next.runs["r1"]).toEqual(state.runs["r1"]);
-    expect(next.lastReadRunId).toBe("r1");
+    expect(normalizeRestoredConversation(state)).toBeNull();
+    expect(state.lastReadRunId).toBe("r1");
+    expect(findLatestErroredRun(state)).toBeNull();
   });
 
   it("preserves lastReadRunId when the run it points to survives normalization", () => {
@@ -2088,6 +2126,27 @@ describe("findLatestErroredRun", () => {
         r1: {
           id: "r1",
           status: "success",
+          cards: [],
+          cardStatuses: {},
+          templateFields: null,
+          startedAt: new Date(1),
+          elapsedSeconds: 1,
+        },
+      },
+    };
+
+    expect(findLatestErroredRun(state)).toBeNull();
+  });
+
+  it("returns null when a failed run has no error payload", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      dismissedRunErrorId: null,
+      runs: {
+        r1: {
+          id: "r1",
+          status: "failed",
           cards: [],
           cardStatuses: {},
           templateFields: null,

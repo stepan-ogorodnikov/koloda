@@ -115,10 +115,17 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     Object.assign(runs, lifted.runs);
   }
 
+  // WHY: dismissed stream errors persist so reload does not re-show a
+  // banner the user already put away. Drop the id only when its run is gone.
+  const dismissedRunErrorId =
+    state.dismissedRunErrorId !== null && runs[state.dismissedRunErrorId] === undefined
+      ? null
+      : state.dismissedRunErrorId;
+
   if (
     !didNormalize &&
     state.activeRunId === null &&
-    state.dismissedRunErrorId === null &&
+    dismissedRunErrorId === state.dismissedRunErrorId &&
     (state.lastReadRunId === null || runs[state.lastReadRunId] !== undefined)
   ) {
     return null;
@@ -127,7 +134,7 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
   return {
     ...state,
     activeRunId: null,
-    dismissedRunErrorId: null,
+    dismissedRunErrorId,
     // WHY: lastReadRunId is only cleared when its run is actually gone.
     // Failed runs are kept, so a pointer at a failed run survives restore.
     lastReadRunId: state.lastReadRunId !== null && runs[state.lastReadRunId] === undefined ? null : state.lastReadRunId,

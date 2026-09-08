@@ -261,7 +261,7 @@ export function findLatestErroredRun(state: ConversationReducerState): Assistant
   const ids = Object.keys(state.runs);
   for (let i = ids.length - 1; i >= 0; i--) {
     const run = state.runs[ids[i]];
-    if (run && run.status === "failed" && run.id !== state.dismissedRunErrorId) {
+    if (run && run.status === "failed" && run.error && run.id !== state.dismissedRunErrorId) {
       return run;
     }
   }

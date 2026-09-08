@@ -233,7 +233,7 @@ The revert state is not saved.
 
 ### What Gets Saved
 
-Everything is saved as-is, including failed runs and their error messages.
+Everything is saved as-is, including failed runs, their error messages, and whether that stream error was dismissed.
 
 ### What Doesn't Get Saved
 
@@ -252,11 +252,12 @@ When a conversation is loaded:
 
 - A run that was still streaming becomes interrupted (crash recovery).
   Partial output is kept so the user can retry.
-- Failed, canceled, and interrupted runs are kept, including partial chat text and cards.
+- Failed, canceled, and interrupted runs are kept, including partial chat text, cards, and stream error messages.
 - Pending card statuses are reset; see ASSISTANT-CARD-GENERATION.md (§Card Status).
 - Accepted cards on a turn still show as a review table.
 - No run is active after restore.
-- Dismissed errors and revert state are cleared.
+- Revert state is cleared.
+- A dismissed stream error stays dismissed. After reload the error panel shows only if that failure was never dismissed.
 
 If the stored data is corrupted or from an unknown future format, the conversation resets to empty with the same identity and a current timestamp.
 
@@ -267,8 +268,8 @@ The error panel shows the most recent error for the current conversation.
 
 Dismissed errors stay hidden until a new error occurs — then the panel reappears with the new error.
 
-The error state does **not** persist across sessions.
-On page reload all errors are cleared and the error panel is hidden.
+Failed stream errors persist with the conversation.
+After reload the panel shows the latest undismissed failure.
 
 ### Stream Errors
 
@@ -285,7 +286,7 @@ It belongs to the old conversation.
 
 Stream errors can be dismissed by the user through the error panel button.
 A dismissed error stays hidden until a new failure occurs, at which point the panel reappears with the new error.
-Reloading the page also clears the error.
+Reloading does not re-show a dismissed error.
 
 Save errors are dismissed separately and are cleared by a successful save.
 
@@ -331,6 +332,7 @@ The following are copied into the new conversation:
 - Unread status — the clone starts as read
 - Active streaming state — any in-progress run is not copied
 - Prompt input — the clone starts with an empty composer
+- Dismissed stream errors — the clone shows the error panel if a copied run is still failed
 
 ### Clone Trigger
 
