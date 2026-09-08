@@ -204,6 +204,44 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].toolCalls).toHaveLength(1);
     });
 
+    it("keeps inputs at or under the persist cap untruncated", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      let payload = "";
+      while (JSON.stringify({ cards: payload }).length < 2000) payload += "x";
+      const input = { cards: payload };
+      expect(JSON.stringify(input).length).toBe(2000);
+
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input } },
+      ]);
+
+      expect(state.runs["r1"].toolCalls?.[0]?.input).toEqual(input);
+    });
+
+    it("bounds inputs one char past the persist cap to a summary + preview", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      let payload = "";
+      while (JSON.stringify({ cards: payload }).length <= 2000) payload += "x";
+      const input = { cards: payload };
+      expect(JSON.stringify(input).length).toBe(2001);
+
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input } },
+      ]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.input as {
+        isTruncated: boolean;
+        itemCount: number;
+        preview: string;
+      };
+      expect(stored.isTruncated).toBe(true);
+      expect(stored.itemCount).toBe(1);
+      expect(stored.preview).toHaveLength(400);
+      expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(input).length);
+    });
+
     it("stamps startedAt on a new tool call and freezes elapsedSeconds on the result", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));

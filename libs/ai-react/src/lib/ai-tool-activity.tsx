@@ -157,9 +157,11 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const displayName = toolCallLabel(call.name, _);
   const summary = toolCallSummary(call, _);
-  const inputText = formatToolPayload(call.input);
-  const bounded = call.status === "success" ? boundedToolOutput(call.output) : null;
-  const outputText = call.status === "success" ? (bounded ? bounded.preview : formatToolPayload(call.output)) : "";
+  const inputBounded = boundedToolPayload(call.input);
+  const inputText = inputBounded ? inputBounded.preview : formatToolPayload(call.input);
+  const outputBounded = call.status === "success" ? boundedToolPayload(call.output) : null;
+  const outputText =
+    call.status === "success" ? (outputBounded ? outputBounded.preview : formatToolPayload(call.output)) : "";
   const errorText = call.status === "error" ? formatToolPayload(call.error) : "";
 
   return (
@@ -200,7 +202,9 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
             {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
             {outputText ? (
               <ToolPayloadBlock
-                label={bounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)}
+                label={
+                  outputBounded ? _(msg`ai.chat.tool-activity.output-truncated`) : _(msg`ai.chat.tool-activity.output`)
+                }
                 text={outputText}
               />
             ) : null}
@@ -346,10 +350,10 @@ function namedNumber(value: unknown, key: string): number | null {
 
 /**
  * Detects the bounded summary the conversation reducer persists for oversized
- * tool outputs: the live full output never reaches the run record, only
+ * tool payloads: the live full value never reaches the run record, only
  * `{ isTruncated: true, itemCount, preview }` does.
  */
-function boundedToolOutput(value: unknown): { itemCount: number; preview: string } | null {
+function boundedToolPayload(value: unknown): { itemCount: number; preview: string } | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   if (record.isTruncated !== true) return null;

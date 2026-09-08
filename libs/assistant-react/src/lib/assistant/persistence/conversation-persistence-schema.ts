@@ -13,7 +13,7 @@ import type {
   RunStatus,
   RunTerminationReason,
 } from "../state/conversation-reducer";
-import { boundToolError } from "../state/conversation-reducer";
+import { boundToolError, boundToolOutput } from "../state/conversation-reducer";
 import { z } from "zod";
 
 /**
@@ -218,7 +218,9 @@ const optionalActivityElapsedField = z.number().nullable().optional();
 const toolCallField = z.object({
   id: z.string(),
   name: z.string(),
-  input: z.unknown(),
+  // WHY: rows saved before input was bounded may hold a full propose_cards
+  // arguments blob — cap on restore so reload cannot keep rewriting it.
+  input: z.unknown().transform((input) => boundToolOutput(input)),
   status: toolCallStatusField,
   output: z.unknown().optional(),
   // WHY: rows saved before `RunToolCall.error` became a bounded string may

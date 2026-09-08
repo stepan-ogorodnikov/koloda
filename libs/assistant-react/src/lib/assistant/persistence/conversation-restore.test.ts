@@ -963,6 +963,29 @@ describe("coerceConversationState", () => {
       );
       expect(coerced.runs["r1"]?.toolCalls?.[0]?.error).toBe(`${"x".repeat(2000)}…`);
     });
+
+    it("caps an oversized tool input on restore", () => {
+      let payload = "";
+      while (JSON.stringify({ cards: payload }).length <= 2000) payload += "x";
+      const input = { cards: payload };
+      expect(JSON.stringify(input).length).toBe(2001);
+
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            toolCalls: [{ id: "call-1", name: "propose_cards", input, status: "running" }],
+          }),
+        ),
+      );
+      const stored = coerced.runs["r1"]?.toolCalls?.[0]?.input as {
+        isTruncated: boolean;
+        itemCount: number;
+        preview: string;
+      };
+      expect(stored.isTruncated).toBe(true);
+      expect(stored.itemCount).toBe(1);
+      expect(stored.preview).toHaveLength(400);
+    });
   });
 
   describe("run writeTargetDeckId coercion", () => {

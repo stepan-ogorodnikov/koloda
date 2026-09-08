@@ -524,7 +524,12 @@ function addToolCall(draft: ConversationReducerState, payload: AddToolCallPayloa
   // WHY: a tool call is the next timeline step — close thinking so the
   // widget can collapse it before the new tool row appears.
   finishRunningReasoning(run);
-  activity.push({ ...payload.call, status: "running", ...activityTiming() });
+  activity.push({
+    ...payload.call,
+    input: boundToolOutput(payload.call.input),
+    status: "running",
+    ...activityTiming(),
+  });
 }
 
 type SetToolCallResultPayload = { runId: string; callId: string; output?: unknown; error?: unknown };
@@ -551,10 +556,10 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
   call.output = boundToolOutput(payload.output);
 }
 
-// WHY: tool outputs ride the conversation document, rewritten in full on
-// every autosave. The live tool flow needs the full output, the run record
-// does not — cap what we persist so a tool-heavy conversation cannot grow
-// the blob unboundedly.
+// WHY: tool inputs and outputs ride the conversation document, rewritten in
+// full on every autosave. The live tool flow needs the full payload, the run
+// record does not — cap what we persist so a tool-heavy conversation cannot
+// grow the blob unboundedly.
 const MAX_TOOL_OUTPUT_CHARS = 2000;
 const MAX_TOOL_OUTPUT_PREVIEW_CHARS = 400;
 

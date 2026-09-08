@@ -153,6 +153,26 @@ describe("AIToolActivity", () => {
     expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
   });
 
+  it("expands a truncated input as the preview, not the wrapper object", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "propose_cards",
+            status: "running",
+            input: { isTruncated: true, itemCount: 2, preview: '{"deckId":1,"cards":[{' },
+          }),
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.propose-cards/ }));
+    expect(screen.getByText("ai.chat.tool-activity.input")).toBeTruthy();
+    expect(screen.getByText('{"deckId":1,"cards":[{')).toBeTruthy();
+    expect(screen.queryByText(/isTruncated/)).toBeNull();
+  });
+
   it("puts a fold chevron after the label", () => {
     render(
       <AIToolActivity
