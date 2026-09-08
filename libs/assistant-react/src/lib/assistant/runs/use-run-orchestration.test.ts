@@ -123,6 +123,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
   it("an invalid retry (no profile) does not start a stream", async () => {
     seedConversation("conv-1");
     addChatRun("run-1");
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
     const cfg = makeConfig({ profileId: "" });
 
     const { result } = orchestrate(cfg);
@@ -139,6 +140,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
   it("an invalid retry (run missing the user message → empty prompt) does not start a stream", async () => {
     seedConversation("conv-1");
     addChatRun("run-2", { withUserMessage: false });
+    dispatch(["runFailed", { runId: "run-2", error: { message: "boom" } }]);
     const cfg = makeConfig();
 
     const { result } = orchestrate(cfg);
@@ -152,6 +154,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
   it("a valid chat retry remembers profile then dispatches retry command", async () => {
     seedConversation("conv-1");
     addChatRun("run-1");
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
     const cfg = makeConfig();
 
     const { result } = orchestrate(cfg);
@@ -434,6 +437,33 @@ describe("useRunOrchestration — retry always chat", () => {
     // is retryable.
     expect(dispatchCommand).not.toHaveBeenCalled();
     expect(readState().runs["run-1"].status).toBe("failed");
+  });
+
+  it("retrying a successful tail is a no-op", async () => {
+    seedConversation("conv-1");
+    dispatch(["submitTurn", { runId: "run-1", text: "hello", kind: "chat-text", assistantText: "" }]);
+    dispatch(["completeRun", { runId: "run-1" }]);
+
+    const { result } = orchestrate();
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(dispatchCommand).not.toHaveBeenCalled();
+    expect(readState().runs["run-1"].status).toBe("success");
+  });
+
+  it("retrying a streaming tail is a no-op", async () => {
+    seedConversation("conv-1");
+    dispatch(["submitTurn", { runId: "run-1", text: "hello", kind: "chat-text", assistantText: "" }]);
+
+    const { result } = orchestrate();
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(dispatchCommand).not.toHaveBeenCalled();
+    expect(readState().runs["run-1"].status).toBe("streaming");
   });
 });
 

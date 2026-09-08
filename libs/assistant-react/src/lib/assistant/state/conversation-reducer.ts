@@ -249,8 +249,16 @@ export function dropRuns(
 }
 
 export function hasRetryableTurn(state: ConversationReducerState, runId: string): boolean {
-  if (state.runs[runId]) return true;
+  const run = state.runs[runId];
+  if (run) {
+    // INVARIANT: Successful and streaming runs are not retryable
+    // (ASSISTANT-CONVERSATIONS.md §Retry). Renderers hide the button; this
+    // is the backstop for programmatic controller.retry.
+    return run.status === "failed" || run.status === "canceled" || run.status === "interrupted";
+  }
 
+  // WHY: Retry after restore may find the run dropped (normalize removes
+  // orphaned failed markers) while the assistant message remains.
   const assistantMessage = state.messages.find((m) => m.id === assistantMessageId(runId));
   if (!assistantMessage) return false;
   const metadata = getAssistantMetadata(assistantMessage);

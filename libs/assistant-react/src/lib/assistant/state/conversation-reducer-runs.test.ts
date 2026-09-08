@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DataAccessSnapshot } from "../runs/data-access";
-import { conversationReducer, findLatestErroredRun, initialConversationState } from "./conversation-reducer";
+import {
+  conversationReducer,
+  findLatestErroredRun,
+  hasRetryableTurn,
+  initialConversationState,
+} from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
@@ -1166,5 +1171,65 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["setUsage", { runId: "r1", usage }]);
       expect(state.runs["r1"].usage).toEqual(usage);
     });
+  });
+});
+
+describe("hasRetryableTurn", () => {
+  it.each(["failed", "canceled", "interrupted"] as const)("allows a %s run", (status) => {
+    let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+    if (status === "failed") {
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+    } else if (status === "canceled") {
+      state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
+    } else {
+      state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
+    }
+
+    expect(hasRetryableTurn(state, "r1")).toBe(true);
+  });
+
+  it.each(["streaming", "success"] as const)("rejects a %s run", (status) => {
+    let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+    if (status === "success") {
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+    }
+
+    expect(hasRetryableTurn(state, "r1")).toBe(false);
+  });
+
+  it("rejects an unknown runId with no assistant message", () => {
+    expect(hasRetryableTurn(initialConversationState, "missing")).toBe(false);
+  });
+
+  it("allows a missing run whose assistant message is an error marker", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      messages: [
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "error", runId: "r1" },
+        },
+      ],
+    };
+
+    expect(hasRetryableTurn(state, "r1")).toBe(true);
+  });
+
+  it("allows a missing run whose assistant message is chat-text", () => {
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      messages: [
+        {
+          id: "assistant-r1",
+          role: "assistant",
+          parts: [{ type: "text", text: "" }],
+          metadata: { kind: "chat-text", runId: "r1" },
+        },
+      ],
+    };
+
+    expect(hasRetryableTurn(state, "r1")).toBe(true);
   });
 });
