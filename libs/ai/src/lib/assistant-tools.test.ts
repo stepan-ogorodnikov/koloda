@@ -182,8 +182,49 @@ describe("propose_cards input schema", () => {
     });
   });
 
-  it("rejects an empty cards array", () => {
-    expect(() => schema.parse({ deckId: 5, cards: [] })).toThrow();
+  it("parses an empty cards array", () => {
+    expect(schema.parse({ deckId: 5, cards: [] })).toEqual({ deckId: 5, cards: [] });
+  });
+
+  it("coerces a mixed batch without failing the payload", () => {
+    expect(
+      schema.parse({
+        deckId: 5,
+        cards: [
+          { fields: { Front: "hola", Back: "hello" } },
+          { fields: { Front: "gato", Back: 1 } },
+          { fields: { Front: "x", Back: [] } },
+          "not-an-object",
+        ],
+      }),
+    ).toEqual({
+      deckId: 5,
+      cards: [
+        { fields: { Front: "hola", Back: "hello" } },
+        { fields: { Front: "gato", Back: "1" } },
+        { fields: { Front: "x" } },
+        { fields: {} },
+      ],
+    });
+  });
+
+  it("coerces booleans and { text } numbers to strings", () => {
+    expect(
+      schema.parse({
+        deckId: 5,
+        cards: [{ fields: { Front: true, Back: { text: 1492 } } }],
+      }),
+    ).toEqual({
+      deckId: 5,
+      cards: [{ fields: { Front: "true", Back: "1492" } }],
+    });
+  });
+
+  it("parses all-unfixable cards as empty field maps", () => {
+    expect(schema.parse({ deckId: 5, cards: [null, "x", [1], { fields: 1 }] })).toEqual({
+      deckId: 5,
+      cards: [{ fields: {} }, { fields: {} }, { fields: {} }, { fields: {} }],
+    });
   });
 });
 

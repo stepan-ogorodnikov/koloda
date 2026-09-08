@@ -89,33 +89,36 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === "object" && !Array.isArray(value);
 }
 
-// WHY: weaker models omit the `fields` wrapper, send `{ text }` values, or call
-// with an empty cards array and then dump a markdown table instead.
-function coerceFieldRecord(value: unknown): Record<string, string> | null {
-  if (!isPlainObject(value)) return null;
+// WHY: weaker models omit `fields`, wrap `{ text }`, or mix numbers/arrays into
+// a batch. Coerce is total so one bad card cannot fail the tool; shaping drops the rest.
+function coerceFieldValue(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (typeof value === "boolean") return String(value);
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (isPlainObject(value)) {
+    const text = value.text;
+    if (typeof text === "string") return text;
+    if (typeof text === "boolean") return String(text);
+    if (typeof text === "number" && Number.isFinite(text)) return String(text);
+  }
+  return undefined;
+}
+
+function coerceFieldRecord(value: unknown): Record<string, string> {
+  if (!isPlainObject(value)) return {};
   const mapped: Record<string, string> = {};
   for (const [key, entry] of Object.entries(value)) {
-    if (typeof entry === "string") {
-      mapped[key] = entry;
-      continue;
-    }
-    if (isPlainObject(entry) && typeof entry.text === "string") {
-      mapped[key] = entry.text;
-      continue;
-    }
-    return null;
+    const coerced = coerceFieldValue(entry);
+    if (coerced === undefined) continue;
+    mapped[key] = coerced;
   }
   return mapped;
 }
 
-function coerceProposeCard(value: unknown): unknown {
-  if (!isPlainObject(value)) return value;
-  if ("fields" in value) {
-    const fields = coerceFieldRecord(value.fields);
-    return fields == null ? value : { fields };
-  }
-  const fields = coerceFieldRecord(value);
-  return fields == null ? value : { fields };
+function coerceProposeCard(value: unknown): { fields: Record<string, string> } {
+  if (!isPlainObject(value)) return { fields: {} };
+  if ("fields" in value) return { fields: coerceFieldRecord(value.fields) };
+  return { fields: coerceFieldRecord(value) };
 }
 
 const proposeCardSchema = z.preprocess(coerceProposeCard, z.object({ fields: z.record(z.string(), z.string()) }));
@@ -144,7 +147,7 @@ export const ASSISTANT_TOOL_SPECS = {
       "Create new flashcards for a deck. Call this whenever the user asks to generate, create, make, add, or invent cards, including a random card — invent original field values; do not copy or pick existing cards. If you lack the deck id or field titles, call list_decks first in this turn; do not ask the user. deckId is the target deck from list_decks. Each cards item must include fields: a map of exact template field title to invented text. An empty cards array does not create cards. If the result accepts 0 cards, call this tool again with the titles in templateFields; never write cards as a markdown table.",
     inputSchema: z.object({
       deckId: z.int().positive(),
-      cards: z.array(proposeCardSchema).min(1),
+      cards: z.array(proposeCardSchema),
     }),
   },
 } as const satisfies Record<string, AssistantToolSpec>;

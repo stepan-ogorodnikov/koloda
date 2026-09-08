@@ -60,6 +60,25 @@ describe("createAssistantToolExecutor", () => {
     expect(output.deckId).toBe(1);
   });
 
+  it("propose_cards drops mixed invalid cards instead of throwing", async () => {
+    const executor = createAssistantToolExecutor(makeDataSource());
+    const output = (await executor("propose_cards", {
+      deckId: 1,
+      cards: [
+        { fields: { Front: "hola", Back: "hello" } },
+        { fields: { Front: "gato", Back: 1 } },
+        { fields: { Front: "x", Back: [] } },
+        "not-an-object",
+      ],
+    })) as { cards: Array<{ fields: Record<string, string> }>; rejectedCount: number };
+
+    expect(output.cards).toEqual([
+      { fields: { Front: "hola", Back: "hello" } },
+      { fields: { Front: "gato", Back: "1" } },
+    ]);
+    expect(output.rejectedCount).toBe(2);
+  });
+
   it("rejects unknown tool names", async () => {
     const executor = createAssistantToolExecutor(makeDataSource());
     await expect(executor("delete_everything", {})).rejects.toThrow("Unknown assistant tool: delete_everything");
