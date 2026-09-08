@@ -232,6 +232,8 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
                 serde_json::to_string(&data.content)?,
                 data.state.unwrap_or(0),
                 data.due_at,
+                // WHY: NULL here desyncs desktop IPC from web `z.number()`;
+                // omitted InsertCardData must persist 0, not SQL NULL.
                 data.stability.unwrap_or(0.0),
                 data.difficulty.unwrap_or(0.0),
                 data.scheduled_days.unwrap_or(0),
