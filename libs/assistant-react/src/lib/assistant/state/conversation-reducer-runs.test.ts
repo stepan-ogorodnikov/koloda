@@ -146,7 +146,16 @@ describe("conversationReducer", () => {
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
       ]);
-      expect(state.runs["r1"].toolCalls).toEqual([{ id: "call-1", name: "list_decks", input: {}, status: "running" }]);
+      expect(state.runs["r1"].toolCalls).toEqual([
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "running",
+          startedAt: expect.any(Date),
+          elapsedSeconds: null,
+        },
+      ]);
     });
 
     it("closes a running reasoning row before appending the tool call", () => {
@@ -157,8 +166,22 @@ describe("conversationReducer", () => {
         { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
       ]);
       expect(state.runs["r1"].toolCalls).toEqual([
-        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
-        { id: "call-1", name: "list_decks", input: {}, status: "running" },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-0",
+          text: "plan",
+          status: "done",
+          startedAt: expect.any(Date),
+          elapsedSeconds: expect.any(Number),
+        },
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "running",
+          startedAt: expect.any(Date),
+          elapsedSeconds: null,
+        },
       ]);
     });
 
@@ -174,6 +197,34 @@ describe("conversationReducer", () => {
       ]);
 
       expect(state.runs["r1"].toolCalls).toHaveLength(1);
+    });
+
+    it("stamps startedAt on a new tool call and freezes elapsedSeconds on the result", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
+
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      vi.setSystemTime(new Date("2026-07-01T12:00:02.000Z"));
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        startedAt: new Date("2026-07-01T12:00:02.000Z"),
+        elapsedSeconds: null,
+      });
+
+      vi.setSystemTime(new Date("2026-07-01T12:00:07.000Z"));
+      state = conversationReducer(state, [
+        "setToolCallResult",
+        { runId: "r1", callId: "call-1", output: { decks: [] } },
+      ]);
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        status: "success",
+        elapsedSeconds: 5,
+      });
+
+      vi.useRealTimers();
     });
   });
 
@@ -543,8 +594,36 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       expect(state.runs["r1"].toolCalls).toEqual([
-        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-0",
+          text: "plan",
+          status: "done",
+          startedAt: expect.any(Date),
+          elapsedSeconds: expect.any(Number),
+        },
       ]);
+    });
+
+    it("freezes a still-running tool call's elapsed time when the run completes", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
+
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
+      ]);
+      vi.setSystemTime(new Date("2026-07-01T12:00:04.000Z"));
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+
+      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
+        id: "call-1",
+        status: "running",
+        elapsedSeconds: 4,
+      });
+
+      vi.useRealTimers();
     });
 
     it("does not clear activeRunId when a different run completes", () => {

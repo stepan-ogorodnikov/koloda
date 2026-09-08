@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { computeConversationTitle } from "@koloda/ai";
 import { fromPersistedState, normalizeRestoredConversation, toPersistedState } from "./conversation-persistence";
 import { coerceConversationState } from "./conversation-persistence-schema";
@@ -861,6 +861,98 @@ describe("coerceConversationState", () => {
       ]);
     });
 
+    it("keeps activity timers intact across a save→restore roundtrip (JSON wire shape)", () => {
+      const startedAt = new Date("2026-07-01T12:00:00.000Z");
+      const timedToolCalls = [
+        {
+          kind: "reasoning" as const,
+          id: "r1-reasoning-0",
+          text: "Quiet plan.",
+          status: "done" as const,
+          startedAt,
+          elapsedSeconds: 3,
+        },
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "success" as const,
+          output: { decks: [] },
+          startedAt,
+          elapsedSeconds: 5,
+        },
+      ];
+      const state: ConversationReducerState = {
+        ...initialConversationState,
+        id: "conv-1",
+        runs: {
+          r1: {
+            id: "r1",
+            status: "success",
+            cards: [],
+            cardStatuses: {},
+            templateFields: null,
+            startedAt: new Date(1000),
+            elapsedSeconds: 1,
+            toolCalls: timedToolCalls,
+          },
+        },
+      };
+      const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
+      const restored = expectOk(persisted);
+      expect(restored.runs["r1"]?.toolCalls).toEqual(timedToolCalls);
+    });
+
+    it("restores rows saved before activity timers without startedAt or elapsedSeconds", () => {
+      const coerced = expectOk(
+        makeStateWithRun(
+          baseRun({
+            toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } }],
+          }),
+        ),
+      );
+      expect(coerced.runs["r1"]?.toolCalls).toEqual([
+        { id: "call-1", name: "list_decks", input: {}, status: "success", output: { decks: [] } },
+      ]);
+    });
+
+    it("rejects a malformed activity timer as corrupt", () => {
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              toolCalls: [
+                {
+                  id: "call-1",
+                  name: "list_decks",
+                  input: {},
+                  status: "success",
+                  startedAt: "not-a-date",
+                },
+              ],
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+      expect(
+        expectCorrupt(
+          makeStateWithRun(
+            baseRun({
+              toolCalls: [
+                {
+                  kind: "reasoning",
+                  id: "r1-reasoning-0",
+                  text: "plan",
+                  status: "done",
+                  elapsedSeconds: "3",
+                },
+              ],
+            }),
+          ),
+        ).length,
+      ).toBeGreaterThan(0);
+    });
+
     it("caps an oversized tool error string on restore", () => {
       const coerced = expectOk(
         makeStateWithRun(
@@ -1316,6 +1408,62 @@ describe("normalizeRestoredConversation", () => {
     expect(next.runs["r1"]?.toolCalls).toEqual([
       { kind: "reasoning", id: "r1-reasoning-0", text: "partial thought", status: "done" },
     ]);
+  });
+
+  it("freezes in-flight activity elapsed time when converting a streaming run", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T12:00:05.000Z"));
+    const startedAt = new Date("2026-07-01T12:00:00.000Z");
+
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [
+            {
+              kind: "reasoning",
+              id: "r1-reasoning-0",
+              text: "partial thought",
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            },
+            {
+              id: "call-1",
+              name: "list_decks",
+              input: {},
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            },
+          ],
+          templateFields: null,
+          startedAt: new Date(5000),
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+    expect(next.runs["r1"]?.toolCalls).toEqual([
+      {
+        kind: "reasoning",
+        id: "r1-reasoning-0",
+        text: "partial thought",
+        status: "done",
+        startedAt,
+        elapsedSeconds: 5,
+      },
+      { id: "call-1", name: "list_decks", input: {}, status: "error", startedAt, elapsedSeconds: 5 },
+    ]);
+
+    vi.useRealTimers();
   });
 
   it("lifts legacy message reasoning parts onto the run activity list", () => {

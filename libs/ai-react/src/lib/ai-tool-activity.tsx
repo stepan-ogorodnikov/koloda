@@ -14,6 +14,7 @@ import { useLingui } from "@lingui/react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { tv } from "tailwind-variants";
+import { AiChatElapsedTimeDisplay, useElapsedSeconds } from "./ai-chat-elapsed-time";
 
 const toolActivityHeadline = tv({
   base: "flex flex-row items-center gap-2",
@@ -58,6 +59,8 @@ export type AIToolCallRecord = {
   status: "running" | "success" | "error";
   output?: unknown;
   error?: unknown;
+  startedAt?: Date;
+  elapsedSeconds?: number | null;
 };
 
 export type AIReasoningRecord = {
@@ -65,6 +68,8 @@ export type AIReasoningRecord = {
   id: string;
   text: string;
   status: "running" | "done";
+  startedAt?: Date;
+  elapsedSeconds?: number | null;
 };
 
 export type AIActivityRecord = AIToolCallRecord | AIReasoningRecord;
@@ -121,7 +126,14 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
             aria-hidden={item.status === "running" ? undefined : true}
             aria-label={item.status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
           />
-          <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
+          <span className="flex flex-row items-center gap-1">
+            <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
+            <ActivityElapsed
+              isRunning={item.status === "running"}
+              startedAt={item.startedAt}
+              elapsedSeconds={item.elapsedSeconds}
+            />
+          </span>
           <FoldChevron />
         </span>
       </Button>
@@ -164,10 +176,20 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
           })}
         >
           <ToolCallStatusIcon name={call.name} status={call.status} />
-          <div className="flex flex-row items-center gap-3">
+          <span className="flex flex-row items-center gap-1">
             <span className="font-medium">{displayName}</span>
-            <span>{summary}</span>
-          </div>
+            {summary ? (
+              <>
+                <ActivityDot />
+                <span>{summary}</span>
+              </>
+            ) : null}
+            <ActivityElapsed
+              isRunning={call.status === "running"}
+              startedAt={call.startedAt}
+              elapsedSeconds={call.elapsedSeconds}
+            />
+          </span>
           <FoldChevron />
         </span>
       </Button>
@@ -198,6 +220,33 @@ function FoldChevron() {
       icon={ChevronRightIcon}
       aria-hidden="true"
     />
+  );
+}
+
+function ActivityDot() {
+  return <span aria-hidden="true">·</span>;
+}
+
+type ActivityElapsedProps = {
+  isRunning: boolean;
+  startedAt?: Date;
+  elapsedSeconds?: number | null;
+};
+
+const minVisibleElapsedSeconds = 1;
+
+function ActivityElapsed({ isRunning, startedAt, elapsedSeconds }: ActivityElapsedProps) {
+  // WHY: sub-second rows would read "0 s". The clock is only useful once a
+  // second has actually passed. The message-level timer still shows 0 s.
+  const liveSeconds = useElapsedSeconds(startedAt, isRunning && typeof elapsedSeconds !== "number");
+  const seconds = typeof elapsedSeconds === "number" ? elapsedSeconds : liveSeconds;
+  if (seconds == null || seconds < minVisibleElapsedSeconds) return null;
+
+  return (
+    <>
+      <ActivityDot />
+      <AiChatElapsedTimeDisplay seconds={seconds} />
+    </>
   );
 }
 

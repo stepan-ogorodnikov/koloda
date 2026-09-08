@@ -40,6 +40,10 @@ export type RunToolCall = {
   // WHY: always a bounded string (`boundToolError`) so a tool failure cannot
   // grow the persisted blob with an arbitrary error object.
   error?: string;
+  // WHY: optional so rows saved before activity timers restore without them;
+  // live calls always stamp both (`activityTiming` / `stampActivityElapsed`).
+  startedAt?: Date;
+  elapsedSeconds?: number | null;
 };
 
 /**
@@ -51,6 +55,10 @@ export type RunReasoningActivity = {
   id: string;
   text: string;
   status: "running" | "done";
+  // WHY: optional so rows saved before activity timers restore without them;
+  // live thinking always stamps both (`activityTiming` / `stampActivityElapsed`).
+  startedAt?: Date;
+  elapsedSeconds?: number | null;
 };
 
 export type RunActivity = RunToolCall | RunReasoningActivity;
@@ -189,10 +197,32 @@ function makeRun(
   };
 }
 
+function elapsedSecondsSince(startedAt: Date): number {
+  return Math.floor((Date.now() - startedAt.getTime()) / 1000);
+}
+
+function activityTiming(): { startedAt: Date; elapsedSeconds: null } {
+  return { startedAt: new Date(), elapsedSeconds: null };
+}
+
+function stampActivityElapsed(entry: { startedAt?: Date; elapsedSeconds?: number | null }) {
+  if (!entry.startedAt) return;
+  entry.elapsedSeconds = elapsedSecondsSince(entry.startedAt);
+}
+
 function finishRunningReasoning(run: AssistantRun) {
   const last = run.toolCalls?.at(-1);
   if (last && isReasoningActivity(last) && last.status === "running") {
     last.status = "done";
+    stampActivityElapsed(last);
+  }
+}
+
+function stampRunningToolElapsed(run: AssistantRun) {
+  for (const entry of run.toolCalls ?? []) {
+    if (!isReasoningActivity(entry) && entry.status === "running") {
+      stampActivityElapsed(entry);
+    }
   }
 }
 
@@ -254,7 +284,7 @@ export type RunLifecycleEvent =
     };
 
 function stampElapsed(run: AssistantRun) {
-  run.elapsedSeconds = Math.floor((Date.now() - run.startedAt.getTime()) / 1000);
+  run.elapsedSeconds = elapsedSecondsSince(run.startedAt);
 }
 
 // INVARIANT: Legal run lifecycle transitions:
@@ -316,6 +346,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     terminationReason = "user";
   }
   finishRunningReasoning(run);
+  stampRunningToolElapsed(run);
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
   logAssistantStructured({
@@ -385,6 +416,7 @@ function appendAssistantReasoning(draft: ConversationReducerState, payload: Appe
   if (last && isReasoningActivity(last)) {
     last.text += payload.text;
     last.status = "running";
+    last.elapsedSeconds = null;
     return;
   }
   const reasoningCount = activity.filter(isReasoningActivity).length;
@@ -393,6 +425,7 @@ function appendAssistantReasoning(draft: ConversationReducerState, payload: Appe
     id: `${payload.runId}-reasoning-${reasoningCount}`,
     text: payload.text,
     status: "running",
+    ...activityTiming(),
   });
 }
 
@@ -481,7 +514,7 @@ function addToolCall(draft: ConversationReducerState, payload: AddToolCallPayloa
   // WHY: a tool call is the next timeline step — close thinking so the
   // widget can collapse it before the new tool row appears.
   finishRunningReasoning(run);
-  activity.push({ ...payload.call, status: "running" });
+  activity.push({ ...payload.call, status: "running", ...activityTiming() });
 }
 
 type SetToolCallResultPayload = { runId: string; callId: string; output?: unknown; error?: unknown };
@@ -495,6 +528,7 @@ function setToolCallResult(draft: ConversationReducerState, payload: SetToolCall
     (entry): entry is RunToolCall => !isReasoningActivity(entry) && entry.id === payload.callId,
   );
   if (!call) return;
+  stampActivityElapsed(call);
   if (payload.error !== undefined) {
     call.status = "error";
     call.error = boundToolError(payload.error);

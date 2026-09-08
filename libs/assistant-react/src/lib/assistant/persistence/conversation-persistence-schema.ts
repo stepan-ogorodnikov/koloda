@@ -210,6 +210,11 @@ const toolCallStatusField = z.enum(["running", "success", "error"]);
  * extra keys are stripped; a present-but-invalid array fails the whole row
  * as corrupt (same optional-field policy as `dataAccess`).
  */
+// WHY: optional so rows saved before activity timers restore without them;
+// a present invalid value fails the row as corrupt.
+const optionalActivityStartedAtField = dateField.optional();
+const optionalActivityElapsedField = z.number().nullable().optional();
+
 const toolCallField = z.object({
   id: z.string(),
   name: z.string(),
@@ -222,6 +227,8 @@ const toolCallField = z.object({
     .unknown()
     .optional()
     .transform((error) => (error === undefined ? undefined : boundToolError(error))),
+  startedAt: optionalActivityStartedAtField,
+  elapsedSeconds: optionalActivityElapsedField,
 });
 
 const reasoningActivityField = z.object({
@@ -229,6 +236,8 @@ const reasoningActivityField = z.object({
   id: z.string(),
   text: z.string(),
   status: z.enum(["running", "done"]),
+  startedAt: optionalActivityStartedAtField,
+  elapsedSeconds: optionalActivityElapsedField,
 });
 
 // WHY: pre-reasoning rows omit `kind` and must still restore as tool calls.

@@ -186,6 +186,9 @@ When thinking finishes, the row is labeled Thought and the text is collapsed.
 A user toggle is kept if they already opened or closed it.
 The user can expand or collapse the row.
 A chevron after the label points right when collapsed and rotates down when expanded.
+An elapsed time follows the label, separated by a dot, the same way the message status shows it.
+It appears after one second. While the model is thinking the time ticks; when thinking finishes it freezes.
+Sub-second thinking is omitted.
 Consecutive reasoning stays on one row.
 A new row starts after a tool call.
 Empty reasoning is not shown.

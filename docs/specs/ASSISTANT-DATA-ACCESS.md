@@ -83,15 +83,16 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 
 - `list_decks`, `get_deck_cards`, and `propose_cards` show a translated label.
 - Any other tool shows the protocol id.
-- A successful `list_decks` also shows how many decks came back.
-- A successful `get_deck_cards` also shows how many cards came back.
-- A successful `propose_cards` also shows how many cards were accepted.
+- A successful `list_decks` also shows how many decks came back, after a dot.
+- A successful `get_deck_cards` also shows how many cards came back, after a dot.
+- A successful `propose_cards` also shows how many cards were accepted, after a dot.
 - A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
 - Expanding a row shows the protocol id, the input, and the output or error.
 - Tool rows start collapsed, including while a call is running.
 - The user can expand or collapse the row.
 - A chevron after the label points right when collapsed and rotates down when expanded.
+- An elapsed time follows the label, separated by a dot, once the call has taken at least one second. A running call ticks; a finished call shows the frozen duration. Sub-second calls omit it.
 - Long payloads scroll inside the expanded region so they do not stretch the message.
 - The disclosed payload sits in a bordered container; the row and reasoning do not.
 
@@ -138,6 +139,8 @@ The user can switch models and retry.
 
 Runs store tool activity on the run.
 Missing tool activity restores without it.
+Elapsed time on a tool or reasoning row is stored with that row.
+Rows saved before activity timers restore without them.
 A malformed value fails restore as corrupt, not as an empty conversation; see ASSISTANT-CONVERSATIONS.md (§Restore).
 After a crash, a run that was still streaming is interrupted.
 Any tool call that was still running is recorded as failed so it does not keep spinning.

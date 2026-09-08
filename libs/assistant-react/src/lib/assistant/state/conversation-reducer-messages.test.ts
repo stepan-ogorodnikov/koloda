@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { conversationReducer, getVisibleMessages, initialConversationState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
@@ -103,7 +103,14 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
       expect(state.messages[1].parts).toEqual([{ type: "text", text: "Done" }]);
       expect(state.runs.r1?.toolCalls).toEqual([
-        { kind: "reasoning", id: "r1-reasoning-0", text: "thought", status: "done" },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-0",
+          text: "thought",
+          status: "done",
+          startedAt: expect.any(Date),
+          elapsedSeconds: expect.any(Number),
+        },
       ]);
     });
 
@@ -122,7 +129,14 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "thinking" }]);
       expect(state.messages[1].parts).toEqual([{ type: "text", text: "" }]);
       expect(state.runs.r1?.toolCalls).toEqual([
-        { kind: "reasoning", id: "r1-reasoning-0", text: "thinking", status: "running" },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-0",
+          text: "thinking",
+          status: "running",
+          startedAt: expect.any(Date),
+          elapsedSeconds: null,
+        },
       ]);
     });
 
@@ -135,6 +149,8 @@ describe("conversationReducer", () => {
         id: "r1-reasoning-0",
         text: "a b",
         status: "running",
+        startedAt: expect.any(Date),
+        elapsedSeconds: null,
       });
     });
 
@@ -147,9 +163,30 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "next" }]);
       expect(state.runs.r1?.toolCalls).toEqual([
-        { kind: "reasoning", id: "r1-reasoning-0", text: "plan", status: "done" },
-        { id: "call-1", name: "list_decks", input: {}, status: "running" },
-        { kind: "reasoning", id: "r1-reasoning-1", text: "next", status: "running" },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-0",
+          text: "plan",
+          status: "done",
+          startedAt: expect.any(Date),
+          elapsedSeconds: expect.any(Number),
+        },
+        {
+          id: "call-1",
+          name: "list_decks",
+          input: {},
+          status: "running",
+          startedAt: expect.any(Date),
+          elapsedSeconds: null,
+        },
+        {
+          kind: "reasoning",
+          id: "r1-reasoning-1",
+          text: "next",
+          status: "running",
+          startedAt: expect.any(Date),
+          elapsedSeconds: null,
+        },
       ]);
     });
 
@@ -157,6 +194,28 @@ describe("conversationReducer", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "" }]);
       expect(state.runs.r1?.toolCalls).toEqual([]);
+    });
+
+    it("stamps startedAt on a new reasoning row and freezes elapsedSeconds when it closes", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
+
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      vi.setSystemTime(new Date("2026-07-01T12:00:01.000Z"));
+      state = conversationReducer(state, ["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
+      expect(state.runs.r1?.toolCalls?.[0]).toMatchObject({
+        startedAt: new Date("2026-07-01T12:00:01.000Z"),
+        elapsedSeconds: null,
+      });
+
+      vi.setSystemTime(new Date("2026-07-01T12:00:04.000Z"));
+      state = conversationReducer(state, ["updateAssistantText", { runId: "r1", text: "Done" }]);
+      expect(state.runs.r1?.toolCalls?.[0]).toMatchObject({
+        status: "done",
+        elapsedSeconds: 3,
+      });
+
+      vi.useRealTimers();
     });
   });
 

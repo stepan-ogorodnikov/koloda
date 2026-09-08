@@ -491,7 +491,14 @@ describe("assistant chat integration (per-conversation state)", () => {
     const aAssistant = stateA.messages.find((m) => m.role === "assistant");
     expect(aAssistant?.parts).toEqual([{ type: "text", text: "The answer" }]);
     expect(stateA.runs[Object.keys(stateA.runs)[0]!]?.toolCalls).toEqual([
-      { kind: "reasoning", id: expect.stringMatching(/-reasoning-0$/), text: "pondering the question", status: "done" },
+      {
+        kind: "reasoning",
+        id: expect.stringMatching(/-reasoning-0$/),
+        text: "pondering the question",
+        status: "done",
+        startedAt: expect.any(Date),
+        elapsedSeconds: expect.any(Number),
+      },
     ]);
   });
 

@@ -4,6 +4,31 @@ import { useEffect, useState } from "react";
 
 const period = "flex flex-row gap-0.5";
 
+export function useElapsedSeconds(startedAt: Date | undefined, enabled = true): number | null {
+  const startMs = startedAt?.getTime();
+  const [seconds, setSeconds] = useState(() =>
+    enabled && startMs !== undefined ? Math.max(0, Math.floor((Date.now() - startMs) / 1000)) : null,
+  );
+
+  useEffect(() => {
+    if (!enabled || startMs === undefined) {
+      setSeconds(null);
+      return;
+    }
+
+    const update = () => {
+      setSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
+    };
+    update();
+    const id = setInterval(update, 1000);
+
+    return () => clearInterval(id);
+  }, [enabled, startMs]);
+
+  if (!enabled || startMs === undefined) return null;
+  return seconds;
+}
+
 export type AiChatElapsedTimeDisplayProps = { seconds: number };
 
 export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: AiChatElapsedTimeDisplayProps) {
@@ -42,18 +67,6 @@ export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: AiChatElapse
 export type AiChatElapsedTimerProps = { startedAt: Date };
 
 export function AiChatElapsedTimer({ startedAt }: AiChatElapsedTimerProps) {
-  const startMs = startedAt.getTime();
-  const [seconds, setSeconds] = useState(() => Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
-
-  useEffect(() => {
-    const update = () => {
-      setSeconds(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
-    };
-    update();
-    const id = setInterval(update, 1000);
-
-    return () => clearInterval(id);
-  }, [startMs]);
-
+  const seconds = useElapsedSeconds(startedAt) ?? 0;
   return <AiChatElapsedTimeDisplay seconds={seconds} />;
 }

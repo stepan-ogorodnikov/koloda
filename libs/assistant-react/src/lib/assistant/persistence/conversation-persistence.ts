@@ -4,6 +4,7 @@ import type {
   AssistantRun,
   CardStatus,
   ConversationReducerState,
+  RunActivity,
   RunReasoningActivity,
 } from "../state/conversation-reducer";
 import { isReasoningActivity } from "../state/conversation-reducer";
@@ -78,16 +79,13 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
 
     // WHY: a crash-restored run is terminal; leaving toolCalls as `running`
     // would keep the activity widget spinning after reload. Partial thinking
-    // is still useful, so in-flight reasoning rows close as `done`.
+    // is still useful, so in-flight reasoning rows close as `done`. Freeze
+    // elapsed time from startedAt so the row timer stops with the run.
     const toolCalls = nextRun.toolCalls;
     if (toolCalls?.some((entry) => entry.status === "running")) {
       nextRun = {
         ...nextRun,
-        toolCalls: toolCalls.map((entry) => {
-          if (entry.status !== "running") return entry;
-          if (isReasoningActivity(entry)) return { ...entry, status: "done" as const };
-          return { ...entry, status: "error" as const };
-        }),
+        toolCalls: toolCalls.map((entry) => closeRestoredActivity(entry)),
       };
       runChanged = true;
       didNormalize = true;
@@ -136,6 +134,14 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     runs,
     messages: lifted.hasChanges ? lifted.messages : messagesWithRunIds,
   };
+}
+
+function closeRestoredActivity(entry: RunActivity): RunActivity {
+  if (entry.status !== "running") return entry;
+  const elapsedSeconds = entry.startedAt ? elapsedSecondsSince(entry.startedAt) : undefined;
+  const timing = elapsedSeconds === undefined ? {} : { elapsedSeconds };
+  if (isReasoningActivity(entry)) return { ...entry, status: "done", ...timing };
+  return { ...entry, status: "error", ...timing };
 }
 
 function isReasoningPart(part: UIMessage["parts"][number]): part is { type: "reasoning"; text: string } {

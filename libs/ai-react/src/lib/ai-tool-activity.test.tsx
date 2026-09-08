@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIToolActivity } from "./ai-tool-activity";
 import type { AIToolCallRecord } from "./ai-tool-activity";
 
@@ -23,6 +23,10 @@ function foldChevron(trigger: HTMLElement) {
   return svgs.find((svg) => [...svg.classList].some((name) => name.includes("rotate-90"))) ?? null;
 }
 
+function activityDots(trigger: HTMLElement) {
+  return [...trigger.querySelectorAll('[aria-hidden="true"]')].filter((el) => el.textContent === "·");
+}
+
 describe("AIToolActivity", () => {
   it("renders a list_decks success row from the decks array length", () => {
     render(
@@ -40,6 +44,7 @@ describe("AIToolActivity", () => {
 
     expect(screen.getByText("ai.chat.tool-activity.list-decks")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.decks")).toBeTruthy();
+    expect(activityDots(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ }))).toHaveLength(1);
     expect(screen.queryByLabelText("ai.chat.tool-activity.running")).toBeNull();
     expect(screen.queryByLabelText("ai.chat.tool-activity.failed")).toBeNull();
     expect(document.querySelector("svg")).not.toBeNull();
@@ -162,6 +167,168 @@ describe("AIToolActivity", () => {
     const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
     expect(foldChevron(reasoningTrigger)).not.toBeNull();
     expect(foldChevron(toolTrigger)).not.toBeNull();
+  });
+
+  describe("activity elapsed time", () => {
+    const startedAt = new Date("2026-07-01T12:00:00.000Z");
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows a live timer after a dot while a row is running", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-07-01T12:00:30.000Z"));
+
+      render(
+        <AIToolActivity
+          calls={[
+            {
+              kind: "reasoning",
+              id: "r1",
+              text: "Quiet plan.",
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            },
+            call({
+              id: "c1",
+              name: "list_decks",
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            }),
+          ]}
+        />,
+      );
+
+      const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
+      const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
+      expect(activityDots(reasoningTrigger)).toHaveLength(1);
+      expect(activityDots(toolTrigger)).toHaveLength(1);
+      expect(reasoningTrigger.textContent).toContain("30");
+      expect(toolTrigger.textContent).toContain("30");
+    });
+
+    it("shows a frozen elapsed time after a dot when a row is done", () => {
+      render(
+        <AIToolActivity
+          calls={[
+            {
+              kind: "reasoning",
+              id: "r1",
+              text: "Quiet plan.",
+              status: "done",
+              startedAt,
+              elapsedSeconds: 4,
+            },
+            call({
+              id: "c1",
+              name: "list_decks",
+              status: "success",
+              output: { decks: [] },
+              startedAt,
+              elapsedSeconds: 5,
+            }),
+          ]}
+        />,
+      );
+
+      const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ });
+      const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
+      expect(activityDots(reasoningTrigger)).toHaveLength(1);
+      expect(activityDots(toolTrigger)).toHaveLength(2);
+      expect(reasoningTrigger.textContent).toMatch(/4/);
+      expect(toolTrigger.textContent).toMatch(/5/);
+    });
+
+    it("hides the timer and separator when timestamps are missing", () => {
+      render(
+        <AIToolActivity
+          calls={[
+            { kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" },
+            call({ id: "c1", name: "search_cards", status: "success", input: { q: "hola" } }),
+          ]}
+        />,
+      );
+
+      const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ });
+      const toolTrigger = screen.getByRole("button", { name: /search_cards/ });
+      expect(activityDots(reasoningTrigger)).toHaveLength(0);
+      expect(activityDots(toolTrigger)).toHaveLength(0);
+    });
+
+    it("hides a frozen elapsed time under one second", () => {
+      render(
+        <AIToolActivity
+          calls={[
+            {
+              kind: "reasoning",
+              id: "r1",
+              text: "Quiet plan.",
+              status: "done",
+              startedAt,
+              elapsedSeconds: 0,
+            },
+            call({
+              id: "c1",
+              name: "list_decks",
+              status: "success",
+              output: { decks: [] },
+              startedAt,
+              elapsedSeconds: 0,
+            }),
+          ]}
+        />,
+      );
+
+      const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thought/ });
+      const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
+      expect(activityDots(reasoningTrigger)).toHaveLength(0);
+      expect(activityDots(toolTrigger)).toHaveLength(1);
+      expect(screen.queryByText("ai.chat.elapsed-time.periods.seconds")).toBeNull();
+    });
+
+    it("waits until one second has elapsed before showing a live timer", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(startedAt);
+
+      render(
+        <AIToolActivity
+          calls={[
+            {
+              kind: "reasoning",
+              id: "r1",
+              text: "Quiet plan.",
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            },
+            call({
+              id: "c1",
+              name: "search_cards",
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            }),
+          ]}
+        />,
+      );
+
+      const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
+      const toolTrigger = screen.getByRole("button", { name: /search_cards/ });
+      expect(activityDots(reasoningTrigger)).toHaveLength(0);
+      expect(activityDots(toolTrigger)).toHaveLength(0);
+      expect(screen.queryByText("ai.chat.elapsed-time.periods.seconds")).toBeNull();
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      expect(activityDots(reasoningTrigger)).toHaveLength(1);
+      expect(activityDots(toolTrigger)).toHaveLength(1);
+      expect(screen.getAllByText("ai.chat.elapsed-time.periods.seconds")).toHaveLength(2);
+    });
   });
 
   it("frames the disclosed tool payload and leaves the row and reasoning unframed", () => {
