@@ -185,6 +185,7 @@ While the model is thinking, the row is labeled Thinking and the reasoning text 
 When thinking finishes, the row is labeled Thought and the text is collapsed.
 A user toggle is kept if they already opened or closed it.
 The user can expand or collapse the row.
+A chevron after the label points right when collapsed and rotates down when expanded.
 Consecutive reasoning stays on one row.
 A new row starts after a tool call.
 Empty reasoning is not shown.

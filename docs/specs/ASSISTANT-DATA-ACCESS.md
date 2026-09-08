@@ -91,6 +91,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - Expanding a row shows the protocol id, the input, and the output or error.
 - Tool rows start collapsed, including while a call is running.
 - The user can expand or collapse the row.
+- A chevron after the label points right when collapsed and rotates down when expanded.
 - Long payloads scroll inside the expanded region so they do not stretch the message.
 - The disclosed payload sits in a bordered container; the row and reasoning do not.
 

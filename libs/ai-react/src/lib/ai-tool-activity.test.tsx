@@ -18,6 +18,11 @@ function call(
   };
 }
 
+function foldChevron(trigger: HTMLElement) {
+  const svgs = [...trigger.querySelectorAll("svg")];
+  return svgs.find((svg) => [...svg.classList].some((name) => name.includes("rotate-90"))) ?? null;
+}
+
 describe("AIToolActivity", () => {
   it("renders a list_decks success row from the decks array length", () => {
     render(
@@ -141,6 +146,22 @@ describe("AIToolActivity", () => {
     fireEvent.click(trigger);
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText("ai.chat.tool-activity.input")).toBeNull();
+  });
+
+  it("puts a fold chevron after the label", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          { kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" },
+          call({ id: "c1", name: "list_decks", status: "success", output: { decks: [] } }),
+        ]}
+      />,
+    );
+
+    const reasoningTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.thinking/ });
+    const toolTrigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.list-decks/ });
+    expect(foldChevron(reasoningTrigger)).not.toBeNull();
+    expect(foldChevron(toolTrigger)).not.toBeNull();
   });
 
   it("frames the disclosed tool payload and leaves the row and reasoning unframed", () => {

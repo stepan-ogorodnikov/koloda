@@ -1,4 +1,10 @@
-import { AiBrain01Icon, AlertCircleIcon, WrenchIcon, InvestigationIcon } from "@hugeicons/core-free-icons";
+import {
+  AiBrain01Icon,
+  AlertCircleIcon,
+  ChevronRightIcon,
+  InvestigationIcon,
+  WrenchIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import { Button, CardsIcon } from "@koloda/ui";
@@ -116,6 +122,7 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
             aria-label={item.status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
           />
           <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
+          <FoldChevron />
         </span>
       </Button>
       {isOpen && item.text ? (
@@ -161,6 +168,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
             <span className="font-medium">{displayName}</span>
             <span>{summary}</span>
           </div>
+          <FoldChevron />
         </span>
       </Button>
       {isOpen ? (
@@ -179,6 +187,17 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         </div>
       ) : null}
     </li>
+  );
+}
+
+function FoldChevron() {
+  return (
+    <HugeiconsIcon
+      className="size-5 min-w-5 group-aria-expanded/tool:rotate-90 transition-transform duration-250 ease-in-out"
+      strokeWidth={2}
+      icon={ChevronRightIcon}
+      aria-hidden="true"
+    />
   );
 }
 
