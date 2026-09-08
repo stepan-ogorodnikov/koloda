@@ -1,5 +1,13 @@
 import { AppError, throwKnownError } from "@koloda/app";
-import type { Deck, LessonAmounts, LessonDeck, LessonFilters, LessonResultData, LessonsResult } from "@koloda/srs";
+import type {
+  Deck,
+  LessonAmounts,
+  LessonData,
+  LessonDeck,
+  LessonFilters,
+  LessonResultData,
+  LessonsResult,
+} from "@koloda/srs";
 import {
   cardRowSchema,
   convertTemplateToLessonTemplate,
@@ -131,9 +139,17 @@ export async function getLessonTemplates(db: DB, deckIds: Deck["id"][]) {
   });
 }
 
-export async function getLessonData(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
+export async function getLessonData(
+  db: DB,
+  dueAt: Date,
+  filters: LessonFilters,
+  amounts: LessonAmounts,
+): Promise<LessonData | null> {
   const lessonCards = await getLessonCards(db, dueAt, filters, amounts);
-  if (!lessonCards) return null;
+  // INVARIANT: empty match is `null`, not `{ cards: [], ... }`. Twin of Rust `get_lesson_data`
+  // returning `None`. Spec: studying must not begin. `useLessonSession` treats only nullish
+  // data as not ready — an empty object is truthy and would start studying with no current card.
+  if (lessonCards.length === 0) return null;
 
   const deckIdsSet = new Set<number>();
   for (const { deckId } of lessonCards) deckIdsSet.add(deckId);

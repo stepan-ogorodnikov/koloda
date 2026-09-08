@@ -81,6 +81,8 @@ pub struct LessonTemplate {
     pub updated_at: Option<i64>,
 }
 
+// INVARIANT: loaders return `None` when no cards match — never an empty struct.
+// Twin of PGlite `null`; NAPI/IPC is `Option` / `LessonData | null`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonData {

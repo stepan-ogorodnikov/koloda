@@ -70,6 +70,7 @@ export type GetLessonDataParams = {
   amounts: LessonAmounts;
 };
 
+// INVARIANT: loaders return `LessonData | null` when no cards match — never an empty payload.
 export type LessonData = {
   cards: Card[];
   decks: Deck[];

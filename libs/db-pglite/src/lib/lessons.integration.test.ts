@@ -168,6 +168,26 @@ describe("lessons repository integration", () => {
     );
   });
 
+  it("returns null when no cards match requested amounts", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 0,
+    });
+
+    const lessonData = await getLessonData(
+      db,
+      new Date("2026-01-10T12:00:00.000Z"),
+      { deckIds: [deck.id] },
+      { untouched: 0, learn: 0, review: 0, total: 0 },
+    );
+
+    expect(lessonData).toBeNull();
+  });
+
   it("stores the updated card and review when a lesson result is submitted", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
