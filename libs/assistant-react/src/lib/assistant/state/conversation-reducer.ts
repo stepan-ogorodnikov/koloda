@@ -313,6 +313,8 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.usage = undefined;
     run.error = undefined;
     draft.activeRunId = runId;
+    // WHY: retry reuses the run id; a later fail must count as a new failure.
+    if (draft.dismissedRunErrorId === runId) draft.dismissedRunErrorId = null;
     logAssistantStructured({
       conversationId: draft.id,
       runId,
@@ -678,6 +680,7 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
   draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
   applyRetryAssistantKind(draft, payload.runId);
   draft.activeRunId = payload.runId;
+  if (draft.dismissedRunErrorId === payload.runId) draft.dismissedRunErrorId = null;
 }
 
 type SetUsagePayload = { runId: string; usage: StreamUsage };

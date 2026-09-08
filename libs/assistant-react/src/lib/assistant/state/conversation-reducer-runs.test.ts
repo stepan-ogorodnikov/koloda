@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DataAccessSnapshot } from "../runs/data-access";
-import { conversationReducer, initialConversationState } from "./conversation-reducer";
+import { conversationReducer, findLatestErroredRun, initialConversationState } from "./conversation-reducer";
 import type { ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
@@ -1091,6 +1091,59 @@ describe("conversationReducer", () => {
       ]);
 
       expect(state.runs["r1"].modelName).toBe("Claude");
+    });
+
+    it("clears dismissedRunErrorId on restart so a later fail shows the panel", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+      state = conversationReducer(state, ["dismissRunError", { runId: "r1" }]);
+      expect(findLatestErroredRun(state)).toBeNull();
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      expect(state.dismissedRunErrorId).toBeNull();
+
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+      expect(findLatestErroredRun(state)?.id).toBe("r1");
+    });
+
+    it("does not clear dismissedRunErrorId when restarting a different run", () => {
+      let state = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+        ["submitTurn", { runId: "r2", text: "hello", kind: "chat-text", assistantText: "" }],
+      ]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r2", error: { message: "boom" } }]);
+      state = conversationReducer(state, ["dismissRunError", { runId: "r1" }]);
+
+      state = conversationReducer(state, ["restartRun", { runId: "r2", templateFields: null }]);
+
+      expect(state.dismissedRunErrorId).toBe("r1");
+    });
+
+    it("clears dismissedRunErrorId when recreating a missing run", () => {
+      const state = conversationReducer(
+        {
+          ...initialConversationState,
+          dismissedRunErrorId: "r1",
+          messages: [
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "Hi" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "error", runId: "r1" },
+            },
+          ],
+        },
+        ["restartRun", { runId: "r1", templateFields: null }],
+      );
+
+      expect(state.dismissedRunErrorId).toBeNull();
     });
 
     it("keeps the stored data access snapshot when the restart carries none", () => {
