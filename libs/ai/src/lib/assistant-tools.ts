@@ -313,16 +313,15 @@ function shapeProposedCardFields(
 ): Record<string, string> | null {
   const mapped: Record<string, string> = {};
   let hasNonEmpty = false;
-  let isMissingRequired = false;
   for (const field of fields) {
     // WHY: models often send lowercase titles or field ids instead of the exact
     // titles from list_decks; exact match still wins so colliding titles stay stable.
     const text = lookupProposedFieldText(inputFields, field);
     mapped[field.title] = text;
     if (text.length > 0) hasNonEmpty = true;
-    else if (field.isRequired) isMissingRequired = true;
   }
-  if (!hasNonEmpty || isMissingRequired) return null;
+  // WHY: required fields are save-time; proposal keeps any card with at least one value.
+  if (!hasNonEmpty) return null;
   return mapped;
 }
 

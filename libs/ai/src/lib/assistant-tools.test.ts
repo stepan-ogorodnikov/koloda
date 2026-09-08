@@ -378,14 +378,17 @@ describe("propose_cards output shaping", () => {
     expect(output.rejectedCount).toBe(2);
   });
 
-  it("drops cards missing required fields", () => {
+  it("keeps cards that have any value even if a required field is blank", () => {
     const output = shapeProposeCardsOutput(deck, [
       { fields: { Front: "hola", Hint: "greeting" } },
       { fields: { Front: "gato", Back: "cat" } },
     ]);
 
-    expect(output.cards).toEqual([{ fields: { Front: "gato", Back: "cat", Hint: "" } }]);
-    expect(output.rejectedCount).toBe(1);
+    expect(output.cards).toEqual([
+      { fields: { Front: "hola", Back: "", Hint: "greeting" } },
+      { fields: { Front: "gato", Back: "cat", Hint: "" } },
+    ]);
+    expect(output.rejectedCount).toBe(0);
     expect(output.message).toBeUndefined();
   });
 
@@ -399,11 +402,19 @@ describe("propose_cards output shaping", () => {
   });
 
   it("tells the model to retry when every card is rejected", () => {
-    const output = shapeProposeCardsOutput(deck, [{ fields: { Hint: "only optional" } }]);
+    const output = shapeProposeCardsOutput(deck, [{ fields: {} }, { fields: { Front: "  ", Back: "", Hint: "   " } }]);
 
     expect(output.cards).toEqual([]);
-    expect(output.rejectedCount).toBe(1);
+    expect(output.rejectedCount).toBe(2);
     expect(output.message).toBe(PROPOSE_CARDS_RETRY_MESSAGE);
+  });
+
+  it("keeps a card with only an optional field value", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Hint: "only optional" } }]);
+
+    expect(output.cards).toEqual([{ fields: { Front: "", Back: "", Hint: "only optional" } }]);
+    expect(output.rejectedCount).toBe(0);
+    expect(output.message).toBeUndefined();
   });
 
   it("ignores unknown field titles", () => {

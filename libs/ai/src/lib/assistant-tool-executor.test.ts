@@ -75,8 +75,9 @@ describe("createAssistantToolExecutor", () => {
     expect(output.cards).toEqual([
       { fields: { Front: "hola", Back: "hello" } },
       { fields: { Front: "gato", Back: "1" } },
+      { fields: { Front: "x", Back: "" } },
     ]);
-    expect(output.rejectedCount).toBe(2);
+    expect(output.rejectedCount).toBe(1);
   });
 
   it("rejects unknown tool names", async () => {
