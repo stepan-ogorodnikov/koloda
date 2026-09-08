@@ -237,16 +237,7 @@ impl AIProfile {
     }
 
     pub fn validate_for_input(&self) -> Result<(), AppError> {
-        if self.id.is_empty() {
-            return Err(AppError::new(error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID, None));
-        }
-
-        if let Some(title) = &self.title {
-            // WHY: UTF-16 units, not bytes — same rule as `common::validate_title`.
-            if title.encode_utf16().count() > 128 {
-                return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
-            }
-        }
+        self.validate_id_and_title()?;
 
         if let Some(secrets) = &self.secrets {
             secrets.validate_for_input()?;
@@ -258,6 +249,18 @@ impl AIProfile {
     }
 
     pub fn validate_for_storage(&self) -> Result<(), AppError> {
+        self.validate_id_and_title()?;
+
+        if let Some(secrets) = &self.secrets {
+            secrets.validate_for_storage()?;
+        }
+
+        Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
+
+        Ok(())
+    }
+
+    fn validate_id_and_title(&self) -> Result<(), AppError> {
         if self.id.is_empty() {
             return Err(AppError::new(error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID, None));
         }
@@ -268,12 +271,6 @@ impl AIProfile {
                 return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
             }
         }
-
-        if let Some(secrets) = &self.secrets {
-            secrets.validate_for_storage()?;
-        }
-
-        Self::validate_whitelist_model_ids(self.whitelist_model_ids.as_deref())?;
 
         Ok(())
     }

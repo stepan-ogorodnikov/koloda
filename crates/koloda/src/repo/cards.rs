@@ -117,41 +117,7 @@ pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
             )
         })?;
 
-        data.validate(&template.content.fields)?;
-
-        let now = get_current_timestamp()?;
-
-        let id = db.with_conn(|conn| {
-            conn.execute(
-                r#"
-                INSERT INTO cards (deck_id, template_id, content, state, due_at, stability,
-                                  difficulty, scheduled_days, learning_steps, reps, lapses,
-                                  last_reviewed_at, created_at, updated_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, NULL)
-                "#,
-                params![
-                    data.deck_id,
-                    data.template_id,
-                    serde_json::to_string(&data.content)?,
-                    data.state.unwrap_or(0),
-                    data.due_at,
-                    // WHY: NULL here desyncs desktop IPC from web `z.number()`;
-                    // omitted InsertCardData must persist 0, not SQL NULL.
-                    data.stability.unwrap_or(0.0),
-                    data.difficulty.unwrap_or(0.0),
-                    data.scheduled_days.unwrap_or(0),
-                    data.learning_steps.unwrap_or(0),
-                    data.reps.unwrap_or(0),
-                    data.lapses.unwrap_or(0),
-                    data.last_reviewed_at,
-                    now
-                ],
-            )?;
-
-            Ok(conn.last_insert_rowid())
-        })?;
-
-        get_card(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+        insert_card_data(db, &data, &template)
     })
 }
 

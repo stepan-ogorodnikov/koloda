@@ -34,6 +34,12 @@ fn test_required_and_optional_deserialize_epoch_ms() {
 }
 
 #[test]
+fn test_required_truncates_fractional_epoch_ms_toward_zero() {
+    let required: RequiredTs = serde_json::from_value(json!({ "ts": 1_700_000_000_000.9 })).unwrap();
+    assert_eq!(required.ts, 1_700_000_000_000);
+}
+
+#[test]
 fn test_required_and_optional_round_trip_rfc3339() {
     let serialized = serde_json::to_value(RequiredTs { ts: MS }).unwrap();
     let rfc3339 = serialized["ts"]

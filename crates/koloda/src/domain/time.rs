@@ -6,11 +6,16 @@
 
 use serde::{de::Visitor, Deserializer, Serializer};
 
-pub fn default_now() -> i64 {
+pub(crate) fn now_millis() -> Result<i64, std::time::SystemTimeError> {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|duration| duration.as_millis() as i64)
-        .unwrap_or_default()
+}
+
+pub fn default_now() -> i64 {
+    // WHY: serde `default =` cannot return `Result`; a pre-1970 clock becomes `0`
+    // rather than failing deserialize of omitted `createdAt`.
+    now_millis().unwrap_or_default()
 }
 
 pub fn serialize_optional_timestamp<S>(timestamp: &Option<i64>, serializer: S) -> Result<S::Ok, S::Error>
@@ -72,6 +77,8 @@ where
         }
 
         fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E> {
+            // WHY: serde_json delivers fractional JSON numbers as `f64`; truncating toward
+            // zero is the integer epoch; do not round.
             Ok(value as i64)
         }
 
@@ -108,6 +115,8 @@ where
         }
 
         fn visit_f64<E>(self, value: f64) -> Result<Self::Value, E> {
+            // WHY: serde_json delivers fractional JSON numbers as `f64`; truncating toward
+            // zero is the integer epoch; do not round.
             Ok(Some(value as i64))
         }
 

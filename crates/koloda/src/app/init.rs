@@ -44,10 +44,6 @@ pub fn get_db_status(db: &Database) -> Result<DbStatus, AppError> {
 }
 
 pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
-    seed_db_impl(db, data)
-}
-
-fn seed_db_impl(db: &Database, data: SeedData) -> Result<(), AppError> {
     data.algorithm.validate()?;
     data.template.validate()?;
 
