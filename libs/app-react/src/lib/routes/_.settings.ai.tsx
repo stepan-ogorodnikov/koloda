@@ -10,9 +10,9 @@ import { SettingsAi } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/ai")({
   component: SettingsAiRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData(getAIProfilesQuery());
+    await queryClient.ensureQueryData(getAIProfilesQuery());
     return { title: msg`title.settings.ai` };
   },
 });

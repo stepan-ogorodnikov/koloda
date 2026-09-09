@@ -11,9 +11,9 @@ import { SettingsLearning } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/learning")({
   component: SettingsLearningRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData(getSettingsQuery("learning"));
+    await queryClient.ensureQueryData(getSettingsQuery("learning"));
     return { title: msg`title.settings.learning` };
   },
 });

@@ -11,9 +11,9 @@ import { SettingsHotkeys } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/hotkeys")({
   component: SettingsHotkeysRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData(getSettingsQuery("hotkeys"));
+    await queryClient.ensureQueryData(getSettingsQuery("hotkeys"));
     return { title: msg`title.settings.hotkeys` };
   },
 });

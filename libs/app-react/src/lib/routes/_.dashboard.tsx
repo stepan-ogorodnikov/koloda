@@ -6,9 +6,12 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_/dashboard")({
   component: DashboardRoute,
-  loader: ({ context: { queryClient, queries } }) => {
-    const { getLessonsQuery } = queries;
-    queryClient.ensureQueryData(getLessonsQuery());
+  loader: async ({ context: { queryClient, queries } }) => {
+    const { getLessonsQuery, getTodayReviewTotalsQuery } = queries;
+    await Promise.all([
+      queryClient.ensureQueryData(getLessonsQuery()),
+      queryClient.ensureQueryData(getTodayReviewTotalsQuery()),
+    ]);
     return { title: msg`title.dashboard` };
   },
 });

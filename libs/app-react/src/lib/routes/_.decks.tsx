@@ -10,9 +10,9 @@ import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/decks")({
   component: DecksRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getDecksQuery } = queries;
-    queryClient.ensureQueryData(getDecksQuery());
+    await queryClient.ensureQueryData(getDecksQuery());
     return { title: msg`title.decks` };
   },
 });

@@ -22,10 +22,12 @@ export const Route = createFileRoute("/_/ai")({
   validateSearch: (search: Record<string, unknown>) => ({
     conversationId: typeof search.conversationId === "string" ? search.conversationId : undefined,
   }),
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getAIProfilesQuery, getConversationsQuery } = queries;
-    queryClient.ensureQueryData(getAIProfilesQuery());
-    queryClient.ensureQueryData(getConversationsQuery());
+    await Promise.all([
+      queryClient.ensureQueryData(getAIProfilesQuery()),
+      queryClient.ensureQueryData(getConversationsQuery()),
+    ]);
     return { title: msg`title.ai` };
   },
 });

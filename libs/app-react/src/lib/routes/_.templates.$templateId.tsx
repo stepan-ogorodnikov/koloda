@@ -9,9 +9,9 @@ import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/templates/$templateId")({
   component: TemplateRoute,
-  loader: ({ context: { queryClient, queries }, params: { templateId } }) => {
+  loader: async ({ context: { queryClient, queries }, params: { templateId } }) => {
     const { getTemplateQuery } = queries;
-    queryClient.ensureQueryData(getTemplateQuery(templateId));
+    await queryClient.ensureQueryData(getTemplateQuery(templateId));
   },
 });
 

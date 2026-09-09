@@ -12,11 +12,13 @@ import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/decks/$deckId")({
   component: DeckRoute,
-  loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
+  loader: async ({ context: { queryClient, queries }, params: { deckId } }) => {
     const { getDeckQuery, getCardsQuery, getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData(getDeckQuery(deckId));
-    queryClient.ensureQueryData(getCardsQuery({ deckId }));
-    queryClient.ensureQueryData(getAIProfilesQuery());
+    await Promise.all([
+      queryClient.ensureQueryData(getDeckQuery(deckId)),
+      queryClient.ensureQueryData(getCardsQuery({ deckId })),
+      queryClient.ensureQueryData(getAIProfilesQuery()),
+    ]);
   },
 });
 

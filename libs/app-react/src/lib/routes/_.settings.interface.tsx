@@ -7,9 +7,9 @@ import { SettingsInterface } from "@koloda/settings-react";
 
 export const Route = createFileRoute("/_/settings/interface")({
   component: SettingsInterfaceRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getSettingsQuery } = queries;
-    queryClient.ensureQueryData(getSettingsQuery("interface"));
+    await queryClient.ensureQueryData(getSettingsQuery("interface"));
     return { title: msg`title.settings.interface` };
   },
 });

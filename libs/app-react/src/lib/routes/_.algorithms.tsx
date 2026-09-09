@@ -10,9 +10,9 @@ import { useAtomValue } from "jotai";
 
 export const Route = createFileRoute("/_/algorithms")({
   component: AlgorithmsRoute,
-  loader: ({ context: { queryClient, queries } }) => {
+  loader: async ({ context: { queryClient, queries } }) => {
     const { getAlgorithmsQuery } = queries;
-    queryClient.ensureQueryData(getAlgorithmsQuery());
+    await queryClient.ensureQueryData(getAlgorithmsQuery());
     return { title: msg`title.algorithms` };
   },
 });
