@@ -3,16 +3,18 @@
 SQLite persistence for the web host: `wa-sqlite` with `IDBBatchAtomicVFS`.
 IndexedDB database name is `koloda`.
 Every connection sets `PRAGMA foreign_keys = ON`.
+Product SQL is `crates/koloda/src/migrations/V1`–`V5`.
 
 ## Where it sits
 
-Not yet wired to `apps/web` (`@koloda/db-pglite` still is).
-Desktop apps do not use this package; they call `koloda` via NAPI.
+Wired to `apps/web`. Desktop apps do not use this package; they call `koloda` via NAPI.
 
 ## Architectural Map
 
-- DB handle: `db.ts` — open/close, exec, parameterized query, IndexedDB `koloda`.
-- Tests: persist/reload through `fake-indexeddb`.
+- DB handle: `db.ts` — open/close, exec, parameterized query, transactions, IndexedDB `koloda`.
+- Migrations: `migrate.ts` — apply Refinery SQL; `__migrations` bookkeeping.
+- Repos: `algorithms.ts`, `templates.ts`, `decks.ts`, `cards.ts`, `reviews.ts`, `lessons.ts`, `settings.ts`, `conversations.ts`.
+- Row mapping: `parse-rows.ts` — unix-ms ↔ `Date`, JSON text ↔ objects, `0/1` ↔ boolean, `reviews.id` ↔ `bigint`.
 
 ### Does NOT own (prevent scope creep)
 

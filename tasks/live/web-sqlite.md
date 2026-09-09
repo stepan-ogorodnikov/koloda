@@ -70,7 +70,7 @@ Out:
   Commit: Add db-sqlite lib
   Depends on: none
 
-- [ ] 2. Port web app onto existing SQLite schema
+- [x] 2. Port web app onto existing SQLite schema
   Goal: Apply `crates/koloda/src/migrations/*.sql` in `V` order (read the files; do not copy PG drizzle SQL).
   Record applied names in a small SQLite bookkeeping table (not PG identity).
   Port every repo and integration test from `libs/db-pglite` (`algorithms`, `templates`, `decks`, `cards`, `reviews`,

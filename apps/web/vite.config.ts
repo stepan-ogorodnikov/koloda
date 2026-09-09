@@ -17,6 +17,9 @@ export default defineConfig(() => ({
   server: {
     port: 3000,
     host: "localhost",
+    fs: {
+      allow: [resolve(__dirname, "../..")],
+    },
   },
   preview: {
     port: 3000,
@@ -45,6 +48,6 @@ export default defineConfig(() => ({
     reportCompressedSize: true,
   },
   optimizeDeps: {
-    exclude: ["@electric-sql/pglite", "@koloda/srs"],
+    exclude: ["@electric-sql/pglite", "@koloda/srs", "wa-sqlite"],
   },
 }));

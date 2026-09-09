@@ -36,6 +36,7 @@ export const FEATURE_PEERS: Record<string, readonly string[]> = {
 /** These packages may be imported only by the listed consumers. */
 export const EXCLUSIVE_CONSUMERS: Record<string, readonly string[]> = {
   "@koloda/db-pglite": ["@koloda/web"],
+  "@koloda/db-sqlite": ["@koloda/web"],
   "@koloda/native-ipc": ["@koloda/electron", "@koloda/electron-react"],
   "@koloda/e2e": ["@koloda/web-e2e", "@koloda/electron-e2e"],
 };

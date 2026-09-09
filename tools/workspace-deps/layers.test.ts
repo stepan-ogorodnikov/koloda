@@ -65,6 +65,7 @@ describe("forbiddenImportReason", () => {
     expect(forbiddenImportReason("@koloda/settings-react", "@koloda/srs-react", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/app-react", "@koloda/settings-react", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/web", "@koloda/db-pglite", layers)).toBeNull();
+    expect(forbiddenImportReason("@koloda/web", "@koloda/db-sqlite", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/electron", "@koloda/native-ipc", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/web-e2e", "@koloda/e2e", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/web", "@koloda/app-react", layers)).toBeNull();
@@ -97,6 +98,12 @@ describe("forbiddenImportReason", () => {
     );
     expect(forbiddenImportReason("@koloda/app-react", "@koloda/db-pglite", layers)).toBe(
       "@koloda/db-pglite is exclusive to @koloda/web",
+    );
+    expect(forbiddenImportReason("@koloda/srs-react", "@koloda/db-sqlite", layers)).toBe(
+      "@koloda/db-sqlite is exclusive to @koloda/web",
+    );
+    expect(forbiddenImportReason("@koloda/app-react", "@koloda/db-sqlite", layers)).toBe(
+      "@koloda/db-sqlite is exclusive to @koloda/web",
     );
     expect(forbiddenImportReason("@koloda/web", "@koloda/native-ipc", layers)).toBe(
       "@koloda/native-ipc is exclusive to @koloda/electron, @koloda/electron-react",

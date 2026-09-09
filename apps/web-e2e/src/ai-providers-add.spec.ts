@@ -42,8 +42,11 @@ test("validates required fields and adds profiles for all providers", async ({ p
     await requiredInput.fill(requiredField.value);
     await submitAddAIDialog(page);
 
-    await expect(page.getByText(title)).toBeVisible();
-    await expect(page.getByText(name, { exact: true })).toBeVisible();
+    const profileTitle = page.getByText(title, { exact: true });
+    await expect(profileTitle).toBeVisible();
+    // Provider label sits next to the title; page-wide getByText(name) also hits
+    // the provider picker / native <option>s (strict-mode violation).
+    await expect(profileTitle.locator("..").getByText(name, { exact: true })).toBeVisible();
 
     // Re-open the dialog for the next iteration and wait for the form to be ready.
     if (index < providerCases.length - 1) {

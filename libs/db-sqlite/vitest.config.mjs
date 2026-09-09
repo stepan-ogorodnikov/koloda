@@ -12,6 +12,12 @@ export default defineConfig({
       "@lingui/core/macro": resolve(__dirname, "../../tools/test/mocks/lingui-core-macro.ts"),
     },
   },
+  assetsInclude: ["**/*.sql"],
+  server: {
+    fs: {
+      allow: [resolve(__dirname, "../..")],
+    },
+  },
   optimizeDeps: {
     exclude: ["wa-sqlite"],
   },

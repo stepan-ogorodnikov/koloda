@@ -1,8 +1,8 @@
 import type { AddAIProfileData, AIProfile, AISecrets, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
 import { aiSettingsValidation, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import type { DB } from "@koloda/db-pglite";
-import { getSettings, setSettings } from "@koloda/db-pglite";
+import type { DB } from "@koloda/db-sqlite";
+import { getSettings, setSettings } from "@koloda/db-sqlite";
 import { produce } from "immer";
 
 function profileHasSecrets(secrets?: AISecrets): boolean {
@@ -44,7 +44,7 @@ function toPublicProfile(profile: {
   };
 }
 
-// INVARIANT: Host-local only. Loads usable secrets from PGlite for web AIRuntime.
+// INVARIANT: Host-local only. Loads usable secrets from SQLite for web AIRuntime.
 // Never call from React Query / shared UI.
 export async function loadAIProfileSecrets(db: DB, profileId: string): Promise<AISecrets | null> {
   const aiSettings = await getSettings<"ai">(db, "ai");

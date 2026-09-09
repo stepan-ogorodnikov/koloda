@@ -1,11 +1,11 @@
 import type { AIRuntime, AISecrets } from "@koloda/ai";
 import { createAIGenerationClient, createAssistantToolExecutor, fetchModels } from "@koloda/ai";
 import { AppError } from "@koloda/app";
-import type { DB } from "@koloda/db-pglite";
-import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-pglite";
+import type { DB } from "@koloda/db-sqlite";
+import { getCardCounts, getCards, getDecks, getTemplates } from "@koloda/db-sqlite";
 import { loadAIProfileSecrets } from "./ai";
 
-// INVARIANT: Web host executor — closes over the PGlite db via the same in-process
+// INVARIANT: Web host executor — closes over the SQLite db via the same in-process
 // query implementations queries.ts uses; shaping and budgets live in @koloda/ai.
 function createWebToolExecutor(db: DB) {
   return createAssistantToolExecutor({
@@ -20,7 +20,7 @@ function createWebToolExecutor(db: DB) {
 // time inside this module — never expose them to shared React / React Query.
 export function createWebAIRuntime(db: DB): AIRuntime {
   const webToolExecutor = createWebToolExecutor(db);
-  // WHY: every PGlite statement persists through IDBFS, so a storage write
+  // WHY: every SQLite statement persists through IndexedDB, so a storage write
   // failure (real quota exhaustion, e2e write-failure sim) fails the secrets
   // read too. Chat must survive that — keep the last successfully loaded
   // secrets per profile as a host-side fallback so an in-flight run is not

@@ -9,7 +9,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "ignoreDeprecations": "6.0"
   },
   "exclude": [
@@ -27,5 +27,16 @@
     "src/**/test-setup.ts",
     "src/test/**"
   ],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../app/tsconfig.lib.json"
+    },
+    {
+      "path": "../settings/tsconfig.lib.json"
+    },
+    {
+      "path": "../srs/tsconfig.lib.json"
+    }
+  ]
 }

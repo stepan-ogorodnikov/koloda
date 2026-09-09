@@ -35,11 +35,11 @@ function rowDeleteTrigger(row: Locator): Locator {
 }
 
 /**
- * Environment-level IndexedDB write-failure simulation. PGlite (`idb://`)
- * persists every statement through Emscripten IDBFS, whose only durable write
- * is `IDBObjectStore.put`, so a synchronous throw from `put` rejects the
- * statement's persist and the app sees a real failed save/delete. No app code
- * is mocked; the wrapper passes through while disarmed.
+ * Environment-level IndexedDB write-failure simulation. wa-sqlite
+ * (`IDBBatchAtomicVFS`) persists pages through `IDBObjectStore.put`, so a
+ * synchronous throw from `put` rejects the statement's persist and the app
+ * sees a real failed save/delete. No app code is mocked; the wrapper passes
+ * through while disarmed.
  */
 async function installIdbWriteFailureSim(page: Page): Promise<void> {
   await page.addInitScript(() => {

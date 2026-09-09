@@ -30,7 +30,7 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import type { DB } from "@koloda/db-pglite";
+import type { DB } from "@koloda/db-sqlite";
 import {
   addAlgorithm,
   addCard,
@@ -70,7 +70,7 @@ import {
   updateCard,
   updateDeck,
   updateTemplate,
-} from "@koloda/db-pglite";
+} from "@koloda/db-sqlite";
 import { addAIProfile, getAIProfiles, removeAIProfile, updateAIProfile } from "./ai";
 import { getStatus, setupFromScratch } from "./setup";
 

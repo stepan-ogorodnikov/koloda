@@ -64,7 +64,7 @@
       "path": "../../libs/settings/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/db-pglite/tsconfig.lib.json"
+      "path": "../../libs/db-sqlite/tsconfig.lib.json"
     },
     {
       "path": "../../libs/ai/tsconfig.lib.json"
