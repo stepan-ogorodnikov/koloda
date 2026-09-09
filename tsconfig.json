@@ -25,6 +25,9 @@
       "path": "./libs/db-pglite"
     },
     {
+      "path": "./libs/db-sqlite"
+    },
+    {
       "path": "./libs/core-react"
     },
     {

@@ -35,6 +35,7 @@
       "exclude": [
         "libs/srs/*",
         "libs/db-pglite/*",
+        "libs/db-sqlite/*",
         "libs/ai/*"
       ]
     },
@@ -56,6 +57,7 @@
       "include": [
         "libs/srs/*",
         "libs/db-pglite/*",
+        "libs/db-sqlite/*",
         "libs/ai/*"
       ],
       "options": {

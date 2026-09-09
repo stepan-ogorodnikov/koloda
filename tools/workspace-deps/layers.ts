@@ -15,6 +15,7 @@ export const PACKAGE_LAYERS: Record<string, Exclude<Layer, "app">> = {
   "@koloda/settings": "domain",
   "@koloda/assistant": "domain",
   "@koloda/db-pglite": "persistence",
+  "@koloda/db-sqlite": "persistence",
   "@koloda/native-ipc": "ipc",
   "@koloda/core-react": "data",
   "@koloda/ui": "ui",
