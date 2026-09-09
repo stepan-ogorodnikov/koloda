@@ -152,7 +152,7 @@ export function serializeGeneratedCards(cards: GeneratedCard[], template: Templa
 
 export function makeHistoricalTemplate(fields: TemplateFields): Template {
   return {
-    id: 0,
+    id: "01900000-0000-7000-8000-000000000000",
     title: "",
     content: {
       fields,

@@ -9,6 +9,7 @@ import { initialConversationState } from "../state/conversation-reducer";
 import type { AssistantRun } from "../state/conversation-reducer";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
+import { testId } from "../../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({
@@ -54,8 +55,8 @@ vi.mock("./copy-message-button", () => ({
 vi.mock("./assistant-cards-message", () => ({
   AssistantCardsMessage: (props: {
     canAdd: boolean;
-    deckId: number | null;
-    templateId: number | undefined;
+    deckId: string | null;
+    templateId: string | undefined;
     isGenerating: boolean;
     showStatus?: boolean;
   }) => (
@@ -72,10 +73,10 @@ vi.mock("./assistant-cards-message", () => ({
   ),
 }));
 
-const sampleCard = { content: { "1": { text: "Q" }, "2": { text: "A" } } };
+const sampleCard = { content: { [testId(1)]: { text: "Q" }, [testId(2)]: { text: "A" } } };
 const sampleFields = [
-  { id: 1, title: "Front", type: "text" as const, isRequired: true },
-  { id: 2, title: "Back", type: "text" as const, isRequired: true },
+  { id: testId(1), title: "Front", type: "text" as const, isRequired: true },
+  { id: testId(2), title: "Back", type: "text" as const, isRequired: true },
 ];
 
 function mountRenderer(
@@ -83,8 +84,6 @@ function mountRenderer(
   options: {
     assistantText?: string;
     kind?: "chat-text";
-    deckId?: number | null;
-    templateId?: number;
     activeRunId?: string | null;
   } = {},
 ) {
@@ -96,7 +95,6 @@ function mountRenderer(
     [conversationId]: {
       ...initialConversationState,
       id: conversationId,
-      deckId: options.deckId === undefined ? null : options.deckId,
       activeRunId: options.activeRunId === undefined ? null : options.activeRunId,
       messages: [
         createTextMessage("user-r1", "user", "Hi", {
@@ -185,7 +183,7 @@ describe("useAssistantMessageRenderer", () => {
           name: "list_decks",
           input: {},
           status: "success" as const,
-          output: { decks: [{ deckId: 1 }] },
+          output: { decks: [{ deckId: testId(1) }] },
         },
       ],
     };
@@ -199,9 +197,9 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
-    mountRenderer({ r1: run }, { templateId: 9 });
+    mountRenderer({ r1: run });
     const table = screen.getByTestId("cards-table");
     const note = screen.getByText("Hello");
     expect(table.getAttribute("data-show-status")).toBe("false");
@@ -216,7 +214,7 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
       toolCalls: [
         {
           id: "call-1",
@@ -241,7 +239,7 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "streaming"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
     mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
     const table = screen.getByTestId("cards-table");
@@ -256,7 +254,7 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "streaming"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
     mountRenderer({ r1: run }, { activeRunId: "r1" });
     const table = screen.getByTestId("cards-table");
@@ -271,7 +269,7 @@ describe("useAssistantMessageRenderer", () => {
       cards: [sampleCard],
       templateFields: sampleFields,
     };
-    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    mountRenderer({ r1: run });
     const table = screen.getByTestId("cards-table");
     expect(table.getAttribute("data-can-add")).toBe("false");
     expect(table.getAttribute("data-deck-id")).toBe("null");
@@ -283,12 +281,12 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
-    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    mountRenderer({ r1: run });
     const table = screen.getByTestId("cards-table");
     expect(table.getAttribute("data-can-add")).toBe("false");
-    expect(table.getAttribute("data-deck-id")).toBe("5");
+    expect(table.getAttribute("data-deck-id")).toBe(testId(5));
     expect(table.getAttribute("data-template-id")).toBe("undefined");
   });
 
@@ -297,14 +295,14 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
-      writeTargetTemplateId: 3,
+      writeTargetDeckId: testId(5),
+      writeTargetTemplateId: testId(3),
     };
-    mountRenderer({ r1: run }, { deckId: 7, templateId: 9 });
+    mountRenderer({ r1: run });
     const table = screen.getByTestId("cards-table");
     expect(table.getAttribute("data-can-add")).toBe("true");
-    expect(table.getAttribute("data-deck-id")).toBe("5");
-    expect(table.getAttribute("data-template-id")).toBe("3");
+    expect(table.getAttribute("data-deck-id")).toBe(testId(5));
+    expect(table.getAttribute("data-template-id")).toBe(testId(3));
   });
 
   it("copies cards serialized before leftover text on a chat proposal", () => {
@@ -312,7 +310,7 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard, sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
     mountRenderer({ r1: run });
     expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe(
@@ -327,7 +325,7 @@ describe("useAssistantMessageRenderer", () => {
       ...makeRun("r1", "success"),
       cards: [sampleCard],
       templateFields: sampleFields,
-      writeTargetDeckId: 5,
+      writeTargetDeckId: testId(5),
     };
     mountRenderer({ r1: run }, { assistantText: "" });
     expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe(

@@ -24,7 +24,7 @@ export function AddDeck() {
   const [newId, setNewId] = useState<Deck["id"] | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
-    defaultValues: { title: "", algorithmId: 0, templateId: 0 } as InsertDeckData,
+    defaultValues: { title: "", algorithmId: "", templateId: "" } as InsertDeckData,
     validators: { onSubmit: schema },
     listeners: {
       onChange: () => {
@@ -96,10 +96,10 @@ export function AddDeck() {
                 )}
               </form.Field>
               <form.Field name="algorithmId">
-                {(field) => <AlgorithmPicker value={Number(field.state.value)} onChange={field.handleChange} />}
+                {(field) => <AlgorithmPicker value={field.state.value} onChange={field.handleChange} />}
               </form.Field>
               <form.Field name="templateId">
-                {(field) => <TemplatePicker value={Number(field.state.value)} onChange={field.handleChange} />}
+                {(field) => <TemplatePicker value={field.state.value} onChange={field.handleChange} />}
               </form.Field>
               <div className="min-h-10 mt-4">
                 {formErrorMap.onSubmit && <form.Errors errors={formErrorMap.onSubmit} />}

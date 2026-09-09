@@ -4,13 +4,13 @@
   "content": {
     "fields": [
       {
-        "id": 1,
+        "id": "01a08376-dc00-7007-8000-000000000700",
         "title": "Front",
         "type": "text",
         "isRequired": true
       },
       {
-        "id": 2,
+        "id": "01a08376-dc00-7008-8000-000000000800",
         "title": "Back",
         "type": "text",
         "isRequired": true
@@ -18,11 +18,11 @@
     ],
     "layout": [
       {
-        "field": 1,
+        "field": "01a08376-dc00-7007-8000-000000000700",
         "operation": "display"
       },
       {
-        "field": 2,
+        "field": "01a08376-dc00-7008-8000-000000000800",
         "operation": "reveal"
       }
     ]

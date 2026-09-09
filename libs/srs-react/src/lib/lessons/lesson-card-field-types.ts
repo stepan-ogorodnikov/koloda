@@ -6,7 +6,7 @@ import { LessonCardFieldText } from "./lesson-card-field-text";
 export type FieldComponentProps = {
   value: string;
   operation: TemplateOperation;
-  fieldId: number;
+  fieldId: string;
   fieldTitle: string;
   userValue: string;
   isSubmitted: boolean;

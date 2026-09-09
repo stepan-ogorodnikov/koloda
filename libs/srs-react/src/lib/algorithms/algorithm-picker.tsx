@@ -11,8 +11,8 @@ import { useEffect } from "react";
 
 type AlgorithmPickerProps = Omit<SelectProps<Algorithm>, "value" | "onChange" | "items" | "children"> & {
   isNullable?: boolean;
-  value: number | null;
-  onChange: (key: number) => void;
+  value: Algorithm["id"] | null;
+  onChange: (key: Algorithm["id"]) => void;
 };
 
 export function AlgorithmPicker({ label, isNullable, value, onChange, ...props }: AlgorithmPickerProps) {
@@ -32,7 +32,9 @@ export function AlgorithmPicker({ label, isNullable, value, onChange, ...props }
       label={label || _(msg`algorithm-picker.label`)}
       items={data}
       value={value || defaultAlgorithm}
-      onChange={(i) => onChange(Number(i))}
+      onChange={(key) => {
+        if (typeof key === "string") onChange(key);
+      }}
       {...props}
     >
       {({ id, title }) => (

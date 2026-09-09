@@ -12,6 +12,7 @@ import {
   createLessonsResult,
   createQueryClient,
   createTodaysReviewTotals,
+  testId,
 } from "../../test/test-helpers";
 import {
   initializeLessonAtom,
@@ -24,7 +25,7 @@ import { lessonUploadHeadAtom, lessonUploadLogAtom } from "./lesson-selectors";
 import { lessonStateAtom } from "./lesson-store";
 import { useLessonUploader } from "./lesson-uploader";
 
-const REQUEST = { type: "total" as const, deckId: 7 };
+const REQUEST = { type: "total" as const, deckId: testId(7) };
 
 function initializePayload() {
   return {
@@ -61,7 +62,7 @@ function enqueueTwoUploads(store: ReturnType<typeof createStore>) {
   store.set(
     receiveLessonDataAtom,
     createLessonData({
-      cards: [createCard({ id: 1 }), createCard({ id: 2 })],
+      cards: [createCard({ id: testId(1) }), createCard({ id: testId(2) })],
     }),
   );
   store.set(selectLessonGradeAtom, 2);
@@ -117,7 +118,7 @@ describe("useLessonUploader", () => {
       expect(store.get(lessonUploadHeadAtom)?.index).toBe(1);
       expect(submitted).toHaveLength(2);
     });
-    expect(submitted[1]?.review.cardId).toBe(2);
+    expect(submitted[1]?.review.cardId).toBe(testId(2));
 
     await act(async () => {
       pending[1]?.resolve();

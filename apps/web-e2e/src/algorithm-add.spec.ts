@@ -32,6 +32,8 @@ test("validates required title and adds an algorithm", async ({ page }) => {
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: "My Test Algorithm", exact: true })).toBeVisible();
 });

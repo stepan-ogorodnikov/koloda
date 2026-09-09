@@ -38,7 +38,9 @@ test("prevents deleting a default template", async ({ page }) => {
   // Navigate to the default template
   await openSection(page, "Templates");
   await page.getByRole("link", { name: "Default", exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify delete trigger is disabled
   const deleteTrigger = page.getByRole("button", { name: "Delete template", exact: true });
@@ -56,7 +58,9 @@ test("prevents deleting a template that is in use by a deck", async ({ page }) =
   // Navigate back to the template
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify delete trigger is disabled
   const deleteTrigger = page.getByRole("button", { name: "Delete template", exact: true });

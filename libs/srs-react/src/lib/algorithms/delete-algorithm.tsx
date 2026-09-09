@@ -41,12 +41,9 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
     );
   };
 
-  const filteredAlgorithms = useMemo(
-    () => algorithms?.filter((algorithm) => algorithm.id !== Number(id)),
-    [algorithms, id],
-  );
+  const filteredAlgorithms = useMemo(() => algorithms?.filter((algorithm) => algorithm.id !== id), [algorithms, id]);
 
-  const isDefault = defaultAlgorithm === Number(id);
+  const isDefault = defaultAlgorithm === id;
   const isDisabled = (algorithms && algorithms.length < 2) || isDefault;
 
   return (
@@ -78,7 +75,9 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
                     label={_(msg`delete-algorithm.successor.label`)}
                     items={filteredAlgorithms}
                     value={successorId || (filteredAlgorithms ? filteredAlgorithms[0]?.id : null)}
-                    onChange={(e) => setSuccessorId(Number(e))}
+                    onChange={(key) => {
+                      if (typeof key === "string") setSuccessorId(key);
+                    }}
                     autoFocus
                   >
                     {({ id, title }) => (

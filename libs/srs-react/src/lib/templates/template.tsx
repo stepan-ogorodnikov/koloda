@@ -29,7 +29,7 @@ export function Template({ id }: TemplateProps) {
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
       mutate(
-        { id: Number(id), values: schema.parse(value) },
+        { id, values: schema.parse(value) },
         {
           onSuccess: (returning) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });

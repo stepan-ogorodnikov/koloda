@@ -27,20 +27,24 @@ test("locks template when card is added and unlocks when card is deleted", async
   // Ensure template isn't locked
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByText("Not locked", { exact: true })).toBeVisible();
 
   // Add card
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await page.getByRole("tab", { name: "Cards" }).click();
   await addCard(page, cardFront, "answer");
 
   // Ensure template gets locked
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await page.reload();
   await expect(page.getByText("Locked", { exact: true })).toBeVisible();
 
@@ -57,7 +61,9 @@ test("locks template when card is added and unlocks when card is deleted", async
   // Ensure template gets unlocked again
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await page.reload();
   await expect(page.getByText("Not locked", { exact: true })).toBeVisible();
 });

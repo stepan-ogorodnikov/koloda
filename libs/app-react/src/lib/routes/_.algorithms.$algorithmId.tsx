@@ -10,9 +10,8 @@ import { useAtomValue } from "jotai";
 export const Route = createFileRoute("/_/algorithms/$algorithmId")({
   component: AlgorithmRoute,
   loader: ({ context: { queryClient, queries }, params: { algorithmId } }) => {
-    const id = Number(algorithmId);
     const { getAlgorithmQuery } = queries;
-    queryClient.ensureQueryData(getAlgorithmQuery(id));
+    queryClient.ensureQueryData(getAlgorithmQuery(algorithmId));
   },
 });
 
@@ -20,11 +19,11 @@ function AlgorithmRoute() {
   const { algorithmId } = Route.useParams();
   const ref = useRouteFocus(algorithmId);
   useLayoutHeaderScrollShadow(ref);
-  const id = Number(algorithmId);
+  const id = algorithmId;
   const { getAlgorithmQuery } = useAtomValue(queriesAtom);
   const query = useQuery(getAlgorithmQuery(id));
 
-  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
+  if (query.isSuccess && query.data === null) return <NotFound />;
 
   return (
     <>

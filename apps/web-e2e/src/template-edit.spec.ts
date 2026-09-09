@@ -51,7 +51,9 @@ test("edits template title, adds and removes fields, and verifies persistence", 
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: updatedTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify title persisted
   await expect(page.getByRole("textbox", { name: "Title", exact: true }).first()).toHaveValue(updatedTitle);

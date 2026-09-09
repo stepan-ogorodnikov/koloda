@@ -96,7 +96,7 @@ export async function createDeck(page: Page, title: string) {
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
 
@@ -135,7 +135,9 @@ export async function createAlgorithm(page: Page, title: string) {
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
 
@@ -185,7 +187,9 @@ export async function createTemplate(page: Page, title: string) {
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
 
@@ -210,7 +214,7 @@ export async function createDeckWithAlgorithm(page: Page, deckTitle: string, alg
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 }
 
@@ -235,7 +239,7 @@ export async function createDeckWithTemplate(page: Page, deckTitle: string, temp
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 }
 
@@ -525,9 +529,11 @@ export async function dispatchGracefulShutdown(page: Page) {
 
 export async function createDeckAndOpenAssistant(page: Page, deckTitle = "E2E Assistant Deck") {
   await createDeck(page, deckTitle);
-  const match = page.url().match(/\/decks\/(\d+)/);
+  const match = page
+    .url()
+    .match(/\/decks\/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/);
   if (!match?.[1]) throw new Error(`Could not parse deck id from ${page.url()}`);
-  const deckId = Number(match[1]);
+  const deckId = match[1];
   await openAssistantWithDeck(page);
   return deckId;
 }

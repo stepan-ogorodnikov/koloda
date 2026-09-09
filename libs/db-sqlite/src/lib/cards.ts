@@ -1,4 +1,4 @@
-import { AppError, isAppError, throwKnownError } from "@koloda/app";
+import { AppError, isAppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import { cardRowSchema, getInsertCardSchema, getUpdateCardSchema } from "@koloda/srs";
 import type {
   Card,
@@ -26,12 +26,12 @@ export async function getCards(db: DB, { deckId }: GetCardsParams) {
   });
 }
 
-export async function getCardCounts(db: DB): Promise<Record<number, number>> {
+export async function getCardCounts(db: DB): Promise<Record<string, number>> {
   return throwKnownError("db.get", async () => {
     const rows = await db.all(`SELECT deck_id AS deckId, COUNT(*) AS count FROM cards GROUP BY deck_id`);
 
-    const counts: Record<number, number> = {};
-    for (const row of rows) counts[Number(row.deckId)] = Number(row.count);
+    const counts: Record<string, number> = {};
+    for (const row of rows) counts[String(row.deckId)] = Number(row.count);
     return counts;
   });
 }
@@ -44,12 +44,14 @@ async function getCard(db: DB, id: Card["id"]) {
 }
 
 async function insertCardRow(db: DB, data: InsertCardData) {
-  const inserted = await db.run(
-    `INSERT INTO cards (deck_id, template_id, content, state, due_at, stability,
+  const rowId = mintedUuidv7();
+  await db.run(
+    `INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability,
                         difficulty, scheduled_days, learning_steps, reps, lapses,
                         last_reviewed_at, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
     [
+      rowId,
       data.deckId,
       data.templateId,
       JSON.stringify(data.content),
@@ -65,7 +67,7 @@ async function insertCardRow(db: DB, data: InsertCardData) {
       nowMs(),
     ],
   );
-  const result = await getCard(db, inserted.lastInsertRowid);
+  const result = await getCard(db, rowId);
   if (!result) throw new Error("no row returned");
   return result;
 }
@@ -155,14 +157,20 @@ export async function updateCard(db: DB, { id, values }: UpdateCardData) {
 
 export async function deleteCard(db: DB, { id }: DeleteCardData) {
   return throwKnownError("db.delete", async () => {
-    await db.run(`DELETE FROM cards WHERE id = ?`, [id]);
+    await db.transaction(async (tx) => {
+      await tx.run(`DELETE FROM reviews WHERE card_id = ?`, [id]);
+      await tx.run(`DELETE FROM cards WHERE id = ?`, [id]);
+    });
   });
 }
 
 export async function deleteCards(db: DB, { ids }: DeleteCardsData) {
   if (ids.length === 0) return;
   return throwKnownError("db.delete", async () => {
-    await db.run(`DELETE FROM cards WHERE id IN (${placeholders(ids.length)})`, ids);
+    await db.transaction(async (tx) => {
+      await tx.run(`DELETE FROM reviews WHERE card_id IN (${placeholders(ids.length)})`, ids);
+      await tx.run(`DELETE FROM cards WHERE id IN (${placeholders(ids.length)})`, ids);
+    });
   });
 }
 
@@ -177,9 +185,9 @@ export async function resetCardProgress(db: DB, { id }: ResetCardProgressData) {
         `UPDATE cards
          SET state = ?, due_at = NULL, stability = 0, difficulty = 0,
              scheduled_days = 0, learning_steps = 0, reps = 0, lapses = 0,
-             last_reviewed_at = NULL, updated_at = ?
+             last_reviewed_at = NULL
          WHERE id = ?`,
-        [FSRS_NEW, nowMs(), id],
+        [FSRS_NEW, id],
       );
 
       const result = await tx.get(`SELECT ${CARD_SELECT} FROM cards WHERE id = ? LIMIT 1`, [id]);

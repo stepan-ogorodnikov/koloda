@@ -117,7 +117,7 @@ Out:
   Depends on: 2
   Commit: Persist desktop rows with client-minted UUIDv7 ids
 
-- [ ] 4. Cut web persistence over to UUIDv7
+- [x] 4. Cut web persistence over to UUIDv7
   Goal: `@koloda/db-sqlite` repos mint UUIDv7 the same way (dependency: `uuid` `v7()`).
   Inserts write `id`; stop using `last_insert_rowid()` for product tables.
   `createTestDb` / integration tests use string ids.

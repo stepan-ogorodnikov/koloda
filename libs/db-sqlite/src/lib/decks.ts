@@ -1,4 +1,4 @@
-import { AppError, throwKnownError } from "@koloda/app";
+import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import { deckRowSchema, updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import { getAlgorithm } from "./algorithms";
@@ -8,7 +8,7 @@ import { parseRowOrNull, parseRows } from "./parse-rows";
 import { nowMs, placeholders } from "./sql";
 import { getTemplate } from "./templates";
 
-export async function getDecks(db: DB, ids?: number[]) {
+export async function getDecks(db: DB, ids?: Deck["id"][]) {
   return throwKnownError("db.get", async () => {
     if (ids && ids.length === 0) return [];
 
@@ -32,11 +32,12 @@ export async function addDeck(db: DB, data: InsertDeckData) {
     const template = await getTemplate(db, data.templateId);
     if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${data.templateId}`);
 
-    const inserted = await db.run(
-      `INSERT INTO decks (title, algorithm_id, template_id, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`,
-      [data.title, data.algorithmId, data.templateId, nowMs()],
+    const rowId = mintedUuidv7();
+    await db.run(
+      `INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NULL)`,
+      [rowId, data.title, data.algorithmId, data.templateId, nowMs()],
     );
-    const result = await getDeck(db, inserted.lastInsertRowid);
+    const result = await getDeck(db, rowId);
     if (!result) throw new Error("no row returned");
     return result;
   });
@@ -69,6 +70,10 @@ export async function updateDeck(db: DB, { id, values }: UpdateDeckData) {
 
 export async function deleteDeck(db: DB, { id }: DeleteDeckData) {
   return throwKnownError("db.delete", async () => {
-    await db.run(`DELETE FROM decks WHERE id = ?`, [id]);
+    await db.transaction(async (tx) => {
+      await tx.run(`DELETE FROM reviews WHERE card_id IN (SELECT id FROM cards WHERE deck_id = ?)`, [id]);
+      await tx.run(`DELETE FROM cards WHERE deck_id = ?`, [id]);
+      await tx.run(`DELETE FROM decks WHERE id = ?`, [id]);
+    });
   });
 }

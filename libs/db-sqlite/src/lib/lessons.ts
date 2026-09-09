@@ -1,4 +1,4 @@
-import { AppError, throwKnownError } from "@koloda/app";
+import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import type {
   Deck,
   LessonAmounts,
@@ -34,7 +34,7 @@ function sumLessonAmounts(decks: LessonDeck[]): LessonAmounts {
   );
 }
 
-function lessonDeckFilter(column: string, deckIds: number[] | undefined, prefix: "WHERE" | "AND") {
+function lessonDeckFilter(column: string, deckIds: Deck["id"][] | undefined, prefix: "WHERE" | "AND") {
   if (!deckIds?.length) return { sql: "", params: [] as unknown[] };
   return { sql: ` ${prefix} ${column} IN (${placeholders(deckIds.length)})`, params: [...deckIds] };
 }
@@ -167,7 +167,7 @@ export async function getLessonData(
   // data as not ready — an empty object is truthy and would start studying with no current card.
   if (lessonCards.length === 0) return null;
 
-  const deckIdsSet = new Set<number>();
+  const deckIdsSet = new Set<Deck["id"]>();
   for (const { deckId } of lessonCards) deckIdsSet.add(deckId);
   const deckIds = Array.from(deckIdsSet);
 
@@ -210,11 +210,13 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
         ],
       );
 
-      const inserted = await tx.run(
-        `INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
+      const reviewId = mintedUuidv7();
+      await tx.run(
+        `INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,
                               scheduled_days, learning_steps, time, is_ignored, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          reviewId,
           review.cardId,
           review.rating,
           review.state,
@@ -229,10 +231,8 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
         ],
       );
 
-      const result = await tx.get(`SELECT ${REVIEW_SELECT} FROM reviews WHERE id = ? LIMIT 1`, [
-        inserted.lastInsertRowid,
-      ]);
-      return parseRow(reviewRowSchema, result, { bigintId: true });
+      const result = await tx.get(`SELECT ${REVIEW_SELECT} FROM reviews WHERE id = ? LIMIT 1`, [reviewId]);
+      return parseRow(reviewRowSchema, result);
     });
   });
 }

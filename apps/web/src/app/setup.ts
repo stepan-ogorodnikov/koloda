@@ -13,7 +13,7 @@ import {
   setSettings,
 } from "@koloda/db-sqlite";
 import { db } from "./db";
-import { loadSeedData } from "./seed/seed";
+import { loadSeedData, WEB_SEED_ALGORITHM_IDS, WEB_SEED_TEMPLATE_IDS, webSeedCardContent } from "./seed/seed";
 
 export async function getStatus() {
   return getDbStatus(db);
@@ -29,16 +29,24 @@ export async function setupFromScratch(settings: SetupFromScratchData) {
   await db.transaction(async (tx) => {
     await applyPendingMigrations(tx);
 
-    const algorithmIds = new Map<string, number>();
+    const algorithmIds = new Map<string, string>();
     for (const algorithm of seed.algorithms) {
-      const returning = await addAlgorithm(tx, { title: algorithm.title, content: algorithm.content });
+      const returning = await addAlgorithm(
+        tx,
+        { title: algorithm.title, content: algorithm.content },
+        WEB_SEED_ALGORITHM_IDS[algorithm.id],
+      );
       if (!returning?.id) throw new AppError("db.add");
       algorithmIds.set(algorithm.id, returning.id);
     }
 
-    const templateIds = new Map<string, number>();
+    const templateIds = new Map<string, string>();
     for (const template of seed.templates) {
-      const returning = await addTemplate(tx, { title: template.title, content: template.content });
+      const returning = await addTemplate(
+        tx,
+        { title: template.title, content: template.content },
+        WEB_SEED_TEMPLATE_IDS[template.id],
+      );
       if (!returning?.id) throw new AppError("db.add");
       templateIds.set(template.id, returning.id);
     }
@@ -73,10 +81,7 @@ export async function setupFromScratch(settings: SetupFromScratchData) {
         sample.cards.map((card) => ({
           deckId: deck.id,
           templateId,
-          content: {
-            "1": { text: card.front },
-            "2": { text: card.back },
-          },
+          content: webSeedCardContent(sample.template, card),
         })),
       );
       if (results.some((result) => result.error)) throw new AppError("db.add");

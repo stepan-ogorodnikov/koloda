@@ -34,7 +34,9 @@ test("creates an algorithm, modifies parameters, and verifies persistence", asyn
   await openSection(page, "Dashboard");
   await openSection(page, "Presets");
   await page.getByRole("link", { name: updatedTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(updatedTitle);
   await expect(page.getByRole("slider", { name: "Retention" })).toHaveValue("85");

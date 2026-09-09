@@ -32,7 +32,7 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
 
   await createDeckDialog.getByRole("button", { name: "Add deck", exact: true }).click();
   await createDeckDialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: deckTitle, exact: true })).toBeVisible();
 
   const cardsTab = page.getByRole("tab", { name: "Cards" });
@@ -59,7 +59,7 @@ test("grades cards with all four FSRS grades and verifies persisted state", asyn
 
   await openSection(page, "Decks");
   await page.getByRole("link", { name: deckTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await cardsTab.click();
   await expectDeckCardCount(page, 4);
 

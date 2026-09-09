@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsMessage } from "./assistant-cards-message";
+import { testId } from "../../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({
@@ -33,11 +34,11 @@ vi.mock("./assistant-cards-table", () => ({
 }));
 
 const template = {
-  id: 1,
+  id: testId(1),
   title: "T",
   content: {
-    fields: [{ id: 1, name: "Front", type: "text" }],
-    layout: [{ field: 1, operation: "display" as const }],
+    fields: [{ id: testId(1), title: "Front", type: "text", isRequired: true }],
+    layout: [{ field: testId(1), operation: "display" as const }],
   },
   createdAt: new Date(0),
   updatedAt: new Date(0),
@@ -46,11 +47,11 @@ const template = {
 
 const baseProps = {
   runId: "r1",
-  cards: [{ content: { "1": { text: "Front A" } } }],
+  cards: [{ content: { [testId(1)]: { text: "Front A" } } }],
   cardStatuses: { 0: "idle" as const },
   template,
-  deckId: 1 as const,
-  templateId: 1 as const,
+  deckId: testId(1),
+  templateId: testId(1),
   canAdd: false,
   isGenerating: false,
   isCanceled: false,

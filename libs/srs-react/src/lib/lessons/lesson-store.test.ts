@@ -1,6 +1,6 @@
 import { createStore } from "jotai";
 import { describe, expect, it } from "vitest";
-import { createLessonData, createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
+import { createLessonData, createLessonsResult, createTodaysReviewTotals, testId } from "../../test/test-helpers";
 import {
   closeLessonStateAtom,
   initializeLessonAtom,
@@ -58,7 +58,7 @@ const TOTAL_EXPECTED_AMOUNTS = {
   total: 4,
 };
 
-const REQUEST = { type: "total" as const, deckId: 7 };
+const REQUEST = { type: "total" as const, deckId: testId(7) };
 
 function initializePayload(request = REQUEST) {
   return {
@@ -137,7 +137,7 @@ describe("lesson command atoms", () => {
     store.set(openLessonAtom, REQUEST);
     const preparing = store.get(lessonStateAtom);
 
-    store.set(openLessonAtom, { type: "review", deckId: 3 });
+    store.set(openLessonAtom, { type: "review", deckId: testId(3) });
 
     expect(store.get(lessonStateAtom)).toBe(preparing);
     expect(store.get(lessonRequestAtom)).toEqual(REQUEST);
@@ -177,7 +177,7 @@ describe("lesson selectors", () => {
     expect(store.get(lessonIsOpenAtom)).toBe(true);
     expect(store.get(lessonRequestAtom)).toEqual(REQUEST);
     expect(store.get(lessonSetupAtom)).toMatchObject({
-      filters: { deckIds: [7] },
+      filters: { deckIds: [testId(7)] },
       available: TOTAL_LESSONS.total,
       reviewTotals: TOTAL_TODAY_REVIEW_TOTALS.reviewTotals,
       dailyLimits: TOTAL_TODAY_REVIEW_TOTALS.dailyLimits,

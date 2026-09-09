@@ -1,3 +1,5 @@
+import { v7 as uuidv7 } from "uuid";
+
 export type DeepPartial<T> = T extends string | number | bigint | boolean | null | undefined | symbol | Date
   ? T | undefined
   : T extends Array<infer ArrayType>
@@ -109,4 +111,13 @@ export function generateUUID(): string {
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+export function generateUuidv7(): string {
+  return uuidv7();
+}
+
+export function mintedUuidv7(id?: string): string {
+  // WHY: seed (and tests) pass well-known ids; product inserts mint a new UUIDv7.
+  return id ? id : generateUuidv7();
 }

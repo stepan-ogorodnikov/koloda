@@ -6,6 +6,7 @@ import {
   createCardContent,
   createTestDb,
   insertReview,
+  MISSING_ID,
   seedAlgorithm,
   seedDeck,
   seedDeckContext,
@@ -48,7 +49,7 @@ describe("cards repository integration", () => {
     expect(counts[first.deck.id]).toBe(2);
     expect(counts[second.deck.id]).toBe(1);
     // Decks without cards simply have no entry.
-    expect(counts[999_999]).toBeUndefined();
+    expect(counts[MISSING_ID]).toBeUndefined();
   });
 
   it("persists omitted stability and difficulty as 0", async () => {
@@ -69,20 +70,22 @@ describe("cards repository integration", () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
 
+    const frontId = template.content.fields[0]!.id;
+
     await expect(
       addCard(db, {
         deckId: deck.id,
         templateId: template.id,
         content: {
           ...createCardContent(template),
-          "1": { text: "" },
+          [frontId]: { text: "" },
         },
       }),
     ).rejects.toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           message: "validation.cards.content.field-empty",
-          path: ["content", "1", "text"],
+          path: ["content", frontId, "text"],
         }),
       ]),
     });
@@ -94,7 +97,7 @@ describe("cards repository integration", () => {
 
     await expect(
       addCard(db, {
-        deckId: 999_999,
+        deckId: MISSING_ID,
         templateId: template.id,
         content: createCardContent(template),
       }),
@@ -107,13 +110,13 @@ describe("cards repository integration", () => {
 
     const result = await addCards(db, [
       {
-        deckId: 999_999,
+        deckId: MISSING_ID,
         templateId: template.id,
         content: createCardContent(template),
       },
       {
-        deckId: 999_999,
-        templateId: 999_999,
+        deckId: MISSING_ID,
+        templateId: MISSING_ID,
         content: createCardContent(template),
       },
     ]);
@@ -131,16 +134,17 @@ describe("cards repository integration", () => {
       templateId: template.id,
       content: createCardContent(template),
     };
+    const frontId = template.content.fields[0]!.id;
     const invalidCard = {
       deckId: deck.id,
       templateId: template.id,
       content: {
         ...createCardContent(template),
-        "1": { text: "" },
+        [frontId]: { text: "" },
       },
     };
 
-    const result = await addCards(db, [validCard, invalidCard, { ...validCard, templateId: 999_999 }]);
+    const result = await addCards(db, [validCard, invalidCard, { ...validCard, templateId: MISSING_ID }]);
     const storedCards = await getCards(db, { deckId: deck.id });
 
     expect(result).toHaveLength(3);
@@ -148,7 +152,7 @@ describe("cards repository integration", () => {
     expect(result[1]?.error).toEqual({ code: "validation.cards.content.field-empty" });
     expect(result[2]?.error).toEqual({ code: "not-found.cards.add.template" });
     expect(storedCards).toHaveLength(1);
-    expect(storedCards[0]?.content["1"]?.text).toBe("Front value");
+    expect(storedCards[0]?.content[frontId]?.text).toBe("Front value");
   });
 
   it("supports mixed templates in one batch, each validated against its own template", async () => {
@@ -222,6 +226,7 @@ describe("cards repository integration", () => {
       lapses: 0,
       lastReviewedAt: null,
     });
+    expect(resetCard.updatedAt).toEqual(card.updatedAt);
     expect(reviews).toEqual([]);
   });
 });

@@ -25,7 +25,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     validators: { onSubmit: schema },
     onSubmit: async ({ formApi, value }) => {
       mutate(
-        { id: Number(id), values: schema.parse(value) },
+        { id, values: schema.parse(value) },
         {
           onSuccess: (returning) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
@@ -76,20 +76,12 @@ export function DeckDetails({ id }: DeckDetailsProps) {
       </form.AppField>
       <form.Field name="algorithmId">
         {(field) => (
-          <AlgorithmPicker
-            variants={{ layout: "form" }}
-            value={Number(field.state.value)}
-            onChange={field.handleChange}
-          />
+          <AlgorithmPicker variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange} />
         )}
       </form.Field>
       <form.Field name="templateId">
         {(field) => (
-          <TemplatePicker
-            variants={{ layout: "form" }}
-            value={Number(field.state.value)}
-            onChange={field.handleChange}
-          />
+          <TemplatePicker variants={{ layout: "form" }} value={field.state.value} onChange={field.handleChange} />
         )}
       </form.Field>
       <FormLayout.Section term={_(msg`deck.actions.label`)}>

@@ -33,6 +33,8 @@ test("validates required title and adds a template", async ({ page }) => {
   await expect(redirectLink).toBeVisible();
   await redirectLink.click();
 
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: "My Test Template", exact: true })).toBeVisible();
 });

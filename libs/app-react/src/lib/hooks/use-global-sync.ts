@@ -26,8 +26,8 @@ export function useGlobalSync() {
 
   useEffect(() => {
     if (learning) {
-      setDefaultAlgorithm(learning?.content?.defaults?.algorithm || 0);
-      setDefaultTemplate(learning?.content?.defaults?.template || 0);
+      setDefaultAlgorithm(learning?.content?.defaults?.algorithm || "");
+      setDefaultTemplate(learning?.content?.defaults?.template || "");
     }
   }, [learning, setDefaultAlgorithm, setDefaultTemplate]);
 

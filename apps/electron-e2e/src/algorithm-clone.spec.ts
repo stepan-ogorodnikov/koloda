@@ -42,7 +42,9 @@ test("clones an existing algorithm and verifies copied parameters", async ({ pag
   await cloneDialog.getByRole("link", { name: "Go to the new preset", exact: true }).click();
 
   // Verify content
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: clonedTitle, exact: true })).toBeVisible();
   await expect(page.getByRole("slider", { name: "Retention" })).toHaveValue(String(sourceRetention));
 

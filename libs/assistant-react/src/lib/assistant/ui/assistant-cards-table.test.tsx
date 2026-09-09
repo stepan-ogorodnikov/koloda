@@ -13,6 +13,7 @@ import { useAssistantCardsTable } from "./use-assistant-cards-table";
 import { makeConversation, makeRun } from "../state/assistant-conversation.fixtures";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import type { CardStatus } from "../state/conversation-reducer";
+import { testId } from "../../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({
@@ -21,11 +22,11 @@ vi.mock("@lingui/react", () => ({
 }));
 
 const template = {
-  id: 1,
+  id: testId(1),
   title: "T",
   content: {
-    fields: [{ id: 1, name: "Front", type: "text" }],
-    layout: [{ field: 1, operation: "display" as const }],
+    fields: [{ id: testId(1), title: "Front", type: "text", isRequired: true }],
+    layout: [{ field: testId(1), operation: "display" as const }],
   },
   createdAt: new Date(0),
   updatedAt: new Date(0),
@@ -33,7 +34,7 @@ const template = {
 } as unknown as Template;
 
 function makeCard(text: string): GeneratedCard {
-  return { content: { "1": { text } } };
+  return { content: { [testId(1)]: { text } } };
 }
 
 function buildQueries(): Queries {
@@ -194,8 +195,8 @@ function SelectionProbe() {
     cards: run?.cards ?? [],
     cardStatuses: run?.cardStatuses ?? {},
     template,
-    deckId: 1,
-    templateId: 1,
+    deckId: testId(1),
+    templateId: testId(1),
   });
 
   return (

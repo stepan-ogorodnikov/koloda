@@ -44,7 +44,7 @@ const wire = vi.hoisted(() => {
   return {
     profiles: [] as AIProfile[],
     models: [] as AIModel[],
-    template: { id: 1 } as Template,
+    template: { id: "01900000-0000-7000-8000-000000000001" } as Template,
     // Stream controls — AIRuntime.chat reads these.
     chatStream: {
       started: 0,

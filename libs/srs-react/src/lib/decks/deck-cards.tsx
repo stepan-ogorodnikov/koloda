@@ -32,7 +32,7 @@ export function DeckCards({ deckId }: DeckCardsProps) {
       <div className="flex flex-row items-center gap-4">
         <CardsViewToggle key="toggle" />
         <div className="grow flex flex-row" id="deck-cards-controls" ref={setPortalContainer} />
-        <AddCard deckId={Number(deckId)} templateId={data.templateId} key="add" />
+        <AddCard deckId={deckId} templateId={data.templateId} key="add" />
       </div>
       <QueryState query={query}>
         {() => (

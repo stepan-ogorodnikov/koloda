@@ -13,10 +13,9 @@ import { useAtomValue } from "jotai";
 export const Route = createFileRoute("/_/decks/$deckId")({
   component: DeckRoute,
   loader: ({ context: { queryClient, queries }, params: { deckId } }) => {
-    const id = Number(deckId);
     const { getDeckQuery, getCardsQuery, getAIProfilesQuery } = queries;
-    queryClient.ensureQueryData(getDeckQuery(id));
-    queryClient.ensureQueryData(getCardsQuery({ deckId: id }));
+    queryClient.ensureQueryData(getDeckQuery(deckId));
+    queryClient.ensureQueryData(getCardsQuery({ deckId }));
     queryClient.ensureQueryData(getAIProfilesQuery());
   },
 });
@@ -32,11 +31,10 @@ function DeckRoute() {
   const { deckId } = Route.useParams();
   const ref = useRouteFocus(deckId);
   useLayoutHeaderScrollShadow(ref);
-  const id = Number(deckId);
   const { getDeckQuery } = useAtomValue(queriesAtom);
-  const query = useQuery(getDeckQuery(id));
+  const query = useQuery(getDeckQuery(deckId));
 
-  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
+  if (query.isSuccess && query.data === null) return <NotFound />;
 
   return (
     <Tabs defaultSelectedKey="cards">
@@ -57,10 +55,10 @@ function DeckRoute() {
           {() => (
             <Tabs.Panels>
               <Tabs.Panel id="details">
-                <DeckDetails id={id} />
+                <DeckDetails id={deckId} />
               </Tabs.Panel>
               <Tabs.Panel id="cards">
-                <DeckCards deckId={id} />
+                <DeckCards deckId={deckId} />
               </Tabs.Panel>
             </Tabs.Panels>
           )}

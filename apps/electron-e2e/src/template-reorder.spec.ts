@@ -48,7 +48,9 @@ test("reorders fields via drag-and-drop and verifies persistence", async ({ page
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify persistence
   const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
@@ -92,7 +94,9 @@ test("reorders layout items via drag-and-drop and verifies persistence", async (
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify layout persistence
   const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: "Field" });
@@ -143,7 +147,9 @@ test("reorders fields after adding multiple custom fields", async ({ page }) => 
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify persistence
   const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
@@ -186,7 +192,9 @@ test("reorders fields via keyboard and verifies persistence", async ({ page }) =
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify persistence
   const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });
@@ -230,7 +238,9 @@ test("reorders layout items via keyboard and verifies persistence", async ({ pag
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify layout persistence
   const persistedLayoutFields = getLayoutSection(page).getByRole("textbox", { name: "Field" });
@@ -281,7 +291,9 @@ test("reorders fields via keyboard after adding multiple custom fields", async (
   await openSection(page, "Dashboard");
   await openSection(page, "Templates");
   await page.getByRole("link", { name: templateTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Verify persistence
   const persistedTitles = getFieldsSection(page).getByRole("textbox", { name: "Title" });

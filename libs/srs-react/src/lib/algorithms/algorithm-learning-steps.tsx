@@ -6,7 +6,7 @@ import { Button, FieldGroup, NumberField, Select, withForm } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
-const defaultValues = { id: 0, title: "", content: DEFAULT_FSRS_ALGORITHM } as UpdateAlgorithmValues;
+const defaultValues = { title: "", content: DEFAULT_FSRS_ALGORITHM } as UpdateAlgorithmValues;
 
 export const AlgorithmLearningSteps = withForm({
   defaultValues,

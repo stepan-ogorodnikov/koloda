@@ -23,7 +23,9 @@ test("discards changes to deck details and resets form to persisted state", asyn
   await algoDialog.getByLabel("Title", { exact: true }).fill(algorithmTitle);
   await algoDialog.getByRole("button", { name: "Create", exact: true }).click();
   await algoDialog.getByRole("link", { name: "Go to the new preset", exact: true }).click();
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Create a second template to pick later
   await openSection(page, "Templates");
@@ -33,7 +35,9 @@ test("discards changes to deck details and resets form to persisted state", asyn
   await templateDialog.getByLabel("Title", { exact: true }).fill(templateTitle);
   await templateDialog.getByRole("button", { name: "Create", exact: true }).click();
   await templateDialog.getByRole("link", { name: "Go to the new template", exact: true }).click();
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   // Create a deck
   await createDeck(page, deckTitle);

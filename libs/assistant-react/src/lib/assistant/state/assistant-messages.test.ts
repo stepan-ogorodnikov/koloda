@@ -3,7 +3,8 @@ import type { GeneratedCard } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { createGeneratedCard, createTemplate } from "../../../test/test-helpers";
+import { createGeneratedCard, createTemplate, testId } from "../../../test/test-helpers";
+import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID } from "@koloda/app";
 import {
   backfillUserMessageRunIds,
   buildConversationMessages,
@@ -109,14 +110,14 @@ describe("aiChatUtility", () => {
     const cards = [
       createGeneratedCard({
         content: {
-          "1": { text: "Question one" },
-          "2": { text: "Answer one" },
+          [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Question one" },
+          [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Answer one" },
         },
       }),
       createGeneratedCard({
         content: {
-          "1": { text: "Question two" },
-          "2": { text: "Answer two" },
+          [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Question two" },
+          [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Answer two" },
         },
       }),
     ];
@@ -165,14 +166,14 @@ function createRunData(
 }
 
 const cardTemplateFields: TemplateFields = [
-  { id: 1, title: "Front", type: "text", isRequired: true },
-  { id: 2, title: "Back", type: "text", isRequired: true },
+  { id: testId(1), title: "Front", type: "text", isRequired: true },
+  { id: testId(2), title: "Back", type: "text", isRequired: true },
 ];
 
 const cardWithContent: GeneratedCard = {
   content: {
-    "1": { text: "Question" },
-    "2": { text: "Answer" },
+    [testId(1)]: { text: "Question" },
+    [testId(2)]: { text: "Answer" },
   },
 };
 
@@ -318,13 +319,13 @@ describe("buildConversationMessages", () => {
 
   it("serializes chat-text cards with run.templateFields", () => {
     const runFields = [
-      { id: 10, title: "Prompt", type: "text" as const, isRequired: true },
-      { id: 11, title: "Response", type: "text" as const, isRequired: true },
+      { id: testId(10), title: "Prompt", type: "text" as const, isRequired: true },
+      { id: testId(11), title: "Response", type: "text" as const, isRequired: true },
     ];
     const proposedCard: GeneratedCard = {
       content: {
-        "10": { text: "hola" },
-        "11": { text: "hello" },
+        [testId(10)]: { text: "hola" },
+        [testId(11)]: { text: "hello" },
       },
     };
     const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "Proposed.")], {

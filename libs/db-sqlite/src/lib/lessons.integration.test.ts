@@ -158,8 +158,8 @@ describe("lessons repository integration", () => {
 
     expect(lessonData).not.toBeNull();
     expect(lessonData?.cards).toHaveLength(3);
-    expect(lessonData?.decks.map((deck) => deck.id).sort((a, b) => a - b)).toEqual(
-      [deckContextA.deck.id, deckContextB.deck.id].sort((a, b) => a - b),
+    expect(lessonData?.decks.map((deck) => deck.id).sort()).toEqual(
+      [deckContextA.deck.id, deckContextB.deck.id].sort(),
     );
     expect(lessonData?.templates).toHaveLength(2);
     expect(lessonData?.algorithms).toHaveLength(2);

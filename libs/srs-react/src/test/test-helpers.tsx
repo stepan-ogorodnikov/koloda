@@ -1,4 +1,4 @@
-import { deepMerge } from "@koloda/app";
+import { deepMerge, SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID } from "@koloda/app";
 import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
 import type { DeepPartial } from "@koloda/app";
 import { convertTemplateToLessonTemplate, DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE } from "@koloda/srs";
@@ -16,6 +16,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 
 const DEFAULT_DATE = new Date("2024-01-01T00:00:00.000Z");
+
+export function testId(n: number): string {
+  return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
+}
 
 export function createQueryClient() {
   // A fresh client per test keeps query and mutation state from leaking across hook runs.
@@ -35,7 +39,7 @@ export function createQueryClientWrapper(queryClient = createQueryClient()) {
 
 export function createAlgorithm(overrides: DeepPartial<Algorithm> = {}): Algorithm {
   const base: Algorithm = {
-    id: 1,
+    id: testId(1),
     title: "Default FSRS",
     content: DEFAULT_FSRS_ALGORITHM,
     createdAt: DEFAULT_DATE,
@@ -47,7 +51,7 @@ export function createAlgorithm(overrides: DeepPartial<Algorithm> = {}): Algorit
 
 export function createTemplate(overrides: DeepPartial<Template> = {}): Template {
   const base: Template = {
-    id: 1,
+    id: testId(1),
     title: DEFAULT_TEMPLATE.title,
     content: structuredClone(DEFAULT_TEMPLATE.content),
     isLocked: false,
@@ -60,10 +64,10 @@ export function createTemplate(overrides: DeepPartial<Template> = {}): Template 
 
 export function createDeck(overrides: DeepPartial<Deck> = {}): Deck {
   const base: Deck = {
-    id: 1,
+    id: testId(1),
     title: "Default Deck",
-    algorithmId: 1,
-    templateId: 1,
+    algorithmId: testId(1),
+    templateId: testId(1),
     createdAt: DEFAULT_DATE,
     updatedAt: null,
   };
@@ -73,12 +77,12 @@ export function createDeck(overrides: DeepPartial<Deck> = {}): Deck {
 
 export function createCard(overrides: DeepPartial<Card> = {}): Card {
   const base: Card = {
-    id: 1,
-    deckId: 1,
-    templateId: 1,
+    id: testId(1),
+    deckId: testId(1),
+    templateId: testId(1),
     content: {
-      "1": { text: "Question" },
-      "2": { text: "Answer" },
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Question" },
+      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Answer" },
     },
     state: 0,
     dueAt: null,

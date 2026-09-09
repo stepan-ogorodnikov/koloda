@@ -83,9 +83,9 @@ export type AssistantRun = {
   templateFields: TemplateFields | null;
   // WHY: optional so rows saved before proposed-card write targets restore
   // unchanged; live chat runs set it when `propose_cards` first succeeds.
-  // When present, persistence requires a positive int — malformed fails the row.
-  writeTargetDeckId?: number;
-  writeTargetTemplateId?: number;
+  // When present, persistence requires a UUID string — malformed fails the row.
+  writeTargetDeckId?: string;
+  writeTargetTemplateId?: string;
   error?: AssistantRunError;
   startedAt: Date;
   elapsedSeconds: number | null;

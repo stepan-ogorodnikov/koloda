@@ -166,11 +166,11 @@ const cardStatusField = z.enum(["idle", "pending", "success", "error"]);
  * shape mirrors `DataAccessManifest` (`../runs/data-access.ts`) — the single
  * source of truth; do not invent a parallel persistence-only shape. Unknown
  * extra keys are stripped like the rest of the row, but known-shape violations
- * (a string where a number belongs, a missing required field, a write target
+ * (a string where a UUID belongs, a missing required field, a write target
  * whose `isMissing` flag does not match its record) fail the whole row.
  */
 const deckSummaryField = z.object({
-  deckId: z.number(),
+  deckId: z.uuid(),
   title: z.string(),
   cardCount: z.number(),
   templateTitle: z.string().nullable(),
@@ -182,7 +182,7 @@ const writeTargetField = z.discriminatedUnion("isMissing", [
   z.object({ isMissing: z.literal(true) }),
   z.object({
     isMissing: z.literal(false),
-    deckId: z.number(),
+    deckId: z.uuid(),
     title: z.string(),
     totalCards: z.number(),
     listedCards: z.number(),
@@ -275,10 +275,10 @@ const runSchema: z.ZodType<AssistantRun> = z
     // corrupt rather than silently dropping tool history from the run.
     toolCalls: z.array(activityField).optional(),
     // INVARIANT: optional so rows saved before proposed-card write targets
-    // restore unchanged; when present it must be a positive int — a malformed
+    // restore unchanged; when present it must be a UUID — a malformed
     // value fails the row as corrupt rather than silently dropping the target.
-    writeTargetDeckId: z.number().int().positive().optional(),
-    writeTargetTemplateId: z.number().int().positive().optional(),
+    writeTargetDeckId: z.uuid().optional(),
+    writeTargetTemplateId: z.uuid().optional(),
   })
   .superRefine((run, ctx) => {
     // INVARIANT: canceled → reason:user; interrupted → app_shutdown|crash_recovery;

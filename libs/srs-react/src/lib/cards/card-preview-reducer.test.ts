@@ -1,5 +1,6 @@
+import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID } from "@koloda/app";
 import { describe, expect, it } from "vitest";
-import { createCard, createTemplate } from "../../test/test-helpers";
+import { createCard, createTemplate, testId } from "../../test/test-helpers";
 import { cardPreviewReducer, cardPreviewReducerDefault } from "./card-preview-reducer";
 
 type CardPreviewAction = Parameters<typeof cardPreviewReducer>[1];
@@ -22,7 +23,7 @@ describe("cardPreviewReducer", () => {
 
     expect(state.content?.card).toEqual(card);
     expect(state.content?.template.layout[0]?.field?.title).toBe("Front");
-    expect(state.content?.form.firstInputFieldId).toBe(2);
+    expect(state.content?.form.firstInputFieldId).toBe(SEED_TEMPLATE_TYPE_BACK_FIELD_ID);
     expect(state.content?.form.isSubmitted).toBe(false);
   });
 
@@ -33,12 +34,12 @@ describe("cardPreviewReducer", () => {
         createTemplate({
           content: {
             fields: [
-              { id: 1, title: "Front", type: "text", isRequired: true },
-              { id: 2, title: "Back", type: "text", isRequired: true },
+              { id: testId(1), title: "Front", type: "text", isRequired: true },
+              { id: testId(2), title: "Back", type: "text", isRequired: true },
             ],
             layout: [
-              { field: 1, operation: "display" },
-              { field: 2, operation: "display" },
+              { field: testId(1), operation: "display" },
+              { field: testId(2), operation: "display" },
             ],
           },
         }),
@@ -56,10 +57,13 @@ describe("cardPreviewReducer", () => {
       ["cardUpdated", createCard()],
     ]);
 
-    state = cardPreviewReducer(state, ["cardFormUpdated", { key: 2, value: "typed preview" }]);
+    state = cardPreviewReducer(state, [
+      "cardFormUpdated",
+      { key: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, value: "typed preview" },
+    ]);
     state = cardPreviewReducer(state, ["cardSubmitted"]);
 
-    expect(state.content?.form.data[2]).toBe("typed preview");
+    expect(state.content?.form.data[SEED_TEMPLATE_TYPE_BACK_FIELD_ID]).toBe("typed preview");
     expect(state.content?.form.isSubmitted).toBe(true);
   });
 });

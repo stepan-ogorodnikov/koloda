@@ -67,7 +67,9 @@ export type { LearningSettings, ResolvedLearningSettings } from "./lib/settings-
 export {
   deepMerge,
   generateUUID,
+  generateUuidv7,
   getNextNumericId,
+  mintedUuidv7,
   mapObjectProperties,
   mapObjectPropertiesReverse,
   objectEntries,

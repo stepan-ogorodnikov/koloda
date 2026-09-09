@@ -17,7 +17,9 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
   // Navigate to the algorithm and try to delete
   await openSection(page, "Presets");
   await page.getByRole("link", { name: algorithmTitle, exact: true }).click();
-  await expect(page).toHaveURL(/\/algorithms\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
 
   const deleteTrigger = page.getByRole("button", { name: "Delete preset", exact: true });
   await expect(deleteTrigger).toBeVisible();

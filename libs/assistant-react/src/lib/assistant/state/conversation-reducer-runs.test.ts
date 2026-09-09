@@ -9,6 +9,10 @@ import {
 import type { ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
+function testId(n: number): string {
+  return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
+}
+
 describe("conversationReducer", () => {
   describe("submitTurn", () => {
     it("creates a new run with streaming status and sets activeRunId", () => {
@@ -50,7 +54,7 @@ describe("conversationReducer", () => {
     });
 
     it("stamps templateFields when provided", () => {
-      const fields = [{ id: 1, title: "Front", type: "text" as const, isRequired: true }];
+      const fields = [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }];
 
       const state = conversationReducer(initialConversationState, [
         "submitTurn",
@@ -94,7 +98,7 @@ describe("conversationReducer", () => {
       const dataAccess: DataAccessSnapshot = {
         context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
         manifest: {
-          decks: [{ deckId: 1, title: "Spanish", cardCount: 3, templateTitle: "Default" }],
+          decks: [{ deckId: testId(1), title: "Spanish", cardCount: 3, templateTitle: "Default" }],
           writeTarget: null,
         },
       };
@@ -376,7 +380,7 @@ describe("conversationReducer", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
+        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: testId(9) } } },
       ]);
       state = conversationReducer(state, [
         "setToolCallResult",
@@ -394,7 +398,7 @@ describe("conversationReducer", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 9 } } },
+        { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: { deckId: testId(9) } } },
       ]);
       state = conversationReducer(state, [
         "setToolCallResult",
@@ -456,13 +460,13 @@ describe("conversationReducer", () => {
     });
 
     const proposeOutput = {
-      deckId: 5,
+      deckId: testId(5),
       deckTitle: "Spanish verbs",
-      templateId: 1,
+      templateId: testId(1),
       templateFields: [
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: testId(10), title: "Front", type: "text", isRequired: true },
+        { id: testId(11), title: "Back", type: "text", isRequired: true },
+        { id: testId(12), title: "Hint", type: "text", isRequired: false },
       ],
       cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
       rejectedCount: 0,
@@ -476,7 +480,7 @@ describe("conversationReducer", () => {
     ): ConversationReducerState {
       const next = conversationReducer(state, [
         "addToolCall",
-        { runId: "r1", call: { id: callId, name: "propose_cards", input: { deckId: 5, cards: [] } } },
+        { runId: "r1", call: { id: callId, name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
       ]);
       return conversationReducer(next, [
         "setToolCallResult",
@@ -489,16 +493,22 @@ describe("conversationReducer", () => {
       state = withProposeCall(state, "call-1", proposeOutput);
 
       expect(state.runs["r1"].cards).toEqual([
-        { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
+        {
+          content: {
+            [testId(10)]: { text: "hola" },
+            [testId(11)]: { text: "hello" },
+            [testId(12)]: { text: "greeting" },
+          },
+        },
       ]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle" });
       expect(state.runs["r1"].templateFields).toEqual([
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: testId(10), title: "Front", type: "text", isRequired: true },
+        { id: testId(11), title: "Back", type: "text", isRequired: true },
+        { id: testId(12), title: "Hint", type: "text", isRequired: false },
       ]);
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
         id: "call-1",
         name: "propose_cards",
@@ -512,20 +522,20 @@ describe("conversationReducer", () => {
       const markdownOutput = {
         ...proposeOutput,
         templateFields: [
-          { id: 10, title: "Front", type: "text", isRequired: true },
-          { id: 11, title: "Back", type: "markdown", isRequired: true },
-          { id: 12, title: "Hint", type: "text", isRequired: false },
+          { id: testId(10), title: "Front", type: "text", isRequired: true },
+          { id: testId(11), title: "Back", type: "markdown", isRequired: true },
+          { id: testId(12), title: "Hint", type: "text", isRequired: false },
         ],
       };
       state = withProposeCall(state, "call-1", markdownOutput);
 
       expect(state.runs["r1"].templateFields).toEqual([
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "markdown", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: testId(10), title: "Front", type: "text", isRequired: true },
+        { id: testId(11), title: "Back", type: "markdown", isRequired: true },
+        { id: testId(12), title: "Hint", type: "text", isRequired: false },
       ]);
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
     });
 
     it("records an empty accepted list without setting cards, writeTargetDeckId, writeTargetTemplateId, or templateFields", () => {
@@ -569,18 +579,18 @@ describe("conversationReducer", () => {
       state = withProposeCall(state, "call-1", proposeOutput);
       const otherDeck = {
         ...proposeOutput,
-        deckId: 9,
+        deckId: testId(9),
         deckTitle: "Other",
-        templateId: 4,
+        templateId: testId(4),
         cards: [{ fields: { Front: "gato", Back: "cat", Hint: "" } }],
       };
       state = withProposeCall(state, "call-2", otherDeck);
 
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].cards).toHaveLength(1);
-      expect(state.runs["r1"].cards[0].content["10"].text).toBe("hola");
-      expect(state.runs["r1"].templateFields?.[0]).toMatchObject({ id: 10, title: "Front" });
+      expect(state.runs["r1"].cards[0].content[testId(10)].text).toBe("hola");
+      expect(state.runs["r1"].templateFields?.[0]).toMatchObject({ id: testId(10), title: "Front" });
       expect(state.runs["r1"].toolCalls).toHaveLength(2);
       expect(state.runs["r1"].toolCalls?.[1]).toMatchObject({ id: "call-2", status: "success", output: otherDeck });
     });
@@ -590,26 +600,32 @@ describe("conversationReducer", () => {
       state = withProposeCall(state, "call-1", proposeOutput);
       const second = {
         ...proposeOutput,
-        templateId: 4,
+        templateId: testId(4),
         templateFields: [
-          { id: 10, title: "Front", type: "text", isRequired: true },
-          { id: 99, title: "Changed", type: "markdown", isRequired: false },
+          { id: testId(10), title: "Front", type: "text", isRequired: true },
+          { id: testId(99), title: "Changed", type: "markdown", isRequired: false },
         ],
         cards: [{ fields: { Front: "gato", Back: "cat", Hint: "" } }],
       };
       state = withProposeCall(state, "call-2", second);
 
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].cards).toEqual([
-        { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
-        { content: { "10": { text: "gato" }, "99": { text: "" } } },
+        {
+          content: {
+            [testId(10)]: { text: "hola" },
+            [testId(11)]: { text: "hello" },
+            [testId(12)]: { text: "greeting" },
+          },
+        },
+        { content: { [testId(10)]: { text: "gato" }, [testId(99)]: { text: "" } } },
       ]);
       expect(state.runs["r1"].cardStatuses).toEqual({ 0: "idle", 1: "idle" });
       expect(state.runs["r1"].templateFields).toEqual([
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: testId(10), title: "Front", type: "text", isRequired: true },
+        { id: testId(11), title: "Back", type: "text", isRequired: true },
+        { id: testId(12), title: "Hint", type: "text", isRequired: false },
       ]);
     });
   });
@@ -683,13 +699,13 @@ describe("conversationReducer", () => {
 
     it("does not copy writeTargetDeckId onto the conversation", () => {
       const proposeOutput = {
-        deckId: 5,
+        deckId: testId(5),
         deckTitle: "Spanish",
-        templateId: 1,
+        templateId: testId(1),
         templateTitle: "Default",
         templateFields: [
-          { id: 10, title: "Front", type: "text", isRequired: true },
-          { id: 11, title: "Back", type: "text", isRequired: true },
+          { id: testId(10), title: "Front", type: "text", isRequired: true },
+          { id: testId(11), title: "Back", type: "text", isRequired: true },
         ],
         cards: [{ fields: { Front: "hola", Back: "hello" } }],
         rejectedCount: 0,
@@ -697,7 +713,7 @@ describe("conversationReducer", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
       ]);
       state = conversationReducer(state, [
         "setToolCallResult",
@@ -705,7 +721,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
       expect(state).not.toHaveProperty("deckId");
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
     });
   });
 
@@ -865,7 +881,7 @@ describe("conversationReducer", () => {
             text: "hello",
             kind: "chat-text",
             assistantText: "",
-            templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
         ["addCard", { runId: "r1", card: { content: {} } }],
@@ -915,12 +931,12 @@ describe("conversationReducer", () => {
 
     it("clears cards, toolCalls, and write targets on restart", () => {
       const proposeOutput = {
-        deckId: 5,
+        deckId: testId(5),
         deckTitle: "Spanish verbs",
-        templateId: 1,
+        templateId: testId(1),
         templateFields: [
-          { id: 10, title: "Front", type: "text", isRequired: true },
-          { id: 11, title: "Back", type: "text", isRequired: true },
+          { id: testId(10), title: "Front", type: "text", isRequired: true },
+          { id: testId(11), title: "Back", type: "text", isRequired: true },
         ],
         cards: [{ fields: { Front: "hola", Back: "hello" } }],
         rejectedCount: 0,
@@ -928,7 +944,7 @@ describe("conversationReducer", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: 5, cards: [] } } },
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
       ]);
       state = conversationReducer(state, [
         "setToolCallResult",
@@ -936,8 +952,8 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      expect(state.runs["r1"].writeTargetDeckId).toBe(5);
-      expect(state.runs["r1"].writeTargetTemplateId).toBe(1);
+      expect(state.runs["r1"].writeTargetDeckId).toBe(testId(5));
+      expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].cards).toHaveLength(1);
 
       state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
@@ -1052,13 +1068,13 @@ describe("conversationReducer", () => {
             text: "hello",
             kind: "chat-text",
             assistantText: "",
-            templateFields: [{ id: 1, title: "Front", type: "text" as const, isRequired: true }],
+            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
           },
         ],
       ]);
       state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
 
-      const nextFields = [{ id: 2, title: "Back", type: "text" as const, isRequired: false }];
+      const nextFields = [{ id: testId(2), title: "Back", type: "text" as const, isRequired: false }];
       state = conversationReducer(state, [
         "restartRun",
         {

@@ -105,20 +105,21 @@ describe("settings and review totals integration", () => {
       },
     );
 
+    const frontId = template.content.fields[0]!.id;
     const cardA = await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
-      content: createCardContent(template, { "1": "Card A" }),
+      content: createCardContent(template, { [frontId]: "Card A" }),
     });
     const cardB = await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
-      content: createCardContent(template, { "1": "Card B" }),
+      content: createCardContent(template, { [frontId]: "Card B" }),
     });
     const cardC = await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
-      content: createCardContent(template, { "1": "Card C" }),
+      content: createCardContent(template, { [frontId]: "Card C" }),
     });
     const boundary = new Date(2026, 0, 10, 5, 0, 0);
 

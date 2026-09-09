@@ -15,6 +15,7 @@ import {
 } from "../state/conversation-store";
 import type { DataAccessSnapshot } from "./data-access";
 import { useRunOrchestration } from "./use-run-orchestration";
+import { testId } from "../../../test/test-helpers";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
 // retry (no prompt/profile/model) never reaches the engine.
@@ -387,7 +388,10 @@ describe("useRunOrchestration — retry always chat", () => {
     seedConversation("conv-1");
     const stored: DataAccessSnapshot = {
       context: "User decks:\n- Deck: Old — 1 card — Template: Default (Front, Back)",
-      manifest: { decks: [{ deckId: 1, title: "Old", cardCount: 1, templateTitle: "Default" }], writeTarget: null },
+      manifest: {
+        decks: [{ deckId: testId(1), title: "Old", cardCount: 1, templateTitle: "Default" }],
+        writeTarget: null,
+      },
     };
     addFailedChatRun("run-1", stored);
 

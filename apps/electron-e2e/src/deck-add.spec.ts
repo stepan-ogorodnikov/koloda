@@ -26,7 +26,7 @@ async function fillAndSubmitDeck(page: Page, dialog: Locator, title: string, opt
   await dialog.getByRole("button", { name: "Add deck", exact: true }).click();
   await dialog.getByRole("link", { name: "Go to the new deck", exact: true }).click();
 
-  await expect(page).toHaveURL(/\/decks\/\d+$/);
+  await expect(page).toHaveURL(/\/decks\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 }
 

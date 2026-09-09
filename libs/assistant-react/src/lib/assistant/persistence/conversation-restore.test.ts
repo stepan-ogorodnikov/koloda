@@ -8,6 +8,10 @@ import type { DataAccessSnapshot } from "../runs/data-access";
 import { findLatestErroredRun, initialConversationState } from "../state/conversation-reducer";
 import type { ConversationReducerState } from "../state/conversation-reducer";
 
+function testId(n: number): string {
+  return `01900000-0000-7000-8000-${n.toString(16).padStart(12, "0")}`;
+}
+
 /** Returns the state of an `ok` restore result, failing the test otherwise. */
 function expectOk(value: unknown): ConversationReducerState {
   const result = coerceConversationState(value);
@@ -481,12 +485,12 @@ describe("coerceConversationState", () => {
       context: "User decks:\n- Deck: Spanish — 12 cards — Template: Basic (Front, Back)",
       manifest: {
         decks: [
-          { deckId: 3, title: "Spanish", cardCount: 12, templateTitle: "Basic" },
-          { deckId: 7, title: "Kanji", cardCount: 40, templateTitle: null },
+          { deckId: testId(3), title: "Spanish", cardCount: 12, templateTitle: "Basic" },
+          { deckId: testId(7), title: "Kanji", cardCount: 40, templateTitle: null },
         ],
         writeTarget: {
           isMissing: false,
-          deckId: 3,
+          deckId: testId(3),
           title: "Spanish",
           totalCards: 12,
           listedCards: 10,
@@ -608,7 +612,7 @@ describe("coerceConversationState", () => {
                 ...fullSnapshot,
                 manifest: {
                   ...fullSnapshot.manifest,
-                  decks: [{ deckId: 3, title: "Spanish", cardCount: "12", templateTitle: "Basic" }],
+                  decks: [{ deckId: testId(3), title: "Spanish", cardCount: "12", templateTitle: "Basic" }],
                 },
               },
             }),
@@ -623,7 +627,7 @@ describe("coerceConversationState", () => {
                 ...fullSnapshot,
                 manifest: {
                   ...fullSnapshot.manifest,
-                  decks: [{ deckId: 3, title: "Spanish", cardCount: 12, templateTitle: 7 }],
+                  decks: [{ deckId: testId(3), title: "Spanish", cardCount: 12, templateTitle: 7 }],
                 },
               },
             }),
@@ -655,7 +659,7 @@ describe("coerceConversationState", () => {
             baseRun({
               dataAccess: {
                 context: "x",
-                manifest: { decks: [{ deckId: 3, title: "Spanish", cardCount: 12 }], writeTarget: null },
+                manifest: { decks: [{ deckId: testId(3), title: "Spanish", cardCount: 12 }], writeTarget: null },
               },
             }),
           ),
@@ -671,7 +675,7 @@ describe("coerceConversationState", () => {
                   decks: [],
                   writeTarget: {
                     isMissing: false,
-                    deckId: 3,
+                    deckId: testId(3),
                     title: "Spanish",
                     listedCards: 10,
                     fullFieldCards: 4,
@@ -1025,14 +1029,14 @@ describe("coerceConversationState", () => {
             templateFields: null,
             startedAt: new Date(1000),
             elapsedSeconds: 1,
-            writeTargetDeckId: 5,
+            writeTargetDeckId: testId(5),
           },
         },
       };
       const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
       const restored = expectOk(persisted);
       expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
-      expect(restored.runs["r1"]?.writeTargetDeckId).toBe(5);
+      expect(restored.runs["r1"]?.writeTargetDeckId).toBe(testId(5));
     });
 
     it("restores rows saved before write targets unchanged (no writeTargetDeckId field)", () => {
@@ -1087,21 +1091,21 @@ describe("coerceConversationState", () => {
             templateFields: null,
             startedAt: new Date(1000),
             elapsedSeconds: 1,
-            writeTargetDeckId: 5,
-            writeTargetTemplateId: 1,
+            writeTargetDeckId: testId(5),
+            writeTargetTemplateId: testId(1),
           },
         },
       };
       const persisted = JSON.parse(JSON.stringify(toPersistedState(state))) as unknown;
       const restored = expectOk(persisted);
       expect(restored.runs["r1"]?.startedAt).toBeInstanceOf(Date);
-      expect(restored.runs["r1"]?.writeTargetDeckId).toBe(5);
-      expect(restored.runs["r1"]?.writeTargetTemplateId).toBe(1);
+      expect(restored.runs["r1"]?.writeTargetDeckId).toBe(testId(5));
+      expect(restored.runs["r1"]?.writeTargetTemplateId).toBe(testId(1));
     });
 
     it("restores rows saved before write-target templates unchanged (no writeTargetTemplateId field)", () => {
-      const coerced = expectOk(makeStateWithRun(baseRun({ writeTargetDeckId: 5 })));
-      expect(coerced.runs["r1"].writeTargetDeckId).toBe(5);
+      const coerced = expectOk(makeStateWithRun(baseRun({ writeTargetDeckId: testId(5) })));
+      expect(coerced.runs["r1"].writeTargetDeckId).toBe(testId(5));
       expect(coerced.runs["r1"].writeTargetTemplateId).toBeUndefined();
     });
 

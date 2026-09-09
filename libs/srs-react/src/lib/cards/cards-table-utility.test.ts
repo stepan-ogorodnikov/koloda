@@ -2,13 +2,13 @@ import type { Template } from "@koloda/srs";
 import { describe, expect, it } from "vitest";
 import { getCardsTableContentColumns } from "./cards-table-utility";
 
-function createTemplate(id: number, fields: Array<{ title: string }>): Template {
+function createTemplate(id: string, fields: Array<{ title: string }>): Template {
   return {
     id,
     title: `Template ${id}`,
     content: {
       fields: fields.map((f, i) => ({
-        id: i + 1,
+        id: `01900000-0000-7000-8000-${(i + 1).toString(16).padStart(12, "0")}`,
         title: f.title,
         type: "text" as const,
         isRequired: true,
@@ -27,7 +27,7 @@ describe("getCardsTableContentColumns", () => {
   });
 
   it("uses field titles directly for a single template", () => {
-    const templates = [createTemplate(1, [{ title: "Front" }, { title: "Back" }])];
+    const templates = [createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }, { title: "Back" }])];
     const result = getCardsTableContentColumns(templates);
 
     expect(result).toHaveLength(2);
@@ -37,8 +37,8 @@ describe("getCardsTableContentColumns", () => {
 
   it("deduplicates when all templates share the same field title at each position", () => {
     const templates = [
-      createTemplate(1, [{ title: "Front" }, { title: "Back" }]),
-      createTemplate(2, [{ title: "Front" }, { title: "Back" }]),
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }, { title: "Back" }]),
+      createTemplate("01900000-0000-7000-8000-000000000002", [{ title: "Front" }, { title: "Back" }]),
     ];
     const result = getCardsTableContentColumns(templates);
 
@@ -49,8 +49,8 @@ describe("getCardsTableContentColumns", () => {
 
   it("falls back to #N when templates have different titles at the same position", () => {
     const templates = [
-      createTemplate(1, [{ title: "Front" }, { title: "Back" }]),
-      createTemplate(2, [{ title: "Question" }, { title: "Answer" }]),
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }, { title: "Back" }]),
+      createTemplate("01900000-0000-7000-8000-000000000002", [{ title: "Question" }, { title: "Answer" }]),
     ];
     const result = getCardsTableContentColumns(templates);
 
@@ -61,8 +61,8 @@ describe("getCardsTableContentColumns", () => {
 
   it("uses the longest template's field count as column count", () => {
     const templates = [
-      createTemplate(1, [{ title: "Front" }]),
-      createTemplate(2, [{ title: "A" }, { title: "B" }, { title: "C" }]),
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }]),
+      createTemplate("01900000-0000-7000-8000-000000000002", [{ title: "A" }, { title: "B" }, { title: "C" }]),
     ];
     const result = getCardsTableContentColumns(templates);
 
@@ -70,30 +70,38 @@ describe("getCardsTableContentColumns", () => {
   });
 
   it("getFieldId returns correct field id for each template", () => {
-    const templates = [createTemplate(1, [{ title: "Front" }]), createTemplate(2, [{ title: "Prompt" }])];
+    const templates = [
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }]),
+      createTemplate("01900000-0000-7000-8000-000000000002", [{ title: "Prompt" }]),
+    ];
     const result = getCardsTableContentColumns(templates);
 
-    expect(result[0].getFieldId(templates[0])).toBe(1);
-    expect(result[0].getFieldId(templates[1])).toBe(1);
+    expect(result[0].getFieldId(templates[0])).toBe("01900000-0000-7000-8000-000000000001");
+    expect(result[0].getFieldId(templates[1])).toBe("01900000-0000-7000-8000-000000000001");
   });
 
   it("getFieldId returns undefined when template is undefined", () => {
-    const templates = [createTemplate(1, [{ title: "Front" }])];
+    const templates = [createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "Front" }])];
     const cols = getCardsTableContentColumns(templates);
 
     expect(cols[0].getFieldId(undefined)).toBeUndefined();
   });
 
   it("getFieldId returns undefined for index beyond template fields", () => {
-    const mixed = [createTemplate(1, [{ title: "A" }]), createTemplate(2, [{ title: "X" }, { title: "Y" }])];
+    const mixed = [
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "A" }]),
+      createTemplate("01900000-0000-7000-8000-000000000002", [{ title: "X" }, { title: "Y" }]),
+    ];
     const cols = getCardsTableContentColumns(mixed);
     expect(cols).toHaveLength(2);
     expect(cols[1].getFieldId(mixed[0])).toBeUndefined(); // template 1 has no second field
-    expect(cols[1].getFieldId(mixed[1])).toBe(2);
+    expect(cols[1].getFieldId(mixed[1])).toBe("01900000-0000-7000-8000-000000000002");
   });
 
   it("includes index starting from 0 for each column", () => {
-    const templates = [createTemplate(1, [{ title: "A" }, { title: "B" }, { title: "C" }])];
+    const templates = [
+      createTemplate("01900000-0000-7000-8000-000000000001", [{ title: "A" }, { title: "B" }, { title: "C" }]),
+    ];
     const result = getCardsTableContentColumns(templates);
 
     expect(result[0].index).toBe(0);

@@ -8,9 +8,9 @@ describe("lessons", () => {
     // WHY: mirrors the Rust test_lesson_result_card_review_id_mismatch_fails
     // rule — both entities are individually valid; only their id link is broken.
     const card = {
-      id: 7,
-      deckId: 1,
-      templateId: 1,
+      id: "01900000-0000-7000-8000-000000000007",
+      deckId: "01900000-0000-7000-8000-000000000001",
+      templateId: "01900000-0000-7000-8000-000000000001",
       content: { front: { text: "front" }, back: { text: "back" } },
       state: 2,
       dueAt: new Date("2026-01-12T12:00:00.000Z"),
@@ -25,7 +25,7 @@ describe("lessons", () => {
       updatedAt: null,
     };
     const review = {
-      cardId: 8,
+      cardId: "01900000-0000-7000-8000-000000000008",
       rating: 3,
       state: 2,
       dueAt: new Date("2026-01-12T12:00:00.000Z"),

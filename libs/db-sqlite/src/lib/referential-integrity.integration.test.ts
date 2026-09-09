@@ -1,3 +1,4 @@
+import { generateUuidv7 } from "@koloda/app";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
 import {
@@ -5,6 +6,7 @@ import {
   createTestDb,
   insertReview,
   isForeignKeyError,
+  MISSING_ID,
   seedDeck,
   seedDeckContext,
   seedTemplate,
@@ -29,8 +31,9 @@ describe("referential integrity integration", () => {
     const template = await seedTemplate(db);
 
     await expect(
-      db.run("INSERT INTO cards (deck_id, template_id, content, created_at) VALUES (?, ?, ?, ?)", [
-        999_999,
+      db.run("INSERT INTO cards (id, deck_id, template_id, content, created_at) VALUES (?, ?, ?, ?, ?)", [
+        generateUuidv7(),
+        MISSING_ID,
         template.id,
         "{}",
         Date.now(),
@@ -38,7 +41,7 @@ describe("referential integrity integration", () => {
     ).rejects.toSatisfy(isForeignKeyError);
   });
 
-  it("deleting a deck deletes its cards through on-delete-cascade", async () => {
+  it("deleting a deck deletes its cards after leaf-first review and card deletes", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
 
@@ -63,7 +66,7 @@ describe("referential integrity integration", () => {
     expect(Number(count)).toBe(0);
   });
 
-  it("deleting a card deletes its reviews through on-delete-cascade", async () => {
+  it("deleting a card deletes its reviews after a leaf-first review delete", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
     const card = await addCard(db, {

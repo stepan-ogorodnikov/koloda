@@ -51,7 +51,7 @@ function setContent(draft: CardPreviewReducerState) {
 }
 
 type CardFormUpdatedPayload = {
-  key: number | string;
+  key: string;
   value: string;
 };
 

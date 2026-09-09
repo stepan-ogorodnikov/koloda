@@ -1,4 +1,4 @@
-import { DEFAULT_LEARNING_SETTINGS } from "@koloda/app";
+import { DEFAULT_LEARNING_SETTINGS, mintedUuidv7 } from "@koloda/app";
 import type { LearningSettings } from "@koloda/app";
 import { DEFAULT_FSRS_ALGORITHM, DEFAULT_TEMPLATE, reviewRowSchema } from "@koloda/srs";
 import type { InsertAlgorithmData, InsertDeckData, InsertTemplateData, Review, Template } from "@koloda/srs";
@@ -109,6 +109,8 @@ export async function seedDeckContext(
   return { algorithm, template, deck };
 }
 
+export const MISSING_ID = "01900000-0000-7000-8000-0000000f423f";
+
 export function createCardContent(template: Pick<Template, "content">, overrides: Record<string, string> = {}) {
   return Object.fromEntries(
     template.content.fields.map((field) => [
@@ -149,11 +151,13 @@ export async function seedLearningSettings(
 }
 
 export async function insertReview(db: DB, review: Omit<Review, "id">) {
-  const inserted = await db.run(
-    `INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
+  const rowId = mintedUuidv7();
+  await db.run(
+    `INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,
                           scheduled_days, learning_steps, time, is_ignored, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
+      rowId,
       review.cardId,
       review.rating,
       review.state,
@@ -167,8 +171,8 @@ export async function insertReview(db: DB, review: Omit<Review, "id">) {
       review.createdAt,
     ],
   );
-  const result = await db.get(`SELECT ${REVIEW_SELECT} FROM reviews WHERE id = ? LIMIT 1`, [inserted.lastInsertRowid]);
-  return parseRow(reviewRowSchema, result, { bigintId: true });
+  const result = await db.get(`SELECT ${REVIEW_SELECT} FROM reviews WHERE id = ? LIMIT 1`, [rowId]);
+  return parseRow(reviewRowSchema, result);
 }
 
 export function isForeignKeyError(error: unknown) {

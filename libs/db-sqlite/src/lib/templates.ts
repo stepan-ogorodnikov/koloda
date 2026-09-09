@@ -1,4 +1,4 @@
-import { AppError, throwKnownError } from "@koloda/app";
+import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import type {
   CloneTemplateData,
   DeleteTemplateData,
@@ -54,13 +54,16 @@ export async function getTemplatesByIds(db: DB, ids: Template["id"][]): Promise<
   return new Map(parsed.map((template) => [template.id, template]));
 }
 
-export async function addTemplate(db: DB, data: InsertTemplateData) {
+export async function addTemplate(db: DB, data: InsertTemplateData, id?: string) {
   return throwKnownError("db.add", async () => {
-    const inserted = await db.run(
-      `INSERT INTO templates (title, content, created_at, updated_at) VALUES (?, ?, ?, NULL)`,
-      [data.title, JSON.stringify(data.content), nowMs()],
-    );
-    const result = await getTemplate(db, inserted.lastInsertRowid);
+    const rowId = mintedUuidv7(id);
+    await db.run(`INSERT INTO templates (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
+      rowId,
+      data.title,
+      JSON.stringify(data.content),
+      nowMs(),
+    ]);
+    const result = await getTemplate(db, rowId);
     if (!result) throw new Error("no row returned");
     return result;
   });

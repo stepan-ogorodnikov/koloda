@@ -10,7 +10,7 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
   const templateIds = useMemo(() => {
     const ids = new Set(cards?.map((c) => c.templateId) ?? []);
     if (deckTemplateId !== undefined) ids.add(deckTemplateId);
-    return [...ids].sort((a, b) => a - b);
+    return [...ids].sort();
   }, [cards, deckTemplateId]);
 
   // WHY: useQueries returns a fresh results array on every render; without `combine`

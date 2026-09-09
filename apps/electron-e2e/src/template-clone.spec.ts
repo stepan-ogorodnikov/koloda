@@ -49,7 +49,9 @@ test("clones an existing template and verifies the copied fields", async ({ page
   await cloneDialog.getByRole("link", { name: "Go to the new template", exact: true }).click();
 
   // Verify content
-  await expect(page).toHaveURL(/\/templates\/\d+$/);
+  await expect(page).toHaveURL(
+    /\/templates\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
   await expect(page.getByRole("heading", { name: clonedTitle, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete field" })).toHaveCount(3);
   await expect(page.getByRole("textbox", { name: "Title" }).last()).toHaveValue(clonedFieldTitle);

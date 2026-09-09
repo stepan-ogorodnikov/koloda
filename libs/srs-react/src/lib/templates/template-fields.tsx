@@ -4,7 +4,7 @@ import { DragDropProvider, KeyboardSensor, PointerSensor } from "@dnd-kit/react"
 import { isSortable } from "@dnd-kit/react/sortable";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { getNextNumericId } from "@koloda/app";
+import { generateUuidv7 } from "@koloda/app";
 import { DEFAULT_TEMPLATE, DEFAULT_TEMPLATE_FIELD } from "@koloda/srs";
 import type { UpdateTemplateValues } from "@koloda/srs";
 import { Button, Draggable, withForm } from "@koloda/ui";
@@ -20,7 +20,6 @@ export const TemplateFields = withForm({
   props: { isLocked: false },
   render: function Render({ form, isLocked }) {
     const { _ } = useLingui();
-    const fieldsValue = useStore(form.store, (state) => state.values?.content?.fields);
     const layoutValue = useStore(form.store, (state) => state.values?.content?.layout);
 
     return (
@@ -66,7 +65,7 @@ export const TemplateFields = withForm({
                   <Button
                     variants={{ style: "dashed", class: "justify-start gap-4 w-full px-1" }}
                     onClick={() => {
-                      const id = getNextNumericId(fieldsValue);
+                      const id = generateUuidv7();
                       field.pushValue({ ...DEFAULT_TEMPLATE_FIELD, id });
                       form.pushFieldValue("content.layout", { field: id, operation: "display" });
                     }}

@@ -15,22 +15,14 @@ const ZERO_KEYS = new Set([
   "state",
 ]);
 
-export type MapSqliteRowOptions = {
-  bigintId?: boolean;
-};
-
 function asNumber(value: SqlValue): number {
   if (typeof value === "bigint") return Number(value);
   return Number(value);
 }
 
-export function mapSqliteRow(row: SqlRow, options?: MapSqliteRowOptions): Record<string, unknown> {
+export function mapSqliteRow(row: SqlRow): Record<string, unknown> {
   const mapped: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(row)) {
-    if (key === "id" && options?.bigintId) {
-      mapped.id = typeof value === "bigint" ? value : BigInt(asNumber(value));
-      continue;
-    }
     if (value == null) {
       mapped[key] = ZERO_KEYS.has(key) ? 0 : null;
       continue;
@@ -56,32 +48,23 @@ export function mapSqliteRow(row: SqlRow, options?: MapSqliteRowOptions): Record
   return mapped;
 }
 
-export function parseRow<S extends z.ZodType>(schema: S, row: unknown, options?: MapSqliteRowOptions): z.infer<S> {
+export function parseRow<S extends z.ZodType>(schema: S, row: unknown): z.infer<S> {
   if (row == null) throw new Error("no row returned");
-  const mapped = typeof row === "object" ? mapSqliteRow(row as SqlRow, options) : row;
+  const mapped = typeof row === "object" ? mapSqliteRow(row as SqlRow) : row;
   return schema.parse(mapped);
 }
 
-export function parseRows<S extends z.ZodType>(
-  schema: S,
-  rows: unknown[],
-  options?: MapSqliteRowOptions,
-): z.infer<S>[] {
-  return rows.map((row) => parseRow(schema, row, options));
+export function parseRows<S extends z.ZodType>(schema: S, rows: unknown[]): z.infer<S>[] {
+  return rows.map((row) => parseRow(schema, row));
 }
 
-export function parseRowOrNull<S extends z.ZodType>(
-  schema: S,
-  row: unknown | null | undefined,
-  options?: MapSqliteRowOptions,
-): z.infer<S> | null {
-  return row == null ? null : parseRow(schema, row, options);
+export function parseRowOrNull<S extends z.ZodType>(schema: S, row: unknown | null | undefined): z.infer<S> | null {
+  return row == null ? null : parseRow(schema, row);
 }
 
 export function parseRowOrUndefined<S extends z.ZodType>(
   schema: S,
   row: unknown | null | undefined,
-  options?: MapSqliteRowOptions,
 ): z.infer<S> | undefined {
-  return row == null ? undefined : parseRow(schema, row, options);
+  return row == null ? undefined : parseRow(schema, row);
 }

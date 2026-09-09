@@ -40,8 +40,8 @@ export type LessonContent = {
   index: number;
   startedAt: number;
   form: {
-    data: Record<number | string, string>;
-    firstInputFieldId?: number;
+    data: Record<string, string>;
+    firstInputFieldId?: string;
     isSubmitted: boolean;
   };
   card: Card;

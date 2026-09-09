@@ -65,6 +65,8 @@ describe("templates repository integration", () => {
       content: createCardContent(template),
     });
 
+    const frontId = template.content.fields[0]!.id;
+
     await expect(
       updateTemplate(db, {
         id: template.id,
@@ -73,7 +75,7 @@ describe("templates repository integration", () => {
           content: {
             ...template.content,
             fields: template.content.fields.map((field) =>
-              field.id === 1 ? { ...field, type: "markdown" as const } : field,
+              field.id === frontId ? { ...field, type: "markdown" as const } : field,
             ),
           },
         },
@@ -83,7 +85,7 @@ describe("templates repository integration", () => {
     });
 
     const storedTemplate = await getTemplate(db, template.id);
-    expect(storedTemplate?.content.fields.find((field) => field.id === 1)?.type).toBe("text");
+    expect(storedTemplate?.content.fields.find((field) => field.id === frontId)?.type).toBe("text");
   });
 
   it("prevents deleting locked templates", async () => {

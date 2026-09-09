@@ -1,4 +1,4 @@
-import { AppError, throwKnownError } from "@koloda/app";
+import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
 import { algorithmRowSchema, deckWithOnlyTitleSchema, insertAlgorithmSchema, updateAlgorithmSchema } from "@koloda/srs";
 import type {
   Algorithm,
@@ -26,13 +26,16 @@ export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
   });
 }
 
-export async function addAlgorithm(db: DB, data: InsertAlgorithmData) {
+export async function addAlgorithm(db: DB, data: InsertAlgorithmData, id?: string) {
   return throwKnownError("db.add", async () => {
-    const inserted = await db.run(
-      `INSERT INTO algorithms (title, content, created_at, updated_at) VALUES (?, ?, ?, NULL)`,
-      [data.title, JSON.stringify(data.content), nowMs()],
-    );
-    const result = await getAlgorithm(db, inserted.lastInsertRowid);
+    const rowId = mintedUuidv7(id);
+    await db.run(`INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
+      rowId,
+      data.title,
+      JSON.stringify(data.content),
+      nowMs(),
+    ]);
+    const result = await getAlgorithm(db, rowId);
     if (!result) throw new Error("no row returned");
     return result;
   });
@@ -71,10 +74,11 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
   return throwKnownError("db.delete", async () => {
     const algorithmDecks = await getAlgorithmDecks(db, id);
     if (algorithmDecks.length > 0) {
-      const successor = await getAlgorithm(db, Number(successorId));
+      if (!successorId) throw new AppError("not-found.algorithms.delete.successor");
+      const successor = await getAlgorithm(db, successorId);
       if (!successor) throw new AppError("not-found.algorithms.delete.successor");
       return db.transaction(async (tx) => {
-        await tx.run(`UPDATE decks SET algorithm_id = ? WHERE algorithm_id = ?`, [Number(successorId), id]);
+        await tx.run(`UPDATE decks SET algorithm_id = ? WHERE algorithm_id = ?`, [successorId, id]);
         await tx.run(`DELETE FROM algorithms WHERE id = ?`, [id]);
       });
     }

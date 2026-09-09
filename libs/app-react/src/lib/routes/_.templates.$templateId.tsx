@@ -10,9 +10,8 @@ import { useAtomValue } from "jotai";
 export const Route = createFileRoute("/_/templates/$templateId")({
   component: TemplateRoute,
   loader: ({ context: { queryClient, queries }, params: { templateId } }) => {
-    const id = Number(templateId);
     const { getTemplateQuery } = queries;
-    queryClient.ensureQueryData(getTemplateQuery(id));
+    queryClient.ensureQueryData(getTemplateQuery(templateId));
   },
 });
 
@@ -20,11 +19,11 @@ function TemplateRoute() {
   const { templateId } = Route.useParams();
   const ref = useRouteFocus(templateId);
   useLayoutHeaderScrollShadow(ref);
-  const id = Number(templateId);
+  const id = templateId;
   const { getTemplateQuery } = useAtomValue(queriesAtom);
   const query = useQuery(getTemplateQuery(id));
 
-  if ((query.isSuccess && query.data === null) || isNaN(id)) return <NotFound />;
+  if (query.isSuccess && query.data === null) return <NotFound />;
 
   return (
     <>

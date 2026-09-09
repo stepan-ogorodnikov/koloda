@@ -1,8 +1,10 @@
+import { SEED_ALGORITHM_SIMPLE_ID } from "@koloda/app";
 import { DEFAULT_FSRS_ALGORITHM } from "@koloda/srs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
-import { createTestDb, seedAlgorithm, seedDeckContext } from "../test/test-helpers";
+import { createTestDb, MISSING_ID, seedAlgorithm, seedDeckContext } from "../test/test-helpers";
 import {
+  addAlgorithm,
   cloneAlgorithm,
   deleteAlgorithm,
   getAlgorithm,
@@ -40,10 +42,22 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithms(db)).toHaveLength(2);
   });
 
+  it("inserts a caller-provided id", async () => {
+    const { db } = testDb;
+    const algorithm = await addAlgorithm(
+      db,
+      { title: "Seeded", content: DEFAULT_FSRS_ALGORITHM },
+      SEED_ALGORITHM_SIMPLE_ID,
+    );
+
+    expect(algorithm.id).toBe(SEED_ALGORITHM_SIMPLE_ID);
+    expect(await getAlgorithm(db, SEED_ALGORITHM_SIMPLE_ID)).toMatchObject({ title: "Seeded" });
+  });
+
   it("rejects cloning when the source algorithm is missing", async () => {
     const { db } = testDb;
 
-    await expect(cloneAlgorithm(db, { title: "Clone", sourceId: 999 })).rejects.toMatchObject({
+    await expect(cloneAlgorithm(db, { title: "Clone", sourceId: MISSING_ID })).rejects.toMatchObject({
       code: "not-found.algorithms.clone.source",
     });
   });
@@ -76,7 +90,7 @@ describe("algorithms repository integration", () => {
     const { db } = testDb;
     const { algorithm } = await seedDeckContext(db);
 
-    await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: 999 })).rejects.toMatchObject({
+    await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: MISSING_ID })).rejects.toMatchObject({
       code: "not-found.algorithms.delete.successor",
     });
 

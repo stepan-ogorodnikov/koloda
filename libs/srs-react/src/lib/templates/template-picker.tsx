@@ -10,8 +10,8 @@ import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 
 type TemplatePickerProps = Omit<SelectProps<Template>, "value" | "onChange" | "items" | "children"> & {
-  value: number;
-  onChange: (key: number) => void;
+  value: Template["id"];
+  onChange: (key: Template["id"]) => void;
 };
 
 export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProps) {
@@ -31,7 +31,9 @@ export function TemplatePicker({ value, onChange, ...props }: TemplatePickerProp
       label={_(msg`template-picker.label`)}
       items={data}
       value={value || defaultTemplate}
-      onChange={(i) => onChange(Number(i))}
+      onChange={(key) => {
+        if (typeof key === "string") onChange(key);
+      }}
       {...props}
     >
       {({ id, title }) => (

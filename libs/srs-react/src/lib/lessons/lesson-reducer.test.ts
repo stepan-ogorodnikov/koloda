@@ -1,7 +1,14 @@
 import type { LearningSettings } from "@koloda/app";
+import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID } from "@koloda/app";
 import type * as KolodaSrsModule from "@koloda/srs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createCard, createLessonData, createLessonsResult, createTodaysReviewTotals } from "../../test/test-helpers";
+import {
+  createCard,
+  createLessonData,
+  createLessonsResult,
+  createTodaysReviewTotals,
+  testId,
+} from "../../test/test-helpers";
 import { calculateInitialLessonAmounts, lessonReducer, lessonReducerDefault } from "./lesson-reducer";
 import type { LessonReducerState } from "./lesson-reducer";
 
@@ -144,7 +151,7 @@ afterEach(() => {
 
 describe("lessonReducer", () => {
   it("opens a closed lesson into preparing, then initialize moves to configuring", () => {
-    const request = { type: "total" as const, deckId: 7 };
+    const request = { type: "total" as const, deckId: testId(7) };
     let state = lessonReducer(structuredClone(lessonReducerDefault), ["open", request]);
 
     expect(state.phase).toBe("preparing");
@@ -162,7 +169,7 @@ describe("lessonReducer", () => {
     ]);
 
     expect(state.phase).toBe("configuring");
-    expect(state.setup?.filters).toEqual({ deckIds: [7] });
+    expect(state.setup?.filters).toEqual({ deckIds: [testId(7)] });
     expect(state.setup?.learnAheadLimit).toEqual([0, 30]);
   });
 
@@ -209,7 +216,7 @@ describe("lessonReducer", () => {
     const mismatched = lessonReducer(preparing, [
       "initialize",
       {
-        request: { type: "review", deckId: 2 },
+        request: { type: "review", deckId: testId(2) },
         learnAheadLimit: [0, 30],
         lessons: REVIEW_LESSONS,
         todayReviewTotals: REVIEW_TODAY_REVIEW_TOTALS,
@@ -257,7 +264,7 @@ describe("lessonReducer", () => {
 
     expect(studying.phase).toBe("studying");
     expect(studying.session?.content?.index).toBe(0);
-    expect(studying.session?.content?.form.firstInputFieldId).toBe(2);
+    expect(studying.session?.content?.form.firstInputFieldId).toBe(SEED_TEMPLATE_TYPE_BACK_FIELD_ID);
     expect(studying.session?.content?.form.isSubmitted).toBe(false);
     expect(studying.session?.progress).toEqual({
       done: { untouched: 0, learn: 0, review: 0, total: 0 },
@@ -271,16 +278,19 @@ describe("lessonReducer", () => {
 
   it("updates and submits the card form only while studying", () => {
     const loading = startLesson({ shouldSubmitSetup: true });
-    const ignoredForm = lessonReducer(loading, ["cardFormUpdated", { key: 2, value: "too early" }]);
+    const ignoredForm = lessonReducer(loading, [
+      "cardFormUpdated",
+      { key: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, value: "too early" },
+    ]);
     const ignoredSubmit = lessonReducer(loading, ["cardSubmitted"]);
     expect(ignoredForm).toBe(loading);
     expect(ignoredSubmit).toBe(loading);
 
     let state = startLesson({ lessonData: createLessonData() });
-    state = lessonReducer(state, ["cardFormUpdated", { key: 2, value: "typed answer" }]);
+    state = lessonReducer(state, ["cardFormUpdated", { key: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, value: "typed answer" }]);
     state = lessonReducer(state, ["cardSubmitted"]);
 
-    expect(state.session?.content?.form.data[2]).toBe("typed answer");
+    expect(state.session?.content?.form.data[SEED_TEMPLATE_TYPE_BACK_FIELD_ID]).toBe("typed answer");
     expect(state.session?.content?.form.isSubmitted).toBe(true);
   });
 
@@ -289,7 +299,7 @@ describe("lessonReducer", () => {
     vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
 
     const learnedAheadCard = createCard({
-      id: 2,
+      id: testId(2),
       state: 1,
       dueAt: new Date("2024-01-01T00:10:00.000Z"),
     });
@@ -312,7 +322,7 @@ describe("lessonReducer", () => {
     let state = startLesson({
       learnAheadLimit: [0, 30],
       lessonData: createLessonData({
-        cards: [createCard({ id: 1 })],
+        cards: [createCard({ id: testId(1) })],
       }),
     });
 
@@ -325,14 +335,14 @@ describe("lessonReducer", () => {
       index: 0,
       card: learnedAheadCard,
       review: {
-        cardId: 1,
+        cardId: testId(1),
         isIgnored: false,
         time: 60 * 60 * 1000,
       },
     });
     expect(state.session?.data.cards).toHaveLength(2);
     expect(state.session?.content?.index).toBe(1);
-    expect(state.session?.content?.card.id).toBe(2);
+    expect(state.session?.content?.card.id).toBe(testId(2));
     expect(state.session?.progress).toEqual({
       done: { untouched: 1, learn: 0, review: 0, total: 1 },
       pending: { untouched: 0, learn: 1, review: 0, total: 1 },
@@ -343,7 +353,7 @@ describe("lessonReducer", () => {
   it("finishes the lesson when the last card is graded", () => {
     const grade = { card: { id: 10 }, log: { rating: 3 } } as any;
     getCardGradesMock.mockReturnValue([grade]);
-    createCardFromCardFSRSMock.mockReturnValue(createCard({ id: 1, state: 2 }));
+    createCardFromCardFSRSMock.mockReturnValue(createCard({ id: testId(1), state: 2 }));
     createReviewFromReviewFSRSMock.mockReturnValue({
       rating: 3,
       state: 2,
@@ -426,7 +436,7 @@ describe("lessonReducer", () => {
 
   it("ignores open while a lesson is already active", () => {
     const openState = lessonReducer(structuredClone(lessonReducerDefault), ["open", { type: "total" }]);
-    const repeated = lessonReducer(openState, ["open", { type: "review", deckId: 3 }]);
+    const repeated = lessonReducer(openState, ["open", { type: "review", deckId: testId(3) }]);
 
     expect(repeated).toBe(openState);
     expect(repeated.request).toEqual({ type: "total" });

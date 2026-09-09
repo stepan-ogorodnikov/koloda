@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
-import { createTestDb, seedDeckContext } from "../test/test-helpers";
+import { createTestDb, MISSING_ID, seedDeckContext } from "../test/test-helpers";
 import { addDeck, deleteDeck, getDeck, getDecks, updateDeck } from "./decks";
 
 describe("decks repository integration", () => {
@@ -76,7 +76,7 @@ describe("decks repository integration", () => {
     await expect(
       addDeck(db, {
         title: "Bad algorithm",
-        algorithmId: 999_999,
+        algorithmId: MISSING_ID,
         templateId: template.id,
       }),
     ).rejects.toMatchObject({ code: "not-found.decks.add.algorithm" });
@@ -85,13 +85,13 @@ describe("decks repository integration", () => {
       addDeck(db, {
         title: "Bad template",
         algorithmId: algorithm.id,
-        templateId: 999_999,
+        templateId: MISSING_ID,
       }),
     ).rejects.toMatchObject({ code: "not-found.decks.add.template" });
 
     await expect(
       updateDeck(db, {
-        id: 999_999,
+        id: MISSING_ID,
         values: {
           title: "Missing deck",
           algorithmId: algorithm.id,
@@ -105,7 +105,7 @@ describe("decks repository integration", () => {
         id: deck.id,
         values: {
           title: "Bad algorithm",
-          algorithmId: 999_999,
+          algorithmId: MISSING_ID,
           templateId: template.id,
         },
       }),
@@ -117,7 +117,7 @@ describe("decks repository integration", () => {
         values: {
           title: "Bad template",
           algorithmId: algorithm.id,
-          templateId: 999_999,
+          templateId: MISSING_ID,
         },
       }),
     ).rejects.toMatchObject({ code: "not-found.decks.update.template" });

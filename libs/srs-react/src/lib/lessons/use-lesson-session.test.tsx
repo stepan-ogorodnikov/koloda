@@ -10,6 +10,7 @@ import {
   createLessonsResult,
   createQueryClient,
   createTodaysReviewTotals,
+  testId,
 } from "../../test/test-helpers";
 import { openLessonAtom, submitLessonSetupAtom } from "./lesson-actions";
 import { lessonContentAtom, lessonPhaseAtom, lessonSetupAtom } from "./lesson-selectors";
@@ -39,7 +40,7 @@ const TOTAL_TODAY_REVIEW_TOTALS = createTodaysReviewTotals({
   },
 });
 
-const REQUEST = { type: "total" as const, deckId: 7 };
+const REQUEST = { type: "total" as const, deckId: testId(7) };
 
 function buildQueries(overrides: Partial<Queries> = {}): Queries {
   return {
@@ -99,7 +100,7 @@ describe("useLessonSession", () => {
       expect(store.get(lessonPhaseAtom)).toBe("configuring");
     });
 
-    expect(store.get(lessonSetupAtom)?.filters).toEqual({ deckIds: [7] });
+    expect(store.get(lessonSetupAtom)?.filters).toEqual({ deckIds: [testId(7)] });
     expect(store.get(lessonSetupAtom)?.learnAheadLimit).toBeUndefined();
     expect(store.get(lessonSetupAtom)?.available).toEqual(TOTAL_LESSONS.total);
   });
@@ -175,7 +176,7 @@ describe("useLessonSession", () => {
     });
 
     expect(store.get(lessonStateAtom).phase).toBe("closed");
-    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.all({ deckIds: [7] }) });
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.all({ deckIds: [testId(7)] }) });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.all() });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.todayReviewTotals() });
   });
