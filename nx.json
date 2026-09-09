@@ -34,7 +34,6 @@
       },
       "exclude": [
         "libs/srs/*",
-        "libs/db-pglite/*",
         "libs/db-sqlite/*",
         "libs/ai/*"
       ]
@@ -56,7 +55,6 @@
       "plugin": "@nx/js/typescript",
       "include": [
         "libs/srs/*",
-        "libs/db-pglite/*",
         "libs/db-sqlite/*",
         "libs/ai/*"
       ],

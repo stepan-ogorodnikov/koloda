@@ -354,7 +354,7 @@ describe("conversations repository integration", () => {
     await deleteConversation(db, { id });
     expect(await getConversation(db, id)).toBeNull();
 
-    // WHY: both PGlite and SQLite repos use unconditional on-conflict upsert.
+    // WHY: SQLite repos use unconditional on-conflict upsert.
     // A save that passed an in-memory existence check can recreate the row
     // after delete unless the persistence coordinator tombstones/awaits first.
     await setConversation(db, { id, state });

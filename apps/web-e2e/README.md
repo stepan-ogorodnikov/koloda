@@ -1,6 +1,6 @@
 # web-e2e
 
-Playwright suite for the browser host: drives the real UI end to end against the PGlite database in Chromium.
+Playwright suite for the browser host: drives the real UI end to end against in-browser SQLite in Chromium.
 One spec file per user flow; no app code is mocked except the AI provider.
 
 ## Where it sits

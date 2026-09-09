@@ -19,7 +19,7 @@ The Zod registry stays in `@koloda/settings`; this package owns the forms that e
 
 - Zod registry / DTOs — `@koloda/settings`
 - Domain schemas — `@koloda/app`, `@koloda/ai`
-- Persistence — `@koloda/db-pglite`, `koloda`
+- Persistence — `@koloda/db-sqlite`, `koloda`
 - Routes, `useGlobalSync`, `wireUiPreferences`, global hotkey wiring — `@koloda/app-react`
 - Conversation-level assistant settings (prompt/temperature) — `@koloda/assistant-react`
 - Layout primitives — `@koloda/ui`

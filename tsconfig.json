@@ -22,9 +22,6 @@
       "path": "./libs/assistant-react"
     },
     {
-      "path": "./libs/db-pglite"
-    },
-    {
       "path": "./libs/db-sqlite"
     },
     {

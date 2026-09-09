@@ -1,4 +1,4 @@
-//! SQLite repos parallel to `@koloda/db-pglite` (plus AI secrets redaction/reconstruction).
+//! SQLite repos parallel to `@koloda/db-sqlite` (plus AI secrets redaction/reconstruction).
 //!
 //! Owns `rusqlite` adapters. Public functions wrap DB failures with `throw_known_error`
 //! so operation codes (`db.get` / `db.add` / …) match the TS side.

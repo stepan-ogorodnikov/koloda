@@ -10,7 +10,7 @@ System webviews made Tauri painful enough that the product moved to Electron.
 The Rust backend was kept anyway: it was already working, and it is a performant option for local SQLite work.
 It was extracted into `crates/koloda` and exposed to Electron through NAPI.
 
-Web still runs in TypeScript (PGlite + Drizzle repos).
+Web still runs in TypeScript (`@koloda/db-sqlite` repos).
 Desktop still validates and persists through Rust.
 The same product concepts therefore exist in both languages.
 
@@ -38,15 +38,15 @@ Prefer deleting and reshaping call sites over compatibility shims
 
 ## Consequences
 
-- Schema and domain edits are multi-package by default (TS libs + `koloda`, often both DB dialects).
+- Schema and domain edits are multi-package by default (TS libs + `koloda`, including web SQLite repos).
 - Agents must not “dedupe” by removing Rust validation, moving FSRS into Rust, or inventing adapter layers unless that is an explicit new ADR.
 - Playbooks such as `agents/ADD-AI-PROVIDER.md` and `agents/DB.md` remain the how-to; this ADR is the why.
 - Platform engines and ownership are covered in `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`.
 
 ## Related
 
-- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — web PGlite vs desktop SQLite / `koloda`
+- `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md` — web SQLite vs desktop SQLite / `koloda`
 - `agents/ADD-AI-PROVIDER.md` — keep provider enum and secrets in sync
-- `agents/DB.md` — schema + migration workflow across dialects and Refinery
+- `agents/DB.md` — schema + migration workflow and Refinery SQL
 - `agents/BACKWARDS-COMPATIBILITY.md` — no deprecation shims while pre-release
 - `libs/ai/README.md`, `libs/srs/README.md`, `crates/koloda/README.md` — package maps

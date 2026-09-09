@@ -20,7 +20,7 @@ Depends on `@koloda/app`, `@koloda/srs`, `@koloda/core-react`, and `@koloda/ui`.
 - Generic streaming transport hooks and presentational chat chrome — `@koloda/ai-react`
 - App routing, global hotkeys — `@koloda/app-react`
 - Global settings screens — `@koloda/settings-react`
-- Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda`
+- SQLite schema / Rust repos — `@koloda/db-sqlite`, `koloda`
 - Layout primitives — `@koloda/ui`
 
 ## Read next

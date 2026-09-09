@@ -16,7 +16,7 @@ function createWebToolExecutor(db: DB) {
   });
 }
 
-// INVARIANT: Web host adapter. Loads usable secrets from PGlite only at call
+// INVARIANT: Web host adapter. Loads usable secrets from SQLite only at call
 // time inside this module — never expose them to shared React / React Query.
 export function createWebAIRuntime(db: DB): AIRuntime {
   const webToolExecutor = createWebToolExecutor(db);

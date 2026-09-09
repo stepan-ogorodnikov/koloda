@@ -23,7 +23,7 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 - App routing, global hotkeys, application-shell assistant host mount — `@koloda/app-react`
 - Global settings screens — `@koloda/settings-react`
 - SRS screens — `@koloda/srs-react`
-- Drizzle schema / Rust repos — `@koloda/db-pglite`, `koloda`
+- SQLite schema / Rust repos — `@koloda/db-sqlite`, `koloda`
 - Layout primitives — `@koloda/ui`
 
 ## Read next

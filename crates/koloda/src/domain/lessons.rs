@@ -82,7 +82,7 @@ pub struct LessonTemplate {
 }
 
 // INVARIANT: loaders return `None` when no cards match — never an empty struct.
-// Twin of PGlite `null`; NAPI/IPC is `Option` / `LessonData | null`.
+// Twin of web SQLite `null`; NAPI/IPC is `Option` / `LessonData | null`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonData {

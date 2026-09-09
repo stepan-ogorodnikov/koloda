@@ -28,7 +28,7 @@ export function EditAIProfileForm({
     validators: { onSubmit: getEditSchema(config, hasSecrets) },
     onSubmit: async ({ value }) => {
       const hasNewApiKey = Boolean(value.apiKey?.trim());
-      // WHY: Omit secrets on title-only edits so hosts keep the keyring/PGlite key.
+      // WHY: Omit secrets on title-only edits so hosts keep the keyring/IndexedDB key.
       // Providers with baseUrl always send secrets; empty apiKey means keep existing.
       if (hasNewApiKey || hasBaseUrlField) {
         onSubmit({

@@ -4,7 +4,7 @@ Local-first spaced repetition software powered by the [FSRS](https://github.com/
 
 [Live demo](https://stepan-ogorodnikov.github.io/koloda)
 
-> This project is in early stages. API, database dialect and schema are subject to change.
+> This project is in early stages. API and schema are subject to change.
 
 ## Getting Started
 
@@ -59,7 +59,7 @@ cargo test
 
 ```
 apps/
-  web/                    # PGlite web host
+  web/                    # SQLite web host
   web-e2e/                # E2E tests for web host (Playwright)
   electron/               # Desktop main process (Electron / Rust NAPI)
   electron-react/         # Desktop renderer (React / Electron)
@@ -72,7 +72,7 @@ libs/
   assistant/              # Assistant application layer (run execution, save scheduling)
   assistant-react/        # Assistant chat React UI
   core-react/             # Shared React infrastructure (queries, hooks, atoms)
-  db-pglite/              # PGlite persistence (web)
+  db-sqlite/              # SQLite persistence (web)
   settings/               # Settings row registry (Zod)
   settings-react/         # Global settings screens
   srs/                    # SRS domain logic

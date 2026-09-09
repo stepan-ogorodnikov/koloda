@@ -64,7 +64,6 @@ describe("forbiddenImportReason", () => {
     expect(forbiddenImportReason("@koloda/assistant-react", "@koloda/ai-react", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/settings-react", "@koloda/srs-react", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/app-react", "@koloda/settings-react", layers)).toBeNull();
-    expect(forbiddenImportReason("@koloda/web", "@koloda/db-pglite", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/web", "@koloda/db-sqlite", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/electron", "@koloda/native-ipc", layers)).toBeNull();
     expect(forbiddenImportReason("@koloda/web-e2e", "@koloda/e2e", layers)).toBeNull();
@@ -93,12 +92,6 @@ describe("forbiddenImportReason", () => {
   });
 
   it("rejects exclusive packages from everyone except the listed consumers", () => {
-    expect(forbiddenImportReason("@koloda/srs-react", "@koloda/db-pglite", layers)).toBe(
-      "@koloda/db-pglite is exclusive to @koloda/web",
-    );
-    expect(forbiddenImportReason("@koloda/app-react", "@koloda/db-pglite", layers)).toBe(
-      "@koloda/db-pglite is exclusive to @koloda/web",
-    );
     expect(forbiddenImportReason("@koloda/srs-react", "@koloda/db-sqlite", layers)).toBe(
       "@koloda/db-sqlite is exclusive to @koloda/web",
     );
@@ -132,12 +125,12 @@ describe("compareDirection", () => {
     expect(
       compareDirection({
         selfName: "@koloda/mystery",
-        imported: ["@koloda/app", "@koloda/db-pglite"],
+        imported: ["@koloda/app", "@koloda/db-sqlite"],
         layers,
       }),
     ).toEqual({
       isUnclassified: true,
-      forbidden: [{ dependency: "@koloda/db-pglite", reason: "@koloda/db-pglite is exclusive to @koloda/web" }],
+      forbidden: [{ dependency: "@koloda/db-sqlite", reason: "@koloda/db-sqlite is exclusive to @koloda/web" }],
     });
 
     expect(
@@ -162,7 +155,7 @@ describe("compareDirection", () => {
     expect(
       compareDirection({
         selfName: "@koloda/web",
-        imported: ["@koloda/app-react", "@koloda/db-pglite"],
+        imported: ["@koloda/app-react", "@koloda/db-sqlite"],
         layers,
       }),
     ).toEqual({ isUnclassified: false, forbidden: [] });

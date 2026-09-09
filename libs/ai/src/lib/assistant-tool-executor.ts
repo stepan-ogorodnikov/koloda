@@ -9,7 +9,7 @@ import type { AssistantToolCard, AssistantToolExecutor, AssistantToolTemplate } 
 /**
  * Data access the assistant tools need. Injected by the host so this module
  * stays I/O-free (libs/ai holds shaping and budgets only — hosts bind the DB).
- * Each fn may be sync (NAPI) or async (PGlite); `await` normalizes both.
+ * Each fn may be sync (NAPI) or async (web SQLite); `await` normalizes both.
  */
 export type AssistantToolDataSource = {
   getDecks: () =>

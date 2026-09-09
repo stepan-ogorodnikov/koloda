@@ -214,7 +214,7 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
     throw_known_error(error_codes::DB_GET, || {
         let cards = get_lesson_cards(db, params)?;
 
-        // INVARIANT: empty match is `None`, not an empty `LessonData`. Twin of PGlite `null`.
+        // INVARIANT: empty match is `None`, not an empty `LessonData`. Twin of web SQLite `null`.
         // NAPI/IPC is `Option` / `LessonData | null`. Spec: studying must not begin.
         if cards.is_empty() {
             return Ok(None);

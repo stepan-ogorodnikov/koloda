@@ -48,6 +48,6 @@ export default defineConfig(() => ({
     reportCompressedSize: true,
   },
   optimizeDeps: {
-    exclude: ["@electric-sql/pglite", "@koloda/srs", "wa-sqlite"],
+    exclude: ["@koloda/srs", "wa-sqlite"],
   },
 }));

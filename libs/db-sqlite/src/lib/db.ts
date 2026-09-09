@@ -2,7 +2,7 @@ import SQLiteESMFactory from "wa-sqlite/dist/wa-sqlite-async.mjs";
 import { IDBBatchAtomicVFS } from "wa-sqlite/src/examples/IDBBatchAtomicVFS.js";
 import * as SQLite from "wa-sqlite";
 
-// INVARIANT: IndexedDB database name is `koloda` (same as today's PGlite).
+// INVARIANT: IndexedDB database name is `koloda`.
 export const IDB_DATABASE_NAME = "koloda";
 
 export type SqlValue = SQLiteCompatibleType;
@@ -127,7 +127,7 @@ async function wipeIncompatibleIdb(idbName: string) {
   const stores = Array.from(existing.objectStoreNames);
   existing.close();
 
-  // WHY: leftover PGlite `koloda` is not migrated. wa-sqlite needs a `blocks` store.
+  // WHY: leftover IndexedDB `koloda` without a `blocks` store is not migrated.
   if (stores.length > 0 && !stores.includes("blocks")) {
     await deleteIdb(idbName);
   }

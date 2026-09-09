@@ -89,7 +89,7 @@ export function categorizeSaveError(error: unknown): SaveErrorCategory {
     if (error.name === "AbortError") return "aborted";
     const text = `${error.name} ${error.message}`;
     if (/network|fetch|ECONN|ENOTFOUND|ETIMEDOUT|timeout/i.test(text)) return "network";
-    if (/quota|disk|SQLITE|PGlite|IndexedDB|storage/i.test(text)) return "storage";
+    if (/quota|disk|SQLITE|IndexedDB|storage/i.test(text)) return "storage";
   }
   return "unknown";
 }

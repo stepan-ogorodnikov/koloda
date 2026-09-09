@@ -91,7 +91,7 @@ Raising them wastes the human reviewer's time and signals the reviewer did not r
   Module/type orientation docs (ownership, mappings, do-not-interpret) are allowed per `agents/CODE-DOCUMENTATION.md`.
   Do not flag them as noise.
 - Do not suggest deprecation shims, adapter layers, or compatibility wrappers. See `agents/BACKWARDS-COMPATIBILITY.md`.
-- Do not propose collapsing the TS ↔ Rust duplication or unifying the two DB dialects. See `docs/adr/0001`, `docs/adr/0002`.
+- Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners. See `docs/adr/0001`, `docs/adr/0002`.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust. The source of truth is TS. See `docs/adr/0001`.
 - Do not flag provider HTTP calls living in `libs/ai` instead of the store. Layer boundaries own this. See `agents/ASSISTANT-MAP.md`.
 - Do not flag `Select.Root = SelectRoot` style assignment as a reexport. It is the allowed compound component exception. See `agents/CODE-STYLE.md`.

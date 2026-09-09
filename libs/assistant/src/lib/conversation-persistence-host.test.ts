@@ -469,7 +469,7 @@ describe("createConversationPersistenceHost", () => {
   });
 
   it("delayed write that resumes after tombstone does not resurrect the row", async () => {
-    // Simulated unconditional upsert store — mirrors PGlite/SQLite repos.
+    // Simulated unconditional upsert store — mirrors SQLite repos.
     const rows = new Map<string, string>();
     rows.set("A", "v1");
 

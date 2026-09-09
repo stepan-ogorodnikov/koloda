@@ -1,6 +1,6 @@
 # Web SQLite (current schema)
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -98,7 +98,7 @@ Out:
   Commit: Port web app onto existing SQLite schema
   Depends on: 1
 
-- [ ] 3. Cleanup PGlite and Drizzle
+- [x] 3. Cleanup PGlite and Drizzle
   Goal: Delete `libs/db-pglite`, `drizzle/`, `drizzle.config.pgsql.ts`, `db:generate` scripts, and the drizzle/pglite packages.
   Update workspace-deps, tsconfig references, `nx.json` inputs, and `agents/TESTING.md`.
   Rewrite ADR 0002: keep TS-owns-web / Rust-owns-desktop; product SQL is SQLite on both hosts;
@@ -117,4 +117,4 @@ Out:
 
 ## Outcome
 
-Not yet.
+Shipped in `fe874e1`, `1ebbe83`, and this cleanup commit (2026-09-09). Web host uses `@koloda/db-sqlite` (`wa-sqlite` + `IDBBatchAtomicVFS`) against Refinery `V1`–`V5`. PGlite, Drizzle, and `libs/db-pglite` are gone. `bunx nx test @koloda/db-sqlite` 50/50, `bunx nx run web-e2e:e2e` 82/82, `cargo test -p koloda` 94/94, `bun run check:workspace-deps` pass. Safari reload + private window was not checked in this run.

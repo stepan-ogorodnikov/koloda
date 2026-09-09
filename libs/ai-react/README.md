@@ -22,7 +22,7 @@ Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps tha
 - Revert — `libs/assistant-react/.../assistant`
 - Provider HTTP calls — `@koloda/ai`
 - Secrets storage / redaction — `crates/koloda`
-- Persistence schema — `drizzle/`
+- Persistence schema — `@koloda/db-sqlite`, `koloda`
 - SRS deck data — `libs/srs`
 
 ## Read next

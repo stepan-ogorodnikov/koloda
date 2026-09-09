@@ -528,7 +528,7 @@ fn unconditional_upsert_recreates_row_after_delete() {
         "row should be gone after delete"
     );
 
-    // WHY: both PGlite and SQLite repos use unconditional on-conflict upsert.
+    // WHY: SQLite repos use unconditional on-conflict upsert.
     // A save that passed an in-memory existence check can recreate the row
     // after delete unless the persistence coordinator tombstones/awaits first.
     set(&db, id, state).expect("upsert after delete should succeed");

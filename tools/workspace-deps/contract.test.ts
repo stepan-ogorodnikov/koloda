@@ -222,15 +222,15 @@ describe("formatCheckFailures", () => {
       badVersions: [],
       forbidden: [
         {
-          dependency: "@koloda/db-pglite",
-          reason: "@koloda/db-pglite is exclusive to @koloda/web",
+          dependency: "@koloda/db-sqlite",
+          reason: "@koloda/db-sqlite is exclusive to @koloda/web",
         },
       ],
       isUnclassified: false,
       references: [
         {
-          packageName: "@koloda/db-pglite",
-          specifier: "@koloda/db-pglite",
+          packageName: "@koloda/db-sqlite",
+          specifier: "@koloda/db-sqlite",
           file: "libs/srs-react/src/lib/foo.ts",
           line: 1,
           column: 10,
@@ -247,8 +247,8 @@ describe("formatCheckFailures", () => {
         "stale layer: @koloda/demo is listed in tools/workspace-deps/layers.ts but was not found under libs/ or apps/",
         "",
         "@koloda/srs-react (libs/srs-react/package.json)",
-        "  forbidden: @koloda/db-pglite is exclusive to @koloda/web",
-        "    libs/srs-react/src/lib/foo.ts:1:10 (import) @koloda/db-pglite",
+        "  forbidden: @koloda/db-sqlite is exclusive to @koloda/web",
+        "    libs/srs-react/src/lib/foo.ts:1:10 (import) @koloda/db-sqlite",
         "",
       ].join("\n"),
     );

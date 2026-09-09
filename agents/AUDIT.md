@@ -83,7 +83,7 @@ Project residue from agentic coding.
 This list is the point of the audit:
 
 - Mirror desync — Zod / TS domain vs Rust domain disagree (`docs/adr/0001`).
-- Dialect desync — PGlite vs SQLite / Refinery columns or behavior disagree (`docs/adr/0002`, `agents/DB.md`).
+- Host desync — web SQLite vs desktop SQLite / Refinery columns or behavior disagree (`docs/adr/0002`, `agents/DB.md`).
 - IPC drift — `apps/electron/IPC.md` vs main or renderer.
 - Layer leaks — a package does work that its README `Does NOT own`, or that `agents/ASSISTANT-MAP.md` forbids.
 - Missing trap comments — non-obvious code without `// WHY` / `// INVARIANT` / `// WORKAROUND`.
@@ -97,7 +97,7 @@ This list is the point of the audit:
 
 The job is desync, not unification.
 Flag the two sides disagreeing.
-Do not recommend collapsing TypeScript and Rust, or the two DB engines.
+Do not recommend collapsing TypeScript and Rust, or the two persistence owners.
 
 ## Finding rules
 
@@ -141,7 +141,7 @@ The review noise list is not copied unchanged; the dropped item is the diff-scop
   Module/type orientation docs are allowed per `agents/CODE-DOCUMENTATION.md`.
 - Do not suggest adding deprecation shims, adapter layers, or compatibility wrappers.
   Existing leftovers of those are residue — flag them.
-- Do not propose collapsing the TS ↔ Rust duplication or unifying the two DB dialects.
+- Do not propose collapsing the TS ↔ Rust duplication or unifying the two persistence owners.
   See `docs/adr/0001`, `docs/adr/0002`.
   Desync between the two sides is a finding; unification is not the fix.
 - Do not flag FSRS staying TypeScript-side as a bug, or suggest moving it into Rust.
