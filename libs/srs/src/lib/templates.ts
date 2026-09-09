@@ -1,5 +1,5 @@
 import type { UpdateData } from "@koloda/app";
-import { timestampsValidation } from "@koloda/app";
+import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, timestampsValidation } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 
@@ -21,13 +21,13 @@ export const TEMPLATE_OPERATIONS_MESSAGES = [
 ];
 
 export const templateValidation = z.object({
-  id: z.int(),
+  id: z.uuid(),
   title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
   content: z.object({
     fields: z
       .array(
         z.object({
-          id: z.number(),
+          id: z.uuid(),
           title: z.string(),
           type: z.enum(TEMPLATE_FIELD_TYPES),
           isRequired: z.boolean(),
@@ -37,7 +37,7 @@ export const templateValidation = z.object({
     layout: z
       .array(
         z.object({
-          field: z.number(),
+          field: z.uuid(),
           operation: z.enum(TEMPLATE_OPERATIONS),
         }),
       )
@@ -51,10 +51,7 @@ export const templateRowSchema = templateValidation.extend(timestampsValidation.
 });
 
 /** Partial template row from lesson SQL (`id` + `content` only). */
-export const lessonTemplateRowSchema = templateValidation.pick({ id: true, content: true }).extend({
-  // WHY: raw `db.execute` rows may surface int4 as string; coerce at this boundary.
-  id: z.coerce.number().int(),
-});
+export const lessonTemplateRowSchema = templateValidation.pick({ id: true, content: true });
 
 export type Template = z.infer<typeof templateRowSchema>;
 
@@ -72,18 +69,18 @@ export const DEFAULT_TEMPLATE: InsertTemplateData = {
   title: "Default",
   content: {
     fields: [
-      { id: 1, title: "Front", type: "text", isRequired: true },
-      { id: 2, title: "Back", type: "text", isRequired: true },
+      { id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, title: "Front", type: "text", isRequired: true },
+      { id: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, title: "Back", type: "text", isRequired: true },
     ],
     layout: [
-      { field: 1, operation: "display" },
-      { field: 2, operation: "type" },
+      { field: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, operation: "display" },
+      { field: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, operation: "type" },
     ],
   },
 };
 
 export const DEFAULT_TEMPLATE_FIELD: TemplateField = {
-  id: 0,
+  id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID,
   title: "",
   type: "text",
   isRequired: true,

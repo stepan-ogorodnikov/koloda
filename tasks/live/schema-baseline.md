@@ -53,7 +53,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Replace Refinery series with UUIDv7 V1
+- [x] 1. Replace Refinery series with UUIDv7 V1
   Goal: Delete `crates/koloda/src/migrations/V1`–`V5`.
   Write one `V1__init.sql` that is the current product schema with text primary keys for
   `algorithms`, `templates`, `decks`, `cards`, and `reviews`.
@@ -76,7 +76,7 @@ Out:
   Depends on: none (but do not start until web-sqlite is done)
   Commit: Start the product schema from a UUIDv7 V1
 
-- [ ] 2. Switch domain ids to UUID strings
+- [x] 2. Switch domain ids to UUID strings
   Goal: Cut entity ids in Zod and Rust domain from integers to UUID strings.
   `algorithms`, `templates`, `decks`, `cards`, `reviews` ids: `z.uuid()` / `String`.
   `reviews.id` is no longer `bigint`.

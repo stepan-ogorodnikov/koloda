@@ -2,7 +2,7 @@ use rusqlite::{params, OptionalExtension};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::app::utility::get_current_timestamp;
+use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData};
 use crate::repo::algorithms::get_algorithm;
 use crate::repo::templates::get_template;
@@ -36,7 +36,7 @@ pub fn get_decks(db: &Database) -> Result<Vec<Deck>, AppError> {
     })
 }
 
-pub fn get_decks_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Deck>, AppError> {
+pub fn get_decks_by_ids(db: &Database, ids: &[String]) -> Result<Vec<Deck>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         if ids.is_empty() {
             return Ok(Vec::new());
@@ -65,7 +65,7 @@ pub fn get_decks_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Deck>, AppErro
     })
 }
 
-pub fn get_deck(db: &Database, id: i64) -> Result<Option<Deck>, AppError> {
+pub fn get_deck(db: &Database, id: &str) -> Result<Option<Deck>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             conn.query_row(
@@ -88,13 +88,13 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
         data.validate()?;
 
-        get_algorithm(db, data.algorithm_id)?.ok_or_else(|| {
+        get_algorithm(db, &data.algorithm_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_DECKS_ADD_ALGORITHM,
                 Some(format!("Algorithm id: {}", data.algorithm_id)),
             )
         })?;
-        get_template(db, data.template_id)?.ok_or_else(|| {
+        get_template(db, &data.template_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_DECKS_ADD_TEMPLATE,
                 Some(format!("Template id: {}", data.template_id)),
@@ -104,18 +104,19 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
         let now = get_current_timestamp()?;
 
         let id = db.with_conn(|conn| {
+            let id = minted_uuidv7(None);
             conn.execute(
                 r#"
-                INSERT INTO decks (title, algorithm_id, template_id, created_at, updated_at)
-                VALUES (?1, ?2, ?3, ?4, NULL)
+                INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at)
+                VALUES (?1, ?2, ?3, ?4, ?5, NULL)
                 "#,
-                params![data.title, data.algorithm_id, data.template_id, now],
+                params![id, data.title, data.algorithm_id, data.template_id, now],
             )?;
 
-            Ok(conn.last_insert_rowid())
+            Ok(id)
         })?;
 
-        get_deck(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+        get_deck(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
     })
 }
 
@@ -123,19 +124,19 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
     throw_known_error(error_codes::DB_UPDATE, || {
         data.values.validate()?;
 
-        get_deck(db, data.id)?.ok_or_else(|| {
+        get_deck(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_DECKS_UPDATE_DECK,
                 Some(format!("Deck id: {}", data.id)),
             )
         })?;
-        get_algorithm(db, data.values.algorithm_id)?.ok_or_else(|| {
+        get_algorithm(db, &data.values.algorithm_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_DECKS_UPDATE_ALGORITHM,
                 Some(format!("Algorithm id: {}", data.values.algorithm_id)),
             )
         })?;
-        get_template(db, data.values.template_id)?.ok_or_else(|| {
+        get_template(db, &data.values.template_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_DECKS_UPDATE_TEMPLATE,
                 Some(format!("Template id: {}", data.values.template_id)),
@@ -167,14 +168,22 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
             Ok(())
         })?;
 
-        get_deck(db, data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_deck(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
 }
 
 pub fn delete_deck(db: &Database, data: DeleteDeckData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        db.with_conn(|conn| {
-            conn.execute("DELETE FROM decks WHERE id = ?1", params![data.id])?;
+        db.with_transaction(|tx| {
+            tx.execute(
+                r#"
+                DELETE FROM reviews
+                WHERE card_id IN (SELECT id FROM cards WHERE deck_id = ?1)
+                "#,
+                params![data.id],
+            )?;
+            tx.execute("DELETE FROM cards WHERE deck_id = ?1", params![data.id])?;
+            tx.execute("DELETE FROM decks WHERE id = ?1", params![data.id])?;
 
             Ok(())
         })

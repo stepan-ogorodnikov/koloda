@@ -3,10 +3,10 @@ use serde_json::json;
 
 fn deck_fixture() -> Deck {
     Deck {
-        id: 5,
+        id: "01900000-0000-7000-8000-000000000005".to_string(),
         title: "German".to_string(),
-        algorithm_id: 1,
-        template_id: 2,
+        algorithm_id: "01900000-0000-7000-8000-000000000001".to_string(),
+        template_id: "01900000-0000-7000-8000-000000000002".to_string(),
         created_at: 1_699_999_000_000,
         updated_at: Some(1_700_000_400_000),
     }
@@ -21,10 +21,10 @@ fn test_deck_serializes_wire_shape() {
     assert_eq!(
         value,
         json!({
-            "id": 5,
+            "id": "01900000-0000-7000-8000-000000000005",
             "title": "German",
-            "algorithmId": 1,
-            "templateId": 2,
+            "algorithmId": "01900000-0000-7000-8000-000000000001",
+            "templateId": "01900000-0000-7000-8000-000000000002",
             "createdAt": "2023-11-14T21:56:40+00:00",
             "updatedAt": "2023-11-14T22:20:00+00:00",
         })
@@ -55,7 +55,7 @@ fn test_deck_json_round_trips() {
 #[test]
 fn test_deck_input_shapes() {
     // All three insert fields are non-Option: presence is required.
-    let payload = json!({ "title": "German", "algorithmId": 1, "templateId": 2 });
+    let payload = json!({ "title": "German", "algorithmId": "01900000-0000-7000-8000-000000000001", "templateId": "01900000-0000-7000-8000-000000000002" });
     for field in ["title", "algorithmId", "templateId"] {
         let mut missing = payload.clone();
         missing.as_object_mut().unwrap().remove(field);
@@ -67,9 +67,12 @@ fn test_deck_input_shapes() {
     serde_json::from_value::<InsertDeckData>(payload).expect("canonical insert payload should deserialize");
 
     // The update `values` envelope is required as a whole.
-    serde_json::from_value::<UpdateDeckData>(json!({ "id": 5 })).unwrap_err();
+    serde_json::from_value::<UpdateDeckData>(json!({ "id": "01900000-0000-7000-8000-000000000005" })).unwrap_err();
     assert!(
-        serde_json::from_value::<UpdateDeckData>(json!({ "id": 5, "values": { "title": "x" } })).is_err(),
+        serde_json::from_value::<UpdateDeckData>(
+            json!({ "id": "01900000-0000-7000-8000-000000000005", "values": { "title": "x" } })
+        )
+        .is_err(),
         "values needs algorithmId and templateId too"
     );
 }

@@ -12,7 +12,7 @@ fn update_algorithm_fails_with_not_found_when_algorithm_is_missing() {
     let err = algorithms::update_algorithm(
         &db,
         UpdateAlgorithmData {
-            id: 999_999,
+            id: "01900000-0000-7000-8000-0000000f423f".to_string(),
             values: UpdateAlgorithmValues {
                 title: "Renamed FSRS".to_string(),
                 content: fsrs_algorithm_content(),
@@ -30,23 +30,23 @@ fn delete_algorithm_reassigns_decks_to_successor() {
     let old_algorithm_id = add_algorithm(&db, "Old FSRS");
     let successor_algorithm_id = add_algorithm(&db, "New FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, old_algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &old_algorithm_id, &template_id, "Deck");
 
     algorithms::delete_algorithm(
         &db,
         DeleteAlgorithmData {
-            id: old_algorithm_id,
-            successor_id: Some(successor_algorithm_id),
+            id: old_algorithm_id.clone(),
+            successor_id: Some(successor_algorithm_id.clone()),
         },
     )
     .expect("algorithm delete with successor should succeed");
 
-    let deck = koloda::repo::decks::get_deck(&db, deck_id)
+    let deck = koloda::repo::decks::get_deck(&db, &deck_id)
         .expect("deck query should succeed")
         .expect("deck should exist");
     assert_eq!(deck.algorithm_id, successor_algorithm_id);
 
-    let deleted_algorithm = algorithms::get_algorithm(&db, old_algorithm_id).expect("query should succeed");
+    let deleted_algorithm = algorithms::get_algorithm(&db, &old_algorithm_id).expect("query should succeed");
     assert!(deleted_algorithm.is_none());
 }
 
@@ -55,12 +55,12 @@ fn delete_algorithm_fails_without_successor_when_decks_exist() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let _ = add_deck(&db, algorithm_id, template_id, "Deck");
+    let _ = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let err = algorithms::delete_algorithm(
         &db,
         DeleteAlgorithmData {
-            id: algorithm_id,
+            id: algorithm_id.clone(),
             successor_id: None,
         },
     )
@@ -74,13 +74,13 @@ fn delete_algorithm_fails_when_successor_does_not_exist() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let _ = add_deck(&db, algorithm_id, template_id, "Deck");
+    let _ = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let err = algorithms::delete_algorithm(
         &db,
         DeleteAlgorithmData {
-            id: algorithm_id,
-            successor_id: Some(999_999),
+            id: algorithm_id.clone(),
+            successor_id: Some("01900000-0000-7000-8000-0000000f423f".to_string()),
         },
     )
     .expect_err("deleting algorithm with non-existent successor should fail");
@@ -93,18 +93,18 @@ fn delete_algorithm_invalid_successor_does_not_mutate_decks_or_delete_algorithm(
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let result = algorithms::delete_algorithm(
         &db,
         DeleteAlgorithmData {
-            id: algorithm_id,
-            successor_id: Some(999_999),
+            id: algorithm_id.clone(),
+            successor_id: Some("01900000-0000-7000-8000-0000000f423f".to_string()),
         },
     );
     assert!(result.is_err(), "delete should fail with invalid successor");
 
-    let deck = koloda::repo::decks::get_deck(&db, deck_id)
+    let deck = koloda::repo::decks::get_deck(&db, &deck_id)
         .expect("deck query should succeed")
         .expect("deck should exist");
     assert_eq!(
@@ -112,6 +112,6 @@ fn delete_algorithm_invalid_successor_does_not_mutate_decks_or_delete_algorithm(
         "deck algorithm should remain unchanged"
     );
 
-    let algorithm = algorithms::get_algorithm(&db, algorithm_id).expect("query should succeed");
+    let algorithm = algorithms::get_algorithm(&db, &algorithm_id).expect("query should succeed");
     assert!(algorithm.is_some(), "source algorithm should remain");
 }

@@ -59,8 +59,8 @@ fn test_settings_row_serializes_wire_shape() {
 fn test_learning_content_uses_camel_case_keys() {
     let learning = LearningSettings {
         defaults: LearningDefaults {
-            algorithm: 1,
-            template: 2,
+            algorithm: "01900000-0000-7000-8000-000000000001".to_string(),
+            template: "01900000-0000-7000-8000-000000000002".to_string(),
         },
         daily_limits: DailyLimits {
             total: 10,
@@ -84,7 +84,7 @@ fn test_learning_content_uses_camel_case_keys() {
     assert_eq!(
         serde_json::to_value(&learning).unwrap(),
         json!({
-            "defaults": { "algorithm": 1, "template": 2 },
+            "defaults": { "algorithm": "01900000-0000-7000-8000-000000000001", "template": "01900000-0000-7000-8000-000000000002" },
             "dailyLimits": {
                 "total": 10,
                 "untouched": { "value": 5, "counts": false },

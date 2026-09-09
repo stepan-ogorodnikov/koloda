@@ -52,9 +52,9 @@ pub struct CardContentField {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Card {
-    pub id: i64,
-    pub deck_id: i64,
-    pub template_id: i64,
+    pub id: String,
+    pub deck_id: String,
+    pub template_id: String,
     pub content: CardContent,
     pub state: i32,
     #[serde(
@@ -98,15 +98,15 @@ pub struct Card {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CardCount {
-    pub deck_id: i64,
+    pub deck_id: String,
     pub count: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InsertCardData {
-    pub deck_id: i64,
-    pub template_id: i64,
+    pub deck_id: String,
+    pub template_id: String,
     pub content: CardContent,
     pub state: Option<i32>,
     #[serde(default, deserialize_with = "deserialize_optional_timestamp")]
@@ -130,14 +130,14 @@ pub struct UpdateCardValues {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCardData {
-    pub id: i64,
+    pub id: String,
     pub values: UpdateCardValues,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCardProgress {
-    pub id: i64,
+    pub id: String,
     pub state: i32,
     #[serde(deserialize_with = "deserialize_timestamp")]
     pub due_at: i64,
@@ -154,19 +154,19 @@ pub struct UpdateCardProgress {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteCardData {
-    pub id: i64,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteCardsData {
-    pub ids: Vec<i64>,
+    pub ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResetCardProgressData {
-    pub id: i64,
+    pub id: String,
 }
 
 /// Per-item batch-add result — mirrors `@koloda/srs` `InsertCardsResponse`.
@@ -202,7 +202,7 @@ pub type AddCardsResponse = Vec<AddCardsItemResult>;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetCardsParams {
-    pub deck_id: i64,
+    pub deck_id: String,
 }
 
 impl InsertCardData {
@@ -257,8 +257,8 @@ impl UpdateCardProgress {
 fn validate_content(content: &CardContent, template_fields: &[TemplateField]) -> Result<(), AppError> {
     for field in template_fields {
         if field.is_required {
-            let field_key = field.id.to_string();
-            let field_value = content.get(&field_key).ok_or_else(|| {
+            let field_key = field.id.as_str();
+            let field_value = content.get(field_key).ok_or_else(|| {
                 AppError::new(
                     error_codes::VALIDATION_CARDS_CONTENT_FIELD_EMPTY,
                     Some(format!("Field id: {}", field.id)),

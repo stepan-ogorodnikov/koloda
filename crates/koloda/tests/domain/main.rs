@@ -24,6 +24,7 @@ mod reviews_serde_tests;
 mod reviews_totals_tests;
 mod reviews_validation_tests;
 mod secrets_tests;
+mod seed_ids_tests;
 mod settings_ai_tests;
 mod settings_hotkeys_tests;
 mod settings_interface_tests;

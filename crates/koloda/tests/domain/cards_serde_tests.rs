@@ -6,9 +6,9 @@ use serde_json::{json, Value};
 /// Full-field card used as the base for wire-shape and round-trip pins.
 fn card_fixture() -> Card {
     Card {
-        id: 42,
-        deck_id: 7,
-        template_id: 3,
+        id: "01900000-0000-7000-8000-00000000002a".to_string(),
+        deck_id: "01900000-0000-7000-8000-000000000007".to_string(),
+        template_id: "01900000-0000-7000-8000-000000000003".to_string(),
         content: [
             (
                 "1".to_string(),
@@ -50,9 +50,9 @@ fn test_card_serializes_wire_shape() {
     assert_eq!(
         value,
         json!({
-            "id": 42,
-            "deckId": 7,
-            "templateId": 3,
+            "id": "01900000-0000-7000-8000-00000000002a",
+            "deckId": "01900000-0000-7000-8000-000000000007",
+            "templateId": "01900000-0000-7000-8000-000000000003",
             "content": { "1": { "text": "front" }, "2": { "text": "back" } },
             "state": 2,
             "dueAt": "2023-11-14T22:13:20+00:00",
@@ -132,8 +132,8 @@ fn test_card_json_round_trips() {
 /// Canonical valid card-insert payload used as the mutation base for input-shape cases.
 fn valid_insert_payload() -> Value {
     json!({
-        "deckId": 7,
-        "templateId": 3,
+        "deckId": "01900000-0000-7000-8000-000000000007",
+        "templateId": "01900000-0000-7000-8000-000000000003",
         "content": { "1": { "text": "front" } },
         "state": 0,
         "stability": null,
@@ -195,7 +195,7 @@ fn test_insert_card_data_required_fields() {
 #[test]
 fn test_insert_card_data_wrong_typed_fields_fail() {
     let mistyped_fields = [
-        ("deckId", json!("not-a-number")),
+        ("deckId", json!(1)),
         ("templateId", json!(null)),
         ("content", json!("not-an-object")),
         ("content", json!({ "1": "not-a-field" })),
@@ -218,16 +218,17 @@ fn test_insert_card_data_wrong_typed_fields_fail() {
 #[test]
 fn test_update_card_data_wire_envelope() {
     let data: UpdateCardData = serde_json::from_value(json!({
-        "id": 5,
+        "id": "01900000-0000-7000-8000-000000000005",
         "values": { "content": { "1": { "text": "updated" } } },
     }))
     .expect("canonical update payload should deserialize");
-    assert_eq!(data.id, 5);
+    assert_eq!(data.id, "01900000-0000-7000-8000-000000000005");
     assert_eq!(data.values.content["1"].text, "updated");
 
     // The `values` envelope is required as a whole.
-    serde_json::from_value::<UpdateCardData>(json!({ "id": 5 })).unwrap_err();
-    serde_json::from_value::<UpdateCardData>(json!({ "id": 5, "values": {} })).unwrap_err();
+    serde_json::from_value::<UpdateCardData>(json!({ "id": "01900000-0000-7000-8000-000000000005" })).unwrap_err();
+    serde_json::from_value::<UpdateCardData>(json!({ "id": "01900000-0000-7000-8000-000000000005", "values": {} }))
+        .unwrap_err();
 }
 
 /// Pins the batch-add wire shape: success items serialize as `{}` (no `error`

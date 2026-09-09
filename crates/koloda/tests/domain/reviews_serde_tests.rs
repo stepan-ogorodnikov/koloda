@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 /// Canonical valid review-insert payload used as the mutation base for JSON-shape contract cases.
 fn valid_payload() -> Value {
     json!({
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1_000_000_000,
@@ -61,7 +61,7 @@ fn test_wrong_typed_fields_fail() {
     data.validate().unwrap();
 
     let mistyped_fields = [
-        ("cardId", json!("not-a-number")),
+        ("cardId", json!(1)),
         ("cardId", json!(null)),
         ("rating", json!("not-a-number")),
         ("rating", json!(null)),
@@ -95,8 +95,8 @@ fn test_wrong_typed_fields_fail() {
 /// Full-field review used as the base for wire-shape and round-trip pins.
 fn review_fixture() -> Review {
     Review {
-        id: 42,
-        card_id: 7,
+        id: "01900000-0000-7000-8000-00000000002a".to_string(),
+        card_id: "01900000-0000-7000-8000-000000000007".to_string(),
         rating: 3,
         state: 2,
         due_at: 1_700_000_000_000,
@@ -120,8 +120,8 @@ fn test_review_serializes_wire_shape() {
     assert_eq!(
         value,
         json!({
-            "id": 42,
-            "cardId": 7,
+            "id": "01900000-0000-7000-8000-00000000002a",
+            "cardId": "01900000-0000-7000-8000-000000000007",
             "rating": 3,
             "state": 2,
             "dueAt": "2023-11-14T22:13:20+00:00",

@@ -3,18 +3,18 @@ use serde_json::json;
 
 fn template_fixture() -> Template {
     Template {
-        id: 11,
+        id: "01900000-0000-7000-8000-00000000000b".to_string(),
         title: "Basic".to_string(),
         content: TemplateContent {
             fields: vec![
                 TemplateField {
-                    id: 1,
+                    id: "01900000-0000-7000-8000-000000000001".to_string(),
                     title: "Front".to_string(),
                     field_type: "text".to_string(),
                     is_required: true,
                 },
                 TemplateField {
-                    id: 2,
+                    id: "01900000-0000-7000-8000-000000000002".to_string(),
                     title: "Back".to_string(),
                     field_type: "markdown".to_string(),
                     is_required: false,
@@ -22,11 +22,11 @@ fn template_fixture() -> Template {
             ],
             layout: vec![
                 TemplateLayoutItem {
-                    field: 1,
+                    field: "01900000-0000-7000-8000-000000000001".to_string(),
                     operation: "display".to_string(),
                 },
                 TemplateLayoutItem {
-                    field: 2,
+                    field: "01900000-0000-7000-8000-000000000002".to_string(),
                     operation: "reveal".to_string(),
                 },
             ],
@@ -47,16 +47,16 @@ fn test_template_serializes_wire_shape() {
     assert_eq!(
         value,
         json!({
-            "id": 11,
+            "id": "01900000-0000-7000-8000-00000000000b",
             "title": "Basic",
             "content": {
                 "fields": [
-                    { "id": 1, "title": "Front", "type": "text", "isRequired": true },
-                    { "id": 2, "title": "Back", "type": "markdown", "isRequired": false },
+                    { "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true },
+                    { "id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "markdown", "isRequired": false },
                 ],
                 "layout": [
-                    { "field": 1, "operation": "display" },
-                    { "field": 2, "operation": "reveal" },
+                    { "field": "01900000-0000-7000-8000-000000000001", "operation": "display" },
+                    { "field": "01900000-0000-7000-8000-000000000002", "operation": "reveal" },
                 ],
             },
             "isLocked": true,
@@ -80,8 +80,8 @@ fn test_insert_template_data_input_shapes() {
     let payload = json!({
         "title": "Basic",
         "content": {
-            "fields": [{ "id": 1, "title": "Front", "type": "text", "isRequired": true }],
-            "layout": [{ "field": 1, "operation": "display" }],
+            "fields": [{ "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true }],
+            "layout": [{ "field": "01900000-0000-7000-8000-000000000001", "operation": "display" }],
         },
     });
 

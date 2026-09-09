@@ -9,7 +9,7 @@ use koloda::repo::{algorithms, cards, decks, templates};
 
 use crate::common::{card_content, fsrs_algorithm_content, simple_template_content};
 
-pub fn add_algorithm(db: &Database, title: &str) -> i64 {
+pub fn add_algorithm(db: &Database, title: &str) -> String {
     let algorithm = algorithms::add_algorithm(
         db,
         InsertAlgorithmData {
@@ -22,7 +22,7 @@ pub fn add_algorithm(db: &Database, title: &str) -> i64 {
     algorithm.id
 }
 
-pub fn add_template(db: &Database, title: &str) -> i64 {
+pub fn add_template(db: &Database, title: &str) -> String {
     let template = templates::add_template(
         db,
         InsertTemplateData {
@@ -35,13 +35,13 @@ pub fn add_template(db: &Database, title: &str) -> i64 {
     template.id
 }
 
-pub fn add_deck(db: &Database, algorithm_id: i64, template_id: i64, title: &str) -> i64 {
+pub fn add_deck(db: &Database, algorithm_id: &str, template_id: &str, title: &str) -> String {
     let deck = decks::add_deck(
         db,
         InsertDeckData {
             title: title.to_string(),
-            algorithm_id,
-            template_id,
+            algorithm_id: algorithm_id.to_string(),
+            template_id: template_id.to_string(),
         },
     )
     .expect("deck should be created");
@@ -49,12 +49,12 @@ pub fn add_deck(db: &Database, algorithm_id: i64, template_id: i64, title: &str)
     deck.id
 }
 
-pub fn add_card(db: &Database, deck_id: i64, template_id: i64, front: &str) -> i64 {
+pub fn add_card(db: &Database, deck_id: &str, template_id: &str, front: &str) -> String {
     let card = cards::add_card(
         db,
         InsertCardData {
-            deck_id,
-            template_id,
+            deck_id: deck_id.to_string(),
+            template_id: template_id.to_string(),
             content: card_content(front, "answer"),
             state: None,
             due_at: None,
@@ -74,36 +74,43 @@ pub fn add_card(db: &Database, deck_id: i64, template_id: i64, front: &str) -> i
 
 pub fn insert_card_row(
     db: &Database,
-    deck_id: i64,
-    template_id: i64,
+    deck_id: &str,
+    template_id: &str,
     state: i32,
     due_at: Option<i64>,
     created_at: i64,
-) -> i64 {
+) -> String {
     let content = serde_json::to_string(&card_content("q", "a")).expect("content should serialize");
+    let id = koloda::app::utility::generate_uuidv7();
     db.with_conn(|conn| {
         conn.execute(
             r#"
-            INSERT INTO cards (deck_id, template_id, content, state, due_at, stability, difficulty,
+            INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability, difficulty,
                               scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at)
-            VALUES (?1, ?2, ?3, ?4, ?5, 0, 0, 0, 0, 0, 0, NULL, ?6, NULL)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, 0, 0, 0, 0, 0, NULL, ?7, NULL)
             "#,
-            rusqlite::params![deck_id, template_id, content, state, due_at, created_at],
+            rusqlite::params![id, deck_id, template_id, content, state, due_at, created_at],
         )?;
-        Ok(conn.last_insert_rowid())
+        Ok(id)
     })
     .expect("card row should insert")
 }
 
-pub fn insert_review_row(db: &Database, card_id: i64, state: i32, is_ignored: i32, created_at: i64) {
+pub fn insert_review_row(db: &Database, card_id: &str, state: i32, is_ignored: i32, created_at: i64) {
     db.with_conn(|conn| {
         conn.execute(
             r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
+            INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,
                                 scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, ?2, NULL, 1.0, 5.0, 0, 0, 10, ?3, ?4)
+            VALUES (?1, ?2, 3, ?3, NULL, 1.0, 5.0, 0, 0, 10, ?4, ?5)
             "#,
-            rusqlite::params![card_id, state, is_ignored, created_at],
+            rusqlite::params![
+                koloda::app::utility::generate_uuidv7(),
+                card_id,
+                state,
+                is_ignored,
+                created_at
+            ],
         )?;
         Ok(())
     })

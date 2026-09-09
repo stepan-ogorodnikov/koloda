@@ -14,7 +14,7 @@ fn test_lessons_result_serializes_wire_shape() {
             total: 8,
         },
         decks: vec![LessonDeck {
-            id: 5,
+            id: "01900000-0000-7000-8000-000000000005".to_string(),
             title: "German".to_string(),
             untouched: 2,
             learn: 3,
@@ -30,7 +30,7 @@ fn test_lessons_result_serializes_wire_shape() {
         json!({
             "total": { "untouched": 2, "learn": 3, "review": 5, "total": 8 },
             "decks": [
-                { "id": 5, "title": "German", "untouched": 2, "learn": 3, "review": 5, "total": 10 },
+                { "id": "01900000-0000-7000-8000-000000000005", "title": "German", "untouched": 2, "learn": 3, "review": 5, "total": 10 },
             ],
         })
     );
@@ -45,10 +45,10 @@ fn test_lessons_result_serializes_wire_shape() {
 #[test]
 fn test_lesson_template_layout_allows_missing_field() {
     let template = LessonTemplate {
-        id: 11,
+        id: "01900000-0000-7000-8000-00000000000b".to_string(),
         title: "Basic".to_string(),
         fields: vec![TemplateField {
-            id: 1,
+            id: "01900000-0000-7000-8000-000000000001".to_string(),
             title: "Front".to_string(),
             field_type: "text".to_string(),
             is_required: true,
@@ -56,18 +56,18 @@ fn test_lesson_template_layout_allows_missing_field() {
         layout: vec![
             LessonTemplateLayoutItem {
                 field: Some(TemplateField {
-                    id: 1,
+                    id: "01900000-0000-7000-8000-000000000001".to_string(),
                     title: "Front".to_string(),
                     field_type: "text".to_string(),
                     is_required: true,
                 }),
                 operation: "display".to_string(),
-                field_id: 1,
+                field_id: "01900000-0000-7000-8000-000000000001".to_string(),
             },
             LessonTemplateLayoutItem {
                 field: None,
                 operation: "reveal".to_string(),
-                field_id: 2,
+                field_id: "01900000-0000-7000-8000-000000000002".to_string(),
             },
         ],
         created_at: 1_699_999_000_000,
@@ -80,11 +80,11 @@ fn test_lesson_template_layout_allows_missing_field() {
         value["layout"],
         json!([
             {
-                "field": { "id": 1, "title": "Front", "type": "text", "isRequired": true },
+                "field": { "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true },
                 "operation": "display",
-                "fieldId": 1,
+                "fieldId": "01900000-0000-7000-8000-000000000001",
             },
-            { "field": null, "operation": "reveal", "fieldId": 2 },
+            { "field": null, "operation": "reveal", "fieldId": "01900000-0000-7000-8000-000000000002" },
         ])
     );
     assert_eq!(value["createdAt"], json!("2023-11-14T21:56:40+00:00"));
@@ -100,11 +100,14 @@ fn test_lesson_template_layout_allows_missing_field() {
 fn test_lesson_query_input_shapes() {
     let params: GetLessonsParams = serde_json::from_value(json!({
         "dueAt": "2023-11-14T22:13:20+00:00",
-        "filters": { "deckIds": [5] },
+        "filters": { "deckIds": ["01900000-0000-7000-8000-000000000005"] },
     }))
     .expect("ISO 8601 dueAt should deserialize");
     assert_eq!(params.due_at, 1_700_000_000_000);
-    assert_eq!(params.filters.unwrap().deck_ids, Some(vec![5]));
+    assert_eq!(
+        params.filters.unwrap().deck_ids,
+        Some(vec!["01900000-0000-7000-8000-000000000005".to_string()])
+    );
 
     let params: GetLessonsParams = serde_json::from_value(json!({ "dueAt": 1_700_000_000_000_i64 }))
         .expect("filters should be optional on get_lessons");

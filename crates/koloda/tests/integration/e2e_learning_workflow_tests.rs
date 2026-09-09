@@ -28,8 +28,8 @@ fn e2e_full_learning_workflow() {
         &db,
         InsertDeckData {
             title: "Test Deck".to_string(),
-            algorithm_id,
-            template_id,
+            algorithm_id: algorithm_id.clone(),
+            template_id: template_id.clone(),
         },
     )
     .expect("deck should be created");
@@ -39,8 +39,8 @@ fn e2e_full_learning_workflow() {
         cards::add_card(
             &db,
             InsertCardData {
-                deck_id,
-                template_id,
+                deck_id: deck_id.clone(),
+                template_id: template_id.clone(),
                 content: card_content(&format!("Question {}", i), &format!("Answer {}", i)),
                 state: None,
                 due_at: None,
@@ -71,7 +71,7 @@ fn e2e_full_learning_workflow() {
         &GetLessonDataParams {
             due_at: 1_000_000_000_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_id]),
+                deck_ids: Some(vec![deck_id.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 5,
@@ -93,7 +93,7 @@ fn e2e_full_learning_workflow() {
             &db,
             LessonResultData {
                 card: koloda::domain::cards::UpdateCardProgress {
-                    id: card.id,
+                    id: card.id.clone(),
                     state: 2,
                     due_at: 1_900_000_000_000,
                     stability: 5.0,
@@ -105,7 +105,7 @@ fn e2e_full_learning_workflow() {
                     last_reviewed_at: Some(1_800_000_000_000),
                 },
                 review: koloda::domain::reviews::InsertReviewData {
-                    card_id: card.id,
+                    card_id: card.id.clone(),
                     rating: 3,
                     state: 2,
                     due_at: 1_900_000_000_000,

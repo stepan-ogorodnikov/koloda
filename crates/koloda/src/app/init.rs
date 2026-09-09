@@ -60,12 +60,22 @@ pub fn seed_db(db: &Database, data: SeedData) -> Result<(), AppError> {
     db.with_transaction(|tx| {
         let algorithm_id = match algorithms::oldest_algorithm_id(tx)? {
             Some(id) => id,
-            None => algorithms::insert_algorithm(tx, &data.algorithm, now)?,
+            None => algorithms::insert_algorithm(
+                tx,
+                &data.algorithm,
+                now,
+                Some(crate::domain::seed_ids::SEED_ALGORITHM_SIMPLE_ID),
+            )?,
         };
 
         let template_id = match templates::oldest_template_id(tx)? {
             Some(id) => id,
-            None => templates::insert_template(tx, &data.template, now)?,
+            None => templates::insert_template(
+                tx,
+                &data.template,
+                now,
+                Some(crate::domain::seed_ids::SEED_TEMPLATE_TYPE_ID),
+            )?,
         };
 
         learning_settings.defaults.algorithm = algorithm_id;

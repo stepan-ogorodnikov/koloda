@@ -16,7 +16,7 @@ use crate::domain::time::{
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonDeck {
-    pub id: i64,
+    pub id: String,
     pub title: String,
     pub untouched: i64,
     pub learn: i64,
@@ -34,7 +34,7 @@ pub struct LessonsResult {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonFilters {
-    pub deck_ids: Option<Vec<i64>>,
+    pub deck_ids: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -60,13 +60,13 @@ impl LessonAmounts {
 pub struct LessonTemplateLayoutItem {
     pub field: Option<TemplateField>,
     pub operation: String,
-    pub field_id: i64,
+    pub field_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonTemplate {
-    pub id: i64,
+    pub id: String,
     pub title: String,
     pub fields: Vec<TemplateField>,
     pub layout: Vec<LessonTemplateLayoutItem>,

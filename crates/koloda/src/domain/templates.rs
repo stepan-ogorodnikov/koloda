@@ -16,7 +16,7 @@ const LAYOUT_OPERATIONS: &[&str] = &["display", "reveal", "type"];
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Template {
-    pub id: i64,
+    pub id: String,
     pub title: String,
     pub content: TemplateContent,
     pub is_locked: bool,
@@ -41,7 +41,7 @@ pub struct TemplateContent {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateField {
-    pub id: i64,
+    pub id: String,
     pub title: String,
     #[serde(rename = "type")]
     pub field_type: String,
@@ -51,7 +51,7 @@ pub struct TemplateField {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateLayoutItem {
-    pub field: i64,
+    pub field: String,
     pub operation: String,
 }
 
@@ -72,7 +72,7 @@ pub struct UpdateTemplateValues {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateTemplateData {
-    pub id: i64,
+    pub id: String,
     pub values: UpdateTemplateValues,
 }
 
@@ -80,19 +80,19 @@ pub struct UpdateTemplateData {
 #[serde(rename_all = "camelCase")]
 pub struct CloneTemplateData {
     pub title: String,
-    pub source_id: i64,
+    pub source_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteTemplateData {
-    pub id: i64,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TemplateDeck {
-    pub id: i64,
+    pub id: String,
     pub title: String,
 }
 
@@ -141,9 +141,9 @@ fn validate_template_content(
         }
     }
 
-    let field_ids: std::collections::HashSet<i64> = content.fields.iter().map(|f| f.id).collect();
+    let field_ids: std::collections::HashSet<&str> = content.fields.iter().map(|f| f.id.as_str()).collect();
     for item in &content.layout {
-        if !field_ids.contains(&item.field) {
+        if !field_ids.contains(item.field.as_str()) {
             return Err(AppError::new(
                 error_codes::UNKNOWN,
                 Some(format!("Non-existent field id in layout: {}", item.field)),
@@ -159,10 +159,10 @@ fn validate_template_content(
 }
 
 fn validate_locked_template_fields(original: &[TemplateField], updated: &[TemplateField]) -> Result<(), AppError> {
-    let updated_ids: std::collections::HashSet<i64> = updated.iter().map(|f| f.id).collect();
+    let updated_ids: std::collections::HashSet<&str> = updated.iter().map(|f| f.id.as_str()).collect();
 
     for orig_field in original {
-        if !updated_ids.contains(&orig_field.id) {
+        if !updated_ids.contains(orig_field.id.as_str()) {
             return Err(AppError::new(
                 error_codes::VALIDATION_TEMPLATES_UPDATE_LOCKED,
                 Some(format!("Missing field with id: {}", orig_field.id)),

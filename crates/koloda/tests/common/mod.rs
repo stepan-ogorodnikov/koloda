@@ -32,13 +32,13 @@ pub fn card_content(
 ) -> std::collections::HashMap<String, koloda::domain::cards::CardContentField> {
     std::collections::HashMap::from([
         (
-            "1".to_string(),
+            "01900000-0000-7000-8000-000000000001".to_string(),
             koloda::domain::cards::CardContentField {
                 text: front.to_string(),
             },
         ),
         (
-            "2".to_string(),
+            "01900000-0000-7000-8000-000000000002".to_string(),
             koloda::domain::cards::CardContentField { text: back.to_string() },
         ),
     ])
@@ -50,13 +50,13 @@ pub fn simple_template_content() -> koloda::domain::templates::TemplateContent {
     TemplateContent {
         fields: vec![
             TemplateField {
-                id: 1,
+                id: "01900000-0000-7000-8000-000000000001".to_string(),
                 title: "Front".to_string(),
                 field_type: "text".to_string(),
                 is_required: true,
             },
             TemplateField {
-                id: 2,
+                id: "01900000-0000-7000-8000-000000000002".to_string(),
                 title: "Back".to_string(),
                 field_type: "text".to_string(),
                 is_required: false,
@@ -64,11 +64,11 @@ pub fn simple_template_content() -> koloda::domain::templates::TemplateContent {
         ],
         layout: vec![
             TemplateLayoutItem {
-                field: 1,
+                field: "01900000-0000-7000-8000-000000000001".to_string(),
                 operation: "display".to_string(),
             },
             TemplateLayoutItem {
-                field: 2,
+                field: "01900000-0000-7000-8000-000000000002".to_string(),
                 operation: "reveal".to_string(),
             },
         ],
@@ -186,13 +186,13 @@ pub fn valid_template_fields() -> [koloda::domain::templates::TemplateField; 2] 
 
     [
         TemplateField {
-            id: 1,
+            id: "01900000-0000-7000-8000-000000000001".to_string(),
             title: "Front".to_string(),
             field_type: "text".to_string(),
             is_required: true,
         },
         TemplateField {
-            id: 2,
+            id: "01900000-0000-7000-8000-000000000002".to_string(),
             title: "Back".to_string(),
             field_type: "text".to_string(),
             is_required: false,
@@ -202,40 +202,40 @@ pub fn valid_template_fields() -> [koloda::domain::templates::TemplateField; 2] 
 
 pub fn valid_card_content() -> serde_json::Value {
     json!({
-        "1": { "text": "Front text" },
-        "2": { "text": "Back text" }
+        "01900000-0000-7000-8000-000000000001": { "text": "Front text" },
+        "01900000-0000-7000-8000-000000000002": { "text": "Back text" }
     })
 }
 
 pub fn empty_required_field_content() -> serde_json::Value {
     json!({
-        "1": { "text": "" },
-        "2": { "text": "Back text" }
+        "01900000-0000-7000-8000-000000000001": { "text": "" },
+        "01900000-0000-7000-8000-000000000002": { "text": "Back text" }
     })
 }
 
 pub fn missing_required_field_content() -> serde_json::Value {
     json!({
-        "2": { "text": "Back text" }
+        "01900000-0000-7000-8000-000000000002": { "text": "Back text" }
     })
 }
 
 pub fn empty_optional_field_content() -> serde_json::Value {
     json!({
-        "1": { "text": "Front text" },
-        "2": { "text": "" }
+        "01900000-0000-7000-8000-000000000001": { "text": "Front text" },
+        "01900000-0000-7000-8000-000000000002": { "text": "" }
     })
 }
 
 pub fn missing_optional_field_content() -> serde_json::Value {
     json!({
-        "1": { "text": "Front text" }
+        "01900000-0000-7000-8000-000000000001": { "text": "Front text" }
     })
 }
 
 pub fn valid_card_progress_json() -> serde_json::Value {
     json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -250,7 +250,7 @@ pub fn valid_card_progress_json() -> serde_json::Value {
 
 pub fn valid_review_json() -> serde_json::Value {
     json!({
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,

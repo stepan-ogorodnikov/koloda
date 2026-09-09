@@ -25,10 +25,10 @@ fn to_value<T: serde::Serialize>(val: &T) -> Result<serde_json::Value> {
     serde_json::to_value(val).map_err(|e| Error::from_reason(e.to_string()))
 }
 
-fn extract_id(params: serde_json::Value) -> Result<i64> {
+fn extract_id(params: serde_json::Value) -> Result<String> {
     #[derive(serde::Deserialize)]
     struct P {
-        id: i64,
+        id: String,
     }
     serde_json::from_value::<P>(params)
         .map(|p| p.id)
@@ -77,7 +77,7 @@ impl KolodaDb {
     pub fn get_cards(&self, params: serde_json::Value) -> Result<serde_json::Value> {
         let params: koloda::domain::cards::GetCardsParams =
             serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
-        let cards = repo::cards::get_cards(&self.db, params.deck_id).map_err(to_napi_error)?;
+        let cards = repo::cards::get_cards(&self.db, &params.deck_id).map_err(to_napi_error)?;
         to_value(&cards)
     }
 
@@ -90,7 +90,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_card(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
         let id = extract_id(params)?;
-        let card = repo::cards::get_card(&self.db, id).map_err(to_napi_error)?;
+        let card = repo::cards::get_card(&self.db, &id).map_err(to_napi_error)?;
         card.map(|c| to_value(&c)).transpose()
     }
 
@@ -143,7 +143,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_algorithm(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
         let id = extract_id(params)?;
-        let algorithm = repo::algorithms::get_algorithm(&self.db, id).map_err(to_napi_error)?;
+        let algorithm = repo::algorithms::get_algorithm(&self.db, &id).map_err(to_napi_error)?;
         algorithm.map(|a| to_value(&a)).transpose()
     }
 
@@ -177,7 +177,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_algorithm_decks(&self, params: serde_json::Value) -> Result<serde_json::Value> {
         let id = extract_id(params)?;
-        let decks = repo::algorithms::get_algorithm_decks(&self.db, id).map_err(to_napi_error)?;
+        let decks = repo::algorithms::get_algorithm_decks(&self.db, &id).map_err(to_napi_error)?;
         to_value(&decks)
     }
 
@@ -190,7 +190,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_deck(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
         let id = extract_id(params)?;
-        let deck = repo::decks::get_deck(&self.db, id).map_err(to_napi_error)?;
+        let deck = repo::decks::get_deck(&self.db, &id).map_err(to_napi_error)?;
         deck.map(|d| to_value(&d)).transpose()
     }
 
@@ -223,7 +223,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_template(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
         let id = extract_id(params)?;
-        let template = repo::templates::get_template(&self.db, id).map_err(to_napi_error)?;
+        let template = repo::templates::get_template(&self.db, &id).map_err(to_napi_error)?;
         template.map(|t| to_value(&t)).transpose()
     }
 
@@ -257,7 +257,7 @@ impl KolodaDb {
     #[napi]
     pub fn get_template_decks(&self, params: serde_json::Value) -> Result<serde_json::Value> {
         let id = extract_id(params)?;
-        let decks = repo::templates::get_template_decks(&self.db, id).map_err(to_napi_error)?;
+        let decks = repo::templates::get_template_decks(&self.db, &id).map_err(to_napi_error)?;
         to_value(&decks)
     }
 

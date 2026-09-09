@@ -6,7 +6,7 @@ import { templateValidation } from "./templates";
 import type { Template } from "./templates";
 
 export const deckValidation = z.object({
-  id: z.int(),
+  id: z.uuid(),
   title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
   algorithmId: algorithmValidation.shape.id,
   templateId: templateValidation.shape.id,

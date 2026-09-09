@@ -16,45 +16,13 @@ fn get_review_totals_counts_states_and_ignores_ignored_rows() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
-    db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 0, NULL, 1.0, 5.0, 0, 0, 10, 0, 1000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 1, NULL, 1.0, 5.0, 0, 0, 10, 0, 2000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 2, NULL, 1.0, 5.0, 0, 0, 10, 0, 3000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 2, NULL, 1.0, 5.0, 0, 0, 10, 1, 3500)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        Ok(())
-    })
-    .expect("review fixtures should be inserted");
+    insert_review_row(&db, &card_id, 0, 0, 1000);
+    insert_review_row(&db, &card_id, 1, 0, 2000);
+    insert_review_row(&db, &card_id, 2, 0, 3000);
+    insert_review_row(&db, &card_id, 2, 1, 3500);
 
     let totals = reviews::get_review_totals(&db, GetReviewTotalsParams { from: 1000, to: 4000 })
         .expect("review totals query should succeed");
@@ -70,8 +38,8 @@ fn get_todays_review_totals_uses_learning_day_window_and_limits_meta() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     koloda::repo::settings::set_settings(
         &db,
@@ -83,9 +51,9 @@ fn get_todays_review_totals_uses_learning_day_window_and_limits_meta() {
     let now = get_todays_timestamp();
     let yesterday = now - 86_400_000;
 
-    insert_review_row(&db, card_id, 0, 0, now);
-    insert_review_row(&db, card_id, 2, 0, now);
-    insert_review_row(&db, card_id, 1, 0, yesterday);
+    insert_review_row(&db, &card_id, 0, 0, now);
+    insert_review_row(&db, &card_id, 2, 0, now);
+    insert_review_row(&db, &card_id, 1, 0, yesterday);
 
     let totals = reviews::get_todays_review_totals(&db).expect("today totals should succeed");
 
@@ -103,8 +71,8 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     koloda::repo::settings::set_settings(
         &db,
@@ -125,8 +93,8 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
 
     let now = get_todays_timestamp();
 
-    insert_review_row(&db, card_id, 0, 0, now);
-    insert_review_row(&db, card_id, 1, 0, now);
+    insert_review_row(&db, &card_id, 0, 0, now);
+    insert_review_row(&db, &card_id, 1, 0, now);
 
     let totals = reviews::get_todays_review_totals(&db).expect("today totals should succeed");
 
@@ -149,37 +117,12 @@ fn get_review_totals_respects_from_inclusive_to_exclusive_range() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
-    db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 0, NULL, 1.0, 5.0, 0, 0, 10, 0, 1000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 1, NULL, 1.0, 5.0, 0, 0, 10, 0, 1999)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 2, NULL, 1.0, 5.0, 0, 0, 10, 0, 2000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        Ok(())
-    })
-    .expect("review fixtures should be inserted");
+    insert_review_row(&db, &card_id, 0, 0, 1000);
+    insert_review_row(&db, &card_id, 1, 0, 1999);
+    insert_review_row(&db, &card_id, 2, 0, 2000);
 
     let totals = reviews::get_review_totals(&db, GetReviewTotalsParams { from: 1000, to: 2000 })
         .expect("review totals query should succeed");
@@ -195,29 +138,11 @@ fn get_review_totals_counts_reviews_created_in_window_even_when_due_after_to() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
-    db.with_conn(|conn| {
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 1, 5000, 1.0, 5.0, 0, 0, 10, 0, 2000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        conn.execute(
-            r#"
-            INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
-                                scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, 3, 2, 6000, 1.0, 5.0, 0, 0, 10, 0, 3000)
-            "#,
-            rusqlite::params![card_id],
-        )?;
-        Ok(())
-    })
-    .expect("review fixtures should be inserted");
+    insert_review_row(&db, &card_id, 1, 0, 2000);
+    insert_review_row(&db, &card_id, 2, 0, 3000);
 
     let totals = reviews::get_review_totals(&db, GetReviewTotalsParams { from: 1000, to: 4000 })
         .expect("review totals query should succeed");

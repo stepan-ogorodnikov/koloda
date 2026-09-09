@@ -30,7 +30,7 @@ fn test_insert_valid_fsrs_algorithm() {
 fn test_update_valid_algorithm() {
     let json = format!(
         r#"{{
-            "id": 1,
+            "id": "01900000-0000-7000-8000-000000000001",
             "values": {{
                 "title": "Updated Title",
                 "content": {}
@@ -167,18 +167,18 @@ fn test_incomplete_non_fsrs_content_fails_to_deserialize() {
 fn test_clone_algorithm_valid() {
     let json = r#"{
         "title": "Cloned Algorithm",
-        "sourceId": 42
+        "sourceId": "01900000-0000-7000-8000-00000000002a"
     }"#;
 
     let data: CloneAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
     assert_eq!(data.title, "Cloned Algorithm");
-    assert_eq!(data.source_id, 42);
+    assert_eq!(data.source_id, "01900000-0000-7000-8000-00000000002a");
 }
 
 #[test]
 fn test_clone_algorithm_missing_title_fails() {
     let json = r#"{
-        "sourceId": 42
+        "sourceId": "01900000-0000-7000-8000-00000000002a"
     }"#;
 
     let result: Result<CloneAlgorithmData, _> = serde_json::from_str(json);
@@ -198,22 +198,25 @@ fn test_clone_algorithm_missing_source_id_fails() {
 #[test]
 fn test_delete_algorithm_with_successor() {
     let json = r#"{
-        "id": 1,
-        "successorId": 2
+        "id": "01900000-0000-7000-8000-000000000001",
+        "successorId": "01900000-0000-7000-8000-000000000002"
     }"#;
 
     let data: DeleteAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(data.id, 1);
-    assert_eq!(data.successor_id, Some(2));
+    assert_eq!(data.id, "01900000-0000-7000-8000-000000000001");
+    assert_eq!(
+        data.successor_id,
+        Some("01900000-0000-7000-8000-000000000002".to_string())
+    );
 }
 
 #[test]
 fn test_delete_algorithm_without_successor() {
     let json = r#"{
-        "id": 1
+        "id": "01900000-0000-7000-8000-000000000001"
     }"#;
 
     let data: DeleteAlgorithmData = serde_json::from_str(json).expect("Should deserialize");
-    assert_eq!(data.id, 1);
+    assert_eq!(data.id, "01900000-0000-7000-8000-000000000001");
     assert_eq!(data.successor_id, None);
 }

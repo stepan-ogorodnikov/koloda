@@ -12,7 +12,7 @@ import type { GeneratedCard } from "./generation";
 /** Deck summary row returned by `list_decks`. */
 export type ListDecksOutput = {
   decks: Array<{
-    deckId: number;
+    deckId: string;
     title: string;
     cardCount: number;
     /** Null mirrors the v1 data-access manifest: the deck's template was not among the resolved set. */
@@ -35,10 +35,10 @@ export type AssistantToolFieldType = "text" | "markdown";
 
 /** Accepted `propose_cards` payload; `fields` is title-keyed like `get_deck_cards`. */
 export type ProposeCardsOutput = {
-  deckId: number;
+  deckId: string;
   deckTitle: string;
-  templateId: number;
-  templateFields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
+  templateId: string;
+  templateFields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }>;
   cards: Array<{ fields: Record<string, string> }>;
   rejectedCount: number;
   message?: string;
@@ -54,22 +54,22 @@ export const ASSISTANT_TOOL_CARD_LIST_CHAR_BUDGET = 8_000;
 
 /** Structural deck row subset for `list_decks`; the host resolves `cardCount` (per-deck card reads). */
 export type AssistantDeckSummarySource = {
-  id: number;
+  id: string;
   title: string;
-  templateId: number;
+  templateId: string;
   cardCount: number;
 };
 
 /** Structural template subset — field titles map card content keys to output keys. */
 export type AssistantToolTemplate = {
-  id: number;
+  id: string;
   title: string;
-  content: { fields: Array<{ id: number; title: string; type: AssistantToolFieldType; isRequired: boolean }> };
+  content: { fields: Array<{ id: string; title: string; type: AssistantToolFieldType; isRequired: boolean }> };
 };
 
 /** Structural deck + template subset for `get_deck_cards` and `propose_cards`. */
 export type AssistantDeckCardsSource = {
-  id: number;
+  id: string;
   title: string;
   template: AssistantToolTemplate;
 };
@@ -138,7 +138,7 @@ export const ASSISTANT_TOOL_SPECS = {
     description:
       "Get the existing cards of one deck by deck id (as reported by list_decks), as field-title-to-text pairs. Large decks are capped. Use this only to inspect existing cards, for example to avoid duplicates. Field titles come from list_decks, not from this tool. This cannot pick a single random card, cannot fetch one card by id, and cannot create cards.",
     inputSchema: z.object({
-      deckId: z.int().positive(),
+      deckId: z.uuid(),
     }),
   },
   propose_cards: {
@@ -146,7 +146,7 @@ export const ASSISTANT_TOOL_SPECS = {
     description:
       "Create new flashcards for a deck. Call this whenever the user asks to generate, create, make, add, or invent cards, including a random card — invent original field values; do not copy or pick existing cards. If you lack the deck id or field titles, call list_decks first in this turn; do not ask the user. deckId is the target deck from list_decks. Each cards item must include fields: a map of exact template field title to invented text. An empty cards array does not create cards. If the result accepts 0 cards, call this tool again with the titles in templateFields; never write cards as a markdown table.",
     inputSchema: z.object({
-      deckId: z.int().positive(),
+      deckId: z.uuid(),
       cards: z.array(proposeCardSchema),
     }),
   },
@@ -248,9 +248,9 @@ export function shapeGetDeckCardsOutput(
 /** Field ids are the card content keys; the output is keyed by field title. */
 function shapeCardFields(
   card: AssistantToolCard,
-  fields: Array<{ id: number; title: string }>,
+  fields: Array<{ id: string; title: string }>,
 ): Record<string, string> {
-  return Object.fromEntries(fields.map((field) => [field.title, card.content[String(field.id)]?.text ?? ""]));
+  return Object.fromEntries(fields.map((field) => [field.title, card.content[field.id]?.text ?? ""]));
 }
 
 /**
@@ -295,10 +295,10 @@ export function shapeProposeCardsOutput(
   };
 }
 
-function lookupProposedFieldText(inputFields: Record<string, string>, field: { id: number; title: string }): string {
+function lookupProposedFieldText(inputFields: Record<string, string>, field: { id: string; title: string }): string {
   const exact = inputFields[field.title];
   if (exact !== undefined) return exact.trim();
-  const byId = inputFields[String(field.id)];
+  const byId = inputFields[field.id];
   if (byId !== undefined) return byId.trim();
   const lower = field.title.toLowerCase();
   for (const [key, value] of Object.entries(inputFields)) {
@@ -337,8 +337,8 @@ function isAssistantToolFieldType(value: unknown): value is AssistantToolFieldTy
 function isProposeCardsTemplateField(value: unknown): value is ProposeCardsOutput["templateFields"][number] {
   if (!isPlainObject(value)) return false;
   return (
-    typeof value.id === "number" &&
-    Number.isInteger(value.id) &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
     typeof value.title === "string" &&
     isAssistantToolFieldType(value.type) &&
     typeof value.isRequired === "boolean"
@@ -353,13 +353,11 @@ function isProposeCardsCard(value: unknown): value is ProposeCardsOutput["cards"
 export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutput {
   if (!isPlainObject(value)) return false;
   return (
-    typeof value.deckId === "number" &&
-    Number.isInteger(value.deckId) &&
-    value.deckId > 0 &&
+    typeof value.deckId === "string" &&
+    value.deckId.length > 0 &&
     typeof value.deckTitle === "string" &&
-    typeof value.templateId === "number" &&
-    Number.isInteger(value.templateId) &&
-    value.templateId > 0 &&
+    typeof value.templateId === "string" &&
+    value.templateId.length > 0 &&
     Array.isArray(value.templateFields) &&
     value.templateFields.every(isProposeCardsTemplateField) &&
     Array.isArray(value.cards) &&
@@ -375,7 +373,7 @@ export function isProposeCardsOutput(value: unknown): value is ProposeCardsOutpu
 export function generatedCardsFromProposeOutput(output: ProposeCardsOutput): GeneratedCard[] {
   return output.cards.map((card) => ({
     content: Object.fromEntries(
-      output.templateFields.map((field) => [String(field.id), { text: card.fields[field.title] ?? "" }]),
+      output.templateFields.map((field) => [field.id, { text: card.fields[field.title] ?? "" }]),
     ),
   }));
 }

@@ -11,10 +11,10 @@ use crate::domain::time::{
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Deck {
-    pub id: i64,
+    pub id: String,
     pub title: String,
-    pub algorithm_id: i64,
-    pub template_id: i64,
+    pub algorithm_id: String,
+    pub template_id: String,
     // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
     #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub created_at: i64,
@@ -30,29 +30,29 @@ pub struct Deck {
 #[serde(rename_all = "camelCase")]
 pub struct InsertDeckData {
     pub title: String,
-    pub algorithm_id: i64,
-    pub template_id: i64,
+    pub algorithm_id: String,
+    pub template_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateDeckValues {
     pub title: String,
-    pub algorithm_id: i64,
-    pub template_id: i64,
+    pub algorithm_id: String,
+    pub template_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateDeckData {
-    pub id: i64,
+    pub id: String,
     pub values: UpdateDeckValues,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteDeckData {
-    pub id: i64,
+    pub id: String,
 }
 
 impl InsertDeckData {

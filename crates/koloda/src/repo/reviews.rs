@@ -2,6 +2,7 @@ use rusqlite::{params, Connection, Row};
 
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
+use crate::app::utility::minted_uuidv7;
 use crate::domain::learning_day::current_learning_day_range;
 use crate::domain::reviews::{
     calculate_todays_review_totals, GetReviewTotalsParams, GetReviewsData, InsertReviewData, Review, ReviewTotals,
@@ -37,14 +38,16 @@ fn get_review_row(row: &Row) -> Result<Review, rusqlite::Error> {
 // public repo surface stays read-side until a real second writer appears.
 // INVARIANT: callers validate `data` (see `InsertReviewData::validate`) and wrap
 // errors with their own operation code; this helper is a raw write primitive.
-pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64) -> Result<i64, AppError> {
+pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64) -> Result<String, AppError> {
+    let id = minted_uuidv7(None);
     conn.execute(
         r#"
-        INSERT INTO reviews (card_id, rating, state, due_at, stability, difficulty,
+        INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,
                             scheduled_days, learning_steps, time, is_ignored, created_at)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
         "#,
         params![
+            id,
             data.card_id,
             data.rating,
             data.state,
@@ -61,7 +64,7 @@ pub(crate) fn insert_review(conn: &Connection, data: &InsertReviewData, now: i64
         ],
     )?;
 
-    Ok(conn.last_insert_rowid())
+    Ok(id)
 }
 
 pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, AppError> {

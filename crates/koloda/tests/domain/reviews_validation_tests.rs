@@ -3,7 +3,7 @@ use koloda::domain::reviews::InsertReviewData;
 #[test]
 fn test_valid_review_data() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -24,7 +24,7 @@ fn test_valid_review_all_ratings() {
     for rating in 1..=4 {
         let json = format!(
             r#"{{
-                "cardId": 1,
+                "cardId": "01900000-0000-7000-8000-000000000001",
                 "rating": {},
                 "state": 0,
                 "dueAt": 1000000000,
@@ -48,7 +48,7 @@ fn test_valid_review_all_states() {
     for state in 0..=3 {
         let json = format!(
             r#"{{
-                "cardId": 1,
+                "cardId": "01900000-0000-7000-8000-000000000001",
                 "rating": 1,
                 "state": {},
                 "dueAt": 1000000000,
@@ -70,7 +70,7 @@ fn test_valid_review_all_states() {
 #[test]
 fn test_valid_review_difficulty_boundaries() {
     let json_min = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -83,7 +83,7 @@ fn test_valid_review_difficulty_boundaries() {
     }"#;
 
     let json_max = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -105,7 +105,7 @@ fn test_valid_review_difficulty_boundaries() {
 #[test]
 fn test_valid_stability_zero() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -124,7 +124,7 @@ fn test_valid_stability_zero() {
 #[test]
 fn test_valid_stability_large_value() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -143,7 +143,7 @@ fn test_valid_stability_large_value() {
 #[test]
 fn test_valid_time_positive() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -162,7 +162,7 @@ fn test_valid_time_positive() {
 #[test]
 fn test_rating_below_min_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 0,
         "state": 0,
         "dueAt": 1000000000,
@@ -182,7 +182,7 @@ fn test_rating_below_min_fails() {
 #[test]
 fn test_rating_above_max_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 5,
         "state": 0,
         "dueAt": 1000000000,
@@ -202,7 +202,7 @@ fn test_rating_above_max_fails() {
 #[test]
 fn test_rating_negative_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": -1,
         "state": 0,
         "dueAt": 1000000000,
@@ -222,7 +222,7 @@ fn test_rating_negative_fails() {
 #[test]
 fn test_state_below_min_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": -1,
         "dueAt": 1000000000,
@@ -242,7 +242,7 @@ fn test_state_below_min_fails() {
 #[test]
 fn test_state_above_max_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 4,
         "dueAt": 1000000000,
@@ -262,7 +262,7 @@ fn test_state_above_max_fails() {
 #[test]
 fn test_stability_negative_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -282,7 +282,7 @@ fn test_stability_negative_fails() {
 #[test]
 fn test_difficulty_below_min_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -302,7 +302,7 @@ fn test_difficulty_below_min_fails() {
 #[test]
 fn test_difficulty_above_max_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -322,7 +322,7 @@ fn test_difficulty_above_max_fails() {
 #[test]
 fn test_scheduled_days_negative_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -342,7 +342,7 @@ fn test_scheduled_days_negative_fails() {
 #[test]
 fn test_learning_steps_negative_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,
@@ -362,7 +362,7 @@ fn test_learning_steps_negative_fails() {
 #[test]
 fn test_time_negative_fails() {
     let json = r#"{
-        "cardId": 1,
+        "cardId": "01900000-0000-7000-8000-000000000001",
         "rating": 1,
         "state": 0,
         "dueAt": 1000000000,

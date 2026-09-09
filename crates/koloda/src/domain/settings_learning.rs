@@ -10,9 +10,9 @@ use crate::app::error::{error_codes, AppError};
 #[serde(rename_all = "camelCase")]
 pub struct LearningDefaults {
     #[serde(default)]
-    pub algorithm: i64,
+    pub algorithm: String,
     #[serde(default)]
-    pub template: i64,
+    pub template: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -15,12 +15,12 @@ fn get_card_counts_groups_by_deck() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_a = add_deck(&db, algorithm_id, template_id, "Deck A");
-    let deck_b = add_deck(&db, algorithm_id, template_id, "Deck B");
+    let deck_a = add_deck(&db, &algorithm_id, &template_id, "Deck A");
+    let deck_b = add_deck(&db, &algorithm_id, &template_id, "Deck B");
 
-    add_card(&db, deck_a, template_id, "front one");
-    add_card(&db, deck_a, template_id, "front two");
-    add_card(&db, deck_b, template_id, "front three");
+    add_card(&db, &deck_a, &template_id, "front one");
+    add_card(&db, &deck_a, &template_id, "front two");
+    add_card(&db, &deck_b, &template_id, "front three");
 
     let counts = cards::get_card_counts(&db).unwrap();
 
@@ -29,7 +29,9 @@ fn get_card_counts_groups_by_deck() {
     assert_eq!(count_a, Some(2));
     assert_eq!(count_b, Some(1));
     // Decks without cards simply have no entry.
-    assert!(counts.iter().all(|c| c.deck_id != 999_999));
+    assert!(counts
+        .iter()
+        .all(|c| c.deck_id != "01900000-0000-7000-8000-0000000f423f"));
 }
 
 #[test]
@@ -37,13 +39,13 @@ fn add_card_rejects_missing_deck() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let _deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let _deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let result = cards::add_card(
         &db,
         InsertCardData {
-            deck_id: 999_999,
-            template_id,
+            deck_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
+            template_id: template_id.clone(),
             content: card_content("question", "answer"),
             state: None,
             due_at: None,
@@ -65,13 +67,13 @@ fn add_card_rejects_invalid_progress_state() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let result = cards::add_card(
         &db,
         InsertCardData {
-            deck_id,
-            template_id,
+            deck_id: deck_id.clone(),
+            template_id: template_id.clone(),
             content: card_content("question", "answer"),
             state: Some(999),
             due_at: None,
@@ -93,13 +95,13 @@ fn add_cards_rejects_missing_deck_per_item() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let result = cards::add_cards(
         &db,
         vec![InsertCardData {
-            deck_id: 999_999,
-            template_id,
+            deck_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
+            template_id: template_id.clone(),
             content: card_content("question", "answer"),
             state: None,
             due_at: None,
@@ -120,7 +122,7 @@ fn add_cards_rejects_missing_deck_per_item() {
         Some(error_codes::NOT_FOUND_CARDS_ADD_DECK)
     );
 
-    let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    let cards_after = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert!(cards_after.is_empty(), "no card should be inserted for a missing deck");
 }
 
@@ -129,14 +131,14 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let result = cards::add_cards(
         &db,
         vec![
             InsertCardData {
-                deck_id,
-                template_id,
+                deck_id: deck_id.clone(),
+                template_id: template_id.clone(),
                 content: card_content("first", "answer"),
                 state: None,
                 due_at: None,
@@ -149,8 +151,8 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
                 last_reviewed_at: None,
             },
             InsertCardData {
-                deck_id,
-                template_id: 999_999,
+                deck_id: deck_id.clone(),
+                template_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
                 content: card_content("second", "answer"),
                 state: None,
                 due_at: None,
@@ -176,13 +178,19 @@ fn add_cards_keeps_previously_inserted_cards_on_failure() {
         "failure item must keep the structured error code"
     );
 
-    let cards_after = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    let cards_after = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert_eq!(
         cards_after.len(),
         1,
         "first insert remains even though second insert failed"
     );
-    assert_eq!(cards_after[0].content.get("1").map(|v| v.text.as_str()), Some("first"));
+    assert_eq!(
+        cards_after[0]
+            .content
+            .get("01900000-0000-7000-8000-000000000001")
+            .map(|v| v.text.as_str()),
+        Some("first")
+    );
 }
 
 #[test]
@@ -191,15 +199,15 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id_a = add_template(&db, "Basic");
     let template_id_b = add_template(&db, "Cloze");
-    let deck_id_a = add_deck(&db, algorithm_id, template_id_a, "Deck A");
-    let deck_id_b = add_deck(&db, algorithm_id, template_id_b, "Deck B");
+    let deck_id_a = add_deck(&db, &algorithm_id, &template_id_a, "Deck A");
+    let deck_id_b = add_deck(&db, &algorithm_id, &template_id_b, "Deck B");
 
     let result = cards::add_cards(
         &db,
         vec![
             InsertCardData {
-                deck_id: deck_id_a,
-                template_id: template_id_a,
+                deck_id: deck_id_a.clone(),
+                template_id: template_id_a.clone(),
                 content: card_content("first", "answer"),
                 state: None,
                 due_at: None,
@@ -212,8 +220,8 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
                 last_reviewed_at: None,
             },
             InsertCardData {
-                deck_id: deck_id_b,
-                template_id: template_id_b,
+                deck_id: deck_id_b.clone(),
+                template_id: template_id_b.clone(),
                 content: card_content("second", "answer"),
                 state: None,
                 due_at: None,
@@ -233,8 +241,8 @@ fn add_cards_supports_mixed_templates_in_one_batch() {
     assert!(results[0].error.is_none(), "first card (template A) should succeed");
     assert!(results[1].error.is_none(), "second card (template B) should succeed");
 
-    let cards_a = cards::get_cards(&db, deck_id_a).expect("cards query should succeed");
-    let cards_b = cards::get_cards(&db, deck_id_b).expect("cards query should succeed");
+    let cards_a = cards::get_cards(&db, &deck_id_a).expect("cards query should succeed");
+    let cards_b = cards::get_cards(&db, &deck_id_b).expect("cards query should succeed");
     assert_eq!(cards_a.len(), 1);
     assert_eq!(cards_b.len(), 1);
     assert_eq!(cards_a[0].template_id, template_id_a);
@@ -246,13 +254,13 @@ fn add_card_omitted_stability_and_difficulty_persists_zero() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
     let added = cards::add_card(
         &db,
         InsertCardData {
-            deck_id,
-            template_id,
+            deck_id: deck_id.clone(),
+            template_id: template_id.clone(),
             content: card_content("question", "answer"),
             state: None,
             due_at: None,
@@ -278,7 +286,7 @@ fn add_card_omitted_stability_and_difficulty_persists_zero() {
         added.difficulty
     );
 
-    let fetched = cards::get_card(&db, added.id)
+    let fetched = cards::get_card(&db, &added.id)
         .expect("card lookup should succeed")
         .expect("card should exist");
     assert!(
@@ -311,24 +319,24 @@ fn get_card_reads_null_stability_and_difficulty_as_zero() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
     let content = serde_json::to_string(&card_content("q", "a")).expect("content should serialize");
 
-    let card_id = db
-        .with_conn(|conn| {
-            conn.execute(
-                r#"
-                INSERT INTO cards (deck_id, template_id, content, state, due_at, stability, difficulty,
+    let card_id = koloda::app::utility::generate_uuidv7();
+    db.with_conn(|conn| {
+        conn.execute(
+            r#"
+                INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability, difficulty,
                                   scheduled_days, learning_steps, reps, lapses, last_reviewed_at, created_at, updated_at)
-                VALUES (?1, ?2, ?3, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 1700000000000, NULL)
+                VALUES (?1, ?2, ?3, ?4, 0, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 1700000000000, NULL)
                 "#,
-                rusqlite::params![deck_id, template_id, content],
-            )?;
-            Ok(conn.last_insert_rowid())
-        })
-        .expect("legacy NULL row should insert");
+            rusqlite::params![card_id, deck_id, template_id, content],
+        )?;
+        Ok(())
+    })
+    .expect("legacy NULL row should insert");
 
-    let fetched = cards::get_card(&db, card_id)
+    let fetched = cards::get_card(&db, &card_id)
         .expect("card lookup should succeed")
         .expect("card should exist");
     assert!(
@@ -342,7 +350,7 @@ fn get_card_reads_null_stability_and_difficulty_as_zero() {
         fetched.difficulty
     );
 
-    let listed = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    let listed = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert_eq!(listed.len(), 1);
     assert!(
         listed[0].stability.abs() < f64::EPSILON,
@@ -360,8 +368,13 @@ fn get_card_reads_null_stability_and_difficulty_as_zero() {
 fn reset_card_progress_fails_with_not_found_when_card_is_missing() {
     let db = test_db();
 
-    let err = cards::reset_card_progress(&db, ResetCardProgressData { id: 999_999 })
-        .expect_err("resetting progress for a missing card should fail");
+    let err = cards::reset_card_progress(
+        &db,
+        ResetCardProgressData {
+            id: "01900000-0000-7000-8000-0000000f423f".to_string(),
+        },
+    )
+    .expect_err("resetting progress for a missing card should fail");
 
     assert_eq!(err.code, error_codes::NOT_FOUND_CARDS_RESET_CARD);
 }
@@ -371,14 +384,14 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     lessons::submit_lesson_result(
         &db,
         LessonResultData {
             card: UpdateCardProgress {
-                id: card_id,
+                id: card_id.clone(),
                 state: 2,
                 due_at: 1_900_000_000_000,
                 stability: 5.0,
@@ -390,7 +403,7 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
                 last_reviewed_at: Some(1_800_000_000_000),
             },
             review: InsertReviewData {
-                card_id,
+                card_id: card_id.clone(),
                 rating: 3,
                 state: 2,
                 due_at: 1_900_000_000_000,
@@ -405,8 +418,13 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     )
     .expect("lesson result should be persisted");
 
-    let reset = cards::reset_card_progress(&db, ResetCardProgressData { id: card_id }).expect("reset should succeed");
+    let before = cards::get_card(&db, &card_id)
+        .expect("card lookup should succeed")
+        .expect("card should exist");
+    let reset =
+        cards::reset_card_progress(&db, ResetCardProgressData { id: card_id.clone() }).expect("reset should succeed");
 
+    assert_eq!(reset.updated_at, before.updated_at);
     assert_eq!(reset.state, 0);
     assert_eq!(reset.reps, 0);
     assert_eq!(reset.lapses, 0);
@@ -425,7 +443,13 @@ fn reset_card_progress_removes_reviews_and_resets_progress_fields() {
     assert_eq!(reset.due_at, None);
     assert_eq!(reset.last_reviewed_at, None);
 
-    let saved_reviews = reviews::get_reviews(&db, GetReviewsData { card_id }).expect("reviews query should succeed");
+    let saved_reviews = reviews::get_reviews(
+        &db,
+        GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
     assert!(saved_reviews.is_empty(), "reset should delete prior reviews");
 }
 
@@ -434,23 +458,29 @@ fn delete_card_removes_card_and_cascades_reviews() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
-    insert_review_row(&db, card_id, 2, 0, 1_800_000_000_000);
+    insert_review_row(&db, &card_id, 2, 0, 1_800_000_000_000);
 
-    cards::delete_card(&db, DeleteCardData { id: card_id }).expect("delete should succeed");
+    cards::delete_card(&db, DeleteCardData { id: card_id.clone() }).expect("delete should succeed");
 
-    let deleted_card = cards::get_card(&db, card_id).expect("card lookup should succeed");
+    let deleted_card = cards::get_card(&db, &card_id).expect("card lookup should succeed");
     assert!(deleted_card.is_none(), "deleted card should no longer exist");
 
-    let remaining_cards = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    let remaining_cards = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert!(
         remaining_cards.is_empty(),
         "deleted card should be removed from the deck"
     );
 
-    let saved_reviews = reviews::get_reviews(&db, GetReviewsData { card_id }).expect("reviews query should succeed");
+    let saved_reviews = reviews::get_reviews(
+        &db,
+        GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
     assert!(
         saved_reviews.is_empty(),
         "deleting a card should cascade to its reviews"
@@ -462,10 +492,10 @@ fn delete_cards_removes_only_selected_cards() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let first_card_id = add_card(&db, deck_id, template_id, "first");
-    let second_card_id = add_card(&db, deck_id, template_id, "second");
-    let third_card_id = add_card(&db, deck_id, template_id, "third");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let first_card_id = add_card(&db, &deck_id, &template_id, "first");
+    let second_card_id = add_card(&db, &deck_id, &template_id, "second");
+    let third_card_id = add_card(&db, &deck_id, &template_id, "third");
 
     cards::delete_cards(
         &db,
@@ -475,11 +505,14 @@ fn delete_cards_removes_only_selected_cards() {
     )
     .expect("batch delete should succeed");
 
-    let remaining_cards = cards::get_cards(&db, deck_id).expect("cards query should succeed");
+    let remaining_cards = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
     assert_eq!(remaining_cards.len(), 1);
     assert_eq!(remaining_cards[0].id, second_card_id);
     assert_eq!(
-        remaining_cards[0].content.get("1").map(|value| value.text.as_str()),
+        remaining_cards[0]
+            .content
+            .get("01900000-0000-7000-8000-000000000001")
+            .map(|value| value.text.as_str()),
         Some("second")
     );
 }
@@ -489,11 +522,11 @@ fn delete_cards_with_empty_ids_is_a_noop() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     cards::delete_cards(&db, DeleteCardsData { ids: vec![] }).expect("empty batch delete should succeed");
 
-    let saved_card = cards::get_card(&db, card_id).expect("card lookup should succeed");
+    let saved_card = cards::get_card(&db, &card_id).expect("card lookup should succeed");
     assert!(saved_card.is_some(), "empty batch delete should not remove cards");
 }

@@ -45,7 +45,7 @@ pub fn get_lessons(db: &Database, params: GetLessonsParams) -> Result<LessonsRes
             let mut next_param = 1;
             let (filters, mut query_params) = lesson_deck_filter_sql("d.id", deck_ids, &mut next_param, "WHERE");
             let due_at_param = format!("?{}", next_param);
-            query_params.push(params.due_at);
+            query_params.push(rusqlite::types::Value::Integer(params.due_at));
 
             let query = format!(
                 r#"
@@ -92,7 +92,7 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
         db.with_conn(|conn| {
             let deck_ids = params.filters.deck_ids.as_deref().filter(|ids| !ids.is_empty());
             let mut next_param = 1;
-            let mut query_params: Vec<i64> = Vec::new();
+            let mut query_params: Vec<rusqlite::types::Value> = Vec::new();
 
             let (filters_untouched, untouched_deck_params) =
                 lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
@@ -102,14 +102,14 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                 next_param += 1;
                 placeholder
             };
-            query_params.push(params.amounts.untouched);
+            query_params.push(rusqlite::types::Value::Integer(params.amounts.untouched));
 
             let due_at_param = {
                 let placeholder = format!("?{}", next_param);
                 next_param += 1;
                 placeholder
             };
-            query_params.push(params.due_at);
+            query_params.push(rusqlite::types::Value::Integer(params.due_at));
 
             let (filters_learn, learn_deck_params) =
                 lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
@@ -119,13 +119,13 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
                 next_param += 1;
                 placeholder
             };
-            query_params.push(params.amounts.learn);
+            query_params.push(rusqlite::types::Value::Integer(params.amounts.learn));
 
             let (filters_review, review_deck_params) =
                 lesson_deck_filter_sql("deck_id", deck_ids, &mut next_param, "AND");
             query_params.extend(review_deck_params);
             let limit_review_param = format!("?{}", next_param);
-            query_params.push(params.amounts.review);
+            query_params.push(rusqlite::types::Value::Integer(params.amounts.review));
 
             let query = format!(
                 r#"
@@ -181,9 +181,12 @@ pub fn get_lesson_cards(db: &Database, params: &GetLessonDataParams) -> Result<V
     })
 }
 
-fn unique_ids_in_order(ids: impl IntoIterator<Item = i64>) -> Vec<i64> {
+fn unique_ids_in_order<'a>(ids: impl IntoIterator<Item = &'a str>) -> Vec<String> {
     let mut seen = std::collections::HashSet::new();
-    ids.into_iter().filter(|id| seen.insert(*id)).collect()
+    ids.into_iter()
+        .filter(|id| seen.insert(*id))
+        .map(str::to_string)
+        .collect()
 }
 
 fn template_to_lesson_template(t: crate::domain::templates::Template) -> LessonTemplate {
@@ -196,7 +199,7 @@ fn template_to_lesson_template(t: crate::domain::templates::Template) -> LessonT
             LessonTemplateLayoutItem {
                 field,
                 operation: item.operation.clone(),
-                field_id: item.field,
+                field_id: item.field.clone(),
             }
         })
         .collect();
@@ -220,11 +223,11 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
             return Ok(None);
         }
 
-        let unique_deck_ids: Vec<i64> = unique_ids_in_order(cards.iter().map(|c| c.deck_id));
+        let unique_deck_ids = unique_ids_in_order(cards.iter().map(|c| c.deck_id.as_str()));
 
         let lesson_decks = crate::repo::decks::get_decks_by_ids(db, &unique_deck_ids)?;
 
-        let template_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.template_id));
+        let template_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.template_id.as_str()));
         let templates_by_id = crate::repo::templates::get_templates_by_ids(db, &template_ids)?;
         let lesson_templates: Vec<LessonTemplate> = template_ids
             .iter()
@@ -232,11 +235,11 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
             .map(template_to_lesson_template)
             .collect();
 
-        let algorithm_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.algorithm_id));
-        let algorithms_by_id: std::collections::HashMap<i64, _> =
+        let algorithm_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.algorithm_id.as_str()));
+        let algorithms_by_id: std::collections::HashMap<String, _> =
             crate::repo::algorithms::get_algorithms_by_ids(db, &algorithm_ids)?
                 .into_iter()
-                .map(|a| (a.id, a))
+                .map(|a| (a.id.clone(), a))
                 .collect();
         let lesson_algorithms: Vec<_> = algorithm_ids
             .iter()
@@ -292,10 +295,10 @@ pub fn submit_lesson_result(db: &Database, data: LessonResultData) -> Result<(),
 
 fn lesson_deck_filter_sql(
     column: &str,
-    deck_ids: Option<&[i64]>,
+    deck_ids: Option<&[String]>,
     next_param: &mut i32,
     prefix: &str,
-) -> (String, Vec<i64>) {
+) -> (String, Vec<rusqlite::types::Value>) {
     let Some(ids) = deck_ids.filter(|ids| !ids.is_empty()) else {
         return (String::new(), Vec::new());
     };
@@ -311,6 +314,6 @@ fn lesson_deck_filter_sql(
 
     (
         format!(" {prefix} {column} IN ({})", placeholders.join(", ")),
-        ids.to_vec(),
+        ids.iter().map(|id| rusqlite::types::Value::Text(id.clone())).collect(),
     )
 }

@@ -4,7 +4,7 @@ use serde_json::json;
 
 fn algorithm_fixture() -> Algorithm {
     Algorithm {
-        id: 9,
+        id: "01900000-0000-7000-8000-000000000009".to_string(),
         title: "FSRS".to_string(),
         content: AlgorithmFSRS {
             algorithm_type: "fsrs".to_string(),
@@ -30,7 +30,7 @@ fn test_algorithm_serializes_wire_shape() {
     assert_eq!(
         value,
         json!({
-            "id": 9,
+            "id": "01900000-0000-7000-8000-000000000009",
             "title": "FSRS",
             "content": {
                 "type": "fsrs",

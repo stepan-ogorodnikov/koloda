@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::app::utility::get_current_timestamp;
+use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::algorithms::{
     Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
 };
@@ -46,7 +46,7 @@ pub fn get_algorithms(db: &Database) -> Result<Vec<Algorithm>, AppError> {
     })
 }
 
-pub fn get_algorithms_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Algorithm>, AppError> {
+pub fn get_algorithms_by_ids(db: &Database, ids: &[String]) -> Result<Vec<Algorithm>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         if ids.is_empty() {
             return Ok(Vec::new());
@@ -75,7 +75,7 @@ pub fn get_algorithms_by_ids(db: &Database, ids: &[i64]) -> Result<Vec<Algorithm
     })
 }
 
-pub fn get_algorithm(db: &Database, id: i64) -> Result<Option<Algorithm>, AppError> {
+pub fn get_algorithm(db: &Database, id: &str) -> Result<Option<Algorithm>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             conn.query_row(
@@ -99,13 +99,13 @@ pub fn add_algorithm(db: &Database, data: InsertAlgorithmData) -> Result<Algorit
         data.validate()?;
         let now = get_current_timestamp()?;
 
-        let id = db.with_conn(|conn| insert_algorithm(conn, &data, now))?;
+        let id = db.with_conn(|conn| insert_algorithm(conn, &data, now, None))?;
 
-        get_algorithm(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+        get_algorithm(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
     })
 }
 
-pub(crate) fn oldest_algorithm_id(conn: &Connection) -> Result<Option<i64>, AppError> {
+pub(crate) fn oldest_algorithm_id(conn: &Connection) -> Result<Option<String>, AppError> {
     conn.query_row("SELECT id FROM algorithms ORDER BY created_at ASC LIMIT 1", [], |row| {
         row.get(0)
     })
@@ -113,24 +113,30 @@ pub(crate) fn oldest_algorithm_id(conn: &Connection) -> Result<Option<i64>, AppE
     .map_err(AppError::from)
 }
 
-pub(crate) fn insert_algorithm(conn: &Connection, data: &InsertAlgorithmData, now: i64) -> Result<i64, AppError> {
+pub(crate) fn insert_algorithm(
+    conn: &Connection,
+    data: &InsertAlgorithmData,
+    now: i64,
+    id: Option<&str>,
+) -> Result<String, AppError> {
+    let id = minted_uuidv7(id);
     let content = serde_json::to_string(&data.content)?;
     conn.execute(
         r#"
-        INSERT INTO algorithms (title, content, created_at, updated_at)
-        VALUES (?1, ?2, ?3, NULL)
+        INSERT INTO algorithms (id, title, content, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, NULL)
         "#,
-        params![data.title, content, now],
+        params![id, data.title, content, now],
     )?;
 
-    Ok(conn.last_insert_rowid())
+    Ok(id)
 }
 
 pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algorithm, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
         data.values.validate()?;
 
-        get_algorithm(db, data.id)?.ok_or_else(|| {
+        get_algorithm(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_ALGORITHMS_UPDATE_ALGORITHM,
                 Some(format!("Algorithm id: {}", data.id)),
@@ -156,13 +162,13 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
             Ok(())
         })?;
 
-        get_algorithm(db, data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_algorithm(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
 }
 
 pub fn clone_algorithm(db: &Database, data: CloneAlgorithmData) -> Result<Algorithm, AppError> {
     throw_known_error(error_codes::DB_CLONE, || {
-        let source = get_algorithm(db, data.source_id)?.ok_or_else(|| {
+        let source = get_algorithm(db, &data.source_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_ALGORITHMS_CLONE_SOURCE,
                 Some(format!("Algorithm id: {}", data.source_id)),
@@ -237,7 +243,7 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
     })
 }
 
-pub fn get_algorithm_decks(db: &Database, id: i64) -> Result<Vec<AlgorithmDeck>, AppError> {
+pub fn get_algorithm_decks(db: &Database, id: &str) -> Result<Vec<AlgorithmDeck>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let mut stmt = conn.prepare(

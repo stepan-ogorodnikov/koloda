@@ -13,11 +13,11 @@ import type { AssistantToolCard, AssistantToolExecutor, AssistantToolTemplate } 
  */
 export type AssistantToolDataSource = {
   getDecks: () =>
-    | Promise<Array<{ id: number; title: string; templateId: number }>>
-    | Array<{ id: number; title: string; templateId: number }>;
+    | Promise<Array<{ id: string; title: string; templateId: string }>>
+    | Array<{ id: string; title: string; templateId: string }>;
   getTemplates: () => Promise<AssistantToolTemplate[]> | AssistantToolTemplate[];
-  getCards: (params: { deckId: number }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
-  getCardCounts: () => Promise<Record<number, number>> | Record<number, number>;
+  getCards: (params: { deckId: string }) => Promise<AssistantToolCard[]> | AssistantToolCard[];
+  getCardCounts: () => Promise<Record<string, number>> | Record<string, number>;
 };
 
 /**

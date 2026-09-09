@@ -13,7 +13,7 @@ import { CARDS_PROGRESS_FIELD_CODES, validateProgressFields } from "./progress";
 import { templateValidation } from "./templates";
 
 const cardFieldsSchema = z.object({
-  id: z.int(),
+  id: z.uuid(),
   deckId: deckValidation.shape.id,
   templateId: templateValidation.shape.id,
   content: z.record(z.string(), z.object({ text: z.string() })),

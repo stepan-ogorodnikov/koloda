@@ -12,9 +12,9 @@ function firstIssueMessage<T>(result: z.SafeParseReturnType<T, T>): string | und
 
 function validCardProgress(overrides: Record<string, unknown> = {}) {
   return {
-    id: 1,
-    deckId: 1,
-    templateId: 1,
+    id: "01900000-0000-7000-8000-000000000001",
+    deckId: "01900000-0000-7000-8000-000000000001",
+    templateId: "01900000-0000-7000-8000-000000000001",
     content: { "1": { text: "Question" } },
     state: 0,
     dueAt: null,
@@ -36,8 +36,8 @@ function validInsertCard(overrides: Record<string, unknown> = {}) {
 
 function validReview(overrides: Record<string, unknown> = {}) {
   return {
-    id: 1n,
-    cardId: 1,
+    id: "01900000-0000-7000-8000-000000000001",
+    cardId: "01900000-0000-7000-8000-000000000001",
     rating: 1,
     state: 0,
     dueAt: DEFAULT_DATE,

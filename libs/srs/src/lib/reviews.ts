@@ -23,7 +23,7 @@ type ReviewRefinementValues = ProgressFieldValues & {
 export type { ReviewLog as ReviewFSRS } from "ts-fsrs";
 
 const reviewFieldsSchema = z.object({
-  id: z.bigint(),
+  id: z.uuid(),
   cardId: cardValidation.shape.id,
   rating: z.int(),
   state: z.int(),

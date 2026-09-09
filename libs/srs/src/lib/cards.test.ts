@@ -1,3 +1,4 @@
+import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID } from "@koloda/app";
 import { Rating } from "ts-fsrs";
 import type { Card as CardFSRS } from "ts-fsrs";
 import { describe, expect, it, vi } from "vitest";
@@ -17,12 +18,17 @@ import type { Template, TemplateFields } from "./templates";
 
 const DEFAULT_DATE = new Date("2024-01-01T00:00:00.000Z");
 
+const ID = "01900000-0000-7000-8000-000000000001";
+
 function createCard(overrides: Partial<Card> = {}): Card {
   return {
-    id: 1,
-    deckId: 1,
-    templateId: 1,
-    content: { "1": { text: "Question" }, "2": { text: "Answer" } },
+    id: ID,
+    deckId: ID,
+    templateId: ID,
+    content: {
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Question" },
+      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Answer" },
+    },
     state: 0,
     dueAt: null,
     stability: 0,
@@ -40,7 +46,7 @@ function createCard(overrides: Partial<Card> = {}): Card {
 
 function createAlgorithm(overrides: Partial<Algorithm> = {}): Algorithm {
   return {
-    id: 1,
+    id: ID,
     title: "FSRS",
     content: structuredClone(DEFAULT_FSRS_ALGORITHM),
     createdAt: DEFAULT_DATE,
@@ -51,7 +57,7 @@ function createAlgorithm(overrides: Partial<Algorithm> = {}): Algorithm {
 
 function createTemplate(overrides: Partial<Template> = {}): Template {
   return {
-    id: 1,
+    id: ID,
     title: "Default",
     content: structuredClone(DEFAULT_TEMPLATE.content),
     isLocked: false,
@@ -233,25 +239,34 @@ describe("createCardFromCardFSRS", () => {
 
 describe("getCardContentValidation", () => {
   const fields: TemplateFields = [
-    { id: 1, title: "Front", type: "text", isRequired: true },
-    { id: 2, title: "Back", type: "markdown", isRequired: false },
+    { id: SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, title: "Front", type: "text", isRequired: true },
+    { id: SEED_TEMPLATE_TYPE_BACK_FIELD_ID, title: "Back", type: "markdown", isRequired: false },
   ];
 
   it("requires text on required fields", () => {
     const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({ "1": { text: "" }, "2": { text: "anything" } });
+    const result = contentSchema.safeParse({
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
+      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "anything" },
+    });
     expect(result.success).toBe(false);
   });
 
   it("accepts non-empty text on required fields", () => {
     const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({ "1": { text: "Valid" }, "2": { text: "Back" } });
+    const result = contentSchema.safeParse({
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back" },
+    });
     expect(result.success).toBe(true);
   });
 
   it("accepts empty text on non-required fields", () => {
     const { content: contentSchema } = getCardContentValidation(fields);
-    const result = contentSchema.safeParse({ "1": { text: "Valid" }, "2": { text: "" } });
+    const result = contentSchema.safeParse({
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+      [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "" },
+    });
     expect(result.success).toBe(true);
   });
 });
@@ -262,11 +277,11 @@ describe("getInsertCardSchema", () => {
     const schema = getInsertCardSchema(template);
 
     const valid = schema.safeParse({
-      deckId: 1,
+      deckId: ID,
       templateId: template.id,
       content: {
-        "1": { text: "Front text" },
-        "2": { text: "Back text" },
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Front text" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back text" },
       },
     });
     expect(valid.success).toBe(true);
@@ -277,11 +292,11 @@ describe("getInsertCardSchema", () => {
     const schema = getInsertCardSchema(template);
 
     const result = schema.safeParse({
-      deckId: 1,
+      deckId: ID,
       templateId: template.id,
       content: {
-        "1": { text: "" },
-        "2": { text: "Back text" },
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Back text" },
       },
     });
     expect(result.success).toBe(false);
@@ -292,10 +307,10 @@ describe("getInsertCardSchema", () => {
     const schema = getInsertCardSchema(template);
 
     const result = schema.safeParse({
-      deckId: 1,
+      deckId: ID,
       templateId: template.id,
       content: {
-        "1": { text: "Only front" },
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Only front" },
       },
     });
     expect(result.success).toBe(false);
@@ -309,8 +324,8 @@ describe("getUpdateCardSchema", () => {
 
     const valid = schema.safeParse({
       content: {
-        "1": { text: "Updated front" },
-        "2": { text: "Updated back" },
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Updated front" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Updated back" },
       },
     });
     expect(valid.success).toBe(true);
@@ -322,8 +337,8 @@ describe("getUpdateCardSchema", () => {
 
     const result = schema.safeParse({
       content: {
-        "1": { text: "" },
-        "2": { text: "Updated back" },
+        [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "" },
+        [SEED_TEMPLATE_TYPE_BACK_FIELD_ID]: { text: "Updated back" },
       },
     });
     expect(result.success).toBe(false);

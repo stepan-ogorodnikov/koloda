@@ -44,7 +44,7 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
                 }
             },
             "defaults": {
-                "algorithm": 123
+                "algorithm": "01900000-0000-7000-8000-00000000007b"
             }
         }),
     )
@@ -57,7 +57,10 @@ fn patch_settings_merges_nested_fields_without_overwriting_unpatched_values() {
     );
     assert_eq!(patched.content["dailyLimits"]["learn"], counted_daily_limit(7, true));
     assert_eq!(patched.content["dailyLimits"]["review"], counted_daily_limit(50, true));
-    assert_eq!(patched.content["defaults"]["algorithm"], 123);
+    assert_eq!(
+        patched.content["defaults"]["algorithm"],
+        "01900000-0000-7000-8000-00000000007b"
+    );
     assert!(patched.updated_at.is_some());
 }
 
@@ -70,8 +73,8 @@ fn set_settings_preserves_false_counts_flag() {
         SettingsName::Learning,
         json!({
             "defaults": {
-                "algorithm": 0,
-                "template": 0
+                "algorithm": "01900000-0000-7000-8000-000000000001",
+                "template": "01900000-0000-7000-8000-000000000002"
             },
             "dailyLimits": {
                 "total": 100,

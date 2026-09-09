@@ -2,7 +2,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::app::utility::get_current_timestamp;
+use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::templates::{
     CloneTemplateData, DeleteTemplateData, InsertTemplateData, Template, TemplateContent, TemplateDeck,
     UpdateTemplateData,
@@ -57,7 +57,7 @@ pub fn get_templates(db: &Database) -> Result<Vec<Template>, AppError> {
     })
 }
 
-pub fn get_template(db: &Database, id: i64) -> Result<Option<Template>, AppError> {
+pub fn get_template(db: &Database, id: &str) -> Result<Option<Template>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             conn.query_row(
@@ -86,7 +86,10 @@ pub fn get_template(db: &Database, id: i64) -> Result<Option<Template>, AppError
     })
 }
 
-pub fn get_templates_by_ids(db: &Database, ids: &[i64]) -> Result<std::collections::HashMap<i64, Template>, AppError> {
+pub fn get_templates_by_ids(
+    db: &Database,
+    ids: &[String],
+) -> Result<std::collections::HashMap<String, Template>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         if ids.is_empty() {
             return Ok(std::collections::HashMap::new());
@@ -118,7 +121,7 @@ pub fn get_templates_by_ids(db: &Database, ids: &[i64]) -> Result<std::collectio
             let templates = stmt
                 .query_map(params.as_slice(), get_template_row)?
                 .collect::<Result<Vec<_>, _>>()?;
-            let map = templates.into_iter().map(|t| (t.id, t)).collect();
+            let map = templates.into_iter().map(|t| (t.id.clone(), t)).collect();
             Ok(map)
         })
     })
@@ -129,13 +132,13 @@ pub fn add_template(db: &Database, data: InsertTemplateData) -> Result<Template,
         data.validate()?;
         let now = get_current_timestamp()?;
 
-        let id = db.with_conn(|conn| insert_template(conn, &data, now))?;
+        let id = db.with_conn(|conn| insert_template(conn, &data, now, None))?;
 
-        get_template(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+        get_template(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
     })
 }
 
-pub(crate) fn oldest_template_id(conn: &Connection) -> Result<Option<i64>, AppError> {
+pub(crate) fn oldest_template_id(conn: &Connection) -> Result<Option<String>, AppError> {
     conn.query_row("SELECT id FROM templates ORDER BY created_at ASC LIMIT 1", [], |row| {
         row.get(0)
     })
@@ -143,19 +146,25 @@ pub(crate) fn oldest_template_id(conn: &Connection) -> Result<Option<i64>, AppEr
     .map_err(AppError::from)
 }
 
-pub(crate) fn insert_template(conn: &Connection, data: &InsertTemplateData, now: i64) -> Result<i64, AppError> {
+pub(crate) fn insert_template(
+    conn: &Connection,
+    data: &InsertTemplateData,
+    now: i64,
+    id: Option<&str>,
+) -> Result<String, AppError> {
+    let id = minted_uuidv7(id);
     conn.execute(
         r#"
-        INSERT INTO templates (title, content, created_at, updated_at)
-        VALUES (?1, ?2, ?3, NULL)
+        INSERT INTO templates (id, title, content, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, NULL)
         "#,
-        params![data.title, serde_json::to_string(&data.content)?, now],
+        params![id, data.title, serde_json::to_string(&data.content)?, now],
     )?;
 
-    Ok(conn.last_insert_rowid())
+    Ok(id)
 }
 
-pub fn is_template_locked(db: &Database, id: i64) -> Result<bool, AppError> {
+pub fn is_template_locked(db: &Database, id: &str) -> Result<bool, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let count: i64 = conn.query_row(
@@ -171,13 +180,13 @@ pub fn is_template_locked(db: &Database, id: i64) -> Result<bool, AppError> {
 
 pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Template, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        let original = get_template(db, data.id)?.ok_or_else(|| {
+        let original = get_template(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_TEMPLATES_UPDATE_TEMPLATE,
                 Some(format!("Template id: {}", data.id)),
             )
         })?;
-        let is_locked = is_template_locked(db, data.id)?;
+        let is_locked = is_template_locked(db, &data.id)?;
         if is_locked {
             data.values.validate(Some(&original.content))?;
         } else {
@@ -206,13 +215,13 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
             Ok(())
         })?;
 
-        get_template(db, data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_template(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
 }
 
 pub fn clone_template(db: &Database, data: CloneTemplateData) -> Result<Template, AppError> {
     throw_known_error(error_codes::DB_CLONE, || {
-        let source = get_template(db, data.source_id)?.ok_or_else(|| {
+        let source = get_template(db, &data.source_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_TEMPLATES_CLONE_SOURCE,
                 Some(format!("Template id: {}", data.source_id)),
@@ -230,7 +239,7 @@ pub fn clone_template(db: &Database, data: CloneTemplateData) -> Result<Template
 
 pub fn delete_template(db: &Database, data: DeleteTemplateData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        let is_locked = is_template_locked(db, data.id)?;
+        let is_locked = is_template_locked(db, &data.id)?;
         if is_locked {
             return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED, None));
         }
@@ -242,7 +251,7 @@ pub fn delete_template(db: &Database, data: DeleteTemplateData) -> Result<(), Ap
     })
 }
 
-pub fn get_template_decks(db: &Database, id: i64) -> Result<Vec<TemplateDeck>, AppError> {
+pub fn get_template_decks(db: &Database, id: &str) -> Result<Vec<TemplateDeck>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let mut stmt = conn.prepare(

@@ -3,7 +3,7 @@ use rusqlite::{params, OptionalExtension};
 
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
-use crate::app::utility::get_current_timestamp;
+use crate::app::utility::{get_current_timestamp, minted_uuidv7};
 use crate::domain::cards::{
     Card, CardContent, CardCount, CardState, DeleteCardData, DeleteCardsData, InsertCardData, ResetCardProgressData,
     UpdateCardData,
@@ -40,7 +40,7 @@ pub fn get_card_row(row: &rusqlite::Row<'_>) -> Result<Card, rusqlite::Error> {
     })
 }
 
-pub fn get_cards(db: &Database, deck_id: i64) -> Result<Vec<Card>, AppError> {
+pub fn get_cards(db: &Database, deck_id: &str) -> Result<Vec<Card>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             let mut stmt = conn.prepare(
@@ -81,7 +81,7 @@ pub fn get_card_counts(db: &Database) -> Result<Vec<CardCount>, AppError> {
     })
 }
 
-pub fn get_card(db: &Database, id: i64) -> Result<Option<Card>, AppError> {
+pub fn get_card(db: &Database, id: &str) -> Result<Option<Card>, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
             conn.query_row(
@@ -103,14 +103,14 @@ pub fn get_card(db: &Database, id: i64) -> Result<Option<Card>, AppError> {
 
 pub fn add_card(db: &Database, data: InsertCardData) -> Result<Card, AppError> {
     throw_known_error(error_codes::DB_ADD, || {
-        get_deck(db, data.deck_id)?.ok_or_else(|| {
+        get_deck(db, &data.deck_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_ADD_DECK,
                 Some(format!("Deck id: {}", data.deck_id)),
             )
         })?;
 
-        let template = get_template(db, data.template_id)?.ok_or_else(|| {
+        let template = get_template(db, &data.template_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_ADD_TEMPLATE,
                 Some(format!("Template id: {}", data.template_id)),
@@ -127,24 +127,24 @@ pub fn add_cards(db: &Database, data: Vec<InsertCardData>) -> Result<AddCardsRes
             return Ok(Vec::new());
         }
 
-        let distinct_deck_ids: Vec<i64> = {
-            let mut ids: Vec<i64> = data.iter().map(|c| c.deck_id).collect();
+        let distinct_deck_ids: Vec<String> = {
+            let mut ids: Vec<String> = data.iter().map(|c| c.deck_id.clone()).collect();
             ids.sort_unstable();
             ids.dedup();
             ids
         };
-        let decks: HashMap<i64, _> = get_decks_by_ids(db, &distinct_deck_ids)?
+        let decks: HashMap<String, _> = get_decks_by_ids(db, &distinct_deck_ids)?
             .into_iter()
-            .map(|deck| (deck.id, deck))
+            .map(|deck| (deck.id.clone(), deck))
             .collect();
 
-        let distinct_template_ids: Vec<i64> = {
-            let mut ids: Vec<i64> = data.iter().map(|c| c.template_id).collect();
+        let distinct_template_ids: Vec<String> = {
+            let mut ids: Vec<String> = data.iter().map(|c| c.template_id.clone()).collect();
             ids.sort_unstable();
             ids.dedup();
             ids
         };
-        let templates: HashMap<i64, Template> = get_templates_by_ids(db, &distinct_template_ids)?;
+        let templates: HashMap<String, Template> = get_templates_by_ids(db, &distinct_template_ids)?;
 
         let mut results = Vec::with_capacity(data.len());
 
@@ -185,14 +185,16 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
     let now = get_current_timestamp()?;
 
     let id = db.with_conn(|conn| {
+        let id = minted_uuidv7(None);
         conn.execute(
             r#"
-            INSERT INTO cards (deck_id, template_id, content, state, due_at, stability,
+            INSERT INTO cards (id, deck_id, template_id, content, state, due_at, stability,
                               difficulty, scheduled_days, learning_steps, reps, lapses,
                               last_reviewed_at, created_at, updated_at)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, NULL)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, NULL)
             "#,
             params![
+                id,
                 data.deck_id,
                 data.template_id,
                 serde_json::to_string(&data.content)?,
@@ -211,22 +213,22 @@ fn insert_card_data(db: &Database, data: &InsertCardData, template: &Template) -
             ],
         )?;
 
-        Ok(conn.last_insert_rowid())
+        Ok(id)
     })?;
 
-    get_card(db, id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
+    get_card(db, &id)?.ok_or_else(|| AppError::new(error_codes::DB_ADD, None))
 }
 
 pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        let original = get_card(db, data.id)?.ok_or_else(|| {
+        let original = get_card(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_UPDATE_CARD,
                 Some(format!("Card id: {}", data.id)),
             )
         })?;
 
-        let template = get_template(db, original.template_id)?.ok_or_else(|| {
+        let template = get_template(db, &original.template_id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_UPDATE_TEMPLATE,
                 Some(format!("Template id: {}", original.template_id)),
@@ -250,14 +252,15 @@ pub fn update_card(db: &Database, data: UpdateCardData) -> Result<Card, AppError
             Ok(())
         })?;
 
-        get_card(db, data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_card(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
 }
 
 pub fn delete_card(db: &Database, data: DeleteCardData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        db.with_conn(|conn| {
-            conn.execute("DELETE FROM cards WHERE id = ?1", params![data.id])?;
+        db.with_transaction(|tx| {
+            tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
+            tx.execute("DELETE FROM cards WHERE id = ?1", params![data.id])?;
 
             Ok(())
         })
@@ -276,12 +279,15 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
             .enumerate()
             .map(|(i, _)| format!("?{}", i + 1))
             .collect();
-        let sql = format!("DELETE FROM cards WHERE id IN ({})", placeholders.join(", "));
+        let in_list = placeholders.join(", ");
+        let reviews_sql = format!("DELETE FROM reviews WHERE card_id IN ({in_list})");
+        let cards_sql = format!("DELETE FROM cards WHERE id IN ({in_list})");
 
         let params: Vec<&dyn rusqlite::ToSql> = data.ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
 
-        db.with_conn(|conn| {
-            conn.execute(&sql, params.as_slice())?;
+        db.with_transaction(|tx| {
+            tx.execute(&reviews_sql, params.as_slice())?;
+            tx.execute(&cards_sql, params.as_slice())?;
 
             Ok(())
         })
@@ -290,14 +296,12 @@ pub fn delete_cards(db: &Database, data: DeleteCardsData) -> Result<(), AppError
 
 pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result<Card, AppError> {
     throw_known_error(error_codes::DB_UPDATE, || {
-        get_card(db, data.id)?.ok_or_else(|| {
+        get_card(db, &data.id)?.ok_or_else(|| {
             AppError::new(
                 error_codes::NOT_FOUND_CARDS_RESET_CARD,
                 Some(format!("Card id: {}", data.id)),
             )
         })?;
-
-        let now = get_current_timestamp()?;
 
         db.with_transaction(|tx| {
             tx.execute("DELETE FROM reviews WHERE card_id = ?1", params![data.id])?;
@@ -308,17 +312,17 @@ pub fn reset_card_progress(db: &Database, data: ResetCardProgressData) -> Result
                 UPDATE cards
                 SET {reset_to_new}, due_at = NULL, stability = 0, difficulty = 0,
                     scheduled_days = 0, learning_steps = 0, reps = 0, lapses = 0,
-                    last_reviewed_at = NULL, updated_at = ?1
-                WHERE id = ?2
+                    last_reviewed_at = NULL
+                WHERE id = ?1
                 "#,
                     reset_to_new = fsrs_sql::eq_state("state", CardState::New),
                 ),
-                params![now, data.id],
+                params![data.id],
             )?;
 
             Ok(())
         })?;
 
-        get_card(db, data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
+        get_card(db, &data.id)?.ok_or_else(|| AppError::new(error_codes::DB_UPDATE, None))
     })
 }

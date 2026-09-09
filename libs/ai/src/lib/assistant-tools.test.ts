@@ -167,29 +167,34 @@ describe("propose_cards input schema", () => {
   const schema = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema;
 
   it("coerces a flattened card and { text } field values", () => {
-    expect(schema.parse({ deckId: 5, cards: [{ Front: "hola", Back: "hello" }] })).toEqual({
-      deckId: 5,
+    expect(
+      schema.parse({ deckId: "01900000-0000-7000-8000-000000000005", cards: [{ Front: "hola", Back: "hello" }] }),
+    ).toEqual({
+      deckId: "01900000-0000-7000-8000-000000000005",
       cards: [{ fields: { Front: "hola", Back: "hello" } }],
     });
     expect(
       schema.parse({
-        deckId: 5,
+        deckId: "01900000-0000-7000-8000-000000000005",
         cards: [{ fields: { Front: { text: "hola" }, Back: { text: "hello" } } }],
       }),
     ).toEqual({
-      deckId: 5,
+      deckId: "01900000-0000-7000-8000-000000000005",
       cards: [{ fields: { Front: "hola", Back: "hello" } }],
     });
   });
 
   it("parses an empty cards array", () => {
-    expect(schema.parse({ deckId: 5, cards: [] })).toEqual({ deckId: 5, cards: [] });
+    expect(schema.parse({ deckId: "01900000-0000-7000-8000-000000000005", cards: [] })).toEqual({
+      deckId: "01900000-0000-7000-8000-000000000005",
+      cards: [],
+    });
   });
 
   it("coerces a mixed batch without failing the payload", () => {
     expect(
       schema.parse({
-        deckId: 5,
+        deckId: "01900000-0000-7000-8000-000000000005",
         cards: [
           { fields: { Front: "hola", Back: "hello" } },
           { fields: { Front: "gato", Back: 1 } },
@@ -198,7 +203,7 @@ describe("propose_cards input schema", () => {
         ],
       }),
     ).toEqual({
-      deckId: 5,
+      deckId: "01900000-0000-7000-8000-000000000005",
       cards: [
         { fields: { Front: "hola", Back: "hello" } },
         { fields: { Front: "gato", Back: "1" } },
@@ -211,18 +216,20 @@ describe("propose_cards input schema", () => {
   it("coerces booleans and { text } numbers to strings", () => {
     expect(
       schema.parse({
-        deckId: 5,
+        deckId: "01900000-0000-7000-8000-000000000005",
         cards: [{ fields: { Front: true, Back: { text: 1492 } } }],
       }),
     ).toEqual({
-      deckId: 5,
+      deckId: "01900000-0000-7000-8000-000000000005",
       cards: [{ fields: { Front: "true", Back: "1492" } }],
     });
   });
 
   it("parses all-unfixable cards as empty field maps", () => {
-    expect(schema.parse({ deckId: 5, cards: [null, "x", [1], { fields: 1 }] })).toEqual({
-      deckId: 5,
+    expect(
+      schema.parse({ deckId: "01900000-0000-7000-8000-000000000005", cards: [null, "x", [1], { fields: 1 }] }),
+    ).toEqual({
+      deckId: "01900000-0000-7000-8000-000000000005",
       cards: [{ fields: {} }, { fields: {} }, { fields: {} }, { fields: {} }],
     });
   });
@@ -231,21 +238,27 @@ describe("propose_cards input schema", () => {
 describe("tool output shaping", () => {
   const templates: AssistantToolTemplate[] = [
     {
-      id: 1,
+      id: "01900000-0000-7000-8000-000000000001",
       title: "Basic",
       content: {
         fields: [
-          { id: 10, title: "Front", type: "text", isRequired: true },
-          { id: 11, title: "Back", type: "text", isRequired: true },
+          { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+          { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
         ],
       },
     },
-    { id: 2, title: "Cloze", content: { fields: [{ id: 20, title: "Text", type: "text", isRequired: true }] } },
+    {
+      id: "01900000-0000-7000-8000-000000000002",
+      title: "Cloze",
+      content: {
+        fields: [{ id: "01900000-0000-7000-8000-000000000014", title: "Text", type: "text", isRequired: true }],
+      },
+    },
   ];
-  const deck = { id: 5, title: "Spanish verbs", template: templates[0] };
+  const deck = { id: "01900000-0000-7000-8000-000000000005", title: "Spanish verbs", template: templates[0] };
 
   /** Card content is keyed by field id as a string, mirroring the persisted shape. */
-  function card(texts: Record<number, string>): AssistantToolCard {
+  function card(texts: Record<string, string>): AssistantToolCard {
     return {
       content: Object.fromEntries(Object.entries(texts).map(([id, text]) => [id, { text }])),
     };
@@ -254,16 +267,38 @@ describe("tool output shaping", () => {
   it("maps deck rows to list_decks output with template titles and field titles", () => {
     const output = shapeListDecksOutput(
       [
-        { id: 5, title: "Spanish verbs", templateId: 1, cardCount: 12 },
-        { id: 6, title: "Orphan", templateId: 99, cardCount: 0 },
+        {
+          id: "01900000-0000-7000-8000-000000000005",
+          title: "Spanish verbs",
+          templateId: "01900000-0000-7000-8000-000000000001",
+          cardCount: 12,
+        },
+        {
+          id: "01900000-0000-7000-8000-000000000006",
+          title: "Orphan",
+          templateId: "01900000-0000-7000-8000-000000000063",
+          cardCount: 0,
+        },
       ],
       templates,
     );
 
     expect(output).toEqual({
       decks: [
-        { deckId: 5, title: "Spanish verbs", cardCount: 12, templateTitle: "Basic", fieldTitles: ["Front", "Back"] },
-        { deckId: 6, title: "Orphan", cardCount: 0, templateTitle: null, fieldTitles: [] },
+        {
+          deckId: "01900000-0000-7000-8000-000000000005",
+          title: "Spanish verbs",
+          cardCount: 12,
+          templateTitle: "Basic",
+          fieldTitles: ["Front", "Back"],
+        },
+        {
+          deckId: "01900000-0000-7000-8000-000000000006",
+          title: "Orphan",
+          cardCount: 0,
+          templateTitle: null,
+          fieldTitles: [],
+        },
       ],
     });
   });
@@ -273,7 +308,16 @@ describe("tool output shaping", () => {
   });
 
   it("lists every card of a small deck and maps field ids to titles", () => {
-    const cards = [card({ 10: "hola", 11: "hello" }), card({ 10: "gato", 11: "cat" })];
+    const cards = [
+      card({
+        "01900000-0000-7000-8000-00000000000a": "hola",
+        "01900000-0000-7000-8000-00000000000b": "hello",
+      }),
+      card({
+        "01900000-0000-7000-8000-00000000000a": "gato",
+        "01900000-0000-7000-8000-00000000000b": "cat",
+      }),
+    ];
 
     expect(shapeGetDeckCardsOutput(deck, cards)).toEqual({
       deckTitle: "Spanish verbs",
@@ -284,7 +328,7 @@ describe("tool output shaping", () => {
   });
 
   it("maps a field missing from card content to empty text", () => {
-    expect(shapeGetDeckCardsOutput(deck, [card({ 10: "hola" })])).toEqual({
+    expect(shapeGetDeckCardsOutput(deck, [card({ "01900000-0000-7000-8000-00000000000a": "hola" })])).toEqual({
       deckTitle: "Spanish verbs",
       totalCards: 1,
       isCapped: false,
@@ -304,9 +348,9 @@ describe("tool output shaping", () => {
   it(`caps the card list at ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK} while reporting the true total`, () => {
     // WHY: single short field keeps every entry far under the char budget, so the
     // only truncation source in this test is the per-deck cap.
-    const cappedDeck = { id: 7, title: "Numbers", template: templates[1] };
+    const cappedDeck = { id: "01900000-0000-7000-8000-000000000007", title: "Numbers", template: templates[1] };
     const cards = Array.from({ length: ASSISTANT_TOOL_MAX_CARDS_PER_DECK + 5 }, (_unused, index) =>
-      card({ 20: `n${index}` }),
+      card({ "01900000-0000-7000-8000-000000000014": `n${index}` }),
     );
 
     const output = shapeGetDeckCardsOutput(cappedDeck, cards);
@@ -325,9 +369,18 @@ describe("tool output shaping", () => {
     // 8k budget — truncation comes from the budget, not the 200-card cap.
     const bigText = "x".repeat(3_500);
     const cards = [
-      card({ 10: bigText, 11: bigText }),
-      card({ 10: bigText, 11: bigText }),
-      card({ 10: "small", 11: "tiny" }),
+      card({
+        "01900000-0000-7000-8000-00000000000a": bigText,
+        "01900000-0000-7000-8000-00000000000b": bigText,
+      }),
+      card({
+        "01900000-0000-7000-8000-00000000000a": bigText,
+        "01900000-0000-7000-8000-00000000000b": bigText,
+      }),
+      card({
+        "01900000-0000-7000-8000-00000000000a": "small",
+        "01900000-0000-7000-8000-00000000000b": "tiny",
+      }),
     ];
 
     const output = shapeGetDeckCardsOutput(deck, cards);
@@ -340,27 +393,27 @@ describe("tool output shaping", () => {
 
 describe("propose_cards output shaping", () => {
   const template: AssistantToolTemplate = {
-    id: 1,
+    id: "01900000-0000-7000-8000-000000000001",
     title: "Basic",
     content: {
       fields: [
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text", isRequired: false },
       ],
     },
   };
-  const deck = { id: 5, title: "Spanish verbs", template };
+  const deck = { id: "01900000-0000-7000-8000-000000000005", title: "Spanish verbs", template };
 
   it("maps titles onto template field ids and returns title-keyed accepted cards", () => {
     expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }])).toEqual({
-      deckId: 5,
+      deckId: "01900000-0000-7000-8000-000000000005",
       deckTitle: "Spanish verbs",
-      templateId: 1,
+      templateId: "01900000-0000-7000-8000-000000000001",
       templateFields: [
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text", isRequired: false },
       ],
       cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
       rejectedCount: 0,
@@ -396,9 +449,16 @@ describe("propose_cards output shaping", () => {
     expect(shapeProposeCardsOutput(deck, [{ fields: { front: "hola", BACK: "hello" } }]).cards).toEqual([
       { fields: { Front: "hola", Back: "hello", Hint: "" } },
     ]);
-    expect(shapeProposeCardsOutput(deck, [{ fields: { "10": "hola", "11": "hello" } }]).cards).toEqual([
-      { fields: { Front: "hola", Back: "hello", Hint: "" } },
-    ]);
+    expect(
+      shapeProposeCardsOutput(deck, [
+        {
+          fields: {
+            "01900000-0000-7000-8000-00000000000a": "hola",
+            "01900000-0000-7000-8000-00000000000b": "hello",
+          },
+        },
+      ]).cards,
+    ).toEqual([{ fields: { Front: "hola", Back: "hello", Hint: "" } }]);
   });
 
   it("tells the model to retry when every card is rejected", () => {
@@ -426,13 +486,13 @@ describe("propose_cards output shaping", () => {
 
   it("returns an empty accepted list for empty input without rejecting", () => {
     expect(shapeProposeCardsOutput(deck, [])).toEqual({
-      deckId: 5,
+      deckId: "01900000-0000-7000-8000-000000000005",
       deckTitle: "Spanish verbs",
-      templateId: 1,
+      templateId: "01900000-0000-7000-8000-000000000001",
       templateFields: [
-        { id: 10, title: "Front", type: "text", isRequired: true },
-        { id: 11, title: "Back", type: "text", isRequired: true },
-        { id: 12, title: "Hint", type: "text", isRequired: false },
+        { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
+        { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text", isRequired: false },
       ],
       cards: [],
       rejectedCount: 0,
@@ -459,30 +519,32 @@ describe("propose_cards output shaping", () => {
   });
 
   it("copies the source template id onto the shaped result", () => {
-    expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]).templateId).toBe(1);
+    expect(shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]).templateId).toBe(
+      "01900000-0000-7000-8000-000000000001",
+    );
   });
 
   it("carries isRequired from the source template onto output fields", () => {
     const output = shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }]);
 
     expect(output.templateFields).toEqual([
-      { id: 10, title: "Front", type: "text", isRequired: true },
-      { id: 11, title: "Back", type: "text", isRequired: true },
-      { id: 12, title: "Hint", type: "text", isRequired: false },
+      { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text", isRequired: false },
     ]);
   });
 
   it("carries type: markdown from the source template onto output fields", () => {
     const markdownDeck = {
-      id: 5,
+      id: "01900000-0000-7000-8000-000000000005",
       title: "Spanish verbs",
       template: {
-        id: 1,
+        id: "01900000-0000-7000-8000-000000000001",
         title: "Basic",
         content: {
           fields: [
-            { id: 10, title: "Front", type: "text" as const, isRequired: true },
-            { id: 11, title: "Back", type: "markdown" as const, isRequired: true },
+            { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text" as const, isRequired: true },
+            { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "markdown" as const, isRequired: true },
           ],
         },
       },
@@ -491,8 +553,8 @@ describe("propose_cards output shaping", () => {
     const output = shapeProposeCardsOutput(markdownDeck, [{ fields: { Front: "hola", Back: "**hello**" } }]);
 
     expect(output.templateFields).toEqual([
-      { id: 10, title: "Front", type: "text", isRequired: true },
-      { id: 11, title: "Back", type: "markdown", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "markdown", isRequired: true },
     ]);
     expect(isProposeCardsOutput(output)).toBe(true);
   });
@@ -500,13 +562,13 @@ describe("propose_cards output shaping", () => {
 
 describe("propose_cards output guard and mapper", () => {
   const validOutput: ProposeCardsOutput = {
-    deckId: 5,
+    deckId: "01900000-0000-7000-8000-000000000005",
     deckTitle: "Spanish verbs",
-    templateId: 1,
+    templateId: "01900000-0000-7000-8000-000000000001",
     templateFields: [
-      { id: 10, title: "Front", type: "text", isRequired: true },
-      { id: 11, title: "Back", type: "text", isRequired: true },
-      { id: 12, title: "Hint", type: "text", isRequired: false },
+      { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text", isRequired: true },
+      { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text", isRequired: false },
     ],
     cards: [{ fields: { Front: "hola", Back: "hello", Hint: "greeting" } }],
     rejectedCount: 0,
@@ -514,16 +576,16 @@ describe("propose_cards output guard and mapper", () => {
 
   it("accepts a shaped propose_cards payload", () => {
     const deck = {
-      id: 5,
+      id: "01900000-0000-7000-8000-000000000005",
       title: "Spanish verbs",
       template: {
-        id: 1,
+        id: "01900000-0000-7000-8000-000000000001",
         title: "Basic",
         content: {
           fields: [
-            { id: 10, title: "Front", type: "text" as const, isRequired: true },
-            { id: 11, title: "Back", type: "text" as const, isRequired: true },
-            { id: 12, title: "Hint", type: "text" as const, isRequired: false },
+            { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "text" as const, isRequired: true },
+            { id: "01900000-0000-7000-8000-00000000000b", title: "Back", type: "text" as const, isRequired: true },
+            { id: "01900000-0000-7000-8000-00000000000c", title: "Hint", type: "text" as const, isRequired: false },
           ],
         },
       },
@@ -543,26 +605,28 @@ describe("propose_cards output guard and mapper", () => {
     expect(isProposeCardsOutput({ ...validOutput, deckId: 1.5 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, templateId: 0 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, templateId: 1.5 })).toBe(false);
-    expect(isProposeCardsOutput({ ...validOutput, templateId: "1" })).toBe(false);
+    expect(isProposeCardsOutput({ ...validOutput, templateId: "" })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, rejectedCount: 1.5 })).toBe(false);
     expect(isProposeCardsOutput({ ...validOutput, message: PROPOSE_CARDS_RETRY_MESSAGE })).toBe(true);
     expect(isProposeCardsOutput({ ...validOutput, message: 1 })).toBe(false);
     expect(
       isProposeCardsOutput({
         ...validOutput,
-        templateFields: [{ id: 10, title: "Front" }],
+        templateFields: [{ id: "01900000-0000-7000-8000-00000000000a", title: "Front" }],
       }),
     ).toBe(false);
     expect(
       isProposeCardsOutput({
         ...validOutput,
-        templateFields: [{ id: 10, title: "Front", isRequired: true }],
+        templateFields: [{ id: "01900000-0000-7000-8000-00000000000a", title: "Front", isRequired: true }],
       }),
     ).toBe(false);
     expect(
       isProposeCardsOutput({
         ...validOutput,
-        templateFields: [{ id: 10, title: "Front", type: "html", isRequired: true }],
+        templateFields: [
+          { id: "01900000-0000-7000-8000-00000000000a", title: "Front", type: "html", isRequired: true },
+        ],
       }),
     ).toBe(false);
     expect(
@@ -575,7 +639,13 @@ describe("propose_cards output guard and mapper", () => {
 
   it("maps title-keyed accepted cards onto id-keyed GeneratedCard content", () => {
     expect(generatedCardsFromProposeOutput(validOutput)).toEqual([
-      { content: { "10": { text: "hola" }, "11": { text: "hello" }, "12": { text: "greeting" } } },
+      {
+        content: {
+          "01900000-0000-7000-8000-00000000000a": { text: "hola" },
+          "01900000-0000-7000-8000-00000000000b": { text: "hello" },
+          "01900000-0000-7000-8000-00000000000c": { text: "greeting" },
+        },
+      },
     ]);
   });
 
@@ -585,7 +655,15 @@ describe("propose_cards output guard and mapper", () => {
         ...validOutput,
         cards: [{ fields: { Front: "hola", Extra: "nope" } }],
       }),
-    ).toEqual([{ content: { "10": { text: "hola" }, "11": { text: "" }, "12": { text: "" } } }]);
+    ).toEqual([
+      {
+        content: {
+          "01900000-0000-7000-8000-00000000000a": { text: "hola" },
+          "01900000-0000-7000-8000-00000000000b": { text: "" },
+          "01900000-0000-7000-8000-00000000000c": { text: "" },
+        },
+      },
+    ]);
   });
 
   it("returns an empty list when no cards were accepted", () => {
@@ -603,7 +681,13 @@ describe("chat tool streaming", () => {
     fakeModelSlot.model = model;
     const listDecksOutput = {
       decks: [
-        { deckId: 1, title: "Spanish verbs", cardCount: 12, templateTitle: "Basic", fieldTitles: ["Front", "Back"] },
+        {
+          deckId: "01900000-0000-7000-8000-000000000001",
+          title: "Spanish verbs",
+          cardCount: 12,
+          templateTitle: "Basic",
+          fieldTitles: ["Front", "Back"],
+        },
       ],
     };
     const executeTool = vi.fn().mockResolvedValue(listDecksOutput);
@@ -662,7 +746,12 @@ describe("chat tool streaming", () => {
         // Mimics a provider whose in-flight request rejects once the signal fires.
         if (abortSignal?.aborted) throw new DOMException("Aborted", "AbortError");
         return streamOf([
-          { type: "tool-call", toolCallId: "call-1", toolName: "get_deck_cards", input: JSON.stringify({ deckId: 7 }) },
+          {
+            type: "tool-call",
+            toolCallId: "call-1",
+            toolName: "get_deck_cards",
+            input: JSON.stringify({ deckId: "01900000-0000-7000-8000-000000000007" }),
+          },
           { type: "finish", finishReason: { unified: "tool-calls", raw: "tool-calls" }, usage: usage(3, 5) },
         ]);
       },
@@ -695,9 +784,12 @@ describe("chat tool streaming", () => {
 
     expect(error).toBeInstanceOf(DOMException);
     expect((error as DOMException).name).toBe("AbortError");
-    expect(executeTool).toHaveBeenCalledWith("get_deck_cards", { deckId: 7 });
+    expect(executeTool).toHaveBeenCalledWith("get_deck_cards", { deckId: "01900000-0000-7000-8000-000000000007" });
     expect(events).toEqual([
-      { kind: "toolCall", call: { id: "call-1", name: "get_deck_cards", input: { deckId: 7 } } },
+      {
+        kind: "toolCall",
+        call: { id: "call-1", name: "get_deck_cards", input: { deckId: "01900000-0000-7000-8000-000000000007" } },
+      },
     ]);
   });
 

@@ -65,7 +65,7 @@ fn test_lesson_result_valid() {
 fn test_lesson_result_all_ratings_valid() {
     for rating in 1..=4 {
         let review = json!({
-            "cardId": 1,
+            "cardId": "01900000-0000-7000-8000-000000000001",
             "rating": rating,
             "state": 0,
             "dueAt": 1000000000,
@@ -89,7 +89,7 @@ fn test_lesson_result_all_ratings_valid() {
 fn test_lesson_result_all_states_valid() {
     for state in 0..=3 {
         let card = json!({
-            "id": 1,
+            "id": "01900000-0000-7000-8000-000000000001",
             "state": state,
             "dueAt": 1000000000,
             "stability": 5.0,
@@ -101,7 +101,7 @@ fn test_lesson_result_all_states_valid() {
             "lastReviewedAt": null
         });
         let review = json!({
-            "cardId": 1,
+            "cardId": "01900000-0000-7000-8000-000000000001",
             "rating": 1,
             "state": state,
             "dueAt": 1000000000,
@@ -127,9 +127,9 @@ fn test_lesson_result_card_review_id_mismatch_fails() {
     // The mismatch rule must fire even when neither side has a validation
     // error of its own.
     let mut card = valid_card_progress_json();
-    card["id"] = json!(7);
+    card["id"] = json!("01900000-0000-7000-8000-000000000007");
     let mut review = valid_review_json();
-    review["cardId"] = json!(8);
+    review["cardId"] = json!("01900000-0000-7000-8000-000000000008");
 
     let data = json!({
         "card": card,

@@ -1,4 +1,5 @@
 use koloda::app::init::seed_db;
+use koloda::domain::seed_ids::{SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID};
 use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{TemplateContent, TemplateField, TemplateLayoutItem};
 use koloda::repo::{algorithms, settings, templates};
@@ -22,6 +23,8 @@ fn seed_db_is_idempotent_and_reuses_oldest_algorithm_and_template() {
         .expect("settings query should succeed")
         .expect("learning settings should exist");
 
+    assert_eq!(all_algorithms[0].id, SEED_ALGORITHM_SIMPLE_ID);
+    assert_eq!(all_templates[0].id, SEED_TEMPLATE_TYPE_ID);
     assert_eq!(learning.content["defaults"]["algorithm"], all_algorithms[0].id);
     assert_eq!(learning.content["defaults"]["template"], all_templates[0].id);
 }
@@ -34,7 +37,7 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
         conn.execute(
             "INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
             rusqlite::params![
-                10_i64,
+                "01900000-0000-7000-8000-00000000000a",
                 "Algo older",
                 serde_json::to_string(&fsrs_algorithm_content()).unwrap(),
                 100_i64
@@ -43,7 +46,7 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
         conn.execute(
             "INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
             rusqlite::params![
-                11_i64,
+                "01900000-0000-7000-8000-00000000000b",
                 "Algo newer",
                 serde_json::to_string(&fsrs_algorithm_content()).unwrap(),
                 200_i64
@@ -53,18 +56,18 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
         conn.execute(
             "INSERT INTO templates (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
             rusqlite::params![
-                20_i64,
+                "01900000-0000-7000-8000-000000000014",
                 "Tpl older",
                 serde_json::to_string(&TemplateContent {
                     fields: vec![
                         TemplateField {
-                            id: 1,
+                            id: "01900000-0000-7000-8000-000000000001".to_string(),
                             title: "Front".to_string(),
                             field_type: "text".to_string(),
                             is_required: true,
                         },
                         TemplateField {
-                            id: 2,
+                            id: "01900000-0000-7000-8000-000000000002".to_string(),
                             title: "Back".to_string(),
                             field_type: "text".to_string(),
                             is_required: false,
@@ -72,11 +75,11 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
                     ],
                     layout: vec![
                         TemplateLayoutItem {
-                            field: 1,
+                            field: "01900000-0000-7000-8000-000000000001".to_string(),
                             operation: "display".to_string(),
                         },
                         TemplateLayoutItem {
-                            field: 2,
+                            field: "01900000-0000-7000-8000-000000000002".to_string(),
                             operation: "reveal".to_string(),
                         },
                     ],
@@ -88,18 +91,18 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
         conn.execute(
             "INSERT INTO templates (id, title, content, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, NULL)",
             rusqlite::params![
-                21_i64,
+                "01900000-0000-7000-8000-000000000015",
                 "Tpl newer",
                 serde_json::to_string(&TemplateContent {
                     fields: vec![
                         TemplateField {
-                            id: 1,
+                            id: "01900000-0000-7000-8000-000000000001".to_string(),
                             title: "Front".to_string(),
                             field_type: "text".to_string(),
                             is_required: true,
                         },
                         TemplateField {
-                            id: 2,
+                            id: "01900000-0000-7000-8000-000000000002".to_string(),
                             title: "Back".to_string(),
                             field_type: "text".to_string(),
                             is_required: false,
@@ -107,11 +110,11 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
                     ],
                     layout: vec![
                         TemplateLayoutItem {
-                            field: 1,
+                            field: "01900000-0000-7000-8000-000000000001".to_string(),
                             operation: "display".to_string(),
                         },
                         TemplateLayoutItem {
-                            field: 2,
+                            field: "01900000-0000-7000-8000-000000000002".to_string(),
                             operation: "reveal".to_string(),
                         },
                     ],
@@ -130,8 +133,14 @@ fn seed_db_reuses_oldest_existing_algorithm_and_template_ids() {
         .expect("settings query should succeed")
         .expect("learning settings should exist");
 
-    assert_eq!(learning.content["defaults"]["algorithm"], 10);
-    assert_eq!(learning.content["defaults"]["template"], 20);
+    assert_eq!(
+        learning.content["defaults"]["algorithm"],
+        "01900000-0000-7000-8000-00000000000a"
+    );
+    assert_eq!(
+        learning.content["defaults"]["template"],
+        "01900000-0000-7000-8000-000000000014"
+    );
 
     let all_algorithms = algorithms::get_algorithms(&db).expect("algorithms query should succeed");
     let all_templates = templates::get_templates(&db).expect("templates query should succeed");

@@ -4,7 +4,7 @@ use serde_json::{json, Value};
 /// Canonical valid card-progress payload used as the mutation base for JSON-shape contract cases.
 fn valid_payload() -> Value {
     json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -61,7 +61,7 @@ fn test_wrong_typed_fields_fail() {
     assert_eq!(progress.last_reviewed_at, None);
 
     let mistyped_fields = [
-        ("id", json!("not-a-number")),
+        ("id", json!(1)),
         ("state", json!("not-a-number")),
         ("dueAt", json!("not-a-timestamp")),
         ("stability", json!("not-a-number")),
@@ -86,7 +86,7 @@ fn test_wrong_typed_fields_fail() {
 fn test_update_card_progress_state_all_valid() {
     for state in 0..=3 {
         let data = json!({
-            "id": 1,
+            "id": "01900000-0000-7000-8000-000000000001",
             "state": state,
             "dueAt": 1000000000,
             "stability": 5.0,
@@ -104,7 +104,7 @@ fn test_update_card_progress_state_all_valid() {
 #[test]
 fn test_update_card_progress_state_above_max_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 4,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -122,7 +122,7 @@ fn test_update_card_progress_state_above_max_fails() {
 #[test]
 fn test_update_card_progress_state_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": -1,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -140,7 +140,7 @@ fn test_update_card_progress_state_negative_fails() {
 #[test]
 fn test_update_card_progress_stability_zero_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 0.0,
@@ -157,7 +157,7 @@ fn test_update_card_progress_stability_zero_ok() {
 #[test]
 fn test_update_card_progress_stability_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": -1.0,
@@ -178,7 +178,7 @@ fn test_update_card_progress_stability_negative_fails() {
 #[test]
 fn test_update_card_progress_difficulty_min_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -195,7 +195,7 @@ fn test_update_card_progress_difficulty_min_ok() {
 #[test]
 fn test_update_card_progress_difficulty_max_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -212,7 +212,7 @@ fn test_update_card_progress_difficulty_max_ok() {
 #[test]
 fn test_update_card_progress_difficulty_below_min_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -233,7 +233,7 @@ fn test_update_card_progress_difficulty_below_min_fails() {
 #[test]
 fn test_update_card_progress_difficulty_above_max_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -254,7 +254,7 @@ fn test_update_card_progress_difficulty_above_max_fails() {
 #[test]
 fn test_update_card_progress_scheduled_days_zero_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -271,7 +271,7 @@ fn test_update_card_progress_scheduled_days_zero_ok() {
 #[test]
 fn test_update_card_progress_scheduled_days_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -292,7 +292,7 @@ fn test_update_card_progress_scheduled_days_negative_fails() {
 #[test]
 fn test_update_card_progress_learning_steps_zero_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -309,7 +309,7 @@ fn test_update_card_progress_learning_steps_zero_ok() {
 #[test]
 fn test_update_card_progress_learning_steps_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -330,7 +330,7 @@ fn test_update_card_progress_learning_steps_negative_fails() {
 #[test]
 fn test_update_card_progress_reps_zero_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -347,7 +347,7 @@ fn test_update_card_progress_reps_zero_ok() {
 #[test]
 fn test_update_card_progress_reps_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -365,7 +365,7 @@ fn test_update_card_progress_reps_negative_fails() {
 #[test]
 fn test_update_card_progress_lapses_zero_ok() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,
@@ -382,7 +382,7 @@ fn test_update_card_progress_lapses_zero_ok() {
 #[test]
 fn test_update_card_progress_lapses_negative_fails() {
     let data = json!({
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "state": 0,
         "dueAt": 1000000000,
         "stability": 5.0,

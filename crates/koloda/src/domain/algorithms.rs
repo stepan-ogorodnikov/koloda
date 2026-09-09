@@ -12,7 +12,7 @@ use crate::domain::time::{
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Algorithm {
-    pub id: i64,
+    pub id: String,
     pub title: String,
     pub content: AlgorithmFSRS,
     // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
@@ -43,7 +43,7 @@ pub struct UpdateAlgorithmValues {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateAlgorithmData {
-    pub id: i64,
+    pub id: String,
     pub values: UpdateAlgorithmValues,
 }
 
@@ -51,20 +51,20 @@ pub struct UpdateAlgorithmData {
 #[serde(rename_all = "camelCase")]
 pub struct CloneAlgorithmData {
     pub title: String,
-    pub source_id: i64,
+    pub source_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeleteAlgorithmData {
-    pub id: i64,
-    pub successor_id: Option<i64>,
+    pub id: String,
+    pub successor_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AlgorithmDeck {
-    pub id: i64,
+    pub id: String,
     pub title: String,
 }
 

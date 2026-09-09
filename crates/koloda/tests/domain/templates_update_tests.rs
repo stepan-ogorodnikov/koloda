@@ -6,13 +6,13 @@ fn create_original_template_content() -> TemplateContent {
     TemplateContent {
         fields: vec![
             TemplateField {
-                id: 1,
+                id: "01900000-0000-7000-8000-000000000001".to_string(),
                 title: "Front".to_string(),
                 field_type: "markdown".to_string(),
                 is_required: true,
             },
             TemplateField {
-                id: 2,
+                id: "01900000-0000-7000-8000-000000000002".to_string(),
                 title: "Back".to_string(),
                 field_type: "text".to_string(),
                 is_required: false,
@@ -20,11 +20,11 @@ fn create_original_template_content() -> TemplateContent {
         ],
         layout: vec![
             TemplateLayoutItem {
-                field: 1,
+                field: "01900000-0000-7000-8000-000000000001".to_string(),
                 operation: "display".to_string(),
             },
             TemplateLayoutItem {
-                field: 2,
+                field: "01900000-0000-7000-8000-000000000002".to_string(),
                 operation: "reveal".to_string(),
             },
         ],
@@ -39,10 +39,10 @@ fn test_locked_template_cannot_remove_fields() {
         "title": "Updated Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -60,12 +60,12 @@ fn test_locked_template_cannot_change_field_type() {
         "title": "Updated Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
             ]
         }
     }"#;
@@ -86,12 +86,12 @@ fn test_locked_template_cannot_change_is_required() {
         "title": "Updated Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "markdown", "isRequired": false},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": false},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
             ]
         }
     }"#;
@@ -112,12 +112,12 @@ fn test_locked_template_can_change_field_title() {
         "title": "Updated Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "New Front Title", "type": "markdown", "isRequired": true},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "New Front Title", "type": "markdown", "isRequired": true},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
             ]
         }
     }"#;
@@ -135,14 +135,14 @@ fn test_locked_template_can_add_new_fields() {
         "title": "Updated Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "markdown", "isRequired": true},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false},
-                {"id": 3, "title": "New Field", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": true},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false},
+                {"id": "01900000-0000-7000-8000-000000000003", "title": "New Field", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"},
-                {"field": 3, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"},
+                {"field": "01900000-0000-7000-8000-000000000003", "operation": "display"}
             ]
         }
     }"#;
@@ -159,10 +159,10 @@ fn test_update_template_data_missing_id() {
             "title": "Updated Template",
             "content": {
                 "fields": [
-                    {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
                 ],
                 "layout": [
-                    {"field": 1, "operation": "display"}
+                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
                 ]
             }
         }
@@ -175,7 +175,7 @@ fn test_update_template_data_missing_id() {
 #[test]
 fn test_update_template_data_missing_values() {
     let json = r#"{
-        "id": 1
+        "id": "01900000-0000-7000-8000-000000000001"
     }"#;
 
     let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
@@ -185,15 +185,15 @@ fn test_update_template_data_missing_values() {
 #[test]
 fn test_update_template_data_extra_fields_ok() {
     let json = r#"{
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "values": {
             "title": "Updated Template",
             "content": {
                 "fields": [
-                    {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
                 ],
                 "layout": [
-                    {"field": 1, "operation": "display"}
+                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
                 ]
             }
         },
@@ -207,28 +207,28 @@ fn test_update_template_data_extra_fields_ok() {
 #[test]
 fn test_update_template_data_id_invalid_type() {
     let json = r#"{
-        "id": "not-a-number",
+        "id": 1,
         "values": {
             "title": "Updated Template",
             "content": {
                 "fields": [
-                    {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                    {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
                 ],
                 "layout": [
-                    {"field": 1, "operation": "display"}
+                    {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
                 ]
             }
         }
     }"#;
 
     let result: Result<UpdateTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when id is a string");
+    assert!(result.is_err(), "Should fail when id is a number");
 }
 
 #[test]
 fn test_update_template_data_values_invalid_type() {
     let json = r#"{
-        "id": 1,
+        "id": "01900000-0000-7000-8000-000000000001",
         "values": "not-an-object"
     }"#;
 

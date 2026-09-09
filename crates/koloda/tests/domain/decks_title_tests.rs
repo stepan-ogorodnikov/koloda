@@ -5,8 +5,8 @@ use serde_json::json;
 fn test_insert_deck_empty_title_fails() {
     let data = json!({
         "title": "",
-        "algorithmId": 1,
-        "templateId": 1
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
     });
     let result = serde_json::from_value::<InsertDeckData>(data);
     let validation_result = result.unwrap().validate();
@@ -17,8 +17,8 @@ fn test_insert_deck_empty_title_fails() {
 fn test_insert_deck_title_max_length_ok() {
     let data = json!({
         "title": "a".repeat(255),
-        "algorithmId": 1,
-        "templateId": 1
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
     });
     let result = serde_json::from_value::<InsertDeckData>(data);
     result.unwrap().validate().unwrap();
@@ -30,8 +30,8 @@ fn test_insert_deck_title_max_length_in_cyrillic_ok() {
     // title the TS zod mirror (UTF-16 units) accepts.
     let data = json!({
         "title": "ф".repeat(255),
-        "algorithmId": 1,
-        "templateId": 1
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
     });
     let result = serde_json::from_value::<InsertDeckData>(data);
     result.unwrap().validate().unwrap();
@@ -43,8 +43,8 @@ fn test_insert_deck_title_max_length_in_emoji_fails() {
     // accept the title the TS zod mirror (UTF-16 units) rejects.
     let data = json!({
         "title": "🦀".repeat(128),
-        "algorithmId": 1,
-        "templateId": 1
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
     });
     let result = serde_json::from_value::<InsertDeckData>(data);
     let validation_result = result.unwrap().validate();
@@ -55,8 +55,8 @@ fn test_insert_deck_title_max_length_in_emoji_fails() {
 fn test_insert_deck_title_one_past_max_length_fails() {
     let data = json!({
         "title": "ф".repeat(256),
-        "algorithmId": 1,
-        "templateId": 1
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
     });
     let result = serde_json::from_value::<InsertDeckData>(data);
     let validation_result = result.unwrap().validate();

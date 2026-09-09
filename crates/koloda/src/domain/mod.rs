@@ -18,6 +18,7 @@ pub mod learning_day;
 pub mod lessons;
 pub mod progress;
 pub mod reviews;
+pub mod seed_ids;
 pub mod settings;
 pub mod settings_ai;
 pub mod settings_hotkeys;

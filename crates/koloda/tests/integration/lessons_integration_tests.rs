@@ -12,14 +12,14 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     lessons::submit_lesson_result(
         &db,
         LessonResultData {
             card: UpdateCardProgress {
-                id: card_id,
+                id: card_id.clone(),
                 state: 2,
                 due_at: 1_900_000_000_000,
                 stability: 5.0,
@@ -31,7 +31,7 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
                 last_reviewed_at: Some(1_800_000_000_000),
             },
             review: InsertReviewData {
-                card_id,
+                card_id: card_id.clone(),
                 rating: 3,
                 state: 2,
                 due_at: 1_900_000_000_000,
@@ -46,15 +46,20 @@ fn submit_lesson_result_updates_card_and_inserts_review() {
     )
     .expect("lesson result should be persisted");
 
-    let updated = koloda::repo::cards::get_card(&db, card_id)
+    let updated = koloda::repo::cards::get_card(&db, &card_id)
         .expect("card query should succeed")
         .expect("card should exist");
     assert_eq!(updated.state, 2);
     assert_eq!(updated.reps, 1);
     assert_eq!(updated.due_at, Some(1_900_000_000_000));
 
-    let saved_reviews = koloda::repo::reviews::get_reviews(&db, koloda::domain::reviews::GetReviewsData { card_id })
-        .expect("reviews query should succeed");
+    let saved_reviews = koloda::repo::reviews::get_reviews(
+        &db,
+        koloda::domain::reviews::GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
     assert_eq!(saved_reviews.len(), 1);
     assert_eq!(saved_reviews[0].card_id, card_id);
     assert_eq!(saved_reviews[0].rating, 3);
@@ -66,14 +71,14 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     let result = lessons::submit_lesson_result(
         &db,
         LessonResultData {
             card: UpdateCardProgress {
-                id: card_id,
+                id: card_id.clone(),
                 state: 2,
                 due_at: 1_900_000_000_000,
                 stability: 5.0,
@@ -85,7 +90,7 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
                 last_reviewed_at: Some(1_800_000_000_000),
             },
             review: InsertReviewData {
-                card_id: card_id + 9_999,
+                card_id: "01900000-0000-7000-8000-0000000f423f".to_string(),
                 rating: 3,
                 state: 2,
                 due_at: 1_900_000_000_000,
@@ -104,15 +109,20 @@ fn submit_lesson_result_rolls_back_when_review_insert_fails() {
         "foreign key violation should fail insert and rollback transaction"
     );
 
-    let card_after = koloda::repo::cards::get_card(&db, card_id)
+    let card_after = koloda::repo::cards::get_card(&db, &card_id)
         .expect("card query should succeed")
         .expect("card should exist");
     assert_eq!(card_after.state, 0, "card update should be rolled back");
     assert_eq!(card_after.reps, 0, "card update should be rolled back");
     assert_eq!(card_after.due_at, None, "card update should be rolled back");
 
-    let saved_reviews = koloda::repo::reviews::get_reviews(&db, koloda::domain::reviews::GetReviewsData { card_id })
-        .expect("reviews query should succeed");
+    let saved_reviews = koloda::repo::reviews::get_reviews(
+        &db,
+        koloda::domain::reviews::GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
     assert!(saved_reviews.is_empty(), "review insert should be rolled back");
 }
 
@@ -121,18 +131,18 @@ fn get_lessons_counts_cards_per_deck_and_total_row() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_1 = add_deck(&db, algorithm_id, template_id, "Deck 1");
-    let deck_2 = add_deck(&db, algorithm_id, template_id, "Deck 2");
+    let deck_1 = add_deck(&db, &algorithm_id, &template_id, "Deck 1");
+    let deck_2 = add_deck(&db, &algorithm_id, &template_id, "Deck 2");
 
     let due_at = 1_000;
 
-    let _ = insert_card_row(&db, deck_1, template_id, 0, None, 10);
-    let _ = insert_card_row(&db, deck_1, template_id, 1, Some(900), 20);
-    let _ = insert_card_row(&db, deck_1, template_id, 1, Some(1_100), 30);
-    let _ = insert_card_row(&db, deck_1, template_id, 2, Some(800), 40);
-    let _ = insert_card_row(&db, deck_1, template_id, 2, Some(1_200), 50);
-    let _ = insert_card_row(&db, deck_1, template_id, 3, Some(700), 60);
-    let _ = insert_card_row(&db, deck_2, template_id, 0, None, 70);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 0, None, 10);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 1, Some(900), 20);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 1, Some(1_100), 30);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 2, Some(800), 40);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 2, Some(1_200), 50);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 3, Some(700), 60);
+    let _ = insert_card_row(&db, &deck_2, &template_id, 0, None, 70);
 
     let lessons_all =
         lessons::get_lessons(&db, GetLessonsParams { due_at, filters: None }).expect("lessons query should succeed");
@@ -167,7 +177,7 @@ fn get_lessons_counts_cards_per_deck_and_total_row() {
         GetLessonsParams {
             due_at,
             filters: Some(LessonFilters {
-                deck_ids: Some(vec![deck_1]),
+                deck_ids: Some(vec![deck_1.clone()]),
             }),
         },
     )
@@ -194,29 +204,29 @@ fn get_lesson_cards_applies_limits_due_at_and_deck_filters() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_1 = add_deck(&db, algorithm_id, template_id, "Deck 1");
-    let deck_2 = add_deck(&db, algorithm_id, template_id, "Deck 2");
+    let deck_1 = add_deck(&db, &algorithm_id, &template_id, "Deck 1");
+    let deck_2 = add_deck(&db, &algorithm_id, &template_id, "Deck 2");
 
     let due_at = 1_000;
 
-    let untouched_first = insert_card_row(&db, deck_1, template_id, 0, None, 10);
-    let _untouched_second = insert_card_row(&db, deck_1, template_id, 0, None, 20);
-    let learn_earliest_due = insert_card_row(&db, deck_1, template_id, 1, Some(800), 30);
-    let _learn_later_due = insert_card_row(&db, deck_1, template_id, 1, Some(900), 40);
-    let _learn_not_due = insert_card_row(&db, deck_1, template_id, 1, Some(1_100), 50);
-    let review_earliest_due = insert_card_row(&db, deck_1, template_id, 2, Some(700), 60);
-    let _review_not_due = insert_card_row(&db, deck_1, template_id, 2, Some(1_200), 70);
+    let untouched_first = insert_card_row(&db, &deck_1, &template_id, 0, None, 10);
+    let _untouched_second = insert_card_row(&db, &deck_1, &template_id, 0, None, 20);
+    let learn_earliest_due = insert_card_row(&db, &deck_1, &template_id, 1, Some(800), 30);
+    let _learn_later_due = insert_card_row(&db, &deck_1, &template_id, 1, Some(900), 40);
+    let _learn_not_due = insert_card_row(&db, &deck_1, &template_id, 1, Some(1_100), 50);
+    let review_earliest_due = insert_card_row(&db, &deck_1, &template_id, 2, Some(700), 60);
+    let _review_not_due = insert_card_row(&db, &deck_1, &template_id, 2, Some(1_200), 70);
 
-    let _foreign_deck_untouched = insert_card_row(&db, deck_2, template_id, 0, None, 80);
-    let _foreign_deck_learn = insert_card_row(&db, deck_2, template_id, 1, Some(600), 90);
-    let _foreign_deck_review = insert_card_row(&db, deck_2, template_id, 2, Some(500), 100);
+    let _foreign_deck_untouched = insert_card_row(&db, &deck_2, &template_id, 0, None, 80);
+    let _foreign_deck_learn = insert_card_row(&db, &deck_2, &template_id, 1, Some(600), 90);
+    let _foreign_deck_review = insert_card_row(&db, &deck_2, &template_id, 2, Some(500), 100);
 
     let cards_result = lessons::get_lesson_cards(
         &db,
         &GetLessonDataParams {
             due_at,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_1]),
+                deck_ids: Some(vec![deck_1.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 1,
@@ -240,15 +250,15 @@ fn get_lesson_data_returns_none_when_no_cards_match_requested_amounts() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let _ = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let _ = add_card(&db, &deck_id, &template_id, "question");
 
     let no_cards = lessons::get_lesson_data(
         &db,
         &GetLessonDataParams {
             due_at: 1_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_id]),
+                deck_ids: Some(vec![deck_id.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 0,
@@ -268,15 +278,15 @@ fn get_lesson_data_returns_related_decks_templates_and_algorithms() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let card_id = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
 
     let lesson_data = lessons::get_lesson_data(
         &db,
         &GetLessonDataParams {
             due_at: 1_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_id]),
+                deck_ids: Some(vec![deck_id.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 1,
@@ -304,11 +314,11 @@ fn get_lessons_with_empty_deck_filter_matches_unfiltered_results() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_1 = add_deck(&db, algorithm_id, template_id, "Deck 1");
-    let deck_2 = add_deck(&db, algorithm_id, template_id, "Deck 2");
+    let deck_1 = add_deck(&db, &algorithm_id, &template_id, "Deck 1");
+    let deck_2 = add_deck(&db, &algorithm_id, &template_id, "Deck 2");
 
-    let _ = insert_card_row(&db, deck_1, template_id, 0, None, 10);
-    let _ = insert_card_row(&db, deck_2, template_id, 2, Some(500), 20);
+    let _ = insert_card_row(&db, &deck_1, &template_id, 0, None, 10);
+    let _ = insert_card_row(&db, &deck_2, &template_id, 2, Some(500), 20);
 
     let due_at = 1_000;
 
@@ -337,17 +347,17 @@ fn get_lesson_cards_treats_state_three_as_learn() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
-    let learn_state_three_due = insert_card_row(&db, deck_id, template_id, 3, Some(900), 10);
-    let _learn_state_three_not_due = insert_card_row(&db, deck_id, template_id, 3, Some(1_100), 20);
+    let learn_state_three_due = insert_card_row(&db, &deck_id, &template_id, 3, Some(900), 10);
+    let _learn_state_three_not_due = insert_card_row(&db, &deck_id, &template_id, 3, Some(1_100), 20);
 
     let cards_result = lessons::get_lesson_cards(
         &db,
         &GetLessonDataParams {
             due_at: 1_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_id]),
+                deck_ids: Some(vec![deck_id.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 0,
@@ -372,17 +382,17 @@ fn get_lesson_data_includes_unique_related_entities_for_multiple_decks() {
     let template_1 = add_template(&db, "Basic 1");
     let template_2 = add_template(&db, "Basic 2");
 
-    let deck_1 = add_deck(&db, algorithm_1, template_1, "Deck 1");
-    let deck_2 = add_deck(&db, algorithm_2, template_2, "Deck 2");
-    let _ = add_card(&db, deck_1, template_1, "q1");
-    let _ = add_card(&db, deck_2, template_2, "q2");
+    let deck_1 = add_deck(&db, &algorithm_1, &template_1, "Deck 1");
+    let deck_2 = add_deck(&db, &algorithm_2, &template_2, "Deck 2");
+    let _ = add_card(&db, &deck_1, &template_1, "q1");
+    let _ = add_card(&db, &deck_2, &template_2, "q2");
 
     let lesson_data = lessons::get_lesson_data(
         &db,
         &GetLessonDataParams {
             due_at: 1_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_1, deck_2]),
+                deck_ids: Some(vec![deck_1.clone(), deck_2.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: 2,
@@ -406,15 +416,15 @@ fn get_lesson_cards_rejects_negative_amounts() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
     let template_id = add_template(&db, "Basic");
-    let deck_id = add_deck(&db, algorithm_id, template_id, "Deck");
-    let _ = add_card(&db, deck_id, template_id, "question");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let _ = add_card(&db, &deck_id, &template_id, "question");
 
     let result = lessons::get_lesson_cards(
         &db,
         &GetLessonDataParams {
             due_at: 1_000,
             filters: LessonFilters {
-                deck_ids: Some(vec![deck_id]),
+                deck_ids: Some(vec![deck_id.clone()]),
             },
             amounts: LessonAmounts {
                 untouched: -1,

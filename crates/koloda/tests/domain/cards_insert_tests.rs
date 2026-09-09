@@ -8,8 +8,8 @@ use serde_json::{json, Value};
 /// Canonical valid card-insert payload used as the mutation base for JSON-shape contract cases.
 fn valid_payload() -> Value {
     json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": valid_card_content()
     })
 }
@@ -49,8 +49,8 @@ fn test_wrong_typed_fields_fail() {
     serde_json::from_value::<InsertCardData>(payload).expect("Should deserialize ignoring extra fields");
 
     let mistyped_fields = [
-        ("deckId", json!("not-a-number")),
-        ("templateId", json!("not-a-number")),
+        ("deckId", json!(1)),
+        ("templateId", json!(1)),
         ("content", json!("not-an-object")),
         // Content values are typed structs (`CardContentField`), so a non-string `text` must reject.
         ("content", json!({"1": { "text": 123 }, "2": { "text": "Back text" }})),
@@ -77,8 +77,8 @@ fn test_wrong_typed_fields_fail() {
 #[test]
 fn test_insert_card_content_valid_ok() {
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": valid_card_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -89,8 +89,8 @@ fn test_insert_card_content_valid_ok() {
 #[test]
 fn test_insert_card_content_required_field_empty_fails() {
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": empty_required_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -105,8 +105,8 @@ fn test_insert_card_content_required_field_empty_fails() {
 #[test]
 fn test_insert_card_content_required_field_missing_fails() {
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": missing_required_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -121,8 +121,8 @@ fn test_insert_card_content_required_field_missing_fails() {
 #[test]
 fn test_insert_card_content_optional_field_empty_ok() {
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": empty_optional_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -133,8 +133,8 @@ fn test_insert_card_content_optional_field_empty_ok() {
 #[test]
 fn test_insert_card_content_optional_field_missing_ok() {
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": missing_optional_field_content()
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -145,12 +145,12 @@ fn test_insert_card_content_optional_field_missing_ok() {
 #[test]
 fn test_insert_card_content_unicode_ok() {
     let unicode_content = json!({
-        "1": { "text": "こんにちは世界 🌍" },
-        "2": { "text": "Привет мир 🎴" }
+        "01900000-0000-7000-8000-000000000001": { "text": "こんにちは世界 🌍" },
+        "01900000-0000-7000-8000-000000000002": { "text": "Привет мир 🎴" }
     });
     let data = json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": unicode_content
     });
     let result = serde_json::from_value::<InsertCardData>(data);
@@ -160,8 +160,8 @@ fn test_insert_card_content_unicode_ok() {
 
 fn minimal_insert_card_data() -> serde_json::Value {
     json!({
-        "deckId": 1,
-        "templateId": 1,
+        "deckId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001",
         "content": valid_card_content()
     })
 }

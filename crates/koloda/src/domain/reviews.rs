@@ -15,8 +15,8 @@ const RATING_MAX: i32 = 4;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Review {
-    pub id: i64,
-    pub card_id: i64,
+    pub id: String,
+    pub card_id: String,
     pub rating: i32,
     pub state: i32,
     // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
@@ -39,7 +39,7 @@ pub struct Review {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InsertReviewData {
-    pub card_id: i64,
+    pub card_id: String,
     pub rating: i32,
     pub state: i32,
     // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
@@ -70,7 +70,7 @@ impl InsertReviewData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GetReviewsData {
-    pub card_id: i64,
+    pub card_id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

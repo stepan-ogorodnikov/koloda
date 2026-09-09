@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError } from "./error";
+import { SEED_ALGORITHM_SIMPLE_ID, SEED_TEMPLATE_TYPE_ID } from "./seed-ids";
 
 // WHY: regex enforces zero-padded "hh:mm". `z.iso.time({ precision: -1 })`
 // accepted "5:00" and broke the TS↔Rust mirror — Rust's `parse_day_starts_at`
@@ -91,8 +92,8 @@ const dailyLimitsValidation = z
 
 export const learningSettingsValidation = z.object({
   defaults: z.object({
-    algorithm: z.int(),
-    template: z.int(),
+    algorithm: z.uuid(),
+    template: z.uuid(),
   }),
   dailyLimits: dailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation.default("05:00"),
@@ -101,8 +102,8 @@ export const learningSettingsValidation = z.object({
 
 export const resolvedLearningSettingsValidation = z.object({
   defaults: z.object({
-    algorithm: z.int(),
-    template: z.int(),
+    algorithm: z.uuid(),
+    template: z.uuid(),
   }),
   dailyLimits: resolvedDailyLimitsValidation,
   dayStartsAt: dayStartsAtValidation,
@@ -114,6 +115,6 @@ export type LearningSettings = LearningSettingsInput;
 export type ResolvedLearningSettings = z.output<typeof resolvedLearningSettingsValidation>;
 
 export const DEFAULT_LEARNING_SETTINGS: ResolvedLearningSettings = learningSettingsValidation.parse({
-  defaults: { algorithm: 0, template: 0 },
+  defaults: { algorithm: SEED_ALGORITHM_SIMPLE_ID, template: SEED_TEMPLATE_TYPE_ID },
   dailyLimits: {},
 });

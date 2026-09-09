@@ -6,6 +6,11 @@ import {
   resolvedLearningSettingsValidation,
 } from "./settings-learning";
 
+const defaults = {
+  algorithm: "01900000-0000-7000-8000-000000000001",
+  template: "01900000-0000-7000-8000-000000000002",
+};
+
 describe("parseDayStartsAt", () => {
   it.each([
     { name: "00:00", input: "00:00", hours: 0, minutes: 0 },
@@ -19,7 +24,7 @@ describe("parseDayStartsAt", () => {
 describe("learningSettingsValidation", () => {
   it("provides default daily limits when empty", () => {
     const result = learningSettingsValidation.parse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {},
     });
 
@@ -33,7 +38,7 @@ describe("learningSettingsValidation", () => {
 
   it("coerces a plain number to { value, counts: true } for daily limit types", () => {
     const result = learningSettingsValidation.parse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {
         untouched: 10,
         learn: 5,
@@ -48,7 +53,7 @@ describe("learningSettingsValidation", () => {
 
   it("defaults dayStartsAt to '05:00'", () => {
     const result = learningSettingsValidation.parse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {},
     });
     expect(result.dayStartsAt).toBe("05:00");
@@ -56,7 +61,7 @@ describe("learningSettingsValidation", () => {
 
   it("defaults learnAheadLimit to [0, 30]", () => {
     const result = learningSettingsValidation.parse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {},
     });
     expect(result.learnAheadLimit).toEqual([0, 30]);
@@ -64,7 +69,7 @@ describe("learningSettingsValidation", () => {
 
   it("accepts custom valid daily limits", () => {
     const result = learningSettingsValidation.parse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {
         total: 100,
         untouched: { value: 50, counts: true },
@@ -83,7 +88,10 @@ describe("learningSettingsValidation", () => {
 
   it("accepts default preset via DEFAULT_LEARNING_SETTINGS", () => {
     expect(DEFAULT_LEARNING_SETTINGS).toEqual({
-      defaults: { algorithm: 0, template: 0 },
+      defaults: {
+        algorithm: "01a08376-dc00-7001-8000-000000000100",
+        template: "01a08376-dc00-7003-8000-000000000300",
+      },
       dailyLimits: {
         total: 200,
         untouched: { value: 50, counts: true },
@@ -97,8 +105,6 @@ describe("learningSettingsValidation", () => {
 });
 
 describe("daily limits refine rules", () => {
-  const defaults = { algorithm: 1, template: 1 };
-
   it("allows any sub-limit values when total is 0", () => {
     const result = learningSettingsValidation.safeParse({
       defaults,
@@ -199,8 +205,6 @@ describe("daily limits refine rules", () => {
 });
 
 describe("learn ahead limit validation", () => {
-  const defaults = { algorithm: 1, template: 1 };
-
   it("accepts hours at boundary 0", () => {
     const result = learningSettingsValidation.safeParse({
       defaults,
@@ -282,7 +286,7 @@ describe("resolvedLearningSettingsValidation", () => {
 
   it("accepts a fully specified object", () => {
     const result = resolvedLearningSettingsValidation.safeParse({
-      defaults: { algorithm: 1, template: 1 },
+      defaults,
       dailyLimits: {
         total: 200,
         untouched: { value: 50, counts: true },
@@ -297,8 +301,6 @@ describe("resolvedLearningSettingsValidation", () => {
 });
 
 describe("negative daily limit values", () => {
-  const defaults = { algorithm: 1, template: 1 };
-
   it("rejects negative total", () => {
     const result = learningSettingsValidation.safeParse({
       defaults,

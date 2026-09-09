@@ -12,11 +12,14 @@ describe("assistant-cards-generation", () => {
           },
         },
       ],
-      5,
-      7,
+      "01900000-0000-7000-8000-000000000005",
+      "01900000-0000-7000-8000-000000000007",
     );
 
-    expect(card).toMatchObject({ deckId: 5, templateId: 7 });
+    expect(card).toMatchObject({
+      deckId: "01900000-0000-7000-8000-000000000005",
+      templateId: "01900000-0000-7000-8000-000000000007",
+    });
     expect(card.state).toBe(0);
     expect(card.dueAt).toBeNull();
   });

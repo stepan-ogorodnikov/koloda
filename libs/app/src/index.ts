@@ -47,6 +47,16 @@ export {
 } from "./lib/settings-interface";
 export type { InterfaceSettings } from "./lib/settings-interface";
 export {
+  SEED_ALGORITHM_COMPLEX_ID,
+  SEED_ALGORITHM_SIMPLE_ID,
+  SEED_TEMPLATE_REVEAL_BACK_FIELD_ID,
+  SEED_TEMPLATE_REVEAL_FRONT_FIELD_ID,
+  SEED_TEMPLATE_REVEAL_ID,
+  SEED_TEMPLATE_TYPE_BACK_FIELD_ID,
+  SEED_TEMPLATE_TYPE_FRONT_FIELD_ID,
+  SEED_TEMPLATE_TYPE_ID,
+} from "./lib/seed-ids";
+export {
   DEFAULT_LEARNING_SETTINGS,
   LEARNING_DAILY_LIMIT_TYPES,
   learningSettingsValidation,

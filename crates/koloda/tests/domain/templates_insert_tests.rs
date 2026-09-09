@@ -6,12 +6,12 @@ fn test_valid_template_passes() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "markdown", "isRequired": true},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": true},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
             ]
         }
     }"#;
@@ -27,7 +27,7 @@ fn test_empty_fields_fails() {
         "content": {
             "fields": [],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -42,7 +42,7 @@ fn test_empty_layout_items_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": []
         }
@@ -65,10 +65,10 @@ fn test_insert_template_missing_title() {
     let json = r#"{
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -93,10 +93,10 @@ fn test_template_with_extra_fields_ignored() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ],
             "extraField": "ignored"
         },
@@ -113,10 +113,10 @@ fn test_title_empty_fails() {
         "title": "",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -132,10 +132,10 @@ fn test_title_too_long_fails() {
             "title": "{}",
             "content": {{
                 "fields": [
-                    {{"id": 1, "title": "Front", "type": "text", "isRequired": true}}
+                    {{"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}}
                 ],
                 "layout": [
-                    {{"field": 1, "operation": "display"}}
+                    {{"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}}
                 ]
             }}
         }}"#,
@@ -152,10 +152,10 @@ fn test_title_unicode_ok() {
         "title": "Шаблон карточки 🎴",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -171,10 +171,10 @@ fn test_title_as_number_fails() {
         "title": 123,
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -189,10 +189,10 @@ fn test_field_type_text_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -207,10 +207,10 @@ fn test_field_type_markdown_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "markdown", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "markdown", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -225,10 +225,10 @@ fn test_field_type_invalid_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "invalid", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "invalid", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -243,10 +243,10 @@ fn test_field_type_empty_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -261,10 +261,10 @@ fn test_layout_operation_display_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -279,10 +279,10 @@ fn test_layout_operation_reveal_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "reveal"}
             ]
         }
     }"#;
@@ -297,10 +297,10 @@ fn test_layout_operation_type_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "type"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "type"}
             ]
         }
     }"#;
@@ -315,10 +315,10 @@ fn test_layout_operation_invalid_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "invalid"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "invalid"}
             ]
         }
     }"#;
@@ -333,10 +333,10 @@ fn test_layout_references_nonexistent_field_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 999, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-0000000003e7", "operation": "display"}
             ]
         }
     }"#;
@@ -354,12 +354,12 @@ fn test_layout_references_valid_field_ok() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true},
-                {"id": 2, "title": "Back", "type": "text", "isRequired": false}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true},
+                {"id": "01900000-0000-7000-8000-000000000002", "title": "Back", "type": "text", "isRequired": false}
             ],
             "layout": [
-                {"field": 1, "operation": "display"},
-                {"field": 2, "operation": "reveal"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"},
+                {"field": "01900000-0000-7000-8000-000000000002", "operation": "reveal"}
             ]
         }
     }"#;
@@ -373,9 +373,9 @@ fn test_fields_as_object_fails() {
     let json = r#"{
         "title": "Test Template",
         "content": {
-            "fields": {"id": 1, "title": "Front", "type": "text", "isRequired": true},
+            "fields": {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true},
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
@@ -404,9 +404,9 @@ fn test_layout_as_object_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
             ],
-            "layout": {"field": 1, "operation": "display"}
+            "layout": {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
         }
     }"#;
 
@@ -415,21 +415,21 @@ fn test_layout_as_object_fails() {
 }
 
 #[test]
-fn test_field_id_as_string_fails() {
+fn test_field_id_as_number_fails() {
     let json = r#"{
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": "1", "title": "Front", "type": "text", "isRequired": true}
+                {"id": 1, "title": "Front", "type": "text", "isRequired": true}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;
 
     let result: Result<InsertTemplateData, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when field id is a string");
+    assert!(result.is_err(), "Should fail when field id is a number");
 }
 
 #[test]
@@ -438,10 +438,10 @@ fn test_is_required_as_string_fails() {
         "title": "Test Template",
         "content": {
             "fields": [
-                {"id": 1, "title": "Front", "type": "text", "isRequired": "true"}
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": "true"}
             ],
             "layout": [
-                {"field": 1, "operation": "display"}
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
             ]
         }
     }"#;

@@ -20,8 +20,7 @@ export const LESSON_TYPE_LABELS: Record<LessonType, MessageDescriptor> = {
 export type LessonType = (typeof LESSON_TYPES)[number];
 
 export const lessonDeckSchema = z.object({
-  // WHY: raw `db.execute` rows may surface int4/counts as string; coerce at this boundary.
-  id: z.coerce.number().int(),
+  id: z.uuid(),
   title: z.string(),
   untouched: z.coerce.number(),
   learn: z.coerce.number(),
