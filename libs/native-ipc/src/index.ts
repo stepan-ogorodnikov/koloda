@@ -119,7 +119,7 @@ export interface DataIpc {
   seed_db: { args: { data: SeedDbData }; result: true };
 
   cmd_get_cards: { args: { params: GetCardsParams }; result: Card[] };
-  cmd_get_card: { args: { id: number }; result: Card | null };
+  cmd_get_card: { args: { id: string }; result: Card | null };
   cmd_add_card: { args: { data: InsertCardData }; result: Card };
   cmd_add_cards: { args: { data: InsertCardData[] }; result: InsertCardsResponse };
   cmd_update_card: { args: { data: UpdateCardData }; result: Card };
@@ -128,26 +128,26 @@ export interface DataIpc {
   cmd_reset_card_progress: { args: { data: ResetCardProgressData }; result: Card };
 
   cmd_get_algorithms: { args: undefined; result: Algorithm[] };
-  cmd_get_algorithm: { args: { id: number }; result: Algorithm | null };
+  cmd_get_algorithm: { args: { id: string }; result: Algorithm | null };
   cmd_add_algorithm: { args: { data: InsertAlgorithmData }; result: Algorithm };
   cmd_clone_algorithm: { args: { data: CloneAlgorithmData }; result: Algorithm };
   cmd_update_algorithm: { args: { data: UpdateAlgorithmData }; result: Algorithm };
   cmd_delete_algorithm: { args: { data: DeleteAlgorithmData }; result: void };
-  cmd_get_algorithm_decks: { args: { id: number }; result: DeckWithOnlyTitle[] };
+  cmd_get_algorithm_decks: { args: { id: string }; result: DeckWithOnlyTitle[] };
 
   cmd_get_decks: { args: undefined; result: Deck[] };
-  cmd_get_deck: { args: { id: number }; result: Deck | null };
+  cmd_get_deck: { args: { id: string }; result: Deck | null };
   cmd_add_deck: { args: { data: InsertDeckData }; result: Deck };
   cmd_update_deck: { args: { data: UpdateDeckData }; result: Deck };
   cmd_delete_deck: { args: { data: DeleteDeckData }; result: void };
 
   cmd_get_templates: { args: undefined; result: Template[] };
-  cmd_get_template: { args: { id: number }; result: Template | null };
+  cmd_get_template: { args: { id: string }; result: Template | null };
   cmd_add_template: { args: { data: InsertTemplateData }; result: Template };
   cmd_clone_template: { args: { data: CloneTemplateData }; result: Template };
   cmd_update_template: { args: { data: UpdateTemplateData }; result: Template };
   cmd_delete_template: { args: { data: DeleteTemplateData }; result: void };
-  cmd_get_template_decks: { args: { id: number }; result: DeckWithOnlyTitle[] };
+  cmd_get_template_decks: { args: { id: string }; result: DeckWithOnlyTitle[] };
 
   cmd_get_settings: { args: { name: SettingsName }; result: AllowedSettings<SettingsName> | null };
   cmd_set_settings: { args: SetSettingsData<SettingsName>; result: AllowedSettings<SettingsName> };

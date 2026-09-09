@@ -97,7 +97,7 @@ Out:
   Depends on: 1
   Commit: Replace integer entity ids in domain types
 
-- [ ] 3. Cut desktop persistence over to UUIDv7
+- [x] 3. Cut desktop persistence over to UUIDv7
   Goal: Desktop repos insert client-minted UUIDv7 ids (explicit `id` column, no `last_insert_rowid`
   for product tables).
   Add `generate_uuidv7()` next to `generate_uuid()`.

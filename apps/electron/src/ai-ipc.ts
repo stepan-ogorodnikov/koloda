@@ -23,10 +23,10 @@ import { ipcMain } from "electron";
 
 type KolodaDb = {
   getAiProfileSecrets: (profileId: string) => unknown;
-  getDecks: () => Array<{ id: number; title: string; templateId: number }>;
+  getDecks: () => Array<{ id: string; title: string; templateId: string }>;
   getTemplates: () => AssistantToolTemplate[];
-  getCards: (params: { deckId: number }) => AssistantToolCard[];
-  getCardCounts: () => Array<{ deckId: number; count: number }>;
+  getCards: (params: { deckId: string }) => AssistantToolCard[];
+  getCardCounts: () => Array<{ deckId: string; count: number }>;
 };
 
 // INVARIANT: Correlate concurrent streams by requestId; abort must cancel only that run.

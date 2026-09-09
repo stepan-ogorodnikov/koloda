@@ -52,8 +52,8 @@ export interface KolodaDb {
 
   // Cards
   getCards(params: GetCardsParams): Card[];
-  getCardCounts(): Array<{ deckId: number; count: number }>;
-  getCard(params: { id: number }): Card | null;
+  getCardCounts(): Array<{ deckId: string; count: number }>;
+  getCard(params: { id: string }): Card | null;
   addCard(data: InsertCardData): Card;
   addCards(data: InsertCardData[]): InsertCardsResponse;
   updateCard(data: UpdateCardData): Card;
@@ -63,28 +63,28 @@ export interface KolodaDb {
 
   // Presets (algorithms)
   getAlgorithms(): Algorithm[];
-  getAlgorithm(params: { id: number }): Algorithm | null;
+  getAlgorithm(params: { id: string }): Algorithm | null;
   addAlgorithm(data: InsertAlgorithmData): Algorithm;
   cloneAlgorithm(data: CloneAlgorithmData): Algorithm;
   updateAlgorithm(data: UpdateAlgorithmData): Algorithm;
   deleteAlgorithm(data: DeleteAlgorithmData): void;
-  getAlgorithmDecks(params: { id: number }): DeckWithOnlyTitle[];
+  getAlgorithmDecks(params: { id: string }): DeckWithOnlyTitle[];
 
   // Decks
   getDecks(): Deck[];
-  getDeck(params: { id: number }): Deck | null;
+  getDeck(params: { id: string }): Deck | null;
   addDeck(data: InsertDeckData): Deck;
   updateDeck(data: UpdateDeckData): Deck;
   deleteDeck(data: DeleteDeckData): void;
 
   // Templates
   getTemplates(): Template[];
-  getTemplate(params: { id: number }): Template | null;
+  getTemplate(params: { id: string }): Template | null;
   addTemplate(data: InsertTemplateData): Template;
   cloneTemplate(data: CloneTemplateData): Template;
   updateTemplate(data: UpdateTemplateData): Template;
   deleteTemplate(data: DeleteTemplateData): void;
-  getTemplateDecks(params: { id: number }): DeckWithOnlyTitle[];
+  getTemplateDecks(params: { id: string }): DeckWithOnlyTitle[];
 
   // Settings
   getSettings(params: { name: SettingsName }): AllowedSettings<SettingsName> | null;
