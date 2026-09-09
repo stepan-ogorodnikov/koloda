@@ -1,0 +1,596 @@
+{
+  "tables": [
+    {
+      "name": "algorithms",
+      "columns": [
+        {
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "algorithms_title_idx",
+          "unique": 0,
+          "columns": [
+            "title"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_algorithms_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "cards",
+      "columns": [
+        {
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "deck_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "difficulty",
+          "type": "REAL",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "due_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "lapses",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "last_reviewed_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "learning_steps",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "reps",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "scheduled_days",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "stability",
+          "type": "REAL",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "state",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "template_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "cards_deck_id_idx",
+          "unique": 0,
+          "columns": [
+            "deck_id"
+          ]
+        },
+        {
+          "name": "cards_due_at_idx",
+          "unique": 0,
+          "columns": [
+            "due_at"
+          ]
+        },
+        {
+          "name": "cards_template_id_idx",
+          "unique": 0,
+          "columns": [
+            "template_id"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_cards_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "table": "decks",
+          "from": "deck_id",
+          "to": "id",
+          "on_delete": "NO ACTION",
+          "on_update": "NO ACTION"
+        },
+        {
+          "table": "templates",
+          "from": "template_id",
+          "to": "id",
+          "on_delete": "NO ACTION",
+          "on_update": "NO ACTION"
+        }
+      ]
+    },
+    {
+      "name": "conversations",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "state",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "conversations_updated_at_idx",
+          "unique": 0,
+          "columns": [
+            "updated_at",
+            "created_at"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_conversations_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "decks",
+      "columns": [
+        {
+          "name": "algorithm_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "template_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "decks_algorithm_id_idx",
+          "unique": 0,
+          "columns": [
+            "algorithm_id"
+          ]
+        },
+        {
+          "name": "decks_template_id_idx",
+          "unique": 0,
+          "columns": [
+            "template_id"
+          ]
+        },
+        {
+          "name": "decks_title_idx",
+          "unique": 0,
+          "columns": [
+            "title"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_decks_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "table": "algorithms",
+          "from": "algorithm_id",
+          "to": "id",
+          "on_delete": "NO ACTION",
+          "on_update": "NO ACTION"
+        },
+        {
+          "table": "templates",
+          "from": "template_id",
+          "to": "id",
+          "on_delete": "NO ACTION",
+          "on_update": "NO ACTION"
+        }
+      ]
+    },
+    {
+      "name": "reviews",
+      "columns": [
+        {
+          "name": "card_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "difficulty",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "due_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "is_ignored",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "learning_steps",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "rating",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "scheduled_days",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "stability",
+          "type": "REAL",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "state",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        },
+        {
+          "name": "time",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "0"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "reviews_card_id_idx",
+          "unique": 0,
+          "columns": [
+            "card_id"
+          ]
+        },
+        {
+          "name": "reviews_created_at_idx",
+          "unique": 0,
+          "columns": [
+            "created_at"
+          ]
+        },
+        {
+          "name": "sqlite_autoindex_reviews_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "foreign_keys": [
+        {
+          "table": "cards",
+          "from": "card_id",
+          "to": "id",
+          "on_delete": "NO ACTION",
+          "on_update": "NO ACTION"
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "columns": [
+        {
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": "'{}'"
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "settings_name_idx",
+          "unique": 1,
+          "columns": [
+            "name"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    },
+    {
+      "name": "templates",
+      "columns": [
+        {
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "created_at",
+          "type": "INTEGER",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "id",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 1,
+          "dflt_value": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "notnull": 1,
+          "pk": 0,
+          "dflt_value": null
+        },
+        {
+          "name": "updated_at",
+          "type": "INTEGER",
+          "notnull": 0,
+          "pk": 0,
+          "dflt_value": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "sqlite_autoindex_templates_1",
+          "unique": 1,
+          "columns": [
+            "id"
+          ]
+        },
+        {
+          "name": "templates_title_idx",
+          "unique": 0,
+          "columns": [
+            "title"
+          ]
+        }
+      ],
+      "foreign_keys": []
+    }
+  ]
+}

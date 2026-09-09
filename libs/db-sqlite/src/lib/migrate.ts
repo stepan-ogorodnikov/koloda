@@ -26,7 +26,7 @@ async function loadMigrationEntries(): Promise<[string, string][]> {
   const fromGlob = entriesFromGlob();
   if (fromGlob.length > 0) return fromGlob;
 
-  // WHY: Vitest can miss a glob outside the lib; Node tests still need V1–V5 applied.
+  // WHY: Vitest can miss a glob outside the lib; Node tests still need the SQL series applied.
   const { readdir, readFile } = await import("node:fs/promises");
   const { dirname, resolve } = await import("node:path");
   const { fileURLToPath } = await import("node:url");

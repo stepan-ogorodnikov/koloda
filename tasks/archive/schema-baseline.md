@@ -1,6 +1,6 @@
 # Schema baseline (UUIDv7)
 
-Status: ready
+Status: done
 
 ## Intent
 
@@ -138,7 +138,7 @@ Out:
   Depends on: 3
   Commit: Persist web rows with client-minted UUIDv7 ids
 
-- [ ] 5. Add schema inventory and rewrite DB.md
+- [x] 5. Add schema inventory and rewrite DB.md
   Goal: After migrate, dump product schema from both runners and assert one committed JSON snapshot.
   Include tables, columns (`name`, `type`, `notnull`, `pk`, `dflt_value`), indexes, and foreign keys
   (`from`, `to`, `on_delete`, `on_update`).
@@ -161,4 +161,8 @@ Out:
 
 ## Outcome
 
-Not yet.
+New installs apply one `V1__init.sql`.
+Product ids are client-minted UUIDv7 text on desktop and web.
+Seed algorithms and templates use mirrored well-known ids.
+`crates/koloda/src/migrations/schema-inventory.json` is the schema gate for both runners.
+Existing local DBs are wiped, not migrated.
