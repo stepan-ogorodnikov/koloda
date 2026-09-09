@@ -121,6 +121,10 @@ msgstr "Карточки колоды"
 msgid "ai.chat.tool-activity.input"
 msgstr "Ввод"
 
+#: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:205
+msgid "ai.chat.tool-activity.input-truncated"
+msgstr "Ввод (сокращён)"
+
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:66
 msgid "ai.chat.tool-activity.label"
 msgstr "Вызовы инструментов"

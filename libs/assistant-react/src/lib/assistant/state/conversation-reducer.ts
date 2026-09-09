@@ -426,6 +426,9 @@ function appendAssistantReasoning(draft: ConversationReducerState, payload: Appe
   if (last && isReasoningActivity(last)) {
     last.text += payload.text;
     last.status = "running";
+    // WHY: clearing unfreezes the live timer when the row goes back to running.
+    // A leftover stamp freezes ActivityElapsed after more thinking reopens a
+    // row that answer text had already closed.
     last.elapsedSeconds = null;
     return;
   }

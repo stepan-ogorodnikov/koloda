@@ -199,7 +199,14 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
         <div className={toolActivityPayloadClass}>
           <div className="flex flex-col gap-2">
             <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.tool`)} text={call.name} />
-            {inputText ? <ToolPayloadBlock label={_(msg`ai.chat.tool-activity.input`)} text={inputText} /> : null}
+            {inputText ? (
+              <ToolPayloadBlock
+                label={
+                  inputBounded ? _(msg`ai.chat.tool-activity.input-truncated`) : _(msg`ai.chat.tool-activity.input`)
+                }
+                text={inputText}
+              />
+            ) : null}
             {outputText ? (
               <ToolPayloadBlock
                 label={

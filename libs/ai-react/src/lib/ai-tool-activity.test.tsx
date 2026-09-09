@@ -168,7 +168,7 @@ describe("AIToolActivity", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /ai\.chat\.tool-activity\.propose-cards/ }));
-    expect(screen.getByText("ai.chat.tool-activity.input")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.input-truncated")).toBeTruthy();
     expect(screen.getByText('{"deckId":1,"cards":[{')).toBeTruthy();
     expect(screen.queryByText(/isTruncated/)).toBeNull();
   });
