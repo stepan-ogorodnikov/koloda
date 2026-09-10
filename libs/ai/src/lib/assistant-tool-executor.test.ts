@@ -88,7 +88,7 @@ describe("createAssistantToolExecutor", () => {
         { fields: { Front: "x", Back: [] } },
         "not-an-object",
       ],
-    })) as { cards: Array<{ fields: Record<string, string> }>; rejectedCount: number };
+    })) as { cards: Array<{ fields: Record<string, string> }>; rejectedCount: number; message?: string };
 
     expect(output.cards).toEqual([
       { fields: { Front: "hola", Back: "hello" } },
@@ -96,6 +96,7 @@ describe("createAssistantToolExecutor", () => {
       { fields: { Front: "x", Back: "" } },
     ]);
     expect(output.rejectedCount).toBe(1);
+    expect(output.message).toMatch(/1 card was not accepted/);
   });
 
   it("rejects unknown tool names", async () => {

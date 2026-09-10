@@ -86,6 +86,7 @@ Tool traffic is visible in the chat feed as compact rows on that assistant messa
 - A successful `list_decks` also shows how many decks came back, after a dot.
 - A successful `get_deck_cards` also shows how many cards came back, after a dot.
 - A successful `propose_cards` also shows how many cards were accepted, after a dot.
+- If any proposed cards were dropped, it also shows how many were skipped, after another dot.
 - A running call keeps the tool icon and shimmers the whole row.
 - A failed call is marked failed.
 - Expanding a row shows the protocol id, the input, and the output or error.
@@ -117,6 +118,9 @@ It is never silently dropped.
 `propose_cards` uses the same 200-card cap for accepted cards.
 Invalid, empty, and over-cap cards are dropped from the accepted list.
 They do not fail the tool call.
+The result reports `rejectedCount` and includes a message whenever any were dropped.
+The activity row shows the skipped count next to the accepted count.
+Dropped cards are never silently omitted from the result.
 
 ### Retry
 

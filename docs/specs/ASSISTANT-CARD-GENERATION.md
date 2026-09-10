@@ -56,8 +56,9 @@ The write target is the deck id and template id on that tool call.
 An empty proposal does not create a review table.
 An accepted list of 0 cards does not set a write target.
 Invalid cards and cards past the proposal cap are dropped from the accepted list.
+The result reports how many were dropped (`rejectedCount`) and includes a message whenever any were dropped, so the model can retry those cards with the titles from that result.
 See ASSISTANT-DATA-ACCESS.md (§Budgets) for the cap.
-If the tool accepts 0 cards, the result tells the model to call `propose_cards` again with the titles from that result.
+If the tool accepts 0 cards, that message tells the model to call `propose_cards` again with the titles from that result.
 The run itself is not failed by an empty or invalid proposal.
 
 Common title mismatches still accept when the text can be matched.

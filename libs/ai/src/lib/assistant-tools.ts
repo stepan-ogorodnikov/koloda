@@ -126,6 +126,17 @@ const proposeCardSchema = z.preprocess(coerceProposeCard, z.object({ fields: z.r
 export const PROPOSE_CARDS_RETRY_MESSAGE =
   "No cards accepted. Call propose_cards again with cards[].fields keyed by the exact titles in templateFields. Do not write the cards as markdown.";
 
+export function proposeCardsRejectedMessage(rejectedCount: number): string {
+  const noun = rejectedCount === 1 ? "card was" : "cards were";
+  return `${rejectedCount} ${noun} not accepted (empty, unmappable, or over the ${ASSISTANT_TOOL_MAX_CARDS_PER_DECK}-card cap). Call propose_cards again for those cards with cards[].fields keyed by the exact titles in templateFields. Do not write the cards as markdown.`;
+}
+
+function proposeCardsOutputMessage(acceptedCount: number, rejectedCount: number): string | undefined {
+  if (rejectedCount === 0) return undefined;
+  if (acceptedCount === 0) return PROPOSE_CARDS_RETRY_MESSAGE;
+  return proposeCardsRejectedMessage(rejectedCount);
+}
+
 export const ASSISTANT_TOOL_SPECS = {
   list_decks: {
     name: "list_decks",
@@ -144,7 +155,7 @@ export const ASSISTANT_TOOL_SPECS = {
   propose_cards: {
     name: "propose_cards",
     description:
-      "Create new flashcards for a deck. Call this whenever the user asks to generate, create, make, add, or invent cards, including a random card — invent original field values; do not copy or pick existing cards. If you lack the deck id or field titles, call list_decks first in this turn; do not ask the user. deckId is the target deck from list_decks. Each cards item must include fields: a map of exact template field title to invented text. An empty cards array does not create cards. If the result accepts 0 cards, call this tool again with the titles in templateFields; never write cards as a markdown table.",
+      "Create new flashcards for a deck. Call this whenever the user asks to generate, create, make, add, or invent cards, including a random card — invent original field values; do not copy or pick existing cards. If you lack the deck id or field titles, call list_decks first in this turn; do not ask the user. deckId is the target deck from list_decks. Each cards item must include fields: a map of exact template field title to invented text. An empty cards array does not create cards. Dropped cards are counted in rejectedCount and explained in message. If the result accepts 0 cards or rejectedCount is greater than 0, call this tool again with the titles in templateFields; never write cards as a markdown table.",
     inputSchema: z.object({
       deckId: z.uuid(),
       cards: z.array(proposeCardSchema),
@@ -256,6 +267,7 @@ function shapeCardFields(
 /**
  * Shape `propose_cards` output from a loaded deck+template and title-keyed input
  * cards. Invalid, empty, and over-cap cards are dropped — never a thrown error.
+ * Drops are counted in `rejectedCount` and explained in `message` when any were dropped.
  */
 export function shapeProposeCardsOutput(
   deck: AssistantDeckCardsSource,
@@ -279,6 +291,7 @@ export function shapeProposeCardsOutput(
     accepted.push({ fields });
   }
 
+  const message = proposeCardsOutputMessage(accepted.length, rejectedCount);
   return {
     deckId: deck.id,
     deckTitle: deck.title,
@@ -291,7 +304,7 @@ export function shapeProposeCardsOutput(
     })),
     cards: accepted,
     rejectedCount,
-    ...(accepted.length === 0 && cards.length > 0 ? { message: PROPOSE_CARDS_RETRY_MESSAGE } : {}),
+    ...(message != null ? { message } : {}),
   };
 }
 

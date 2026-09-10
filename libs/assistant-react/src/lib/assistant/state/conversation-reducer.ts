@@ -570,13 +570,20 @@ export function boundToolOutput(output: unknown): unknown {
   if (output === null || typeof output !== "object") return output;
   const serialized = JSON.stringify(output);
   if (serialized === undefined || serialized.length <= MAX_TOOL_OUTPUT_CHARS) return output;
-  const totalCards = (output as Record<string, unknown>).totalCards;
+  const record = output as Record<string, unknown>;
+  const totalCards = record.totalCards;
+  const rejectedCount = record.rejectedCount;
+  const cards = record.cards;
   return {
     isTruncated: true,
     itemCount: Array.isArray(output) ? output.length : Object.keys(output).length,
     // WHY: the tool-row headline counts cards via totalCards (spec Visibility);
     // without this, any get_deck_cards output past the cap renders name-only.
     ...(typeof totalCards === "number" && Number.isFinite(totalCards) ? { totalCards } : {}),
+    // WHY: propose_cards headline counts accepted cards and skipped drops;
+    // truncation must not hide those counts (ASSISTANT-DATA-ACCESS.md Visibility).
+    ...(Array.isArray(cards) ? { acceptedCount: cards.length } : {}),
+    ...(typeof rejectedCount === "number" && Number.isInteger(rejectedCount) ? { rejectedCount } : {}),
     preview: serialized.slice(0, MAX_TOOL_OUTPUT_PREVIEW_CHARS),
   };
 }

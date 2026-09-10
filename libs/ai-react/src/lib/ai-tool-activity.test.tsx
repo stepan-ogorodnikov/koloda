@@ -86,6 +86,64 @@ describe("AIToolActivity", () => {
 
     expect(screen.getByText("ai.chat.tool-activity.propose-cards")).toBeTruthy();
     expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.queryByText("ai.chat.tool-activity.skipped")).toBeNull();
+  });
+
+  it("renders skipped cards after a dot when propose_cards drops some", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "propose_cards",
+            status: "success",
+            input: { deckId: 5, cards: [] },
+            output: { cards: [{ fields: {} }, { fields: {} }, { fields: {} }], rejectedCount: 2 },
+          }),
+        ]}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /ai\.chat\.tool-activity\.propose-cards/ });
+    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.skipped")).toBeTruthy();
+    expect(activityDots(trigger)).toHaveLength(2);
+  });
+
+  it("omits skipped when propose_cards rejectedCount is zero", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "propose_cards",
+            status: "success",
+            output: { cards: [{ fields: {} }], rejectedCount: 0 },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.queryByText("ai.chat.tool-activity.skipped")).toBeNull();
+  });
+
+  it("renders accepted and skipped counts from a truncated propose_cards output", () => {
+    render(
+      <AIToolActivity
+        calls={[
+          call({
+            id: "c1",
+            name: "propose_cards",
+            status: "success",
+            output: { isTruncated: true, itemCount: 7, acceptedCount: 8, rejectedCount: 2, preview: '{"cards":[' },
+          }),
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
+    expect(screen.getByText("ai.chat.tool-activity.skipped")).toBeTruthy();
   });
 
   it("shimmers the tool row while a call is running", () => {

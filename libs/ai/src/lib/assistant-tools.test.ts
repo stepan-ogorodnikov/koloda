@@ -13,6 +13,7 @@ import {
   generatedCardsFromProposeOutput,
   isProposeCardsOutput,
   PROPOSE_CARDS_RETRY_MESSAGE,
+  proposeCardsRejectedMessage,
   shapeGetDeckCardsOutput,
   shapeListDecksOutput,
   shapeProposeCardsOutput,
@@ -134,6 +135,7 @@ describe("assistant-tools binder", () => {
     expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/random card/i);
     expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/do not ask the user/i);
     expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/empty cards array/i);
+    expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/rejectedCount/i);
     expect(ASSISTANT_TOOL_SPECS.propose_cards.description).toMatch(/markdown table/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/field titles/i);
     expect(ASSISTANT_TOOL_SPECS.list_decks.description).toMatch(/do not ask the user for field titles/i);
@@ -429,6 +431,7 @@ describe("propose_cards output shaping", () => {
 
     expect(output.cards).toEqual([{ fields: { Front: "hola", Back: "hello", Hint: "" } }]);
     expect(output.rejectedCount).toBe(2);
+    expect(output.message).toBe(proposeCardsRejectedMessage(2));
   });
 
   it("keeps cards that have any value even if a required field is blank", () => {
@@ -467,6 +470,14 @@ describe("propose_cards output shaping", () => {
     expect(output.cards).toEqual([]);
     expect(output.rejectedCount).toBe(2);
     expect(output.message).toBe(PROPOSE_CARDS_RETRY_MESSAGE);
+  });
+
+  it("tells the model about partial rejects without failing the tool", () => {
+    const output = shapeProposeCardsOutput(deck, [{ fields: { Front: "hola", Back: "hello" } }, { fields: {} }]);
+
+    expect(output.cards).toEqual([{ fields: { Front: "hola", Back: "hello", Hint: "" } }]);
+    expect(output.rejectedCount).toBe(1);
+    expect(output.message).toBe(proposeCardsRejectedMessage(1));
   });
 
   it("keeps a card with only an optional field value", () => {
@@ -508,6 +519,7 @@ describe("propose_cards output shaping", () => {
 
     expect(output.cards).toHaveLength(ASSISTANT_TOOL_MAX_CARDS_PER_DECK);
     expect(output.rejectedCount).toBe(5);
+    expect(output.message).toBe(proposeCardsRejectedMessage(5));
     expect(output.cards[0]).toEqual({ fields: { Front: "f0", Back: "b0", Hint: "" } });
     expect(output.cards[ASSISTANT_TOOL_MAX_CARDS_PER_DECK - 1]).toEqual({
       fields: {

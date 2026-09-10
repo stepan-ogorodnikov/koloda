@@ -376,6 +376,38 @@ describe("conversationReducer", () => {
       expect("totalCards" in stored).toBe(false);
     });
 
+    it("keeps acceptedCount and rejectedCount on a bounded propose_cards output", () => {
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      state = conversationReducer(state, [
+        "addToolCall",
+        { runId: "r1", call: { id: "call-1", name: "propose_cards", input: { deckId: testId(5), cards: [] } } },
+      ]);
+      const cards = Array.from({ length: 30 }, (_, i) => ({ fields: { Front: `front ${i}${"x".repeat(120)}` } }));
+      const output = {
+        deckId: testId(5),
+        deckTitle: "Deck",
+        templateId: testId(1),
+        templateFields: [{ id: testId(10), title: "Front", type: "text", isRequired: true }],
+        cards,
+        rejectedCount: 4,
+        message: "4 cards were not accepted",
+      };
+      expect(JSON.stringify(output).length).toBeGreaterThan(2000);
+
+      state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
+
+      const stored = state.runs["r1"].toolCalls?.[0]?.output as {
+        isTruncated: boolean;
+        acceptedCount?: number;
+        rejectedCount?: number;
+        cards?: unknown;
+      };
+      expect(stored.isTruncated).toBe(true);
+      expect(stored.acceptedCount).toBe(30);
+      expect(stored.rejectedCount).toBe(4);
+      expect(stored.cards).toBeUndefined();
+    });
+
     it("resolves a running tool call to error with the error payload", () => {
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [

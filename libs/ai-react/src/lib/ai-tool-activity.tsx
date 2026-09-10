@@ -11,7 +11,7 @@ import { Button, CardsIcon } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 import { tv } from "tailwind-variants";
 import { AiChatElapsedTimeDisplay, useElapsedSeconds } from "./ai-chat-elapsed-time";
@@ -156,7 +156,7 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
   // auto-opens while tokens arrive; a JSON dump must not.
   const [isOpen, setIsOpen] = useState(false);
   const displayName = toolCallLabel(call.name, _);
-  const summary = toolCallSummary(call, _);
+  const summaries = toolCallSummaries(call, _);
   const inputBounded = boundedToolPayload(call.input);
   const inputText = inputBounded ? inputBounded.preview : formatToolPayload(call.input);
   const outputBounded = call.status === "success" ? boundedToolPayload(call.output) : null;
@@ -180,12 +180,12 @@ function ToolActivityRow({ call }: ToolActivityRowProps) {
           <ToolCallStatusIcon name={call.name} status={call.status} />
           <span className="flex flex-row items-center gap-1">
             <span className="font-medium">{displayName}</span>
-            {summary ? (
-              <>
+            {summaries.map((summary) => (
+              <Fragment key={summary}>
                 <ActivityDot />
                 <span>{summary}</span>
-              </>
-            ) : null}
+              </Fragment>
+            ))}
             <ActivityElapsed
               isRunning={call.status === "running"}
               startedAt={call.startedAt}
@@ -321,26 +321,34 @@ function toolCallLabel(name: string, translate: I18n["_"]): string {
   return name;
 }
 
-function toolCallSummary(call: AIToolCallRecord, translate: I18n["_"]): string | null {
+function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string[] {
   // WHY: the translator param must not be named `_`. Lingui treats `_()` as the
   // t-macro and extracts nested `plural()` as `{0}`, which does not match the SWC runtime id.
-  if (call.status === "error") return translate(msg`ai.chat.tool-activity.failed`);
-  if (call.status !== "success") return null;
+  if (call.status === "error") return [translate(msg`ai.chat.tool-activity.failed`)];
+  if (call.status !== "success") return [];
   // WHY: compact counts exist only for these output shapes; unknown tools
   // must stay name-only (commit 5 copy decision / Visibility UI).
   if (call.name === "list_decks") {
     const deckCount = namedArrayLength(call.output, "decks");
-    if (deckCount !== null) return translate(msg`${plural(deckCount, { other: "ai.chat.tool-activity.decks" })}`);
+    if (deckCount !== null) return [translate(msg`${plural(deckCount, { other: "ai.chat.tool-activity.decks" })}`)];
   }
   if (call.name === "get_deck_cards") {
     const cardCount = namedArrayLength(call.output, "cards") ?? namedNumber(call.output, "totalCards");
-    if (cardCount !== null) return translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`);
+    if (cardCount !== null) return [translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`)];
   }
   if (call.name === "propose_cards") {
-    const cardCount = namedArrayLength(call.output, "cards");
-    if (cardCount !== null) return translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`);
+    const summaries: string[] = [];
+    const cardCount = namedArrayLength(call.output, "cards") ?? namedInteger(call.output, "acceptedCount");
+    if (cardCount !== null) {
+      summaries.push(translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`));
+    }
+    const rejectedCount = namedInteger(call.output, "rejectedCount");
+    if (rejectedCount !== null && rejectedCount > 0) {
+      summaries.push(translate(msg`${plural(rejectedCount, { other: "ai.chat.tool-activity.skipped" })}`));
+    }
+    return summaries;
   }
-  return null;
+  return [];
 }
 
 function namedArrayLength(value: unknown, key: string): number | null {
@@ -353,6 +361,11 @@ function namedNumber(value: unknown, key: string): number | null {
   if (!value || typeof value !== "object") return null;
   const field = (value as Record<string, unknown>)[key];
   return typeof field === "number" && Number.isFinite(field) ? field : null;
+}
+
+function namedInteger(value: unknown, key: string): number | null {
+  const field = namedNumber(value, key);
+  return field !== null && Number.isInteger(field) ? field : null;
 }
 
 /**
