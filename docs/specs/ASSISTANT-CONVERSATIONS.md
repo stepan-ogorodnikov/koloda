@@ -222,7 +222,7 @@ Once a profile exists, these empty states are no longer shown.
 
 Conversations are saved automatically.
 Messages, runs, and AI profile state are saved together.
-Unknown future formats fail restore rather than loading.
+Corrupt or unknown future formats fail restore rather than loading; see Restore.
 The revert state is not saved.
 
 ### When Saves Happen
@@ -259,7 +259,12 @@ When a conversation is loaded:
 - Revert state is cleared.
 - A dismissed stream error stays dismissed. After reload the error panel shows only if that failure was never dismissed.
 
-If the stored data is corrupted or from an unknown future format, the conversation resets to empty with the same identity and a current timestamp.
+If the stored data is corrupted or from an unknown future format, restore is blocked.
+The stored row is left untouched and is not loaded as an editable conversation, so autosave cannot overwrite it.
+The chat shows a recovery screen instead of an empty conversation.
+Reset and delete are explicit user actions on that screen.
+Reset replaces the stored row with a fresh empty conversation under the same identity.
+Delete removes the conversation.
 
 ## Error Handling
 
