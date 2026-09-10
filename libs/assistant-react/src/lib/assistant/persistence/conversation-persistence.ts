@@ -10,8 +10,27 @@ import type {
 import { isReasoningActivity } from "../state/conversation-reducer";
 import { CONVERSATION_SCHEMA_VERSION } from "./conversation-schema-version";
 
-function elapsedSecondsSince(startedAt: Date): number {
-  return Math.floor((Date.now() - startedAt.getTime()) / 1000);
+function elapsedSecondsSince(startedAt: Date, now = Date.now()): number {
+  return Math.max(0, Math.floor((now - startedAt.getTime()) / 1000));
+}
+
+// WHY: live streaming rows keep `elapsedSeconds: null` and tick from
+// `startedAt`. Persist a snapshot so crash restore can freeze that duration
+// instead of counting downtime (ASSISTANT-CONVERSATIONS.md §Restore).
+function snapshotStreamingElapsed(run: AssistantRun, now: number): AssistantRun {
+  if (run.status !== "streaming") return run;
+  const elapsedSeconds = elapsedSecondsSince(run.startedAt, now);
+  if (!run.toolCalls?.length) return { ...run, elapsedSeconds };
+  return {
+    ...run,
+    elapsedSeconds,
+    toolCalls: run.toolCalls.map((entry) => {
+      if (entry.status !== "running" || typeof entry.elapsedSeconds === "number" || !entry.startedAt) {
+        return entry;
+      }
+      return { ...entry, elapsedSeconds: elapsedSecondsSince(entry.startedAt, now) };
+    }),
+  };
 }
 
 /**
@@ -28,7 +47,12 @@ export type PersistedConversation = Omit<ConversationReducerState, "revertState"
 
 export function toPersistedState(state: ConversationReducerState): PersistedConversation {
   const { revertState: _omit, ...persisted } = state;
-  return { ...persisted, schemaVersion: CONVERSATION_SCHEMA_VERSION };
+  const now = Date.now();
+  const runs: Record<string, AssistantRun> = {};
+  for (const [runId, run] of Object.entries(persisted.runs)) {
+    runs[runId] = snapshotStreamingElapsed(run, now);
+  }
+  return { ...persisted, runs, schemaVersion: CONVERSATION_SCHEMA_VERSION };
 }
 
 export function fromPersistedState(persisted: PersistedConversation): ConversationReducerState {
@@ -51,11 +75,12 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
     // `crash_recovery` and keep partial output for retry. Graceful
     // `app_shutdown` is applied in-memory before the bounded final flush.
     if (run.status === "streaming") {
+      // WHY: keep the last persisted elapsed snapshot. Recomputing from
+      // startedAt here would include the entire downtime as run time.
       nextRun = {
         ...run,
         status: "interrupted",
         reason: "crash_recovery",
-        elapsedSeconds: elapsedSecondsSince(run.startedAt),
       };
       runChanged = true;
       didNormalize = true;
@@ -79,8 +104,8 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
 
     // WHY: a crash-restored run is terminal; leaving toolCalls as `running`
     // would keep the activity widget spinning after reload. Partial thinking
-    // is still useful, so in-flight reasoning rows close as `done`. Freeze
-    // elapsed time from startedAt so the row timer stops with the run.
+    // is still useful, so in-flight reasoning rows close as `done`. Keep any
+    // persisted elapsed snapshot; do not measure from startedAt at restore.
     const toolCalls = nextRun.toolCalls;
     if (toolCalls?.some((entry) => entry.status === "running")) {
       nextRun = {
@@ -145,10 +170,8 @@ export function normalizeRestoredConversation(state: ConversationReducerState): 
 
 function closeRestoredActivity(entry: RunActivity): RunActivity {
   if (entry.status !== "running") return entry;
-  const elapsedSeconds = entry.startedAt ? elapsedSecondsSince(entry.startedAt) : undefined;
-  const timing = elapsedSeconds === undefined ? {} : { elapsedSeconds };
-  if (isReasoningActivity(entry)) return { ...entry, status: "done", ...timing };
-  return { ...entry, status: "error", ...timing };
+  if (isReasoningActivity(entry)) return { ...entry, status: "done" };
+  return { ...entry, status: "error" };
 }
 
 function isReasoningPart(part: UIMessage["parts"][number]): part is { type: "reasoning"; text: string } {

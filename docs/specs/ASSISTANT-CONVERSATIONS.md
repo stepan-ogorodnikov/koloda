@@ -252,6 +252,8 @@ When a conversation is loaded:
 
 - A run that was still streaming becomes interrupted (crash recovery).
   Partial output is kept so the user can retry.
+  Elapsed time is the duration last saved while streaming, not the time since the run started.
+  If no duration was saved, the indicator is omitted.
 - Failed, canceled, and interrupted runs are kept, including partial chat text, cards, and stream error messages.
 - Pending card statuses are reset; see ASSISTANT-CARD-GENERATION.md (§Card Status).
 - Accepted cards on a turn still show as a review table.

@@ -55,6 +55,51 @@ describe("toPersistedState / fromPersistedState", () => {
     expect(fromPersistedState(persisted).promptInput).toBe("unsent");
   });
 
+  it("snapshots streaming elapsed so crash restore does not count downtime", () => {
+    vi.useFakeTimers();
+    const startedAt = new Date("2026-07-01T12:00:00.000Z");
+    vi.setSystemTime(new Date("2026-07-01T12:00:05.000Z"));
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [
+            {
+              id: "call-1",
+              name: "list_decks",
+              input: {},
+              status: "running",
+              startedAt,
+              elapsedSeconds: null,
+            },
+          ],
+          templateFields: null,
+          startedAt,
+          elapsedSeconds: null,
+        },
+      },
+    };
+
+    const persisted = toPersistedState(state);
+    expect(persisted.runs["r1"]?.elapsedSeconds).toBe(5);
+    expect(persisted.runs["r1"]?.toolCalls?.[0]?.elapsedSeconds).toBe(5);
+    expect(state.runs["r1"]?.elapsedSeconds).toBeNull();
+
+    vi.setSystemTime(new Date("2026-07-03T12:00:00.000Z"));
+    const next = normalizeRestoredConversation(fromPersistedState(persisted))!;
+    expect(next.runs["r1"]?.status).toBe("interrupted");
+    expect(next.runs["r1"]?.elapsedSeconds).toBe(5);
+    expect(next.runs["r1"]?.toolCalls?.[0]?.elapsedSeconds).toBe(5);
+
+    vi.useRealTimers();
+  });
+
   it("round-trips a draft with no messages so the title can follow the prompt", () => {
     const createdAt = new Date(1);
     const state: ConversationReducerState = {
@@ -1376,7 +1421,7 @@ describe("normalizeRestoredConversation", () => {
 
     expect(next.runs["r1"]?.status).toBe("interrupted");
     expect(next.runs["r1"]?.reason).toBe("crash_recovery");
-    expect(next.runs["r1"]?.elapsedSeconds).toEqual(expect.any(Number));
+    expect(next.runs["r1"]?.elapsedSeconds).toBeNull();
     expect(next.messages).toHaveLength(2);
     expect(next.messages[1]?.parts).toEqual([{ type: "text", text: "partial reply" }]);
     expect(next.activeRunId).toBeNull();
@@ -1437,9 +1482,66 @@ describe("normalizeRestoredConversation", () => {
     ]);
   });
 
-  it("freezes in-flight activity elapsed time when converting a streaming run", () => {
+  it("keeps persisted activity elapsed instead of counting downtime on crash restore", () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-07-01T12:00:05.000Z"));
+    vi.setSystemTime(new Date("2026-07-03T12:00:00.000Z"));
+    const startedAt = new Date("2026-07-01T12:00:00.000Z");
+
+    const state: ConversationReducerState = {
+      ...initialConversationState,
+      id: "conv-1",
+      activeRunId: "r1",
+      runs: {
+        r1: {
+          id: "r1",
+          status: "streaming",
+          cards: [],
+          cardStatuses: {},
+          toolCalls: [
+            {
+              kind: "reasoning",
+              id: "r1-reasoning-0",
+              text: "partial thought",
+              status: "running",
+              startedAt,
+              elapsedSeconds: 4,
+            },
+            {
+              id: "call-1",
+              name: "list_decks",
+              input: {},
+              status: "running",
+              startedAt,
+              elapsedSeconds: 4,
+            },
+          ],
+          templateFields: null,
+          startedAt,
+          elapsedSeconds: 5,
+        },
+      },
+    };
+
+    const next = normalizeRestoredConversation(state)!;
+    expect(next.runs["r1"]?.elapsedSeconds).toBe(5);
+    expect(next.runs["r1"]?.toolCalls).toEqual([
+      {
+        kind: "reasoning",
+        id: "r1-reasoning-0",
+        text: "partial thought",
+        status: "done",
+        startedAt,
+        elapsedSeconds: 4,
+      },
+      { id: "call-1", name: "list_decks", input: {}, status: "error", startedAt, elapsedSeconds: 4 },
+    ]);
+
+    vi.useRealTimers();
+  });
+
+  it("does not invent elapsed time for crash-restored rows that never saved one", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-03T12:00:00.000Z"));
     const startedAt = new Date("2026-07-01T12:00:00.000Z");
 
     const state: ConversationReducerState = {
@@ -1461,23 +1563,16 @@ describe("normalizeRestoredConversation", () => {
               startedAt,
               elapsedSeconds: null,
             },
-            {
-              id: "call-1",
-              name: "list_decks",
-              input: {},
-              status: "running",
-              startedAt,
-              elapsedSeconds: null,
-            },
           ],
           templateFields: null,
-          startedAt: new Date(5000),
+          startedAt,
           elapsedSeconds: null,
         },
       },
     };
 
     const next = normalizeRestoredConversation(state)!;
+    expect(next.runs["r1"]?.elapsedSeconds).toBeNull();
     expect(next.runs["r1"]?.toolCalls).toEqual([
       {
         kind: "reasoning",
@@ -1485,9 +1580,8 @@ describe("normalizeRestoredConversation", () => {
         text: "partial thought",
         status: "done",
         startedAt,
-        elapsedSeconds: 5,
+        elapsedSeconds: null,
       },
-      { id: "call-1", name: "list_decks", input: {}, status: "error", startedAt, elapsedSeconds: 5 },
     ]);
 
     vi.useRealTimers();

@@ -61,4 +61,10 @@ describe("AIChatMessageStatus", () => {
       expect(screen.queryByRole("button", { name: "ai.chat.message.retry" })).toBeNull();
     });
   });
+
+  it.each(["canceled", "interrupted"] as const)("omits elapsed time for %s when duration is unknown", (state) => {
+    const { container } = render(<AIChatMessageStatus state={state} canRetry={false} />);
+    expect(container.textContent).toContain(`ai.chat.message.status.${state}`);
+    expect(container.textContent).not.toContain(`ai.chat.message.status.${state}-in`);
+  });
 });

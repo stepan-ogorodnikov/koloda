@@ -77,6 +77,10 @@ msgstr "Retry"
 msgid "ai.chat.message.status.canceled-in"
 msgstr "Canceled after"
 
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx
+msgid "ai.chat.message.status.canceled"
+msgstr "Canceled"
+
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:99
 msgid "ai.chat.message.status.failed"
 msgstr "Failed to get a response"
@@ -84,6 +88,10 @@ msgstr "Failed to get a response"
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:88
 msgid "ai.chat.message.status.interrupted-in"
 msgstr "Interrupted after"
+
+#: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx
+msgid "ai.chat.message.status.interrupted"
+msgstr "Interrupted"
 
 #: ../../libs/ai-react/src/lib/ai-chat-message-status.tsx:51
 msgid "ai.chat.message.status.pending"

@@ -42,6 +42,35 @@ function RetryAction({ canRetry, onRetry, label }: RetryActionProps) {
   );
 }
 
+function TerminalDurationStatus({
+  withTimeLabel,
+  withoutTimeLabel,
+  elapsedSeconds,
+  retry,
+  actions,
+}: {
+  withTimeLabel: string;
+  withoutTimeLabel: string;
+  elapsedSeconds?: number;
+  retry: ReactNode;
+  actions: ReactNode;
+}) {
+  return (
+    <div className="flex flex-row flex-wrap items-center gap-2 px-3">
+      {typeof elapsedSeconds === "number" ? (
+        <p className="fg-level-4 flex flex-row items-center gap-1">
+          {withTimeLabel}
+          <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
+        </p>
+      ) : (
+        <p className="fg-level-4">{withoutTimeLabel}</p>
+      )}
+      {retry}
+      {actions}
+    </div>
+  );
+}
+
 export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
   const { state, elapsedSeconds, modelName, canRetry, onRetry, actions, startedAt } = props;
   const { _ } = useLingui();
@@ -70,27 +99,25 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
 
   if (state === "canceled") {
     return (
-      <div className="flex flex-row flex-wrap items-center gap-2 px-3">
-        <p className="fg-level-4 flex flex-row items-center gap-1">
-          {_(msg`ai.chat.message.status.canceled-in`)}
-          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
-        </p>
-        <RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />
-        {actions}
-      </div>
+      <TerminalDurationStatus
+        withTimeLabel={_(msg`ai.chat.message.status.canceled-in`)}
+        withoutTimeLabel={_(msg`ai.chat.message.status.canceled`)}
+        elapsedSeconds={elapsedSeconds}
+        retry={<RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />}
+        actions={actions}
+      />
     );
   }
 
   if (state === "interrupted") {
     return (
-      <div className="flex flex-row flex-wrap items-center gap-2 px-3">
-        <p className="fg-level-4 flex flex-row items-center gap-1">
-          {_(msg`ai.chat.message.status.interrupted-in`)}
-          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
-        </p>
-        <RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />
-        {actions}
-      </div>
+      <TerminalDurationStatus
+        withTimeLabel={_(msg`ai.chat.message.status.interrupted-in`)}
+        withoutTimeLabel={_(msg`ai.chat.message.status.interrupted`)}
+        elapsedSeconds={elapsedSeconds}
+        retry={<RetryAction canRetry={canRetry} onRetry={onRetry} label={retryLabel} />}
+        actions={actions}
+      />
     );
   }
 

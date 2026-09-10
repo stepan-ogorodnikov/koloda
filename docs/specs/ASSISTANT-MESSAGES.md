@@ -98,6 +98,7 @@ The message state maps to the run state:
   A canceled status indicator is shown.
 - **interrupted**: partial content is preserved.
   An interrupted status indicator with a retry button is shown.
+  Elapsed time is included when a duration was saved; crash restore does not count downtime. See ASSISTANT-CONVERSATIONS.md (§Restore).
 
 For a mixed chat turn, content is the tool rows, the proposed cards, and leftover text together.
 
