@@ -465,6 +465,22 @@ describe("createConversationPersistenceHost", () => {
     await Promise.resolve();
     expect(writeCount).toBe(1);
 
+    // INVARIANT: removing the pending-save key must not drop a committed
+    // tombstone. A later bump must still no-op (ASSISTANT-CONVERSATIONS.md
+    // §Delete / §Concurrent Behavior — a late save cannot bring it back).
+    pending = {};
+    listener!(pending);
+    expect(host.isTombstoned("A")).toBe(true);
+
+    pending = { A: 3 };
+    listener!(pending);
+    host.retrySave("A");
+    host.flushAllNow();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    expect(writeCount).toBe(1);
+    expect(host.isTombstoned("A")).toBe(true);
+
     host.dispose();
   });
 

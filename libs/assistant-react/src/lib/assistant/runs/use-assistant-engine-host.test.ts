@@ -116,14 +116,17 @@ describe("deleteAssistantConversation", () => {
     expect(invalidateConversations).toHaveBeenCalledTimes(1);
     expect(removeConversationQuery).toHaveBeenCalledWith("A");
 
-    // WHY: removeConversationAtom drops the pending counter, which clears the
-    // host tombstone — durable writes still no-op because the store row is gone.
+    // INVARIANT: removeConversationAtom drops the pending counter and the
+    // store row; the committed host tombstone stays so a late pending bump
+    // cannot resurrect the conversation.
+    expect(host.isTombstoned("A")).toBe(true);
     store.set(pendingSaveByConversationAtom, { A: 99 });
     host.retrySave("A");
     await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
     await Promise.resolve();
     await Promise.resolve();
     expect(writes).toEqual([]);
+    expect(host.isTombstoned("A")).toBe(true);
   });
 });
 

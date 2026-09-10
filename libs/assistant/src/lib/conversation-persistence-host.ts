@@ -87,9 +87,12 @@ export function createConversationPersistenceHost({
     }
     for (const id of Object.keys(prevPending)) {
       if (!(id in next)) {
+        // WHY: dropping the pending-save key (removeConversationAtom) disposes
+        // the queue. Committed/provisional tombstones stay — only rollback and
+        // host dispose clear them. Clearing here let a later pending bump
+        // recreate the queue and resurrect a deleted row.
         queues.get(id)?.dispose();
         queues.delete(id);
-        tombstonedIds.delete(id);
       }
     }
     prevPending = next;

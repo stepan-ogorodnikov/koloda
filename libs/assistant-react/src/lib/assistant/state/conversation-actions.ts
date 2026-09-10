@@ -18,7 +18,8 @@ import {
 
 // WHY: Called after coordinated delete (`beginDelete` → DB delete → commit →
 // disposeConversation). Dropping the store entry and pending-save counter
-// disposes the tombstoned queue (#8). Do not clear before beginDelete awaits
+// disposes the queue (#8); the host tombstone stays for the session so a late
+// pending bump cannot resurrect the row. Do not clear before beginDelete awaits
 // in-flight writes, or before disposeConversation reads run keys to abort.
 export const removeConversationAtom = atom(null, (_get, set, id: string) => {
   set(conversationsAtom, (prev) => {
