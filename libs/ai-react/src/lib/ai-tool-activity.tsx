@@ -7,7 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { Button, CardsIcon } from "@koloda/ui";
+import { Button, CardsIcon, TextSwap } from "@koloda/ui";
 import type { I18n } from "@lingui/core";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -127,7 +127,7 @@ function ReasoningActivityRow({ item, renderText }: ReasoningActivityRowProps) {
             aria-label={item.status === "running" ? _(msg`ai.chat.tool-activity.running`) : undefined}
           />
           <span className="flex flex-row items-center gap-1">
-            <span className={thinkingLabel({ isRunning: item.status === "running" })}>{displayName}</span>
+            <TextSwap value={displayName} className={thinkingLabel({ isRunning: item.status === "running" })} />
             <ActivityElapsed
               isRunning={item.status === "running"}
               startedAt={item.startedAt}

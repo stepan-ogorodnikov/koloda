@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIToolActivity } from "./ai-tool-activity";
 import type { AIToolCallRecord } from "./ai-tool-activity";
@@ -438,7 +438,7 @@ describe("AIToolActivity", () => {
     expect(screen.getByText(/"q": 1/)).toBeTruthy();
   });
 
-  it("streams thinking inline and auto-collapses when done", () => {
+  it("streams thinking inline and auto-collapses when done", async () => {
     const { container, rerender } = render(
       <AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "running" }]} />,
     );
@@ -453,7 +453,9 @@ describe("AIToolActivity", () => {
 
     rerender(<AIToolActivity calls={[{ kind: "reasoning", id: "r1", text: "Quiet plan.", status: "done" }]} />);
 
-    expect(screen.getByText("ai.chat.tool-activity.thought")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText("ai.chat.tool-activity.thought")).toBeTruthy();
+    });
     expect(screen.queryByText("Quiet plan.")).toBeNull();
     expect(screen.getByText("ai.chat.tool-activity.thought").className).not.toContain(
       "animate-shimmer-text--fg-level-4/fg-level-1",
