@@ -167,12 +167,12 @@ async function closeConnection(sqlite3: SQLiteAPI, conn: Conn) {
   try {
     await sqlite3.close(conn.handle);
   } catch {
-    // connection already dead after a VFS I/O failure
+    // WHY: connection already dead after a VFS I/O failure
   }
   try {
     await conn.vfs.close();
   } catch {
-    // IDBContext may already be wedged (`#tx` null)
+    // WHY: IDBContext may already be wedged (`#tx` null)
   }
 }
 
@@ -194,7 +194,7 @@ function createApi(sqlite3: SQLiteAPI, conn: Conn, idbName: string, locked: bool
         try {
           await recover();
         } catch {
-          // still surface the original I/O failure
+          // WHY: still surface the original I/O failure
         }
       }
       throw error;

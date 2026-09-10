@@ -44,7 +44,7 @@ test("validates required fields and adds profiles for all providers", async ({ p
 
     const profileTitle = page.getByText(title, { exact: true });
     await expect(profileTitle).toBeVisible();
-    // Provider label sits next to the title; page-wide getByText(name) also hits
+    // WHY: Provider label sits next to the title; page-wide getByText(name) also hits
     // the provider picker / native <option>s (strict-mode violation).
     await expect(profileTitle.locator("..").getByText(name, { exact: true })).toBeVisible();
 
