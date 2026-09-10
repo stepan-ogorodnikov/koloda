@@ -194,4 +194,4 @@ msgstr "Success"
 
 #: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-message.tsx:91
 msgid "assistant.template-unavailable"
-msgstr "This message was generated with a template that is no longer accessible."
+msgstr "Template is unavailable"

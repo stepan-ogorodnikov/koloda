@@ -83,7 +83,8 @@ On cancellation, the cards received before cancellation remain visible with a ca
 On failure, the partial cards remain visible with a failed status and a retry button.
 
 If the template used for generation no longer exists (for example, after restoring a conversation from a previous session), a synthetic template is created from the stored field definitions.
-The table still renders, but the template is marked as unavailable.
+The table still renders as a read-only snapshot: there is no selection column and no add button.
+The unavailable notice replaces the add button.
 
 If no cards were accepted, the review table is not shown.
 
@@ -142,6 +143,9 @@ The add button is disabled when:
 - No cards are selected
 - There is no write-target deck
 - There is no write-target template
+
+If the write-target template no longer exists, the add button is not shown.
+The unavailable notice takes its place, and rows are not selectable.
 
 ## Conversation History
 

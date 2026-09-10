@@ -194,4 +194,4 @@ msgstr "Успешно"
 
 #: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-message.tsx:91
 msgid "assistant.template-unavailable"
-msgstr "Это сообщение было создано с шаблоном, который больше не доступен."
+msgstr "Шаблон не доступен"

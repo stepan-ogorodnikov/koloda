@@ -118,6 +118,27 @@ describe("AssistantCardsTable selection", () => {
     expect((screen.getByRole("button", { name: "assistant.add" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
+  it("replaces Add with the unavailable notice and drops selection when the template is gone", () => {
+    render(
+      <AssistantCardsTable
+        runId="r1"
+        cards={[makeCard("Front A")]}
+        cardStatuses={{ 0: "idle" }}
+        template={template}
+        deckId={1}
+        templateId={1}
+        canAdd={true}
+        isGenerating={false}
+        isTemplateUnavailable
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+    expect(screen.queryByRole("button", { name: "assistant.add" })).toBeNull();
+    expect(screen.getByText("assistant.template-unavailable")).toBeTruthy();
+  });
+
   it("clears idle selection after a successful add so Add stays disabled", async () => {
     const mutate = vi.fn(async () => ({ insertedIds: [] }));
     mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "idle", 1: "idle" }, mutate);

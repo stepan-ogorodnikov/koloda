@@ -97,7 +97,9 @@ type RenderCardsMessageOptions = {
 
 function renderCardsMessage(options: RenderCardsMessageOptions) {
   const { run, runId, isCurrentRun, isTail, handleRetry, showStatus } = options;
-  const templateFieldsMissing = run.templateFields === null;
+  // WHY: columns always come from the run snapshot. AssistantCardsMessage looks
+  // up writeTargetTemplateId for the unavailable marker (ASSISTANT-CARD-GENERATION.md
+  // §Card Display).
   const cardsTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
 
   // INVARIANT: Add uses writeTargetDeckId / writeTargetTemplateId only.
@@ -111,7 +113,6 @@ function renderCardsMessage(options: RenderCardsMessageOptions) {
       cards={run.cards}
       cardStatuses={run.cardStatuses}
       template={cardsTemplate}
-      isTemplateUnavailable={templateFieldsMissing}
       deckId={addTargetDeckId}
       templateId={addTargetTemplateId}
       canAdd={run.cards.length > 0 && !isCurrentRun && addTargetDeckId !== null && addTargetTemplateId !== undefined}

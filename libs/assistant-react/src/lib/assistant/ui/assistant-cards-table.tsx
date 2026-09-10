@@ -1,3 +1,5 @@
+import { BadgeAlertIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { GeneratedCard } from "@koloda/ai";
 import type { Deck, Template } from "@koloda/srs";
 import { Button, Table } from "@koloda/ui";
@@ -15,6 +17,7 @@ type AssistantCardsTableProps = {
   templateId: Template["id"] | undefined;
   canAdd: boolean;
   isGenerating: boolean;
+  isTemplateUnavailable?: boolean;
 };
 
 export function AssistantCardsTable({
@@ -26,6 +29,7 @@ export function AssistantCardsTable({
   templateId,
   canAdd,
   isGenerating,
+  isTemplateUnavailable = false,
 }: AssistantCardsTableProps) {
   const { _ } = useLingui();
 
@@ -36,6 +40,7 @@ export function AssistantCardsTable({
     template,
     deckId,
     templateId,
+    enableSelection: !isTemplateUnavailable,
   });
 
   return (
@@ -46,13 +51,20 @@ export function AssistantCardsTable({
           <Table.Body table={table} />
         </Table.Root>
       </div>
-      <Button
-        variants={{ style: "primary", class: "self-center min-w-60" }}
-        isDisabled={!canAdd || isGenerating || isAdding || !hasSelection}
-        onPress={handleAddCards}
-      >
-        {_(msg`assistant.add`)}
-      </Button>
+      {isTemplateUnavailable ? (
+        <p className="self-center flex items-center justify-center gap-2 min-w-60 fg-level-3">
+          <HugeiconsIcon className="size-5 min-w-5" strokeWidth={1.75} icon={BadgeAlertIcon} aria-hidden="true" />
+          {_(msg`assistant.template-unavailable`)}
+        </p>
+      ) : (
+        <Button
+          variants={{ style: "primary", class: "self-center min-w-60" }}
+          isDisabled={!canAdd || isGenerating || isAdding || !hasSelection}
+          onPress={handleAddCards}
+        >
+          {_(msg`assistant.add`)}
+        </Button>
+      )}
     </div>
   );
 }

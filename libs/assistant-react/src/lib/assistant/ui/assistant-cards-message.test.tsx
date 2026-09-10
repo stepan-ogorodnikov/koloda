@@ -1,5 +1,10 @@
+import { queriesAtom, queryKeys } from "@koloda/core-react";
+import type { Queries } from "@koloda/core-react";
 import type { Template } from "@koloda/srs";
-import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import { createStore, Provider as JotaiProvider } from "jotai";
+import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsMessage } from "./assistant-cards-message";
@@ -30,7 +35,12 @@ vi.mock("@koloda/ai-react", () => ({
 }));
 
 vi.mock("./assistant-cards-table", () => ({
-  AssistantCardsTable: ({ cards }: { cards: unknown[] }) => <div data-testid="cards-table">{cards.length} cards</div>,
+  AssistantCardsTable: ({ cards, isTemplateUnavailable }: { cards: unknown[]; isTemplateUnavailable?: boolean }) => (
+    <div data-testid="cards-table" data-unavailable={String(!!isTemplateUnavailable)}>
+      {isTemplateUnavailable ? <span>assistant.template-unavailable</span> : null}
+      {cards.length} cards
+    </div>
+  ),
 }));
 
 const template = {
@@ -63,6 +73,32 @@ const baseProps = {
   startedAt: new Date(1000),
 };
 
+function buildQueries(liveTemplate: Template | null): Queries {
+  return {
+    getTemplateQuery: (id: Template["id"]) => ({
+      queryKey: queryKeys.templates.detail(id),
+      queryFn: async () => (id === template.id ? liveTemplate : null),
+    }),
+  } as unknown as Queries;
+}
+
+function renderMessage(
+  props: Partial<React.ComponentProps<typeof AssistantCardsMessage>> = {},
+  liveTemplate: Template | null = template,
+) {
+  const store = createStore();
+  store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries(liveTemplate));
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const wrapper = ({ children }: PropsWithChildren) => (
+    <QueryClientProvider client={queryClient}>
+      <JotaiProvider store={store}>{children}</JotaiProvider>
+    </QueryClientProvider>
+  );
+  return render(<AssistantCardsMessage {...baseProps} {...props} />, { wrapper });
+}
+
 describe("AssistantCardsMessage", () => {
   it.each([
     { label: "failed", props: { isFailed: true } },
@@ -70,7 +106,7 @@ describe("AssistantCardsMessage", () => {
     { label: "interrupted", props: { isInterrupted: true } },
   ])("keeps partial cards visible for $label runs and exposes retry", ({ label, props }) => {
     const onRetry = vi.fn();
-    render(<AssistantCardsMessage {...baseProps} {...props} onRetry={onRetry} />);
+    renderMessage({ ...props, onRetry });
 
     expect(screen.getByTestId("cards-table").textContent).toBe("1 cards");
     expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
@@ -79,7 +115,7 @@ describe("AssistantCardsMessage", () => {
   });
 
   it("hides run status when embedded under leftover chat text", () => {
-    render(<AssistantCardsMessage {...baseProps} isGenerating showStatus={false} elapsedSeconds={undefined} />);
+    renderMessage({ isGenerating: true, showStatus: false, elapsedSeconds: undefined });
 
     expect(screen.getByTestId("cards-table")).toBeTruthy();
     expect(screen.queryByTestId("status-pending")).toBeNull();
@@ -87,7 +123,7 @@ describe("AssistantCardsMessage", () => {
   });
 
   it("hides the cards table when there are no cards on a failed run", () => {
-    render(<AssistantCardsMessage {...baseProps} cards={[]} isFailed canRetry={false} />);
+    renderMessage({ cards: [], isFailed: true, canRetry: false });
 
     expect(screen.queryByTestId("cards-table")).toBeNull();
     expect(screen.getByTestId("status-failed")).toBeTruthy();
@@ -98,10 +134,38 @@ describe("AssistantCardsMessage", () => {
     { label: "interrupted", props: { isInterrupted: true } },
   ])("shows $label status and retry when elapsedSeconds is missing", ({ label, props }) => {
     const onRetry = vi.fn();
-    render(<AssistantCardsMessage {...baseProps} {...props} elapsedSeconds={undefined} onRetry={onRetry} />);
+    renderMessage({ ...props, elapsedSeconds: undefined, onRetry });
 
     expect(screen.getByTestId(`status-${label}`)).toBeTruthy();
     screen.getByRole("button", { name: "retry" }).click();
     expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the snapshot table and marks the template unavailable when the write target is gone", async () => {
+    renderMessage({}, null);
+
+    await waitFor(() => {
+      expect(screen.getByText("assistant.template-unavailable")).toBeTruthy();
+    });
+    expect(screen.getByTestId("cards-table").getAttribute("data-unavailable")).toBe("true");
+    expect(screen.getByTestId("cards-table").textContent).toContain("1 cards");
+  });
+
+  it("does not mark the template unavailable when the write target still exists", async () => {
+    renderMessage();
+
+    expect(screen.getByTestId("cards-table")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByText("assistant.template-unavailable")).toBeNull();
+    });
+  });
+
+  it("does not mark unavailable when the run has no write-target template id", async () => {
+    renderMessage({ templateId: undefined }, null);
+
+    expect(screen.getByTestId("cards-table")).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByText("assistant.template-unavailable")).toBeNull();
+    });
   });
 });

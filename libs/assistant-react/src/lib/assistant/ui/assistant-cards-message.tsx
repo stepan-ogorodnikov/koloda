@@ -1,8 +1,11 @@
 import type { GeneratedCard } from "@koloda/ai";
 import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
+import { queriesAtom } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
+import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import { AssistantCardsTable } from "./assistant-cards-table";
 import type { CardStatus } from "../state/conversation-reducer";
 
@@ -11,7 +14,6 @@ export type AssistantCardsMessageProps = {
   cards: GeneratedCard[];
   cardStatuses: Record<number, CardStatus>;
   template: Template | null | undefined;
-  isTemplateUnavailable?: boolean;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
   canAdd: boolean;
@@ -33,7 +35,6 @@ export function AssistantCardsMessage({
   cards,
   cardStatuses,
   template,
-  isTemplateUnavailable = false,
   deckId,
   templateId,
   canAdd,
@@ -49,14 +50,27 @@ export function AssistantCardsMessage({
   modelName,
 }: AssistantCardsMessageProps) {
   const { _ } = useLingui();
+  const { getTemplateQuery } = useAtomValue(queriesAtom);
+  const liveTemplateQuery = useQuery({
+    ...(templateId !== undefined
+      ? getTemplateQuery(templateId)
+      : { queryKey: ["assistant", "live-template", "none"] as const, queryFn: async () => null }),
+    enabled: templateId !== undefined,
+  });
 
-  if (!template && !isTemplateUnavailable) return null;
+  // WHY: §Card Display — if the write-target template is gone, keep the snapshot
+  // table and mark it unavailable. Missing snapshot is a different case (copy
+  // falls back to text); do not treat it as this marker.
+  const isTemplateUnavailable =
+    !!template && templateId !== undefined && liveTemplateQuery.isSuccess && liveTemplateQuery.data == null;
+
+  if (!template) return null;
 
   const isTerminal = isCanceled || isInterrupted || isFailed;
   const isSuccess = !isGenerating && !isTerminal;
   // WHY: Partial cards already received must stay visible beside terminal
   // status (failed / canceled / interrupted); hiding them drops recoverable output.
-  const showCards = !isTemplateUnavailable && !!template && cards.length > 0;
+  const showCards = cards.length > 0;
 
   return (
     <AIChatMessageLayout role="assistant">
@@ -71,6 +85,7 @@ export function AssistantCardsMessage({
           templateId={templateId}
           canAdd={canAdd}
           isGenerating={isGenerating}
+          isTemplateUnavailable={isTemplateUnavailable}
         />
       )}
       {showStatus && isCanceled && (
@@ -88,8 +103,7 @@ export function AssistantCardsMessage({
       {showStatus && isSuccess && elapsedSeconds !== undefined && showCards && (
         <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
       )}
-      {isSuccess && isTemplateUnavailable && <p className="fg-level-3">{_(msg`assistant.template-unavailable`)}</p>}
-      {isSuccess && !isTemplateUnavailable && template && !cards.length && (
+      {isSuccess && !isTemplateUnavailable && !cards.length && (
         <p className="fg-level-3">{_(msg`assistant.generated-no-cards`)}</p>
       )}
     </AIChatMessageLayout>

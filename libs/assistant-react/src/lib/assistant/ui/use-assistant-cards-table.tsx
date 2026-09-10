@@ -23,10 +23,11 @@ type UseAssistantCardsTableOptions = {
   template: Template | null | undefined;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
+  enableSelection?: boolean;
 };
 
 export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
-  const { runId, cards, cardStatuses, template, deckId, templateId } = options;
+  const { runId, cards, cardStatuses, template, deckId, templateId, enableSelection = true } = options;
   const queryClient = useQueryClient();
   const { addCardsMutation } = useAtomValue(queriesAtom);
   const mutation = useMutation(addCardsMutation());
@@ -41,15 +42,6 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   const columns = useMemo(() => {
     if (!template) return [];
 
-    const selectionColumn = columnHelper.display({
-      id: "select",
-      header: ({ table }) => <AssistantCardsTableSelectHeader table={table} />,
-      cell: ({ row }) => <AssistantCardsTableSelectCell row={row} />,
-      size: 2,
-      minSize: 2,
-      enableSorting: false,
-    });
-
     const fieldColumns = (template.content?.fields || []).map((field) =>
       columnHelper.accessor((row) => row.content[field.id]?.text || "", {
         id: field.id.toString(),
@@ -62,14 +54,25 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       }),
     );
 
+    if (!enableSelection) return columnHelper.columns(fieldColumns);
+
+    const selectionColumn = columnHelper.display({
+      id: "select",
+      header: ({ table }) => <AssistantCardsTableSelectHeader table={table} />,
+      cell: ({ row }) => <AssistantCardsTableSelectCell row={row} />,
+      size: 2,
+      minSize: 2,
+      enableSorting: false,
+    });
+
     return columnHelper.columns([selectionColumn, ...fieldColumns]);
-  }, [template]);
+  }, [template, enableSelection]);
 
   const table = useSelectionTable({
     data: cardsWithStatus,
     columns,
     getRowId: (_, index) => index.toString(),
-    enableRowSelection: (row) => row.original.status === "idle",
+    enableRowSelection: enableSelection ? (row) => row.original.status === "idle" : false,
     initialState: {
       // WHY: spec: all generated (idle) cards start selected. Restored success /
       // error / pending rows are not selectable and must not occupy the
@@ -92,6 +95,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   // holds without touching rows the user already deselected.
   const seenCardCount = useRef(cards.length);
   useEffect(() => {
+    if (!enableSelection) return;
     if (cards.length > seenCardCount.current) {
       for (const row of table.getRowModel().rows) {
         const index = Number(row.id);
@@ -101,7 +105,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       }
     }
     seenCardCount.current = cards.length;
-  }, [cards.length, table]);
+  }, [cards.length, enableSelection, table]);
 
   const selectedRowModel = table.getSelectedRowModel();
   const selectedIndices = selectedRowModel.rows.filter((row) => row.original.status === "idle").map((row) => row.index);
