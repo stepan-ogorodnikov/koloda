@@ -54,19 +54,36 @@ describe("createAssistantToolExecutor", () => {
   });
 
   it("get_deck_cards throws for a missing deck", async () => {
-    const executor = createAssistantToolExecutor(makeDataSource());
+    let cardReads = 0;
+    const executor = createAssistantToolExecutor(
+      makeDataSource({
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
+    );
     await expect(executor("get_deck_cards", { deckId: MISSING_DECK_ID })).rejects.toThrow(
       `Deck not found: ${MISSING_DECK_ID}`,
     );
+    expect(cardReads).toBe(0);
   });
 
   it("get_deck_cards throws when the deck's template is missing", async () => {
+    let cardReads = 0;
     const executor = createAssistantToolExecutor(
-      makeDataSource({ getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }] }),
+      makeDataSource({
+        getDecks: () => [{ id: DECK_ID, title: "Spanish", templateId: MISSING_TEMPLATE_ID }],
+        getCards: () => {
+          cardReads += 1;
+          return [];
+        },
+      }),
     );
     await expect(executor("get_deck_cards", { deckId: DECK_ID })).rejects.toThrow(
       `Template not found for deck: ${DECK_ID}`,
     );
+    expect(cardReads).toBe(0);
   });
 
   it("propose_cards shapes accepted cards through the write target", async () => {

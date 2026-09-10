@@ -26,6 +26,15 @@ export type AssistantToolDataSource = {
  * duplicating per-host lookup logic.
  */
 export function createAssistantToolExecutor(data: AssistantToolDataSource): AssistantToolExecutor {
+  const resolveDeckTemplate = async (deckId: string) => {
+    const [decks, templates] = await Promise.all([data.getDecks(), data.getTemplates()]);
+    const deck = decks.find((row) => row.id === deckId);
+    if (deck == null) throw new Error(`Deck not found: ${deckId}`);
+    const template = templates.find((row) => row.id === deck.templateId);
+    if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+    return { deck, template };
+  };
+
   return async (name, input) => {
     if (name === "list_decks") {
       const [decks, templates, counts] = await Promise.all([
@@ -45,24 +54,13 @@ export function createAssistantToolExecutor(data: AssistantToolDataSource): Assi
     }
     if (name === "get_deck_cards") {
       const { deckId } = ASSISTANT_TOOL_SPECS.get_deck_cards.inputSchema.parse(input);
-      const [decks, templates, cards] = await Promise.all([
-        data.getDecks(),
-        data.getTemplates(),
-        data.getCards({ deckId }),
-      ]);
-      const deck = decks.find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = templates.find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+      const { deck, template } = await resolveDeckTemplate(deckId);
+      const cards = await data.getCards({ deckId });
       return shapeGetDeckCardsOutput({ id: deck.id, title: deck.title, template }, cards);
     }
     if (name === "propose_cards") {
       const { deckId, cards } = ASSISTANT_TOOL_SPECS.propose_cards.inputSchema.parse(input);
-      const [decks, templates] = await Promise.all([data.getDecks(), data.getTemplates()]);
-      const deck = decks.find((row) => row.id === deckId);
-      if (deck == null) throw new Error(`Deck not found: ${deckId}`);
-      const template = templates.find((row) => row.id === deck.templateId);
-      if (template == null) throw new Error(`Template not found for deck: ${deckId}`);
+      const { deck, template } = await resolveDeckTemplate(deckId);
       return shapeProposeCardsOutput({ id: deck.id, title: deck.title, template }, cards);
     }
     throw new Error(`Unknown assistant tool: ${name}`);
