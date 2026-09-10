@@ -21,7 +21,7 @@ export function AssistantCardsTableSelectCell({ row }: AssistantCardsTableSelect
   return (
     <AnimatePresence mode="wait" initial={false}>
       {status === "idle" && (
-        <Fade className={tableCellContent()} key="checkbox">
+        <Fade className={tableCellContent({ class: "w-fit" })} key="checkbox">
           <Checkbox
             isSelected={isSelected}
             isDisabled={!isSelectable}
