@@ -3,7 +3,11 @@ import type { MotionProps } from "motion/react";
 import type { ComponentProps } from "react";
 import { useMotionSetting } from "../../hooks/use-motion-settings";
 
-export function Fade(props: MotionProps & ComponentProps<"div">) {
+// WHY: any onUpdate disables Motion's WAAPI path.
+// Chrome promotes a compositor layer for accelerated opacity and the enter flashes.
+function disableAcceleratedOpacity() {}
+
+export function Fade({ style, onUpdate, ...props }: MotionProps & ComponentProps<"div">) {
   const isMotionOn = useMotionSetting();
 
   return (
@@ -13,6 +17,8 @@ export function Fade(props: MotionProps & ComponentProps<"div">) {
       exit={{ opacity: 0 }}
       transition={isMotionOn ? { duration: 0.25 } : { duration: 0 }}
       {...props}
+      style={{ ...style, willChange: "auto" }}
+      onUpdate={onUpdate ?? disableAcceleratedOpacity}
     />
   );
 }
