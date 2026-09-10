@@ -343,4 +343,23 @@ describe("useAssistantMessageRenderer", () => {
     mountRenderer({ r1: run });
     expect(screen.getByTestId("copy-button").getAttribute("data-text")).toBe("Hello");
   });
+
+  it("keeps renderMessage identity when handleRevert is stable", () => {
+    const conversationId = "c1";
+    const store = createStore();
+    store.set(currentConversationIdAtom, conversationId);
+    store.set(conversationsAtom, {
+      [conversationId]: { ...initialConversationState, id: conversationId },
+    });
+    const Wrapper = ({ children }: PropsWithChildren) => <JotaiProvider store={store}>{children}</JotaiProvider>;
+    const handleRetry = vi.fn();
+    const handleRevert = vi.fn();
+    const { result, rerender } = renderHook(() => useAssistantMessageRenderer({ handleRetry, handleRevert }), {
+      wrapper: Wrapper,
+    });
+
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
+  });
 });

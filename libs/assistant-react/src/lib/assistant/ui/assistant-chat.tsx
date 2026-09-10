@@ -131,14 +131,20 @@ export function AssistantChat({
     scroll,
   });
 
+  // WHY: Revert needs the live composer text, but `handleRevert` is in
+  // `renderMessage`'s deps. Closing over `inputValue` would rebuild every
+  // transcript row on each keystroke. Read through a ref instead.
+  const inputValueRef = useRef(inputValue);
+  inputValueRef.current = inputValue;
+
   // WHY: Revert/restore return prompt text the input must adopt; that glue
   // stays in the chat shell, not on RunController.
   const handleRevert = useCallback(
     (userMessageId: string) => {
-      const promptText = controller.revert(userMessageId, inputValue);
+      const promptText = controller.revert(userMessageId, inputValueRef.current);
       if (promptText != null) setInputValue(promptText);
     },
-    [controller, inputValue, setInputValue],
+    [controller, setInputValue],
   );
 
   const handleRestore = useCallback(() => {
