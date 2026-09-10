@@ -33,7 +33,7 @@ nx build electron
 
 - Nx monorepo with Bun as package manager
 - **Frontend**: Vite, React, TanStack Router
-- **Web**: PGLite
+- **Web**: wa-sqlite (in-browser SQLite via IndexedDB)
 - **Desktop**: Electron + Rust NAPI + SQLite
 - **Testing**: Vitest (unit), Playwright (E2E), Cargo (Rust)
 

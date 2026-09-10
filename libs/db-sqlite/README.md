@@ -3,7 +3,7 @@
 SQLite persistence for the web host: `wa-sqlite` with `IDBBatchAtomicVFS`.
 IndexedDB database name is `koloda`.
 Every connection sets `PRAGMA foreign_keys = ON`.
-Product SQL is `crates/koloda/src/migrations/V1`–`V5`.
+Product SQL is the shared Refinery series at `crates/koloda/src/migrations/V*.sql`.
 
 ## Where it sits
 
