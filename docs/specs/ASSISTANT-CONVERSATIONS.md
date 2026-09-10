@@ -52,7 +52,7 @@ The timestamp is bumped only when a new run starts — that is, when the user se
 Picking a different AI profile, model, or model parameter does not change the conversation's order in the sidebar.
 Typing in the prompt input does not change the conversation's order in the sidebar.
 If the sidebar has no conversations, nothing is shown.
-The "New Conversation" button is disabled only when the open surface has no conversation id.
+The "New Conversation" button and hotkey are disabled only when the open surface has no conversation id.
 It is enabled when viewing any existing conversation, including one that has no messages and no active run.
 Starting a new conversation goes to the AI route with no conversation id and forgets the last open conversation so a reload of that route does not bounce back.
 Session reset uses the same route.
