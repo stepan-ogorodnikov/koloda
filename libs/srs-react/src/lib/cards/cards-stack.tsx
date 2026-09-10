@@ -49,9 +49,9 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
             </div>
             {cards.length > 0 && (
               <div className="flex flex-row items-center gap-1">
-                <Number className="numbers-text fg-level-2" value={index + 1} />
+                <Number className="fg-level-2 numbers-text tabular-nums" value={index + 1} />
                 <span className="text-sm fg-level-4">/</span>
-                <Number className="numbers-text fg-level-2" value={cards.length} />
+                <Number className="fg-level-2 numbers-text tabular-nums" value={cards.length} />
               </div>
             )}
           </div>,
