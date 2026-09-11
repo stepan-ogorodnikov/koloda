@@ -16,11 +16,6 @@ export type ConversationLike = {
   promptInput?: string;
 };
 
-export function getConversationName(state: ConversationLike, fallback: string) {
-  const name = computeConversationTitle(state);
-  return name ?? fallback;
-}
-
 function formatConversationTitle(raw: string): string | null {
   const text = raw.trim().replace(COLLAPSE_WHITESPACE, " ");
   if (!text) return null;

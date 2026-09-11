@@ -27,14 +27,6 @@ export const ollamaCloudSecretsValidation = z.object({
   apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
 });
 
-export type AIPrompterSecrets =
-  | z.infer<typeof openRouterSecretsValidation>
-  | z.infer<typeof ollamaSecretsValidation>
-  | z.infer<typeof lmstudioSecretsValidation>
-  | z.infer<typeof opencodeGoSecretsValidation>
-  | z.infer<typeof opencodeZenSecretsValidation>
-  | z.infer<typeof ollamaCloudSecretsValidation>;
-
 // WHY: Settings / profile wire format uses `null` for redacted or absent keys.
 // Legacy `""` from older rows normalizes to `null` so missing-secret checks stay explicit.
 const storedApiKey = z

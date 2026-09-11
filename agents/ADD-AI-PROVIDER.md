@@ -29,11 +29,6 @@ export const myProviderSecretsValidation = z.object({
   // baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
 });
 
-// Add to AIPrompterSecrets union
-export type AIPrompterSecrets =
-  // ...
-  | z.infer<typeof myProviderSecretsValidation>;
-
 // Wire/storage schema uses `storedApiKey` (`string | null`; legacy "" → null):
 export const aiSecretsValidation = z.discriminatedUnion("provider", [
   // ...

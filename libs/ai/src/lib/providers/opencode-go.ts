@@ -8,8 +8,6 @@ import { isPresentApiKey } from "../provider-secrets";
 import { loadModelsDevCatalog, overlayFromModelsDev } from "./models-dev";
 import { fetchOpenAICompatibleModelsDetailed } from "./openai-compatible";
 
-export const OPENCODE_GO_MODELS_URL = `${OPENCODE_GO_BASE_URL}/models`;
-
 export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]> {
   const modelsUrl = `${OPENCODE_GO_BASE_URL.replace(/\/$/, "")}/models`;
   const [models, catalog] = await Promise.all([
