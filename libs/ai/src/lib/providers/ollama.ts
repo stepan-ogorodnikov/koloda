@@ -88,5 +88,4 @@ export const ollamaProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "ollama" }>;
     return s.baseUrl ? [] : ["baseUrl"];
   },
-  getApiKey: () => null,
 };

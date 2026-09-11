@@ -112,8 +112,4 @@ export const lmstudioProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "lmstudio" }>;
     return s.baseUrl ? [] : ["baseUrl"];
   },
-  getApiKey: (secrets) => {
-    const s = secrets as Extract<AISecrets, { provider: "lmstudio" }>;
-    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
-  },
 };

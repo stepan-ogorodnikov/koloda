@@ -41,8 +41,4 @@ export const opencodeGoProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "opencodeGo" }>;
     return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => {
-    const s = secrets as Extract<AISecrets, { provider: "opencodeGo" }>;
-    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
-  },
 };

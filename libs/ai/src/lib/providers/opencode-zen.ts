@@ -41,8 +41,4 @@ export const opencodeZenProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
     return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => {
-    const s = secrets as Extract<AISecrets, { provider: "opencodeZen" }>;
-    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
-  },
 };

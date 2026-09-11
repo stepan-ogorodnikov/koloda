@@ -24,7 +24,6 @@ export type AIProviderEntry = {
   createClient: (secrets: AISecrets) => AIGenerationClient;
   fetchModels: (secrets: AISecrets) => Promise<AIModel[]>;
   getMissingSecretFields: (secrets: AISecrets) => SecretField[];
-  getApiKey: (secrets: AISecrets) => string | null;
 };
 
 export const AI_PROVIDER_REGISTRY: Record<AiProvider, AIProviderEntry> = {

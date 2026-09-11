@@ -138,10 +138,6 @@ export const myProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
     return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => {
-    const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
-    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
-  },
 };
 ```
 

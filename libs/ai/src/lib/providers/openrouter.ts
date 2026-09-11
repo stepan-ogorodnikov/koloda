@@ -66,8 +66,4 @@ export const openrouterProviderEntry: AIProviderEntry = {
     const s = secrets as Extract<AISecrets, { provider: "openrouter" }>;
     return isPresentApiKey(s.apiKey) ? [] : ["apiKey"];
   },
-  getApiKey: (secrets) => {
-    const s = secrets as Extract<AISecrets, { provider: "openrouter" }>;
-    return isPresentApiKey(s.apiKey) ? s.apiKey : null;
-  },
 };
