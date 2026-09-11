@@ -136,3 +136,5 @@ export type RunLifecycleEvent =
       templateFields: TemplateFields | null;
       modelName?: string;
     };
+
+export type RunIdPayload = { runId: string };
