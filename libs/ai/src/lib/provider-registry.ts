@@ -46,10 +46,7 @@ export function listProvidersThatWorkInBrowser(): AiProvider[] {
   return AI_PROVIDERS.filter((id) => getProviderConfig(id).worksInBrowser);
 }
 
-export function createAIGenerationClient(secretsInput: AISecrets | string): AIGenerationClient {
-  const secrets: AISecrets =
-    typeof secretsInput === "string" ? ({ provider: "openrouter", apiKey: secretsInput } as const) : secretsInput;
-
+export function createAIGenerationClient(secrets: AISecrets): AIGenerationClient {
   return getProviderConfig(secrets.provider).createClient(secrets);
 }
 
