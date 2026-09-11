@@ -1,4 +1,4 @@
-import { queriesAtom } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import type { GeneratedCard } from "@koloda/ai";
 import type { Template } from "@koloda/srs";
@@ -150,6 +150,20 @@ describe("AssistantCardsTable selection", () => {
     expect(mutate).toHaveBeenCalledOnce();
   });
 
+  it("refreshes deck cards and lessons after add, not AI settings", async () => {
+    const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    const mutate = vi.fn(async () => ({ insertedIds: [] }));
+    mountProbe([makeCard("Front A")], { 0: "idle" }, mutate, queryClient);
+
+    fireEvent.click(screen.getByTestId("add"));
+    await waitFor(() => expect(screen.getByTestId("has-selection").textContent).toBe("false"));
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.cards.deck({ deckId: testId(1) }) });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.lessons.all() });
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: queryKeys.settings.detail("ai") });
+  });
+
   it("does not re-add persisted success cards when Add is invoked", async () => {
     const mutate = vi.fn(async () => ({ insertedIds: [] }));
     mountProbe([makeCard("Front A"), makeCard("Front B")], { 0: "success", 1: "success" }, mutate);
@@ -234,6 +248,7 @@ function mountProbe(
   cards: GeneratedCard[],
   cardStatuses: Record<number, CardStatus>,
   mutate: () => Promise<{ insertedIds: number[] }> = async () => ({ insertedIds: [] }),
+  queryClient = new QueryClient(),
 ) {
   const store = createStore();
   store.set(
@@ -247,7 +262,7 @@ function mountProbe(
   store.set(conversationsAtom, { c1: makeConversation("c1", { runs: { r1: run } }) });
 
   const Wrapper = ({ children }: WrapperProps) => (
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <JotaiProvider store={store}>{children}</JotaiProvider>
     </QueryClientProvider>
   );

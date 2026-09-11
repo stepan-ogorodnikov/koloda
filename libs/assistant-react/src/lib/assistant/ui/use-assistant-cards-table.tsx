@@ -131,7 +131,6 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       onSuccess: (response) => {
         queryClient.invalidateQueries({ queryKey: queryKeys.cards.deck({ deckId }) });
         queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all() });
-        queryClient.invalidateQueries({ queryKey: queryKeys.settings.detail("ai") });
         for (let i = 0; i < selectedIndices.length; i++) {
           const index = selectedIndices[i];
           const result = response[i];
