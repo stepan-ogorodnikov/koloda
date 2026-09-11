@@ -91,10 +91,9 @@ pub fn get_reviews(db: &Database, data: GetReviewsData) -> Result<Vec<Review>, A
 pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result<ReviewTotals, AppError> {
     throw_known_error(error_codes::DB_GET, || {
         db.with_conn(|conn| {
-            // WHY: The outer WHERE already restricts rows to the learning-day window `[from, to)`.
-            // `untouched` only needs `state = New` inside its FILTER because that window applies
-            // to every bucket. The extra `created_at < ?2` on learn/review/total is redundant
-            // with the outer bound but documents per-bucket intent.
+            // WHY: The outer WHERE applies the learning-day window to every bucket, so FILTERs
+            // stay pure state predicates — same shape as web `getReviewTotals`. Do not add
+            // `created_at` bounds inside the FILTERs; the outer bound is the single window.
             let result = conn.query_row(
                 &format!(
                     r#"
@@ -109,9 +108,9 @@ pub fn get_review_totals(db: &Database, params: GetReviewTotalsParams) -> Result
                   AND created_at < ?2
                 "#,
                     untouched = fsrs_sql::eq_new("state"),
-                    learn_due = format_args!("{} AND created_at < ?2", fsrs_sql::in_learn("state")),
-                    review_due = format_args!("{} AND created_at < ?2", fsrs_sql::eq_review("state")),
-                    total_due = format_args!("{} AND created_at < ?2", fsrs_sql::in_all_tracked("state")),
+                    learn_due = fsrs_sql::in_learn("state"),
+                    review_due = fsrs_sql::eq_review("state"),
+                    total_due = fsrs_sql::in_all_tracked("state"),
                 ),
                 params![params.from, params.to],
                 |row| {
