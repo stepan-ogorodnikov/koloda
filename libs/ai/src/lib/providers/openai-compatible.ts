@@ -69,7 +69,7 @@ export async function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: stri
       name: model.id,
       context_length: 0,
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** OpenAI-compatible models endpoint with gateway metadata only. */
@@ -98,5 +98,5 @@ export async function fetchOpenAICompatibleModelsDetailed(modelsUrl: string, api
       supported_reasoning_levels: model.supported_reasoning_levels,
       default_reasoning_level: model.default_reasoning_level,
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => a.name.localeCompare(b.name));
 }

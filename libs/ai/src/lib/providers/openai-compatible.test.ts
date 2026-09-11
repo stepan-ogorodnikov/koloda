@@ -112,6 +112,30 @@ describe("fetchOpenAICompatibleModelsDetailed", () => {
     expect(models[0]?.supported_reasoning_levels).toEqual([{ effort: "high", description: "from gateway" }]);
     expect(models[0]?.default_reasoning_level).toBe("high");
   });
+
+  it("sorts by display name, not id", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: [
+              { id: "zulu", name: "Alpha" },
+              { id: "alpha", name: "Zulu" },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ),
+    );
+
+    const models = await fetchOpenAICompatibleModelsDetailed("https://example.com/models");
+
+    expect(models.map((model) => ({ id: model.id, name: model.name }))).toEqual([
+      { id: "zulu", name: "Alpha" },
+      { id: "alpha", name: "Zulu" },
+    ]);
+  });
 });
 
 describe("fetchOpenAICompatibleModels", () => {
@@ -128,6 +152,23 @@ describe("fetchOpenAICompatibleModels", () => {
 
     await expect(fetchOpenAICompatibleModels("http://localhost:1234")).resolves.toEqual([
       { id: "local-model", name: "local-model", context_length: 0 },
+    ]);
+  });
+
+  it("sorts id-only listings alphabetically", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ data: [{ id: "zeta" }, { id: "alpha" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+
+    await expect(fetchOpenAICompatibleModels("http://localhost:1234")).resolves.toEqual([
+      { id: "alpha", name: "alpha", context_length: 0 },
+      { id: "zeta", name: "zeta", context_length: 0 },
     ]);
   });
 });

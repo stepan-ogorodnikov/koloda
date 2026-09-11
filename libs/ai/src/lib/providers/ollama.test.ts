@@ -105,6 +105,22 @@ describe("fetchOllamaModels", () => {
     ]);
   });
 
+  it("sorts models by display name, not model id", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [
+        { model: "zulu", name: "Alpha" },
+        { model: "alpha", name: "Zulu" },
+      ],
+    });
+
+    const models = await fetchOllamaModels("http://localhost:11434");
+
+    expect(models).toEqual([
+      { id: "zulu", name: "Alpha", context_length: 0 },
+      { id: "alpha", name: "Zulu", context_length: 0 },
+    ]);
+  });
+
   it("maps a models response missing the models field to ai.invalid-response", async () => {
     listMock.mockResolvedValueOnce({});
 

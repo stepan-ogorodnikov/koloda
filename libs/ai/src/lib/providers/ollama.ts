@@ -63,7 +63,7 @@ export async function fetchOllamaModels(baseUrl: string, apiKey?: string): Promi
       context_length: 0,
       ...ollamaThinkingReasoningLevels(model.model, ollamaListCapabilities(model)),
     }))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function createOllamaClient(secrets: Extract<AISecrets, { provider: "ollama" }>): AIGenerationClient {
