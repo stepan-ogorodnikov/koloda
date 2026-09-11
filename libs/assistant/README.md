@@ -36,7 +36,7 @@ Conversation documents and reducer policy still live in `@koloda/assistant-react
   Closed-registry `beginRun` becomes a typed interrupt, not a bare throw that leaves the run `streaming`.
 - Stream funnel: `run-stream.ts` — shared `runStream` success / fail / abort handling used by chat.
 - Serial queue: `serial-queue.ts` — per-conversation command serialization (one hop per public execute entry; retry must not re-enqueue through those entry points).
-- Types / helpers: `stream-result.ts`, `display-error.ts`.
+- Types / helpers: `stream-result.ts`, `assistant-protocol.ts` (`boundRunErrorDetails`).
 
 ### Does NOT own (prevent scope creep)
 
