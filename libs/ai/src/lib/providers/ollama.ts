@@ -80,7 +80,10 @@ export const ollamaProviderEntry: AIProviderEntry = {
   id: "ollama",
   worksInBrowser: true,
   createClient: (secrets) => createOllamaClient(secrets as Extract<AISecrets, { provider: "ollama" }>),
-  fetchModels: (secrets) => fetchOllamaModels((secrets as Extract<AISecrets, { provider: "ollama" }>).baseUrl),
+  fetchModels: (secrets) => {
+    const s = secrets as Extract<AISecrets, { provider: "ollama" }>;
+    return fetchOllamaModels(s.baseUrl, isPresentApiKey(s.apiKey) ? s.apiKey : undefined);
+  },
   getMissingSecretFields: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "ollama" }>;
     return s.baseUrl ? [] : ["baseUrl"];

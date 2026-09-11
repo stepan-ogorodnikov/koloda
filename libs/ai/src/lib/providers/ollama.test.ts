@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ollamaSecretsValidation } from "../provider-secrets";
-import { fetchOllamaModels } from "./ollama";
+import { aiSecretsValidation, ollamaSecretsValidation } from "../provider-secrets";
+import { fetchOllamaModels, ollamaProviderEntry } from "./ollama";
 
 const listMock = vi.fn();
 const OllamaMock = vi.fn().mockImplementation(function Ollama() {
@@ -139,5 +139,45 @@ describe("ollamaSecretsValidation", () => {
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["baseUrl"]);
     expect(issue?.message).toBe("validation.settings-ai.providers.baseUrl");
+  });
+});
+
+describe("ollamaProviderEntry", () => {
+  it("passes a present apiKey from the secrets when fetching models", async () => {
+    listMock.mockResolvedValueOnce({
+      models: [{ model: "llama3.1", name: "Llama 3.1" }],
+    });
+
+    const secrets = aiSecretsValidation.parse({
+      provider: "ollama",
+      baseUrl: "https://example.com",
+      apiKey: "secret-key",
+    });
+
+    const models = await ollamaProviderEntry.fetchModels(secrets);
+
+    expect(models).toEqual([{ id: "llama3.1", name: "Llama 3.1", context_length: 0 }]);
+    expect(OllamaMock).toHaveBeenCalledTimes(1);
+    expect(OllamaMock).toHaveBeenCalledWith({
+      host: "https://example.com",
+      apiKey: "secret-key",
+    });
+  });
+
+  it("omits a redacted apiKey from the Ollama client when fetching models", async () => {
+    listMock.mockResolvedValueOnce({ models: [] });
+
+    const secrets = aiSecretsValidation.parse({
+      provider: "ollama",
+      baseUrl: "https://example.com",
+      apiKey: null,
+    });
+
+    await ollamaProviderEntry.fetchModels(secrets);
+
+    expect(OllamaMock).toHaveBeenCalledTimes(1);
+    expect(OllamaMock).toHaveBeenCalledWith({
+      host: "https://example.com",
+    });
   });
 });
