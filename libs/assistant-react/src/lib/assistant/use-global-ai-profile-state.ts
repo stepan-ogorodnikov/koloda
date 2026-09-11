@@ -1,11 +1,8 @@
-import { useAIProfiles } from "@koloda/ai-react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo } from "react";
-import { aiProfileStateAtom, reconcileAIProfileState } from "./state/ai-profile-state";
-import type { AIProfileState, AIProfileStateUpdater } from "./state/ai-profile-state";
+import { useCallback } from "react";
+import { aiProfileStateAtom } from "./state/ai-profile-state";
+import type { AIProfileStateUpdater } from "./state/ai-profile-state";
 import { lastUsedOnRunStart } from "./state/ai-profile-sync";
-
-export type UseGlobalAIProfileStateReturn = [AIProfileState, (updater: AIProfileStateUpdater) => void];
 
 export function useSetGlobalAIProfileState(): (updater: AIProfileStateUpdater) => void {
   const stored = useAtomValue(aiProfileStateAtom);
@@ -45,18 +42,4 @@ export function useRememberLastUsedAIProfile(): (profileId: string, modelId: str
     },
     [setGlobal],
   );
-}
-
-/**
- * Read+write global last-used profile.
- * Subscribes to `useAIProfiles` for reconcile — use only outside the chat tree.
- */
-export function useGlobalAIProfileState(): UseGlobalAIProfileStateReturn {
-  const stored = useAtomValue(aiProfileStateAtom);
-  const { profiles } = useAIProfiles();
-  const setState = useSetGlobalAIProfileState();
-
-  const state = useMemo(() => reconcileAIProfileState(stored, profiles), [stored, profiles]);
-
-  return [state, setState];
 }
