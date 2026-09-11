@@ -99,7 +99,7 @@ describe("assistant structured observability", () => {
       subscribePendingSaves: () => () => {},
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
 
     const begin = host.beginDelete("A");

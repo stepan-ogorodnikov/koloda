@@ -19,7 +19,6 @@ export type CreateConversationPersistenceHostOptions = {
 };
 
 export type ConversationPersistenceHost = {
-  flushAllNow: () => void;
   flushAllBounded: (timeoutMs?: number) => Promise<void>;
   /** Immediate save attempt for a conversation (cancels pending backoff). */
   retrySave: (conversationId: string) => void;
@@ -29,11 +28,6 @@ export type ConversationPersistenceHost = {
    * so dirty generations and autosave can resume.
    */
   beginDelete: (conversationId: string) => Promise<ConversationDeletion>;
-  /**
-   * Permanent tombstone: `beginDelete` then `commit`.
-   * Callers that can roll back a failed DB delete should use `beginDelete`.
-   */
-  prepareDelete: (conversationId: string) => Promise<void>;
   isTombstoned: (conversationId: string) => boolean;
   dispose: () => void;
 };
@@ -107,13 +101,6 @@ export function createConversationPersistenceHost({
 
   const unsub = subscribePendingSaves(syncFromPending);
 
-  const flushAllNow = () => {
-    if (isDisposed) return;
-    for (const queue of queues.values()) {
-      queue.flushNow();
-    }
-  };
-
   const retrySave = (conversationId: string) => {
     if (isDisposed) return;
     if (tombstonedIds.has(conversationId)) return;
@@ -157,13 +144,6 @@ export function createConversationPersistenceHost({
         });
       },
     };
-  };
-
-  const prepareDelete = async (conversationId: string): Promise<void> => {
-    // WHY: convenience for tests and callers that cannot roll back. Production
-    // delete uses beginDelete + commit/rollback around deleteFromDb.
-    const deletion = await beginDelete(conversationId);
-    deletion.commit();
   };
 
   const isTombstoned = (conversationId: string) => tombstonedIds.has(conversationId);
@@ -266,5 +246,5 @@ export function createConversationPersistenceHost({
     tombstonedIds.clear();
   };
 
-  return { flushAllNow, flushAllBounded, retrySave, beginDelete, prepareDelete, isTombstoned, dispose };
+  return { flushAllBounded, retrySave, beginDelete, isTombstoned, dispose };
 }

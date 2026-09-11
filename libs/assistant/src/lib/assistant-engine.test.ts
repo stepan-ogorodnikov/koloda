@@ -514,11 +514,9 @@ describe("createAssistantEngine", () => {
       readConversationState,
     });
     engine.setPersistenceHost({
-      flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
       beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
-      prepareDelete: vi.fn(async () => undefined),
       isTombstoned: vi.fn(() => false),
       dispose: vi.fn(),
     });
@@ -670,11 +668,9 @@ describe("createAssistantEngine", () => {
     const hostDispose = vi.fn();
 
     engine.setPersistenceHost({
-      flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
       beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
-      prepareDelete: vi.fn(async () => undefined),
       isTombstoned: vi.fn(() => false),
       dispose: hostDispose,
     });
@@ -710,11 +706,9 @@ describe("createAssistantEngine", () => {
     const interruptActiveRuns = vi.fn();
 
     engine.setPersistenceHost({
-      flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
       beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
-      prepareDelete: vi.fn(async () => undefined),
       isTombstoned: vi.fn(() => false),
       dispose: vi.fn(),
     });
@@ -754,11 +748,9 @@ describe("createAssistantEngine", () => {
   it("dispatch shutdown after dispose is a no-op", async () => {
     const flushAllBounded = vi.fn(async () => undefined);
     engine.setPersistenceHost({
-      flushAllNow: vi.fn(),
       flushAllBounded,
       retrySave: vi.fn(),
       beginDelete: vi.fn(async () => ({ commit: () => {}, rollback: () => {} })),
-      prepareDelete: vi.fn(async () => undefined),
       isTombstoned: vi.fn(() => false),
       dispose: vi.fn(),
     });

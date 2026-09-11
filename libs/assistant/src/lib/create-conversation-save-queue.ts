@@ -53,7 +53,6 @@ export type ConversationSaveQueue = {
    * internal failure counters.
    */
   flushOnce: () => Promise<FlushOutcome>;
-  flushIfPending: () => void;
   isDirty: () => boolean;
   /** Consecutive failed writes since the last successful ack. */
   consecutiveFailures: () => number;
@@ -64,11 +63,6 @@ export type ConversationSaveQueue = {
    * Preserves dirty generations until `commit` (drop) or `rollback` (restore).
    */
   beginDelete: () => Promise<ConversationDeletion>;
-  /**
-   * Permanent tombstone: `beginDelete` then `commit`.
-   * Callers that can roll back a failed DB delete should use `beginDelete`.
-   */
-  prepareDelete: () => Promise<void>;
   isTombstoned: () => boolean;
   dispose: () => void;
 };
@@ -250,11 +244,6 @@ export function createConversationSaveQueue({
     return inFlight ?? "skipped";
   };
 
-  const flushIfPending = () => {
-    if (isDisposed || hasTombstone) return;
-    scheduler.flushIfPending();
-  };
-
   const cancelRetry = () => {
     clearRetryTimer();
   };
@@ -304,17 +293,10 @@ export function createConversationSaveQueue({
     };
   };
 
-  const prepareDelete = async (): Promise<void> => {
-    // WHY: convenience for tests and callers that cannot roll back. Commits
-    // immediately — permanent tombstone; no rollback.
-    const deletion = await beginDelete();
-    deletion.commit();
-  };
-
   const dispose = () => {
     if (isDisposed) return;
     // WHY: delete cancels via beginDelete; host/engine dispose must not
-    // flushIfPending or a timer-fired write can resurrect a removed row.
+    // flush a pending timer or a write can resurrect a removed row.
     clearRetryTimer();
     scheduler.cancel();
     hasTombstone = true;
@@ -325,13 +307,11 @@ export function createConversationSaveQueue({
     notifyDirty,
     flushNow,
     flushOnce,
-    flushIfPending,
     isDirty,
     consecutiveFailures,
     cancelRetry,
     waitUntilIdle,
     beginDelete,
-    prepareDelete,
     isTombstoned,
     dispose,
   };

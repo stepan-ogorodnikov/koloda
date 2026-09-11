@@ -385,7 +385,7 @@ describe("conversations repository integration", () => {
     });
     let isTombstoned = false;
 
-    // WHY: mirrors prepareDelete ordering — tombstone, delete, then resume a
+    // WHY: mirrors beginDelete commit ordering — tombstone, delete, then resume a
     // write that already passed the in-memory existence check.
     const delayedWrite = (async () => {
       await writeGate;

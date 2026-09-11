@@ -24,7 +24,7 @@ describe("createConversationPersistenceHost", () => {
       subscribePendingSaves: () => () => {},
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     expect(writes).toEqual(["A"]);
@@ -165,7 +165,7 @@ describe("createConversationPersistenceHost", () => {
 
     // Drive ordinary autosave failures until consecutiveFailures >= cap.
     for (let i = 0; i < SHUTDOWN_SAVE_MAX_ATTEMPTS; i += 1) {
-      host.flushAllNow();
+      host.retrySave("A");
       await vi.advanceTimersByTimeAsync(0);
       await Promise.resolve();
       await Promise.resolve();
@@ -221,7 +221,7 @@ describe("createConversationPersistenceHost", () => {
     });
 
     for (let i = 0; i < SHUTDOWN_SAVE_MAX_ATTEMPTS; i += 1) {
-      host.flushAllNow();
+      host.retrySave("A");
       await vi.advanceTimersByTimeAsync(0);
       await Promise.resolve();
       await Promise.resolve();
@@ -283,7 +283,7 @@ describe("createConversationPersistenceHost", () => {
     host.dispose();
   });
 
-  it("prepareDelete awaits an in-flight write then blocks further saves", async () => {
+  it("beginDelete commit awaits an in-flight write then blocks further saves", async () => {
     const rows = new Map<string, string>();
     let releaseWrite!: () => void;
     const writeGate = new Promise<void>((resolve) => {
@@ -310,32 +310,34 @@ describe("createConversationPersistenceHost", () => {
       },
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     expect(writeCount).toBe(0);
 
-    let prepareDone = false;
-    const prepare = host.prepareDelete("A").then(() => {
-      prepareDone = true;
+    let beginSettled = false;
+    const begin = host.beginDelete("A").then((deletion) => {
+      beginSettled = true;
+      return deletion;
     });
     await Promise.resolve();
     expect(host.isTombstoned("A")).toBe(true);
-    expect(prepareDone).toBe(false);
+    expect(beginSettled).toBe(false);
 
     // WHY: resume the save only after delete coordination has tombstoned —
     // the in-flight write may finish, then callers delete the row.
     releaseWrite();
-    await prepare;
-    expect(prepareDone).toBe(true);
+    const deletion = await begin;
+    deletion.commit();
+    expect(beginSettled).toBe(true);
     expect(writeCount).toBe(1);
     expect(rows.get("A")).toBe("saved");
 
-    // Simulate post-prepare DB delete while still tombstoned.
+    // Simulate post-commit DB delete while still tombstoned.
     rows.delete("A");
     host.retrySave("A");
     pending = { A: 2 };
     listener!(pending);
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     expect(writeCount).toBe(1);
@@ -373,7 +375,7 @@ describe("createConversationPersistenceHost", () => {
       },
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     expect(writeCount).toBe(0);
 
@@ -448,7 +450,7 @@ describe("createConversationPersistenceHost", () => {
       },
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     expect(writeCount).toBe(1);
@@ -460,7 +462,7 @@ describe("createConversationPersistenceHost", () => {
     pending = { A: 2 };
     listener!(pending);
     host.retrySave("A");
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     expect(writeCount).toBe(1);
@@ -475,7 +477,7 @@ describe("createConversationPersistenceHost", () => {
     pending = { A: 3 };
     listener!(pending);
     host.retrySave("A");
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     expect(writeCount).toBe(1);
@@ -509,20 +511,21 @@ describe("createConversationPersistenceHost", () => {
       subscribePendingSaves: () => () => {},
     });
 
-    host.flushAllNow();
+    host.retrySave("A");
     await vi.advanceTimersByTimeAsync(0);
     expect(writeStarted).toBe(true);
 
     // Tombstone without awaiting the gated write — then delete the row.
-    // The host still awaits in prepareDelete; release after microtask so the
+    // The host still awaits in beginDelete; release after microtask so the
     // write continues only once tombstoned (invalidate path).
-    const prepare = host.prepareDelete("A");
+    const begin = host.beginDelete("A");
     await Promise.resolve();
     expect(host.isTombstoned("A")).toBe(true);
 
     rows.delete("A");
     releaseWrite();
-    await prepare;
+    const deletion = await begin;
+    deletion.commit();
 
     expect(rows.has("A")).toBe(false);
     host.dispose();

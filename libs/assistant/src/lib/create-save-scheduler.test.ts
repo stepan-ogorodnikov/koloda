@@ -137,21 +137,4 @@ describe("createSaveScheduler", () => {
     vi.advanceTimersByTime(IDLE_SAVE_DEBOUNCE_MS);
     expect(flush).toHaveBeenCalledTimes(1);
   });
-
-  it("flushIfPending flushes only when a timer is pending", () => {
-    const scheduler = makeScheduler();
-    scheduler.flushIfPending();
-    expect(flush).not.toHaveBeenCalled();
-
-    scheduler.schedule();
-    expect(flush).toHaveBeenCalledTimes(1);
-
-    flush.mockClear();
-    scheduler.schedule();
-    scheduler.flushIfPending();
-    expect(flush).toHaveBeenCalledTimes(1);
-
-    vi.advanceTimersByTime(IDLE_SAVE_DEBOUNCE_MS);
-    expect(flush).toHaveBeenCalledTimes(1);
-  });
 });

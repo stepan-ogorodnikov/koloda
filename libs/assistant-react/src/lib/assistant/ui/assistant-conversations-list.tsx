@@ -13,8 +13,8 @@ import { ConversationListTimestamp } from "./conversation-list-timestamp";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
 export const CONVERSATION_TITLE_FALLBACK = msg`ai.conversation.untitled`;
-export const CONVERSATION_RUNNING_LABEL = msg`ai.conversation.running`;
-export const CONVERSATION_UNREAD_LABEL = msg`ai.conversation.unread`;
+const CONVERSATION_RUNNING_LABEL = msg`ai.conversation.running`;
+const CONVERSATION_UNREAD_LABEL = msg`ai.conversation.unread`;
 
 type AssistantConversationsListProps = {
   activeId?: string;

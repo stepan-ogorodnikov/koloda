@@ -339,44 +339,6 @@ describe("createConversationSaveQueue", () => {
     expect(queue.isDirty()).toBe(false);
   });
 
-  it("prepareDelete permanently tombstones via beginDelete + commit", async () => {
-    const first = deferred<boolean>();
-    const write = vi.fn(() => first.promise);
-    const queue = createConversationSaveQueue({
-      conversationId: "A",
-      write,
-      isStreaming: () => false,
-    });
-
-    queue.notifyDirty();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(write).toHaveBeenCalledTimes(1);
-
-    queue.notifyDirty();
-    expect(queue.isDirty()).toBe(true);
-
-    let prepareDone = false;
-    const prepare = queue.prepareDelete().then(() => {
-      prepareDone = true;
-    });
-    await Promise.resolve();
-    expect(queue.isTombstoned()).toBe(true);
-    expect(prepareDone).toBe(false);
-
-    first.resolve(true);
-    await first.promise;
-    await prepare;
-    expect(prepareDone).toBe(true);
-    expect(queue.isTombstoned()).toBe(true);
-    expect(queue.isDirty()).toBe(false);
-    expect(write).toHaveBeenCalledTimes(1);
-
-    queue.notifyDirty();
-    queue.flushNow();
-    await vi.advanceTimersByTimeAsync(IDLE_SAVE_DEBOUNCE_MS);
-    expect(write).toHaveBeenCalledTimes(1);
-  });
-
   it("dispose does not flush a pending coalesced save", async () => {
     const write = vi.fn(async () => true);
     const queue = createConversationSaveQueue({

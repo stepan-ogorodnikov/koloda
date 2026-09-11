@@ -29,7 +29,6 @@ Conversation documents and reducer policy still live in `@koloda/assistant-react
   Stream start (`streamStart` + `requestId`) is recorded at the host execution port; Electron IPC uses the same `requestId`. Do not log token chunks, card payloads, or secrets.
 - Persistence: `conversation-persistence-host.ts`, `create-conversation-save-queue.ts`, `create-save-scheduler.ts` — engine-owned per-conversation serialized save queues; failed writes retry with bounded exponential backoff + jitter; `retrySave` for explicit recovery.
   Production delete is transactional: `beginDelete` (tombstone + cancel queued + await in-flight) → DB delete → `commit`, or `rollback` (clear tombstone, preserve dirty, resume autosave).
-  `prepareDelete` is a convenience that permanently tombstones (`beginDelete` then `commit`) for callers that cannot roll back; production uses `beginDelete` + commit/rollback.
   `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000 ms) and `SHUTDOWN_SAVE_MAX_ATTEMPTS` (3) bound the best-effort final flush on graceful shutdown.
 - Conversation runtime: `conversation-runtime.ts` — serial command queue and chat/retry execution against the injected execution port + by-id ports (`emit`, `touch`, `markReadIfCurrent`, `readConversationState`, `isRunStreaming`).
   At most one active or queued execute/retry per conversation; a second command throws `AssistantDuplicateRunError` before occupancy is claimed.
