@@ -1,14 +1,6 @@
 use crate::app::error::{error_codes, AppError};
-use std::sync::{Arc, LazyLock};
-
-#[cfg(debug_assertions)]
-use std::sync::RwLock;
-
-#[cfg(not(target_os = "windows"))]
 use std::collections::HashMap;
-
-#[cfg(not(target_os = "windows"))]
-use std::sync::{RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{Arc, LazyLock, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 const STORE_ID: &str = "koloda";
 
@@ -59,33 +51,85 @@ pub trait SecretStore: Send + Sync {
     fn remove(&self, key: &str) -> Result<(), AppError>;
 }
 
-#[cfg(not(target_os = "windows"))]
+// WHY: The raw OS vault behind the cache. Splitting the backend from the
+// read-through cache below lets tests pin the cache policy against an in-memory
+// fake without touching real credentials.
+pub trait RawBackend: Send + Sync {
+    fn read(&self, key: &str) -> Result<Option<String>, AppError>;
+    fn write(&self, key: &str, value: &str) -> Result<(), AppError>;
+    fn delete(&self, key: &str) -> Result<(), AppError>;
+    /// Error domain for cache lock poisoning; each OS backend keeps its own code.
+    fn cache_lock_error(&self) -> AppError;
+}
+
 // INVARIANT: per-process read-through cache; populated on first `get` and updated on
-// `set`/`remove` only. External keyring changes are not observed until process restart.
-pub struct KeyringSecretStore {
-    service: &'static str,
+// `set`/`remove` only. External vault changes are not observed until process restart
+// (a new store instance starts with a cold cache). Misses (`None`) are not cached.
+pub struct CachedStore<B: RawBackend> {
+    backend: B,
     cache: RwLock<HashMap<String, String>>,
 }
 
-#[cfg(not(target_os = "windows"))]
-impl KeyringSecretStore {
-    pub fn new(service: &'static str) -> Self {
+impl<B: RawBackend> CachedStore<B> {
+    pub fn new(backend: B) -> Self {
         Self {
-            service,
+            backend,
             cache: RwLock::new(HashMap::new()),
         }
     }
 
     fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
-        self.cache
-            .read()
-            .map_err(|_poisoned| AppError::new(error_codes::KEYRING, Some("Secret cache lock poisoned".to_string())))
+        self.cache.read().map_err(|_poisoned| self.backend.cache_lock_error())
     }
 
     fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
-        self.cache
-            .write()
-            .map_err(|_poisoned| AppError::new(error_codes::KEYRING, Some("Secret cache lock poisoned".to_string())))
+        self.cache.write().map_err(|_poisoned| self.backend.cache_lock_error())
+    }
+}
+
+impl<B: RawBackend> SecretStore for CachedStore<B> {
+    fn get(&self, key: &str) -> Result<Option<String>, AppError> {
+        {
+            let cache = self.read_cache()?;
+            if let Some(value) = cache.get(key) {
+                return Ok(Some(value.clone()));
+            }
+        }
+
+        match self.backend.read(key)? {
+            Some(value) => {
+                let mut cache = self.write_cache()?;
+                cache.insert(key.to_string(), value.clone());
+                Ok(Some(value))
+            }
+            None => Ok(None),
+        }
+    }
+
+    fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
+        self.backend.write(key, value)?;
+        let mut cache = self.write_cache()?;
+        cache.insert(key.to_string(), value.to_string());
+        Ok(())
+    }
+
+    fn remove(&self, key: &str) -> Result<(), AppError> {
+        self.backend.delete(key)?;
+        let mut cache = self.write_cache()?;
+        cache.remove(key);
+        Ok(())
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub struct KeyringBackend {
+    service: &'static str,
+}
+
+#[cfg(not(target_os = "windows"))]
+impl KeyringBackend {
+    pub fn new(service: &'static str) -> Self {
+        Self { service }
     }
 
     fn get_from_keyring(&self, key: &str) -> Result<Option<String>, AppError> {
@@ -138,85 +182,42 @@ impl KeyringSecretStore {
 }
 
 #[cfg(not(target_os = "windows"))]
-impl SecretStore for KeyringSecretStore {
-    fn get(&self, key: &str) -> Result<Option<String>, AppError> {
-        {
-            let cache = self.read_cache()?;
-            if let Some(value) = cache.get(key) {
-                return Ok(Some(value.clone()));
-            }
-        }
-
-        match self.get_from_keyring(key)? {
-            Some(value) => {
-                let mut cache = self.write_cache()?;
-                cache.insert(key.to_string(), value.clone());
-                Ok(Some(value))
-            }
-            None => Ok(None),
-        }
+impl RawBackend for KeyringBackend {
+    fn read(&self, key: &str) -> Result<Option<String>, AppError> {
+        self.get_from_keyring(key)
     }
 
-    fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
-        self.set_to_keyring(key, value)?;
-        let mut cache = self.write_cache()?;
-        cache.insert(key.to_string(), value.to_string());
-        Ok(())
+    fn write(&self, key: &str, value: &str) -> Result<(), AppError> {
+        self.set_to_keyring(key, value)
     }
 
-    fn remove(&self, key: &str) -> Result<(), AppError> {
-        self.remove_from_keyring(key)?;
-        let mut cache = self.write_cache()?;
-        cache.remove(key);
-        Ok(())
+    fn delete(&self, key: &str) -> Result<(), AppError> {
+        self.remove_from_keyring(key)
+    }
+
+    fn cache_lock_error(&self) -> AppError {
+        AppError::new(error_codes::KEYRING, Some("Secret cache lock poisoned".to_string()))
     }
 }
 
 #[cfg(target_os = "windows")]
 mod windows_store {
-    use super::SecretStore;
     use crate::app::error::{error_codes, AppError};
-    use std::collections::HashMap;
     use std::ffi::OsStr;
     use std::os::windows::ffi::OsStrExt;
-    use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
     use windows_sys::Win32::Security::Credentials::{
         CredDeleteW, CredFree, CredReadW, CredWriteW, CREDENTIALW, CRED_PERSIST_LOCAL_MACHINE, CRED_TYPE_GENERIC,
     };
 
     const ERROR_NOT_FOUND: i32 = 1168;
 
-    // INVARIANT: per-process read-through cache; populated on first `get` and updated on
-    // `set`/`remove` only. External credential changes are not observed until process restart.
-    pub struct WindowsCredentialStore {
+    pub struct WindowsBackend {
         service: &'static str,
-        cache: RwLock<HashMap<String, String>>,
     }
 
-    impl WindowsCredentialStore {
+    impl WindowsBackend {
         pub fn new(service: &'static str) -> Self {
-            Self {
-                service,
-                cache: RwLock::new(HashMap::new()),
-            }
-        }
-
-        fn read_cache(&self) -> Result<RwLockReadGuard<'_, HashMap<String, String>>, AppError> {
-            self.cache.read().map_err(|_poisoned| {
-                AppError::new(
-                    error_codes::WINDOWS_CREDENTIALS,
-                    Some("Secret cache lock poisoned".to_string()),
-                )
-            })
-        }
-
-        fn write_cache(&self) -> Result<RwLockWriteGuard<'_, HashMap<String, String>>, AppError> {
-            self.cache.write().map_err(|_poisoned| {
-                AppError::new(
-                    error_codes::WINDOWS_CREDENTIALS,
-                    Some("Secret cache lock poisoned".to_string()),
-                )
-            })
+            Self { service }
         }
 
         fn to_wide(service: &str, key: &str) -> Vec<u16> {
@@ -336,52 +337,36 @@ mod windows_store {
         }
     }
 
-    impl SecretStore for WindowsCredentialStore {
-        fn get(&self, key: &str) -> Result<Option<String>, AppError> {
-            {
-                let cache = self.read_cache()?;
-                if let Some(value) = cache.get(key) {
-                    return Ok(Some(value.clone()));
-                }
-            }
-
-            match self.get_from_windows(key)? {
-                Some(value) => {
-                    let mut cache = self.write_cache()?;
-                    cache.insert(key.to_string(), value.clone());
-                    Ok(Some(value))
-                }
-                None => Ok(None),
-            }
+    impl super::RawBackend for WindowsBackend {
+        fn read(&self, key: &str) -> Result<Option<String>, AppError> {
+            self.get_from_windows(key)
         }
 
-        fn set(&self, key: &str, value: &str) -> Result<(), AppError> {
-            self.set_to_windows(key, value)?;
-            let mut cache = self.write_cache()?;
-            cache.insert(key.to_string(), value.to_string());
-            Ok(())
+        fn write(&self, key: &str, value: &str) -> Result<(), AppError> {
+            self.set_to_windows(key, value)
         }
 
-        fn remove(&self, key: &str) -> Result<(), AppError> {
-            self.remove_from_windows(key)?;
-            let mut cache = self.write_cache()?;
-            cache.remove(key);
-            Ok(())
+        fn delete(&self, key: &str) -> Result<(), AppError> {
+            self.remove_from_windows(key)
+        }
+
+        fn cache_lock_error(&self) -> AppError {
+            AppError::new(
+                error_codes::WINDOWS_CREDENTIALS,
+                Some("Secret cache lock poisoned".to_string()),
+            )
         }
     }
 }
-
-#[cfg(target_os = "windows")]
-pub use windows_store::WindowsCredentialStore;
 
 static REAL_SECRET_STORE: LazyLock<Arc<dyn SecretStore>> = LazyLock::new(|| create_secret_store(STORE_ID));
 
 #[cfg(target_os = "windows")]
 pub fn create_secret_store(service: &'static str) -> Arc<dyn SecretStore> {
-    Arc::new(WindowsCredentialStore::new(service))
+    Arc::new(CachedStore::new(windows_store::WindowsBackend::new(service)))
 }
 
 #[cfg(not(target_os = "windows"))]
 pub fn create_secret_store(service: &'static str) -> Arc<dyn SecretStore> {
-    Arc::new(KeyringSecretStore::new(service))
+    Arc::new(CachedStore::new(KeyringBackend::new(service)))
 }

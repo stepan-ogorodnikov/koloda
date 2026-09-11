@@ -90,6 +90,160 @@ mod seam {
     }
 }
 
+/// Cache-policy tests: `CachedStore` over an instrumented in-memory backend.
+/// Hermetic by construction — no OS vault access. `external_write` / `external_remove`
+/// bypass the store to simulate another process changing the vault behind our back.
+#[cfg(debug_assertions)]
+mod cache {
+    use koloda::app::error::AppError;
+    use koloda::app::secrets::{CachedStore, RawBackend, SecretStore};
+    use std::collections::HashMap;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::{Arc, Mutex};
+
+    struct FakeInner {
+        data: Mutex<HashMap<String, String>>,
+        reads: AtomicUsize,
+    }
+
+    #[derive(Clone)]
+    struct FakeBackend {
+        inner: Arc<FakeInner>,
+    }
+
+    impl FakeBackend {
+        fn new() -> Self {
+            Self {
+                inner: Arc::new(FakeInner {
+                    data: Mutex::new(HashMap::new()),
+                    reads: AtomicUsize::new(0),
+                }),
+            }
+        }
+
+        fn store(&self) -> CachedStore<FakeBackend> {
+            CachedStore::new(self.clone())
+        }
+
+        fn read_count(&self) -> usize {
+            self.inner.reads.load(Ordering::SeqCst)
+        }
+
+        fn external_write(&self, key: &str, value: &str) {
+            self.inner
+                .data
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(key.to_string(), value.to_string());
+        }
+    }
+
+    impl RawBackend for FakeBackend {
+        fn read(&self, key: &str) -> Result<Option<String>, AppError> {
+            self.inner.reads.fetch_add(1, Ordering::SeqCst);
+            Ok(self
+                .inner
+                .data
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .get(key)
+                .cloned())
+        }
+
+        fn write(&self, key: &str, value: &str) -> Result<(), AppError> {
+            self.inner
+                .data
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .insert(key.to_string(), value.to_string());
+            Ok(())
+        }
+
+        fn delete(&self, key: &str) -> Result<(), AppError> {
+            self.inner.data.lock().unwrap_or_else(|e| e.into_inner()).remove(key);
+            Ok(())
+        }
+
+        fn cache_lock_error(&self) -> AppError {
+            AppError::new(
+                "test-secrets.cache-lock-poisoned",
+                Some("cache lock poisoned".to_string()),
+            )
+        }
+    }
+
+    #[test]
+    fn read_through_populates_cache() {
+        let backend = FakeBackend::new();
+        backend.external_write("k", "v1");
+        let store = backend.store();
+
+        assert_eq!(store.get("k").expect("first get"), Some("v1".to_string()));
+        assert_eq!(store.get("k").expect("second get"), Some("v1".to_string()));
+        assert_eq!(backend.read_count(), 1, "second get must be served from cache");
+    }
+
+    // INVARIANT: external vault changes are not observed until process restart
+    // (a new store instance starts with a cold cache).
+    #[test]
+    fn external_change_invisible_until_new_instance() {
+        let backend = FakeBackend::new();
+        backend.external_write("k", "v1");
+        let store = backend.store();
+        assert_eq!(store.get("k").expect("prime cache"), Some("v1".to_string()));
+
+        backend.external_write("k", "v2");
+        assert_eq!(
+            store.get("k").expect("cached get"),
+            Some("v1".to_string()),
+            "external vault change must not be observed"
+        );
+        assert_eq!(backend.read_count(), 1);
+
+        let restarted = backend.store();
+        assert_eq!(restarted.get("k").expect("cold get"), Some("v2".to_string()));
+        assert_eq!(backend.read_count(), 2);
+    }
+
+    #[test]
+    fn set_updates_cache() {
+        let backend = FakeBackend::new();
+        let store = backend.store();
+
+        store.set("k", "v1").expect("set");
+        backend.external_write("k", "v2");
+        assert_eq!(store.get("k").expect("get after set"), Some("v1".to_string()));
+        assert_eq!(backend.read_count(), 0, "get after set must not hit the backend");
+    }
+
+    #[test]
+    fn remove_evicts_cache() {
+        let backend = FakeBackend::new();
+        let store = backend.store();
+
+        store.set("k", "v1").expect("set");
+        assert_eq!(store.get("k").expect("prime"), Some("v1".to_string()));
+        store.remove("k").expect("remove");
+        backend.external_write("k", "v2");
+        assert_eq!(store.get("k").expect("get after remove"), Some("v2".to_string()));
+        assert_eq!(backend.read_count(), 1, "evicted key must be re-read from the backend");
+    }
+
+    #[test]
+    fn miss_is_not_cached() {
+        let backend = FakeBackend::new();
+        let store = backend.store();
+
+        assert_eq!(store.get("k").expect("absent get"), None);
+        backend.external_write("k", "v1");
+        assert_eq!(
+            store.get("k").expect("get after external insert"),
+            Some("v1".to_string())
+        );
+        assert_eq!(backend.read_count(), 2, "misses must not be cached");
+    }
+}
+
 /// Manual purge if this key ever strands: Windows Credential Manager target
 /// "koloda-test-smoke:smoke-key"; other platforms service "koloda-test-smoke",
 /// entry "smoke-key".
