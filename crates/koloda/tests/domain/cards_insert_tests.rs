@@ -131,7 +131,8 @@ fn test_insert_card_content_optional_field_empty_ok() {
 }
 
 #[test]
-fn test_insert_card_content_optional_field_missing_ok() {
+fn test_insert_card_content_optional_field_missing_fails() {
+    // Twin of `@koloda/srs` missing-optional-key test — CARDS.md requires every field present.
     let data = json!({
         "deckId": "01900000-0000-7000-8000-000000000001",
         "templateId": "01900000-0000-7000-8000-000000000001",
@@ -139,7 +140,11 @@ fn test_insert_card_content_optional_field_missing_ok() {
     });
     let result = serde_json::from_value::<InsertCardData>(data);
     let card_data = result.unwrap();
-    card_data.validate(&valid_template_fields()).unwrap();
+    let validation_result = card_data.validate(&valid_template_fields());
+    assert_eq!(
+        validation_result.unwrap_err().code,
+        "validation.cards.content.field-empty"
+    );
 }
 
 #[test]

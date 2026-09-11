@@ -269,6 +269,16 @@ describe("getCardContentValidation", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  // Twin of koloda `test_insert_card_content_optional_field_missing_fails` — CARDS.md §Card
+  // Content requires every template field to be present in the content.
+  it("rejects missing optional field keys", () => {
+    const { content: contentSchema } = getCardContentValidation(fields);
+    const result = contentSchema.safeParse({
+      [SEED_TEMPLATE_TYPE_FRONT_FIELD_ID]: { text: "Valid" },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("getInsertCardSchema", () => {
