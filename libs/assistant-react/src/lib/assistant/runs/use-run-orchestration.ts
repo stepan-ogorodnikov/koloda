@@ -87,8 +87,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
       try {
         // WHY: Every retry is chat+tools. Chat never resolves data access;
         // the stored v1 snapshot on the run record stays authoritative
-        // (tools re-read current data).
-        const prepared = prepareRunRequest(cfg, promptText, visibleMessages, currentState.runs);
+        // (tools re-read current data). Exclude the retried pair — it is
+        // already in visibleMessages and promptText is appended once more.
+        const prepared = prepareRunRequest(cfg, promptText, visibleMessages, currentState.runs, {
+          excludeRunId: runId,
+        });
         if (!prepared) return;
 
         rememberLastUsedAIProfile(cfg.profileId, cfg.modelId);

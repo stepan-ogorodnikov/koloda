@@ -1,6 +1,11 @@
 import type { AssistantCommand, AssistantExecutionIdentity } from "@koloda/assistant";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { buildConversationMessages } from "../state/assistant-messages";
+import {
+  assistantMessageId,
+  buildConversationMessages,
+  getMessageRunId,
+  userMessageId,
+} from "../state/assistant-messages";
 import type { ConversationReducerState, AssistantRun } from "../state/conversation-reducer";
 import type { StreamRequestResult } from "./build-stream-request";
 import { buildStreamRequest } from "./build-stream-request";
@@ -33,10 +38,25 @@ export function prepareRunRequest(
   promptText: string,
   messages: ConversationReducerState["messages"],
   runs: Record<string, AssistantRun>,
+  options?: { excludeRunId?: string },
 ): PreparedRun | null {
   if (!promptText || !cfg.profileId || !cfg.modelId) return null;
 
-  const conversationMessages = buildConversationMessages(messages, runs);
+  // WHY: Retry reuses the visible tail pair as the new prompt. The pair is
+  // already in `messages`, and buildStreamRequest appends `promptText` once
+  // more — without exclusion the provider sees [.., user(prompt), user(prompt)]
+  // (plus any leftover failed assistant text). Submit passes pre-commit
+  // history, so it needs no exclusion.
+  const excludeRunId = options?.excludeRunId;
+  const historyMessages = excludeRunId
+    ? messages.filter(
+        (m) =>
+          m.id !== userMessageId(excludeRunId) &&
+          m.id !== assistantMessageId(excludeRunId) &&
+          getMessageRunId(m) !== excludeRunId,
+      )
+    : messages;
+  const conversationMessages = buildConversationMessages(historyMessages, runs);
   const result = buildStreamRequest(cfg, promptText, conversationMessages);
   return {
     ...result,

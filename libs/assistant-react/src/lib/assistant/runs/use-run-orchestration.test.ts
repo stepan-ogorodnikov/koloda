@@ -180,6 +180,31 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
     expect(command.input.request).not.toHaveProperty("dataContext");
     expect(command.input.execution).toEqual({ profileId: cfg.profileId });
+    // WHY: Retry reuses the tail pair as the new prompt — history must exclude
+    // it so the provider sees the prompt exactly once, not [user, user].
+    expect(command.input.request.messages).toEqual([{ role: "user", content: "hello" }]);
+  });
+
+  it("retry keeps prior turns and appends the retried prompt once", async () => {
+    seedConversation("conv-1");
+    dispatch(["submitTurn", { runId: "run-0", text: "prior", kind: "chat-text", assistantText: "ok" }]);
+    dispatch(["completeRun", { runId: "run-0" }]);
+    addChatRun("run-1");
+    dispatch(["runFailed", { runId: "run-1", error: { message: "boom" } }]);
+    const cfg = makeConfig();
+
+    const { result } = orchestrate(cfg);
+    await act(async () => {
+      await result.current.handleRetry("run-1");
+    });
+
+    expect(dispatchCommand).toHaveBeenCalledTimes(1);
+    const command = dispatchCommand.mock.calls[0]![0] as Extract<AssistantCommand, { type: "retry" }>;
+    expect(command.input.request.messages).toEqual([
+      { role: "user", content: "prior" },
+      { role: "assistant", content: "ok" },
+      { role: "user", content: "hello" },
+    ]);
   });
 });
 

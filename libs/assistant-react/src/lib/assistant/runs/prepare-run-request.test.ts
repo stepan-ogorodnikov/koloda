@@ -2,7 +2,7 @@ import { ASSISTANT_TOOL_SPECS } from "@koloda/ai";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
 import type { AssistantConversationConfig } from "../state/assistant-conversation-config";
-import { createTextMessage, userMessageId } from "../state/assistant-messages";
+import { createTextMessage, assistantMessageId, userMessageId } from "../state/assistant-messages";
 import type { AssistantRun } from "../state/conversation-reducer";
 import { prepareRunRequest, toRetryCommand, toSubmitCommand } from "./prepare-run-request";
 
@@ -56,6 +56,101 @@ describe("prepareRunRequest", () => {
       tools: CHAT_TOOLS,
     });
     expect(prepared!.request).not.toHaveProperty("dataContext");
+  });
+});
+
+describe("prepareRunRequest — retry history", () => {
+  function chatAssistantMessage(runId: string, text: string): UIMessage {
+    return createTextMessage(assistantMessageId(runId), "assistant", text, {
+      kind: "chat-text",
+      runId,
+    });
+  }
+
+  function errorAssistantMessage(runId: string): UIMessage {
+    return createTextMessage(assistantMessageId(runId), "assistant", "", {
+      kind: "error",
+      runId,
+    });
+  }
+
+  it("retry excludes the retried pair so the prompt appears exactly once", () => {
+    const messages = [chatUserMessage("run-1", "hello"), chatAssistantMessage("run-1", "")];
+    const runs: Record<string, AssistantRun> = {
+      "run-1": {
+        id: "run-1",
+        status: "failed",
+        cards: [],
+        cardStatuses: {},
+        toolCalls: [],
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: null,
+      } as AssistantRun,
+    };
+    const prepared = prepareRunRequest(makeConfig(), "hello", messages, runs, { excludeRunId: "run-1" });
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.messages).toEqual([{ role: "user", content: "hello" }]);
+  });
+
+  it("retry drops leftover failed assistant text (clear previous response)", () => {
+    const messages = [chatUserMessage("run-1", "hello"), chatAssistantMessage("run-1", "partial")];
+    const runs: Record<string, AssistantRun> = {
+      "run-1": {
+        id: "run-1",
+        status: "failed",
+        cards: [],
+        cardStatuses: {},
+        toolCalls: [],
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: null,
+      } as AssistantRun,
+    };
+    const prepared = prepareRunRequest(makeConfig(), "hello", messages, runs, { excludeRunId: "run-1" });
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.messages).toEqual([{ role: "user", content: "hello" }]);
+  });
+
+  it("retry keeps prior turns and appends the retried prompt once", () => {
+    const messages = [
+      chatUserMessage("run-0", "prior"),
+      chatAssistantMessage("run-0", "ok"),
+      chatUserMessage("run-1", "hello"),
+      errorAssistantMessage("run-1"),
+    ];
+    const runs: Record<string, AssistantRun> = {
+      "run-0": {
+        id: "run-0",
+        status: "success",
+        cards: [],
+        cardStatuses: {},
+        toolCalls: [],
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: null,
+      } as AssistantRun,
+      "run-1": {
+        id: "run-1",
+        status: "failed",
+        cards: [],
+        cardStatuses: {},
+        toolCalls: [],
+        templateFields: null,
+        startedAt: new Date(1),
+        elapsedSeconds: null,
+      } as AssistantRun,
+    };
+    const prepared = prepareRunRequest(makeConfig(), "hello", messages, runs, { excludeRunId: "run-1" });
+
+    expect(prepared).not.toBeNull();
+    expect(prepared!.request.messages).toEqual([
+      { role: "user", content: "prior" },
+      { role: "assistant", content: "ok" },
+      { role: "user", content: "hello" },
+    ]);
   });
 });
 
