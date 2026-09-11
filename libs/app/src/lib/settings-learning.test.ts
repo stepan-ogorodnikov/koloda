@@ -102,6 +102,16 @@ describe("learningSettingsValidation", () => {
       learnAheadLimit: [0, 30],
     });
   });
+
+  // Twin of koloda `test_defaults_non_uuid_algorithm_fails` — desktop `LearningDefaults::validate`
+  // rejects the same shapes.
+  it("rejects non-uuid default ids", () => {
+    const result = learningSettingsValidation.safeParse({
+      defaults: { algorithm: "simple", template: defaults.template },
+      dailyLimits: {},
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("daily limits refine rules", () => {

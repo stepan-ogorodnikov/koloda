@@ -10,16 +10,29 @@ fn standard_daily_limits() -> &'static str {
     }"#
 }
 
-fn build_learning_settings_json(daily_limits: &str, day_starts_at: &str, learn_ahead_limit: &str) -> String {
+fn standard_defaults() -> &'static str {
+    r#"{ "algorithm": "01900000-0000-7000-8000-000000000001", "template": "01900000-0000-7000-8000-000000000002" }"#
+}
+
+fn build_learning_settings_json_with(
+    defaults: &str,
+    daily_limits: &str,
+    day_starts_at: &str,
+    learn_ahead_limit: &str,
+) -> String {
     format!(
         r#"{{
-        "defaults": {{}},
+        "defaults": {},
         "dailyLimits": {},
         "dayStartsAt": {},
         "learnAheadLimit": {}
     }}"#,
-        daily_limits, day_starts_at, learn_ahead_limit
+        defaults, daily_limits, day_starts_at, learn_ahead_limit
     )
+}
+
+fn build_learning_settings_json(daily_limits: &str, day_starts_at: &str, learn_ahead_limit: &str) -> String {
+    build_learning_settings_json_with(standard_defaults(), daily_limits, day_starts_at, learn_ahead_limit)
 }
 
 #[test]
@@ -33,7 +46,7 @@ fn test_valid_settings_passes() {
 #[test]
 fn test_legacy_numeric_daily_limits_are_accepted() {
     let json = r#"{
-        "defaults": {},
+        "defaults": {"algorithm": "01900000-0000-7000-8000-000000000001", "template": "01900000-0000-7000-8000-000000000002"},
         "dailyLimits": {"total": 100, "untouched": 20, "learn": 30, "review": 50},
         "dayStartsAt": "04:00",
         "learnAheadLimit": [4, 0]
@@ -90,7 +103,7 @@ fn test_empty_json_object_fails() {
 #[test]
 fn test_settings_with_extra_fields_ignored() {
     let json = r#"{
-        "defaults": {},
+        "defaults": {"algorithm": "01900000-0000-7000-8000-000000000001", "template": "01900000-0000-7000-8000-000000000002"},
         "dailyLimits": {"total": 100, "untouched": {"value": 20, "counts": true}, "learn": {"value": 30, "counts": true}, "review": {"value": 50, "counts": true}},
         "dayStartsAt": "04:00",
         "learnAheadLimit": [4, 0],
@@ -100,6 +113,59 @@ fn test_settings_with_extra_fields_ignored() {
 
     let settings: LearningSettings = serde_json::from_str(json).expect("Should deserialize ignoring extra fields");
     settings.validate().unwrap();
+}
+
+#[test]
+fn test_defaults_non_uuid_algorithm_fails() {
+    let json = build_learning_settings_json_with(
+        r#"{ "algorithm": "not-a-uuid", "template": "01900000-0000-7000-8000-000000000002" }"#,
+        standard_daily_limits(),
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.defaults.algorithm");
+}
+
+#[test]
+fn test_defaults_non_uuid_template_fails() {
+    let json = build_learning_settings_json_with(
+        r#"{ "algorithm": "01900000-0000-7000-8000-000000000001", "template": "simple" }"#,
+        standard_daily_limits(),
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.defaults.template");
+}
+
+#[test]
+fn test_defaults_missing_keys_fail_via_serde_default_empty_string() {
+    // `#[serde(default)]` materializes absent keys as "", which the `z.uuid()` twin also rejects.
+    let json = build_learning_settings_json_with("{}", standard_daily_limits(), r#""04:00""#, "[4, 0]");
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.defaults.algorithm");
+}
+
+#[test]
+fn test_defaults_hyphenless_uuid_fails() {
+    // Twin strictness: `z.uuid()` requires the hyphenated form; `uuid::Uuid::parse_str` would accept this.
+    let json = build_learning_settings_json_with(
+        r#"{ "algorithm": "01900000000070008000000000000001", "template": "01900000-0000-7000-8000-000000000002" }"#,
+        standard_daily_limits(),
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize");
+    let err = settings.validate().unwrap_err();
+    assert_eq!(err.code, "validation.settings-learning.defaults.algorithm");
 }
 
 #[test]
@@ -389,7 +455,10 @@ fn test_settings_name_learning_validation_with_array_content() {
 #[test]
 fn test_settings_name_learning_validation_valid() {
     let content = serde_json::json!({
-        "defaults": {},
+        "defaults": {
+            "algorithm": "01900000-0000-7000-8000-000000000001",
+            "template": "01900000-0000-7000-8000-000000000002"
+        },
         "dailyLimits": {
             "total": 100,
             "untouched": {"value": 20, "counts": true},

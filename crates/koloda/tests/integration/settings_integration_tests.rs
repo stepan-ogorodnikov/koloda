@@ -137,6 +137,38 @@ fn patch_settings_fails_when_target_setting_does_not_exist() {
 }
 
 #[test]
+fn patch_settings_rejects_non_uuid_default_and_preserves_previous_value() {
+    let db = test_db();
+
+    settings::set_settings(&db, SettingsName::Learning, learning_settings(100, 20, 30, 50))
+        .expect("initial learning settings insert should succeed");
+
+    let patch_result = settings::patch_settings(
+        &db,
+        SettingsName::Learning,
+        json!({
+            "defaults": {
+                "algorithm": "simple"
+            }
+        }),
+    );
+
+    assert_eq!(
+        patch_result.expect_err("patch should fail").code,
+        error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_ALGORITHM
+    );
+
+    let current = settings::get_settings(&db, SettingsName::Learning)
+        .expect("settings query should succeed")
+        .expect("learning settings should exist");
+
+    assert_eq!(
+        current.content["defaults"]["algorithm"],
+        "01900000-0000-7000-8000-000000000001"
+    );
+}
+
+#[test]
 fn set_settings_rejects_plaintext_ai_api_key() {
     let db = test_db();
 

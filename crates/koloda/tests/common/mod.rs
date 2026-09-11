@@ -103,7 +103,7 @@ pub fn counted_daily_limit(value: u32, counts: bool) -> serde_json::Value {
 
 pub fn learning_settings(total: u32, untouched: u32, learn: u32, review: u32) -> serde_json::Value {
     json!({
-        "defaults": {},
+        "defaults": valid_learning_defaults(),
         "dailyLimits": {
             "total": total,
             "untouched": counted_daily_limit(untouched, true),
@@ -123,7 +123,7 @@ pub fn learning_settings_with_day_start(
     day_starts_at: &str,
 ) -> serde_json::Value {
     json!({
-        "defaults": {},
+        "defaults": valid_learning_defaults(),
         "dailyLimits": {
             "total": total,
             "untouched": counted_daily_limit(untouched, true),
@@ -132,6 +132,13 @@ pub fn learning_settings_with_day_start(
         },
         "dayStartsAt": day_starts_at,
         "learnAheadLimit": [4, 0],
+    })
+}
+
+pub fn valid_learning_defaults() -> serde_json::Value {
+    json!({
+        "algorithm": "01900000-0000-7000-8000-000000000001",
+        "template": "01900000-0000-7000-8000-000000000002",
     })
 }
 

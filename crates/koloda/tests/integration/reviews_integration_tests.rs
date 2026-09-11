@@ -5,7 +5,7 @@ use serde_json::json;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use crate::common::test_db;
-use crate::common::{counted_daily_limit, learning_settings_with_day_start};
+use crate::common::{counted_daily_limit, learning_settings_with_day_start, valid_learning_defaults};
 
 fn get_todays_timestamp() -> i64 {
     koloda::app::utility::get_current_timestamp().expect("timestamp should be available")
@@ -78,7 +78,7 @@ fn get_todays_review_totals_excludes_non_counted_limits_from_total() {
         &db,
         SettingsName::Learning,
         json!({
-            "defaults": {},
+            "defaults": valid_learning_defaults(),
             "dailyLimits": {
                 "total": 1,
                 "untouched": counted_daily_limit(5, false),

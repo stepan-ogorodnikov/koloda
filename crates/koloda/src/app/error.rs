@@ -40,6 +40,8 @@ pub mod error_codes {
     pub const VALIDATION_SETTINGS_LEARNING_LEARN_AHEAD_LIMIT_MINUTES_RANGE: &str =
         "validation.settings-learning.learn-ahead-limit.minutes-range";
     pub const VALIDATION_SETTINGS_LEARNING_DAY_STARTS_AT: &str = "validation.settings-learning.day-starts-at";
+    pub const VALIDATION_SETTINGS_LEARNING_DEFAULTS_ALGORITHM: &str = "validation.settings-learning.defaults.algorithm";
+    pub const VALIDATION_SETTINGS_LEARNING_DEFAULTS_TEMPLATE: &str = "validation.settings-learning.defaults.template";
 
     pub const VALIDATION_SETTINGS_HOTKEYS_DUPLICATE_KEYS: &str = "validation.settings-hotkeys.duplicate-keys";
 

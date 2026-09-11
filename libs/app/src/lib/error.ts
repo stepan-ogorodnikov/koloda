@@ -55,6 +55,8 @@ export const ERROR_MESSAGES = {
   "validation.settings-learning.learn-ahead-limit.hours-range": msg`validation.settings-learning.learn-ahead-limit.hours-range`,
   "validation.settings-learning.learn-ahead-limit.minutes-range": msg`validation.settings-learning.learn-ahead-limit.minutes-range`,
   "validation.settings-learning.day-starts-at": msg`validation.settings-learning.day-starts-at`,
+  "validation.settings-learning.defaults.algorithm": msg`validation.settings-learning.defaults.algorithm`,
+  "validation.settings-learning.defaults.template": msg`validation.settings-learning.defaults.template`,
   "validation.lessons.result.card-review-mismatch": msg`validation.lessons.result.card-review-mismatch`,
   "validation.lessons.amounts.negative": msg`validation.lessons.amounts.negative`,
   "validation.settings-hotkeys.duplicate-keys": msg`validation.settings-hotkeys.duplicate-keys`,

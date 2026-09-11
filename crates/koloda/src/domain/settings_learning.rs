@@ -26,10 +26,45 @@ pub struct LearningSettings {
 
 impl LearningSettings {
     pub fn validate(&self) -> Result<(), AppError> {
+        self.defaults.validate()?;
         self.daily_limits.validate()?;
         self.learn_ahead_limit.validate()?;
         parse_day_starts_at(&self.day_starts_at)?;
         Ok(())
+    }
+}
+
+impl LearningDefaults {
+    fn validate(&self) -> Result<(), AppError> {
+        validate_uuid(
+            &self.algorithm,
+            error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_ALGORITHM,
+        )?;
+        validate_uuid(
+            &self.template,
+            error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_TEMPLATE,
+        )?;
+        Ok(())
+    }
+}
+
+// Twin of `@koloda/app` `z.uuid()`: 8-4-4-4-12 hex groups, case-insensitive. Hand-rolled instead of
+// `uuid::Uuid::parse_str`, which also accepts braced/urn/hyphen-less forms the web validation rejects.
+fn validate_uuid(value: &str, code: &'static str) -> Result<(), AppError> {
+    const HYPHEN_SLOTS: [usize; 4] = [8, 13, 18, 23];
+    let is_uuid = value.len() == 36
+        && value.bytes().enumerate().all(|(i, b)| {
+            if HYPHEN_SLOTS.contains(&i) {
+                b == b'-'
+            } else {
+                b.is_ascii_hexdigit()
+            }
+        });
+
+    if is_uuid {
+        Ok(())
+    } else {
+        Err(AppError::new(code, Some(format!("Invalid uuid: {value}"))))
     }
 }
 
