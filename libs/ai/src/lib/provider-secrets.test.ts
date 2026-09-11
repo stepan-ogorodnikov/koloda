@@ -3,7 +3,11 @@ import {
   aiSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,
+  ollamaCloudSecretsValidation,
   ollamaSecretsValidation,
+  openRouterSecretsValidation,
+  opencodeGoSecretsValidation,
+  opencodeZenSecretsValidation,
 } from "./provider-secrets";
 
 describe("provider-secrets", () => {
@@ -46,5 +50,42 @@ describe("provider-secrets", () => {
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["baseUrl"]);
     expect(issue?.message).toBe("validation.settings-ai.providers.baseUrl");
+  });
+
+  it.each([
+    {
+      label: "openRouterSecretsValidation",
+      parse: () => openRouterSecretsValidation.safeParse({ apiKey: "   " }),
+    },
+    {
+      label: "opencodeGoSecretsValidation",
+      parse: () => opencodeGoSecretsValidation.safeParse({ apiKey: "   " }),
+    },
+    {
+      label: "opencodeZenSecretsValidation",
+      parse: () => opencodeZenSecretsValidation.safeParse({ apiKey: "   " }),
+    },
+    {
+      label: "ollamaCloudSecretsValidation",
+      parse: () => ollamaCloudSecretsValidation.safeParse({ apiKey: "   " }),
+    },
+  ])("rejects a whitespace-only apiKey on $label", ({ parse }) => {
+    const result = parse();
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["apiKey"]);
+    expect(issue?.message).toBe("validation.settings-ai.providers.apiKey");
+  });
+
+  it("accepts a non-blank apiKey on the form schema", () => {
+    const parsed = openRouterSecretsValidation.parse({ apiKey: "sk-or" });
+    expect(parsed).toEqual({ apiKey: "sk-or" });
+  });
+
+  it("accepts a whitespace-only optional apiKey on the ollama form schema", () => {
+    // WHY: Rust leaves optional keys unvalidated on input (`domain/ai.rs` only trims
+    // required keys), so the TS form schema must stay equally lenient here.
+    const parsed = ollamaSecretsValidation.parse({ baseUrl: "http://localhost:11434", apiKey: "   " });
+    expect(parsed).toEqual({ baseUrl: "http://localhost:11434", apiKey: "   " });
   });
 });

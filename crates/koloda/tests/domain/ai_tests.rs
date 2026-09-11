@@ -21,6 +21,16 @@ fn test_ai_secrets_validate_for_storage_accepts_redacted_openrouter() {
 }
 
 #[test]
+fn test_openrouter_input_rejects_whitespace_only_api_key() {
+    let secrets = AISecrets::OpenRouter {
+        api_key: Some("  ".to_string()),
+    };
+
+    let result = secrets.validate_for_input();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+}
+
+#[test]
 fn test_ollama_validate_empty_base_url_fails() {
     let secrets = AISecrets::Ollama {
         base_url: "".to_string(),

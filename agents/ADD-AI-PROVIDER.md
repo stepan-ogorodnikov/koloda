@@ -22,9 +22,9 @@ export const AI_PROVIDER_LABELS = {
 **`libs/ai/src/lib/provider-secrets.ts`** — add secrets validation:
 
 ```typescript
-// Form/input schema (required non-empty key):
+// Form/input schema (required non-blank key):
 export const myProviderSecretsValidation = z.object({
-  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  apiKey: requiredApiKey,
   // Optional fields:
   // baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
 });

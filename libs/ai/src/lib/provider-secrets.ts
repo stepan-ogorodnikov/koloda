@@ -1,8 +1,12 @@
 import { z } from "zod";
 
-/** Form/input schema: required non-empty key. */
+// WHY: Whitespace-only keys must fail the form schema to mirror the trim-based
+// `require_api_key_for_input` check in `crates/koloda/src/domain/ai.rs`.
+const requiredApiKey = z.string().trim().min(1, "validation.settings-ai.providers.apiKey");
+
+/** Form/input schema: required non-blank key. */
 export const openRouterSecretsValidation = z.object({
-  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  apiKey: requiredApiKey,
 });
 
 export const ollamaSecretsValidation = z.object({
@@ -16,15 +20,15 @@ export const lmstudioSecretsValidation = z.object({
 });
 
 export const opencodeGoSecretsValidation = z.object({
-  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  apiKey: requiredApiKey,
 });
 
 export const opencodeZenSecretsValidation = z.object({
-  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  apiKey: requiredApiKey,
 });
 
 export const ollamaCloudSecretsValidation = z.object({
-  apiKey: z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  apiKey: requiredApiKey,
 });
 
 // WHY: Settings / profile wire format uses `null` for redacted or absent keys.
