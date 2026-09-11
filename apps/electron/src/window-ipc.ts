@@ -1,7 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
+import { APP_SHUTDOWN_ACK_CHANNEL } from "@koloda/native-ipc";
 import { saveUiPrefs } from "./ui-prefs";
 import { TITLEBAR_HEIGHT, getWindowButtonPosition, getWindowOverlayWidth, windowCloseCoordinators } from "./window";
-import { APP_SHUTDOWN_ACK_CHANNEL } from "./window-close-coordinator";
 
 export function registerWindowIpc() {
   ipcMain.handle(APP_SHUTDOWN_ACK_CHANNEL, (event) => {

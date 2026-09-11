@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { APP_SHUTDOWN_ACK_CHANNEL, APP_SHUTDOWN_REQUEST_CHANNEL } from "@koloda/native-ipc";
 
 const shutdownAssistantGracefully = vi.fn(async () => {});
 
@@ -64,7 +65,7 @@ describe("installElectronCloseCoordination", () => {
     invokeMock.mockResolvedValue(undefined);
 
     const uninstall = installElectronCloseCoordination(store);
-    emit("app:shutdown-request");
+    emit(APP_SHUTDOWN_REQUEST_CHANNEL);
 
     expect(shutdownAssistantGracefully).toHaveBeenCalledTimes(1);
     expect(shutdownAssistantGracefully).toHaveBeenCalledWith(store);
@@ -72,11 +73,11 @@ describe("installElectronCloseCoordination", () => {
 
     resolveShutdown();
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith("app:shutdown-ack");
+      expect(invokeMock).toHaveBeenCalledWith(APP_SHUTDOWN_ACK_CHANNEL);
     });
 
     // Duplicate request while in flight / after start is ignored.
-    emit("app:shutdown-request");
+    emit(APP_SHUTDOWN_REQUEST_CHANNEL);
     expect(shutdownAssistantGracefully).toHaveBeenCalledTimes(1);
 
     uninstall();
@@ -87,10 +88,10 @@ describe("installElectronCloseCoordination", () => {
     invokeMock.mockResolvedValue(undefined);
 
     installElectronCloseCoordination(store);
-    emit("app:shutdown-request");
+    emit(APP_SHUTDOWN_REQUEST_CHANNEL);
 
     await vi.waitFor(() => {
-      expect(invokeMock).toHaveBeenCalledWith("app:shutdown-ack");
+      expect(invokeMock).toHaveBeenCalledWith(APP_SHUTDOWN_ACK_CHANNEL);
     });
   });
 });

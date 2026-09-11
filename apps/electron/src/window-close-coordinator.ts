@@ -1,11 +1,6 @@
 // WHY: Renderer `pagehide`/`beforeunload` promises are not awaited by Electron.
 // Main owns a bounded close handshake so `app_shutdown` flush can finish.
-
-/** Main → renderer: begin interrupt + bounded persistence flush. */
-export const APP_SHUTDOWN_REQUEST_CHANNEL = "app:shutdown-request";
-
-/** Renderer → main: interrupt + flush settled (or bounded flush timed out in renderer). */
-export const APP_SHUTDOWN_ACK_CHANNEL = "app:shutdown-ack";
+// Handshake channel names live in `@koloda/native-ipc` (shared with the renderer).
 
 // WHY: Align with `@koloda/assistant` `SHUTDOWN_FLUSH_TIMEOUT_MS` (2000) plus IPC slack
 // so main does not force-destroy before the renderer flush deadline.

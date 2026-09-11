@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { appDir, isDev } from "./env";
 import { getDefaultSurfaceColor, loadUiPrefs } from "./ui-prefs";
 import { loadWindowState, saveWindowState } from "./window-state";
-import { APP_SHUTDOWN_REQUEST_CHANNEL, createWindowCloseCoordinator } from "./window-close-coordinator";
+import { APP_SHUTDOWN_REQUEST_CHANNEL } from "@koloda/native-ipc";
+import { createWindowCloseCoordinator } from "./window-close-coordinator";
 import type { WindowCloseCoordinator } from "./window-close-coordinator";
 
 export const TITLEBAR_HEIGHT = 40;

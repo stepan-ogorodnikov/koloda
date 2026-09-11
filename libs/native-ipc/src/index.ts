@@ -104,6 +104,18 @@ export type ReviewTotals = {
 export const AI_STREAM_CHANNEL = "ai:stream";
 
 /**
+ * Window-close handshake channels (see `apps/electron/src/window-close-coordinator.ts`
+ * and `apps/electron-react/src/app/electron-close-coordination.ts`).
+ * Single source of truth — do not redeclare these literals elsewhere.
+ */
+
+/** Main → renderer: begin interrupt + bounded persistence flush. */
+export const APP_SHUTDOWN_REQUEST_CHANNEL = "app:shutdown-request";
+
+/** Renderer → main: interrupt + flush settled (or bounded flush timed out in renderer). */
+export const APP_SHUTDOWN_ACK_CHANNEL = "app:shutdown-ack";
+
+/**
  * Events streamed main-to-renderer on `AI_STREAM_CHANNEL`, all keyed by
  * `requestId` so concurrent runs can be correlated and aborted individually.
  */

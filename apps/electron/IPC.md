@@ -68,7 +68,7 @@ over `KolodaDb`, streaming tool events back on the same channel.
 - `window:get-overlay-width` — platform- and DPI-scaled overlay width
 - `window:set-window-button-position` `{ titlebarHeight }` — macOS traffic lights
 - `window:maximize-changed` (main → renderer push on maximize/unmaximize)
-- Close handshake (`src/window-close-coordinator.ts`):
+- Close handshake (`src/window-close-coordinator.ts`; channel names in `@koloda/native-ipc`):
   - main sends `app:shutdown-request`; the renderer interrupts and flushes, then answers `app:shutdown-ack`
   - bounded at 2500 ms — on timeout main saves window bounds and force-destroys
   - extra close clicks during the handshake stay deferred
