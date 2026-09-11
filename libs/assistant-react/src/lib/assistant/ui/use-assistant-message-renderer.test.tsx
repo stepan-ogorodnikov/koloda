@@ -164,6 +164,29 @@ describe("useAssistantMessageRenderer", () => {
     expect(screen.queryByTestId("status-pending")).toBeNull();
   });
 
+  it("shows pending after settled tools when the stream still has no text", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      toolCalls: [{ id: "call-1", name: "list_decks", input: {}, status: "success" as const, output: { decks: [] } }],
+    };
+    mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
+    const tool = screen.getByTestId("tool-activity");
+    const pending = screen.getByTestId("status-pending");
+    expect(tool.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("shows pending after settled thinking when the stream still has no text", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      toolCalls: [{ kind: "reasoning" as const, id: "r1-reasoning-0", text: "plan", status: "done" as const }],
+    };
+    mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
+    const tool = screen.getByTestId("tool-activity");
+    const pending = screen.getByTestId("status-pending");
+    expect(tool.textContent).toBe("thinking");
+    expect(tool.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("renders tool activity above streaming text", () => {
     const run = {
       ...makeRun("r1", "streaming"),
@@ -247,6 +270,20 @@ describe("useAssistantMessageRenderer", () => {
     expect(table.getAttribute("data-show-status")).toBe("false");
     expect(screen.queryByText("Hello")).toBeNull();
     expect(table.compareDocumentPosition(pending) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("hides pending on a card turn while a tool is still running", () => {
+    const run = {
+      ...makeRun("r1", "streaming"),
+      cards: [sampleCard],
+      templateFields: sampleFields,
+      writeTargetDeckId: testId(5),
+      toolCalls: [{ id: "call-1", name: "propose_cards", input: {}, status: "running" as const }],
+    };
+    mountRenderer({ r1: run }, { assistantText: "", activeRunId: "r1" });
+    expect(screen.getByTestId("cards-table")).toBeTruthy();
+    expect(screen.getByTestId("tool-activity").textContent).toBe("propose_cards");
+    expect(screen.queryByTestId("status-pending")).toBeNull();
   });
 
   it("drops pending once leftover text is streaming below the table", () => {

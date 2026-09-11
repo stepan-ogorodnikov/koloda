@@ -138,10 +138,21 @@ function renderErrorMessage(runId: string, isTail: boolean, handleRetry: (runId:
   );
 }
 
+function hasLiveRunActivity(run: AssistantRun): boolean {
+  return !!run.toolCalls?.some((entry) => entry.status === "running");
+}
+
+// WHY: pending means "this turn still owes a reply". Hide it when a tool or
+// thinking row is still running, or when leftover text is already streaming
+// (ASSISTANT-MESSAGES.md §Message States).
+function shouldShowStreamingPending(run: AssistantRun, text: string): boolean {
+  return run.status === "streaming" && !text && !hasLiveRunActivity(run);
+}
+
 // WHY: one terminal-status ladder for every run rendering path — the
 // success/canceled/interrupted/failed copies had already drifted subtly.
 // Streaming/pending states stay with the callers (the pending condition
-// depends on whether leftover text or a cards table is present).
+// depends on leftover text and live activity, not on whether a table exists).
 type RenderRunStatusOptions = {
   run: AssistantRun;
   runId: string;
@@ -190,12 +201,11 @@ type RenderChatProposalOptions = {
 
 function renderChatProposal(options: RenderChatProposalOptions) {
   const { toolActivity, cardsBlock, text, content, copyAction, run, runId, isTail, handleRetry } = options;
-  const status =
-    run.status === "streaming" && !text ? (
-      <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
-    ) : (
-      renderRunStatus({ run, runId, isTail, copyAction, handleRetry })
-    );
+  const status = shouldShowStreamingPending(run, text) ? (
+    <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
+  ) : (
+    renderRunStatus({ run, runId, isTail, copyAction, handleRetry })
+  );
 
   return (
     <div className="group flex flex-col gap-2 self-start w-full">
@@ -266,20 +276,19 @@ function renderChatMessage(options: RenderChatMessageOptions) {
   }
 
   if (run.status === "streaming") {
-    if (toolActivity) {
+    const pending = shouldShowStreamingPending(run, text) ? (
+      <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
+    ) : null;
+    if (toolActivity || text) {
       return (
         <div className="group flex flex-col gap-2 self-start w-full">
           {toolActivity}
           {text ? content : null}
+          {pending}
         </div>
       );
     }
-    if (text) return content;
-    return (
-      <AIChatMessageLayout role="assistant">
-        <AIChatMessageStatus state="pending" startedAt={run.startedAt} />
-      </AIChatMessageLayout>
-    );
+    return <AIChatMessageLayout role="assistant">{pending}</AIChatMessageLayout>;
   }
 
   const terminalStatus = renderRunStatus({ run, runId, isTail, copyAction, handleRetry });

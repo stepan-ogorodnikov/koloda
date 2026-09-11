@@ -68,7 +68,8 @@ Assistant messages:
   When the same run proposed cards, that turn is mixed:
   tool activity, then the review table, then leftover streamed text, then status.
   Leftover text appears below the table, not above it.
-  Once cards are on screen, the pending status is not shown on the table; it attaches below the table until text arrives.
+  Once cards are on screen, the pending status is not shown on the table.
+  It attaches below the table while the run is still streaming, leftover text has not arrived, and no tool or thinking row is still running.
   Tool activity, if any, appears above the table even when there is no leftover text.
 - **error**: a failed status indicator and a retry button are shown.
 
@@ -89,7 +90,9 @@ See ASSISTANT-CONVERSATIONS.md (§Runs) for the run lifecycle.
 The message state maps to the run state:
 
 - **pending/streaming**: text is empty or partial.
-  A pending shimmer indicator is shown unless cards or leftover text already occupy the turn.
+  A pending shimmer indicator means the turn still owes a reply and nothing else already shows that.
+  It is shown for an empty turn, for cards with no leftover text yet, and for settled tool or thinking rows with no text yet.
+  It is hidden while a tool or thinking row is still running, and once assistant text is streaming.
 - **success**: full content is displayed.
   An elapsed time indicator is shown.
 - **failed**: partial content is preserved.

@@ -76,7 +76,8 @@ All rows are initially selected.
 
 On a chat turn that proposed cards, the table sits below any tool activity and above leftover assistant text.
 Once cards are on screen, the pending status is not shown on the table.
-It attaches below the table until leftover text arrives.
+It attaches below the table while the run is still streaming, leftover text has not arrived, and no tool or thinking row is still running.
+See ASSISTANT-MESSAGES.md (§Message States).
 
 On success, the table and an elapsed time display appear with the rest of the turn.
 On cancellation, the cards received before cancellation remain visible with a canceled status.
@@ -139,6 +140,7 @@ The selection is cleared — all rows are deselected.
 
 The add button is disabled when:
 
+- The proposing run is still streaming (more cards can still arrive)
 - Cards are currently being added
 - No cards are selected
 - There is no write-target deck
