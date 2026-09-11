@@ -591,7 +591,7 @@ describe("updatedAt stamping (only on run start)", () => {
     store.set(
       upsertConversationAtom,
       makeConversation("A", {
-        runs: { r1: makeRun("r1", "success") },
+        runs: { r1: makeRun("r1", "failed") },
       }),
     );
     store.set(setCurrentConversationIdAtom, "A");

@@ -185,7 +185,7 @@ describe("unreadConversationIdsAtom", () => {
     const store = createStore();
     store.set(
       upsertConversationAtom,
-      makeConversation("A", { runs: { r1: makeRun("r1", "success") }, lastReadRunId: "r1" }),
+      makeConversation("A", { runs: { r1: makeRun("r1", "failed") }, lastReadRunId: "r1" }),
     );
     store.set(setCurrentConversationIdAtom, "A");
 

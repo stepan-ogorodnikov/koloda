@@ -918,7 +918,7 @@ describe("conversationReducer", () => {
         ],
         ["addCard", { runId: "r1", card: { content: {} } }],
       ]);
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       vi.setSystemTime(10_000);
       state = conversationReducer(state, [
@@ -941,6 +941,49 @@ describe("conversationReducer", () => {
       expect(state.activeRunId).toBe("r1");
 
       vi.useRealTimers();
+    });
+
+    it("restart of a successful run is a no-op", () => {
+      let state = reduce([
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "hello",
+            kind: "chat-text",
+            assistantText: "good answer",
+            templateFields: [{ id: testId(1), title: "Front", type: "text" as const, isRequired: true }],
+          },
+        ],
+        ["addCard", { runId: "r1", card: { content: {} } }],
+      ]);
+      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      expect(state.runs["r1"].status).toBe("success");
+      expect(state.activeRunId).toBeNull();
+
+      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+
+      // WHY: Successful runs are not retryable (ASSISTANT-CONVERSATIONS.md
+      // §Retry) — a stray restart must leave the good answer untouched.
+      expect(state.runs["r1"].status).toBe("success");
+      expect(state.runs["r1"].cards).toHaveLength(1);
+      expect(state.runs["r1"].templateFields).not.toBeNull();
+      expect(state.activeRunId).toBeNull();
+      expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "good answer" }]);
+    });
+
+    it("restart of a streaming run is a no-op", () => {
+      const before = reduce([
+        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "partial" }],
+      ]);
+      expect(before.runs["r1"].status).toBe("streaming");
+
+      const state = conversationReducer(before, ["restartRun", { runId: "r1", templateFields: null }]);
+
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].startedAt).toEqual(before.runs["r1"].startedAt);
+      expect(state.runs["r1"].templateFields).toEqual(before.runs["r1"].templateFields);
+      expect(state.messages[1]?.parts).toEqual([{ type: "text", text: "partial" }]);
     });
 
     it("clears recorded tool calls on restart", () => {
@@ -1104,7 +1147,7 @@ describe("conversationReducer", () => {
           },
         ],
       ]);
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       const nextFields = [{ id: testId(2), title: "Back", type: "text" as const, isRequired: false }];
       state = conversationReducer(state, [
@@ -1122,7 +1165,7 @@ describe("conversationReducer", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
       ]);
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       state = conversationReducer(state, [
         "restartRun",
@@ -1140,7 +1183,7 @@ describe("conversationReducer", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
       ]);
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       state = conversationReducer(state, [
         "restartRun",
@@ -1157,7 +1200,7 @@ describe("conversationReducer", () => {
       let state = reduce([
         ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", modelName: "GPT-4" }],
       ]);
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
+      state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       state = conversationReducer(state, [
         "restartRun",
@@ -1171,7 +1214,40 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
 
-    it("uses the action's modelName when the run is missing", () => {
+    it("uses the action's modelName when recreating a missing error-marker run", () => {
+      const state = conversationReducer(
+        {
+          ...initialConversationState,
+          messages: [
+            {
+              id: "user-r1",
+              role: "user",
+              parts: [{ type: "text", text: "Hi" }],
+              metadata: { createdAt: "2026-07-01T11:00:00.000Z", runId: "r1" },
+            },
+            {
+              id: "assistant-r1",
+              role: "assistant",
+              parts: [{ type: "text", text: "" }],
+              metadata: { kind: "error", runId: "r1" },
+            },
+          ],
+        },
+        [
+          "restartRun",
+          {
+            runId: "r1",
+            templateFields: null,
+            modelName: "Claude",
+          },
+        ],
+      );
+
+      expect(state.runs["r1"].status).toBe("streaming");
+      expect(state.runs["r1"].modelName).toBe("Claude");
+    });
+
+    it("does not conjure a run when the missing run has no marker", () => {
       const state = conversationReducer(initialConversationState, [
         "restartRun",
         {
@@ -1181,7 +1257,8 @@ describe("conversationReducer", () => {
         },
       ]);
 
-      expect(state.runs["r1"].modelName).toBe("Claude");
+      expect(state.runs["r1"]).toBeUndefined();
+      expect(state.activeRunId).toBeNull();
     });
 
     it("clears dismissedRunErrorId on restart so a later fail shows the panel", () => {

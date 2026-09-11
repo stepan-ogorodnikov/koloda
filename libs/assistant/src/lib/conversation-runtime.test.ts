@@ -280,3 +280,62 @@ describe("createConversationRuntime chat tool events", () => {
     });
   });
 });
+
+describe("createConversationRuntime retryRun status guard", () => {
+  function makeRetryRuntime(storedRuns: Record<string, unknown>) {
+    const events: AssistantEvent[] = [];
+    const executionPort: AssistantExecutionPort = { executeChat: vi.fn(async () => undefined) };
+    const runtime = createConversationRuntime(
+      "conv-a",
+      {
+        emit: (event) => events.push(event),
+        markReadIfCurrent: vi.fn(),
+        touch: vi.fn(),
+        isRunStreaming: () => false,
+        readConversationState: () => ({ runs: storedRuns }),
+      },
+      { executionPort },
+      createRunControllerRegistry(),
+    );
+    return { runtime, events, executionPort };
+  }
+
+  it.each(["success", "streaming"] as const)("ignores a retry for a %s run", async (status) => {
+    const { runtime, events, executionPort } = makeRetryRuntime({ "run-1": { status } });
+
+    await runtime.retryRun("run-1", {} as ChatStreamRequest, null, undefined, TEST_EXECUTION);
+
+    // WHY: Only failed/canceled/interrupted runs are retryable
+    // (ASSISTANT-CONVERSATIONS.md §Retry) — a stale retry command must not
+    // restart the run or spend a provider call (the runChunk alone would
+    // overwrite a good answer even though the reducer ignores restart).
+    expect(events).toEqual([]);
+    expect(executionPort.executeChat).not.toHaveBeenCalled();
+  });
+
+  it.each(["failed", "canceled", "interrupted"] as const)("retries a %s run", async (status) => {
+    const { runtime, events, executionPort } = makeRetryRuntime({ "run-1": { status } });
+
+    await runtime.retryRun("run-1", {} as ChatStreamRequest, null, undefined, TEST_EXECUTION);
+
+    expect(events[0]).toEqual({
+      type: "runStarted",
+      conversationId: "conv-a",
+      run: { runId: "run-1", templateFields: null, modelName: undefined },
+    });
+    expect(executionPort.executeChat).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries a missing run (restore-dropped error-marker recreate)", async () => {
+    const { runtime, events, executionPort } = makeRetryRuntime({});
+
+    await runtime.retryRun("run-1", {} as ChatStreamRequest, null, undefined, TEST_EXECUTION);
+
+    expect(events[0]).toEqual({
+      type: "runStarted",
+      conversationId: "conv-a",
+      run: { runId: "run-1", templateFields: null, modelName: undefined },
+    });
+    expect(executionPort.executeChat).toHaveBeenCalledTimes(1);
+  });
+});

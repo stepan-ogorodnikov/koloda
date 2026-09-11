@@ -450,6 +450,24 @@ export function createConversationRuntime(
           return;
         }
 
+        // WHY: The store owns retry eligibility (ASSISTANT-CONVERSATIONS.md
+        // §Retry: only failed/canceled/interrupted). A stale or duplicate
+        // retry command must not restart a success/streaming run or spend a
+        // provider call on it — without this the runChunk below would still
+        // overwrite a good answer even though the reducer ignores restart.
+        // Missing runs proceed (restore-dropped error-marker recreate).
+        const storedRun = callbacks.readConversationState(conversationId).runs[runId];
+        const storedStatus =
+          typeof storedRun === "object" && storedRun !== null ? (storedRun as { status?: unknown }).status : undefined;
+        if (
+          storedStatus !== undefined &&
+          storedStatus !== "failed" &&
+          storedStatus !== "canceled" &&
+          storedStatus !== "interrupted"
+        ) {
+          return;
+        }
+
         // INVARIANT: Restart/clear/stream ownership stays on this runtime's
         // conversationId even if the UI-current conversation changed while
         // this retry waited in the serial queue.

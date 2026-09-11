@@ -297,7 +297,7 @@ function stampElapsed(run: AssistantRun) {
 
 // INVARIANT: Legal run lifecycle transitions:
 // streaming → success | failed | canceled(reason:user) | interrupted(reason);
-// restart → streaming.
+// restart (from failed | canceled | interrupted) → streaming.
 export function transitionRun(draft: ConversationReducerState, runId: string, event: RunLifecycleEvent): boolean {
   const run = draft.runs[runId];
   if (!run) return false;
@@ -305,6 +305,10 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
   const priorStatus = run.status;
 
   if (event.type === "restart") {
+    // WHY: Only failed/canceled/interrupted runs are retryable
+    // (ASSISTANT-CONVERSATIONS.md §Retry). A restart of a success/streaming
+    // run is a no-op so a stray command can never wipe a good answer.
+    if (run.status !== "failed" && run.status !== "canceled" && run.status !== "interrupted") return false;
     run.status = "streaming";
     run.reason = undefined;
     run.cards = [];
@@ -699,7 +703,14 @@ function restartRun(draft: ConversationReducerState, payload: RestartRunPayload)
 
   // WHY: Retry after restore may find the run dropped (normalize removes
   // orphaned failed markers) while the assistant error message
-  // remains — recreate the run and rewrite the error marker.
+  // remains — recreate the run and rewrite the error marker. Anything else
+  // (a present but non-retryable run, or a missing run with no marker) is a
+  // no-op: hasRetryableTurn parity, so a stray restart can neither wipe a
+  // successful run nor conjure one from nothing.
+  if (draft.runs[payload.runId]) return;
+  const assistantMessage = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
+  const markerKind = assistantMessage ? getAssistantMetadata(assistantMessage)?.kind : undefined;
+  if (markerKind !== "error" && markerKind !== "chat-text") return;
   draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
   applyRetryAssistantKind(draft, payload.runId);
   draft.activeRunId = payload.runId;
