@@ -42,19 +42,21 @@ function RetryAction({ canRetry, onRetry, label }: RetryActionProps) {
   );
 }
 
+type TerminalDurationStatusProps = {
+  withTimeLabel: string;
+  withoutTimeLabel: string;
+  elapsedSeconds?: number;
+  retry: ReactNode;
+  actions: ReactNode;
+};
+
 function TerminalDurationStatus({
   withTimeLabel,
   withoutTimeLabel,
   elapsedSeconds,
   retry,
   actions,
-}: {
-  withTimeLabel: string;
-  withoutTimeLabel: string;
-  elapsedSeconds?: number;
-  retry: ReactNode;
-  actions: ReactNode;
-}) {
+}: TerminalDurationStatusProps) {
   return (
     <div className="flex flex-row flex-wrap items-center gap-2 px-3">
       {typeof elapsedSeconds === "number" ? (

@@ -23,11 +23,11 @@ type UseAssistantCardsTableOptions = {
   template: Template | null | undefined;
   deckId: Deck["id"] | null;
   templateId: Template["id"] | undefined;
-  enableSelection?: boolean;
+  isSelectionEnabled?: boolean;
 };
 
 export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
-  const { runId, cards, cardStatuses, template, deckId, templateId, enableSelection = true } = options;
+  const { runId, cards, cardStatuses, template, deckId, templateId, isSelectionEnabled = true } = options;
   const queryClient = useQueryClient();
   const { addCardsMutation } = useAtomValue(queriesAtom);
   const mutation = useMutation(addCardsMutation());
@@ -54,7 +54,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       }),
     );
 
-    if (!enableSelection) return columnHelper.columns(fieldColumns);
+    if (!isSelectionEnabled) return columnHelper.columns(fieldColumns);
 
     const selectionColumn = columnHelper.display({
       id: "select",
@@ -66,13 +66,13 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
     });
 
     return columnHelper.columns([selectionColumn, ...fieldColumns]);
-  }, [template, enableSelection]);
+  }, [template, isSelectionEnabled]);
 
   const table = useSelectionTable({
     data: cardsWithStatus,
     columns,
     getRowId: (_, index) => index.toString(),
-    enableRowSelection: enableSelection ? (row) => row.original.status === "idle" : false,
+    enableRowSelection: isSelectionEnabled ? (row) => row.original.status === "idle" : false,
     initialState: {
       // WHY: spec: all generated (idle) cards start selected. Restored success /
       // error / pending rows are not selectable and must not occupy the
@@ -95,7 +95,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
   // holds without touching rows the user already deselected.
   const seenCardCount = useRef(cards.length);
   useEffect(() => {
-    if (!enableSelection) return;
+    if (!isSelectionEnabled) return;
     if (cards.length > seenCardCount.current) {
       for (const row of table.getRowModel().rows) {
         const index = Number(row.id);
@@ -105,7 +105,7 @@ export function useAssistantCardsTable(options: UseAssistantCardsTableOptions) {
       }
     }
     seenCardCount.current = cards.length;
-  }, [cards.length, enableSelection, table]);
+  }, [cards.length, isSelectionEnabled, table]);
 
   const selectedRowModel = table.getSelectedRowModel();
   const selectedIndices = selectedRowModel.rows.filter((row) => row.original.status === "idle").map((row) => row.index);

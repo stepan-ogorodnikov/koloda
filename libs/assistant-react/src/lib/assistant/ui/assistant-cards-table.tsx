@@ -40,7 +40,7 @@ export function AssistantCardsTable({
     template,
     deckId,
     templateId,
-    enableSelection: !isTemplateUnavailable,
+    isSelectionEnabled: !isTemplateUnavailable,
   });
 
   return (

@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMotionSetting } from "../../hooks/use-motion-settings";
 
 const BLUR_PX = 2;
+// WHY: Width spring must not start on the same frame layout commits; one paint
+// with duration-0 width avoids a 0→measured spring that flashes and stutters.
 const MOTION_ENABLE_DELAY_MS = 60;
 const SPRING = { type: "spring", visualDuration: 0.5, bounce: 0 } as const;
 
@@ -12,6 +14,8 @@ const gridStyle = {
   justifyItems: "start" as const,
 };
 
+// WHY: Blur cross-fades hit the compositor; these hints reduce subpixel shimmer
+// and jagged text while filter animates — removing them looks "fine" until motion.
 const textCellStyle = {
   gridArea: "text",
   willChange: "filter",
@@ -25,8 +29,8 @@ export function TextSwap({ value, className, ...props }: TextSwapProps) {
   const isMotionOn = useMotionSetting();
   const measureRef = useRef<HTMLSpanElement>(null);
   const [width, setWidth] = useState(0);
-  const [layoutReady, setLayoutReady] = useState(false);
-  const [motionReady, setMotionReady] = useState(false);
+  const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const [isMotionReady, setIsMotionReady] = useState(false);
 
   useLayoutEffect(() => {
     const el = measureRef.current;
@@ -35,18 +39,22 @@ export function TextSwap({ value, className, ...props }: TextSwapProps) {
     const nextWidth = el.getBoundingClientRect().width;
     el.textContent = "";
     setWidth(nextWidth);
-    if (nextWidth > 0 && !layoutReady) {
-      const frame = requestAnimationFrame(() => setLayoutReady(true));
+    if (nextWidth > 0 && !isLayoutReady) {
+      // WHY: Defer motion tree until after measure + one frame so width is
+      // non-zero before the animated grid mounts (see isMotionReady gate).
+      const frame = requestAnimationFrame(() => setIsLayoutReady(true));
       return () => cancelAnimationFrame(frame);
     }
     return undefined;
-  }, [value, className, layoutReady]);
+  }, [value, className, isLayoutReady]);
 
+  // WHY: Two-phase gate — layout first (static text + measure), then enable
+  // width spring after MOTION_ENABLE_DELAY_MS; skipping either phase regresses jank.
   useEffect(() => {
-    if (!layoutReady || motionReady) return undefined;
-    const id = window.setTimeout(() => setMotionReady(true), MOTION_ENABLE_DELAY_MS);
+    if (!isLayoutReady || isMotionReady) return undefined;
+    const id = window.setTimeout(() => setIsMotionReady(true), MOTION_ENABLE_DELAY_MS);
     return () => window.clearTimeout(id);
-  }, [layoutReady, motionReady]);
+  }, [isLayoutReady, isMotionReady]);
 
   if (!isMotionOn) {
     return (
@@ -56,6 +64,8 @@ export function TextSwap({ value, className, ...props }: TextSwapProps) {
     );
   }
 
+  // WHY: Off-screen probe — same className/fonts as visible text; in-flow measure
+  // would shift layout and pollute width before the clip grid exists.
   const measure = (
     <span
       className={className}
@@ -65,7 +75,7 @@ export function TextSwap({ value, className, ...props }: TextSwapProps) {
     />
   );
 
-  if (!layoutReady) {
+  if (!isLayoutReady) {
     return (
       <span className="relative inline-block align-baseline" {...props}>
         {measure}
@@ -81,7 +91,7 @@ export function TextSwap({ value, className, ...props }: TextSwapProps) {
         className="inline-grid align-baseline overflow-hidden"
         style={gridStyle}
         animate={{ width }}
-        transition={motionReady ? SPRING : { duration: 0 }}
+        transition={isMotionReady ? SPRING : { duration: 0 }}
         initial={false}
       >
         <AnimatePresence mode="popLayout" initial={false}>
