@@ -2,7 +2,7 @@
 name = "koloda"
 version = "0.0.1"
 edition = "2021"
-rust-version = "1.81.0"
+rust-version = "1.88.0"
 # Two explicit binaries (`domain`, `integration`). Do not add `tests/*.rs` crate roots.
 autotests = false
 
