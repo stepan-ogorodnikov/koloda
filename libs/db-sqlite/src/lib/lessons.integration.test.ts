@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addCard, getCards } from "./cards";
 import { getLessons, getLessonData, submitLessonResult } from "./lessons";
 import { getReviews } from "./reviews";
@@ -13,6 +13,7 @@ describe("lessons repository integration", () => {
   });
 
   afterEach(async () => {
+    vi.useRealTimers();
     await testDb.close();
   });
 
@@ -191,6 +192,10 @@ describe("lessons repository integration", () => {
   it("stores the updated card and review when a lesson result is submitted", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
+    // INVARIANT: `InsertReviewData` carries no `createdAt` — the repo stamps the submit
+    // time, mirroring Rust `insert_review(_, _, now)`.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-01-10T12:00:00.000Z"));
     const card = await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
@@ -220,7 +225,6 @@ describe("lessons repository integration", () => {
       learningSteps: 0,
       time: 1250,
       isIgnored: false,
-      createdAt: new Date("2026-01-10T12:00:00.000Z"),
     };
 
     const insertedReview = await submitLessonResult(db, { card: updatedCard, review });
@@ -238,5 +242,6 @@ describe("lessons repository integration", () => {
     });
     expect(storedReviews).toHaveLength(1);
     expect(storedReviews[0]).toMatchObject(review);
+    expect(storedReviews[0]?.createdAt).toEqual(new Date("2026-01-10T12:00:00.000Z"));
   });
 });

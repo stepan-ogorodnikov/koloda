@@ -227,7 +227,7 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
           review.learningSteps,
           review.time,
           review.isIgnored,
-          review.createdAt?.getTime() ?? nowMs(),
+          nowMs(),
         ],
       );
 

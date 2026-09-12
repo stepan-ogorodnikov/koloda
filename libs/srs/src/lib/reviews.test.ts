@@ -203,21 +203,23 @@ describe("reviews", () => {
     });
   });
 
-  it("maps fsrs review properties back to app review fields", () => {
+  // Twin of koloda `reviews_serde_tests.rs` InsertReviewData shape pins: the submit
+  // payload must carry exactly the fields the Rust struct deserializes, nothing more.
+  it("maps the graded FSRS log to exactly the submit review fields", () => {
     const result = createReviewFromReviewFSRS({
       rating: 3,
       state: 1,
       due: new Date("2024-01-03T00:00:00.000Z"),
       stability: 2.5,
       difficulty: 4.2,
-      scheduled_days: 7,
-      learning_steps: 2,
       elapsed_days: 0,
       last_elapsed_days: 0,
-      reviewed_date: new Date("2024-01-01T00:00:00.000Z"),
+      scheduled_days: 7,
+      learning_steps: 2,
+      review: new Date("2024-01-01T00:00:00.000Z"),
     } as any);
 
-    expect(result).toMatchObject({
+    expect(result).toEqual({
       rating: 3,
       state: 1,
       dueAt: new Date("2024-01-03T00:00:00.000Z"),

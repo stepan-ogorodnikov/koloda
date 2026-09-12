@@ -53,7 +53,7 @@ function validReview(overrides: Record<string, unknown> = {}) {
 }
 
 function validInsertReview(overrides: Record<string, unknown> = {}) {
-  const { id: _id, ...rest } = validReview(overrides);
+  const { id: _id, createdAt: _createdAt, ...rest } = validReview(overrides);
   return rest;
 }
 

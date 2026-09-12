@@ -1,5 +1,4 @@
-import type { ObjectPropertiesMapping } from "@koloda/app";
-import { mapObjectPropertiesReverse, parseDayStartsAt } from "@koloda/app";
+import { parseDayStartsAt } from "@koloda/app";
 import { LEARNING_DAILY_LIMIT_TYPES, learningSettingsValidation } from "@koloda/app";
 import type { AllowedSettings } from "@koloda/settings";
 import type { DateInput, ReviewLog as ReviewFSRS } from "ts-fsrs";
@@ -53,7 +52,9 @@ export type Review = z.input<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] };
 
-export const insertReviewSchema = reviewFieldsSchema.omit({ id: true }).superRefine(refineReview);
+// INVARIANT: mirrors Rust `InsertReviewData` (crates/koloda/src/domain/reviews.rs) — no
+// `createdAt` field; the repo stamps it at insert time (`submitLessonResult` / `insert_review`).
+export const insertReviewSchema = reviewFieldsSchema.omit({ id: true, createdAt: true }).superRefine(refineReview);
 
 export type InsertReviewData = z.infer<typeof insertReviewSchema>;
 
@@ -130,12 +131,18 @@ export async function calculateTodaysReviewTotals(
 
 export type TodaysReviewTotals = Awaited<ReturnType<typeof calculateTodaysReviewTotals>>;
 
-const FSRS_REVIEW_PROPERTIES: ObjectPropertiesMapping<Review, ReviewFSRS> = {
-  dueAt: "due",
-  learningSteps: "learning_steps",
-  scheduledDays: "scheduled_days",
-} as const;
-
-export function createReviewFromReviewFSRS(input: ReviewFSRS) {
-  return mapObjectPropertiesReverse(input, FSRS_REVIEW_PROPERTIES) as Omit<InsertReviewData, "cardId" | "isIgnored">;
+// Twin of `createUpdateCardProgress`: the submit payload must carry exactly the fields
+// Rust `InsertReviewData` deserializes — other ts-fsrs `ReviewLog` keys (elapsed_days,
+// last_elapsed_days, review) must not leak into it.
+export function createReviewFromReviewFSRS(input: ReviewFSRS): Omit<InsertReviewData, "cardId" | "time" | "isIgnored"> {
+  const { rating, state, due, stability, difficulty, scheduled_days, learning_steps } = input;
+  return {
+    rating,
+    state,
+    dueAt: due,
+    stability,
+    difficulty,
+    scheduledDays: scheduled_days,
+    learningSteps: learning_steps,
+  };
 }

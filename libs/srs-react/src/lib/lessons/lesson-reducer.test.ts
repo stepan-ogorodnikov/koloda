@@ -339,8 +339,6 @@ describe("lessonReducer", () => {
       difficulty: 1,
       scheduledDays: 0,
       learningSteps: 1,
-      time: 0,
-      createdAt: new Date("2024-01-01T00:00:00.000Z"),
     });
 
     let state = startLesson({
@@ -368,13 +366,19 @@ describe("lessonReducer", () => {
       lapses: 0,
       lastReviewedAt: new Date("2024-01-01T02:00:00.000Z"),
     });
-    expect(state.upload.queue[0]).toMatchObject({
-      index: 0,
-      review: {
-        cardId: testId(1),
-        isIgnored: false,
-        time: 60 * 60 * 1000,
-      },
+    expect(state.upload.queue[0]?.index).toBe(0);
+    // INVARIANT: the queue item is the wire payload — exactly the submit fields, not the session Card.
+    expect(state.upload.queue[0]?.review).toEqual({
+      rating: 3,
+      state: 1,
+      dueAt: new Date("2024-01-01T00:10:00.000Z"),
+      stability: 1,
+      difficulty: 1,
+      scheduledDays: 0,
+      learningSteps: 1,
+      cardId: testId(1),
+      isIgnored: false,
+      time: 60 * 60 * 1000,
     });
     expect(state.session?.data.cards).toHaveLength(2);
     expect(state.session?.content?.index).toBe(1);
@@ -398,8 +402,6 @@ describe("lessonReducer", () => {
       difficulty: 1,
       scheduledDays: 1,
       learningSteps: 0,
-      time: 0,
-      createdAt: new Date("2024-01-01T00:00:00.000Z"),
     });
 
     let state = startLesson({ lessonData: createLessonData() });

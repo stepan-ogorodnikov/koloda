@@ -30,7 +30,6 @@ describe("lessons", () => {
       learningSteps: 0,
       time: 1250,
       isIgnored: false,
-      createdAt: new Date("2026-01-10T12:00:00.000Z"),
     };
 
     // The mismatch guard fires before any DB access, so no database is needed.
