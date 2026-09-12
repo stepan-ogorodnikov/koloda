@@ -6,7 +6,7 @@ Framework-agnostic — no React, no DB access, no conversation state.
 ## Where it sits
 
 Consumed by `@koloda/db-sqlite` (repo validation), `@koloda/srs-react`, `@koloda/assistant-react`, `@koloda/core-react` (query types), and app query layers.
-Depends on `@koloda/app` and `@koloda/ai`.
+Depends on `@koloda/app`, `@koloda/settings`, and `@koloda/ai`.
 Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned when fields change.
 
 ## Architectural Map
@@ -15,6 +15,7 @@ Desktop mirrors live in `crates/koloda/src/domain/`; keep TS and Rust aligned wh
 - Templates & decks: `templates.ts`, `decks.ts` — fields/layout validation and entity DTOs.
 - Cards: `cards.ts` — content schema from template fields, FSRS state fields, insert/update/delete DTOs.
 - Reviews & lessons: `reviews.ts` — review logs and daily-limit helpers; `lessons.ts` — lesson types, filters, session DTOs.
+- Progress: `progress.ts` — shared progress-field bounds, error-code maps, and validation for cards and reviews.
 - Markdown: `markdown.ts` — `markdownToHtml` (marked + DOMPurify).
 - AI bridge (pure): `assistant-cards-generation.ts` — `transformGeneratedCards()` (`GeneratedCard` → `InsertCardData`).
 
