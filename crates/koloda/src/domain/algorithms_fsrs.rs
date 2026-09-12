@@ -76,7 +76,7 @@ impl AlgorithmFSRS {
         }
 
         for part in weight_parts.iter() {
-            if part.trim().parse::<f64>().is_err() {
+            if !part.trim().parse::<f64>().is_ok_and(|value| value.is_finite()) {
                 return Err(AppError::new(error_codes::VALIDATION_ALGORITHM_FSRS_WEIGHTS, None));
             }
         }

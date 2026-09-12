@@ -277,6 +277,60 @@ fn test_weights_non_numeric_fails() {
 }
 
 #[test]
+fn test_weights_all_infinity_fails() {
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(
+        algorithm.validate().is_err(),
+        "Should fail when all weights are Infinity"
+    );
+}
+
+#[test]
+fn test_weights_negative_infinity_fails() {
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "0.5,-Infinity,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(
+        algorithm.validate().is_err(),
+        "Should fail when weights contains negative Infinity"
+    );
+}
+
+#[test]
+fn test_weights_nan_fails() {
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "0.5,NaN,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(algorithm.validate().is_err(), "Should fail when weights contains NaN");
+}
+
+#[test]
 fn test_weights_empty_string_fails() {
     let json = r#"{
         "type": "fsrs",

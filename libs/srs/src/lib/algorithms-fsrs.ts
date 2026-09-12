@@ -98,7 +98,7 @@ export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((
   }
 
   for (const part of weightParts) {
-    if (part.trim().length === 0 || Number.isNaN(Number(part.trim()))) {
+    if (part.trim().length === 0 || !Number.isFinite(Number(part.trim()))) {
       ctx.addIssue({
         code: "custom",
         message: "validation.algorithm.fsrs.weights",

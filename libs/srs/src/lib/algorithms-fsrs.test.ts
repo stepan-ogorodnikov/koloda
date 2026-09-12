@@ -290,6 +290,31 @@ describe("algorithmFSRSValidation", () => {
       code: "validation.algorithm.fsrs.weights",
     },
     {
+      name: "weights all Infinity",
+      payload: {
+        ...validPayload(),
+        weights:
+          "Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity,Infinity",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
+      name: "weights negative Infinity among valid",
+      payload: {
+        ...validPayload(),
+        weights: "0.5,-Infinity,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
+      name: "weights NaN among valid",
+      payload: {
+        ...validPayload(),
+        weights: "0.5,NaN,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
       name: "weights empty string",
       payload: { ...validPayload(), weights: "" },
       code: "validation.algorithm.fsrs.weights",
