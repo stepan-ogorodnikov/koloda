@@ -1,5 +1,5 @@
 import { AppError, mintedUuidv7, throwKnownError } from "@koloda/app";
-import { deckRowSchema, updateDeckSchema } from "@koloda/srs";
+import { deckRowSchema, insertDeckSchema, updateDeckSchema } from "@koloda/srs";
 import type { Deck, DeleteDeckData, InsertDeckData, UpdateDeckData } from "@koloda/srs";
 import { getAlgorithm } from "./algorithms";
 import { DECK_SELECT } from "./columns";
@@ -27,15 +27,17 @@ export async function getDeck(db: DB, id: Deck["id"]) {
 
 export async function addDeck(db: DB, data: InsertDeckData) {
   return throwKnownError("db.add", async () => {
-    const algorithm = await getAlgorithm(db, data.algorithmId);
-    if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${data.algorithmId}`);
-    const template = await getTemplate(db, data.templateId);
-    if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${data.templateId}`);
+    const payload = insertDeckSchema.parse(data);
+
+    const algorithm = await getAlgorithm(db, payload.algorithmId);
+    if (!algorithm) throw new AppError("not-found.decks.add.algorithm", `Algorithm id: ${payload.algorithmId}`);
+    const template = await getTemplate(db, payload.templateId);
+    if (!template) throw new AppError("not-found.decks.add.template", `Template id: ${payload.templateId}`);
 
     const rowId = mintedUuidv7();
     await db.run(
       `INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NULL)`,
-      [rowId, data.title, data.algorithmId, data.templateId, nowMs()],
+      [rowId, payload.title, payload.algorithmId, payload.templateId, nowMs()],
     );
     const result = await getDeck(db, rowId);
     if (!result) throw new Error("no row returned");

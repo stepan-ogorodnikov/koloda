@@ -69,6 +69,28 @@ describe("decks repository integration", () => {
     expect(await getDeck(db, deck.id)).toMatchObject({ title: deck.title });
   });
 
+  it("rejects deck adds with an empty title", async () => {
+    const { db } = testDb;
+    const { deck, algorithm, template } = await seedDeckContext(db);
+
+    await expect(
+      addDeck(db, {
+        title: "",
+        algorithmId: algorithm.id,
+        templateId: template.id,
+      }),
+    ).rejects.toMatchObject({
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          message: "validation.common.title.too-short",
+          path: ["title"],
+        }),
+      ]),
+    });
+
+    expect(await getDecks(db)).toEqual([deck]);
+  });
+
   it("rejects add/update when algorithm or template is missing", async () => {
     const { db } = testDb;
     const { deck, algorithm, template } = await seedDeckContext(db);
