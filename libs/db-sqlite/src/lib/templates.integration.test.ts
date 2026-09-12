@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addCard } from "./cards";
-import { deleteTemplate, getTemplate, updateTemplate } from "./templates";
+import { addTemplate, deleteTemplate, getTemplate, updateTemplate } from "./templates";
 import type { TestDb } from "../test/test-helpers";
-import { createCardContent, createTestDb, seedDeckContext } from "../test/test-helpers";
+import { createCardContent, createTestDb, MISSING_ID, seedDeckContext, seedTemplate } from "../test/test-helpers";
 
 describe("templates repository integration", () => {
   let testDb: TestDb;
@@ -101,5 +101,20 @@ describe("templates repository integration", () => {
     await expect(deleteTemplate(db, { id: template.id })).rejects.toMatchObject({
       code: "validation.templates.delete-locked",
     });
+  });
+
+  it("rejects adding a template whose layout references an unknown field", async () => {
+    const { db } = testDb;
+    const { content } = await seedTemplate(db);
+
+    await expect(
+      addTemplate(db, {
+        title: "Broken layout",
+        content: {
+          fields: content.fields.map((field) => ({ ...field })),
+          layout: content.layout.map((item) => ({ ...item, field: MISSING_ID })),
+        },
+      }),
+    ).rejects.toThrow();
   });
 });

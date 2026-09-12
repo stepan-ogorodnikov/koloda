@@ -56,11 +56,13 @@ export async function getTemplatesByIds(db: DB, ids: Template["id"][]): Promise<
 
 export async function addTemplate(db: DB, data: InsertTemplateData, id?: string) {
   return throwKnownError("db.add", async () => {
+    const payload = insertTemplateSchema.parse(data);
+
     const rowId = mintedUuidv7(id);
     await db.run(`INSERT INTO templates (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
       rowId,
-      data.title,
-      JSON.stringify(data.content),
+      payload.title,
+      JSON.stringify(payload.content),
       nowMs(),
     ]);
     const result = await getTemplate(db, rowId);
