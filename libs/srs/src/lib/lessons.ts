@@ -6,7 +6,7 @@ import type { LessonAlgorithm } from "./algorithms";
 import type { Card, UpdateCardProgress } from "./cards";
 import type { Deck } from "./decks";
 import type { InsertReviewData } from "./reviews";
-import type { LessonTemplateRow, Template, TemplateField, TemplateLayoutItem } from "./templates";
+import type { Template, TemplateField, TemplateLayoutItem } from "./templates";
 
 export const LESSON_TYPES = ["untouched", "learn", "review", "total"] as const;
 
@@ -54,15 +54,15 @@ export type LessonTemplateLayoutItem = Modify<
   TemplateLayoutItem,
   {
     field: TemplateField | undefined;
+    // INVARIANT: `fieldId` survives even when the referenced field is gone (`field` undefined).
+    // Twin of Rust `LessonTemplateLayoutItem.field_id`.
+    fieldId: TemplateLayoutItem["field"];
   }
 >;
 
-export type LessonTemplate = Modify<
-  Template,
-  {
-    layout: LessonTemplateLayoutItem[];
-  }
->;
+// The lesson session consumes `layout` only; title and timestamps stay on the admin `Template`.
+// Twin of Rust `LessonTemplate` (`domain/lessons.rs`).
+export type LessonTemplate = Modify<Pick<Template, "id">, { layout: LessonTemplateLayoutItem[] }>;
 
 export type GetLessonDataParams = {
   filters: LessonFilters;
@@ -82,12 +82,11 @@ export type LessonResultData = {
   review: InsertReviewData;
 };
 
-export function convertTemplateToLessonTemplate(
-  template: Pick<Template, "id" | "content"> | LessonTemplateRow,
-): LessonTemplate {
+export function convertTemplateToLessonTemplate(template: Pick<Template, "id" | "content">): LessonTemplate {
   const layout: LessonTemplateLayoutItem[] = template.content.layout.map((entry) => ({
     ...entry,
+    fieldId: entry.field,
     field: template.content.fields.find((x) => x.id === entry.field),
   }));
-  return { ...template, layout } as LessonTemplate;
+  return { id: template.id, layout };
 }
