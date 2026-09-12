@@ -3,7 +3,7 @@ import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
 import type { LessonAlgorithm } from "./algorithms";
-import type { Card } from "./cards";
+import type { Card, UpdateCardProgress } from "./cards";
 import type { Deck } from "./decks";
 import type { InsertReviewData } from "./reviews";
 import type { LessonTemplateRow, Template, TemplateField, TemplateLayoutItem } from "./templates";
@@ -78,7 +78,7 @@ export type LessonData = {
 };
 
 export type LessonResultData = {
-  card: Card;
+  card: UpdateCardProgress;
   review: InsertReviewData;
 };
 

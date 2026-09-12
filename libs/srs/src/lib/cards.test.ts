@@ -7,6 +7,7 @@ import type { AlgorithmFSRS } from "./algorithms-fsrs";
 import type { Algorithm } from "./algorithms";
 import {
   createCardFromCardFSRS,
+  createUpdateCardProgress,
   getCardContentValidation,
   getCardGrades,
   getInsertCardSchema,
@@ -234,6 +235,58 @@ describe("createCardFromCardFSRS", () => {
     expect(result.reps).toBe(0);
     expect(result.lapses).toBe(0);
     expect(result.state).toBe(0);
+  });
+});
+
+describe("createUpdateCardProgress", () => {
+  const CARD_ID = "01900000-0000-7000-8000-000000000009";
+  const DUE = new Date("2024-01-03T00:00:00.000Z");
+
+  // Twin of koloda `cards_serde_tests.rs` UpdateCardProgress shape pins: the submit
+  // payload must carry exactly the fields the Rust struct deserializes, nothing more.
+  it("maps the graded FSRS card to exactly the submit progress fields", () => {
+    const lastReview = new Date("2024-01-01T00:00:00.000Z");
+    const result = createUpdateCardProgress(CARD_ID, {
+      due: DUE,
+      stability: 2.5,
+      difficulty: 4.2,
+      elapsed_days: 2,
+      scheduled_days: 7,
+      reps: 1,
+      lapses: 0,
+      state: 1,
+      last_review: lastReview,
+      learning_steps: 2,
+    } as CardFSRS);
+
+    expect(result).toEqual({
+      id: CARD_ID,
+      state: 1,
+      dueAt: DUE,
+      stability: 2.5,
+      difficulty: 4.2,
+      scheduledDays: 7,
+      learningSteps: 2,
+      reps: 1,
+      lapses: 0,
+      lastReviewedAt: lastReview,
+    });
+  });
+
+  it("maps a missing last_review to null", () => {
+    const result = createUpdateCardProgress(CARD_ID, {
+      due: DUE,
+      stability: 0,
+      difficulty: 0,
+      elapsed_days: 0,
+      scheduled_days: 0,
+      reps: 0,
+      lapses: 0,
+      state: 0,
+      learning_steps: 0,
+    } as CardFSRS);
+
+    expect(result.lastReviewedAt).toBeNull();
   });
 });
 

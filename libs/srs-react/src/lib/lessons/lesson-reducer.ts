@@ -2,7 +2,12 @@ import { LEARNING_DAILY_LIMIT_TYPES } from "@koloda/app";
 import type { LearningSettings } from "@koloda/app";
 import type { ReducerAction } from "@koloda/core-react";
 import { dispatchReducerAction } from "@koloda/core-react";
-import { createCardFromCardFSRS, createReviewFromReviewFSRS, getCardGrades } from "@koloda/srs";
+import {
+  createCardFromCardFSRS,
+  createReviewFromReviewFSRS,
+  createUpdateCardProgress,
+  getCardGrades,
+} from "@koloda/srs";
 import type {
   Card,
   CardGrade,
@@ -14,6 +19,7 @@ import type {
   LessonTemplate,
   LessonType,
   TodaysReviewTotals,
+  UpdateCardProgress,
 } from "@koloda/srs";
 import { addHours, addMinutes } from "date-fns";
 import { produce } from "immer";
@@ -82,7 +88,7 @@ export type LessonReducerState = {
   upload: {
     queue: {
       index: number;
-      card: Card;
+      card: UpdateCardProgress;
       review: InsertReviewData;
     }[];
     log: Record<number, LessonResultUploadStatus>;
@@ -325,7 +331,11 @@ function gradeSelected(draft: LessonReducerState, payload: number) {
   const card = createCardFromCardFSRS(grade.card);
 
   const { index } = draft.session.content;
-  draft.upload.queue.push({ index, card, review });
+  draft.upload.queue.push({
+    index,
+    card: createUpdateCardProgress(draft.session.content.card.id, grade.card),
+    review,
+  });
 
   if (doesLearnAheadMatch(draft, card)) draft.session.data.cards.push(card);
   moveToNextCard(draft);

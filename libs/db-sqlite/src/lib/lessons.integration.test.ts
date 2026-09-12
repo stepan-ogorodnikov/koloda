@@ -198,7 +198,7 @@ describe("lessons repository integration", () => {
       state: 0,
     });
     const updatedCard = {
-      ...card,
+      id: card.id,
       state: 2,
       dueAt: new Date("2026-01-12T12:00:00.000Z"),
       stability: 4.5,

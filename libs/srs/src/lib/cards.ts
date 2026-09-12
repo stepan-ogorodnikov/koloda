@@ -1,4 +1,4 @@
-import type { ObjectPropertiesMapping, UpdateData } from "@koloda/app";
+import type { Modify, ObjectPropertiesMapping, UpdateData } from "@koloda/app";
 import { mapObjectProperties, mapObjectPropertiesReverse, timestampsValidation } from "@koloda/app";
 import { createEmptyCard, Rating } from "ts-fsrs";
 import type { Card as CardFSRS, DateInput } from "ts-fsrs";
@@ -86,6 +86,26 @@ export type UpdateCardValues = z.input<typeof updateCardSchema>;
 
 export type UpdateCardData = UpdateData<Card, "id", UpdateCardValues>;
 
+// Mirrors koloda `UpdateCardProgress`: exactly the progress columns the lesson submit updates.
+// INVARIANT: Rust `due_at` is a required timestamp — FSRS always supplies `due` —
+// while `Card.dueAt` stays nullable for untouched rows.
+export type UpdateCardProgress = Modify<
+  Pick<
+    Card,
+    | "id"
+    | "dueAt"
+    | "state"
+    | "stability"
+    | "difficulty"
+    | "scheduledDays"
+    | "learningSteps"
+    | "reps"
+    | "lapses"
+    | "lastReviewedAt"
+  >,
+  { dueAt: Date }
+>;
+
 export type DeleteCardData = Pick<Card, "id">;
 
 export type DeleteCardsData = { ids: Card["id"][] };
@@ -119,6 +139,22 @@ function createFSRSCard(card: Card, time: DateInput = Date.now()): CardFSRS {
 
 export function createCardFromCardFSRS(input: CardFSRS) {
   return mapObjectPropertiesReverse(input, FSRS_CARD_PROPERTIES) as Card;
+}
+
+export function createUpdateCardProgress(cardId: Card["id"], input: CardFSRS): UpdateCardProgress {
+  const { state, due, stability, difficulty, scheduled_days, learning_steps, reps, lapses, last_review } = input;
+  return {
+    id: cardId,
+    state,
+    dueAt: due,
+    stability,
+    difficulty,
+    scheduledDays: scheduled_days,
+    learningSteps: learning_steps,
+    reps,
+    lapses,
+    lastReviewedAt: last_review ?? null,
+  };
 }
 
 export type ResetCardProgressData = { id: Card["id"] };

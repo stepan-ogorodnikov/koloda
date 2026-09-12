@@ -9,9 +9,6 @@ describe("lessons", () => {
     // rule — both entities are individually valid; only their id link is broken.
     const card = {
       id: "01900000-0000-7000-8000-000000000007",
-      deckId: "01900000-0000-7000-8000-000000000001",
-      templateId: "01900000-0000-7000-8000-000000000001",
-      content: { front: { text: "front" }, back: { text: "back" } },
       state: 2,
       dueAt: new Date("2026-01-12T12:00:00.000Z"),
       stability: 4.5,
@@ -21,8 +18,6 @@ describe("lessons", () => {
       reps: 1,
       lapses: 0,
       lastReviewedAt: new Date("2026-01-10T12:00:00.000Z"),
-      createdAt: new Date("2026-01-01T12:00:00.000Z"),
-      updatedAt: null,
     };
     const review = {
       cardId: "01900000-0000-7000-8000-000000000008",

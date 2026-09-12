@@ -125,7 +125,18 @@ function startLesson(options?: {
 function queuedUploadItem() {
   return {
     index: 0,
-    card: createCard(),
+    card: {
+      id: testId(1),
+      state: 2,
+      dueAt: new Date("2024-01-02T00:00:00.000Z"),
+      stability: 1,
+      difficulty: 1,
+      scheduledDays: 1,
+      learningSteps: 0,
+      reps: 1,
+      lapses: 0,
+      lastReviewedAt: null,
+    },
     review: {
       cardId: 1,
       rating: 3,
@@ -303,7 +314,20 @@ describe("lessonReducer", () => {
       state: 1,
       dueAt: new Date("2024-01-01T00:10:00.000Z"),
     });
-    const grade = { card: { id: 10 }, log: { rating: 3 } } as any;
+    const grade = {
+      card: {
+        state: 1,
+        due: new Date("2024-01-01T00:10:00.000Z"),
+        stability: 1,
+        difficulty: 1,
+        scheduled_days: 0,
+        learning_steps: 1,
+        reps: 1,
+        lapses: 0,
+        last_review: new Date("2024-01-01T02:00:00.000Z"),
+      },
+      log: { rating: 3 },
+    } as any;
 
     getCardGradesMock.mockReturnValue([grade, grade, grade, grade]);
     createCardFromCardFSRSMock.mockReturnValue(learnedAheadCard);
@@ -331,9 +355,21 @@ describe("lessonReducer", () => {
 
     expect(state.phase).toBe("studying");
     expect(state.upload.queue).toHaveLength(1);
+    // INVARIANT: the queue item is the wire payload — exactly the submit fields, not the session Card.
+    expect(state.upload.queue[0]?.card).toEqual({
+      id: testId(1),
+      state: 1,
+      dueAt: new Date("2024-01-01T00:10:00.000Z"),
+      stability: 1,
+      difficulty: 1,
+      scheduledDays: 0,
+      learningSteps: 1,
+      reps: 1,
+      lapses: 0,
+      lastReviewedAt: new Date("2024-01-01T02:00:00.000Z"),
+    });
     expect(state.upload.queue[0]).toMatchObject({
       index: 0,
-      card: learnedAheadCard,
       review: {
         cardId: testId(1),
         isIgnored: false,

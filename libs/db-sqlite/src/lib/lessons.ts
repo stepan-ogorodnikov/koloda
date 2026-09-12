@@ -198,7 +198,7 @@ export async function submitLessonResult(db: DB, { card, review }: LessonResultD
          WHERE id = ?`,
         [
           card.state,
-          card.dueAt ?? null,
+          card.dueAt,
           card.stability,
           card.difficulty,
           card.scheduledDays,

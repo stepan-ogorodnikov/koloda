@@ -19,6 +19,7 @@ export { transformGeneratedCards } from "./lib/assistant-cards-generation";
 export {
   cardRowSchema,
   createCardFromCardFSRS,
+  createUpdateCardProgress,
   getCardGrades,
   getInsertCardSchema,
   getUpdateCardSchema,
@@ -36,6 +37,7 @@ export type {
   InsertCardsResponse,
   ResetCardProgressData,
   UpdateCardData,
+  UpdateCardProgress,
   UpdateCardValues,
 } from "./lib/cards";
 export { deckRowSchema, deckWithOnlyTitleSchema, insertDeckSchema, updateDeckSchema } from "./lib/decks";
