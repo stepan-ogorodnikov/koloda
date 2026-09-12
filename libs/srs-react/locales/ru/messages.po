@@ -423,7 +423,7 @@ msgstr "Удалить"
 
 #: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:52
 msgid "delete-deck.message"
-msgstr "Подтвердите удаление колоды"
+msgstr "Вы уверены, что хотите удалить эту колоду и все её карточки и повторения?"
 
 #: ../../libs/srs-react/src/lib/decks/delete-deck.tsx:44
 msgid "delete-deck.trigger"
