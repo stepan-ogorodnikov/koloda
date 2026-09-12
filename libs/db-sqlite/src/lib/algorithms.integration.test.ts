@@ -2,7 +2,14 @@ import { SEED_ALGORITHM_SIMPLE_ID } from "@koloda/app";
 import { DEFAULT_FSRS_ALGORITHM } from "@koloda/srs";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { TestDb } from "../test/test-helpers";
-import { createTestDb, MISSING_ID, seedAlgorithm, seedDeckContext } from "../test/test-helpers";
+import {
+  createTestDb,
+  MISSING_ID,
+  seedAlgorithm,
+  seedDeckContext,
+  seedLearningSettings,
+  seedTemplate,
+} from "../test/test-helpers";
 import {
   addAlgorithm,
   cloneAlgorithm,
@@ -65,11 +72,49 @@ describe("algorithms repository integration", () => {
   it("deletes an unused algorithm", async () => {
     const { db } = testDb;
     const algorithm = await seedAlgorithm(db);
+    await seedAlgorithm(db, { title: "Remaining" });
 
     await deleteAlgorithm(db, { id: algorithm.id });
 
     expect(await getAlgorithm(db, algorithm.id)).toBeNull();
     expect(await getAlgorithmDecks(db, algorithm.id)).toEqual([]);
+  });
+
+  it("rejects deleting the learning-default algorithm", async () => {
+    const { db } = testDb;
+    const algorithm = await seedAlgorithm(db);
+    await seedAlgorithm(db, { title: "Other" });
+    const template = await seedTemplate(db);
+    await seedLearningSettings(db, { algorithm: algorithm.id, template: template.id });
+
+    await expect(deleteAlgorithm(db, { id: algorithm.id })).rejects.toMatchObject({
+      code: "validation.algorithms.delete-default",
+    });
+
+    expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
+  });
+
+  it("rejects deleting the last remaining algorithm", async () => {
+    const { db } = testDb;
+    const algorithm = await seedAlgorithm(db);
+
+    await expect(deleteAlgorithm(db, { id: algorithm.id })).rejects.toMatchObject({
+      code: "validation.algorithms.delete-last",
+    });
+
+    expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
+  });
+
+  it("allows deleting a former default after the default moves elsewhere", async () => {
+    const { db } = testDb;
+    const formerDefault = await seedAlgorithm(db, { title: "Old" });
+    const newDefault = await seedAlgorithm(db, { title: "New" });
+    const template = await seedTemplate(db);
+    await seedLearningSettings(db, { algorithm: newDefault.id, template: template.id });
+
+    await deleteAlgorithm(db, { id: formerDefault.id });
+
+    expect(await getAlgorithm(db, formerDefault.id)).toBeNull();
   });
 
   it("reassigns decks to a successor before deleting a referenced algorithm", async () => {
@@ -89,6 +134,7 @@ describe("algorithms repository integration", () => {
   it("rejects deleting a referenced algorithm without a valid successor", async () => {
     const { db } = testDb;
     const { algorithm } = await seedDeckContext(db);
+    await seedAlgorithm(db, { title: "Other" });
 
     await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: MISSING_ID })).rejects.toMatchObject({
       code: "not-found.algorithms.delete.successor",

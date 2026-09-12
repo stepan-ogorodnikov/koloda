@@ -8,6 +8,7 @@ use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
 use crate::domain::settings::{Settings, SettingsName};
+use crate::domain::settings_learning::{LearningDefaults, LearningSettings};
 
 impl FromSql for SettingsName {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
@@ -58,6 +59,24 @@ pub fn get_settings(db: &Database, name: SettingsName) -> Result<Option<Settings
             })
         })
     })
+}
+
+/// Learning defaults for repo-level delete guards. `None` while learning settings are absent (pre-seed).
+/// Connection-scoped so it can run inside a transaction (unlike [`get_settings`]).
+pub(crate) fn learning_defaults(conn: &Connection) -> Result<Option<LearningDefaults>, AppError> {
+    let content: Option<String> = conn
+        .query_row(
+            "SELECT content FROM settings WHERE name = ?1 LIMIT 1",
+            params![SettingsName::Learning.to_string()],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(AppError::from)?;
+
+    match content {
+        Some(content) => Ok(Some(parse_json_column::<LearningSettings>(0, &content)?.defaults)),
+        None => Ok(None),
+    }
 }
 
 pub fn set_settings(db: &Database, name: SettingsName, content: Value) -> Result<Settings, AppError> {

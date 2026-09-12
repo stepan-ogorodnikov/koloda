@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { addCard } from "./cards";
 import { addTemplate, deleteTemplate, getTemplate, updateTemplate } from "./templates";
 import type { TestDb } from "../test/test-helpers";
-import { createCardContent, createTestDb, MISSING_ID, seedDeckContext, seedTemplate } from "../test/test-helpers";
+import {
+  createCardContent,
+  createTestDb,
+  MISSING_ID,
+  seedDeckContext,
+  seedLearningSettings,
+  seedTemplate,
+} from "../test/test-helpers";
 
 describe("templates repository integration", () => {
   let testDb: TestDb;
@@ -101,6 +108,32 @@ describe("templates repository integration", () => {
     await expect(deleteTemplate(db, { id: template.id })).rejects.toMatchObject({
       code: "validation.templates.delete-locked",
     });
+  });
+
+  it("rejects deleting the learning-default template", async () => {
+    const { db } = testDb;
+    const { algorithm } = await seedDeckContext(db);
+    const defaultTemplate = await seedTemplate(db, { title: "Default" });
+    await seedTemplate(db, { title: "Other" });
+    await seedLearningSettings(db, { algorithm: algorithm.id, template: defaultTemplate.id });
+
+    await expect(deleteTemplate(db, { id: defaultTemplate.id })).rejects.toMatchObject({
+      code: "validation.templates.delete-default",
+    });
+
+    expect(await getTemplate(db, defaultTemplate.id)).not.toBeNull();
+  });
+
+  it("allows deleting a former default template after the default moves elsewhere", async () => {
+    const { db } = testDb;
+    const { algorithm } = await seedDeckContext(db);
+    const formerDefault = await seedTemplate(db, { title: "Old" });
+    const newDefault = await seedTemplate(db, { title: "New" });
+    await seedLearningSettings(db, { algorithm: algorithm.id, template: newDefault.id });
+
+    await deleteTemplate(db, { id: formerDefault.id });
+
+    expect(await getTemplate(db, formerDefault.id)).toBeNull();
   });
 
   it("rejects adding a template whose layout references an unknown field", async () => {

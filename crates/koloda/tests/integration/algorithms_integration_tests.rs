@@ -1,9 +1,10 @@
 use koloda::app::error::error_codes;
 use koloda::domain::algorithms::{DeleteAlgorithmData, UpdateAlgorithmData, UpdateAlgorithmValues};
+use koloda::domain::settings::SettingsName;
 use koloda::repo::algorithms;
 
 use crate::common::fixtures::{add_algorithm, add_deck, add_template};
-use crate::common::{fsrs_algorithm_content, test_db};
+use crate::common::{fsrs_algorithm_content, learning_settings, test_db};
 
 #[test]
 fn update_algorithm_fails_with_not_found_when_algorithm_is_missing() {
@@ -54,6 +55,7 @@ fn delete_algorithm_reassigns_decks_to_successor() {
 fn delete_algorithm_fails_without_successor_when_decks_exist() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
+    let _other_algorithm_id = add_algorithm(&db, "Other FSRS");
     let template_id = add_template(&db, "Basic");
     let _ = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
@@ -73,6 +75,7 @@ fn delete_algorithm_fails_without_successor_when_decks_exist() {
 fn delete_algorithm_fails_when_successor_does_not_exist() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");
+    let _other_algorithm_id = add_algorithm(&db, "Other FSRS");
     let template_id = add_template(&db, "Basic");
     let _ = add_deck(&db, &algorithm_id, &template_id, "Deck");
 
@@ -86,6 +89,84 @@ fn delete_algorithm_fails_when_successor_does_not_exist() {
     .expect_err("deleting algorithm with non-existent successor should fail");
 
     assert_eq!(err.code, error_codes::NOT_FOUND_ALGORITHMS_DELETE_SUCCESSOR);
+}
+
+#[test]
+fn delete_algorithm_fails_while_it_is_the_learning_default() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "Default FSRS");
+    let _other_algorithm_id = add_algorithm(&db, "Other FSRS");
+    let template_id = add_template(&db, "Basic");
+
+    let mut learning = learning_settings(100, 20, 30, 50);
+    learning["defaults"]["algorithm"] = algorithm_id.clone().into();
+    learning["defaults"]["template"] = template_id.into();
+    koloda::repo::settings::set_settings(&db, SettingsName::Learning, learning)
+        .expect("learning settings should be set");
+
+    let err = algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: algorithm_id.clone(),
+            successor_id: None,
+        },
+    )
+    .expect_err("deleting the learning-default algorithm should fail");
+
+    assert_eq!(err.code, error_codes::VALIDATION_ALGORITHMS_DELETE_DEFAULT);
+    assert!(
+        algorithms::get_algorithm(&db, &algorithm_id)
+            .expect("query should succeed")
+            .is_some(),
+        "default algorithm should remain"
+    );
+}
+
+#[test]
+fn delete_algorithm_fails_when_it_is_the_only_algorithm_left() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+
+    let err = algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: algorithm_id,
+            successor_id: None,
+        },
+    )
+    .expect_err("deleting the only algorithm should fail");
+
+    assert_eq!(err.code, error_codes::VALIDATION_ALGORITHMS_DELETE_LAST);
+}
+
+#[test]
+fn delete_algorithm_succeeds_after_the_default_moves_elsewhere() {
+    let db = test_db();
+    let former_default_id = add_algorithm(&db, "Old FSRS");
+    let new_default_id = add_algorithm(&db, "New FSRS");
+    let template_id = add_template(&db, "Basic");
+
+    let mut learning = learning_settings(100, 20, 30, 50);
+    learning["defaults"]["algorithm"] = new_default_id.into();
+    learning["defaults"]["template"] = template_id.into();
+    koloda::repo::settings::set_settings(&db, SettingsName::Learning, learning)
+        .expect("learning settings should be set");
+
+    algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: former_default_id.clone(),
+            successor_id: None,
+        },
+    )
+    .expect("a former default should be deletable once the default moves elsewhere");
+
+    assert!(
+        algorithms::get_algorithm(&db, &former_default_id)
+            .expect("query should succeed")
+            .is_none(),
+        "former default algorithm should be deleted"
+    );
 }
 
 #[test]

@@ -10,6 +10,7 @@ import type {
 import { ALGORITHM_SELECT } from "./columns";
 import type { DB } from "./db";
 import { parseRowOrNull, parseRows } from "./parse-rows";
+import { getSettings } from "./settings";
 import { nowMs } from "./sql";
 
 export async function getAlgorithms(db: DB) {
@@ -72,6 +73,15 @@ export async function cloneAlgorithm(db: DB, { title, sourceId }: CloneAlgorithm
 
 export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorithmData) {
   return throwKnownError("db.delete", async () => {
+    // Invariant: the learning default (LEARNING-SETTINGS.md §Defaults) and the last remaining
+    // algorithm (ALGORITHMS.md §Deleting Algorithms) are not deletable. UI disable is a
+    // convenience, not the enforcement — keep these guards ahead of the successor reassignment.
+    const learning = await getSettings(db, "learning");
+    if (learning?.content.defaults.algorithm === id) throw new AppError("validation.algorithms.delete-default");
+
+    const [{ count }] = await db.all("SELECT COUNT(*) AS count FROM algorithms");
+    if (Number(count) <= 1) throw new AppError("validation.algorithms.delete-last");
+
     const algorithmDecks = await getAlgorithmDecks(db, id);
     if (algorithmDecks.length > 0) {
       if (!successorId) throw new AppError("not-found.algorithms.delete.successor");

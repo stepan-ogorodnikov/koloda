@@ -16,6 +16,7 @@ import {
 import { TEMPLATE_LOCKED_SELECT, TEMPLATE_SELECT } from "./columns";
 import type { DB } from "./db";
 import { parseRowOrNull, parseRows } from "./parse-rows";
+import { getSettings } from "./settings";
 import { nowMs, placeholders } from "./sql";
 
 export async function getTemplates(db: DB) {
@@ -107,6 +108,12 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
 
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.delete", async () => {
+    // Invariant: the learning default template is not deletable while it remains the default
+    // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
+    // convenience, not the enforcement.
+    const learning = await getSettings(db, "learning");
+    if (learning?.content.defaults.template === id) throw new AppError("validation.templates.delete-default");
+
     const template = await getTemplate(db, id);
 
     if (template?.isLocked) throw new AppError("validation.templates.delete-locked");

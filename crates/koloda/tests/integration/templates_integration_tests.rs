@@ -1,11 +1,12 @@
 use koloda::app::error::error_codes;
+use koloda::domain::settings::SettingsName;
 use koloda::domain::templates::{
     DeleteTemplateData, TemplateContent, TemplateField, TemplateLayoutItem, UpdateTemplateData, UpdateTemplateValues,
 };
 use koloda::repo::templates;
 
 use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template};
-use crate::common::test_db;
+use crate::common::{learning_settings, test_db};
 
 #[test]
 fn update_template_fails_with_not_found_when_template_is_missing() {
@@ -46,6 +47,65 @@ fn delete_template_fails_when_template_is_locked_by_cards() {
     .expect_err("locked template delete should fail");
 
     assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED);
+}
+
+#[test]
+fn delete_template_fails_while_it_is_the_learning_default() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let default_template_id = add_template(&db, "Default Basic");
+    let _other_template_id = add_template(&db, "Other Basic");
+
+    let mut learning = learning_settings(100, 20, 30, 50);
+    learning["defaults"]["algorithm"] = algorithm_id.into();
+    learning["defaults"]["template"] = default_template_id.clone().into();
+    koloda::repo::settings::set_settings(&db, SettingsName::Learning, learning)
+        .expect("learning settings should be set");
+
+    let err = templates::delete_template(
+        &db,
+        DeleteTemplateData {
+            id: default_template_id.clone(),
+        },
+    )
+    .expect_err("deleting the learning-default template should fail");
+
+    assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_DELETE_DEFAULT);
+    assert!(
+        templates::get_template(&db, &default_template_id)
+            .expect("query should succeed")
+            .is_some(),
+        "default template should remain"
+    );
+}
+
+#[test]
+fn delete_template_succeeds_after_the_default_moves_elsewhere() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let former_default_id = add_template(&db, "Old Basic");
+    let new_default_id = add_template(&db, "New Basic");
+
+    let mut learning = learning_settings(100, 20, 30, 50);
+    learning["defaults"]["algorithm"] = algorithm_id.into();
+    learning["defaults"]["template"] = new_default_id.into();
+    koloda::repo::settings::set_settings(&db, SettingsName::Learning, learning)
+        .expect("learning settings should be set");
+
+    templates::delete_template(
+        &db,
+        DeleteTemplateData {
+            id: former_default_id.clone(),
+        },
+    )
+    .expect("a former default should be deletable once the default moves elsewhere");
+
+    assert!(
+        templates::get_template(&db, &former_default_id)
+            .expect("query should succeed")
+            .is_none(),
+        "former default template should be deleted"
+    );
 }
 
 #[test]

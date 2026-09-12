@@ -7,6 +7,7 @@ use crate::domain::algorithms::{
     Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
 };
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
+use crate::repo::settings;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
     let content_str: String = row.get(2)?;
@@ -187,6 +188,19 @@ pub fn clone_algorithm(db: &Database, data: CloneAlgorithmData) -> Result<Algori
 pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
         db.with_transaction(|tx| {
+            // INVARIANT: the learning default (LEARNING-SETTINGS.md §Defaults) and the last remaining
+            // algorithm (ALGORITHMS.md §Deleting Algorithms) are not deletable. UI disable is a
+            // convenience, not the enforcement — keep these guards ahead of the successor reassignment.
+            let defaults = settings::learning_defaults(tx)?;
+            if defaults.is_some_and(|d| d.algorithm == data.id) {
+                return Err(AppError::new(error_codes::VALIDATION_ALGORITHMS_DELETE_DEFAULT, None));
+            }
+
+            let algorithm_count: i64 = tx.query_row("SELECT COUNT(*) FROM algorithms", [], |row| row.get(0))?;
+            if algorithm_count <= 1 {
+                return Err(AppError::new(error_codes::VALIDATION_ALGORITHMS_DELETE_LAST, None));
+            }
+
             let has_decks: bool = tx
                 .query_row(
                     r#"

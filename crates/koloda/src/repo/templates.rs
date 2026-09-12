@@ -7,6 +7,7 @@ use crate::domain::templates::{
     CloneTemplateData, DeleteTemplateData, InsertTemplateData, Template, TemplateContent, TemplateDeck,
     UpdateTemplateData,
 };
+use crate::repo::settings;
 
 fn get_template_row(row: &rusqlite::Row<'_>) -> Result<Template, rusqlite::Error> {
     let content_str: String = row.get(2)?;
@@ -239,6 +240,15 @@ pub fn clone_template(db: &Database, data: CloneTemplateData) -> Result<Template
 
 pub fn delete_template(db: &Database, data: DeleteTemplateData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
+        // INVARIANT: the learning default template is not deletable while it remains the default
+        // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
+        // convenience, not the enforcement.
+        let is_default =
+            db.with_conn(|conn| Ok(settings::learning_defaults(conn)?.is_some_and(|d| d.template == data.id)))?;
+        if is_default {
+            return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_DEFAULT, None));
+        }
+
         let is_locked = is_template_locked(db, &data.id)?;
         if is_locked {
             return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED, None));

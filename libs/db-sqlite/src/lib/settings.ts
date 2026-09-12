@@ -8,7 +8,7 @@ import type { DB } from "./db";
 import { parseRow } from "./parse-rows";
 import { nowMs } from "./sql";
 
-export async function getSettings<T extends SettingsName>(db: DB, name: SettingsName) {
+export async function getSettings<T extends SettingsName>(db: DB, name: T) {
   return throwKnownError("db.get", async () => {
     const result = await db.get(`SELECT ${SETTINGS_SELECT} FROM settings WHERE name = ? LIMIT 1`, [name]);
     if (!result) return null;
