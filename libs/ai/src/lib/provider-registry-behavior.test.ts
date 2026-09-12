@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { AIError } from "./error";
-import { AI_PROVIDERS } from "./provider-catalog";
 import type { AiProvider } from "./provider-catalog";
 import { getProviderConfig, listProvidersThatWorkInBrowser } from "./provider-registry";
 
@@ -22,9 +21,7 @@ describe("provider-registry", () => {
     });
   });
 
-  it("lists exactly the catalog entries whose own worksInBrowser flag is set", () => {
-    const expected = AI_PROVIDERS.filter((id) => getProviderConfig(id).worksInBrowser);
-
-    expect(listProvidersThatWorkInBrowser()).toEqual(expected);
+  it("lists the browser-capable providers per the spec platform table", () => {
+    expect(listProvidersThatWorkInBrowser()).toEqual(["openrouter", "ollama", "lmstudio"]);
   });
 });
