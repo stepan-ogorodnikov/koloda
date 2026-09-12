@@ -48,7 +48,7 @@ msgstr "У вас нет ни одного профиля ИИ"
 msgid "ai.chat.no-profiles.add"
 msgstr "Добавить профиль"
 
-#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-chat.tsx:192
+#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-chat.tsx:198
 msgid "ai.chat.restoring"
 msgstr "Загрузка"
 
@@ -148,11 +148,11 @@ msgstr "Не прочитано"
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
 
-#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-table.tsx:54
+#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-table.tsx:65
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-message.tsx:93
+#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-message.tsx:107
 msgid "assistant.generated-no-cards"
 msgstr "Карточки не сгенерированы"
 
@@ -192,6 +192,6 @@ msgstr "В обработке"
 msgid "assistant.table.columns.status.success"
 msgstr "Успешно"
 
-#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-message.tsx:91
+#: ../../libs/assistant-react/src/lib/assistant/ui/assistant-cards-table.tsx:57
 msgid "assistant.template-unavailable"
 msgstr "Шаблон не доступен"

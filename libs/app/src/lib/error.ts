@@ -80,6 +80,7 @@ export const ERROR_MESSAGES = {
   "validation.assistant-settings.temperature-range": msg`validation.assistant-settings.temperature-range`,
   "validation.templates.fields.too-few": msg`validation.templates.fields.too-few`,
   "validation.templates.layout.too-few": msg`validation.templates.layout.too-few`,
+  "validation.templates.layout.missing-field": msg`validation.templates.layout.missing-field`,
   "validation.templates.update-locked": msg`validation.templates.update-locked`,
   "validation.templates.delete-locked": msg`validation.templates.delete-locked`,
   "validation.cards.content.field-empty": msg`validation.cards.content.field-empty`,

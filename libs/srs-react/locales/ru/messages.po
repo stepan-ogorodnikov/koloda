@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:73
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:70
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
@@ -357,7 +357,7 @@ msgstr "Успешно"
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:95
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:87
 msgid "deck.actions.label"
 msgstr "Действия"
 
@@ -365,31 +365,31 @@ msgstr "Действия"
 msgid "deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:98
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:97
 msgid "delete-algorithm.cancel"
 msgstr "Отменить"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:57
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:54
 msgid "delete-algorithm.cant-delete"
 msgstr "Нельзя удалить алгоритм по умолчанию"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:99
 msgid "delete-algorithm.confirm"
 msgstr "Удалить"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:92
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:91
 msgid "delete-algorithm.message"
 msgstr "Подтвердите удаление алгоритма"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:74
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:71
 msgid "delete-algorithm.successor-message"
 msgstr "Чтобы удалить этот алгоритм нужно выбрать алгоритм наследник"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:78
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:75
 msgid "delete-algorithm.successor.label"
 msgstr "Алгоритм наследник"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:55
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:52
 msgid "delete-algorithm.trigger"
 msgstr "Удалить алгоритм"
 
@@ -548,7 +548,7 @@ msgstr "Шаблон"
 msgid "template.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:80
+#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:79
 msgid "template.fields.add-item"
 msgstr "Добавить поле"
 

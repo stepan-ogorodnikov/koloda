@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. placeholder {0}: decks.length
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:73
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:70
 msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
@@ -357,7 +357,7 @@ msgstr "Done"
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:95
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:87
 msgid "deck.actions.label"
 msgstr "Actions"
 
@@ -365,31 +365,31 @@ msgstr "Actions"
 msgid "deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:98
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:97
 msgid "delete-algorithm.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:57
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:54
 msgid "delete-algorithm.cant-delete"
 msgstr "Default preset can't be deleted"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:100
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:99
 msgid "delete-algorithm.confirm"
 msgstr "Delete preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:92
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:91
 msgid "delete-algorithm.message"
 msgstr "Are you sure you want to delete this preset?"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:74
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:71
 msgid "delete-algorithm.successor-message"
 msgstr "If you want to delete this preset, select a successor."
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:78
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:75
 msgid "delete-algorithm.successor.label"
 msgstr "Successor preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:55
+#: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:52
 msgid "delete-algorithm.trigger"
 msgstr "Delete preset"
 
@@ -548,7 +548,7 @@ msgstr "Template"
 msgid "template.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:80
+#: ../../libs/srs-react/src/lib/templates/template-fields.tsx:79
 msgid "template.fields.add-item"
 msgstr "Add field"
 

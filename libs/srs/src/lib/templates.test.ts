@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { TemplateField } from "./templates";
-import { getTemplateFieldTitleById, validateLockedTemplateFields } from "./templates";
+import { getTemplateFieldTitleById, insertTemplateSchema, validateLockedTemplateFields } from "./templates";
 
 const FRONT_ID = "01900000-0000-7000-8000-000000000001";
 const BACK_ID = "01900000-0000-7000-8000-000000000002";
@@ -35,5 +35,39 @@ describe("templates", () => {
 
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual([`Missing fields: ${BACK_ID}`, `Field (id: ${FRONT_ID}): property 'type' changed`]);
+  });
+
+  it("accepts an insert template whose layout items reference existing fields", () => {
+    const result = insertTemplateSchema.safeParse({
+      title: "Basic",
+      content: {
+        fields: ORIGINAL_FIELDS,
+        layout: [
+          { field: FRONT_ID, operation: "display" },
+          { field: BACK_ID, operation: "type" },
+        ],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an insert template whose layout item references a missing field", () => {
+    const result = insertTemplateSchema.safeParse({
+      title: "Basic",
+      content: {
+        fields: ORIGINAL_FIELDS,
+        layout: [
+          { field: FRONT_ID, operation: "display" },
+          { field: "01900000-0000-7000-8000-0000000003e7", operation: "type" },
+        ],
+      },
+    });
+
+    expect(result.success).toBe(false);
+    const issue = result.success
+      ? undefined
+      : result.error.issues.find((x) => x.message === "validation.templates.layout.missing-field");
+    expect(issue?.path).toEqual(["content", "layout", 1, "field"]);
   });
 });

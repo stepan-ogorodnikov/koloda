@@ -20,29 +20,47 @@ export const TEMPLATE_OPERATIONS_MESSAGES = [
   { id: "type", value: msg`templates.operations.type` },
 ];
 
+const templateContentFields = z.object({
+  fields: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        title: z.string(),
+        type: z.enum(TEMPLATE_FIELD_TYPES),
+        isRequired: z.boolean(),
+      }),
+    )
+    .min(1, "validation.templates.fields.too-few"),
+  layout: z
+    .array(
+      z.object({
+        field: z.uuid(),
+        operation: z.enum(TEMPLATE_OPERATIONS),
+      }),
+    )
+    .min(1, "validation.templates.layout.too-few"),
+});
+
+// WHY: mirrors the Rust twin `validate_template_content` layout membership check (docs/adr/0001);
+// TS must reject what Rust rejects, so keep this refine while the Rust check exists.
+const templateContent = templateContentFields.superRefine((content, ctx) => {
+  const fieldIds = new Set(content.fields.map((field) => field.id));
+
+  for (const [index, item] of content.layout.entries()) {
+    if (!fieldIds.has(item.field)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "validation.templates.layout.missing-field",
+        path: ["layout", index, "field"],
+      });
+    }
+  }
+});
+
 export const templateValidation = z.object({
   id: z.uuid(),
   title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
-  content: z.object({
-    fields: z
-      .array(
-        z.object({
-          id: z.uuid(),
-          title: z.string(),
-          type: z.enum(TEMPLATE_FIELD_TYPES),
-          isRequired: z.boolean(),
-        }),
-      )
-      .min(1, "validation.templates.fields.too-few"),
-    layout: z
-      .array(
-        z.object({
-          field: z.uuid(),
-          operation: z.enum(TEMPLATE_OPERATIONS),
-        }),
-      )
-      .min(1, "validation.templates.layout.too-few"),
-  }),
+  content: templateContent,
 });
 
 export const templateRowSchema = templateValidation.extend(timestampsValidation.shape).extend({

@@ -17,11 +17,11 @@ msgstr ""
 msgid "algorithms.title"
 msgstr "Алгоритмы"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:27
 msgid "deck.tabs.cards"
 msgstr "Карточки"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:25
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
 msgid "deck.tabs.details"
 msgstr "Параметры"
 
@@ -97,7 +97,7 @@ msgstr "Настройки"
 msgid "templates.title"
 msgstr "Шаблоны"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:29
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:31
 msgid "title.ai"
 msgstr "Ассистент"
 
@@ -109,7 +109,7 @@ msgstr "Алгоритмы"
 msgid "title.base"
 msgstr "Koloda"
 
-#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:12
+#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:15
 msgid "title.dashboard"
 msgstr "Главная"
 

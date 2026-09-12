@@ -17,11 +17,11 @@ msgstr ""
 msgid "algorithms.title"
 msgstr "Presets"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:27
 msgid "deck.tabs.cards"
 msgstr "Cards"
 
-#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:25
+#: ../../libs/app-react/src/lib/routes/_.decks.$deckId.tsx:26
 msgid "deck.tabs.details"
 msgstr "Details"
 
@@ -97,7 +97,7 @@ msgstr "Settings"
 msgid "templates.title"
 msgstr "Templates"
 
-#: ../../libs/app-react/src/lib/routes/_.ai.tsx:29
+#: ../../libs/app-react/src/lib/routes/_.ai.tsx:31
 msgid "title.ai"
 msgstr "Assistant"
 
@@ -109,7 +109,7 @@ msgstr "Presets"
 msgid "title.base"
 msgstr "Koloda"
 
-#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:12
+#: ../../libs/app-react/src/lib/routes/_.dashboard.tsx:15
 msgid "title.dashboard"
 msgstr "Dashboard"
 

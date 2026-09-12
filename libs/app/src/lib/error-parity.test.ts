@@ -8,7 +8,7 @@ import { ERROR_MESSAGES } from "./error";
 // `crates/koloda/src/app/error.rs` must have a matching key in
 // `ERROR_MESSAGES` (`libs/app/src/lib/error.ts`). The Rust list is parsed from
 // the source file at test time (no pinned copy), so a code added on the Rust
-// side fails here until the message table catches up. TS-only `ai.*` keys are
+// side fails here until the message table catches up. TS-only codes are
 // allow-listed below; they are produced client-side, not by koloda.
 //
 // When adding a Rust error code:
@@ -32,6 +32,9 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.502",
   "ai.http.503",
   "ai.http.504",
+  // WHY: mirrors the Rust `validate_template_content` layout membership check, which reports
+  // `error_codes::UNKNOWN` with a details string instead of a dedicated code.
+  "validation.templates.layout.missing-field",
 ] as const;
 
 const RUST_ERROR_RS = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/app/error.rs");
