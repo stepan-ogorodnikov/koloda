@@ -127,7 +127,7 @@ export function Algorithm({ id }: AlgorithmProps) {
         {(field) => (
           <NumberField
             variants={{ layout: "form" }}
-            minValue={0}
+            minValue={1}
             value={field.state.value}
             onChange={field.handleChange}
           >
