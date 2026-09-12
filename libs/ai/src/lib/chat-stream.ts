@@ -1,13 +1,16 @@
 import type { ProviderOptions } from "@ai-sdk/provider-utils";
 import { stepCountIs, streamText } from "ai";
 import { bindAssistantTools } from "./assistant-tools";
-import { resolveGenerationTemperature } from "./card-parsing";
 import { AIError, wrapAIError } from "./error";
 import type { ChatStreamChunk, ChatStreamRequest } from "./generation";
 import type { StreamUsage } from "./models";
-import { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./prompts";
+import { DEFAULT_CHAT_PROMPT_TEMPLATE, GENERATION_TEMPERATURE } from "./prompts";
 import { OLLAMA_CLOUD_BASE_URL, OPENCODE_GO_BASE_URL, OPENCODE_ZEN_BASE_URL } from "./provider-catalog";
 import { wrapModelWithReasoningExtraction } from "./model-reasoning-extraction";
+
+function resolveGenerationTemperature(value?: number) {
+  return typeof value === "number" ? value : GENERATION_TEMPERATURE;
+}
 
 // WHY: bounds runaway tool loops (the model re-calling tools instead of answering)
 // while leaving room for list_decks → get_deck_cards → answer chains plus retries.
