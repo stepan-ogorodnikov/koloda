@@ -90,7 +90,7 @@ The plan is approved only when the human has both:
 
 On approval, write each picked message as the item's single `Commit:` line.
 Drop the other candidates.
-Follow `agents/TASKS.md` (flip to `ready`, queue).
+Follow `agents/TASKS.md` (flip to `ready`).
 Approval is not an instruction to implement.
 Do not start executing unless the human explicitly asks to implement.
 Never start executing with unpicked messages.
