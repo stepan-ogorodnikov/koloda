@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS cards (
 	id text PRIMARY KEY NOT NULL,
 	deck_id text NOT NULL,
 	template_id text NOT NULL,
-	content text,
+	content text NOT NULL,
 	state integer DEFAULT 0,
 	due_at integer,
 	stability real DEFAULT 0,

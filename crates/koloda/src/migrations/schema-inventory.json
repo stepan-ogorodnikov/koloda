@@ -63,7 +63,7 @@
         {
           "name": "content",
           "type": "TEXT",
-          "notnull": 0,
+          "notnull": 1,
           "pk": 0,
           "dflt_value": null
         },
