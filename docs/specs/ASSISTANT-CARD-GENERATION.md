@@ -76,8 +76,7 @@ All rows are initially selected.
 
 On a chat turn that proposed cards, the table sits below any tool activity and above leftover assistant text.
 Once cards are on screen, the pending status is not shown on the table.
-It attaches below the table while the run is still streaming, leftover text has not arrived, and no tool or thinking row is still running.
-See ASSISTANT-MESSAGES.md (§Message States).
+It attaches below the table while the turn is still pending; the exact conditions live in ASSISTANT-MESSAGES.md (§Message States).
 
 On success, the table and an elapsed time display appear with the rest of the turn.
 On cancellation, the cards received before cancellation remain visible with a canceled status.

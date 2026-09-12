@@ -256,7 +256,7 @@ impl UpdateCardProgress {
 
 fn validate_content(content: &CardContent, template_fields: &[TemplateField]) -> Result<(), AppError> {
     // CARDS.md §Card Content: every template field must be present; optional fields may be empty.
-    // Twin of `@koloda/srs` `getCardContentValidation` (`z.object` rejects absent keys); missing
+    // WHY: Twin of `@koloda/srs` `getCardContentValidation` (`z.object` rejects absent keys); missing
     // keys reuse field-empty because the UI catalog translates only that code.
     for field in template_fields {
         let field_value = content.get(field.id.as_str()).ok_or_else(|| {

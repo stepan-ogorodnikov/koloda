@@ -48,7 +48,7 @@ impl LearningDefaults {
     }
 }
 
-// Twin of `@koloda/app` `z.uuid()`: 8-4-4-4-12 hex groups, case-insensitive. Hand-rolled instead of
+// WHY: Twin of `@koloda/app` `z.uuid()`: 8-4-4-4-12 hex groups, case-insensitive. Hand-rolled instead of
 // `uuid::Uuid::parse_str`, which also accepts braced/urn/hyphen-less forms the web validation rejects.
 fn validate_uuid(value: &str, code: &'static str) -> Result<(), AppError> {
     const HYPHEN_SLOTS: [usize; 4] = [8, 13, 18, 23];

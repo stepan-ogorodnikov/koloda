@@ -91,8 +91,8 @@ mod seam {
 }
 
 /// Cache-policy tests: `CachedStore` over an instrumented in-memory backend.
-/// Hermetic by construction — no OS vault access. `external_write` / `external_remove`
-/// bypass the store to simulate another process changing the vault behind our back.
+/// Hermetic by construction — no OS vault access. `external_write` bypasses the
+/// store to simulate another process changing the vault behind our back.
 #[cfg(debug_assertions)]
 mod cache {
     use koloda::app::error::AppError;
