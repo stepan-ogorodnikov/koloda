@@ -61,6 +61,17 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithm(db, SEED_ALGORITHM_SIMPLE_ID)).toMatchObject({ title: "Seeded" });
   });
 
+  it("rejects adding an algorithm that fails content validation", async () => {
+    const { db } = testDb;
+    const seeded = await seedAlgorithm(db);
+
+    await expect(
+      addAlgorithm(db, { title: "Bad", content: { ...DEFAULT_FSRS_ALGORITHM, retention: 50 } }),
+    ).rejects.toThrow();
+
+    expect(await getAlgorithms(db)).toEqual([seeded]);
+  });
+
   it("rejects cloning when the source algorithm is missing", async () => {
     const { db } = testDb;
 

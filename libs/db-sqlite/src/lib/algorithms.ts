@@ -29,11 +29,12 @@ export async function getAlgorithm(db: DB, id: Algorithm["id"]) {
 
 export async function addAlgorithm(db: DB, data: InsertAlgorithmData, id?: string) {
   return throwKnownError("db.add", async () => {
+    const payload = insertAlgorithmSchema.parse(data);
     const rowId = mintedUuidv7(id);
     await db.run(`INSERT INTO algorithms (id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, NULL)`, [
       rowId,
-      data.title,
-      JSON.stringify(data.content),
+      payload.title,
+      JSON.stringify(payload.content),
       nowMs(),
     ]);
     const result = await getAlgorithm(db, rowId);
