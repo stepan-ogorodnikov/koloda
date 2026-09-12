@@ -224,6 +224,16 @@ describe("algorithmFSRSValidation", () => {
       code: "validation.algorithm.fsrs.retention",
     },
     {
+      name: "retention non-integer",
+      payload: { ...validPayload(), retention: 90.5 },
+      code: "validation.algorithm.fsrs.retention",
+    },
+    {
+      name: "retention in-range non-integer",
+      payload: { ...validPayload(), retention: 70.5 },
+      code: "validation.algorithm.fsrs.retention",
+    },
+    {
       name: "learning step zero amount",
       payload: { ...validPayload(), learningSteps: [[0, "m"]] },
       code: "validation.algorithm.fsrs.learning-steps.amount",

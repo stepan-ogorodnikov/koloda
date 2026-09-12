@@ -29,7 +29,7 @@ impl AlgorithmFSRS {
             ));
         }
 
-        if self.retention < 70.0 || self.retention > 99.0 {
+        if self.retention < 70.0 || self.retention > 99.0 || self.retention.fract() != 0.0 {
             return Err(AppError::new(error_codes::VALIDATION_ALGORITHM_FSRS_RETENTION, None));
         }
 

@@ -150,6 +150,44 @@ fn test_retention_above_maximum_fails() {
 }
 
 #[test]
+fn test_retention_non_integer_fails() {
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 90.5,
+        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(
+        algorithm.validate().is_err(),
+        "Should fail when retention is not an integer"
+    );
+}
+
+#[test]
+fn test_retention_in_range_non_integer_fails() {
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 70.5,
+        "weights": "0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(
+        algorithm.validate().is_err(),
+        "Should fail when in-range retention is not an integer"
+    );
+}
+
+#[test]
 fn test_weights_exactly_21_values() {
     let json = r#"{
         "type": "fsrs",

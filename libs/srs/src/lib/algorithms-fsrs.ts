@@ -35,7 +35,7 @@ const algorithmFSRSBaseValidation = z.object({
 });
 
 export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((data, ctx) => {
-  if (data.retention < 70 || data.retention > 99) {
+  if (data.retention < 70 || data.retention > 99 || !Number.isInteger(data.retention)) {
     ctx.addIssue({
       code: "custom",
       message: "validation.algorithm.fsrs.retention",
