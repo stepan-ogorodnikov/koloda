@@ -1,8 +1,9 @@
 use koloda::app::error::error_codes;
-use koloda::domain::decks::{InsertDeckData, UpdateDeckData, UpdateDeckValues};
-use koloda::repo::decks;
+use koloda::domain::decks::{DeleteDeckData, InsertDeckData, UpdateDeckData, UpdateDeckValues};
+use koloda::domain::reviews::GetReviewsData;
+use koloda::repo::{cards, decks, reviews};
 
-use crate::common::fixtures::{add_algorithm, add_deck, add_template};
+use crate::common::fixtures::{add_algorithm, add_card, add_deck, add_template, insert_review_row};
 use crate::common::test_db;
 
 #[test]
@@ -104,4 +105,52 @@ fn update_deck_rejects_missing_algorithm_and_template() {
     assert_eq!(still.title, "Deck");
     assert_eq!(still.algorithm_id, algorithm_id);
     assert_eq!(still.template_id, template_id);
+}
+
+#[test]
+fn delete_deck_removes_deck_and_cascades_cards_and_reviews() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+    let other_deck_id = add_deck(&db, &algorithm_id, &template_id, "Other deck");
+    let card_id = add_card(&db, &deck_id, &template_id, "question");
+    let other_card_id = add_card(&db, &other_deck_id, &template_id, "untouched");
+
+    insert_review_row(&db, &card_id, 2, 0, 1_800_000_000_000);
+
+    decks::delete_deck(&db, DeleteDeckData { id: deck_id.clone() }).expect("delete should succeed");
+
+    let deleted_deck = decks::get_deck(&db, &deck_id).expect("deck lookup should succeed");
+    assert!(deleted_deck.is_none(), "deleted deck should no longer exist");
+
+    let remaining_cards = cards::get_cards(&db, &deck_id).expect("cards query should succeed");
+    assert!(
+        remaining_cards.is_empty(),
+        "deleting a deck should cascade to its cards"
+    );
+
+    let saved_reviews = reviews::get_reviews(
+        &db,
+        GetReviewsData {
+            card_id: card_id.clone(),
+        },
+    )
+    .expect("reviews query should succeed");
+    assert!(
+        saved_reviews.is_empty(),
+        "deleting a deck should cascade to its cards' reviews"
+    );
+
+    let untouched_deck = decks::get_deck(&db, &other_deck_id)
+        .expect("deck query should succeed")
+        .expect("other decks should be unaffected");
+    assert_eq!(untouched_deck.title, "Other deck");
+
+    let untouched_cards = cards::get_cards(&db, &other_deck_id).expect("cards query should succeed");
+    assert_eq!(
+        untouched_cards.iter().map(|card| card.id.as_str()).collect::<Vec<_>>(),
+        vec![other_card_id.as_str()],
+        "other decks should keep their cards"
+    );
 }
