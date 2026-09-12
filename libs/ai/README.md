@@ -18,6 +18,7 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 - Settings & profiles: `settings.ts` — profile/settings zod schemas, CRUD DTOs, `DEFAULT_AI_SETTINGS`.
 - Models & generation contracts: `models.ts` (`AIModel`, `ModelParameter`, `StreamUsage`); `generation.ts` (chat request types, `chatInputSchema`).
 - Chat streaming: `chat-stream.ts` — shared `runChatStream` for all providers over Vercel AI SDK `streamText`. Note the `streamedError` pattern: errors are captured in `onError` and re-thrown after stream iteration, because `for await` may swallow them. Per-provider wrappers only supply the model factory (and optional `providerOptions`).
+- Assistant tools: `assistant-tools.ts` — specs for the names-only tools (`list_decks`, `get_deck_cards`, `propose_cards`), input binding, output shaping and budgets; `assistant-tool-executor.ts` — the shared find-deck → find-template → shape executor, awaiting a host-injected `AssistantToolDataSource` (web SQLite, Electron NAPI). No I/O in this module — hosts bind data sources.
 - Temperature: `card-parsing.ts` — `resolveGenerationTemperature` (chat still uses this).
 - Prompts: `prompts.ts` — default chat prompt template and `GENERATION_TEMPERATURE`. Field titles come from tools, not the system prompt. `chat-stream.ts` trims the saved (or default) prompt when sending.
 - Conversation helpers (pure): `conversations.ts` — `getTextMessageContent` and `computeConversationTitle` (255-char truncation) over Vercel AI SDK `UIMessage`. No state.

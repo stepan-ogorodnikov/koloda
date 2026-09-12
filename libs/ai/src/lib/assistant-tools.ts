@@ -5,8 +5,9 @@ import type { GeneratedCard } from "./generation";
 
 /**
  * Assistant chat tool registry — specs, binder, and pure output shaping, no I/O
- * (layer map: libs/ai owns the contract; hosts bind executors per tool name).
- * Adding a tool is one entry here plus one executor in each host.
+ * (layer map: libs/ai owns the contract; hosts bind data sources into the
+ * shared executor in `assistant-tool-executor.ts`).
+ * Adding a tool is one entry here plus one branch in the shared executor.
  */
 
 /** Deck summary row returned by `list_decks`. */
