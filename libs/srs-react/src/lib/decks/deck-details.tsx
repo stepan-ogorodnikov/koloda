@@ -34,7 +34,7 @@ export function DeckDetails({ id }: DeckDetailsProps) {
             queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
             queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
             queryClient.setQueryData(queryKeys.decks.detail(id), returning);
-            formApi.reset();
+            formApi.reset(returning);
           },
           onError: (error) => {
             formApi.setErrorMap({ onSubmit: toFormErrors(error) });
