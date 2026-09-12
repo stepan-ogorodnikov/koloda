@@ -16,7 +16,7 @@ fn test_valid_ai_settings_with_openrouter_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-1",
+                "id": "01900000-0000-7000-8000-000000000001",
                 "title": "OpenRouter",
                 "secrets": {
                     "provider": "openrouter",
@@ -36,7 +36,7 @@ fn test_valid_ai_settings_with_legacy_empty_string_api_key() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-1",
+                "id": "01900000-0000-7000-8000-000000000001",
                 "title": "OpenRouter",
                 "secrets": {
                     "provider": "openrouter",
@@ -57,7 +57,7 @@ fn test_ai_settings_with_plaintext_api_key_fails_storage_validation() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-1",
+                "id": "01900000-0000-7000-8000-000000000001",
                 "title": "OpenRouter",
                 "secrets": {
                     "provider": "openrouter",
@@ -83,7 +83,7 @@ fn test_valid_ai_settings_with_lmstudio_profile_without_api_key() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-2",
+                "id": "01900000-0000-7000-8000-000000000002",
                 "title": null,
                 "secrets": {
                     "provider": "lmstudio",
@@ -104,7 +104,7 @@ fn test_valid_ai_settings_with_opencode_go_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-4",
+                "id": "01900000-0000-7000-8000-000000000004",
                 "title": "OpenCode Go",
                 "secrets": {
                     "provider": "opencodeGo",
@@ -124,7 +124,7 @@ fn test_valid_ai_settings_with_opencode_zen_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-5",
+                "id": "01900000-0000-7000-8000-000000000005",
                 "title": "OpenCode Zen",
                 "secrets": {
                     "provider": "opencodeZen",
@@ -144,7 +144,7 @@ fn test_valid_ai_settings_with_ollama_cloud_profile_redacted() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-6",
+                "id": "01900000-0000-7000-8000-000000000006",
                 "title": "Ollama Cloud",
                 "secrets": {
                     "provider": "ollamaCloud",
@@ -164,7 +164,7 @@ fn test_valid_ai_settings_with_whitelist_model_ids() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-1",
+                "id": "01900000-0000-7000-8000-000000000001",
                 "title": "OpenRouter",
                 "secrets": {
                     "provider": "openrouter",
@@ -189,7 +189,7 @@ fn test_ai_settings_empty_whitelist_model_id_fails() {
     let json = r#"{
         "profiles": [
             {
-                "id": "profile-1",
+                "id": "01900000-0000-7000-8000-000000000001",
                 "whitelistModelIds": [""],
                 "createdAt": "2026-01-01T00:00:00Z"
             }
@@ -254,7 +254,7 @@ fn test_settings_name_ai_validation_valid() {
     let content = serde_json::json!({
         "profiles": [
             {
-                "id": "profile-5",
+                "id": "01900000-0000-7000-8000-000000000005",
                 "title": "Local",
                 "secrets": {
                     "provider": "ollama",
@@ -274,13 +274,13 @@ fn test_duplicate_profile_ids_fail() {
     let json = r#"{
         "profiles": [
             {
-                "id": "dup-id",
+                "id": "01900000-0000-7000-8000-0000000000d0",
                 "title": "First",
                 "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11434" },
                 "createdAt": "2026-01-01T00:00:00Z"
             },
             {
-                "id": "dup-id",
+                "id": "01900000-0000-7000-8000-0000000000d0",
                 "title": "Second",
                 "secrets": { "provider": "ollama", "baseUrl": "http://localhost:11435" },
                 "createdAt": "2026-01-01T00:00:00Z"
@@ -302,8 +302,8 @@ fn test_duplicate_profile_ids_fail() {
 fn test_duplicate_profile_ids_fail_for_input_too() {
     let json = r#"{
         "profiles": [
-            { "id": "x", "title": null, "createdAt": "2026-01-01T00:00:00Z" },
-            { "id": "x", "title": null, "createdAt": "2026-01-01T00:00:00Z" }
+            { "id": "01900000-0000-7000-8000-0000000000d0", "title": null, "createdAt": "2026-01-01T00:00:00Z" },
+            { "id": "01900000-0000-7000-8000-0000000000d0", "title": null, "createdAt": "2026-01-01T00:00:00Z" }
         ]
     }"#;
 

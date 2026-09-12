@@ -191,7 +191,7 @@ fn test_ai_secrets_invalid_provider_fails() {
 #[test]
 fn test_ai_profile_validate_for_input_ok_with_secrets() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: Some("Main profile".to_string()),
         secrets: Some(AISecrets::OpenRouter {
             api_key: Some("key-123".to_string()),
@@ -207,7 +207,7 @@ fn test_ai_profile_validate_for_input_ok_with_secrets() {
 #[test]
 fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: Some("Main profile".to_string()),
         secrets: Some(AISecrets::OpenRouter {
             api_key: Some("key-123".to_string()),
@@ -224,7 +224,7 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
 #[test]
 fn test_ai_profile_validate_ok_without_secrets() {
     let profile = AIProfile {
-        id: "profile-2".to_string(),
+        id: "01900000-0000-7000-8000-000000000002".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,
@@ -251,9 +251,72 @@ fn test_ai_profile_validate_empty_id_fails() {
 }
 
 #[test]
+fn test_ai_profile_validate_non_uuid_id_fails_for_input() {
+    let profile = AIProfile {
+        id: "not-a-uuid".to_string(),
+        title: Some("Profile".to_string()),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate_for_input();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
+}
+
+#[test]
+fn test_ai_profile_validate_hyphenless_uuid_id_fails_for_input() {
+    // WHY: `uuid::Uuid::parse_str` accepts this hyphenless form; the hand-rolled twin of
+    // TS `z.uuid()` (strict 8-4-4-4-12) must reject it, so this pin fails on any
+    // regression back to the crate parser or to an empty-only id check.
+    let profile = AIProfile {
+        id: "01900000000070008000000000000001".to_string(),
+        title: Some("Profile".to_string()),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate_for_input();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
+}
+
+#[test]
+fn test_ai_profile_validate_non_uuid_id_fails_for_storage() {
+    let profile = AIProfile {
+        id: "not-a-uuid".to_string(),
+        title: Some("Profile".to_string()),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    let result = profile.validate_for_storage();
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.id");
+}
+
+#[test]
+fn test_ai_profile_validate_uuidv7_id_ok_for_input_and_storage() {
+    let profile = AIProfile {
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
+        title: Some("Profile".to_string()),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    profile.validate_for_input().unwrap();
+    profile.validate_for_storage().unwrap();
+}
+
+#[test]
 fn test_ai_profile_validate_title_too_long_fails() {
     let profile = AIProfile {
-        id: "profile-3".to_string(),
+        id: "01900000-0000-7000-8000-000000000003".to_string(),
         title: Some("a".repeat(129)),
         secrets: None,
         has_secrets: false,
@@ -270,7 +333,7 @@ fn test_ai_profile_validate_title_max_length_in_cyrillic_ok() {
     // 128 Cyrillic chars are 256 UTF-8 bytes — byte counting would reject the
     // title the TS zod mirror (UTF-16 units) accepts.
     let profile = AIProfile {
-        id: "profile-5".to_string(),
+        id: "01900000-0000-7000-8000-000000000005".to_string(),
         title: Some("ф".repeat(128)),
         secrets: None,
         has_secrets: false,
@@ -284,7 +347,7 @@ fn test_ai_profile_validate_title_max_length_in_cyrillic_ok() {
 #[test]
 fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
     let profile = AIProfile {
-        id: "profile-6".to_string(),
+        id: "01900000-0000-7000-8000-000000000006".to_string(),
         title: Some("ф".repeat(129)),
         secrets: None,
         has_secrets: false,
@@ -301,7 +364,7 @@ fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
     // 64 emoji are 128 UTF-16 units (2 per astral char), 65 are 130 — char counting
     // would accept the title the TS zod mirror (UTF-16 units) rejects.
     let profile = AIProfile {
-        id: "profile-7".to_string(),
+        id: "01900000-0000-7000-8000-000000000007".to_string(),
         title: Some("🦀".repeat(65)),
         secrets: None,
         has_secrets: false,
@@ -316,7 +379,7 @@ fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
 #[test]
 fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     let profile = AIProfile {
-        id: "profile-4".to_string(),
+        id: "01900000-0000-7000-8000-000000000004".to_string(),
         title: Some("Profile".to_string()),
         secrets: Some(AISecrets::OpenRouter { api_key: None }),
         has_secrets: false,
@@ -345,7 +408,7 @@ fn test_ai_secrets_deserialize_empty_api_key_as_none() {
 #[test]
 fn test_ai_profile_serialization_renders_iso_string_for_created_at() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,
@@ -380,7 +443,7 @@ fn test_ai_profile_deserialization_accepts_iso_string_for_created_at() {
 #[test]
 fn test_ai_profile_serialization_omits_unset_whitelist() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,
@@ -398,7 +461,7 @@ fn test_ai_profile_serialization_omits_unset_whitelist() {
 #[test]
 fn test_ai_profile_serialization_keeps_empty_whitelist() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,
@@ -417,7 +480,7 @@ fn test_ai_profile_serialization_keeps_empty_whitelist() {
 #[test]
 fn test_ai_profile_validate_ok_with_whitelist() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,
@@ -431,7 +494,7 @@ fn test_ai_profile_validate_ok_with_whitelist() {
 #[test]
 fn test_ai_profile_validate_empty_whitelist_model_id_fails() {
     let profile = AIProfile {
-        id: "profile-1".to_string(),
+        id: "01900000-0000-7000-8000-000000000001".to_string(),
         title: None,
         secrets: None,
         has_secrets: false,

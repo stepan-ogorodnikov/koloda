@@ -5,6 +5,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::app::error::{error_codes, AppError};
+use crate::domain::common;
 use crate::domain::time::{deserialize_timestamp, serialize_timestamp};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -261,9 +262,9 @@ impl AIProfile {
     }
 
     fn validate_id_and_title(&self) -> Result<(), AppError> {
-        if self.id.is_empty() {
-            return Err(AppError::new(error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID, None));
-        }
+        // WHY: Empty and malformed ids share one code, mirroring the single `id: z.uuid()`
+        // failure in the TS `aiProfileValidation` twin (covers input and storage paths).
+        common::validate_uuid(&self.id, error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID)?;
 
         if let Some(title) = &self.title {
             // WHY: UTF-16 units, not bytes — same rule as `common::validate_title`.

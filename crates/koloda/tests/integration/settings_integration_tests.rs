@@ -178,7 +178,7 @@ fn set_settings_rejects_plaintext_ai_api_key() {
         json!({
             "profiles": [
                 {
-                    "id": "profile-1",
+                    "id": "01900000-0000-7000-8000-000000000001",
                     "title": "OpenRouter",
                     "secrets": {
                         "provider": "openrouter",
@@ -206,7 +206,7 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
         json!({
             "profiles": [
                 {
-                    "id": "profile-1",
+                    "id": "01900000-0000-7000-8000-000000000001",
                     "title": "OpenRouter",
                     "secrets": {
                         "provider": "openrouter",
@@ -225,7 +225,7 @@ fn patch_settings_rejects_plaintext_ai_api_key() {
         json!({
             "profiles": [
                 {
-                    "id": "profile-1",
+                    "id": "01900000-0000-7000-8000-000000000001",
                     "title": "OpenRouter",
                     "secrets": {
                         "provider": "openrouter",

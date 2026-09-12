@@ -5,6 +5,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::app::error::{error_codes, AppError};
+use crate::domain::common::validate_uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,26 +46,6 @@ impl LearningDefaults {
             error_codes::VALIDATION_SETTINGS_LEARNING_DEFAULTS_TEMPLATE,
         )?;
         Ok(())
-    }
-}
-
-// WHY: Twin of `@koloda/app` `z.uuid()`: 8-4-4-4-12 hex groups, case-insensitive. Hand-rolled instead of
-// `uuid::Uuid::parse_str`, which also accepts braced/urn/hyphen-less forms the web validation rejects.
-fn validate_uuid(value: &str, code: &'static str) -> Result<(), AppError> {
-    const HYPHEN_SLOTS: [usize; 4] = [8, 13, 18, 23];
-    let is_uuid = value.len() == 36
-        && value.bytes().enumerate().all(|(i, b)| {
-            if HYPHEN_SLOTS.contains(&i) {
-                b == b'-'
-            } else {
-                b.is_ascii_hexdigit()
-            }
-        });
-
-    if is_uuid {
-        Ok(())
-    } else {
-        Err(AppError::new(code, Some(format!("Invalid uuid: {value}"))))
     }
 }
 

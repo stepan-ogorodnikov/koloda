@@ -73,6 +73,31 @@ describe("aiProfileValidation whitelistModelIds", () => {
   });
 });
 
+describe("aiProfileValidation id", () => {
+  const base = { createdAt: "2026-01-01T00:00:00Z" };
+
+  it("accepts a UUIDv7-shaped id", () => {
+    const parsed = aiProfileValidation.parse({ ...base, id: "01900000-0000-7000-8000-000000000001" });
+    expect(parsed.id).toBe("01900000-0000-7000-8000-000000000001");
+  });
+
+  it("rejects a non-UUID id", () => {
+    const result = aiProfileValidation.safeParse({ ...base, id: "not-a-uuid" });
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["id"]);
+  });
+
+  it("rejects a hyphenless UUID-shaped id", () => {
+    // WHY: `uuid::Uuid::parse_str` accepts this form; the Rust twin of `z.uuid()`
+    // must reject it too so desktop cannot persist an id the web schema rejects.
+    const result = aiProfileValidation.safeParse({ ...base, id: "01900000000070008000000000000001" });
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["id"]);
+  });
+});
+
 describe("assistantSettingsValidation", () => {
   it("strips leftover cardsPromptTemplate from old saved settings", () => {
     const parsed = assistantSettingsValidation.parse({
