@@ -15,7 +15,7 @@ msgstr ""
 
 #. placeholder {0}: decks.length
 #: ../../libs/srs-react/src/lib/algorithms/delete-algorithm.tsx:70
-msgid "{0, plural, other {delete-algrorithm.used-by-#-decks}}"
+msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "{0, plural, one {# колода использует} few {# колоды используют} many {# колод используют} other {# колоды используют} } этот алгоритм"
 
 #: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:64

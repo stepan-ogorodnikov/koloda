@@ -67,7 +67,7 @@ export function DeleteAlgorithm({ id }: DeleteAlgorithmProps) {
               {decks && decks.length > 0 ? (
                 <>
                   <div className="flex flex-col gap-6">
-                    <p>{_(msg`${plural(decks.length, { other: "delete-algrorithm.used-by-#-decks" })}`)}</p>
+                    <p>{_(msg`${plural(decks.length, { other: "delete-algorithm.used-by-#-decks" })}`)}</p>
                     <p>{_(msg`delete-algorithm.successor-message`)}</p>
                   </div>
                   <Select
