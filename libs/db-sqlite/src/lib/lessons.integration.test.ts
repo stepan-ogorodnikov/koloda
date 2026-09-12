@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { addCard, getCards } from "./cards";
-import { getLessons, getLessonData, submitLessonResult } from "./lessons";
+import { getLessonCards, getLessons, getLessonData, submitLessonResult } from "./lessons";
 import { getReviews } from "./reviews";
 import type { TestDb } from "../test/test-helpers";
 import { createCardContent, createTestDb, seedDeckContext } from "../test/test-helpers";
@@ -187,6 +187,26 @@ describe("lessons repository integration", () => {
     );
 
     expect(lessonData).toBeNull();
+  });
+
+  it("rejects negative lesson amounts", async () => {
+    const { db } = testDb;
+    const { deck, template } = await seedDeckContext(db);
+    await addCard(db, {
+      deckId: deck.id,
+      templateId: template.id,
+      content: createCardContent(template),
+      state: 0,
+    });
+
+    await expect(
+      getLessonCards(
+        db,
+        new Date("2026-01-10T12:00:00.000Z"),
+        { deckIds: [deck.id] },
+        { untouched: -1, learn: 0, review: 0, total: 0 },
+      ),
+    ).rejects.toMatchObject({ code: "validation.lessons.amounts.negative" });
   });
 
   it("stores the updated card and review when a lesson result is submitted", async () => {
