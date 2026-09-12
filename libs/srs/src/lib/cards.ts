@@ -132,6 +132,7 @@ const FSRS_CARD_PROPERTIES: ObjectPropertiesMapping<Card, CardFSRS> = {
 function createFSRSCard(card: Card, time: DateInput = Date.now()): CardFSRS {
   return createEmptyCard(time, (handlerCard: CardFSRS) => {
     const mapped = mapObjectProperties(card, FSRS_CARD_PROPERTIES);
+    // WHY: null dueAt/lastReviewedAt (untouched rows) must not override the due/last_review defaults createEmptyCard just set.
     const filtered = Object.fromEntries(Object.entries(mapped).filter(([_, v]) => v !== null));
     return { ...handlerCard, ...filtered };
   });
