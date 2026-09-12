@@ -176,7 +176,7 @@ The audit session does not create that file and does not implement.
 
 Structure, in this order:
 
-1. Title and date.
+1. Title and the audited commit hash.
 2. Scope reviewed — the specs, packages, ADRs, and rough size actually read, plus test commands run.
 3. Verdict — the TL;DR: overall health plus the few Must-fix and Should-fix findings that matter most.
 4. Strengths — what is good and should be kept as-is.
