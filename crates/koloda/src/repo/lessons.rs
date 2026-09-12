@@ -1,12 +1,13 @@
 use rusqlite::Row;
 
-use crate::app::db::Database;
+use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::get_current_timestamp;
+use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::cards::Card;
 use crate::domain::lessons::{
-    GetLessonDataParams, GetLessonsParams, LessonAmounts, LessonData, LessonDeck, LessonResultData, LessonTemplate,
-    LessonTemplateLayoutItem, LessonsResult,
+    GetLessonDataParams, GetLessonsParams, LessonAlgorithm, LessonAmounts, LessonData, LessonDeck, LessonResultData,
+    LessonTemplate, LessonTemplateLayoutItem, LessonsResult,
 };
 use crate::repo::cards::get_card_row;
 use crate::repo::fsrs_sql;
@@ -189,28 +190,105 @@ fn unique_ids_in_order<'a>(ids: impl IntoIterator<Item = &'a str>) -> Vec<String
         .collect()
 }
 
-fn template_to_lesson_template(t: crate::domain::templates::Template) -> LessonTemplate {
-    let layout: Vec<LessonTemplateLayoutItem> = t
-        .content
+fn lesson_layout(content: &crate::domain::templates::TemplateContent) -> Vec<LessonTemplateLayoutItem> {
+    content
         .layout
         .iter()
         .map(|item| {
-            let field = t.content.fields.iter().find(|f| f.id == item.field).cloned();
+            let field = content.fields.iter().find(|f| f.id == item.field).cloned();
             LessonTemplateLayoutItem {
                 field,
                 operation: item.operation.clone(),
                 field_id: item.field.clone(),
             }
         })
-        .collect();
-    LessonTemplate {
-        id: t.id,
-        title: t.title,
-        fields: t.content.fields,
-        layout,
-        created_at: t.created_at,
-        updated_at: t.updated_at,
-    }
+        .collect()
+}
+
+// Twin of web `getLessonTemplates` (`libs/db-sqlite/src/lib/lessons.ts`): one DISTINCT join over
+// the lesson decks, `id` + `content` only — everything else is derived from content.
+fn get_lesson_templates(db: &Database, deck_ids: &[String]) -> Result<Vec<LessonTemplate>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        if deck_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let placeholders: Vec<String> = deck_ids
+            .iter()
+            .enumerate()
+            .map(|(i, _)| format!("?{}", i + 1))
+            .collect();
+        let sql = format!(
+            r#"
+            SELECT DISTINCT t.id, t.content
+            FROM templates t
+            JOIN decks d ON d.template_id = t.id
+            WHERE d.id IN ({})
+            "#,
+            placeholders.join(", ")
+        );
+
+        db.with_conn(|conn| {
+            let params: Vec<&dyn rusqlite::ToSql> = deck_ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+            let mut stmt = conn.prepare(&sql)?;
+            let templates = stmt
+                .query_map(params.as_slice(), |row| {
+                    let content_str: String = row.get(1)?;
+                    let content: crate::domain::templates::TemplateContent = parse_json_column(1, &content_str)?;
+
+                    Ok(LessonTemplate {
+                        id: row.get(0)?,
+                        layout: lesson_layout(&content),
+                    })
+                })?
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(templates)
+        })
+    })
+}
+
+// Twin of web `getLessonAlgorithms` (`libs/db-sqlite/src/lib/lessons.ts`): one DISTINCT join over
+// the lesson decks, `id` + `content` only — grading reads content alone.
+fn get_lesson_algorithms(db: &Database, deck_ids: &[String]) -> Result<Vec<LessonAlgorithm>, AppError> {
+    throw_known_error(error_codes::DB_GET, || {
+        if deck_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let placeholders: Vec<String> = deck_ids
+            .iter()
+            .enumerate()
+            .map(|(i, _)| format!("?{}", i + 1))
+            .collect();
+        let sql = format!(
+            r#"
+            SELECT DISTINCT a.id, a.content
+            FROM algorithms a
+            JOIN decks d ON d.algorithm_id = a.id
+            WHERE d.id IN ({})
+            "#,
+            placeholders.join(", ")
+        );
+
+        db.with_conn(|conn| {
+            let params: Vec<&dyn rusqlite::ToSql> = deck_ids.iter().map(|id| id as &dyn rusqlite::ToSql).collect();
+            let mut stmt = conn.prepare(&sql)?;
+            let algorithms = stmt
+                .query_map(params.as_slice(), |row| {
+                    let content_str: String = row.get(1)?;
+                    let content: AlgorithmFSRS = parse_json_column(1, &content_str)?;
+
+                    Ok(LessonAlgorithm {
+                        id: row.get(0)?,
+                        content,
+                    })
+                })?
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(algorithms)
+        })
+    })
 }
 
 pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Option<LessonData>, AppError> {
@@ -227,24 +305,8 @@ pub fn get_lesson_data(db: &Database, params: &GetLessonDataParams) -> Result<Op
 
         let lesson_decks = crate::repo::decks::get_decks_by_ids(db, &unique_deck_ids)?;
 
-        let template_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.template_id.as_str()));
-        let templates_by_id = crate::repo::templates::get_templates_by_ids(db, &template_ids)?;
-        let lesson_templates: Vec<LessonTemplate> = template_ids
-            .iter()
-            .filter_map(|id| templates_by_id.get(id).cloned())
-            .map(template_to_lesson_template)
-            .collect();
-
-        let algorithm_ids = unique_ids_in_order(lesson_decks.iter().map(|d| d.algorithm_id.as_str()));
-        let algorithms_by_id: std::collections::HashMap<String, _> =
-            crate::repo::algorithms::get_algorithms_by_ids(db, &algorithm_ids)?
-                .into_iter()
-                .map(|a| (a.id.clone(), a))
-                .collect();
-        let lesson_algorithms: Vec<_> = algorithm_ids
-            .iter()
-            .filter_map(|id| algorithms_by_id.get(id).cloned())
-            .collect();
+        let lesson_templates = get_lesson_templates(db, &unique_deck_ids)?;
+        let lesson_algorithms = get_lesson_algorithms(db, &unique_deck_ids)?;
 
         Ok(Some(LessonData {
             cards,

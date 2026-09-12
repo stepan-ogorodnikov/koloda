@@ -39,20 +39,12 @@ fn test_lessons_result_serializes_wire_shape() {
     assert_eq!(back, result);
 }
 
-/// Pins the lesson-template projection: layout items keep `fieldId` always and
-/// `field` null when the referenced field is gone, and the row timestamps are
-/// RFC 3339 strings.
+/// Pins the lesson-template projection: slim lesson DTO (`id` + `layout` only) whose
+/// layout items keep `fieldId` always and `field` null when the referenced field is gone.
 #[test]
 fn test_lesson_template_layout_allows_missing_field() {
     let template = LessonTemplate {
         id: "01900000-0000-7000-8000-00000000000b".to_string(),
-        title: "Basic".to_string(),
-        fields: vec![TemplateField {
-            id: "01900000-0000-7000-8000-000000000001".to_string(),
-            title: "Front".to_string(),
-            field_type: "text".to_string(),
-            is_required: true,
-        }],
         layout: vec![
             LessonTemplateLayoutItem {
                 field: Some(TemplateField {
@@ -70,24 +62,24 @@ fn test_lesson_template_layout_allows_missing_field() {
                 field_id: "01900000-0000-7000-8000-000000000002".to_string(),
             },
         ],
-        created_at: 1_699_999_000_000,
-        updated_at: None,
     };
 
     let value = serde_json::to_value(&template).unwrap();
 
     assert_eq!(
-        value["layout"],
-        json!([
-            {
-                "field": { "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true },
-                "operation": "display",
-                "fieldId": "01900000-0000-7000-8000-000000000001",
-            },
-            { "field": null, "operation": "reveal", "fieldId": "01900000-0000-7000-8000-000000000002" },
-        ])
+        value,
+        json!({
+            "id": "01900000-0000-7000-8000-00000000000b",
+            "layout": [
+                {
+                    "field": { "id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true },
+                    "operation": "display",
+                    "fieldId": "01900000-0000-7000-8000-000000000001",
+                },
+                { "field": null, "operation": "reveal", "fieldId": "01900000-0000-7000-8000-000000000002" },
+            ],
+        })
     );
-    assert_eq!(value["createdAt"], json!("2023-11-14T21:56:40+00:00"));
 
     let back: LessonTemplate = serde_json::from_value(value).unwrap();
     assert_eq!(back, template);

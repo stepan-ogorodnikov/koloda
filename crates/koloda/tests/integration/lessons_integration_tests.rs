@@ -409,6 +409,30 @@ fn get_lesson_data_includes_unique_related_entities_for_multiple_decks() {
     assert_eq!(lesson_data.decks.len(), 2);
     assert_eq!(lesson_data.templates.len(), 2);
     assert_eq!(lesson_data.algorithms.len(), 2);
+
+    // Wire shape twin: lesson data carries slim DTOs. Web pins the same keys in
+    // lessons.integration.test.ts.
+    let template_keys: Vec<String> = serde_json::to_value(&lesson_data.templates[0])
+        .unwrap()
+        .as_object()
+        .expect("template should serialize to an object")
+        .keys()
+        .cloned()
+        .collect();
+    let mut sorted_template_keys = template_keys;
+    sorted_template_keys.sort();
+    assert_eq!(sorted_template_keys, vec!["id", "layout"]);
+
+    let algorithm_keys: Vec<String> = serde_json::to_value(&lesson_data.algorithms[0])
+        .unwrap()
+        .as_object()
+        .expect("algorithm should serialize to an object")
+        .keys()
+        .cloned()
+        .collect();
+    let mut sorted_algorithm_keys = algorithm_keys;
+    sorted_algorithm_keys.sort();
+    assert_eq!(sorted_algorithm_keys, vec!["content", "id"]);
 }
 
 #[test]

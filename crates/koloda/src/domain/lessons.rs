@@ -5,13 +5,11 @@ use serde::{Deserialize, Serialize};
 use super::templates::TemplateField;
 use crate::app::error::error_codes;
 use crate::app::error::AppError;
+use crate::domain::algorithms_fsrs::AlgorithmFSRS;
 use crate::domain::cards::{Card, UpdateCardProgress};
 use crate::domain::decks::Deck;
 use crate::domain::reviews::InsertReviewData;
-use crate::domain::time::{
-    default_now, deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp,
-    serialize_timestamp,
-};
+use crate::domain::time::{default_now, deserialize_timestamp};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -63,22 +61,22 @@ pub struct LessonTemplateLayoutItem {
     pub field_id: String,
 }
 
+// The lesson session consumes `layout` only; title and timestamps stay on the admin template.
+// Twin of `@koloda/srs` `LessonTemplate`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LessonTemplate {
     pub id: String,
-    pub title: String,
-    pub fields: Vec<TemplateField>,
     pub layout: Vec<LessonTemplateLayoutItem>,
-    // WHY: accepts the RFC 3339 string `serialize_timestamp` emits, so the wire shape round-trips.
-    #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
-    pub created_at: i64,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_optional_timestamp",
-        serialize_with = "serialize_optional_timestamp"
-    )]
-    pub updated_at: Option<i64>,
+}
+
+// Slim projection for grading — the session reads `content` only. Twin of web `LessonAlgorithm`
+// (`lessonAlgorithmRowSchema` in `@koloda/srs`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LessonAlgorithm {
+    pub id: String,
+    pub content: AlgorithmFSRS,
 }
 
 // INVARIANT: loaders return `None` when no cards match — never an empty struct.
@@ -89,7 +87,7 @@ pub struct LessonData {
     pub cards: Vec<Card>,
     pub decks: Vec<Deck>,
     pub templates: Vec<LessonTemplate>,
-    pub algorithms: Vec<super::algorithms::Algorithm>,
+    pub algorithms: Vec<LessonAlgorithm>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
