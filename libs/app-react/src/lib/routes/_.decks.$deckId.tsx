@@ -23,8 +23,8 @@ export const Route = createFileRoute("/_/decks/$deckId")({
 });
 
 const DECK_TABS = [
-  { id: "details", t: msg`deck.tabs.details` },
   { id: "cards", t: msg`deck.tabs.cards` },
+  { id: "details", t: msg`deck.tabs.details` },
 ];
 
 function DeckRoute() {
@@ -56,11 +56,11 @@ function DeckRoute() {
         <QueryState query={query}>
           {() => (
             <Tabs.Panels>
-              <Tabs.Panel id="details">
-                <DeckDetails id={deckId} />
-              </Tabs.Panel>
               <Tabs.Panel id="cards">
                 <DeckCards deckId={deckId} />
+              </Tabs.Panel>
+              <Tabs.Panel id="details">
+                <DeckDetails id={deckId} />
               </Tabs.Panel>
             </Tabs.Panels>
           )}
