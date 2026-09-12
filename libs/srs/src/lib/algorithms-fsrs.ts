@@ -139,8 +139,9 @@ const FSRS_ALGORITHM_PROPERTIES: ObjectPropertiesMapping<AlgorithmFSRS, FSRSPara
 export function createFSRSAlgorithm(algorithm: AlgorithmFSRS) {
   const retention = algorithm.retention / 100;
   const weights = algorithm.weights.split(",").map(Number);
-  const learningSteps = algorithm.learningSteps.map((step) => step.join()).join(", ");
-  const relearningSteps = algorithm.relearningSteps.map((step) => step.join()).join(", ");
+  // WHY: ts-fsrs takes StepUnit[] ("1m"); a joined string makes generatorParameters silently fall back to its default steps.
+  const learningSteps = algorithm.learningSteps.map((step) => step.join(""));
+  const relearningSteps = algorithm.relearningSteps.map((step) => step.join(""));
   const params = mapObjectProperties(
     { ...algorithm, retention, weights, learningSteps, relearningSteps },
     FSRS_ALGORITHM_PROPERTIES,

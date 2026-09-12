@@ -115,6 +115,20 @@ describe("createFSRSAlgorithm", () => {
     expect(again.difficulty).toBeCloseTo(7.39450274, 5);
   });
 
+  it("passes learning and relearning steps to ts-fsrs as step-unit strings", () => {
+    const instance = createFSRSAlgorithm({
+      ...DEFAULT_FSRS_ALGORITHM,
+      learningSteps: [
+        [5, "s"],
+        [2, "h"],
+      ],
+      relearningSteps: [[1, "d"]],
+    });
+
+    expect(instance.parameters.learning_steps).toEqual(["5s", "2h"]);
+    expect(instance.parameters.relearning_steps).toEqual(["1d"]);
+  });
+
   it("uses fuzz setting from algorithm data", () => {
     const fuzzy = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: true });
     const noFuzz = createFSRSAlgorithm({ ...DEFAULT_FSRS_ALGORITHM, isFuzzEnabled: false });
