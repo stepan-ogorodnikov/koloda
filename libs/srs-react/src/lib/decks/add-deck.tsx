@@ -35,6 +35,8 @@ export function AddDeck() {
       mutate(schema.parse({ ...value }), {
         onSuccess: (returning) => {
           formApi.reset();
+          // WHY: reset() fires the onChange listener above, which clears newId; the
+          // microtask sets it after that so the success link survives the reset.
           queueMicrotask(() => {
             if (returning) setNewId(returning.id);
           });
