@@ -106,7 +106,7 @@ export function CardDetails({ card }: CardDetailsProps) {
           ))}
           <FormLayout.Section term={_(msg`card.labels.state`)}>
             <FormLayout.Section.Content>
-              <CardState value={card.state as number} />
+              <CardState value={card.state} />
             </FormLayout.Section.Content>
           </FormLayout.Section>
           {!!card.state && !!card.dueAt && (
@@ -119,14 +119,14 @@ export function CardDetails({ card }: CardDetailsProps) {
           {!!card.state && (
             <FormLayout.Section term={_(msg`card.labels.stability`)}>
               <FormLayout.Section.Content variants={{ class: "numbers-text" }}>
-                {(card.stability ?? 0).toFixed(2)}
+                {card.stability.toFixed(2)}
               </FormLayout.Section.Content>
             </FormLayout.Section>
           )}
           {!!card.state && (
             <FormLayout.Section term={_(msg`card.labels.difficulty`)}>
               <FormLayout.Section.Content variants={{ class: "numbers-text" }}>
-                {(card.difficulty ?? 0).toFixed(2)}
+                {card.difficulty.toFixed(2)}
               </FormLayout.Section.Content>
             </FormLayout.Section>
           )}

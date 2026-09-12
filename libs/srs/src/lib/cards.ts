@@ -37,8 +37,9 @@ export const cardValidation = cardFieldsSchema.superRefine(refineCardProgress);
 
 export const cardRowSchema = cardFieldsSchema.safeExtend(timestampsValidation.shape).superRefine(refineCardProgress);
 
-// WHY: z.input keeps insert/update callers free to omit defaulted FSRS fields.
-export type Card = z.input<typeof cardValidation> & z.infer<typeof timestampsValidation>;
+// WHY: row type is the schema output, so defaulted FSRS fields are required numbers and
+// insert/update callers omit defaults through `InsertCardData` (`z.input`) instead.
+export type Card = z.infer<typeof cardRowSchema>;
 
 export type GetCardsParams = { deckId: Card["deckId"] };
 
