@@ -9,7 +9,7 @@ import { ollamaProviderEntry } from "./providers/ollama";
 import { ollamaCloudProviderEntry } from "./providers/ollama-cloud";
 import { opencodeGoProviderEntry } from "./providers/opencode-go";
 import { opencodeZenProviderEntry } from "./providers/opencode-zen";
-import { fetchOpenRouterModels, openrouterProviderEntry } from "./providers/openrouter";
+import { openrouterProviderEntry } from "./providers/openrouter";
 
 export type AIGenerationClient = {
   provider: AISecrets["provider"];
@@ -50,7 +50,6 @@ export function createAIGenerationClient(secrets: AISecrets): AIGenerationClient
   return getProviderConfig(secrets.provider).createClient(secrets);
 }
 
-export async function fetchModels(secrets?: AISecrets | null): Promise<AIModel[]> {
-  if (!secrets) return fetchOpenRouterModels();
+export async function fetchModels(secrets: AISecrets): Promise<AIModel[]> {
   return getProviderConfig(secrets.provider).fetchModels(secrets);
 }
