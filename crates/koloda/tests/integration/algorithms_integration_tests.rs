@@ -92,6 +92,37 @@ fn delete_algorithm_fails_when_successor_does_not_exist() {
 }
 
 #[test]
+fn delete_algorithm_fails_when_successor_is_itself() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let _other_algorithm_id = add_algorithm(&db, "Other FSRS");
+    let template_id = add_template(&db, "Basic");
+    let deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+
+    let err = algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: algorithm_id.clone(),
+            successor_id: Some(algorithm_id.clone()),
+        },
+    )
+    .expect_err("deleting algorithm with itself as successor should fail");
+
+    assert_eq!(err.code, error_codes::NOT_FOUND_ALGORITHMS_DELETE_SUCCESSOR);
+
+    let deck = koloda::repo::decks::get_deck(&db, &deck_id)
+        .expect("deck query should succeed")
+        .expect("deck should exist");
+    assert_eq!(
+        deck.algorithm_id, algorithm_id,
+        "deck algorithm should remain unchanged"
+    );
+
+    let algorithm = algorithms::get_algorithm(&db, &algorithm_id).expect("query should succeed");
+    assert!(algorithm.is_some(), "source algorithm should remain");
+}
+
+#[test]
 fn delete_algorithm_fails_while_it_is_the_learning_default() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "Default FSRS");

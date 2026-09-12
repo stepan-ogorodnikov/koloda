@@ -154,6 +154,19 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
   });
 
+  it("rejects deleting a referenced algorithm with itself as the successor", async () => {
+    const { db } = testDb;
+    const { algorithm, deck } = await seedDeckContext(db);
+    await seedAlgorithm(db, { title: "Other" });
+
+    await expect(deleteAlgorithm(db, { id: algorithm.id, successorId: algorithm.id })).rejects.toMatchObject({
+      code: "not-found.algorithms.delete.successor",
+    });
+
+    expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
+    expect(await getAlgorithmDecks(db, algorithm.id)).toEqual([{ id: deck.id, title: deck.title }]);
+  });
+
   it("updates algorithm title and content", async () => {
     const { db } = testDb;
     const algorithm = await seedAlgorithm(db);

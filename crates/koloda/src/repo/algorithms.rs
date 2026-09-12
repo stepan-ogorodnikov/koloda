@@ -221,6 +221,13 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
                     )
                 })?;
 
+                if successor_id == data.id {
+                    return Err(AppError::new(
+                        error_codes::NOT_FOUND_ALGORITHMS_DELETE_SUCCESSOR,
+                        Some(format!("Successor id: {}", successor_id)),
+                    ));
+                }
+
                 let does_successor_exist: bool = tx
                     .query_row(
                         r#"
