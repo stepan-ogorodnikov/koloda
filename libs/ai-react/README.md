@@ -1,6 +1,6 @@
 # @koloda/ai-react
 
-Shared React UI primitives and streaming transport hooks for assistant chat. Presentational components and abortable stream helpers only — no conversation store, no run lifecycle, no persistence.
+Shared presentational AI UI for assistant chat — chat chrome, message shells, tool-activity widget, and profile/model pickers. No conversation store, no run lifecycle, no stream transport, no persistence.
 
 ## Where it sits
 
@@ -10,7 +10,8 @@ Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps tha
 
 ## Architectural Map
 
-- Streaming transport: `use-streaming-request.ts` (generic abortable stream → success | aborted | error) and `use-chat-stream.ts`. Callers in assistant-react feed chunks into the conversation reducer.
+- Tool activity: `ai-tool-activity.tsx` — renders run activity rows (reasoning / tool calls) from `calls` props; markdown via an injected `renderText`.
+- Context usage: `ai-chat-context-usage.tsx` — token counter from `usage` / `contextLength` props.
 - AI configuration UI: `ai-model-profile-picker.tsx` (presentational — takes `profiles` props; does not call `useAIProfiles`), `ai-model-parameters.tsx`, `use-ai-profiles.ts`, `use-ai-models.ts`, `use-ai-profiles-models.ts`. Cascade reset and the chat-tree `useAIProfiles` subscription are owned by assistant-react profile selection.
 - Message list shell: `ai-chat-messages.tsx`, `ai-chat-message.tsx`, status/error/elapsed helpers — layout only; message domain rendering is in assistant-react.
 - Input & validation: `ai-chat-prompt-panel.tsx`, `use-ai-chat-input.ts`, `use-ai-chat-validation.ts`, submit/footer/settings-toggle primitives.
@@ -20,6 +21,7 @@ Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps tha
 
 - Conversation / run lifecycle state — `libs/assistant-react/.../assistant`
 - Revert — `libs/assistant-react/.../assistant`
+- Stream transport / run execution (AbortControllers, chunk pumping) — `@koloda/assistant`, bound to host `AIRuntime` adapters
 - Provider HTTP calls — `@koloda/ai`
 - Secrets storage / redaction — `crates/koloda`
 - Persistence schema — `@koloda/db-sqlite`, `koloda`
