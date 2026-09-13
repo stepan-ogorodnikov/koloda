@@ -34,6 +34,8 @@ export function DeckDetails({ id }: DeckDetailsProps) {
             queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.decksAll() });
             queryClient.invalidateQueries({ queryKey: queryKeys.templates.decksAll() });
             queryClient.setQueryData(queryKeys.decks.detail(id), returning);
+            // WHY: reset must receive the saved values — a bare reset() restores the original
+            // defaults, so Discard would revert to those instead of the last save.
             formApi.reset(returning);
           },
           onError: (error) => {

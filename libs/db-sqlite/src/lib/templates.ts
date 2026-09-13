@@ -108,7 +108,7 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
 
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.delete", async () => {
-    // Invariant: the learning default template is not deletable while it remains the default
+    // INVARIANT: the learning default template is not deletable while it remains the default
     // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
     // convenience, not the enforcement.
     const learning = await getSettings(db, "learning");

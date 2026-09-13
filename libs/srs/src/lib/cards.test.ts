@@ -242,7 +242,7 @@ describe("createUpdateCardProgress", () => {
   const CARD_ID = "01900000-0000-7000-8000-000000000009";
   const DUE = new Date("2024-01-03T00:00:00.000Z");
 
-  // Twin of koloda `cards_serde_tests.rs` UpdateCardProgress shape pins: the submit
+  // INVARIANT: Twin of koloda `cards_progress_tests.rs` UpdateCardProgress shape pins — the submit
   // payload must carry exactly the fields the Rust struct deserializes, nothing more.
   it("maps the graded FSRS card to exactly the submit progress fields", () => {
     const lastReview = new Date("2024-01-01T00:00:00.000Z");

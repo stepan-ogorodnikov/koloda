@@ -221,6 +221,8 @@ pub fn delete_algorithm(db: &Database, data: DeleteAlgorithmData) -> Result<(), 
                     )
                 })?;
 
+                // WHY: self counts as a missing successor — reassigning the decks to the algorithm being
+                // deleted would no-op and the delete would violate the decks FK. Twin of TS `deleteAlgorithm`.
                 if successor_id == data.id {
                     return Err(AppError::new(
                         error_codes::NOT_FOUND_ALGORITHMS_DELETE_SUCCESSOR,

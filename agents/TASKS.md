@@ -64,7 +64,7 @@ Do not assume merge order from PR numbers alone.
 
 When the human asks to implement:
 
-1. Mark the PR ready for review (leave draft).
+1. Mark the PR ready for review.
 2. Implement one Plan item per commit on `task/<slug>`.
 3. Every commit that belongs to the task carries one body line: `Task: <slug>`.
    The slug is the identity; the folder is not.

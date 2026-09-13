@@ -72,7 +72,7 @@ export async function getLessons(db: DB, dueAt: Date, filters: LessonFilters = {
 
 export async function getLessonCards(db: DB, dueAt: Date, filters: LessonFilters, amounts: LessonAmounts) {
   return throwKnownError("db.get", async () => {
-    // Twin of Rust `LessonAmounts::validate`: the three draw amounts must be non-negative; `total`
+    // WHY: Twin of Rust `LessonAmounts::validate`: the three draw amounts must be non-negative; `total`
     // is derived and unchecked. SQLite reads `LIMIT < 0` as "no limit", so a negative would load
     // every matching card instead of failing.
     for (const amount of [amounts.untouched, amounts.learn, amounts.review]) {

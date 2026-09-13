@@ -74,7 +74,7 @@ export async function cloneAlgorithm(db: DB, { title, sourceId }: CloneAlgorithm
 
 export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorithmData) {
   return throwKnownError("db.delete", async () => {
-    // Invariant: the learning default (LEARNING-SETTINGS.md §Defaults) and the last remaining
+    // INVARIANT: the learning default (LEARNING-SETTINGS.md §Defaults) and the last remaining
     // algorithm (ALGORITHMS.md §Deleting Algorithms) are not deletable. UI disable is a
     // convenience, not the enforcement — keep these guards ahead of the successor reassignment.
     const learning = await getSettings(db, "learning");
@@ -85,6 +85,8 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
 
     const algorithmDecks = await getAlgorithmDecks(db, id);
     if (algorithmDecks.length > 0) {
+      // WHY: self counts as a missing successor — reassigning the decks to the algorithm being
+      // deleted would no-op and the delete would violate the decks FK. Twin of Rust `delete_algorithm`.
       if (!successorId || successorId === id) throw new AppError("not-found.algorithms.delete.successor");
       const successor = await getAlgorithm(db, successorId);
       if (!successor) throw new AppError("not-found.algorithms.delete.successor");
