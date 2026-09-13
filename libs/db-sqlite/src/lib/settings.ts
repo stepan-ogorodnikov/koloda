@@ -15,10 +15,13 @@ export async function getSettings<T extends SettingsName>(db: DB, name: T) {
 
     const envelope = parseRow(settingsRowEnvelopeSchema, result);
 
-    const { data, success } = allowedSettings[name].safeParse(envelope.content);
-    if (!success) return null;
+    const parsed = allowedSettings[name].safeParse(envelope.content);
+    // INVARIANT: a present-but-invalid row must fail closed — desktop `get_settings`
+    // normalizes the content and errors. Returning null would read as "absent" and
+    // bypass the delete-default guards (twin of Rust `learning_defaults`).
+    if (!parsed.success) throw new AppError("db.get", `Invalid ${name} settings: ${parsed.error.message}`);
 
-    return parseRow(settingsRowSchema(name), { ...envelope, content: data }) as AllowedSettings<T>;
+    return parseRow(settingsRowSchema(name), { ...envelope, content: parsed.data }) as AllowedSettings<T>;
   });
 }
 

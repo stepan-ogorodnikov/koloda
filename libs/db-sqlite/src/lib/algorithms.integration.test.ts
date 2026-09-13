@@ -167,6 +167,22 @@ describe("algorithms repository integration", () => {
     expect(await getAlgorithmDecks(db, algorithm.id)).toEqual([{ id: deck.id, title: deck.title }]);
   });
 
+  it("fails closed when the stored learning settings row is invalid", async () => {
+    const { db } = testDb;
+    const algorithm = await seedAlgorithm(db);
+    await seedAlgorithm(db, { title: "Other" });
+
+    // Valid JSON, invalid schema — a present-but-invalid row must not read as "absent".
+    await db.run("INSERT INTO settings (name, content, created_at) VALUES (?, ?, ?)", [
+      "learning",
+      JSON.stringify({ dayStartsAt: 42 }),
+      Date.now(),
+    ]);
+
+    await expect(deleteAlgorithm(db, { id: algorithm.id })).rejects.toMatchObject({ code: "db.get" });
+    expect(await getAlgorithm(db, algorithm.id)).not.toBeNull();
+  });
+
   it("updates algorithm title and content", async () => {
     const { db } = testDb;
     const algorithm = await seedAlgorithm(db);

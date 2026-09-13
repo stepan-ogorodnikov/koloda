@@ -80,6 +80,7 @@ export async function deleteAlgorithm(db: DB, { id, successorId }: DeleteAlgorit
       // INVARIANT: the learning default (LEARNING-SETTINGS.md §Defaults) and the last remaining
       // algorithm (ALGORITHMS.md §Deleting Algorithms) are not deletable. UI disable is a
       // convenience, not the enforcement — keep these guards ahead of the successor reassignment.
+      // A corrupt learning row fails closed (getSettings throws) — twin of Rust `learning_defaults`.
       const learning = await getSettings(tx, "learning");
       if (learning?.content.defaults.algorithm === id) throw new AppError("validation.algorithms.delete-default");
 

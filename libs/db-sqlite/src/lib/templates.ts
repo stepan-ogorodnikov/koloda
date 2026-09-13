@@ -110,7 +110,8 @@ export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.delete", async () => {
     // INVARIANT: the learning default template is not deletable while it remains the default
     // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
-    // convenience, not the enforcement.
+    // convenience, not the enforcement. A corrupt learning row fails closed (getSettings
+    // throws) — twin of Rust `learning_defaults`.
     const learning = await getSettings(db, "learning");
     if (learning?.content.defaults.template === id) throw new AppError("validation.templates.delete-default");
 

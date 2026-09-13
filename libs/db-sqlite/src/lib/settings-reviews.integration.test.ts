@@ -84,6 +84,36 @@ describe("settings and review totals integration", () => {
     });
   });
 
+  it("throws db.get instead of returning null when stored learning content is invalid", async () => {
+    const { db } = testDb;
+
+    await db.run("INSERT INTO settings (name, content, created_at) VALUES (?, ?, ?)", [
+      "learning",
+      JSON.stringify({ dayStartsAt: 42 }),
+      Date.now(),
+    ]);
+
+    await expect(getSettings(db, "learning")).rejects.toMatchObject({ code: "db.get" });
+  });
+
+  it("throws db.get for today's totals when learning settings are absent", async () => {
+    const { db } = testDb;
+
+    await expect(getTodaysReviewTotals(db)).rejects.toMatchObject({ code: "db.get" });
+  });
+
+  it("throws db.get for today's totals when stored learning content is invalid", async () => {
+    const { db } = testDb;
+
+    await db.run("INSERT INTO settings (name, content, created_at) VALUES (?, ?, ?)", [
+      "learning",
+      JSON.stringify({ dayStartsAt: 42 }),
+      Date.now(),
+    ]);
+
+    await expect(getTodaysReviewTotals(db)).rejects.toMatchObject({ code: "db.get" });
+  });
+
   it("calculates today's review totals using the learning day boundary and counts flags", async () => {
     const { db } = testDb;
     const { algorithm, template, deck } = await seedDeckContext(db);

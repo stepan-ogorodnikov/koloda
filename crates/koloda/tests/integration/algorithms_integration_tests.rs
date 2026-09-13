@@ -154,6 +154,42 @@ fn delete_algorithm_fails_while_it_is_the_learning_default() {
 }
 
 #[test]
+fn delete_algorithm_fails_closed_when_learning_settings_are_invalid() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "Old FSRS");
+    let _other_algorithm_id = add_algorithm(&db, "Other FSRS");
+
+    // Valid JSON, invalid schema — a present-but-invalid row must not read as "absent"
+    // (`learning_defaults` skips only while learning settings are absent, pre-seed).
+    db.with_conn(|conn| {
+        conn.execute(
+            "INSERT INTO settings (name, content, created_at) VALUES ('learning', '{\"dayStartsAt\": 42}', 1)",
+            [],
+        )
+        .map(|_| ())
+        .map_err(koloda::app::error::AppError::from)
+    })
+    .expect("corrupt learning row should be inserted");
+
+    let err = algorithms::delete_algorithm(
+        &db,
+        DeleteAlgorithmData {
+            id: algorithm_id.clone(),
+            successor_id: None,
+        },
+    )
+    .expect_err("deleting with corrupt learning settings should fail");
+
+    assert_eq!(err.code, error_codes::DB_DELETE);
+    assert!(
+        algorithms::get_algorithm(&db, &algorithm_id)
+            .expect("query should succeed")
+            .is_some(),
+        "algorithm should remain after the failed delete"
+    );
+}
+
+#[test]
 fn delete_algorithm_fails_when_it_is_the_only_algorithm_left() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

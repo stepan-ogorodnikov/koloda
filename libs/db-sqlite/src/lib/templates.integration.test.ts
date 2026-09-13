@@ -124,6 +124,21 @@ describe("templates repository integration", () => {
     expect(await getTemplate(db, defaultTemplate.id)).not.toBeNull();
   });
 
+  it("fails closed when the stored learning settings row is invalid", async () => {
+    const { db } = testDb;
+    const template = await seedTemplate(db);
+
+    // Valid JSON, invalid schema — a present-but-invalid row must not read as "absent".
+    await db.run("INSERT INTO settings (name, content, created_at) VALUES (?, ?, ?)", [
+      "learning",
+      JSON.stringify({ dayStartsAt: 42 }),
+      Date.now(),
+    ]);
+
+    await expect(deleteTemplate(db, { id: template.id })).rejects.toMatchObject({ code: "db.get" });
+    expect(await getTemplate(db, template.id)).not.toBeNull();
+  });
+
   it("allows deleting a former default template after the default moves elsewhere", async () => {
     const { db } = testDb;
     const { algorithm } = await seedDeckContext(db);

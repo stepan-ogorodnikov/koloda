@@ -1,4 +1,4 @@
-import { throwKnownError } from "@koloda/app";
+import { AppError, throwKnownError } from "@koloda/app";
 import { learningSettingsValidation } from "@koloda/app";
 import {
   calculateTodaysReviewTotals,
@@ -45,7 +45,10 @@ export async function getReviewTotals(db: DB, { from, to }: GetReviewTotalsProps
 export async function getTodaysReviewTotals(db: DB) {
   return throwKnownError("db.get", async () => {
     const learningSettings = await getSettings(db, "learning");
-    const content = learningSettingsValidation.parse(learningSettings?.content);
+    // WHY: absent learning settings fail with `db.get` like desktop `get_todays_review_totals`;
+    // parsing `undefined` would leak a ZodError instead of an AppError.
+    if (!learningSettings) throw new AppError("db.get");
+    const content = learningSettingsValidation.parse(learningSettings.content);
     const { from, to } = await getCurrentLearningDayRange(content.dayStartsAt);
     const reviewTotals = await getReviewTotals(db, { from, to });
 

@@ -1,3 +1,4 @@
+use koloda::app::error::error_codes;
 use koloda::domain::reviews::GetReviewTotalsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo::reviews;
@@ -131,6 +132,15 @@ fn get_review_totals_respects_from_inclusive_to_exclusive_range() {
     assert_eq!(totals.learn, 1, "records before 'to' are included");
     assert_eq!(totals.review, 0, "record at 'to' is excluded");
     assert_eq!(totals.total, 2);
+}
+
+#[test]
+fn get_todays_review_totals_fails_with_db_get_when_learning_settings_are_absent() {
+    let db = test_db();
+
+    let err = reviews::get_todays_review_totals(&db).expect_err("today's totals without learning settings should fail");
+
+    assert_eq!(err.code, error_codes::DB_GET);
 }
 
 #[test]
