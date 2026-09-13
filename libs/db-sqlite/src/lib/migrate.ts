@@ -16,10 +16,16 @@ function nameFromPath(path: string) {
   return full.includes(".") ? full.slice(0, full.lastIndexOf(".")) : full;
 }
 
+// WHY: Refinery orders the series by the numeric V prefix; lexicographic compare
+// would apply V10 before V2 and silently diverge the web schema from desktop.
+export function compareMigrationNames(a: string, b: string) {
+  return a.localeCompare(b, undefined, { numeric: true });
+}
+
 function entriesFromGlob(): [string, string][] {
   return Object.entries(migrationFiles)
     .map(([path, mod]) => [nameFromPath(path), mod.default] as [string, string])
-    .sort(([a], [b]) => a.localeCompare(b));
+    .sort(([a], [b]) => compareMigrationNames(a, b));
 }
 
 async function loadMigrationEntries(): Promise<[string, string][]> {
@@ -31,7 +37,7 @@ async function loadMigrationEntries(): Promise<[string, string][]> {
   const { dirname, resolve } = await import("node:path");
   const { fileURLToPath } = await import("node:url");
   const dir = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/migrations");
-  const files = (await readdir(dir)).filter((file) => file.endsWith(".sql")).sort();
+  const files = (await readdir(dir)).filter((file) => file.endsWith(".sql")).sort(compareMigrationNames);
   return Promise.all(
     files.map(async (file) => {
       const sql = await readFile(resolve(dir, file), "utf8");
