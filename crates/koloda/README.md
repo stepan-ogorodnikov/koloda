@@ -9,6 +9,7 @@ Not an npm package — consumed by Electron (NAPI) command layer.
 Consumed by `apps/electron`.
 TS apps reach it through `invoke("cmd_*")` in their `queries.ts`.
 Mirrors `@koloda/srs` + `@koloda/app` domain types and the repo surface of `@koloda/db-sqlite`.
+Deliberate divergence: `get_conversations` returns full rows including opaque `state` where `@koloda/db-sqlite` returns trimmed list items — `hasTurns` derives from `state` in TS only (`libs/app` invariant), so each sidebar query ships every state over NAPI+IPC to the renderer.
 Rust is the source of truth for the AI provider enum and secrets redaction; `@koloda/ai` mirrors those.
 
 ## Architectural Map
