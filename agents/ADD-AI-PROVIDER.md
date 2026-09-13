@@ -95,7 +95,7 @@ import { isPresentApiKey, type AISecrets } from "../provider-secrets";
 import type { AIModel } from "../models";
 
 export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> {
-  const response = throwForAIResponse(
+  const response = await throwForAIResponse(
     await fetch("https://api.myprovider.com/models", {
       headers: {
         "Content-Type": "application/json",
