@@ -1,8 +1,13 @@
 import { z } from "zod";
 
 // WHY: Whitespace-only keys must fail the form schema to mirror the trim-based
-// `require_api_key_for_input` check in `crates/koloda/src/domain/ai.rs`.
-const requiredApiKey = z.string().trim().min(1, "validation.settings-ai.providers.apiKey");
+// `require_api_key_for_input` check in `crates/koloda/src/domain/ai.rs`. Null and
+// missing values coerce to "" so absent, blank, and non-string keys all fail with
+// the same registered code — Rust rejects absent and whitespace-only alike.
+const requiredApiKey = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim() : ""),
+  z.string().min(1, "validation.settings-ai.providers.apiKey"),
+);
 
 // WHY: Optional keys treat whitespace as absent — the Rust serde layer normalizes
 // whitespace-only keys to `None` (`deserialize_api_key` in domain/ai.rs), so the
@@ -65,6 +70,19 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
 ]);
 
 export type AISecrets = z.infer<typeof aiSecretsValidation>;
+
+// WHY: Input-strict twin of `aiSecretsValidation`. Host save paths that own
+// persistence (web) must reject what the forms reject — the twin of
+// `AISecrets::validate_for_input` in crates/koloda/src/domain/ai.rs, which runs
+// on the caller's payload, not on the redacted stored row the wire schema parses.
+export const aiSecretsInputValidation = z.discriminatedUnion("provider", [
+  openRouterSecretsValidation.extend({ provider: z.literal("openrouter") }),
+  ollamaSecretsValidation.extend({ provider: z.literal("ollama") }),
+  lmstudioSecretsValidation.extend({ provider: z.literal("lmstudio") }),
+  opencodeGoSecretsValidation.extend({ provider: z.literal("opencodeGo") }),
+  opencodeZenSecretsValidation.extend({ provider: z.literal("opencodeZen") }),
+  ollamaCloudSecretsValidation.extend({ provider: z.literal("ollamaCloud") }),
+]);
 
 export type SecretField = "apiKey" | "baseUrl";
 

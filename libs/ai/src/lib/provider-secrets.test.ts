@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  aiSecretsInputValidation,
   aiSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,
@@ -106,5 +107,41 @@ describe("provider-secrets", () => {
     // equally lenient here and drop the value instead of preserving it.
     const parsed = ollamaSecretsValidation.parse({ baseUrl: "http://localhost:11434", apiKey: "   " });
     expect(parsed).toEqual({ baseUrl: "http://localhost:11434", apiKey: undefined });
+  });
+
+  it("rejects on the input schema the blank key the wire schema normalizes", () => {
+    // WHY: The save path must reject, not normalize — the twin of
+    // `require_api_key_for_input` in domain/ai.rs. This is the exact desync the
+    // wire schema cannot catch.
+    const result = aiSecretsInputValidation.safeParse({ provider: "openrouter", apiKey: "" });
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["apiKey"]);
+    expect(issue?.message).toBe("validation.settings-ai.providers.apiKey");
+  });
+
+  it.each([
+    { provider: "openrouter" as const, secrets: { apiKey: null } },
+    { provider: "opencodeGo" as const, secrets: { apiKey: "   " } },
+    { provider: "opencodeZen" as const, secrets: {} },
+    { provider: "ollamaCloud" as const, secrets: { apiKey: null } },
+  ])("rejects a missing, blank, or null apiKey on the input schema for $provider", ({ provider, secrets }) => {
+    const result = aiSecretsInputValidation.safeParse({ provider, ...secrets });
+    expect(result.success).toBe(false);
+    expect(result.error!.issues[0]?.message).toBe("validation.settings-ai.providers.apiKey");
+  });
+
+  it("accepts keyed and keyless secrets on the input schema", () => {
+    expect(aiSecretsInputValidation.parse({ provider: "openrouter", apiKey: "sk-or" })).toEqual({
+      provider: "openrouter",
+      apiKey: "sk-or",
+    });
+    expect(aiSecretsInputValidation.parse({ provider: "ollama", baseUrl: "http://localhost:11434" })).toEqual({
+      provider: "ollama",
+      baseUrl: "http://localhost:11434",
+    });
+    expect(
+      aiSecretsInputValidation.parse({ provider: "lmstudio", baseUrl: "http://localhost:1234/v1", apiKey: "   " }),
+    ).toEqual({ provider: "lmstudio", baseUrl: "http://localhost:1234/v1" });
   });
 });

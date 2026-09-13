@@ -1,5 +1,6 @@
 import type { AddAIProfileData, AIProfile, AISecrets, RemoveAIProfileData, UpdateAIProfileData } from "@koloda/ai";
-import { aiSettingsValidation, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
+import { aiSecretsInputValidation, aiSettingsValidation, findDuplicateProfileId, isPresentApiKey } from "@koloda/ai";
+import type { ErrorCode } from "@koloda/app";
 import { AppError } from "@koloda/app";
 import type { DB } from "@koloda/db-sqlite";
 import { getSettings, setSettings } from "@koloda/db-sqlite";
@@ -24,6 +25,18 @@ function redactSecrets(secrets: AISecrets): AISecrets {
       return { provider: "ollama", baseUrl: secrets.baseUrl, apiKey: null };
     case "lmstudio":
       return { provider: "lmstudio", baseUrl: secrets.baseUrl, apiKey: null };
+  }
+}
+
+// WHY: The wire schema normalizes blank keys to `null`, so it cannot enforce the
+// required-key rule on save. This input pass mirrors the desktop CRUD rejection
+// in `AISecrets::validate_for_input` (crates/koloda/src/domain/ai.rs). Zod
+// messages in these schemas are registered error codes.
+function validateSecretsForInput(secrets: AISecrets): void {
+  const { success, error } = aiSecretsInputValidation.safeParse(secrets);
+  if (!success) {
+    const issue = error.issues[0];
+    throw new AppError(issue.message as ErrorCode, [secrets.provider, ...issue.path].join("."));
   }
 }
 
@@ -58,6 +71,10 @@ export async function getAIProfiles(db: DB): Promise<AIProfile[]> {
 }
 
 export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void> {
+  if (data.secrets) {
+    validateSecretsForInput(data.secrets);
+  }
+
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
@@ -90,6 +107,10 @@ export async function addAIProfile(db: DB, data: AddAIProfileData): Promise<void
 export async function updateAIProfile(db: DB, data: UpdateAIProfileData): Promise<void> {
   const currentSettings = await getSettings<"ai">(db, "ai");
   if (!currentSettings) return;
+
+  if (data.secrets) {
+    validateSecretsForInput(data.secrets);
+  }
 
   const newContent = aiSettingsValidation.parse(
     produce(currentSettings.content, (draft) => {

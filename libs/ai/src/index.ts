@@ -29,6 +29,7 @@ export {
   listProvidersThatWorkInBrowser,
 } from "./lib/provider-registry";
 export {
+  aiSecretsInputValidation,
   aiSecretsValidation,
   isPresentApiKey,
   lmstudioSecretsValidation,

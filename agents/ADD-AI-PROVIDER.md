@@ -34,6 +34,12 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
   // ...
   z.object({ provider: z.literal("myProvider"), apiKey: storedApiKey }),
 ]);
+
+// Save-path schema (input-strict twin — rejects what the wire schema normalizes):
+export const aiSecretsInputValidation = z.discriminatedUnion("provider", [
+  // ...
+  myProviderSecretsValidation.extend({ provider: z.literal("myProvider") }),
+]);
 ```
 
 ### 2. Rust Domain (`crates/koloda/src/domain/ai.rs`)
