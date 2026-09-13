@@ -110,9 +110,14 @@ export function getEditDefaultValues(
 }
 
 // WHY: Public profiles never return apiKey; keep existing key when the field is left blank.
+// A typed replacement satisfies the same add-schema rule, so edit rejects the same
+// whitespace-only keys as add — mirroring require_api_key_for_input in domain/ai.rs.
 export function getEditSchema(config: AIProviderFormConfig, hasSecrets: boolean): ZodObject<ZodRawShape> {
   if (!hasSecrets) return config.schema;
+  const apiKeyField = config.fields.find((field) => field.type === "apiKey");
+  // Optional keys stay as lenient as the add schema — Rust ignores them on input.
+  if (!apiKeyField?.isRequired) return config.schema;
   return config.schema.extend({
-    apiKey: z.string().optional(),
+    apiKey: z.preprocess((value) => (value === "" ? undefined : value), config.schema.shape.apiKey.optional()),
   });
 }
