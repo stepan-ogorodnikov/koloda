@@ -102,6 +102,29 @@ export const APP_SHUTDOWN_REQUEST_CHANNEL = "app:shutdown-request";
 export const APP_SHUTDOWN_ACK_CHANNEL = "app:shutdown-ack";
 
 /**
+ * Renderer → main titlebar window controls, plus one main → renderer push
+ * (`WINDOW_MAXIMIZE_CHANGED_CHANNEL`). Single source of truth — do not
+ * redeclare these literals elsewhere.
+ */
+
+export const WINDOW_MINIMIZE_CHANNEL = "window:minimize";
+
+export const WINDOW_MAXIMIZE_CHANNEL = "window:maximize";
+
+export const WINDOW_CLOSE_CHANNEL = "window:close";
+
+export const WINDOW_IS_MAXIMIZED_CHANNEL = "window:isMaximized";
+
+export const WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL = "window:set-title-bar-overlay";
+
+export const WINDOW_GET_OVERLAY_WIDTH_CHANNEL = "window:get-overlay-width";
+
+export const WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL = "window:set-window-button-position";
+
+/** Main → renderer: pushed on maximize/unmaximize. */
+export const WINDOW_MAXIMIZE_CHANGED_CHANNEL = "window:maximize-changed";
+
+/**
  * Events streamed main-to-renderer on `AI_STREAM_CHANNEL`, all keyed by
  * `requestId` so concurrent runs can be correlated and aborted individually.
  */

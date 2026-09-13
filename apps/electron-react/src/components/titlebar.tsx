@@ -1,4 +1,11 @@
 import { getAppPlatform } from "@koloda/app";
+import {
+  WINDOW_GET_OVERLAY_WIDTH_CHANNEL,
+  WINDOW_MAXIMIZE_CHANNEL,
+  WINDOW_MAXIMIZE_CHANGED_CHANNEL,
+  WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL,
+  WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL,
+} from "@koloda/native-ipc";
 import { Titlebar as TitlebarContent } from "@koloda/ui";
 import { useEffect, useRef, useState } from "react";
 
@@ -34,13 +41,13 @@ export function Titlebar() {
 
   useEffect(() => {
     window.electronAPI
-      .invoke<number>("window:get-overlay-width")
+      .invoke<number>(WINDOW_GET_OVERLAY_WIDTH_CHANNEL)
       .then(setOverlayWidth)
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    window.electronAPI.on("window:maximize-changed", (...args: unknown[]) => {
+    window.electronAPI.on(WINDOW_MAXIMIZE_CHANGED_CHANNEL, (...args: unknown[]) => {
       void args;
     });
   }, []);
@@ -73,7 +80,7 @@ export function Titlebar() {
       if (currentPosition?.titlebarHeight === nextPosition.titlebarHeight) return;
 
       windowButtonPositionRef.current = nextPosition;
-      void window.electronAPI.invoke("window:set-window-button-position", nextPosition);
+      void window.electronAPI.invoke(WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL, nextPosition);
     }
 
     function updateOverlay(el: HTMLElement) {
@@ -101,7 +108,7 @@ export function Titlebar() {
       }
 
       overlayRef.current = nextOverlay;
-      void window.electronAPI.invoke("window:set-title-bar-overlay", nextOverlay);
+      void window.electronAPI.invoke(WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL, nextOverlay);
     }
 
     const classObserver = new MutationObserver(scheduleUpdateWindowControls);
@@ -129,7 +136,7 @@ export function Titlebar() {
   }, []);
 
   const handleDragDoubleClick = () => {
-    void window.electronAPI.invoke("window:maximize");
+    void window.electronAPI.invoke(WINDOW_MAXIMIZE_CHANNEL);
   };
 
   return (

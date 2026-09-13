@@ -15,8 +15,8 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
   The renderer bridge re-parses them into `AppError` / `AIError`.
 - Values crossing the Rust boundary follow the NAPI wire format (`toWire`/`fromWire` in the renderer):
   `Date` as epoch ms, `BigInt` bounds-checked to safe integers.
-- Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
-  or the plain object where the method takes one.
+- Data-command args mirror the `KolodaDb` NAPI method signatures — wrapped as the NAPI method names
+  its parameter (`params`/`data`), else the plain object.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
   (`@koloda/native-ipc`), which both processes compile against. The contract covers the full renderer command
   surface: data commands, AI commands, and the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`).
@@ -62,6 +62,9 @@ Functions do not cross IPC: the renderer strips them, and main recreates the ass
 over `KolodaDb`, streaming tool events back on the same channel.
 
 ## Window and Lifecycle
+
+Channel names below are exported as `WINDOW_*_CHANNEL` constants from `@koloda/native-ipc` — both
+processes import them instead of repeating the literals.
 
 - `window:minimize`, `window:maximize` (toggles), `window:close`, `window:isMaximized`
 - `window:set-title-bar-overlay` `{ color, symbolColor, height }` — non-macOS only; persists colors to `ui-prefs.json`
