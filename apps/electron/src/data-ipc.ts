@@ -64,7 +64,6 @@ const dataHandlers = {
   cmd_submit_lesson_result: (db, { data }: IpcArgs<"cmd_submit_lesson_result">) => db.submitLessonResult(data),
 
   cmd_get_reviews: (db, { data }: IpcArgs<"cmd_get_reviews">) => db.getReviews(data),
-  cmd_get_review_totals: (db, { data }: IpcArgs<"cmd_get_review_totals">) => db.getReviewTotals(data),
   cmd_get_todays_review_totals: (db) => db.getTodaysReviewTotals(),
 
   cmd_get_ai_profiles: (db) => db.getAiProfiles(),

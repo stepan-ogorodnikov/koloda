@@ -43,7 +43,7 @@ import type {
   UpdateDeckData,
   UpdateTemplateData,
 } from "@koloda/srs";
-import type { DbStatus, GetLessonsParams, ReviewTotals, ReviewTotalsParams, SeedDbData } from "@koloda/native-ipc";
+import type { DbStatus, GetLessonsParams, SeedDbData } from "@koloda/native-ipc";
 
 export interface KolodaDb {
   // Lifecycle
@@ -102,7 +102,6 @@ export interface KolodaDb {
   getLessonData(params: GetLessonDataParams): LessonData | null;
   submitLessonResult(data: LessonResultData): void;
   getReviews(data: GetReviewsData): Review[];
-  getReviewTotals(data: ReviewTotalsParams): ReviewTotals;
   getTodaysReviewTotals(): TodaysReviewTotals;
 
   // AI profiles (no secrets — see the INVARIANT above)

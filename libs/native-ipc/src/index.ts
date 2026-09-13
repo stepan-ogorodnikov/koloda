@@ -83,20 +83,6 @@ export type GetLessonsParams = {
   filters?: LessonFilters;
 };
 
-/** Review-window query for `cmd_get_review_totals` (mirrors Rust `GetReviewTotalsParams`). */
-export type ReviewTotalsParams = {
-  from: number;
-  to: number;
-};
-
-/** Per-lesson-type review counts (mirrors Rust `ReviewTotals`). */
-export type ReviewTotals = {
-  untouched: number;
-  learn: number;
-  review: number;
-  total: number;
-};
-
 /**
  * Main-to-renderer push channel for AI streaming (see `AiStreamEvent`).
  * Single source of truth for `ai-ipc.ts` and the renderer runtime adapter.
@@ -177,7 +163,6 @@ export interface DataIpc {
   cmd_submit_lesson_result: { args: { data: LessonResultData }; result: void };
 
   cmd_get_reviews: { args: { data: GetReviewsData }; result: Review[] };
-  cmd_get_review_totals: { args: { data: ReviewTotalsParams }; result: ReviewTotals };
   cmd_get_todays_review_totals: { args: undefined; result: TodaysReviewTotals };
 
   cmd_get_ai_profiles: { args: undefined; result: AIProfile[] };

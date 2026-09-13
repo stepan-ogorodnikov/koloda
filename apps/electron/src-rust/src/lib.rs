@@ -2,7 +2,6 @@ use koloda::app::db::Database;
 use koloda::app::error::AppError;
 use koloda::app::init::{self as init_mod, SeedData};
 use koloda::domain::lessons::GetLessonsParams;
-use koloda::domain::reviews::GetReviewTotalsParams;
 use koloda::domain::settings::SettingsName;
 use koloda::repo;
 use napi::bindgen_prelude::*;
@@ -355,14 +354,6 @@ impl KolodaDb {
         let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
         let reviews = repo::reviews::get_reviews(&self.db, data).map_err(to_napi_error)?;
         to_value(&reviews)
-    }
-
-    #[napi]
-    pub fn get_review_totals(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: GetReviewTotalsParams =
-            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
-        let totals = repo::reviews::get_review_totals(&self.db, params).map_err(to_napi_error)?;
-        to_value(&totals)
     }
 
     #[napi]
