@@ -23,6 +23,13 @@ fn get_api_key(profile_id: &str) -> Result<Option<String>, AppError> {
     get_secret_store()?.get(&get_ai_profile_store_key(profile_id))
 }
 
+// WHY: Keyring reads bypass serde, so whitespace-only entries stored by older
+// builds must count as absent here — the twin of the TS `isPresentApiKey` trim
+// check and of `deserialize_api_key` in domain/ai.rs.
+fn present_key(api_key: Option<String>) -> Option<String> {
+    api_key.filter(|key| !key.trim().is_empty())
+}
+
 fn remove_api_key(profile_id: &str) -> Result<(), AppError> {
     get_secret_store()?.remove(&get_ai_profile_store_key(profile_id))
 }
@@ -117,7 +124,7 @@ pub fn get_ai_profiles(db: &Database) -> Result<Vec<AIProfile>, AppError> {
             .profiles
             .into_iter()
             .map(|profile| -> Result<AIProfile, AppError> {
-                let has_secrets = get_api_key(&profile.id)?.is_some();
+                let has_secrets = present_key(get_api_key(&profile.id)?).is_some();
                 Ok(to_public_profile(profile, has_secrets))
             })
             .collect::<Result<Vec<_>, _>>()?;
@@ -137,7 +144,7 @@ pub fn get_ai_profile_secrets(db: &Database, profile_id: &str) -> Result<Option<
         let Some(secrets) = profile.secrets else {
             return Ok(None);
         };
-        let api_key = get_api_key(&profile.id)?;
+        let api_key = present_key(get_api_key(&profile.id)?);
         Ok(Some(match api_key {
             Some(key) => reconstruct_secrets(&secrets, key),
             None => secrets,
@@ -188,7 +195,7 @@ pub fn add_ai_profile(
             }
         }
 
-        let has_secrets = get_api_key(&profile_id)?.is_some();
+        let has_secrets = present_key(get_api_key(&profile_id)?).is_some();
         Ok(to_public_profile(profile, has_secrets))
     })
 }
@@ -259,7 +266,7 @@ pub fn update_ai_profile(
             }
         }
 
-        let has_secrets = get_api_key(id)?.is_some();
+        let has_secrets = present_key(get_api_key(id)?).is_some();
         Ok(to_public_profile(updated_profile, has_secrets))
     })
 }

@@ -27,14 +27,15 @@ pub struct AIProfile {
     pub created_at: i64,
 }
 
-// WHY: Settings JSON and IPC use `null` for redacted/absent keys. Legacy `""` still
-// deserializes as `None` so older rows keep validating without a migration rewrite.
+// WHY: Settings JSON and IPC use `null` for redacted/absent keys. Legacy `""` and
+// whitespace-only values still deserialize as `None` so older rows keep validating
+// without a migration rewrite and a partial update cannot store a blank key.
 fn deserialize_api_key<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let value = Option::<String>::deserialize(deserializer)?;
-    Ok(value.and_then(|key| if key.is_empty() { None } else { Some(key) }))
+    Ok(value.and_then(|key| if key.trim().is_empty() { None } else { Some(key) }))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

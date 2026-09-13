@@ -11,15 +11,23 @@ import {
 } from "./provider-secrets";
 
 describe("provider-secrets", () => {
-  it("treats null and empty string as absent api keys", () => {
+  it("treats null, empty string, and whitespace-only as absent api keys", () => {
     expect(isPresentApiKey(null)).toBe(false);
     expect(isPresentApiKey(undefined)).toBe(false);
     expect(isPresentApiKey("")).toBe(false);
+    expect(isPresentApiKey("   ")).toBe(false);
     expect(isPresentApiKey("sk-live")).toBe(true);
   });
 
   it("normalizes legacy empty apiKey to null on the wire schema", () => {
     const parsed = aiSecretsValidation.parse({ provider: "openrouter", apiKey: "" });
+    expect(parsed).toEqual({ provider: "openrouter", apiKey: null });
+  });
+
+  it("normalizes whitespace-only apiKey to null on the wire schema", () => {
+    // WHY: Twin of `deserialize_api_key` in domain/ai.rs — a whitespace-only key
+    // must not survive a partial update as a present secret.
+    const parsed = aiSecretsValidation.parse({ provider: "openrouter", apiKey: "   " });
     expect(parsed).toEqual({ provider: "openrouter", apiKey: null });
   });
 
@@ -82,10 +90,11 @@ describe("provider-secrets", () => {
     expect(parsed).toEqual({ apiKey: "sk-or" });
   });
 
-  it("accepts a whitespace-only optional apiKey on the ollama form schema", () => {
-    // WHY: Rust leaves optional keys unvalidated on input (`domain/ai.rs` only trims
-    // required keys), so the TS form schema must stay equally lenient here.
+  it("treats a whitespace-only optional apiKey as absent on the ollama form schema", () => {
+    // WHY: Rust's serde layer normalizes whitespace-only keys to `None`
+    // (`deserialize_api_key` in domain/ai.rs), so the form schema must stay
+    // equally lenient here and drop the value instead of preserving it.
     const parsed = ollamaSecretsValidation.parse({ baseUrl: "http://localhost:11434", apiKey: "   " });
-    expect(parsed).toEqual({ baseUrl: "http://localhost:11434", apiKey: "   " });
+    expect(parsed).toEqual({ baseUrl: "http://localhost:11434", apiKey: undefined });
   });
 });

@@ -112,8 +112,10 @@ Validation runs on the add and edit forms and again when the profile is saved.
 The form rejects:
 
 - Empty required fields.
-- Fields that contain only whitespace.
+- Required fields that contain only whitespace.
 - Invalid URLs for the base URL field.
+
+Whitespace in an optional API key is treated as absent, not as a value.
 
 Validation runs on submit.
 Failed validation shows an error per field and prevents the request from being sent.
@@ -123,8 +125,8 @@ On save, the app also rejects:
 - Profiles that cannot be identified.
 - Titles longer than the maximum allowed length.
 - Required secret fields that are empty or whitespace-only on create.
-- Whitespace-only secret fields on store, including partial updates that try to clear a field with whitespace.
 
+Whitespace-only secret values are treated as absent on store, so a partial update cannot clear a stored key with whitespace.
 Empty optional fields are allowed on save so partial updates do not fail.
 If form validation passes but save rejects, the error is shown in the form.
 

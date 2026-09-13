@@ -28,14 +28,14 @@ describe("getEditSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("stays lenient on a whitespace-only optional apiKey for ollama", () => {
-    // WHY: Rust ignores optional keys on input (`domain/ai.rs` only trims required keys),
-    // so the edit schema must stay as lenient as the add schema here.
+  it("treats a whitespace-only optional apiKey as absent on the ollama edit schema", () => {
+    // WHY: Optional keys normalize whitespace to absent (`optionalApiKey` in
+    // provider-secrets.ts), and the edit schema keeps the add-schema rule for them.
     const parsed = getEditSchema(ollama, true).parse({
       title: "Local",
       baseUrl: "http://localhost:11434",
       apiKey: "   ",
     });
-    expect(parsed.apiKey).toBe("   ");
+    expect(parsed.apiKey).toBeUndefined();
   });
 });
