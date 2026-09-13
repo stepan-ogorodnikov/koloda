@@ -96,8 +96,11 @@ export function hasRetryableTurn(state: ConversationReducerState, runId: string)
     return run.status === "failed" || run.status === "canceled" || run.status === "interrupted";
   }
 
-  // WHY: Retry after restore may find the run dropped (normalize removes
-  // orphaned failed markers) while the assistant message remains.
+  // WHY: Restore normalize keeps every run (see normalizeRestoredConversation)
+  // and live paths drop a run together with its message pair — a marker
+  // message without its run comes from legacy persisted rows. Fall back to
+  // the marker kind so those turns stay retryable instead of stranding a
+  // dead error marker.
   const assistantMessage = state.messages.find((m) => m.id === assistantMessageId(runId));
   if (!assistantMessage) return false;
   const metadata = getAssistantMetadata(assistantMessage);

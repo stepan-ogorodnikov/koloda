@@ -145,9 +145,9 @@ export function restartRun(draft: ConversationReducerState, payload: RestartRunP
     return;
   }
 
-  // WHY: Retry after restore may find the run dropped (normalize removes
-  // orphaned failed markers) while the assistant error message
-  // remains — recreate the run and rewrite the error marker. Anything else
+  // WHY: A legacy persisted row can carry the assistant error marker without
+  // its run record (restore normalize never drops runs) — recreate the run
+  // and rewrite the error marker so the turn stays retryable. Anything else
   // (a present but non-retryable run, or a missing run with no marker) is a
   // no-op: hasRetryableTurn parity, so a stray restart can neither wipe a
   // successful run nor conjure one from nothing.
