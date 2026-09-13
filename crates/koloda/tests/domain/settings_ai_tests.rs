@@ -362,6 +362,30 @@ fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
 }
 
 #[test]
+fn test_assistant_chat_prompt_template_defaults_to_null_when_omitted() {
+    // Mirrors the TS schema's `.nullable().default(null)`: an older settings row
+    // whose assistant object omits `chatPromptTemplate` parses with a None
+    // template, and the normalize path re-serializes it as an explicit null.
+    let json = r#"{
+        "profiles": [],
+        "assistant": { "temperature": 0.2 }
+    }"#;
+
+    let settings: AISettings = serde_json::from_str(json).expect("omitted chatPromptTemplate should deserialize");
+    let assistant = settings.assistant.as_ref().expect("assistant should be present");
+    assert_eq!(assistant.chat_prompt_template, None);
+    settings.validate().unwrap();
+
+    let content: serde_json::Value = serde_json::from_str(json).expect("json should be valid Value");
+    let normalized = SettingsName::Ai.normalize(content).expect("normalize should succeed");
+    assert_eq!(
+        normalized.pointer("/assistant/chatPromptTemplate"),
+        Some(&serde_json::Value::Null),
+        "omitted template should canonicalize to an explicit null"
+    );
+}
+
+#[test]
 fn test_assistant_temperature_within_range_ok() {
     let json = r#"{
         "profiles": [],
