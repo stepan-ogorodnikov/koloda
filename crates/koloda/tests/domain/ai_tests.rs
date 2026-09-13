@@ -97,13 +97,17 @@ fn test_local_providers_input_rejects_non_url_base_url() {
 
 #[test]
 fn test_local_providers_storage_rejects_non_url_base_url() {
-    for &(provider, build) in LOCAL_PROVIDER_ROWS {
-        let result = build("not-a-url".to_string()).validate_for_storage();
-        assert_eq!(
-            result.unwrap_err().code,
-            "validation.settings-ai.providers.baseUrl",
-            "{provider} validate_for_storage must reject a non-URL baseUrl"
-        );
+    // WHY: The stored path shares the input rule — schemas are migrated, so there is
+    // no legacy empty exception to tolerate.
+    for bad_base_url in ["", "not-a-url"] {
+        for &(provider, build) in LOCAL_PROVIDER_ROWS {
+            let result = build(bad_base_url.to_string()).validate_for_storage();
+            assert_eq!(
+                result.unwrap_err().code,
+                "validation.settings-ai.providers.baseUrl",
+                "{provider} validate_for_storage must reject a non-URL baseUrl"
+            );
+        }
     }
 }
 

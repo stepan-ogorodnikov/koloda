@@ -44,6 +44,8 @@ describe("provider-secrets", () => {
   it.each([
     { label: "ollamaSecretsValidation", parse: () => ollamaSecretsValidation.safeParse({ baseUrl: "not-a-url" }) },
     { label: "lmstudioSecretsValidation", parse: () => lmstudioSecretsValidation.safeParse({ baseUrl: "not-a-url" }) },
+    { label: "ollamaSecretsValidation empty", parse: () => ollamaSecretsValidation.safeParse({ baseUrl: "" }) },
+    { label: "lmstudioSecretsValidation empty", parse: () => lmstudioSecretsValidation.safeParse({ baseUrl: "" }) },
     {
       label: "stored ollama",
       parse: () => aiSecretsValidation.safeParse({ provider: "ollama" as const, baseUrl: "not-a-url" }),
@@ -51,6 +53,14 @@ describe("provider-secrets", () => {
     {
       label: "stored lmstudio",
       parse: () => aiSecretsValidation.safeParse({ provider: "lmstudio" as const, baseUrl: "not-a-url" }),
+    },
+    {
+      label: "stored ollama empty",
+      parse: () => aiSecretsValidation.safeParse({ provider: "ollama" as const, baseUrl: "" }),
+    },
+    {
+      label: "stored lmstudio empty",
+      parse: () => aiSecretsValidation.safeParse({ provider: "lmstudio" as const, baseUrl: "" }),
     },
   ])("rejects a non-URL baseUrl on $label", ({ parse }) => {
     const result = parse();
