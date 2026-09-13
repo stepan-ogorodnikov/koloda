@@ -68,8 +68,13 @@ export async function applyPendingMigrations(db: DB) {
 
   for (const [name, sql] of await loadMigrationEntries()) {
     if (applied.has(name)) continue;
-    await db.exec(sql);
-    await db.run(`INSERT INTO ${MIGRATIONS_TABLE} (name, created_at) VALUES (?, ?)`, [name, createdAt]);
+    // WHY: Refinery applies each migration in its own transaction — a mid-migration
+    // failure must roll back the DDL instead of leaving a half-applied schema with no
+    // bookkeeping row. Nested callers (setupFromScratch) keep their outer transaction.
+    await db.transaction(async (tx) => {
+      await tx.exec(sql);
+      await tx.run(`INSERT INTO ${MIGRATIONS_TABLE} (name, created_at) VALUES (?, ?)`, [name, createdAt]);
+    });
   }
 }
 
