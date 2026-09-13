@@ -79,10 +79,10 @@ function toSql(value: unknown): SqlValue {
   if (typeof value === "boolean") return value ? 1 : 0;
   if (value === undefined) return null;
   if (typeof value === "bigint") return value;
-  if (typeof value === "object" && value !== null && !(value instanceof Uint8Array) && !Array.isArray(value)) {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value) && !value.every((item) => typeof item === "number")) {
+  // WHY: wa-sqlite's bind dispatches every plain array (numeric included) to
+  // bind_blob, so an array param would bind as raw bytes and silently corrupt;
+  // JSON-stringify it here. Uint8Array passes through to bind as a BLOB.
+  if (typeof value === "object" && value !== null && !(value instanceof Uint8Array)) {
     return JSON.stringify(value);
   }
   return value as SqlValue;

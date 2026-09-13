@@ -16,7 +16,6 @@ const ZERO_KEYS = new Set([
 ]);
 
 function asNumber(value: SqlValue): number {
-  if (typeof value === "bigint") return Number(value);
   return Number(value);
 }
 

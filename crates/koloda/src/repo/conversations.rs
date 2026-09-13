@@ -83,6 +83,11 @@ pub fn set_conversation(db: &Database, input: SetConversationInput) -> Result<Co
             // Leaving it NULL sorted new chats to the bottom of the sidebar
             // (`ORDER BY updated_at DESC`) until a later upsert — typically
             // after streaming finished. Matches db-sqlite `updatedAt ?? new Date()`.
+            //
+            // INVARIANT: this unconditional upsert resurrects a conversation deleted
+            // between a delayed save and the write — writers must be ordered against
+            // delete (tombstone or await before saving). Web twin documents the
+            // hazard in db-sqlite `conversations.integration.test.ts`.
             conn.execute(
                 r#"
                 INSERT INTO conversations (id, title, state, created_at, updated_at)
