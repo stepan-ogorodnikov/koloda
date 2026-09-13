@@ -118,6 +118,6 @@ export function getEditSchema(config: AIProviderFormConfig, hasSecrets: boolean)
   // Optional keys stay as lenient as the add schema — Rust ignores them on input.
   if (!apiKeyField?.isRequired) return config.schema;
   return config.schema.extend({
-    apiKey: z.preprocess((value) => (value === "" ? undefined : value), config.schema.shape.apiKey.optional()),
+    apiKey: z.preprocess((value) => (value === "" ? undefined : value), z.optional(config.schema.shape.apiKey)),
   });
 }
