@@ -681,6 +681,56 @@ fn add_ai_profile_rejects_empty_whitelist_model_id() {
 }
 
 #[test]
+fn add_ai_profile_rejects_title_over_max_length() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    // 129 Cyrillic chars are 258 UTF-8 bytes but 129 UTF-16 units — byte counting
+    // would reject a title the TS zod mirror (UTF-16 units) accepts.
+    let err =
+        ai::add_ai_profile(&db, Some("ф".repeat(129)), None, None).expect_err("title over 128 UTF-16 units must fail");
+    assert_eq!(err.code, "validation.common.title.too-long");
+
+    let profiles = ai::get_ai_profiles(&db).expect("settings read should still work");
+    assert!(profiles.is_empty(), "failed add must not leave a profile in settings");
+
+    test_store::teardown(_guard);
+}
+
+#[test]
+fn update_ai_profile_rejects_title_over_max_length() {
+    let _guard = test_store::setup();
+    let db = test_db();
+
+    let added = ai::add_ai_profile(
+        &db,
+        Some("OpenRouter".to_string()),
+        Some(AISecrets::OpenRouter {
+            api_key: Some("sk-secret-key".to_string()),
+        }),
+        None,
+    )
+    .expect("profile should be added");
+
+    let err = ai::update_ai_profile(&db, &added.id, Some("ф".repeat(129)), None, None)
+        .expect_err("title over 128 UTF-16 units must fail");
+    assert_eq!(err.code, "validation.common.title.too-long");
+
+    let profiles = ai::get_ai_profiles(&db).expect("should get profiles");
+    let retrieved = profiles
+        .iter()
+        .find(|p| p.id == added.id)
+        .expect("profile should remain");
+    assert_eq!(
+        retrieved.title,
+        Some("OpenRouter".to_string()),
+        "failed update must leave the stored title unchanged"
+    );
+
+    test_store::teardown(_guard);
+}
+
+#[test]
 fn remove_ai_profile_rolls_back_settings_when_keyring_remove_fails() {
     let (guard, data) = test_store::setup_shared();
     let db = test_db();
