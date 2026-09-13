@@ -6,7 +6,7 @@ Assistant chat React layer: conversation store, session/`RunController`, persist
 
 Consumed by `@koloda/app-react` and `apps/electron-react` (graceful shutdown).
 Depends on `@koloda/app`, `@koloda/srs`, `@koloda/ai`, `@koloda/ai-react`, `@koloda/assistant`, `@koloda/core-react`, and `@koloda/ui`.
-Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`; run execution lifetime lives in `@koloda/assistant`; this package owns conversation policy and React hosts.
+Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport live in `@koloda/assistant`; this package owns conversation policy and React hosts.
 
 **Ownership source of truth for assistant chat:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing assistant edits.
 
@@ -19,7 +19,7 @@ Provider HTTP and generic stream hooks stay in `@koloda/ai` / `@koloda/ai-react`
 
 - Framework-free run orchestration, persistence scheduling, AbortController lifetime, graceful shutdown — `@koloda/assistant` (wired via `useAssistantEngineHost`)
 - Provider HTTP / client factory — `@koloda/ai`
-- Generic streaming transport hooks and presentational chat chrome — `@koloda/ai-react`
+- Presentational chat chrome and AI UI primitives — `@koloda/ai-react`
 - App routing, global hotkeys, application-shell assistant host mount — `@koloda/app-react`
 - Global settings screens — `@koloda/settings-react`
 - SRS screens — `@koloda/srs-react`

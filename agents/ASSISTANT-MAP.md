@@ -48,7 +48,7 @@ Add a sibling only when the task crosses that spec.
 ## Layer Boundaries (Enforce these)
 
 - libs/ai: Provider calls, streaming, zod schemas, tool specs/binder/output shaping, the shared tool executor pipeline (`assistant-tool-executor.ts`, awaits host-injected `AssistantToolDataSource`), `AIRuntime` contract. NO React, NO DB, NO run state; tool data access stays host-injected.
-- libs/ai-react: Shared AI UI primitives and streaming hooks (incl. tool-activity widget). NO conversation store, NO DB schemas.
+- libs/ai-react: Shared presentational AI UI primitives (incl. tool-activity widget). NO conversation store, NO DB schemas, NO stream transport.
 - `@koloda/assistant`: Run execution lifetime, serial command queues, AbortControllers, save scheduling, graceful shutdown. NO React, NO Jotai, NO repository I/O. Conversation documents stay in `@koloda/assistant-react`.
 - `@koloda/assistant-react`: Conversation store/reducer, run orchestration, chat UI. NO provider HTTP, NO DB schemas.
 - crates/koloda: Source of truth for provider enum, secrets redaction, DB repo.
