@@ -73,10 +73,6 @@ export function findDuplicateProfileId(settings: { profiles: ReadonlyArray<{ id:
   return null;
 }
 
-export const DEFAULT_AI_SETTINGS: AISettings = aiSettingsValidation.parse({
-  profiles: [],
-});
-
 export type AddAIProfileData = {
   title?: string;
   secrets?: AISecrets;
