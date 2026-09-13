@@ -98,6 +98,33 @@ describe("aiProfileValidation id", () => {
   });
 });
 
+describe("aiProfileValidation title", () => {
+  const base = { id: "01900000-0000-7000-8000-000000000001", createdAt: "2026-01-01T00:00:00Z" };
+
+  // WHY: The max counts UTF-16 units; the Rust twin counts UTF-16 explicitly to match
+  // (ai_tests.rs title tests) — byte or char counting would diverge on the Cyrillic
+  // and astral rows.
+  it.each([
+    { name: "accepts a title at the 128-unit limit", title: "a".repeat(128) },
+    { name: "accepts 128 Cyrillic chars", title: "ф".repeat(128) },
+    { name: "accepts 64 emoji as 128 UTF-16 units", title: "🦀".repeat(64) },
+  ])("$name", ({ title }) => {
+    expect(aiProfileValidation.safeParse({ ...base, title }).success).toBe(true);
+  });
+
+  it.each([
+    { name: "rejects a title one past the limit", title: "a".repeat(129) },
+    { name: "rejects 129 Cyrillic chars", title: "ф".repeat(129) },
+    { name: "rejects 65 emoji as 130 UTF-16 units", title: "🦀".repeat(65) },
+  ])("$name", ({ title }) => {
+    const result = aiProfileValidation.safeParse({ ...base, title });
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["title"]);
+    expect(issue?.message).toBe("validation.common.title.too-long");
+  });
+});
+
 describe("assistantSettingsValidation", () => {
   it("strips leftover cardsPromptTemplate from old saved settings", () => {
     const parsed = assistantSettingsValidation.parse({
