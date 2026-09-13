@@ -3,6 +3,10 @@ import { resolveReasoningLevelsForModel } from "./openai-compatible";
 
 export const MODELS_DEV_API_URL = "https://models.dev/api.json";
 
+// WHY: models.dev is served behind bot filtering that 403s script-default
+// User-Agents (undici, empty), so the request deliberately identifies as a
+// browser. Not reproducible from residential IPs (any UA gets 200 there);
+// models-dev.test.ts pins this header so it is not "cleaned up".
 const MODELS_DEV_HEADERS = {
   Accept: "application/json",
   "User-Agent":
