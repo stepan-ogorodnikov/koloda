@@ -180,10 +180,22 @@ The allowlist decides what the picker offers; it does not change how a run is se
 ### Reasoning Effort
 
 Some models support a reasoning-effort parameter.
-Supported levels and the default come from the provider for that model.
+The app learns the supported levels and the default for a model by a fixed rule per provider:
+
+- OpenRouter reports the levels and the default in its model list.
+- LM Studio reports the levels and the default in the model's capabilities.
+- Ollama and Ollama Cloud report only whether a model can think.
+  Thinking GPT-OSS models accept low, medium, and high.
+  The default is medium.
+  Other thinking models accept on and off.
+  The default is on.
+- OpenCode providers join the models.dev catalog by model ID.
+  When the catalog has no row for the provider or the ID, known model families fall back to fixed built-in levels.
+  A model the catalog lists without effort levels gets no picker.
+
 The reasoning-effort picker in the conversation UI lists those levels.
-If the provider does not report levels for the model, the picker is hidden.
-The app does not invent levels on its own.
+If no rule yields levels for the model, the picker is hidden.
+The app does not guess levels outside these rules.
 
 Changing the model resets reasoning effort to that model's default.
 A stored reasoning-effort value that does not apply to the newly selected model is ignored.
