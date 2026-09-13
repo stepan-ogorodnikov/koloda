@@ -10,7 +10,6 @@ export type AIProfileSecretsFieldProps = {
   onChange: (value: string) => void;
   // WHY: Public profiles never return the key; Replace must key off stored presence.
   hasSecrets?: boolean;
-  placeholder?: string;
   errors?: ZodIssue[];
 };
 
@@ -19,7 +18,6 @@ export function AIProfileSecretsField({
   value,
   onChange,
   hasSecrets = false,
-  placeholder,
   errors,
 }: AIProfileSecretsFieldProps) {
   const { _ } = useLingui();
@@ -44,7 +42,7 @@ export function AIProfileSecretsField({
     <TextField type="password" value={value} onChange={onChange}>
       <Label>{label}</Label>
       {isEditing ? (
-        <TextField.Input ref={inputRef} placeholder={placeholder} />
+        <TextField.Input ref={inputRef} />
       ) : (
         <Button variants={{ style: "bordered", size: "default" }} onClick={handleStartEditing}>
           {_(msg`settings.ai.profiles.replace`)}
