@@ -1,4 +1,4 @@
-export { AiChatContextUsage } from "./lib/ai-chat-context-usage";
+export { AIChatContextUsage } from "./lib/ai-chat-context-usage";
 export { AIChatError } from "./lib/ai-chat-error";
 export { AIChatFooter } from "./lib/ai-chat-footer";
 export { AIChatMessageLayout } from "./lib/ai-chat-message";

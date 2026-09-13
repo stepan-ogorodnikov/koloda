@@ -28,13 +28,8 @@ msgstr "{rejectedCount, plural, one {# skipped} other {# skipped}}"
 
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:17
 #: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:20
-msgid "ai-chat.cancel.label"
+msgid "ai.chat.cancel.label"
 msgstr "Cancel request"
-
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:27
-#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:30
-msgid "ai-chat.submit.label"
-msgstr "Send"
 
 #: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:30
 #: ../../libs/ai-react/src/lib/ai-chat-context-usage.tsx:40
@@ -118,6 +113,11 @@ msgstr "Jump to latest"
 #: ../../libs/ai-react/src/lib/ai-chat-settings-toggle.tsx:23
 msgid "ai.chat.settings.toggle"
 msgstr "Settings"
+
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:27
+#: ../../libs/ai-react/src/lib/ai-chat-submit.tsx:30
+msgid "ai.chat.submit.label"
+msgstr "Send"
 
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:218
 #: ../../libs/ai-react/src/lib/ai-tool-activity.tsx:278

@@ -159,7 +159,7 @@ msgstr "Нет профилей"
 msgid "settings.ai.profiles.provider.label"
 msgstr "Провайдер"
 
-#: ../../libs/settings-react/src/lib/ai-providers/ai-profile-secrets-field.tsx:50
+#: ../../libs/settings-react/src/lib/ai-providers/ai-profile-secrets-field.tsx:48
 msgid "settings.ai.profiles.replace"
 msgstr "Заменить"
 

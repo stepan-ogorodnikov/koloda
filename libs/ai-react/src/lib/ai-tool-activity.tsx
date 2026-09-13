@@ -14,7 +14,7 @@ import { useLingui } from "@lingui/react";
 import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 import { tv } from "tailwind-variants";
-import { AiChatElapsedTimeDisplay, useElapsedSeconds } from "./ai-chat-elapsed-time";
+import { AIChatElapsedTimeDisplay, useElapsedSeconds } from "./ai-chat-elapsed-time";
 
 const toolActivityHeadline = tv({
   base: "flex flex-row items-center gap-2",
@@ -256,7 +256,7 @@ function ActivityElapsed({ isRunning, startedAt, elapsedSeconds }: ActivityElaps
   return (
     <>
       <ActivityDot />
-      <AiChatElapsedTimeDisplay seconds={seconds} />
+      <AIChatElapsedTimeDisplay seconds={seconds} />
     </>
   );
 }

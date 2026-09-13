@@ -3,12 +3,12 @@ import { CircularProgress, Tooltip } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 
-export type AiChatContextUsageProps = {
+export type AIChatContextUsageProps = {
   usage: StreamUsage | null;
   contextLength: number;
 };
 
-export function AiChatContextUsage({ usage, contextLength }: AiChatContextUsageProps) {
+export function AIChatContextUsage({ usage, contextLength }: AIChatContextUsageProps) {
   const { _ } = useLingui();
 
   if (!usage) return null;

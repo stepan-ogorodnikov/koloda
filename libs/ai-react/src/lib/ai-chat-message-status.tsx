@@ -2,8 +2,8 @@ import { Button } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import type { ReactNode } from "react";
-import { AiChatElapsedTimeDisplay } from "./ai-chat-elapsed-time";
-import { AiChatMessageStatusPending } from "./ai-chat-message-status-pending";
+import { AIChatElapsedTimeDisplay } from "./ai-chat-elapsed-time";
+import { AIChatMessageStatusPending } from "./ai-chat-message-status-pending";
 
 export type AIChatMessageStatusState = "pending" | "success" | "canceled" | "interrupted" | "failed";
 
@@ -62,7 +62,7 @@ function TerminalDurationStatus({
       {typeof elapsedSeconds === "number" ? (
         <p className="fg-level-4 flex flex-row items-center gap-1">
           {withTimeLabel}
-          <AiChatElapsedTimeDisplay seconds={elapsedSeconds} />
+          <AIChatElapsedTimeDisplay seconds={elapsedSeconds} />
         </p>
       ) : (
         <p className="fg-level-4">{withoutTimeLabel}</p>
@@ -79,7 +79,7 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
   const retryLabel = _(msg`ai.chat.message.retry`);
 
   if (state === "pending") {
-    return <AiChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} startedAt={startedAt} />;
+    return <AIChatMessageStatusPending label={_(msg`ai.chat.message.status.pending`)} startedAt={startedAt} />;
   }
 
   if (state === "success") {
@@ -92,7 +92,7 @@ export function AIChatMessageStatus(props: AIChatMessageStatusProps) {
               <span aria-hidden="true">·</span>
             </>
           )}
-          <AiChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
+          <AIChatElapsedTimeDisplay seconds={elapsedSeconds ?? 0} />
         </p>
         {actions}
       </div>

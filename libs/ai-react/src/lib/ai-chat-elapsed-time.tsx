@@ -29,9 +29,9 @@ export function useElapsedSeconds(startedAt: Date | undefined, enabled = true): 
   return seconds;
 }
 
-export type AiChatElapsedTimeDisplayProps = { seconds: number };
+export type AIChatElapsedTimeDisplayProps = { seconds: number };
 
-export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: AiChatElapsedTimeDisplayProps) {
+export function AIChatElapsedTimeDisplay({ seconds: totalSeconds }: AIChatElapsedTimeDisplayProps) {
   const { _ } = useLingui();
 
   const sLabel = _(msg`ai.chat.elapsed-time.periods.seconds`);
@@ -64,9 +64,9 @@ export function AiChatElapsedTimeDisplay({ seconds: totalSeconds }: AiChatElapse
   );
 }
 
-export type AiChatElapsedTimerProps = { startedAt: Date };
+export type AIChatElapsedTimerProps = { startedAt: Date };
 
-export function AiChatElapsedTimer({ startedAt }: AiChatElapsedTimerProps) {
+export function AIChatElapsedTimer({ startedAt }: AIChatElapsedTimerProps) {
   const seconds = useElapsedSeconds(startedAt) ?? 0;
-  return <AiChatElapsedTimeDisplay seconds={seconds} />;
+  return <AIChatElapsedTimeDisplay seconds={seconds} />;
 }
