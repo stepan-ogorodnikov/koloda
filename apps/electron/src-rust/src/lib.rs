@@ -1,5 +1,5 @@
 use koloda::app::db::Database;
-use koloda::app::error::AppError;
+use koloda::app::error::{error_codes, AppError};
 use koloda::app::init::{self as init_mod, SeedData};
 use koloda::domain::lessons::GetLessonsParams;
 use koloda::domain::settings::SettingsName;
@@ -15,9 +15,20 @@ fn to_napi_error(err: AppError) -> Error {
     Error::from_reason(error_json.to_string())
 }
 
+// WHY: serde wire-shape rejections (missing fields, mistyped values) must
+// cross NAPI inside the `{code, details}` envelope like domain failures do,
+// so the renderer `parseElectronError` builds a translatable `AppError`
+// instead of an unclassified raw serde string. `unknown` is enough — the
+// TS-side error table already covers it via the parity test.
+fn from_wire<T: serde::de::DeserializeOwned>(value: serde_json::Value) -> Result<T> {
+    serde_json::from_value(value).map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))
+}
+
 fn parse_settings_name(name: &str) -> Result<SettingsName> {
+    // WHY: same envelope as `from_wire` — an unknown name is a wire-shape
+    // rejection, not a domain failure, but the renderer still needs `{code}`.
     name.parse::<SettingsName>()
-        .map_err(|e| Error::from_reason(e.to_string()))
+        .map_err(|e| to_napi_error(AppError::new(error_codes::UNKNOWN, Some(e.to_string()))))
 }
 
 fn to_value<T: serde::Serialize>(val: &T) -> Result<serde_json::Value> {
@@ -29,9 +40,7 @@ fn extract_id(params: serde_json::Value) -> Result<String> {
     struct P {
         id: String,
     }
-    serde_json::from_value::<P>(params)
-        .map(|p| p.id)
-        .map_err(|e| Error::from_reason(e.to_string()))
+    from_wire::<P>(params).map(|p| p.id)
 }
 
 fn extract_name(params: serde_json::Value) -> Result<String> {
@@ -39,9 +48,7 @@ fn extract_name(params: serde_json::Value) -> Result<String> {
     struct P {
         name: String,
     }
-    serde_json::from_value::<P>(params)
-        .map(|p| p.name)
-        .map_err(|e| Error::from_reason(e.to_string()))
+    from_wire::<P>(params).map(|p| p.name)
 }
 
 #[napi]
@@ -68,14 +75,13 @@ impl KolodaDb {
 
     #[napi]
     pub fn seed_db(&self, data: serde_json::Value) -> Result<()> {
-        let data: SeedData = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data: SeedData = from_wire(data)?;
         init_mod::seed_db(&self.db, data).map_err(to_napi_error)
     }
 
     #[napi]
     pub fn get_cards(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: koloda::domain::cards::GetCardsParams =
-            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let params: koloda::domain::cards::GetCardsParams = from_wire(params)?;
         let cards = repo::cards::get_cards(&self.db, &params.deck_id).map_err(to_napi_error)?;
         to_value(&cards)
     }
@@ -95,40 +101,40 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_card(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let card = repo::cards::add_card(&self.db, data).map_err(to_napi_error)?;
         to_value(&card)
     }
 
     #[napi]
     pub fn add_cards(&self, cards_data: serde_json::Value) -> Result<serde_json::Value> {
-        let cards = serde_json::from_value(cards_data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let cards = from_wire(cards_data)?;
         let result = repo::cards::add_cards(&self.db, cards).map_err(to_napi_error)?;
         to_value(&result)
     }
 
     #[napi]
     pub fn update_card(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let card = repo::cards::update_card(&self.db, data).map_err(to_napi_error)?;
         to_value(&card)
     }
 
     #[napi]
     pub fn delete_card(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::cards::delete_card(&self.db, data).map_err(to_napi_error)
     }
 
     #[napi]
     pub fn delete_cards(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::cards::delete_cards(&self.db, data).map_err(to_napi_error)
     }
 
     #[napi]
     pub fn reset_card_progress(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let card = repo::cards::reset_card_progress(&self.db, data).map_err(to_napi_error)?;
         to_value(&card)
     }
@@ -148,28 +154,28 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let algorithm = repo::algorithms::add_algorithm(&self.db, data).map_err(to_napi_error)?;
         to_value(&algorithm)
     }
 
     #[napi]
     pub fn update_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let algorithm = repo::algorithms::update_algorithm(&self.db, data).map_err(to_napi_error)?;
         to_value(&algorithm)
     }
 
     #[napi]
     pub fn clone_algorithm(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let algorithm = repo::algorithms::clone_algorithm(&self.db, data).map_err(to_napi_error)?;
         to_value(&algorithm)
     }
 
     #[napi]
     pub fn delete_algorithm(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::algorithms::delete_algorithm(&self.db, data).map_err(to_napi_error)
     }
 
@@ -195,21 +201,21 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_deck(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let deck = repo::decks::add_deck(&self.db, data).map_err(to_napi_error)?;
         to_value(&deck)
     }
 
     #[napi]
     pub fn update_deck(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let deck = repo::decks::update_deck(&self.db, data).map_err(to_napi_error)?;
         to_value(&deck)
     }
 
     #[napi]
     pub fn delete_deck(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::decks::delete_deck(&self.db, data).map_err(to_napi_error)
     }
 
@@ -228,28 +234,28 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let template = repo::templates::add_template(&self.db, data).map_err(to_napi_error)?;
         to_value(&template)
     }
 
     #[napi]
     pub fn update_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let template = repo::templates::update_template(&self.db, data).map_err(to_napi_error)?;
         to_value(&template)
     }
 
     #[napi]
     pub fn clone_template(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let template = repo::templates::clone_template(&self.db, data).map_err(to_napi_error)?;
         to_value(&template)
     }
 
     #[napi]
     pub fn delete_template(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::templates::delete_template(&self.db, data).map_err(to_napi_error)
     }
 
@@ -275,7 +281,7 @@ impl KolodaDb {
             name: String,
             content: serde_json::Value,
         }
-        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let p: P = from_wire(params)?;
         let name = parse_settings_name(&p.name)?;
         let settings = repo::settings::set_settings(&self.db, name, p.content).map_err(to_napi_error)?;
         to_value(&settings)
@@ -288,7 +294,7 @@ impl KolodaDb {
             name: String,
             content: serde_json::Value,
         }
-        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let p: P = from_wire(params)?;
         let name = parse_settings_name(&p.name)?;
         let settings = repo::settings::patch_settings(&self.db, name, p.content).map_err(to_napi_error)?;
         to_value(&settings)
@@ -300,7 +306,7 @@ impl KolodaDb {
         struct P {
             id: String,
         }
-        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let p: P = from_wire(params)?;
         let conversation = repo::conversations::get_conversation(&self.db, &p.id).map_err(to_napi_error)?;
         conversation.map(|c| to_value(&c)).transpose()
     }
@@ -313,8 +319,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn set_conversation(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let input: repo::conversations::SetConversationInput =
-            serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let input: repo::conversations::SetConversationInput = from_wire(params)?;
         let conversation = repo::conversations::set_conversation(&self.db, input).map_err(to_napi_error)?;
         to_value(&conversation)
     }
@@ -325,33 +330,33 @@ impl KolodaDb {
         struct P {
             id: String,
         }
-        let p: P = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let p: P = from_wire(params)?;
         repo::conversations::delete_conversation(&self.db, &p.id).map_err(to_napi_error)
     }
 
     #[napi]
     pub fn get_lessons(&self, params: serde_json::Value) -> Result<serde_json::Value> {
-        let params: GetLessonsParams = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let params: GetLessonsParams = from_wire(params)?;
         let lessons = repo::lessons::get_lessons(&self.db, params).map_err(to_napi_error)?;
         to_value(&lessons)
     }
 
     #[napi]
     pub fn get_lesson_data(&self, params: serde_json::Value) -> Result<Option<serde_json::Value>> {
-        let params = serde_json::from_value(params).map_err(|e| Error::from_reason(e.to_string()))?;
+        let params = from_wire(params)?;
         let data = repo::lessons::get_lesson_data(&self.db, &params).map_err(to_napi_error)?;
         data.map(|d| to_value(&d)).transpose()
     }
 
     #[napi]
     pub fn submit_lesson_result(&self, data: serde_json::Value) -> Result<()> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         repo::lessons::submit_lesson_result(&self.db, data).map_err(to_napi_error)
     }
 
     #[napi]
     pub fn get_reviews(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data = serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data = from_wire(data)?;
         let reviews = repo::reviews::get_reviews(&self.db, data).map_err(to_napi_error)?;
         to_value(&reviews)
     }
@@ -378,8 +383,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn add_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda::domain::ai::AddProfileData =
-            serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data: koloda::domain::ai::AddProfileData = from_wire(data)?;
         let profile = repo::ai::add_ai_profile(&self.db, data.title, data.secrets, data.whitelist_model_ids)
             .map_err(to_napi_error)?;
         to_value(&profile)
@@ -387,8 +391,7 @@ impl KolodaDb {
 
     #[napi]
     pub fn update_ai_profile(&self, data: serde_json::Value) -> Result<serde_json::Value> {
-        let data: koloda::domain::ai::UpdateProfileData =
-            serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data: koloda::domain::ai::UpdateProfileData = from_wire(data)?;
         let profile =
             repo::ai::update_ai_profile(&self.db, &data.id, data.title, data.secrets, data.whitelist_model_ids)
                 .map_err(to_napi_error)?;
@@ -397,8 +400,23 @@ impl KolodaDb {
 
     #[napi]
     pub fn remove_ai_profile(&self, data: serde_json::Value) -> Result<()> {
-        let data: koloda::domain::ai::RemoveProfileData =
-            serde_json::from_value(data).map_err(|e| Error::from_reason(e.to_string()))?;
+        let data: koloda::domain::ai::RemoveProfileData = from_wire(data)?;
         repo::ai::remove_ai_profile(&self.db, &data.id).map_err(to_napi_error)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn wire_shape_rejection_carries_code_envelope() {
+        // Pins I5: serde failures must reach the renderer as `{code, details}`
+        // so `parseElectronError` builds a classified `AppError`, not a raw string.
+        let result: Result<SeedData> = from_wire(serde_json::json!({ "id": 123 }));
+        let payload: serde_json::Value =
+            serde_json::from_str(&result.unwrap_err().reason).expect("envelope must be JSON");
+        assert_eq!(payload["code"], "unknown");
+        assert!(payload["details"].as_str().unwrap().contains("missing field"));
     }
 }
