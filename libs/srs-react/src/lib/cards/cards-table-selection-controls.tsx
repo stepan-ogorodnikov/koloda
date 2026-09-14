@@ -7,21 +7,18 @@ import { Button, Dialog, ErrorMessage, Fade, Number } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { RowSelectionState } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { AnimatePresence } from "motion/react";
 import { useState } from "react";
 
 type CardsTableSelectionControlsProps = {
-  rowSelection: RowSelectionState;
-  filteredCards: Card[];
+  selectedIds: Card["id"][];
   deckId: Deck["id"];
   onClearSelection: () => void;
 };
 
 export function CardsTableSelectionControls({
-  rowSelection,
-  filteredCards,
+  selectedIds,
   deckId,
   onClearSelection,
 }: CardsTableSelectionControlsProps) {
@@ -31,10 +28,7 @@ export function CardsTableSelectionControls({
   const { mutate, error, reset } = useMutation(deleteCardsMutation());
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedCount = Object.keys(rowSelection).length;
-  const selectedIds = Object.keys(rowSelection)
-    .map((index) => filteredCards[parseInt(index)]?.id)
-    .filter((id): id is Card["id"] => id !== undefined);
+  const selectedCount = selectedIds.length;
 
   const handleOpenChange = (value: boolean) => {
     setIsOpen(value);

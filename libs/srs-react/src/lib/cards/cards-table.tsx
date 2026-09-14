@@ -149,6 +149,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const table = useCardsTable({
     columns,
     data: filteredCards,
+    getRowId: (row) => row.id,
     state: {
       pagination,
       columnVisibility,
@@ -169,6 +170,8 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
       maxSize: 1024,
     },
   });
+
+  const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
 
   if (!isReady) return null;
 
@@ -215,10 +218,9 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
         </Table.Root>
         <Table.Pagination table={table} pageSizes={PAGE_SIZES} />
         <AnimatePresence>
-          {Object.keys(rowSelection).length > 0 && (
+          {selectedIds.length > 0 && (
             <CardsTableSelectionControls
-              rowSelection={rowSelection}
-              filteredCards={filteredCards}
+              selectedIds={selectedIds}
               deckId={deckId}
               onClearSelection={() => setRowSelection({})}
             />

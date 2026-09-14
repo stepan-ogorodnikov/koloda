@@ -8,16 +8,14 @@ export type CardsTableHeaderSelectProps = {
 };
 
 export function CardsTableHeaderSelect({ table }: CardsTableHeaderSelectProps) {
-  const allRows = table.getRowModel().rows;
-  const selectedCount = allRows.filter((row) => row.getIsSelected()).length;
-  const isAllSelected = selectedCount === allRows.length;
-  const isIndeterminate = selectedCount > 0 && selectedCount < allRows.length;
+  const isAllSelected = table.getIsAllPageRowsSelected();
+  const isIndeterminate = table.getIsSomePageRowsSelected();
 
   const handleChange = (isSelected: boolean) => {
-    table.toggleAllRowsSelected(isSelected);
+    table.toggleAllPageRowsSelected(isSelected);
   };
 
-  if (allRows.length === 0) return null;
+  if (table.getRowModel().rows.length === 0) return null;
 
   return (
     <Checkbox isSelected={isAllSelected} isIndeterminate={isIndeterminate} onChange={handleChange}>
