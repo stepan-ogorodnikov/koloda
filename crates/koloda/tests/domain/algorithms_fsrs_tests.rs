@@ -579,6 +579,17 @@ fn test_maximum_interval_zero_fails() {
 }
 
 #[test]
+fn test_maximum_interval_fractional_fails_deserialization() {
+    // WHY: `maximum_interval: i64` rejects fractions at serde level before
+    // `validate()` runs — mirrors TS `maximumInterval: z.number().int()`.
+    let mut payload = valid_payload();
+    payload["maximumInterval"] = json!(36500.5);
+
+    let result: Result<AlgorithmFSRS, _> = serde_json::from_value(payload);
+    assert!(result.is_err(), "Should fail when maximumInterval is fractional");
+}
+
+#[test]
 fn test_maximum_interval_negative_fails() {
     let json = r#"{
         "type": "fsrs",

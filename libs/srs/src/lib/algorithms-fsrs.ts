@@ -31,7 +31,9 @@ const algorithmFSRSBaseValidation = z.object({
   isFuzzEnabled: z.boolean(),
   learningSteps: z.array(learningStepValidation),
   relearningSteps: z.array(learningStepValidation),
-  maximumInterval: z.number(),
+  // WHY: `.int()` mirrors Rust `maximum_interval: i64` — fractional values fail
+  // serde deserialization on desktop before validation ever runs.
+  maximumInterval: z.number().int(),
 });
 
 export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((data, ctx) => {

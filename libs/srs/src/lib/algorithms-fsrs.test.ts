@@ -373,4 +373,12 @@ describe("algorithmFSRSValidation", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("rejects fractional maximumInterval (mirrors Rust i64 deserialization)", () => {
+    const result = algorithmFSRSValidation.safeParse({
+      ...DEFAULT_FSRS_ALGORITHM,
+      maximumInterval: 36500.5,
+    });
+    expect(result.success).toBe(false);
+  });
 });
