@@ -9,7 +9,7 @@ import { useAtomValue } from "jotai";
 import { tv } from "tailwind-variants";
 
 const learnedTodayAmount = tv({
-  base: "leadning-none font-bold tracking-tight",
+  base: "leading-none font-bold tracking-tight",
   variants: {
     content: {
       title: "max-wd:hidden wd:text-lg leading-6",
