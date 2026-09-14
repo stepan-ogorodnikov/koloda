@@ -57,28 +57,28 @@ msgstr "Добавить карточку"
 msgid "add-cards.trigger"
 msgstr "Добавить карточки"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:93
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:95
 msgid "add-deck.inputs.title.label"
 msgstr "Название"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:118
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:120
 msgid "add-deck.redirect.link"
 msgstr "Перейти"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
 msgid "add-deck.submit"
 msgstr "Создать"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
 msgid "add-deck.success"
 msgstr "Успешно"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:82
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:84
 msgid "add-deck.title"
 msgstr "Новая колода"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:67
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:68
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:69
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:70
 msgid "add-deck.trigger"
 msgstr "Новая колода"
 
@@ -357,11 +357,11 @@ msgstr "Успешно"
 msgid "clone-template.trigger"
 msgstr "Создать копию"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:87
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:89
 msgid "deck.actions.label"
 msgstr "Действия"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:72
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:74
 msgid "deck.inputs.title.label"
 msgstr "Название"
 

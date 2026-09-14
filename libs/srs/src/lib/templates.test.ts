@@ -123,6 +123,7 @@ describe("templates", () => {
     expect(result.success).toBe(false);
     const issue = result.success ? undefined : result.error.issues.find((x) => x.code === "invalid_value");
     expect(issue?.path).toEqual(["content", "fields", 0, "type"]);
+    expect(issue?.message).toBe("validation.templates.fields.type");
   });
 
   it("rejects an update template whose layout operation is not supported", () => {
@@ -137,5 +138,6 @@ describe("templates", () => {
     expect(result.success).toBe(false);
     const issue = result.success ? undefined : result.error.issues.find((x) => x.code === "invalid_value");
     expect(issue?.path).toEqual(["content", "layout", 0, "operation"]);
+    expect(issue?.message).toBe("validation.templates.layout.operation");
   });
 });

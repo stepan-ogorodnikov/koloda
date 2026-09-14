@@ -67,7 +67,10 @@ pub mod error_codes {
     pub const VALIDATION_ALGORITHMS_DELETE_LAST: &str = "validation.algorithms.delete-last";
 
     pub const VALIDATION_TEMPLATES_FIELDS_TOO_FEW: &str = "validation.templates.fields.too-few";
+    pub const VALIDATION_TEMPLATES_FIELDS_TYPE: &str = "validation.templates.fields.type";
     pub const VALIDATION_TEMPLATES_LAYOUT_TOO_FEW: &str = "validation.templates.layout.too-few";
+    pub const VALIDATION_TEMPLATES_LAYOUT_OPERATION: &str = "validation.templates.layout.operation";
+    pub const VALIDATION_TEMPLATES_LAYOUT_MISSING_FIELD: &str = "validation.templates.layout.missing-field";
     pub const VALIDATION_TEMPLATES_UPDATE_LOCKED: &str = "validation.templates.update-locked";
     pub const VALIDATION_TEMPLATES_DELETE_LOCKED: &str = "validation.templates.delete-locked";
     pub const VALIDATION_TEMPLATES_DELETE_DEFAULT: &str = "validation.templates.delete-default";

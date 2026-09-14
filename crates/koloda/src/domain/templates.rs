@@ -126,7 +126,7 @@ fn validate_template_content(
     for field in &content.fields {
         if !FIELD_TYPES.contains(&field.field_type.as_str()) {
             return Err(AppError::new(
-                error_codes::UNKNOWN,
+                error_codes::VALIDATION_TEMPLATES_FIELDS_TYPE,
                 Some(format!("Invalid field type: {}", field.field_type)),
             ));
         }
@@ -135,7 +135,7 @@ fn validate_template_content(
     for item in &content.layout {
         if !LAYOUT_OPERATIONS.contains(&item.operation.as_str()) {
             return Err(AppError::new(
-                error_codes::UNKNOWN,
+                error_codes::VALIDATION_TEMPLATES_LAYOUT_OPERATION,
                 Some(format!("Invalid layout operation: {}", item.operation)),
             ));
         }
@@ -145,7 +145,7 @@ fn validate_template_content(
     for item in &content.layout {
         if !field_ids.contains(item.field.as_str()) {
             return Err(AppError::new(
-                error_codes::UNKNOWN,
+                error_codes::VALIDATION_TEMPLATES_LAYOUT_MISSING_FIELD,
                 Some(format!("Non-existent field id in layout: {}", item.field)),
             ));
         }

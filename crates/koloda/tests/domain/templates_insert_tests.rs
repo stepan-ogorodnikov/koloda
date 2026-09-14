@@ -471,3 +471,70 @@ fn test_content_as_number_fails() {
     let result: Result<InsertTemplateData, _> = serde_json::from_str(json);
     assert!(result.is_err(), "Should fail when content is a number");
 }
+
+#[test]
+fn test_unsupported_field_type_fails_with_dedicated_code() {
+    // Twin of the TS `rejects an insert template whose field type is not supported` case.
+    let json = r#"{
+        "title": "Test Template",
+        "content": {
+            "fields": [
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "html", "isRequired": true}
+            ],
+            "layout": [
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "display"}
+            ]
+        }
+    }"#;
+
+    let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
+    assert_eq!(
+        template.validate().unwrap_err().code,
+        "validation.templates.fields.type"
+    );
+}
+
+#[test]
+fn test_unsupported_layout_operation_fails_with_dedicated_code() {
+    // Twin of the TS `rejects an update template whose layout operation is not supported` case.
+    let json = r#"{
+        "title": "Test Template",
+        "content": {
+            "fields": [
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
+            ],
+            "layout": [
+                {"field": "01900000-0000-7000-8000-000000000001", "operation": "hide"}
+            ]
+        }
+    }"#;
+
+    let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
+    assert_eq!(
+        template.validate().unwrap_err().code,
+        "validation.templates.layout.operation"
+    );
+}
+
+#[test]
+fn test_layout_references_missing_field_fails_with_dedicated_code() {
+    // Twin of the TS `rejects an insert template whose layout item references
+    // a missing field` case — adopts the pre-existing TS-only code.
+    let json = r#"{
+        "title": "Test Template",
+        "content": {
+            "fields": [
+                {"id": "01900000-0000-7000-8000-000000000001", "title": "Front", "type": "text", "isRequired": true}
+            ],
+            "layout": [
+                {"field": "01900000-0000-7000-8000-0000000003e7", "operation": "display"}
+            ]
+        }
+    }"#;
+
+    let template: InsertTemplateData = serde_json::from_str(json).expect("Should deserialize");
+    assert_eq!(
+        template.validate().unwrap_err().code,
+        "validation.templates.layout.missing-field"
+    );
+}

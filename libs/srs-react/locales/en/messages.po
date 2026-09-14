@@ -57,28 +57,28 @@ msgstr "Add card"
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:93
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:95
 msgid "add-deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:118
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:120
 msgid "add-deck.redirect.link"
 msgstr "Go to the new deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
 msgid "add-deck.submit"
 msgstr "Add deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:125
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
 msgid "add-deck.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:82
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:84
 msgid "add-deck.title"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:67
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:68
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:69
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:70
 msgid "add-deck.trigger"
 msgstr "New deck"
 
@@ -357,11 +357,11 @@ msgstr "Done"
 msgid "clone-template.trigger"
 msgstr "Clone template"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:87
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:89
 msgid "deck.actions.label"
 msgstr "Actions"
 
-#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:72
+#: ../../libs/srs-react/src/lib/decks/deck-details.tsx:74
 msgid "deck.inputs.title.label"
 msgstr "Title"
 

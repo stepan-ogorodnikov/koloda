@@ -26,7 +26,7 @@ const templateContentFields = z.object({
       z.object({
         id: z.uuid(),
         title: z.string(),
-        type: z.enum(TEMPLATE_FIELD_TYPES),
+        type: z.enum(TEMPLATE_FIELD_TYPES, { message: "validation.templates.fields.type" }),
         isRequired: z.boolean(),
       }),
     )
@@ -35,7 +35,7 @@ const templateContentFields = z.object({
     .array(
       z.object({
         field: z.uuid(),
-        operation: z.enum(TEMPLATE_OPERATIONS),
+        operation: z.enum(TEMPLATE_OPERATIONS, { message: "validation.templates.layout.operation" }),
       }),
     )
     .min(1, "validation.templates.layout.too-few"),

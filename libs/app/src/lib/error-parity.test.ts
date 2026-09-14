@@ -32,9 +32,6 @@ const TS_ONLY_ERROR_CODES = [
   "ai.http.502",
   "ai.http.503",
   "ai.http.504",
-  // WHY: mirrors the Rust `validate_template_content` layout membership check, which reports
-  // `error_codes::UNKNOWN` with a details string instead of a dedicated code.
-  "validation.templates.layout.missing-field",
 ] as const;
 
 const RUST_ERROR_RS = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../crates/koloda/src/app/error.rs");
