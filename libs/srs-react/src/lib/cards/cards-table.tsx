@@ -1,6 +1,6 @@
 import { queriesAtom } from "@koloda/core-react";
 import type { Card, Deck, Template } from "@koloda/srs";
-import { SearchField, Table, createCardsColumnHelper, useCardsTable } from "@koloda/ui";
+import { QueryError, SearchField, Table, createCardsColumnHelper, useCardsTable } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -46,7 +46,10 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { data: cards = [] } = useQuery(getCardsQuery({ deckId }));
   const { data: deck } = useQuery(getDeckQuery(deckId));
-  const { templates, templateMapRef, isReady } = useCardsTemplates(cards, deck?.templateId);
+  const { templates, templateMapRef, isReady, templateError, refetchTemplates } = useCardsTemplates(
+    cards,
+    deck?.templateId,
+  );
 
   const columns = useMemo(
     () =>
@@ -173,6 +176,7 @@ export function CardsTable({ deckId, controlsNode }: CardsTableProps) {
 
   const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
 
+  if (templateError && !isReady) return <QueryError error={templateError} onRetry={refetchTemplates} />;
   if (!isReady) return null;
 
   return (

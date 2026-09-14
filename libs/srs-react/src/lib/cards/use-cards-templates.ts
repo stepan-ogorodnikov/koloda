@@ -16,13 +16,15 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
   // WHY: useQueries returns a fresh results array on every render; without `combine`
   // the derived templates array would get a new identity each render and invalidate
   // every memo consuming it (cards table columns), rebuilding cell DOM nonstop.
-  const { templates, isLoading } = useQueries({
+  const { templates, isLoading, templateError, refetchTemplates } = useQueries({
     queries: templateIds.map((id) => getTemplateQuery(id)),
     combine: (results) => ({
       isLoading: results.some((result) => result.isLoading),
+      templateError: results.find((result) => result.error)?.error ?? null,
       templates: results
         .map((result) => result.data)
         .filter((template): template is Template => template !== null && template !== undefined),
+      refetchTemplates: () => Promise.all(results.map((result) => result.refetch())).then(() => undefined),
     }),
   });
 
@@ -35,5 +37,7 @@ export function useCardsTemplates(cards: Card[] | undefined, deckTemplateId?: Te
     templates,
     templateMapRef,
     isReady,
+    templateError,
+    refetchTemplates,
   };
 }
