@@ -48,7 +48,10 @@ export const reviewValidation = reviewFieldsSchema.superRefine(refineReview);
 
 export const reviewRowSchema = reviewValidation;
 
-export type Review = z.input<typeof reviewValidation>;
+// WHY: row type is the schema output, so defaulted fields are required —
+// same convention as `Card` in `./cards`. Runtime parse output is always
+// full; `z.input` typed consumers as if fields could be absent.
+export type Review = z.infer<typeof reviewValidation>;
 
 export type GetReviewsData = { cardId: Card["id"] };
 
