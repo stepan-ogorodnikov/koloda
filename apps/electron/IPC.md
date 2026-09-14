@@ -15,8 +15,8 @@ Main-to-renderer pushes arrive on `window.electronAPI.on(channel, callback)` sub
   The renderer bridge re-parses them into `AppError` / `AIError`.
 - Values crossing the Rust boundary follow the NAPI wire format (`toWire`/`fromWire` in the renderer):
   `Date` as epoch ms, `BigInt` bounds-checked to safe integers.
-- Data-command args mirror the `KolodaDb` NAPI method signatures — wrapped as the NAPI method names
-  its parameter (`params`/`data`), else the plain object.
+- Data-command args mirror the `KolodaDb` NAPI method signatures — `{ params }` for reads, `{ data }` for writes,
+  or the plain object where the method takes one.
 - Channel names and arg/result shapes are machine-checked against the `DataIpc` contract in `libs/native-ipc`
   (`@koloda/native-ipc`), which both processes compile against. The contract covers the full renderer command
   surface: data commands, AI commands, and the `AI_STREAM_CHANNEL` (`ai:stream`) event payload (`AiStreamEvent`).

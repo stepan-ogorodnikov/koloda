@@ -187,9 +187,14 @@ The app learns the supported levels and the default for a model by a fixed rule 
 - OpenRouter reports the levels and the default in its model list.
 - LM Studio reports the levels and the default in the model's capabilities.
 - Ollama and Ollama Cloud report only whether a model can think.
-  Thinking GPT-OSS models accept low, medium, and high.
+  - Thinking GPT-OSS models accept:
+    - low
+    - medium
+    - high
   The default is medium.
-  Other thinking models accept on and off.
+  - Other thinking models accept:
+    - on
+    - off
   The default is on.
 - OpenCode providers join the models.dev catalog by model ID.
   When the catalog has no row for the provider or the ID, known model families fall back to fixed built-in levels.

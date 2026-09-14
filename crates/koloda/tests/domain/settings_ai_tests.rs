@@ -363,7 +363,7 @@ fn test_assistant_temperature_default_is_canonicalized_on_normalize() {
 
 #[test]
 fn test_assistant_chat_prompt_template_defaults_to_null_when_omitted() {
-    // Mirrors the TS schema's `.nullable().default(null)`: an older settings row
+    // WHY: Mirrors the TS schema's `.nullable().default(null)`: an older settings row
     // whose assistant object omits `chatPromptTemplate` parses with a None
     // template, and the normalize path re-serializes it as an explicit null.
     let json = r#"{
