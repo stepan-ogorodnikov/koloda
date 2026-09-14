@@ -42,7 +42,7 @@ Relationships:
 ## Lessons Overview
 
 The lessons screen lists every deck with available counts for "New", "Learn", "Review", and "Total".
-A final row aggregates the same counts across all decks.
+A first row aggregates the same counts across all decks.
 
 Each count is a badge.
 A badge with a non-zero count starts a lesson of that type for that deck (or for all decks on the aggregate row).
