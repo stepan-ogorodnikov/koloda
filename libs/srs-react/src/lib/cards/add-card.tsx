@@ -61,6 +61,7 @@ export function AddCard({ deckId, templateId }: AddCardProps) {
   useAppHotkey(
     ui.submit,
     () => {
+      if (!isOpen) return;
       if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) form.handleSubmit();
     },
     "",
