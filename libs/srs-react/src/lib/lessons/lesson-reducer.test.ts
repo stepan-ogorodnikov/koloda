@@ -287,6 +287,17 @@ describe("lessonReducer", () => {
     expect(repeated.session?.data.cards).toHaveLength(1);
   });
 
+  it("finishes immediately when the loaded data contains zero cards", () => {
+    const state = startLesson({ lessonData: createLessonData({ cards: [] }) });
+
+    expect(state.phase).toBe("finished");
+    expect(state.session?.content).toBeNull();
+    expect(state.session?.progress).toEqual({
+      done: { untouched: 0, learn: 0, review: 0, total: 0 },
+      pending: { untouched: 0, learn: 0, review: 0, total: 0 },
+    });
+  });
+
   it("updates and submits the card form only while studying", () => {
     const loading = startLesson({ shouldSubmitSetup: true });
     const ignoredForm = lessonReducer(loading, [

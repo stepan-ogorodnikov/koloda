@@ -264,7 +264,9 @@ function moveToNextCard(draft: LessonReducerState) {
   const { cards, decks, templates, algorithms } = draft.session.data;
   const index = typeof draft.session.content?.index === "number" ? draft.session.content.index + 1 : 0;
 
-  if (index && index >= cards.length) {
+  // WHY: an empty payload (cards deleted between configure and load) has no
+  // index 0 — finish instead of stranding the dialog in loading-cards.
+  if (index >= cards.length) {
     if (typeof draft.session.content?.index === "number") draft.session.content.index++;
     draft.phase = "finished";
     updateProgressAmounts(draft);
