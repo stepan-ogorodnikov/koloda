@@ -49,6 +49,8 @@ export const ERROR_MESSAGES = {
   "validation.common.title.too-short": msg`validation.common.title.too-short`,
   "validation.common.title.too-long": ({ maximum }: any) =>
     msg`${plural(maximum, { other: "validation.common.title.too-long" })}`,
+  "validation.decks.algorithm": msg`validation.decks.algorithm`,
+  "validation.decks.template": msg`validation.decks.template`,
   "validation.settings-learning.daily-limits.untouched-exceeds-total": msg`validation.settings-learning.daily-limits.untouched-exceeds-total`,
   "validation.settings-learning.daily-limits.learn-exceeds-total": msg`validation.settings-learning.daily-limits.learn-exceeds-total`,
   "validation.settings-learning.daily-limits.review-exceeds-total": msg`validation.settings-learning.daily-limits.review-exceeds-total`,

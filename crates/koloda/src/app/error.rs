@@ -29,6 +29,9 @@ pub mod error_codes {
     pub const VALIDATION_COMMON_TITLE_TOO_SHORT: &str = "validation.common.title.too-short";
     pub const VALIDATION_COMMON_TITLE_TOO_LONG: &str = "validation.common.title.too-long";
 
+    pub const VALIDATION_DECKS_ALGORITHM: &str = "validation.decks.algorithm";
+    pub const VALIDATION_DECKS_TEMPLATE: &str = "validation.decks.template";
+
     pub const VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_UNTOUCHED_EXCEEDS_TOTAL: &str =
         "validation.settings-learning.daily-limits.untouched-exceeds-total";
     pub const VALIDATION_SETTINGS_LEARNING_DAILY_LIMITS_LEARN_EXCEEDS_TOTAL: &str =

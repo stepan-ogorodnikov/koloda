@@ -2,8 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::app::error::AppError;
-use crate::domain::common::validate_title;
+use crate::app::error::{error_codes, AppError};
+use crate::domain::common::{validate_title, validate_uuid};
 use crate::domain::time::{
     deserialize_optional_timestamp, deserialize_timestamp, serialize_optional_timestamp, serialize_timestamp,
 };
@@ -57,12 +57,18 @@ pub struct DeleteDeckData {
 
 impl InsertDeckData {
     pub fn validate(&self) -> Result<(), AppError> {
-        validate_title(&self.title)
+        validate_title(&self.title)?;
+        validate_uuid(&self.algorithm_id, error_codes::VALIDATION_DECKS_ALGORITHM)?;
+        validate_uuid(&self.template_id, error_codes::VALIDATION_DECKS_TEMPLATE)?;
+        Ok(())
     }
 }
 
 impl UpdateDeckValues {
     pub fn validate(&self) -> Result<(), AppError> {
-        validate_title(&self.title)
+        validate_title(&self.title)?;
+        validate_uuid(&self.algorithm_id, error_codes::VALIDATION_DECKS_ALGORITHM)?;
+        validate_uuid(&self.template_id, error_codes::VALIDATION_DECKS_TEMPLATE)?;
+        Ok(())
     }
 }
