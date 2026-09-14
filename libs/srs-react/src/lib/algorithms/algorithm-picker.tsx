@@ -10,22 +10,21 @@ import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 
 type AlgorithmPickerProps = Omit<SelectProps<Algorithm>, "value" | "onChange" | "items" | "children"> & {
-  isNullable?: boolean;
   value: Algorithm["id"] | null;
   onChange: (key: Algorithm["id"]) => void;
 };
 
-export function AlgorithmPicker({ label, isNullable, value, onChange, ...props }: AlgorithmPickerProps) {
+export function AlgorithmPicker({ label, value, onChange, ...props }: AlgorithmPickerProps) {
   const { _ } = useLingui();
   const { getAlgorithmsQuery } = useAtomValue(queriesAtom);
   const defaultAlgorithm = useAtomValue(defaultAlgorithmAtom);
   const { data } = useQuery(getAlgorithmsQuery());
 
   useEffect(() => {
-    if (!isNullable && !value) onChange(defaultAlgorithm);
-  }, [isNullable, value, onChange, defaultAlgorithm]);
+    if (!value) onChange(defaultAlgorithm);
+  }, [value, onChange, defaultAlgorithm]);
 
-  if (!isNullable && !data) return null;
+  if (!data) return null;
 
   return (
     <Select
