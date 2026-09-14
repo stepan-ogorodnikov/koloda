@@ -331,6 +331,27 @@ fn test_weights_nan_fails() {
 }
 
 #[test]
+fn test_weights_hexadecimal_fails() {
+    // Twin of the TS `weights hexadecimal` case — `Number("0x1f")` is finite
+    // but `parse::<f64>()` rejects it, so the TS grammar restricts to decimal.
+    let json = r#"{
+        "type": "fsrs",
+        "retention": 90.0,
+        "weights": "0.5,0x1f,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+        "isFuzzEnabled": true,
+        "learningSteps": [],
+        "relearningSteps": [],
+        "maximumInterval": 36500
+    }"#;
+
+    let algorithm: AlgorithmFSRS = serde_json::from_str(json).expect("Should deserialize");
+    assert!(
+        algorithm.validate().is_err(),
+        "Should fail when weights contains hexadecimal"
+    );
+}
+
+#[test]
 fn test_weights_empty_string_fails() {
     let json = r#"{
         "type": "fsrs",

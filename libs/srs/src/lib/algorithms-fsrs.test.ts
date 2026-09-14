@@ -282,6 +282,14 @@ describe("algorithmFSRSValidation", () => {
       code: "validation.algorithm.fsrs.weights",
     },
     {
+      name: "weights hexadecimal",
+      payload: {
+        ...validPayload(),
+        weights: "0.5,0x1f,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5",
+      },
+      code: "validation.algorithm.fsrs.weights",
+    },
+    {
       name: "weights non-numeric",
       payload: {
         ...validPayload(),

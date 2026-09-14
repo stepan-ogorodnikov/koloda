@@ -22,6 +22,12 @@ export const FSRS_GRADES = [
 export const LEARNING_STEP_UNITS = ["s", "m", "h", "d"] as const;
 export const FSRS6_WEIGHT_COUNT = 21;
 
+// Decimal float grammar mirroring Rust `str::parse::<f64>()` (finite values):
+// optional sign, digits with optional fraction or leading-dot fraction,
+// optional scientific exponent. Rejects hex/binary/octal and `inf`/`NaN`
+// spellings that `Number()` would otherwise accept or that fail `is_finite`.
+const WEIGHT_DECIMAL_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
+
 const learningStepValidation = z.tuple([z.number().int(), z.string()]);
 
 const algorithmFSRSBaseValidation = z.object({
@@ -100,7 +106,11 @@ export const algorithmFSRSValidation = algorithmFSRSBaseValidation.superRefine((
   }
 
   for (const part of weightParts) {
-    if (part.trim().length === 0 || !Number.isFinite(Number(part.trim()))) {
+    const trimmed = part.trim();
+    // WHY: `Number()` accepts hex/binary/octal (`0x1f`) which the Rust twin
+    // `parse::<f64>()` rejects — restrict to the decimal grammar so a value
+    // the web form saves cannot fail desktop validation.
+    if (trimmed.length === 0 || !WEIGHT_DECIMAL_PATTERN.test(trimmed) || !Number.isFinite(Number(trimmed))) {
       ctx.addIssue({
         code: "custom",
         message: "validation.algorithm.fsrs.weights",
