@@ -36,6 +36,42 @@ describe("learningSettingsValidation", () => {
     });
   });
 
+  it("fills per-type defaults for empty limit objects (twin of Rust serde defaults)", () => {
+    const result = learningSettingsValidation.parse({
+      defaults,
+      dailyLimits: { untouched: {}, learn: {}, review: {} },
+    });
+
+    expect(result.dailyLimits).toEqual({
+      total: 200,
+      untouched: { value: 50, counts: true },
+      learn: { value: 0, counts: false },
+      review: { value: 200, counts: true },
+    });
+  });
+
+  it("fills missing counts with the per-type default (twin of Rust deserialize_*_limit)", () => {
+    const result = learningSettingsValidation.parse({
+      defaults,
+      dailyLimits: {
+        learn: { value: 5 },
+        untouched: { value: 5 },
+      },
+    });
+
+    expect(result.dailyLimits.learn).toEqual({ value: 5, counts: false });
+    expect(result.dailyLimits.untouched).toEqual({ value: 5, counts: true });
+  });
+
+  it("fills defaults for null limit values (twin of Rust null handling)", () => {
+    const result = learningSettingsValidation.parse({
+      defaults,
+      dailyLimits: { untouched: null },
+    });
+
+    expect(result.dailyLimits.untouched).toEqual({ value: 50, counts: true });
+  });
+
   it("coerces a plain number to { value, counts: true } for daily limit types", () => {
     const result = learningSettingsValidation.parse({
       defaults,

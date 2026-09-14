@@ -1,6 +1,10 @@
 //! `settings.learning` slice — mirrors `@koloda/app` `learningSettingsValidation`.
 //!
 //! `day_starts_at` must use zero-padded `hh:mm`; keep in sync with TS `parseDayStartsAt`.
+//! Missing-field defaults mirror the TS `.default()`s: `dailyLimits.total` 200,
+//! `untouched` {50, true}, `learn` {0, false}, `review` {200, true},
+//! `dayStartsAt` "05:00", `learnAheadLimit` [0, 30]. The `dailyLimits` key
+//! itself stays required, same as the TS twin (only its contents default).
 
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -20,8 +24,12 @@ pub struct LearningDefaults {
 #[serde(rename_all = "camelCase")]
 pub struct LearningSettings {
     pub defaults: LearningDefaults,
+    // WHY: no serde default — the TS twin also requires the `dailyLimits`
+    // key; only its contents are defaulted (see `DailyLimits`).
     pub daily_limits: DailyLimits,
+    #[serde(default = "default_day_starts_at")]
     pub day_starts_at: String,
+    #[serde(default = "default_learn_ahead_limit")]
     pub learn_ahead_limit: LearnAheadLimit,
 }
 
@@ -89,9 +97,16 @@ fn day_starts_at_error(value: &str) -> AppError {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DailyLimits {
+    #[serde(default = "default_daily_limits_total")]
     pub total: u32,
+    #[serde(
+        default = "default_untouched_limit",
+        deserialize_with = "deserialize_untouched_limit"
+    )]
     pub untouched: CountedDailyLimit,
+    #[serde(default = "default_learn_limit", deserialize_with = "deserialize_learn_limit")]
     pub learn: CountedDailyLimit,
+    #[serde(default = "default_review_limit", deserialize_with = "deserialize_review_limit")]
     pub review: CountedDailyLimit,
 }
 
@@ -122,6 +137,44 @@ impl DailyLimits {
     }
 }
 
+// TS defaults mirrored from `learningSettingsValidation` / `dailyLimitsValidation`.
+// Serde `default` fills missing keys only (explicit `null` still fails),
+// matching Zod `.default()`; the per-limit `deserialize_with` wrappers below
+// additionally map present `null`/partial objects the way the TS
+// `z.preprocess` (`value ?? {}` + per-field defaults) does.
+fn default_daily_limits_total() -> u32 {
+    200
+}
+
+fn default_untouched_limit() -> CountedDailyLimit {
+    CountedDailyLimit {
+        value: 50,
+        counts: true,
+    }
+}
+
+fn default_learn_limit() -> CountedDailyLimit {
+    CountedDailyLimit {
+        value: 0,
+        counts: false,
+    }
+}
+
+fn default_review_limit() -> CountedDailyLimit {
+    CountedDailyLimit {
+        value: 200,
+        counts: true,
+    }
+}
+
+fn default_day_starts_at() -> String {
+    "05:00".to_owned()
+}
+
+fn default_learn_ahead_limit() -> LearnAheadLimit {
+    LearnAheadLimit(0, 30)
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CountedDailyLimit {
@@ -131,21 +184,59 @@ pub struct CountedDailyLimit {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
-enum CountedDailyLimitInput {
+enum CountedDailyLimitPartial {
     Value(u32),
-    Object { value: u32, counts: bool },
+    Object {
+        #[serde(default)]
+        value: Option<u32>,
+        #[serde(default)]
+        counts: Option<bool>,
+    },
 }
 
-impl<'de> Deserialize<'de> for CountedDailyLimit {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        match CountedDailyLimitInput::deserialize(deserializer)? {
-            CountedDailyLimitInput::Value(value) => Ok(Self { value, counts: true }),
-            CountedDailyLimitInput::Object { value, counts } => Ok(Self { value, counts }),
-        }
+fn deserialize_counted_limit_with<'de, D>(
+    deserializer: D,
+    default_value: u32,
+    default_counts: bool,
+) -> Result<CountedDailyLimit, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    // WHY: `Option` outer maps explicit `null` to per-type defaults, mirroring
+    // TS `value ?? {}`. Numeric shorthand always counts, same as the TS
+    // preprocess (`{ value, counts: true }` regardless of the type default).
+    match Option::<CountedDailyLimitPartial>::deserialize(deserializer)? {
+        None => Ok(CountedDailyLimit {
+            value: default_value,
+            counts: default_counts,
+        }),
+        Some(CountedDailyLimitPartial::Value(value)) => Ok(CountedDailyLimit { value, counts: true }),
+        Some(CountedDailyLimitPartial::Object { value, counts }) => Ok(CountedDailyLimit {
+            value: value.unwrap_or(default_value),
+            counts: counts.unwrap_or(default_counts),
+        }),
     }
+}
+
+fn deserialize_untouched_limit<'de, D>(deserializer: D) -> Result<CountedDailyLimit, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_counted_limit_with(deserializer, 50, true)
+}
+
+fn deserialize_learn_limit<'de, D>(deserializer: D) -> Result<CountedDailyLimit, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_counted_limit_with(deserializer, 0, false)
+}
+
+fn deserialize_review_limit<'de, D>(deserializer: D) -> Result<CountedDailyLimit, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    deserialize_counted_limit_with(deserializer, 200, true)
 }
 
 /// Tuple fields are (hours, minutes).

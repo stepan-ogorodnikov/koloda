@@ -58,8 +58,11 @@ fn test_legacy_numeric_daily_limits_are_accepted() {
 
 #[test]
 fn test_missing_daily_limits_fails() {
+    // WHY: the TS twin `learningSettingsValidation` also requires the
+    // `dailyLimits` key — only its contents are defaulted. Valid defaults
+    // isolate the failure to the missing key.
     let json = r#"{
-        "defaults": {},
+        "defaults": {"algorithm": "01900000-0000-7000-8000-000000000001", "template": "01900000-0000-7000-8000-000000000002"},
         "dayStartsAt": "04:00",
         "learnAheadLimit": [4, 0]
     }"#;
@@ -69,27 +72,111 @@ fn test_missing_daily_limits_fails() {
 }
 
 #[test]
-fn test_missing_day_starts_at_fails() {
-    let json = r#"{
-        "defaults": {},
-        "dailyLimits": {"total": 100, "untouched": {"value": 20, "counts": true}, "learn": {"value": 30, "counts": true}, "review": {"value": 50, "counts": true}},
-        "learnAheadLimit": [4, 0]
-    }"#;
+fn test_missing_day_starts_at_fills_default() {
+    // Twin of TS `defaults dayStartsAt to '05:00'` — serde fills the default.
+    let json = build_learning_settings_json(standard_daily_limits(), r#"null"#, "[4, 0]");
+    // `null` is not a string so it must fail; the omitted key fills instead.
+    serde_json::from_str::<LearningSettings>(&json).unwrap_err();
 
-    let result: Result<LearningSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when dayStartsAt is missing");
+    let json = format!(
+        r#"{{
+        "defaults": {},
+        "dailyLimits": {},
+        "learnAheadLimit": [4, 0]
+    }}"#,
+        standard_defaults(),
+        standard_daily_limits()
+    );
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with default dayStartsAt");
+    assert_eq!(settings.day_starts_at, "05:00");
+    settings.validate().unwrap();
 }
 
 #[test]
-fn test_missing_learn_ahead_limit_fails() {
-    let json = r#"{
+fn test_missing_learn_ahead_limit_fills_default() {
+    // Twin of TS `defaults learnAheadLimit to [0, 30]` — serde fills the default.
+    let json = format!(
+        r#"{{
         "defaults": {},
-        "dailyLimits": {"total": 100, "untouched": {"value": 20, "counts": true}, "learn": {"value": 30, "counts": true}, "review": {"value": 50, "counts": true}},
+        "dailyLimits": {},
         "dayStartsAt": "04:00"
-    }"#;
+    }}"#,
+        standard_defaults(),
+        standard_daily_limits()
+    );
 
-    let result: Result<LearningSettings, _> = serde_json::from_str(json);
-    assert!(result.is_err(), "Should fail when learnAheadLimit is missing");
+    let settings: LearningSettings =
+        serde_json::from_str(&json).expect("Should deserialize with default learnAheadLimit");
+    assert_eq!(settings.learn_ahead_limit.0, 0);
+    assert_eq!(settings.learn_ahead_limit.1, 30);
+    settings.validate().unwrap();
+}
+
+#[test]
+fn test_empty_daily_limits_object_fills_defaults() {
+    // Twin of TS `provides default daily limits when empty`.
+    let json = build_learning_settings_json("{}", r#""04:00""#, "[4, 0]");
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with default daily limits");
+    assert_eq!(settings.daily_limits.total, 200);
+    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert!(settings.daily_limits.untouched.counts);
+    assert_eq!(settings.daily_limits.learn.value, 0);
+    assert!(!settings.daily_limits.learn.counts);
+    assert_eq!(settings.daily_limits.review.value, 200);
+    assert!(settings.daily_limits.review.counts);
+    settings.validate().unwrap();
+}
+
+#[test]
+fn test_partial_daily_limits_fill_per_type_defaults() {
+    let json = build_learning_settings_json(r#"{"total": 200, "untouched": 20}"#, r#""04:00""#, "[4, 0]");
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with defaulted limits");
+    assert_eq!(settings.daily_limits.total, 200);
+    assert_eq!(settings.daily_limits.untouched.value, 20);
+    assert!(settings.daily_limits.untouched.counts);
+    assert_eq!(settings.daily_limits.learn.value, 0);
+    assert!(!settings.daily_limits.learn.counts);
+    assert_eq!(settings.daily_limits.review.value, 200);
+    assert!(settings.daily_limits.review.counts);
+    settings.validate().unwrap();
+}
+
+#[test]
+fn test_partial_counted_limit_objects_fill_per_type_defaults() {
+    let json = build_learning_settings_json(
+        r#"{
+            "untouched": {},
+            "learn": {"value": 5},
+            "review": {"counts": false}
+        }"#,
+        r#""04:00""#,
+        "[4, 0]",
+    );
+
+    let settings: LearningSettings =
+        serde_json::from_str(&json).expect("Should deserialize with defaulted limit fields");
+    assert_eq!(settings.daily_limits.total, 200);
+    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert!(settings.daily_limits.untouched.counts);
+    assert_eq!(settings.daily_limits.learn.value, 5);
+    assert!(!settings.daily_limits.learn.counts);
+    assert_eq!(settings.daily_limits.review.value, 200);
+    assert!(!settings.daily_limits.review.counts);
+    settings.validate().unwrap();
+}
+
+#[test]
+fn test_null_counted_limit_fills_default() {
+    // Mirrors TS `value ?? {}` — explicit `null` fills the per-type defaults.
+    let json = build_learning_settings_json(r#"{"untouched": null}"#, r#""04:00""#, "[4, 0]");
+
+    let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize null limit with defaults");
+    assert_eq!(settings.daily_limits.untouched.value, 50);
+    assert!(settings.daily_limits.untouched.counts);
+    settings.validate().unwrap();
 }
 
 #[test]
