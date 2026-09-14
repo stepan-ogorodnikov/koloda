@@ -10,7 +10,8 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useEntityCreatedLink } from "../components/use-entity-created-link";
 
 type CloneAlgorithmProps = { id: Algorithm["id"] };
 
@@ -20,24 +21,21 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
   const { cloneAlgorithmMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
   const { mutate, isSuccess } = useMutation(cloneAlgorithmMutation());
-  const linkRef = useRef<HTMLAnchorElement>(null);
-  const [newId, setNewId] = useState<Algorithm["id"] | null>(null);
+  const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Algorithm["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
     defaultValues: { title: "", sourceId: id },
     validators: { onSubmit: schema },
     listeners: {
       onChange: () => {
-        setNewId(null);
+        clearNewId();
       },
     },
     onSubmit: async ({ value, formApi }) => {
       mutate(schema.parse(value), {
         onSuccess: (returning) => {
           formApi.reset();
-          queueMicrotask(() => {
-            if (returning) setNewId(returning.id);
-          });
+          handleCreated(returning);
           queryClient.invalidateQueries({ queryKey: queryKeys.algorithms.all() });
         },
         onError: (error) => {
@@ -47,16 +45,11 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
-  const isLinkVisible = !!(isSuccess && newId);
 
   useEffect(() => {
-    if (newId) linkRef.current?.focus();
-  }, [newId]);
-
-  useEffect(() => {
-    setNewId(null);
+    clearNewId();
     form.reset();
-  }, [isOpen, form]);
+  }, [isOpen, form, clearNewId]);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -105,12 +98,8 @@ export function CloneAlgorithm({ id }: CloneAlgorithmProps) {
               <div className="grow" />
               <form.Subscribe selector={(state) => [state.canSubmit]}>
                 {([canSubmit]) => (
-                  <Button
-                    variants={{ style: "primary" }}
-                    type="submit"
-                    isDisabled={!canSubmit || !!(isSuccess && newId)}
-                  >
-                    {isSuccess && newId ? _(msg`clone-algorithm.success`) : _(msg`clone-algorithm.submit`)}
+                  <Button variants={{ style: "primary" }} type="submit" isDisabled={!canSubmit || isLinkVisible}>
+                    {isLinkVisible ? _(msg`clone-algorithm.success`) : _(msg`clone-algorithm.submit`)}
                   </Button>
                 )}
               </form.Subscribe>

@@ -10,7 +10,8 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useEntityCreatedLink } from "../components/use-entity-created-link";
 
 export function AddTemplate() {
   const queryClient = useQueryClient();
@@ -18,24 +19,21 @@ export function AddTemplate() {
   const { addTemplateMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
   const { mutate, isSuccess } = useMutation(addTemplateMutation());
-  const linkRef = useRef<HTMLAnchorElement>(null);
-  const [newId, setNewId] = useState<Template["id"] | null>(null);
+  const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Template["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
     defaultValues: { ...DEFAULT_TEMPLATE, title: "" } as InsertTemplateData,
     validators: { onSubmit: schema },
     listeners: {
       onChange: () => {
-        setNewId(null);
+        clearNewId();
       },
     },
     onSubmit: async ({ value, formApi }) => {
       mutate(schema.parse({ ...value }), {
         onSuccess: (returning) => {
           formApi.reset();
-          queueMicrotask(() => {
-            if (returning) setNewId(returning.id);
-          });
+          handleCreated(returning);
           queryClient.invalidateQueries({ queryKey: queryKeys.templates.all() });
         },
         onError: (error) => {
@@ -46,16 +44,11 @@ export function AddTemplate() {
   });
 
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
-  const isLinkVisible = !!(isSuccess && newId);
 
   useEffect(() => {
-    if (newId) linkRef.current?.focus();
-  }, [newId]);
-
-  useEffect(() => {
-    setNewId(null);
+    clearNewId();
     form.reset();
-  }, [isOpen, form]);
+  }, [isOpen, form, clearNewId]);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>

@@ -10,9 +10,10 @@ import { useLingui } from "@lingui/react";
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AlgorithmPicker } from "../algorithms/algorithm-picker";
 import { TemplatePicker } from "../templates/template-picker";
+import { useEntityCreatedLink } from "../components/use-entity-created-link";
 
 export function AddDeck() {
   const queryClient = useQueryClient();
@@ -20,26 +21,21 @@ export function AddDeck() {
   const { addDeckMutation } = useAtomValue(queriesAtom);
   const isMotionOn = useMotionSetting();
   const { mutate, isSuccess } = useMutation(addDeckMutation());
-  const linkRef = useRef<HTMLAnchorElement>(null);
-  const [newId, setNewId] = useState<Deck["id"] | null>(null);
+  const { linkRef, newId, clearNewId, handleCreated, isLinkVisible } = useEntityCreatedLink<Deck["id"]>(isSuccess);
   const [isOpen, setIsOpen] = useState(false);
   const form = useAppForm({
     defaultValues: { title: "", algorithmId: "", templateId: "" } as InsertDeckData,
     validators: { onSubmit: schema },
     listeners: {
       onChange: () => {
-        setNewId(null);
+        clearNewId();
       },
     },
     onSubmit: async ({ value, formApi }) => {
       mutate(schema.parse({ ...value }), {
         onSuccess: (returning) => {
           formApi.reset();
-          // WHY: reset() fires the onChange listener above, which clears newId; the
-          // microtask sets it after that so the success link survives the reset.
-          queueMicrotask(() => {
-            if (returning) setNewId(returning.id);
-          });
+          handleCreated(returning);
           queryClient.invalidateQueries({ queryKey: queryKeys.decks.all() });
           queryClient.invalidateQueries({ queryKey: queryKeys.lessons.all({}) });
           // WHY: deck usage counts feed the delete guards on presets and templates.
@@ -53,16 +49,11 @@ export function AddDeck() {
     },
   });
   const formErrorMap = useStore(form.store, (state) => state.errorMap);
-  const isLinkVisible = !!(isSuccess && newId);
 
   useEffect(() => {
-    if (newId) linkRef.current?.focus();
-  }, [newId]);
-
-  useEffect(() => {
-    setNewId(null);
+    clearNewId();
     form.reset();
-  }, [isOpen, form]);
+  }, [isOpen, form, clearNewId]);
 
   return (
     <Dialog.Root isOpen={isOpen} onOpenChange={setIsOpen}>
