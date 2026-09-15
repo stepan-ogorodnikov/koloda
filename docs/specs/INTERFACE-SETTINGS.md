@@ -36,7 +36,8 @@ The offered languages are:
 - English
 - Russian
 
-The default is English.
+The default is English. Leaving a picker untouched counts as choosing the default:
+implicit selections are remembered like explicit ones.
 Changing the language switches all interface text immediately.
 The choice is saved with the interface settings.
 The document language follows the active locale for assistive tools.
@@ -93,7 +94,8 @@ When the device asks to reduce motion, animations are suppressed; otherwise they
 ## First Setup
 
 First setup asks for language and color scheme before the app's data is created.
-The pickers there change the look and text of the setup screen itself but save nothing yet.
+The pickers there change the look and text of the setup screen itself but save nothing to the database yet.
+Browser-local mirrors follow the live choice, including implicit ones.
 
 On submit, the chosen language and scheme become the interface settings.
 Every field not chosen at setup starts at its default.
