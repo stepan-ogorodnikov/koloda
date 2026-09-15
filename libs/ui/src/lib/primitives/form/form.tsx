@@ -110,11 +110,7 @@ function ResetButton(props: ButtonProps) {
   );
 }
 
-type ControlsProps = Omit<FormErrorsProps, "errors"> & {
-  showErrors?: boolean;
-};
-
-function Controls({ showErrors = true }: ControlsProps) {
+function Controls() {
   const form = useFormContext();
   const {
     form: { submit, reset },
@@ -142,7 +138,7 @@ function Controls({ showErrors = true }: ControlsProps) {
         <form.Subscribe selector={(state) => [state.errorMap]}>
           {([{ onChange, onSubmit }]) => (
             <AnimatePresence>
-              {showErrors && (onChange || onSubmit) && (
+              {(onChange || onSubmit) && (
                 <Fade className="max-w-132 py-2 px-4 rounded-xl border-2 border-main bg-level-1" layout>
                   {onChange && !onSubmit && <Errors errors={onChange} />}
                   {onSubmit && <Errors errors={onSubmit} />}
