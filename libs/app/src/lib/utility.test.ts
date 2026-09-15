@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { deepMerge, getNextNumericId, mapObjectProperties, mapObjectPropertiesReverse } from "./utility";
+import { deepMerge, mapObjectProperties, mapObjectPropertiesReverse } from "./utility";
 
 describe("utility", () => {
-  it("gets the next numeric id for empty and sparse collections", () => {
-    expect(getNextNumericId()).toBe(1);
-    expect(getNextNumericId([{ id: 2 }, { id: 7 }, { id: 3 }])).toBe(8);
-  });
-
   it("deeply merges nested objects, array items, and special objects", () => {
     const initial = {
       meta: {

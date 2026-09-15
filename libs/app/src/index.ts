@@ -68,7 +68,6 @@ export {
   deepMerge,
   generateUUID,
   generateUuidv7,
-  getNextNumericId,
   mintedUuidv7,
   mapObjectProperties,
   mapObjectPropertiesReverse,

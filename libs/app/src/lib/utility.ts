@@ -22,12 +22,6 @@ export type Modify<T, R> = Omit<T, keyof R> & R;
 
 export type UpdateData<Entity, Id extends keyof Entity, Values> = Pick<Entity, Id> & { values: Values };
 
-export function getNextNumericId<T extends { id: number }>(items: T[] = []): number {
-  if (items.length === 0) return 1;
-  const maxId = items.reduce((max, { id }) => (id > max ? id : max), -Infinity);
-  return Math.max(maxId + 1, 1);
-}
-
 export function deepMerge<T extends Record<string, unknown>>(target: T, partial: DeepPartial<T>): T {
   if (typeof partial !== "object" || partial === null) return target;
   const output = { ...target };
@@ -80,10 +74,6 @@ function isSpecialObject(obj: unknown): boolean {
 }
 
 export type Entries<T> = { [K in keyof T]: [K, T[K]] }[keyof T];
-
-export function getObjectProperty(obj: object, key: string): unknown {
-  return key in obj ? (obj as Record<string, unknown>)[key] : undefined;
-}
 
 export function objectEntries<T extends object>(object: T): Entries<T>[] {
   return Object.entries(object) as any;
