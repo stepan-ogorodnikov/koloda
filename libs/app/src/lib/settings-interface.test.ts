@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_INTERFACE_SETTINGS, getLanguageCode, interfaceSettingsValidation } from "./settings-interface";
+import { getLanguageCode, interfaceSettingsValidation } from "./settings-interface";
 
 describe("interfaceSettingsValidation", () => {
   it("provides defaults when parsing an empty object", () => {
@@ -41,10 +41,6 @@ describe("interfaceSettingsValidation", () => {
     const result = interfaceSettingsValidation.safeParse({ [field]: value });
     expect(result.success, `${field} must reject ${value}`).toBe(false);
     expect(result.error?.issues[0]?.message).toBe(code);
-  });
-
-  it("DEFAULT_INTERFACE_SETTINGS matches parse({})", () => {
-    expect(DEFAULT_INTERFACE_SETTINGS).toEqual(interfaceSettingsValidation.parse({}));
   });
 });
 

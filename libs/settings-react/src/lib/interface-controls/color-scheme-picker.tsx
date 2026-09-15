@@ -15,11 +15,11 @@ const ITEMS = [
   { id: "system", Icon: ComputerPhoneSyncIcon },
 ] as const;
 
-type ColorSchemePicker = Partial<SelectProps<(typeof ITEMS)[number]>> & {
+type ColorSchemePickerProps = Partial<SelectProps<(typeof ITEMS)[number]>> & {
   isPersisted?: boolean;
 };
 
-export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemePicker) {
+export function ColorSchemePicker({ isPersisted = true, ...props }: ColorSchemePickerProps) {
   const { _ } = useLingui();
   const [scheme, setScheme] = useAtom(schemeAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);

@@ -1,7 +1,7 @@
 import { MOTION_SETTINGS } from "@koloda/app";
 import type { AllowedSettings } from "@koloda/settings";
 import { schemeAtom } from "@koloda/core-react";
-import { queriesAtom, queryKeys, useTitle } from "@koloda/core-react";
+import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { motionSettingAtom } from "@koloda/ui";
 import { FormLayout, ToggleGroup } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
@@ -12,7 +12,6 @@ import { DarkThemePicker, LightThemePicker } from "./interface-controls/color-th
 import { LanguagePicker } from "./interface-controls/language-picker";
 
 export function SettingsInterface() {
-  useTitle();
   const { _ } = useLingui();
   const queryClient = useQueryClient();
   const scheme = useAtomValue(schemeAtom);

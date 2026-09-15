@@ -10,12 +10,12 @@ import { useLingui } from "@lingui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 
-type LanguagePicker = Partial<SelectProps<(typeof LANGUAGES)[number]>> & {
+type LanguagePickerProps = Partial<SelectProps<(typeof LANGUAGES)[number]>> & {
   showIcon?: boolean;
   isPersisted?: boolean;
 };
 
-export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...props }: LanguagePicker) {
+export function LanguagePicker({ label, showIcon = true, isPersisted = true, ...props }: LanguagePickerProps) {
   const { _, i18n } = useLingui();
   const setLang = useSetAtom(langAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
