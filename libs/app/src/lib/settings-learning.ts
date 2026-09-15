@@ -56,39 +56,46 @@ function createLearningDailyLimitValidation(defaultValue: number, defaultCounts:
   );
 }
 
-export const resolvedDailyLimitsValidation = z
-  .object({
+type CountedDailyLimits = {
+  total: number;
+  untouched: { value: number; counts: boolean };
+  learn: { value: number; counts: boolean };
+  review: { value: number; counts: boolean };
+};
+
+// WHY: the form validates the resolved schema, the save path re-validates the
+// defaulting one — one shared chain so form-time and save-time acceptance
+// cannot drift when a rule changes.
+function withCountedLimitRefines<S extends z.ZodType<CountedDailyLimits>>(schema: S) {
+  return schema
+    .refine(({ total, untouched }) => total === 0 || !untouched.counts || untouched.value <= total, {
+      message: "validation.settings-learning.daily-limits.untouched-exceeds-total",
+    })
+    .refine(({ total, learn }) => total === 0 || !learn.counts || learn.value <= total, {
+      message: "validation.settings-learning.daily-limits.learn-exceeds-total",
+    })
+    .refine(({ total, review }) => total === 0 || !review.counts || review.value <= total, {
+      message: "validation.settings-learning.daily-limits.review-exceeds-total",
+    });
+}
+
+export const resolvedDailyLimitsValidation = withCountedLimitRefines(
+  z.object({
     total: z.number().min(0),
     untouched: learningDailyLimitValidation,
     learn: learningDailyLimitValidation,
     review: learningDailyLimitValidation,
-  })
-  .refine(({ total, untouched }) => total === 0 || !untouched.counts || untouched.value <= total, {
-    message: "validation.settings-learning.daily-limits.untouched-exceeds-total",
-  })
-  .refine(({ total, learn }) => total === 0 || !learn.counts || learn.value <= total, {
-    message: "validation.settings-learning.daily-limits.learn-exceeds-total",
-  })
-  .refine(({ total, review }) => total === 0 || !review.counts || review.value <= total, {
-    message: "validation.settings-learning.daily-limits.review-exceeds-total",
-  });
+  }),
+);
 
-const dailyLimitsValidation = z
-  .object({
+const dailyLimitsValidation = withCountedLimitRefines(
+  z.object({
     total: z.number().min(0).default(200),
     untouched: createLearningDailyLimitValidation(50, true),
     learn: createLearningDailyLimitValidation(0, false),
     review: createLearningDailyLimitValidation(200, true),
-  })
-  .refine(({ total, untouched }) => total === 0 || !untouched.counts || untouched.value <= total, {
-    message: "validation.settings-learning.daily-limits.untouched-exceeds-total",
-  })
-  .refine(({ total, learn }) => total === 0 || !learn.counts || learn.value <= total, {
-    message: "validation.settings-learning.daily-limits.learn-exceeds-total",
-  })
-  .refine(({ total, review }) => total === 0 || !review.counts || review.value <= total, {
-    message: "validation.settings-learning.daily-limits.review-exceeds-total",
-  });
+  }),
+);
 
 export const learningSettingsValidation = z.object({
   defaults: z.object({
