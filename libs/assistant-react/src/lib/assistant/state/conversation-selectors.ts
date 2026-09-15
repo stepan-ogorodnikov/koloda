@@ -59,7 +59,27 @@ export const assistantContextUsageAtom = atom((get) => {
   return null;
 });
 
+let lastActiveRunSet: Set<string> | null = null;
 let lastUnreadSet: Set<string> | null = null;
+
+// WHY: The sidebar only needs running-pulse membership, not the whole store.
+// `conversationsAtom` is rewritten on every streamed chunk; subscribe the list
+// to this membership-stable set instead so it re-renders only when the set of
+// conversations with an active run actually changes (same pattern as
+// `unreadConversationIdsAtom`).
+export const activeRunConversationIdsAtom = atom((get) => {
+  const store = get(conversationsAtom);
+  const active = new Set<string>();
+  for (const [id, state] of Object.entries(store)) {
+    if (state.activeRunId != null) active.add(id);
+  }
+  const previous = lastActiveRunSet;
+  if (previous !== null && previous.size === active.size && [...active].every((id) => previous.has(id))) {
+    return previous;
+  }
+  lastActiveRunSet = active;
+  return active;
+});
 
 // WHY: Use one derived atom for the whole list instead of per-conversation
 // derived atoms, which would create N subscriptions.

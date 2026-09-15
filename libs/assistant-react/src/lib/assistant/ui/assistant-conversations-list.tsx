@@ -7,8 +7,7 @@ import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useRef } from "react";
-import { unreadConversationIdsAtom } from "../state/conversation-selectors";
-import { conversationsAtom } from "../state/conversation-store";
+import { activeRunConversationIdsAtom, unreadConversationIdsAtom } from "../state/conversation-selectors";
 import { ConversationListTimestamp } from "./conversation-list-timestamp";
 import { DeleteConversationButton } from "./delete-conversation-button";
 
@@ -24,7 +23,7 @@ type AssistantConversationsListProps = {
 export function AssistantConversationsList({ activeId, onActiveDeleted }: AssistantConversationsListProps) {
   const { _ } = useLingui();
   const { getConversationsQuery } = useAtomValue(queriesAtom);
-  const conversations = useAtomValue(conversationsAtom);
+  const activeRunIds = useAtomValue(activeRunConversationIdsAtom);
   const unreadIds = useAtomValue(unreadConversationIdsAtom);
   const query = useQuery(getConversationsQuery());
 
@@ -39,7 +38,7 @@ export function AssistantConversationsList({ activeId, onActiveDeleted }: Assist
                 conversation={conversation}
                 fallback={_(CONVERSATION_TITLE_FALLBACK)}
                 isActive={conversation.id === activeId}
-                hasActiveRun={conversations[conversation.id]?.activeRunId != null}
+                hasActiveRun={activeRunIds.has(conversation.id)}
                 hasUnread={unreadIds.has(conversation.id)}
                 runningLabel={_(CONVERSATION_RUNNING_LABEL)}
                 unreadLabel={_(CONVERSATION_UNREAD_LABEL)}
