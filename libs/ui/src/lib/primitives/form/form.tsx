@@ -30,7 +30,7 @@ function CreatedAt({ timestamp }: FormTimestampProps) {
 
   return (
     <Timestamp>
-      <Trans>form.createdAt {i18n.date(timestamp)}</Trans>
+      <Trans>form.created-at {i18n.date(timestamp)}</Trans>
     </Timestamp>
   );
 }
@@ -42,7 +42,7 @@ function UpdatedAt({ timestamp }: FormTimestampProps) {
 
   return (
     <Timestamp>
-      <Trans>form.updatedAt {i18n.date(timestamp)}</Trans>
+      <Trans>form.updated-at {i18n.date(timestamp)}</Trans>
     </Timestamp>
   );
 }

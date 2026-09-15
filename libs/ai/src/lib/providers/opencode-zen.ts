@@ -19,7 +19,7 @@ export async function fetchOpencodeZenModels(apiKey?: string): Promise<AIModel[]
 
 function createOpencodeZenClient(secrets: Extract<AISecrets, { provider: "opencodeZen" }>): AIGenerationClient {
   if (!isPresentApiKey(secrets.apiKey)) {
-    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
   }
   const resolved = { apiKey: secrets.apiKey };
   return {

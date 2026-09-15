@@ -94,8 +94,8 @@ pub mod error_codes {
     pub const VALIDATION_CARDS_PROGRESS_LAPSES: &str = "validation.cards-progress.lapses";
 
     pub const VALIDATION_SETTINGS_AI_PROVIDERS_ID: &str = "validation.settings-ai.providers.id";
-    pub const VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY: &str = "validation.settings-ai.providers.apiKey";
-    pub const VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL: &str = "validation.settings-ai.providers.baseUrl";
+    pub const VALIDATION_SETTINGS_AI_PROVIDERS_API_KEY: &str = "validation.settings-ai.providers.api-key";
+    pub const VALIDATION_SETTINGS_AI_PROVIDERS_BASE_URL: &str = "validation.settings-ai.providers.base-url";
     pub const VALIDATION_SETTINGS_AI_PROFILES_WHITELIST_MODEL_IDS: &str =
         "validation.settings-ai.profiles.whitelist-model-ids";
     pub const VALIDATION_AI_PROVIDERS_PROFILE_ID_DUPLICATE: &str = "validation.ai-providers.profile-id.duplicate";

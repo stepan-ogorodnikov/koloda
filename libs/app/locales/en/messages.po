@@ -494,11 +494,11 @@ msgid "validation.settings-ai.profiles.whitelist-model-ids"
 msgstr "Model id can't be empty"
 
 #: ../../libs/app/src/lib/error.ts:77
-msgid "validation.settings-ai.providers.apiKey"
+msgid "validation.settings-ai.providers.api-key"
 msgstr "API key can't be empty"
 
 #: ../../libs/app/src/lib/error.ts:78
-msgid "validation.settings-ai.providers.baseUrl"
+msgid "validation.settings-ai.providers.base-url"
 msgstr "Invalid URL"
 
 #: ../../libs/app/src/lib/error.ts:79

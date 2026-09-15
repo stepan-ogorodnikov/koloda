@@ -6,7 +6,7 @@ import { z } from "zod";
 // the same registered code — Rust rejects absent and whitespace-only alike.
 const requiredApiKey = z.preprocess(
   (value) => (typeof value === "string" ? value.trim() : ""),
-  z.string().min(1, "validation.settings-ai.providers.apiKey"),
+  z.string().min(1, "validation.settings-ai.providers.api-key"),
 );
 
 // WHY: Optional keys treat whitespace as absent — the Rust serde layer normalizes
@@ -23,12 +23,12 @@ export const openRouterSecretsValidation = z.object({
 });
 
 export const ollamaSecretsValidation = z.object({
-  baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+  baseUrl: z.url("validation.settings-ai.providers.base-url"),
   apiKey: optionalApiKey,
 });
 
 export const lmstudioSecretsValidation = z.object({
-  baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+  baseUrl: z.url("validation.settings-ai.providers.base-url"),
   apiKey: optionalApiKey,
 });
 
@@ -56,12 +56,12 @@ export const aiSecretsValidation = z.discriminatedUnion("provider", [
   z.object({ provider: z.literal("openrouter"), apiKey: storedApiKey }),
   z.object({
     provider: z.literal("ollama"),
-    baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+    baseUrl: z.url("validation.settings-ai.providers.base-url"),
     apiKey: storedApiKey.optional(),
   }),
   z.object({
     provider: z.literal("lmstudio"),
-    baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+    baseUrl: z.url("validation.settings-ai.providers.base-url"),
     apiKey: storedApiKey.optional(),
   }),
   z.object({ provider: z.literal("opencodeGo"), apiKey: storedApiKey }),

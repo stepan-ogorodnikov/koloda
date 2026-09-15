@@ -293,7 +293,7 @@ describe("createElectronAIRuntime", () => {
     invokeMock.mockRejectedValueOnce(
       Object.assign(
         new Error(
-          'Error invoking remote method \'cmd_ai_list_models\': Error: {"code":"validation.settings-ai.providers.apiKey","details":"apiKey is required"}',
+          'Error invoking remote method \'cmd_ai_list_models\': Error: {"code":"validation.settings-ai.providers.api-key","details":"apiKey is required"}',
         ),
         // Electron sometimes attaches a system code; must not win over JSON payload.
         { code: "ERR_FAILED" },
@@ -302,7 +302,7 @@ describe("createElectronAIRuntime", () => {
 
     const runtime = createElectronAIRuntime();
     await expect(runtime.listModels("profile-1")).rejects.toEqual(
-      new AIError("validation.settings-ai.providers.apiKey", "apiKey is required"),
+      new AIError("validation.settings-ai.providers.api-key", "apiKey is required"),
     );
   });
 

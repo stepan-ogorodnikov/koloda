@@ -37,15 +37,15 @@ msgstr "Язык интерфейса"
 msgid "light-theme-picker.label"
 msgstr "Светлая тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
 msgid "scheme.dark"
 msgstr "Тёмная"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:40
 msgid "scheme.light"
 msgstr "Светлая"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:43
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
 msgid "scheme.system"
 msgstr "Системная"
 
@@ -180,7 +180,7 @@ msgstr "Без названия"
 msgid "settings.interface.dark-theme"
 msgstr "Тёмная тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:30
 msgid "settings.interface.language"
 msgstr "Язык интерфейса"
 
@@ -188,11 +188,11 @@ msgstr "Язык интерфейса"
 msgid "settings.interface.light-theme"
 msgstr "Светлая тема"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:48
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:47
 msgid "settings.interface.motion"
 msgstr "Анимации"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:32
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
 msgid "settings.interface.scheme"
 msgstr "Цветовая схема"
 

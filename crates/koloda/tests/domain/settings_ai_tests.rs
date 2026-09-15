@@ -74,7 +74,7 @@ fn test_ai_settings_with_plaintext_api_key_fails_storage_validation() {
         result
             .expect_err("Plaintext apiKey must not pass storage validation")
             .code,
-        "validation.settings-ai.providers.apiKey"
+        "validation.settings-ai.providers.api-key"
     );
 }
 

@@ -13,7 +13,7 @@ export async function fetchOllamaCloudModels(apiKey: string): Promise<AIModel[]>
 
 function createOllamaCloudClient(secrets: Extract<AISecrets, { provider: "ollamaCloud" }>): AIGenerationClient {
   if (!isPresentApiKey(secrets.apiKey)) {
-    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
   }
   const resolved = { apiKey: secrets.apiKey };
   return {
@@ -30,7 +30,7 @@ export const ollamaCloudProviderEntry: AIProviderEntry = {
   fetchModels: async (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "ollamaCloud" }>;
     if (!isPresentApiKey(s.apiKey)) {
-      throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+      throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
     }
     return fetchOllamaCloudModels(s.apiKey);
   },

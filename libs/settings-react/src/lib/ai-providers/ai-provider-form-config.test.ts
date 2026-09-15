@@ -10,7 +10,7 @@ describe("getEditSchema", () => {
     expect(result.success).toBe(false);
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["apiKey"]);
-    expect(issue?.message).toBe("validation.settings-ai.providers.apiKey");
+    expect(issue?.message).toBe("validation.settings-ai.providers.api-key");
   });
 
   it("treats a blank apiKey as keep-existing when secrets are stored", () => {

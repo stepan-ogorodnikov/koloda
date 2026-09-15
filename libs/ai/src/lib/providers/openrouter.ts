@@ -47,7 +47,7 @@ export async function fetchOpenRouterModels(): Promise<AIModel[]> {
 
 function createOpenRouterClient(secrets: Extract<AISecrets, { provider: "openrouter" }>): AIGenerationClient {
   if (!isPresentApiKey(secrets.apiKey)) {
-    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
   }
   const resolved = { apiKey: secrets.apiKey };
   return {

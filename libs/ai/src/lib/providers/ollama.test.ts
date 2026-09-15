@@ -138,7 +138,7 @@ describe("ollamaSecretsValidation", () => {
     expect(result.success).toBe(false);
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["baseUrl"]);
-    expect(issue?.message).toBe("validation.settings-ai.providers.baseUrl");
+    expect(issue?.message).toBe("validation.settings-ai.providers.base-url");
   });
 });
 

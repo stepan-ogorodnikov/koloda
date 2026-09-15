@@ -27,7 +27,7 @@ msgstr "Details"
 
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:33
-msgid "form.createdAt {0}"
+msgid "form.created-at {0}"
 msgstr "Created {0}"
 
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:108
@@ -40,7 +40,7 @@ msgstr "Save"
 
 #. placeholder {0}: i18n.date(timestamp)
 #: ../../libs/ui/src/lib/primitives/form/form.tsx:45
-msgid "form.updatedAt {0}"
+msgid "form.updated-at {0}"
 msgstr "Updated {0}"
 
 #: ../../libs/ui/src/lib/ui/hotkey-recorder.tsx:53

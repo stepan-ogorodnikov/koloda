@@ -19,7 +19,7 @@ export async function fetchOpencodeGoModels(apiKey?: string): Promise<AIModel[]>
 
 function createOpencodeGoClient(secrets: Extract<AISecrets, { provider: "opencodeGo" }>): AIGenerationClient {
   if (!isPresentApiKey(secrets.apiKey)) {
-    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
   }
   const resolved = { apiKey: secrets.apiKey };
   return {

@@ -37,13 +37,13 @@ describe("web AI profile save path", () => {
   it("rejects a blank required apiKey on create and persists nothing", async () => {
     await expect(
       addAIProfile({} as DB, { title: "OpenRouter", secrets: { provider: "openrouter", apiKey: "" } }),
-    ).rejects.toMatchObject({ name: "AppError", code: "validation.settings-ai.providers.apiKey" });
+    ).rejects.toMatchObject({ name: "AppError", code: "validation.settings-ai.providers.api-key" });
     expect(store.has("ai")).toBe(false);
   });
 
   it("rejects a null required apiKey on create", async () => {
     await expect(addAIProfile({} as DB, { secrets: { provider: "openrouter", apiKey: null } })).rejects.toMatchObject({
-      code: "validation.settings-ai.providers.apiKey",
+      code: "validation.settings-ai.providers.api-key",
     });
   });
 
@@ -77,7 +77,7 @@ describe("web AI profile save path", () => {
 
     await expect(
       updateAIProfile({} as DB, { id: PROFILE_ID, secrets: { provider: "openrouter", apiKey: "  " } }),
-    ).rejects.toMatchObject({ code: "validation.settings-ai.providers.apiKey" });
+    ).rejects.toMatchObject({ code: "validation.settings-ai.providers.api-key" });
 
     expect(storedProfiles()[0]?.secrets).toEqual({ provider: "openrouter", apiKey: "sk-or" });
   });

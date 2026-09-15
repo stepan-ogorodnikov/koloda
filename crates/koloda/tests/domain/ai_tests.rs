@@ -10,7 +10,7 @@ fn test_ai_secrets_validate_for_storage_rejects_optional_api_key() {
     };
 
     let result = secrets.validate_for_storage();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.api-key");
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn test_openrouter_input_rejects_whitespace_only_api_key() {
     };
 
     let result = secrets.validate_for_input();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.api-key");
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn test_ollama_validate_empty_base_url_fails() {
     };
 
     let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.base-url");
 }
 
 #[test]
@@ -59,7 +59,7 @@ fn test_lmstudio_validate_empty_base_url_fails() {
     };
 
     let result = secrets.validate();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.baseUrl");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.base-url");
 }
 
 // WHY: Ollama and LmStudio share the same `z.url()` twin; one table covers both providers
@@ -83,13 +83,13 @@ fn test_local_providers_input_rejects_non_url_base_url() {
         let via_validate = secrets.validate();
         assert_eq!(
             via_validate.unwrap_err().code,
-            "validation.settings-ai.providers.baseUrl",
+            "validation.settings-ai.providers.base-url",
             "{provider} validate must reject a non-URL baseUrl"
         );
         let via_input = secrets.validate_for_input();
         assert_eq!(
             via_input.unwrap_err().code,
-            "validation.settings-ai.providers.baseUrl",
+            "validation.settings-ai.providers.base-url",
             "{provider} validate_for_input must reject a non-URL baseUrl"
         );
     }
@@ -104,7 +104,7 @@ fn test_local_providers_storage_rejects_non_url_base_url() {
             let result = build(bad_base_url.to_string()).validate_for_storage();
             assert_eq!(
                 result.unwrap_err().code,
-                "validation.settings-ai.providers.baseUrl",
+                "validation.settings-ai.providers.base-url",
                 "{provider} validate_for_storage must reject a non-URL baseUrl"
             );
         }
@@ -160,10 +160,10 @@ fn test_keyed_providers_require_non_blank_api_key() {
         for api_key in [None, Some("  ".to_string())] {
             let result = build(api_key).validate();
             // WHY: absent and whitespace-only keys funnel through the same trimmed check,
-            // so both rejections surface `validation.settings-ai.providers.apiKey`.
+            // so both rejections surface `validation.settings-ai.providers.api-key`.
             assert_eq!(
                 result.unwrap_err().code,
-                "validation.settings-ai.providers.apiKey",
+                "validation.settings-ai.providers.api-key",
                 "{provider} must reject a missing or blank apiKey"
             );
         }
@@ -222,7 +222,7 @@ fn test_ai_profile_validate_for_storage_rejects_plaintext_api_key() {
     };
 
     let result = profile.validate_for_storage();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.api-key");
 }
 
 #[test]
@@ -392,7 +392,7 @@ fn test_ai_profile_validate_invalid_nested_secrets_fails() {
     };
 
     let result = profile.validate_for_input();
-    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.apiKey");
+    assert_eq!(result.unwrap_err().code, "validation.settings-ai.providers.api-key");
 }
 
 #[test]

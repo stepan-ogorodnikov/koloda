@@ -37,15 +37,15 @@ msgstr "Language"
 msgid "light-theme-picker.label"
 msgstr "Light theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
 msgid "scheme.dark"
 msgstr "Dark"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:41
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:40
 msgid "scheme.light"
 msgstr "Light"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:43
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:42
 msgid "scheme.system"
 msgstr "System"
 
@@ -180,7 +180,7 @@ msgstr "Untitled"
 msgid "settings.interface.dark-theme"
 msgstr "Dark theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:30
 msgid "settings.interface.language"
 msgstr "Language"
 
@@ -188,11 +188,11 @@ msgstr "Language"
 msgid "settings.interface.light-theme"
 msgstr "Light theme"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:48
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:47
 msgid "settings.interface.motion"
 msgstr "Animations"
 
-#: ../../libs/settings-react/src/lib/settings-interface.tsx:32
+#: ../../libs/settings-react/src/lib/settings-interface.tsx:31
 msgid "settings.interface.scheme"
 msgstr "Color scheme"
 

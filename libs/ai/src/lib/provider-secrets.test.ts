@@ -68,7 +68,7 @@ describe("provider-secrets", () => {
     expect(result.success).toBe(false);
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["baseUrl"]);
-    expect(issue?.message).toBe("validation.settings-ai.providers.baseUrl");
+    expect(issue?.message).toBe("validation.settings-ai.providers.base-url");
   });
 
   it.each([
@@ -93,7 +93,7 @@ describe("provider-secrets", () => {
     expect(result.success).toBe(false);
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["apiKey"]);
-    expect(issue?.message).toBe("validation.settings-ai.providers.apiKey");
+    expect(issue?.message).toBe("validation.settings-ai.providers.api-key");
   });
 
   it("accepts a non-blank apiKey on the form schema", () => {
@@ -117,7 +117,7 @@ describe("provider-secrets", () => {
     expect(result.success).toBe(false);
     const issue = result.error!.issues[0];
     expect(issue?.path).toEqual(["apiKey"]);
-    expect(issue?.message).toBe("validation.settings-ai.providers.apiKey");
+    expect(issue?.message).toBe("validation.settings-ai.providers.api-key");
   });
 
   it.each([
@@ -128,7 +128,7 @@ describe("provider-secrets", () => {
   ])("rejects a missing, blank, or null apiKey on the input schema for $provider", ({ provider, secrets }) => {
     const result = aiSecretsInputValidation.safeParse({ provider, ...secrets });
     expect(result.success).toBe(false);
-    expect(result.error!.issues[0]?.message).toBe("validation.settings-ai.providers.apiKey");
+    expect(result.error!.issues[0]?.message).toBe("validation.settings-ai.providers.api-key");
   });
 
   it("accepts keyed and keyless secrets on the input schema", () => {
