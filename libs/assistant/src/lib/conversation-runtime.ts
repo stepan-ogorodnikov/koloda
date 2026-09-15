@@ -1,7 +1,6 @@
 import type { AssistantToolEvent, ChatStreamChunk, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { toAIAppError } from "@koloda/ai/app-error";
 import { isAbortError, isAppError } from "@koloda/app";
-import type { TemplateFields } from "@koloda/srs";
 import { AssistantDuplicateRunError, AssistantEngineClosedError } from "./assistant-engine";
 import type { AssistantExecutionIdentity, AssistantExecutionPort } from "./assistant-execution-port";
 import type { AssistantEvent, AssistantRunError } from "./assistant-protocol";
@@ -49,7 +48,6 @@ export type ConversationRuntime = {
   retryRun: (
     runId: string,
     request: ChatStreamRequest,
-    templateFields: TemplateFields | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
   ) => Promise<void>;
@@ -436,7 +434,6 @@ export function createConversationRuntime(
   const retryRun = (
     runId: string,
     request: ChatStreamRequest,
-    templateFields: TemplateFields | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
   ): Promise<void> =>
@@ -477,7 +474,6 @@ export function createConversationRuntime(
           conversationId,
           run: {
             runId,
-            templateFields,
             modelName,
           },
         });

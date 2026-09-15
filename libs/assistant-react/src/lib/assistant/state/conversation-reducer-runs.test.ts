@@ -94,30 +94,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].modelName).toBeUndefined();
     });
 
-    it("stores the data access snapshot on the created run", () => {
-      const dataAccess: DataAccessSnapshot = {
-        context: "User decks:\n- Deck: Spanish — 3 cards — Template: Default (Front, Back)",
-        manifest: {
-          decks: [{ deckId: testId(1), title: "Spanish", cardCount: 3, templateTitle: "Default" }],
-          writeTarget: null,
-        },
-      };
-
-      const state = conversationReducer(initialConversationState, [
-        "submitTurn",
-        {
-          runId: "r1",
-          text: "hello",
-          kind: "chat-text",
-          assistantText: "",
-          dataAccess,
-        },
-      ]);
-
-      expect(state.runs["r1"].dataAccess).toBe(dataAccess);
-    });
-
-    it("leaves dataAccess undefined when submitTurn carries no snapshot", () => {
+    it("leaves dataAccess undefined on submit (legacy rows restore it)", () => {
       const state = conversationReducer(initialConversationState, [
         "submitTurn",
         {
@@ -921,13 +898,7 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
       vi.setSystemTime(10_000);
-      state = conversationReducer(state, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: null,
-        },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
@@ -961,7 +932,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].status).toBe("success");
       expect(state.activeRunId).toBeNull();
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       // WHY: Successful runs are not retryable (ASSISTANT-CONVERSATIONS.md
       // §Retry) — a stray restart must leave the good answer untouched.
@@ -978,7 +949,7 @@ describe("conversationReducer", () => {
       ]);
       expect(before.runs["r1"].status).toBe("streaming");
 
-      const state = conversationReducer(before, ["restartRun", { runId: "r1", templateFields: null }]);
+      const state = conversationReducer(before, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].startedAt).toEqual(before.runs["r1"].startedAt);
@@ -998,7 +969,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       // WHY: retry re-executes fresh — stale tool traffic must not survive the restart.
       expect(state.runs["r1"].toolCalls).toEqual([]);
@@ -1031,7 +1002,7 @@ describe("conversationReducer", () => {
       expect(state.runs["r1"].writeTargetTemplateId).toBe(testId(1));
       expect(state.runs["r1"].cards).toHaveLength(1);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].cards).toEqual([]);
       expect(state.runs["r1"].cardStatuses).toEqual({});
@@ -1045,14 +1016,14 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["cancelRun", { runId: "r1" }]);
       expect(state.runs["r1"].reason).toBe("user");
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
 
       state = conversationReducer(state, ["interruptRun", { runId: "r1", reason: "app_shutdown" }]);
       expect(state.runs["r1"].reason).toBe("app_shutdown");
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
       expect(state.runs["r1"].status).toBe("streaming");
       expect(state.runs["r1"].reason).toBeUndefined();
     });
@@ -1076,13 +1047,7 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        [
-          "restartRun",
-          {
-            runId: "r1",
-            templateFields: null,
-          },
-        ],
+        ["restartRun", { runId: "r1" }],
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -1127,14 +1092,14 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        ["restartRun", { runId: "r1", templateFields: null }],
+        ["restartRun", { runId: "r1" }],
       );
 
       expect(state.runs["r1"]).not.toHaveProperty("mode");
       expect(state.messages[1]?.metadata).toEqual({ kind: "chat-text", runId: "r1" });
     });
 
-    it("updates templateFields on retry", () => {
+    it("clears templateFields on retry", () => {
       let state = reduce([
         [
           "submitTurn",
@@ -1149,16 +1114,10 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      const nextFields = [{ id: testId(2), title: "Back", type: "text" as const, isRequired: false }];
-      state = conversationReducer(state, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: nextFields,
-        },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
-      expect(state.runs["r1"].templateFields).toEqual(nextFields);
+      expect(state.runs["r1"].templateFields).toBeNull();
+      expect(state.runs["r1"].cards).toEqual([]);
     });
 
     it("overwrites modelName when a new value is provided", () => {
@@ -1167,14 +1126,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: null,
-          modelName: "Claude",
-        },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", modelName: "Claude" }]);
 
       expect(state.runs["r1"].modelName).toBe("Claude");
     });
@@ -1185,13 +1137,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: null,
-        },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
@@ -1202,14 +1148,7 @@ describe("conversationReducer", () => {
       ]);
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: null,
-          modelName: undefined,
-        },
-      ]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1", modelName: undefined }]);
 
       expect(state.runs["r1"].modelName).toBe("GPT-4");
     });
@@ -1233,14 +1172,7 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        [
-          "restartRun",
-          {
-            runId: "r1",
-            templateFields: null,
-            modelName: "Claude",
-          },
-        ],
+        ["restartRun", { runId: "r1", modelName: "Claude" }],
       );
 
       expect(state.runs["r1"].status).toBe("streaming");
@@ -1248,14 +1180,7 @@ describe("conversationReducer", () => {
     });
 
     it("does not conjure a run when the missing run has no marker", () => {
-      const state = conversationReducer(initialConversationState, [
-        "restartRun",
-        {
-          runId: "r1",
-          templateFields: null,
-          modelName: "Claude",
-        },
-      ]);
+      const state = conversationReducer(initialConversationState, ["restartRun", { runId: "r1", modelName: "Claude" }]);
 
       expect(state.runs["r1"]).toBeUndefined();
       expect(state.activeRunId).toBeNull();
@@ -1267,7 +1192,7 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["dismissRunError", { runId: "r1" }]);
       expect(findLatestErroredRun(state)).toBeNull();
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
       expect(state.dismissedRunErrorId).toBeNull();
 
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
@@ -1283,7 +1208,7 @@ describe("conversationReducer", () => {
       state = conversationReducer(state, ["runFailed", { runId: "r2", error: { message: "boom" } }]);
       state = conversationReducer(state, ["dismissRunError", { runId: "r1" }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r2", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r2" }]);
 
       expect(state.dismissedRunErrorId).toBe("r1");
     });
@@ -1308,20 +1233,23 @@ describe("conversationReducer", () => {
             },
           ],
         },
-        ["restartRun", { runId: "r1", templateFields: null }],
+        ["restartRun", { runId: "r1" }],
       );
 
       expect(state.dismissedRunErrorId).toBeNull();
     });
 
-    it("keeps the stored data access snapshot when the restart carries none", () => {
+    it("keeps the stored data access snapshot on restart", () => {
       const dataAccess: DataAccessSnapshot = { context: "User decks:", manifest: { decks: [], writeTarget: null } };
-      let state = reduce([
-        ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "", dataAccess }],
-      ]);
+      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
+      // WHY: new submits omit dataAccess; legacy rows carry it from restore.
+      state = {
+        ...state,
+        runs: { ...state.runs, r1: { ...state.runs["r1"]!, dataAccess } },
+      };
       state = conversationReducer(state, ["runFailed", { runId: "r1", error: { message: "boom" } }]);
 
-      state = conversationReducer(state, ["restartRun", { runId: "r1", templateFields: null }]);
+      state = conversationReducer(state, ["restartRun", { runId: "r1" }]);
 
       expect(state.runs["r1"].dataAccess).toBe(dataAccess);
     });

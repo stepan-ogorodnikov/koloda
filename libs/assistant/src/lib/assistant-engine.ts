@@ -1,5 +1,4 @@
 import type { ChatStreamRequest } from "@koloda/ai";
-import type { TemplateFields } from "@koloda/srs";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 import { logAssistantStructured } from "./assistant-observability";
 import type { AssistantCommand, ShutdownInput } from "./assistant-protocol";
@@ -123,7 +122,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     conversationId: string,
     runId: string,
     request: ImmutableExecutionValue<ChatStreamRequest>,
-    templateFields: ImmutableExecutionValue<TemplateFields> | null,
     modelName: string | undefined,
     execution: AssistantExecutionIdentity,
   ): Promise<void> => {
@@ -134,7 +132,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
     return getRuntime(conversationId).retryRun(
       runId,
       captureExecutionValue<ChatStreamRequest>(request),
-      templateFields ? captureExecutionValue<TemplateFields>(templateFields) : null,
       modelName,
       captureExecutionValue(execution),
     );
@@ -205,7 +202,6 @@ export function createAssistantEngine(options: AssistantEngineOptions): Assistan
             command.conversationId,
             command.input.runId,
             command.input.request,
-            command.input.templateFields,
             command.input.modelName,
             command.input.execution,
           );

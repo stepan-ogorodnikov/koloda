@@ -133,7 +133,6 @@ export type RunLifecycleEvent =
   | { type: "interrupt"; reason: InterruptedReason }
   | {
       type: "restart";
-      templateFields: TemplateFields | null;
       modelName?: string;
     };
 

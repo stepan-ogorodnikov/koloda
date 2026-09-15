@@ -7,15 +7,12 @@ describe("assistantEventToReducerAction", () => {
     const event: AssistantEvent = {
       type: "runStarted",
       conversationId: "c1",
-      run: { runId: "r1", templateFields: null, modelName: "m" },
+      run: { runId: "r1", modelName: "m" },
     };
-    expect(assistantEventToReducerAction(event)).toEqual([
-      "restartRun",
-      { runId: "r1", templateFields: null, modelName: "m" },
-    ]);
+    expect(assistantEventToReducerAction(event)).toEqual(["restartRun", { runId: "r1", modelName: "m" }]);
   });
 
-  it("maps text/card/usage chunks", () => {
+  it("maps text/usage chunks", () => {
     expect(
       assistantEventToReducerAction({
         type: "runChunk",
@@ -33,16 +30,6 @@ describe("assistantEventToReducerAction", () => {
         chunk: { kind: "reasoning", text: "plan" },
       }),
     ).toEqual(["appendAssistantReasoning", { runId: "r1", text: "plan" }]);
-
-    const card = { content: { front: { text: "a" } } };
-    expect(
-      assistantEventToReducerAction({
-        type: "runChunk",
-        conversationId: "c1",
-        runId: "r1",
-        chunk: { kind: "card", card },
-      }),
-    ).toEqual(["addCard", { runId: "r1", card }]);
 
     const usage = { promptTokens: 1, completionTokens: 2, totalTokens: 3 };
     expect(

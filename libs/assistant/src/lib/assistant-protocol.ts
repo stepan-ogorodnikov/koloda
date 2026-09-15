@@ -1,5 +1,4 @@
-import type { AssistantToolEvent, ChatStreamRequest, GeneratedCard, StreamUsage } from "@koloda/ai";
-import type { TemplateFields } from "@koloda/srs";
+import type { AssistantToolEvent, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import type { AssistantExecutionIdentity, ImmutableExecutionValue } from "./assistant-execution-port";
 
 /**
@@ -22,7 +21,6 @@ export type RetryInput = ImmutableExecutionValue<{
   runId: string;
   execution: AssistantExecutionIdentity;
   request: ChatStreamRequest;
-  templateFields: TemplateFields | null;
   modelName?: string;
 }>;
 
@@ -45,7 +43,6 @@ export type AssistantCommand =
 /** Snapshot carried on retry restart — identity only; full run records stay in the store. */
 export type RunStartSnapshot = {
   runId: string;
-  templateFields: TemplateFields | null;
   modelName?: string;
 };
 
@@ -54,7 +51,6 @@ export type RunStartSnapshot = {
 export type RunChunk =
   | { kind: "assistantText"; text: string }
   | { kind: "reasoning"; text: string }
-  | { kind: "card"; card: GeneratedCard }
   | { kind: "usage"; usage: StreamUsage }
   | AssistantToolEvent;
 

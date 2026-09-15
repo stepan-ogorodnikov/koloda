@@ -1,5 +1,4 @@
 import type { TemplateFields } from "@koloda/srs";
-import type { DataAccessSnapshot } from "../runs/data-access";
 import type { UIMessage } from "ai";
 import type { AssistantRun, ConversationReducerState, RevertState, RunActivity } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
@@ -20,7 +19,6 @@ export function makeRun(
   runId: string,
   templateFields: TemplateFields | null | undefined,
   modelName?: string,
-  dataAccess?: DataAccessSnapshot,
 ): AssistantRun {
   return {
     id: runId,
@@ -32,7 +30,6 @@ export function makeRun(
     startedAt: new Date(),
     elapsedSeconds: null,
     modelName,
-    dataAccess,
   };
 }
 

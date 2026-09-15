@@ -85,7 +85,6 @@ export function toRetryCommand(conversationId: string, runId: string, prepared: 
     input: {
       runId,
       request: prepared.request,
-      templateFields: prepared.templateFields,
       modelName: prepared.modelName,
       execution: prepared.execution,
     },

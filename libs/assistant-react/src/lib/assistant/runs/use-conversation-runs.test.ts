@@ -1,6 +1,5 @@
 import type { ChatStreamGenerator, ChatStreamRequest, StreamUsage } from "@koloda/ai";
 import { aiRuntimeAtom } from "@koloda/core-react";
-import type { TemplateFields } from "@koloda/srs";
 import { act, renderHook } from "@testing-library/react";
 import { createStore } from "jotai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -87,20 +86,13 @@ function renderRuns(_harness: ReturnType<typeof createHarness>) {
           conversationId,
           input: { kind: "chat", runId, request, execution: chatExecution },
         }) as Promise<void>,
-      retryRun: (
-        conversationId: string,
-        runId: string,
-        request: ChatStreamRequest,
-        templateFields: TemplateFields | null,
-        modelName?: string,
-      ) =>
+      retryRun: (conversationId: string, runId: string, request: ChatStreamRequest, modelName?: string) =>
         dispatch({
           type: "retry",
           conversationId,
           input: {
             runId,
             request,
-            templateFields,
             modelName,
             execution: chatExecution,
           },
@@ -509,7 +501,7 @@ describe("useConversationRuns", () => {
 
     let retryPromise!: Promise<void>;
     act(() => {
-      retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, null, "m");
+      retryPromise = result.current.retryRun("A", "run-a", {} as ChatStreamRequest, "m");
     });
     await act(async () => {
       await Promise.resolve();
@@ -576,7 +568,6 @@ describe("useConversationRuns", () => {
         input: {
           runId: "run-a",
           request: {} as ChatStreamRequest,
-          templateFields: null,
           execution: chatExecution,
         },
       });

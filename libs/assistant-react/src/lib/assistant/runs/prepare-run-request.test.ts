@@ -49,7 +49,6 @@ describe("prepareRunRequest", () => {
     expect(prepared).not.toBeNull();
     expect(prepared!.kind).toBe("chat");
     expect(prepared!.modelName).toBe("GPT-x");
-    expect(prepared!.templateFields).toBeNull();
     expect(prepared!.execution).toEqual({ profileId: "prof-1" });
     expect(prepared!.request).toMatchObject({
       input: { modelId: "model-1" },
@@ -181,7 +180,7 @@ describe("toSubmitCommand / toRetryCommand", () => {
     });
   });
 
-  it("builds a retry command carrying template fields", () => {
+  it("builds a retry command", () => {
     const prepared = prepareRunRequest(makeConfig(), "hello", [], {});
     expect(prepared).not.toBeNull();
     expect(toRetryCommand("conv-1", "run-1", prepared!)).toEqual({
@@ -190,7 +189,6 @@ describe("toSubmitCommand / toRetryCommand", () => {
       input: {
         runId: "run-1",
         request: prepared!.request,
-        templateFields: null,
         modelName: "GPT-x",
         execution: prepared!.execution,
       },

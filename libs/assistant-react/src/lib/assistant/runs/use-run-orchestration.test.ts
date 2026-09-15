@@ -174,7 +174,7 @@ describe("useRunOrchestration — handleRetry ordering", () => {
     expect(command.type).toBe("retry");
     expect(command.conversationId).toBe("conv-1");
     expect(command.input.runId).toBe("run-1");
-    expect(command.input.templateFields).toBeNull();
+    expect(command.input).not.toHaveProperty("templateFields");
     expect(command.input.modelName).toBe("GPT-x");
     expect(command.input.request).toBeTypeOf("object");
     expect(command.input.request).toMatchObject({ tools: CHAT_TOOLS });
@@ -386,7 +386,16 @@ describe("useRunOrchestration — retry always chat", () => {
   }
 
   function addFailedChatRun(runId: string, dataAccess?: DataAccessSnapshot) {
-    dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "", dataAccess }]);
+    dispatch(["submitTurn", { runId, text: "hello", kind: "chat-text", assistantText: "" }]);
+    // WHY: new submits omit dataAccess; legacy rows carry it from restore.
+    // Set directly to simulate a restored snapshot.
+    if (dataAccess) {
+      const current = readState();
+      store.set(upsertConversationAtom, {
+        ...current,
+        runs: { ...current.runs, [runId]: { ...current.runs[runId]!, dataAccess } },
+      });
+    }
     dispatch(["runFailed", { runId, error: { message: "boom" } }]);
   }
 

@@ -54,7 +54,6 @@ function dispatchRetry(
   conversationId: string,
   runId: string,
   request: ChatStreamRequest,
-  templateFields: null,
   modelName?: string,
 ): Promise<void> {
   return target.dispatch({
@@ -63,7 +62,6 @@ function dispatchRetry(
     input: {
       runId,
       request,
-      templateFields,
       ...(modelName === undefined ? {} : { modelName }),
       execution: TEST_EXECUTION,
     },
@@ -196,7 +194,7 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const retryPromise = dispatchRetry(engine, "A", "run-a", {} as ChatStreamRequest, null, "model-a");
+    const retryPromise = dispatchRetry(engine, "A", "run-a", {} as ChatStreamRequest, "model-a");
     await Promise.resolve();
 
     // Simulate the UI switching to B while A's retry is still in flight.
@@ -228,7 +226,7 @@ describe("createAssistantEngine", () => {
     conversationStates["A"] = { runs: { "run-1": {} } };
     chatStreamGenerator.mockImplementation(async () => undefined);
 
-    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest);
 
     expect(chatStreamGenerator).toHaveBeenCalled();
     const restart = events.find((e) => e.type === "runStarted");
@@ -427,8 +425,8 @@ describe("createAssistantEngine", () => {
       return undefined;
     });
 
-    const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
-    expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null)).toThrow(
+    const firstRetry = dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest);
+    expect(() => dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest)).toThrow(
       new AssistantDuplicateRunError("A", "run-1", "run-1"),
     );
 
@@ -483,7 +481,7 @@ describe("createAssistantEngine", () => {
     await expect(firstRun).resolves.toBeUndefined();
     expect(streaming.has("run-1")).toBe(false);
 
-    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest, null);
+    await dispatchRetry(engine, "A", "run-1", {} as ChatStreamRequest);
 
     expect(providerCalls).toBe(2);
     const restartActions = events.filter((e) => e.type === "runStarted");

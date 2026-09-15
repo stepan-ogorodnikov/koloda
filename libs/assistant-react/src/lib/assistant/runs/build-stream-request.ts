@@ -5,7 +5,6 @@ import type { AssistantConversationConfig } from "../state/assistant-conversatio
 export type StreamRequestResult = {
   kind: "chat";
   request: ChatStreamRequest;
-  templateFields: null;
 };
 
 // WHY: derive from the registry so adding a spec automatically advertises it;
@@ -32,6 +31,5 @@ export function buildStreamRequest(
       systemPromptTemplate: cfg.chatPromptTemplate ?? undefined,
       tools: CHAT_ASSISTANT_TOOL_NAMES,
     },
-    templateFields: null,
   };
 }

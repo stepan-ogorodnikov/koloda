@@ -1,7 +1,6 @@
 import type { StreamUsage } from "@koloda/ai";
 import { logAssistantStructured } from "@koloda/assistant";
 import type { AssistantRunError } from "@koloda/assistant";
-import type { TemplateFields } from "@koloda/srs";
 import type {
   ConversationReducerState,
   InterruptedReason,
@@ -39,7 +38,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     run.toolCalls = [];
     run.writeTargetDeckId = undefined;
     run.writeTargetTemplateId = undefined;
-    run.templateFields = event.templateFields;
+    run.templateFields = null;
     run.startedAt = new Date();
     run.elapsedSeconds = null;
     run.modelName = event.modelName !== undefined ? event.modelName : run.modelName;
@@ -119,7 +118,6 @@ export function interruptRun(draft: ConversationReducerState, payload: Interrupt
 
 type RestartRunPayload = {
   runId: string;
-  templateFields: TemplateFields | null;
   modelName?: string;
 };
 
@@ -137,7 +135,6 @@ export function restartRun(draft: ConversationReducerState, payload: RestartRunP
   if (
     transitionRun(draft, payload.runId, {
       type: "restart",
-      templateFields: payload.templateFields,
       modelName: payload.modelName,
     })
   ) {
@@ -155,7 +152,7 @@ export function restartRun(draft: ConversationReducerState, payload: RestartRunP
   const assistantMessage = draft.messages.find((m) => m.id === assistantMessageId(payload.runId));
   const markerKind = assistantMessage ? getAssistantMetadata(assistantMessage)?.kind : undefined;
   if (markerKind !== "error" && markerKind !== "chat-text") return;
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
+  draft.runs[payload.runId] = makeRun(payload.runId, null, payload.modelName);
   applyRetryAssistantKind(draft, payload.runId);
   draft.activeRunId = payload.runId;
   if (draft.dismissedRunErrorId === payload.runId) draft.dismissedRunErrorId = null;

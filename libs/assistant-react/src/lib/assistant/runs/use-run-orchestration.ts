@@ -169,7 +169,6 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
             text: promptText,
             kind: "chat-text",
             assistantText: "",
-            templateFields: prepared.templateFields,
             modelName: prepared.modelName,
           },
         ]);

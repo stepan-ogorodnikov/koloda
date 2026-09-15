@@ -1,5 +1,4 @@
 import type { TemplateFields } from "@koloda/srs";
-import type { DataAccessSnapshot } from "../runs/data-access";
 import type { TextUIPart } from "ai";
 import type { ConversationReducerState } from "./conversation-types";
 import { isReasoningActivity } from "./conversation-types";
@@ -89,12 +88,11 @@ type StartRunPayload = {
   runId: string;
   templateFields?: TemplateFields | null;
   modelName?: string;
-  dataAccess?: DataAccessSnapshot;
 };
 
 function startRun(draft: ConversationReducerState, payload: StartRunPayload) {
   draft.activeRunId = payload.runId;
-  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName, payload.dataAccess);
+  draft.runs[payload.runId] = makeRun(payload.runId, payload.templateFields, payload.modelName);
 }
 
 type SubmitTurnPayload = {
@@ -104,7 +102,6 @@ type SubmitTurnPayload = {
   assistantText: string;
   templateFields?: TemplateFields | null;
   modelName?: string;
-  dataAccess?: DataAccessSnapshot;
 };
 
 // WHY: One dispatch creates user turn + run + assistant placeholder so
@@ -116,7 +113,6 @@ export function submitTurn(draft: ConversationReducerState, payload: SubmitTurnP
     runId: payload.runId,
     templateFields: payload.templateFields,
     modelName: payload.modelName,
-    dataAccess: payload.dataAccess,
   });
   addAssistantMessage(draft, {
     runId: payload.runId,
