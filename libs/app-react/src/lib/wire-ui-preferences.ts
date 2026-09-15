@@ -1,3 +1,4 @@
+import { DEFAULT_INTERFACE_SETTINGS } from "@koloda/app";
 import {
   darkThemeAtom,
   DEFAULT_HOTKEYS_SCOPES,
@@ -21,10 +22,10 @@ export type WireUiPreferencesOptions = {
 export function wireUiPreferences(store: Store, options: WireUiPreferencesOptions = {}) {
   const cached = readUiPreferencesCache();
   const {
-    scheme = cached?.scheme ?? "system",
-    lightTheme = cached?.lightTheme ?? "github-light",
-    darkTheme = cached?.darkTheme ?? "github-dark",
-    motion = cached?.motion ?? "system",
+    scheme = cached?.scheme ?? DEFAULT_INTERFACE_SETTINGS.scheme,
+    lightTheme = cached?.lightTheme ?? DEFAULT_INTERFACE_SETTINGS.lightTheme,
+    darkTheme = cached?.darkTheme ?? DEFAULT_INTERFACE_SETTINGS.darkTheme,
+    motion = cached?.motion ?? DEFAULT_INTERFACE_SETTINGS.motion,
   } = options;
 
   const prefersColorScheme = window.matchMedia("(prefers-color-scheme: dark)");
