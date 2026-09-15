@@ -1,4 +1,5 @@
 import { markdownToHtml } from "@koloda/srs";
+import { useMemo } from "react";
 import { tv } from "tailwind-variants";
 
 const assistantMarkdown = tv({
@@ -14,7 +15,7 @@ const assistantMarkdown = tv({
 type AssistantMarkdownProps = { text: string; isMuted?: boolean };
 
 export function AssistantMarkdown({ text, isMuted = false }: AssistantMarkdownProps) {
-  const html = markdownToHtml(text);
+  const html = useMemo(() => markdownToHtml(text), [text]);
   return <div className={assistantMarkdown({ isMuted })} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
