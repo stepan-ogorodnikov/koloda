@@ -31,7 +31,6 @@ export type SerialQueue<T = void> = {
   enqueue: (runId: string, task: () => Promise<T>) => Promise<T>;
   cancel: (runId: string, reason: QueueCancelReason) => boolean;
   close: (reason: QueueCancelReason) => string[];
-  readonly isClosed: boolean;
 };
 
 export function createSerialQueue<T = void>(): SerialQueue<T> {
@@ -50,10 +49,6 @@ export function createSerialQueue<T = void>(): SerialQueue<T> {
   };
 
   return {
-    get isClosed() {
-      return closed != null;
-    },
-
     enqueue(runId, task) {
       // WHY: Closed must fail before the caller treats the command as accepted.
       if (closed != null) throw new QueueClosedError(closed);

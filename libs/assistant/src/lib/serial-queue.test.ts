@@ -42,7 +42,6 @@ describe("createSerialQueue", () => {
 
     const canceled = queue.close("app_shutdown");
     expect(canceled).toEqual(["b"]);
-    expect(queue.isClosed).toBe(true);
 
     release();
     await first;

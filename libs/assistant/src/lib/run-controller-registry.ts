@@ -38,7 +38,6 @@ export type RunControllerRegistry = {
   takeAbortReason: (runId: string) => RunAbortReason | undefined;
   has: (runId: string) => boolean;
   dispose: (reason?: RunAbortReason) => void;
-  readonly isClosed: boolean;
 };
 
 export function createRunControllerRegistry(): RunControllerRegistry {
@@ -50,10 +49,6 @@ export function createRunControllerRegistry(): RunControllerRegistry {
   let closedReason: RunAbortReason | null = null;
 
   return {
-    get isClosed() {
-      return isClosed;
-    },
-
     beginRun(runId) {
       // INVARIANT: closed registry must not mint controllers for post-shutdown work.
       if (isClosed) {

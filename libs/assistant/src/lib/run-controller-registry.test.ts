@@ -8,7 +8,6 @@ describe("createRunControllerRegistry", () => {
     expect(controller.signal.aborted).toBe(false);
 
     registry.dispose("app_shutdown");
-    expect(registry.isClosed).toBe(true);
     expect(controller.signal.aborted).toBe(true);
     expect(() => registry.beginRun("run-2")).toThrow(new RunControllerRegistryClosedError("app_shutdown"));
   });
