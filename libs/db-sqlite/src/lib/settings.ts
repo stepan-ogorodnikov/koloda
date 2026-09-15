@@ -51,6 +51,10 @@ export async function patchSettings<T extends SettingsName>(db: DB, { name, cont
 
     const envelope = parseRow(settingsRowEnvelopeSchema, original);
     const base = z.record(z.string(), z.unknown()).parse(envelope.content);
+    // INVARIANT: patch content stays flat scalars. deepMerge element-merges arrays
+    // and assigns null, while desktop json_patch::merge (RFC 7386) replaces arrays
+    // wholesale and deletes on null — keep patches scalar-only or align both sides
+    // first. Twin: patch_settings in crates/koloda/src/repo/settings.rs.
     const merged = deepMerge(base, content);
     const parsed = allowedSettings[name].parse(merged);
     const now = nowMs();
