@@ -1207,6 +1207,73 @@ describe("assistant chat integration (per-conversation state)", () => {
     expect(afterState.runs[beforeRunIds[0]!]?.status).toBe("interrupted");
     expect(afterState.runs[beforeRunIds[0]!]?.reason).toBe("app_shutdown");
   });
+
+  it("controller.cancel aborts the in-flight run, marks it read, and leaves it canceled", async () => {
+    setupTestHarness();
+    const store = createStore();
+    store.set(queriesAtom as unknown as Parameters<typeof store.set>[0], buildQueries());
+    store.set(aiRuntimeAtom, createMockAIRuntime());
+    store.set(upsertConversationAtom, makeConversation("A"));
+    store.set(setCurrentConversationIdAtom, "A");
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    queryClient.setQueryData(queryKeys.templates.detail(wire.template.id), wire.template);
+    queryClient.setQueryData(queryKeys.conversations.detail("A"), {
+      id: "A",
+      title: null,
+      state: { ...initialConversationState, id: "A", createdAt: new Date(1).toISOString() },
+      createdAt: new Date(1).toISOString(),
+      updatedAt: null,
+    });
+
+    function TestWrapper({ children }: PropsWithChildren) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          <JotaiProvider store={store}>{children}</JotaiProvider>
+        </QueryClientProvider>
+      );
+    }
+
+    wire.chatStream.keepInFlight = true;
+
+    const onConversationIdChange = vi.fn();
+    const { result } = renderHook(() => useAssistantChatTestHarness({ conversationId: "A", onConversationIdChange }), {
+      wrapper: TestWrapper,
+    });
+
+    let submitPromise!: Promise<void>;
+    await act(async () => {
+      submitPromise = result.current.controller.submit("Hello from A") as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+
+    const beforeState = store.get(conversationsAtom)["A"];
+    const runId = Object.keys(beforeState.runs)[0]!;
+    expect(beforeState.runs[runId]?.status).toBe("streaming");
+    expect(beforeState.activeRunId).toBe(runId);
+    expect(wire.chatStream.pending).toHaveLength(1);
+
+    await act(async () => {
+      result.current.controller.cancel();
+    });
+
+    // WHY: engine cancel must abort the stream — without the dispatchCommand
+    // line the mock pending entry would linger. Assert first so the missing
+    // dispatch fails fast instead of hanging on the submit below.
+    expect(wire.chatStream.pending).toHaveLength(0);
+
+    await act(async () => {
+      await submitPromise;
+    });
+
+    const afterState = store.get(conversationsAtom)["A"];
+    expect(afterState.runs[runId]?.status).toBe("canceled");
+    expect(afterState.runs[runId]?.reason).toBe("user");
+    expect(afterState.activeRunId).toBeNull();
+    expect(afterState.lastReadRunId).toBe(runId);
+  });
 });
 
 describe("assistant chat restore policy (blocked rows)", () => {
