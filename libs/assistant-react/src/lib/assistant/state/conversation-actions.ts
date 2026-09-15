@@ -184,9 +184,10 @@ export const cloneConversationAtom = atom(null, (get, set, payload: CloneConvers
     id: newId,
     createdAt: now,
     // WHY: `null` (not `now`) so the clone sorts by `createdAt` rather
-    // than pinning itself to the top of the list. The next
-    // content-changing dispatch will stamp a real `updatedAt` via
-    // `applyConversationUpdate`. Mirrors the `newConversation` path.
+    // than pinning itself to the top of the list. This differs from
+    // `newConversation`, which stamps `updatedAt = createdAt`; the first
+    // DB save stamps `now` either way, and the next content-changing
+    // dispatch stamps a real `updatedAt` via `applyConversationUpdate`.
     updatedAt: null,
     messages,
     runs,
