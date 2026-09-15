@@ -137,7 +137,7 @@ impl DailyLimits {
     }
 }
 
-// TS defaults mirrored from `learningSettingsValidation` / `dailyLimitsValidation`.
+// WHY: TS defaults mirrored from `learningSettingsValidation` / `dailyLimitsValidation`.
 // Serde `default` fills missing keys only (explicit `null` still fails),
 // matching Zod `.default()`; the per-limit `deserialize_with` wrappers below
 // additionally map present `null`/partial objects the way the TS

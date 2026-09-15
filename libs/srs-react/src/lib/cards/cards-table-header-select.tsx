@@ -9,7 +9,7 @@ export type CardsTableHeaderSelectProps = {
 
 export function CardsTableHeaderSelect({ table }: CardsTableHeaderSelectProps) {
   const isAllSelected = table.getIsAllPageRowsSelected();
-  const isIndeterminate = table.getIsSomePageRowsSelected();
+  const isIndeterminate = table.getIsSomePageRowsSelected() && !isAllSelected;
 
   const handleChange = (isSelected: boolean) => {
     table.toggleAllPageRowsSelected(isSelected);

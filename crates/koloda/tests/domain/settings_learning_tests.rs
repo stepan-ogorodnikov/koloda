@@ -73,7 +73,7 @@ fn test_missing_daily_limits_fails() {
 
 #[test]
 fn test_missing_day_starts_at_fills_default() {
-    // Twin of TS `defaults dayStartsAt to '05:00'` — serde fills the default.
+    // WHY: Twin of TS `defaults dayStartsAt to '05:00'` — serde fills the default.
     let json = build_learning_settings_json(standard_daily_limits(), r#"null"#, "[4, 0]");
     // `null` is not a string so it must fail; the omitted key fills instead.
     serde_json::from_str::<LearningSettings>(&json).unwrap_err();
@@ -95,7 +95,7 @@ fn test_missing_day_starts_at_fills_default() {
 
 #[test]
 fn test_missing_learn_ahead_limit_fills_default() {
-    // Twin of TS `defaults learnAheadLimit to [0, 30]` — serde fills the default.
+    // WHY: Twin of TS `defaults learnAheadLimit to [0, 30]` — serde fills the default.
     let json = format!(
         r#"{{
         "defaults": {},
@@ -115,7 +115,7 @@ fn test_missing_learn_ahead_limit_fills_default() {
 
 #[test]
 fn test_empty_daily_limits_object_fills_defaults() {
-    // Twin of TS `provides default daily limits when empty`.
+    // WHY: Twin of TS `provides default daily limits when empty`.
     let json = build_learning_settings_json("{}", r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize with default daily limits");
@@ -170,7 +170,7 @@ fn test_partial_counted_limit_objects_fill_per_type_defaults() {
 
 #[test]
 fn test_null_counted_limit_fills_default() {
-    // Mirrors TS `value ?? {}` — explicit `null` fills the per-type defaults.
+    // WHY: Mirrors TS `value ?? {}` — explicit `null` fills the per-type defaults.
     let json = build_learning_settings_json(r#"{"untouched": null}"#, r#""04:00""#, "[4, 0]");
 
     let settings: LearningSettings = serde_json::from_str(&json).expect("Should deserialize null limit with defaults");
