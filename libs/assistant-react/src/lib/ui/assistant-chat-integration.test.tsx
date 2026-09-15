@@ -9,7 +9,7 @@ import { createStore, Provider as JotaiProvider, useAtomValue } from "jotai";
 import * as React from "react";
 import type { PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createAIModel, createAIProfile, createTemplate } from "../../../test/test-helpers";
+import { createAIModel, createAIProfile, createTemplate } from "../../test/test-helpers";
 import { CONVERSATION_SCHEMA_VERSION } from "../persistence/conversation-schema-version";
 import {
   conversationsAtom,

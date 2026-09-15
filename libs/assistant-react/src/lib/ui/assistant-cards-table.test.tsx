@@ -13,7 +13,7 @@ import { useAssistantCardsTable } from "./use-assistant-cards-table";
 import { makeConversation, makeRun } from "../state/assistant-conversation.fixtures";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import type { CardStatus } from "../state/conversation-reducer";
-import { testId } from "../../../test/test-helpers";
+import { testId } from "../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({

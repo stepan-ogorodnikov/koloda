@@ -9,7 +9,7 @@ import { initialConversationState } from "../state/conversation-reducer";
 import type { AssistantRun } from "../state/conversation-reducer";
 import { conversationsAtom, currentConversationIdAtom } from "../state/conversation-store";
 import { useAssistantMessageRenderer } from "./use-assistant-message-renderer";
-import { testId } from "../../../test/test-helpers";
+import { testId } from "../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({

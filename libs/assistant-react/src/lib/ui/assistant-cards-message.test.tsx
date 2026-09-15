@@ -8,7 +8,7 @@ import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { AssistantCardsMessage } from "./assistant-cards-message";
-import { testId } from "../../../test/test-helpers";
+import { testId } from "../../test/test-helpers";
 
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({

@@ -3,7 +3,7 @@ import type { GeneratedCard } from "@koloda/ai";
 import type { TemplateFields } from "@koloda/srs";
 import type { UIMessage } from "ai";
 import { describe, expect, it } from "vitest";
-import { createGeneratedCard, createTemplate, testId } from "../../../test/test-helpers";
+import { createGeneratedCard, createTemplate, testId } from "../../test/test-helpers";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID } from "@koloda/app";
 import {
   backfillUserMessageRunIds,

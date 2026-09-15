@@ -4,7 +4,7 @@ Shared presentational AI UI for assistant chat — chat chrome, message shells, 
 
 ## Where it sits
 
-Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps that compose those surfaces). Depends on `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`. Conversation state, orchestration, and persistence live in `libs/assistant-react/src/lib/assistant/`.
+Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps that compose those surfaces). Depends on `@koloda/ai`, `@koloda/core-react`, and `@koloda/ui`. Conversation state, orchestration, and persistence live in `libs/assistant-react/src/lib/`.
 
 **Ownership source of truth:** `agents/ASSISTANT-MAP.md` — prefer that map over this README when routing edits.
 
@@ -19,8 +19,8 @@ Consumed by `@koloda/assistant-react` and `@koloda/settings-react` (and apps tha
 
 ### Does NOT own (prevent scope creep)
 
-- Conversation / run lifecycle state — `libs/assistant-react/.../assistant`
-- Revert — `libs/assistant-react/.../assistant`
+- Conversation / run lifecycle state — `libs/assistant-react/src/lib`
+- Revert — `libs/assistant-react/src/lib`
 - Stream transport / run execution (AbortControllers, chunk pumping) — `@koloda/assistant`, bound to host `AIRuntime` adapters
 - Provider HTTP calls — `@koloda/ai`
 - Secrets storage / redaction — `crates/koloda`

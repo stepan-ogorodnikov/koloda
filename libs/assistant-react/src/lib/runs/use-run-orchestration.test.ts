@@ -15,7 +15,7 @@ import {
 } from "../state/conversation-store";
 import type { DataAccessSnapshot } from "./data-access";
 import { useRunOrchestration } from "./use-run-orchestration";
-import { testId } from "../../../test/test-helpers";
+import { testId } from "../../test/test-helpers";
 
 // WHY: `handleRetry` must validate before starting a stream so an invalid
 // retry (no prompt/profile/model) never reaches the engine.
