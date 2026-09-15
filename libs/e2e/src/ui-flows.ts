@@ -54,7 +54,7 @@ export async function openSection(page: Page, name: string) {
   await navigationLink.click();
 }
 
-export function getNavigation(page: Page, name: string): Locator {
+function getNavigation(page: Page, name: string): Locator {
   return page.getByRole("link", { name, exact: true }).first();
 }
 
@@ -250,7 +250,7 @@ export async function openLearningSettings(page: Page) {
   await expect(page.getByRole("textbox", { name: "Minutes" })).toBeVisible();
 }
 
-export async function saveLearningSettings(page: Page) {
+async function saveLearningSettings(page: Page) {
   const saveButton = page.getByRole("button", { name: "Save", exact: true });
   await expect(saveButton).toBeEnabled();
   await saveButton.scrollIntoViewIfNeeded();
