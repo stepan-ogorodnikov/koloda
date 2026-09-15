@@ -30,22 +30,18 @@ fn test_missing_themes_default_to_github() {
 }
 
 #[test]
-fn test_missing_required_fields_fail() {
-    let base = serde_json::json!({
-        "language": "en",
-        "scheme": "system",
-        "motion": "system"
-    });
-
-    // WHY: language/scheme/motion carry no serde default, so omitting any one of them fails
-    // identically at deserialization; only the themes are optional (pinned above).
-    for field in ["language", "scheme", "motion"] {
-        let mut content = base.clone();
-        content.as_object_mut().unwrap().remove(field);
-
-        let result: Result<InterfaceSettings, _> = serde_json::from_value(content);
-        assert!(result.is_err(), "Should fail when {field} is missing");
-    }
+fn test_missing_fields_default_to_ts_twin() {
+    // WHY: every field carries a serde default mirroring the TS `.default()`s, so a
+    // partial document parses identically on both hosts; validate() still rejects
+    // unknown values (pinned below).
+    let settings: InterfaceSettings =
+        serde_json::from_value(serde_json::json!({})).expect("Should deserialize empty object");
+    assert_eq!(settings.language, "en");
+    assert_eq!(settings.scheme, "system");
+    assert_eq!(settings.light_theme, "github-light");
+    assert_eq!(settings.dark_theme, "github-dark");
+    assert_eq!(settings.motion, "system");
+    settings.validate().unwrap();
 }
 
 #[test]

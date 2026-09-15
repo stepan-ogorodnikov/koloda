@@ -1,4 +1,8 @@
 //! `settings.interface` slice — mirrors `@koloda/app` interface/theme preferences.
+//!
+//! Missing-field defaults mirror the TS `.default()`s: `language` "en",
+//! `scheme` "system", `lightTheme` "github-light", `darkTheme` "github-dark",
+//! `motion` "system" — same convention as the learning slice.
 
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +14,14 @@ pub const LIGHT_THEMES: &[&str] = &["atom-one-light", "github-light"];
 pub const DARK_THEMES: &[&str] = &["atom-one-dark", "github-dark"];
 pub const MOTION_SETTINGS: &[&str] = &["on", "off", "system"];
 
+fn default_language() -> String {
+    "en".to_string()
+}
+
+fn default_scheme() -> String {
+    "system".to_string()
+}
+
 fn default_light_theme() -> String {
     "github-light".to_string()
 }
@@ -18,15 +30,22 @@ fn default_dark_theme() -> String {
     "github-dark".to_string()
 }
 
+fn default_motion() -> String {
+    "system".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InterfaceSettings {
+    #[serde(default = "default_language")]
     pub language: String,
+    #[serde(default = "default_scheme")]
     pub scheme: String,
     #[serde(default = "default_light_theme")]
     pub light_theme: String,
     #[serde(default = "default_dark_theme")]
     pub dark_theme: String,
+    #[serde(default = "default_motion")]
     pub motion: String,
 }
 
