@@ -150,7 +150,7 @@ The unavailable notice takes its place, and rows are not selectable.
 
 ## Conversation History
 
-Successfully generated cards are included in the conversation history sent to the AI.
+Successfully generated cards are included in the conversation history sent to the AI, including cards from interrupted runs.
 See ASSISTANT-CONVERSATIONS.md (§Conversation History) for what else is included and what is omitted.
 
 The cards are serialized in markdown format: each card becomes a heading `## Card N` followed by `**Field Title**: value` lines.

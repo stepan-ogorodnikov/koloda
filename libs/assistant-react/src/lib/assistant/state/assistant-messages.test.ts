@@ -221,11 +221,21 @@ describe("buildConversationMessages", () => {
     expect(result[0].content).toContain("**Back**");
   });
 
-  it("skips chat-text card markdown when run status is not success", () => {
+  it("skips chat-text card markdown for failed and canceled runs", () => {
+    for (const status of ["failed", "canceled"]) {
+      const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], {
+        r1: createRunData({ status, cards: [cardWithContent], templateFields: cardTemplateFields }),
+      });
+      expect(result).toEqual([]);
+    }
+  });
+
+  it("includes chat-text card markdown for interrupted runs", () => {
     const result = buildConversationMessages([assistantChatTextMessage("a1", "r1", "")], {
-      r1: createRunData({ status: "failed", cards: [cardWithContent] }),
+      r1: createRunData({ status: "interrupted", cards: [cardWithContent], templateFields: cardTemplateFields }),
     });
-    expect(result).toEqual([]);
+    expect(result).toHaveLength(1);
+    expect(result[0].content).toContain("## Card 1");
   });
 
   it("skips chat-text card markdown when run has no cards and no leftover text", () => {

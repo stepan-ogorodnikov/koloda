@@ -189,7 +189,10 @@ export function buildConversationMessages(
     if (metadata.kind === "chat-text") {
       const parts: string[] = [];
       // WHY: history matches the screen — table first, leftover note second.
-      if (run && run.status === "success" && run.cards.length > 0) {
+      // Interrupted cards stay: the interruption is environmental (shutdown /
+      // crash), not a model failure or user rejection, and the proposal
+      // completed before the stream stopped. Failed/canceled stay excluded.
+      if (run && (run.status === "success" || run.status === "interrupted") && run.cards.length > 0) {
         // WHY: Chat proposals serialize against the fields captured on that run.
         const cardTemplate = run.templateFields ? makeHistoricalTemplate(run.templateFields) : null;
         if (cardTemplate) {

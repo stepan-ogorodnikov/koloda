@@ -91,11 +91,11 @@ The rule is simple: what the user sees in the conversation is what the model get
 This includes:
 
 - All user messages (if they have text content)
-- All assistant text (if they have text content), including partial text from failed or canceled runs
-- All successfully generated card outputs (serialized as markdown blocks)
+- All assistant text (if they have text content), including partial text from failed, canceled, or interrupted runs
+- All successfully generated card outputs (serialized as markdown blocks), including cards from interrupted runs
 
 A chat response that proposed cards is sent as those serialized cards, then any leftover assistant text from that run.
-Failed or canceled card outputs are not included in the history, even when the table stayed on screen.
+Failed or canceled card outputs are not included in the history, even when the table stayed on screen. Interrupted cards are included: the interruption is environmental (shutdown/crash), not a model failure or user rejection, and the proposal completed before the stream stopped.
 See ASSISTANT-CARD-GENERATION.md (§Conversation History) for the markdown serialization.
 Tool activity is not included in the history.
 See ASSISTANT-DATA-ACCESS.md (§Visibility).
