@@ -146,6 +146,7 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
 
       isSubmitInFlightByConversationRef.current.add(activeConversationId);
       let submittedRunId: string | null = null;
+      let submittedText: string | null = null;
       try {
         // WHY: Submit is always chat+tools. Cards injection is not resolved
         // here — propose_cards runs against current data when the model calls it.
@@ -173,9 +174,11 @@ export function useRunOrchestration(options: UseRunOrchestrationOptions): UseRun
           },
         ]);
         submittedRunId = runId;
+        submittedText = promptText;
         await pending;
       } catch (error) {
-        if (submittedRunId) dispatch(["rollbackSubmitTurn", { runId: submittedRunId }]);
+        if (submittedRunId && submittedText !== null)
+          dispatch(["rollbackSubmitTurn", { runId: submittedRunId, text: submittedText }]);
         logUnexpectedDispatchError(error);
       } finally {
         isSubmitInFlightByConversationRef.current.delete(activeConversationId);

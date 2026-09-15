@@ -126,7 +126,7 @@ export function submitTurn(draft: ConversationReducerState, payload: SubmitTurnP
   draft.promptInput = "";
 }
 
-type RollbackSubmitTurnPayload = { runId: string };
+type RollbackSubmitTurnPayload = { runId: string; text: string };
 
 // WHY: Safety net if the engine accepted then the returned promise rejects
 // while the turn is still streaming — a late rejection must not delete a
@@ -140,4 +140,8 @@ export function rollbackSubmitTurn(draft: ConversationReducerState, payload: Rol
   clearActiveIfRun(draft, payload.runId);
   if (draft.lastReadRunId === payload.runId) draft.lastReadRunId = null;
   if (draft.dismissedRunErrorId === payload.runId) draft.dismissedRunErrorId = null;
+  // WHY: `submitTurn` clears the composer; a late rollback without restore
+  // would silently drop the prompt. Only restore into an empty composer so
+  // text typed mid-stream is never clobbered.
+  if (draft.promptInput === "") draft.promptInput = payload.text;
 }

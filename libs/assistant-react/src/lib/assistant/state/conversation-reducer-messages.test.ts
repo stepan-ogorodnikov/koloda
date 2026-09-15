@@ -53,7 +53,27 @@ describe("conversationReducer", () => {
   });
 
   describe("rollbackSubmitTurn", () => {
-    it("removes a still-streaming submit turn and clears activeRunId", () => {
+    it("removes a still-streaming submit turn, clears activeRunId, and restores the prompt", () => {
+      const state = reduce([
+        ["setPromptInput", "Hello"],
+        [
+          "submitTurn",
+          {
+            runId: "r1",
+            text: "Hello",
+            kind: "chat-text",
+            assistantText: "",
+          },
+        ],
+        ["rollbackSubmitTurn", { runId: "r1", text: "Hello" }],
+      ]);
+      expect(state.messages).toHaveLength(0);
+      expect(state.runs).toEqual({});
+      expect(state.activeRunId).toBeNull();
+      expect(state.promptInput).toBe("Hello");
+    });
+
+    it("does not clobber text typed mid-stream", () => {
       const state = reduce([
         [
           "submitTurn",
@@ -64,11 +84,11 @@ describe("conversationReducer", () => {
             assistantText: "",
           },
         ],
-        ["rollbackSubmitTurn", { runId: "r1" }],
+        ["setPromptInput", "New draft"],
+        ["rollbackSubmitTurn", { runId: "r1", text: "Hello" }],
       ]);
       expect(state.messages).toHaveLength(0);
-      expect(state.runs).toEqual({});
-      expect(state.activeRunId).toBeNull();
+      expect(state.promptInput).toBe("New draft");
     });
 
     it("is a no-op when the run has already left streaming", () => {
@@ -83,7 +103,7 @@ describe("conversationReducer", () => {
           },
         ],
         ["completeRun", { runId: "r1" }],
-        ["rollbackSubmitTurn", { runId: "r1" }],
+        ["rollbackSubmitTurn", { runId: "r1", text: "Hello" }],
       ]);
       expect(state.messages).toHaveLength(2);
       expect(state.runs.r1?.status).toBe("success");
