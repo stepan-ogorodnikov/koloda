@@ -11,7 +11,7 @@ Why two ownership boundaries exist: `docs/adr/0002-DUAL-PLATFORM-PERSISTENCE.md`
 - **Rust core owns the desktop connection**.
   `apps/electron/src-rust` consumes `koloda`; it does not define migrations.
 - There is no Drizzle schema and no `db:generate` script.
-- `sync_*` tables stay out of this folder until Phase 1.
+- No `sync_*` tables yet; add them to this folder when sync work starts.
 
 #### Schema Change Workflow
 
