@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ERROR_MESSAGES, formatAppError } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Card, Deck } from "@koloda/srs";
-import { Button, Dialog, ErrorMessage, Fade, Number } from "@koloda/ui";
+import { Button, Dialog, ErrorMessage, Fade, AnimatedNumber } from "@koloda/ui";
 import { msg, plural } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,7 +53,7 @@ export function CardsTableSelectionControls({
     <Fade className="sticky bottom-16 wd:bottom-2 flex justify-center">
       <div className="flex flex-row items-center gap-4 py-2 px-4 rounded-xl border-2 border-main bg-level-1">
         <div className="flex flex-row items-center gap-2">
-          <Number value={selectedCount} />
+          <AnimatedNumber value={selectedCount} />
           <span className="fg-level-1">
             {_(msg`${plural(selectedCount, { other: "cards-table.selection.label" })}`)}
           </span>

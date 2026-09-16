@@ -2,7 +2,7 @@ import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck } from "@koloda/srs";
-import { Button, Fade, Number } from "@koloda/ui";
+import { Button, Fade, AnimatedNumber } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -49,9 +49,9 @@ export function CardsStack({ deckId, controlsNode }: CardsTableProps) {
             </div>
             {cards.length > 0 && (
               <div className="flex flex-row items-center gap-1">
-                <Number className="fg-level-2 numbers-text tabular-nums" value={index + 1} />
+                <AnimatedNumber className="fg-level-2 numbers-text tabular-nums" value={index + 1} />
                 <span className="text-sm fg-level-4">/</span>
-                <Number className="fg-level-2 numbers-text tabular-nums" value={cards.length} />
+                <AnimatedNumber className="fg-level-2 numbers-text tabular-nums" value={cards.length} />
               </div>
             )}
           </div>,

@@ -5,7 +5,7 @@ import { Button, NumberField as ReactAriaNumberField, NumberFieldStateContext } 
 import type { ButtonProps, NumberFieldProps as ReactAriaNumberFieldProps } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import type { TWVProps } from "../../types";
-import { Number } from "../animations/number";
+import { AnimatedNumber } from "../animations/number";
 import { button } from "./button";
 import { FieldGroup, fieldGroup } from "./field-group";
 import { TextFieldInput, textField, textFieldInput } from "./text-field";
@@ -27,7 +27,7 @@ export const numberFieldGroup = tv({
       default: "max-w-48",
     },
   },
-  defaultVariants: { size: "default", style: "input", focusable: true },
+  defaultVariants: { size: "default", style: "input", isFocusable: true },
 });
 
 export type NumberFieldGroupProps = Omit<TextFieldInputProps, "variants"> & TWVProps<typeof numberFieldGroup>;
@@ -92,7 +92,7 @@ function NumberFieldInput(props: NumberFieldInputProps) {
         onBlur={handleBlur}
         {...props}
       />
-      <Number
+      <AnimatedNumber
         className={numberFieldInput({ isInput: false })}
         value={state?.numberValue || 0}
         format={{ useGrouping: false }}

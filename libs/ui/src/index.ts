@@ -7,7 +7,7 @@ export { useLayoutHeaderScrollShadow } from "./lib/layout/header-scroll";
 export { Layout } from "./lib/layout/layout";
 export { layoutSidebarItemLink } from "./lib/layout/sidebar";
 export { Fade } from "./lib/primitives/animations/fade";
-export { Number } from "./lib/primitives/animations/number";
+export { AnimatedNumber } from "./lib/primitives/animations/number";
 export { TextSwap } from "./lib/primitives/animations/text-swap";
 export { Draggable } from "./lib/primitives/dnd/draggable";
 export { Button } from "./lib/primitives/form/button";

@@ -3,7 +3,7 @@ import { DateInput, DateSegment, TimeField as ReactAriaTimeField } from "react-a
 import type { DateInputProps, TimeFieldProps as ReactAriaTimeFieldProps, TimeValue } from "react-aria-components";
 import { tv } from "tailwind-variants";
 import type { TWVProps } from "../../types";
-import { Number } from "../animations/number";
+import { AnimatedNumber } from "../animations/number";
 import { Label } from "./label";
 import { formLayoutSection } from "./form-layout";
 import { textFieldInput } from "./text-field";
@@ -60,7 +60,7 @@ function TimeFieldInput(props: TimeFieldInputProps) {
         >
           {({ type, text }) => {
             if (!["hour", "minute", "second"].includes(type)) return text;
-            return <Number value={parseInt(text)} format={{ minimumIntegerDigits: 2 }} />;
+            return <AnimatedNumber value={parseInt(text)} format={{ minimumIntegerDigits: 2 }} />;
           }}
         </DateSegment>
       )}

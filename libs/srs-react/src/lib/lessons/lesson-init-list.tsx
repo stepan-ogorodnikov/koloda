@@ -1,5 +1,5 @@
 import { LESSON_TYPE_LABELS, LESSON_TYPES } from "@koloda/srs";
-import { Number } from "@koloda/ui";
+import { AnimatedNumber } from "@koloda/ui";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useAtomValue } from "jotai";
@@ -26,7 +26,7 @@ export function LessonInitList() {
           </div>
           <div className="flex flex-row items-center justify-between">
             {type === "total" ? (
-              <Number className="flex flex-row items-center numbers-text" value={setup.amounts.total || 0} />
+              <AnimatedNumber className="flex flex-row items-center numbers-text" value={setup.amounts.total || 0} />
             ) : (
               <LessonInitAmountInput type={type} />
             )}

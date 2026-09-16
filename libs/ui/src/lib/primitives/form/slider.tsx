@@ -15,7 +15,7 @@ import type { Format } from "@number-flow/react";
 import { tv } from "tailwind-variants";
 import { useMotionSetting } from "../../hooks/use-motion-settings";
 import type { TWVProps } from "../../types";
-import { Number } from "../animations/number";
+import { AnimatedNumber } from "../animations/number";
 import { formLayoutSection } from "./form-layout";
 import type { TooltipArrowPlacement } from "../overlay/tooltip/tooltip-geometry";
 import { TooltipSurface } from "../overlay/tooltip/tooltip-surface";
@@ -150,7 +150,7 @@ function SliderThumbValue({ state, index }: SliderThumbValueProps) {
         className="absolute bottom-0 left-1/2 -translate-x-1/2 size-5 opacity-0 pointer-events-none"
         ref={arrowRef}
       />
-      <Number
+      <AnimatedNumber
         className="numbers-text"
         transformTiming={SLIDER_VALUE_TIMING}
         // WHY: react-aria's `formatOptions` allows `notation: 'scientific'|'engineering'`,
