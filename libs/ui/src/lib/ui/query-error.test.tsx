@@ -34,6 +34,12 @@ describe("QueryError", () => {
     expect(screen.queryByRole("button", { name: "error.details" })).toBeNull();
   });
 
+  it("resolves unlisted ai.http codes through the shared descriptor instead of unknown", () => {
+    render(<QueryError error={new AppError("ai.http.503" as ErrorCode)} />);
+
+    expect(screen.queryByText("unknown")).toBeNull();
+  });
+
   it("treats a plain Error message as technical details, not the headline", () => {
     render(<QueryError error={new Error("network down")} />);
 

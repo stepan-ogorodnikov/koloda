@@ -1,6 +1,6 @@
 import { BadgeAlertIcon, Refresh04Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ERROR_MESSAGES, isAppError } from "@koloda/app";
+import { formatAppError, isAppError } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCallback, useState } from "react";
@@ -17,11 +17,11 @@ export type QueryErrorProps = {
 export function QueryError({ error, onRetry }: QueryErrorProps) {
   const { _ } = useLingui();
   const [isPending, setIsPending] = useState(false);
-  const catalog = isAppError(error) ? (ERROR_MESSAGES[error.code] ?? ERROR_MESSAGES.unknown) : msg`query-error.message`;
-  const message = typeof catalog === "function" ? _(catalog(error)) : _(catalog);
-  // WHY: AppError.message is the catalog code. The short user text comes from
-  // ERROR_MESSAGES; technical text is `.details`. For plain Error, `.message` is details.
-  const details = isAppError(error) ? error.details : error?.message;
+  // WHY: formatAppError is the single rule for AppError text — it also resolves dynamic
+  // `ai.http.*` codes that a plain catalog lookup would render as unknown.
+  const { message, details } = isAppError(error)
+    ? formatAppError(error, _)
+    : { message: _(msg`query-error.message`), details: error?.message };
 
   const handleRetry = useCallback(async () => {
     if (!onRetry || isPending) return;
