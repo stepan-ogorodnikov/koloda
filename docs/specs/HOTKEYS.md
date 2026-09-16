@@ -127,8 +127,10 @@ Hotkey settings are saved to the database.
 They persist across sessions.
 
 If a save fails, the in-memory bindings revert to the last saved state.
-If the stored settings are invalid (corrupted data), the defaults are used.
-The invalid settings are replaced with defaults silently.
+If the stored settings are corrupted, both hosts report an error instead of silently
+falling back to defaults. Corrupted settings must never look the same as missing
+settings, otherwise safety checks, such as the guards that protect a default algorithm
+or template from deletion, could pass when they should fail.
 
 When stored settings contain unknown action names (for example a retired hotkey), those names are dropped.
 Known actions and their bindings are kept.
