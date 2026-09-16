@@ -1,12 +1,16 @@
 import type { AllowedSettings } from "@koloda/settings";
 import { queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab, useMotionSetting } from "@koloda/ui";
+import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 
 const SCHEME_CYCLE = ["light", "dark", "system"] as const;
+const FOCUS_HOTKEY_OPTIONS: HotkeyOptions = { ignoreInputs: false, conflictBehavior: "allow" };
+const TAB_HOTKEY_OPTIONS: HotkeyOptions = { preventDefault: false, conflictBehavior: "allow" };
+const TOGGLE_HOTKEY_OPTIONS: HotkeyOptions = { ignoreInputs: false };
 
 export function useAppHotkeys() {
   const { navigation, ui } = useHotkeysSettings();
@@ -37,11 +41,11 @@ export function useAppHotkeys() {
   useAppHotkey(navigation.templates, () => navigate({ to: "/templates", viewTransition: isMotionOn }), "navigation");
   useAppHotkey(navigation.settings, () => navigate({ to: "/settings", viewTransition: isMotionOn }), "navigation");
   useAppHotkey(navigation.ai, () => navigate({ to: "/ai", viewTransition: isMotionOn }), "navigation");
-  useAppHotkey(ui.focusNext, focusNext, "", { ignoreInputs: false, conflictBehavior: "allow" });
-  useAppHotkey(ui.focusPrev, focusPrev, "", { ignoreInputs: false, conflictBehavior: "allow" });
-  useAppHotkey(ui.nextTab, goToNextTab, "", { preventDefault: false, conflictBehavior: "allow" });
-  useAppHotkey(ui.prevTab, goToPrevTab, "", { preventDefault: false, conflictBehavior: "allow" });
-  useAppHotkey(ui.toggleColorScheme, toggleColorScheme, "", { ignoreInputs: false });
+  useAppHotkey(ui.focusNext, focusNext, "", FOCUS_HOTKEY_OPTIONS);
+  useAppHotkey(ui.focusPrev, focusPrev, "", FOCUS_HOTKEY_OPTIONS);
+  useAppHotkey(ui.nextTab, goToNextTab, "", TAB_HOTKEY_OPTIONS);
+  useAppHotkey(ui.prevTab, goToPrevTab, "", TAB_HOTKEY_OPTIONS);
+  useAppHotkey(ui.toggleColorScheme, toggleColorScheme, "", TOGGLE_HOTKEY_OPTIONS);
 
   return null;
 }

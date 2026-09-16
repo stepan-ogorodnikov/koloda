@@ -46,15 +46,16 @@ export function SelectStateBridge({ stateRef }: SelectStateBridgeProps) {
   return null;
 }
 
+const SELECT_HOTKEY_OPTIONS: HotkeyOptions = { ignoreInputs: false, conflictBehavior: "allow" };
+
 export function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   const { ui } = useHotkeysSettings();
   const { disableScope, enableScope } = useHotkeysStatus();
   const state = useContext(SelectStateContext);
   const isOpen = state?.isOpen ?? false;
-  const options: HotkeyOptions = { target: ref.current ?? document, ignoreInputs: false, conflictBehavior: "allow" };
 
-  useAppHotkey(ui.focusNext, () => dispatchSelectNavigationKey(ref, state, "ArrowDown"), "", options);
-  useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", options);
+  useAppHotkey(ui.focusNext, () => dispatchSelectNavigationKey(ref, state, "ArrowDown"), "", SELECT_HOTKEY_OPTIONS);
+  useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", SELECT_HOTKEY_OPTIONS);
 
   useEffect(() => {
     (isOpen ? disableScope : enableScope)("navigation");
