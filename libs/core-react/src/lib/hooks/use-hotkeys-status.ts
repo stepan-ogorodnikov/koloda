@@ -12,19 +12,9 @@ export type AppHotkeyScope = RuntimeScope | "";
 export const DEFAULT_HOTKEYS_SCOPES: RuntimeScope[] = [];
 
 export const hotkeysScopesAtom = atom<RuntimeScope[]>(DEFAULT_HOTKEYS_SCOPES);
-export const areHotkeysDisabledAtom = atom<boolean>(false);
 
 export function useHotkeysStatus() {
-  const [isDisabled, setIsDisabled] = useAtom(areHotkeysDisabledAtom);
   const [scopesArray, setScopesArray] = useAtom(hotkeysScopesAtom);
-
-  const disableHotkeys = useCallback(() => {
-    setIsDisabled(true);
-  }, [setIsDisabled]);
-
-  const enableHotkeys = useCallback(() => {
-    setIsDisabled(false);
-  }, [setIsDisabled]);
 
   const disableScope = useCallback(
     (name: RuntimeScope) => {
@@ -41,13 +31,9 @@ export function useHotkeysStatus() {
   );
 
   const scopes: Record<RuntimeScope, boolean> = useMemo(
-    () =>
-      (isDisabled ? {} : scopesArray.reduce((acc, x) => ({ ...acc, [x]: true }), {})) as Record<
-        RuntimeScope,
-        boolean
-      >,
-    [scopesArray, isDisabled],
+    () => scopesArray.reduce((acc, x) => ({ ...acc, [x]: true }), {}) as Record<RuntimeScope, boolean>,
+    [scopesArray],
   );
 
-  return { scopes, disableHotkeys, enableHotkeys, disableScope, enableScope };
+  return { scopes, disableScope, enableScope };
 }
