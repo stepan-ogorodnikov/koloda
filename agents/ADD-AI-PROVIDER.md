@@ -26,7 +26,7 @@ export const AI_PROVIDER_LABELS = {
 export const myProviderSecretsValidation = z.object({
   apiKey: requiredApiKey,
   // Optional fields:
-  // baseUrl: z.url("validation.settings-ai.providers.baseUrl"),
+  // baseUrl: z.url("validation.settings-ai.providers.base-url"),
 });
 
 // Wire/storage schema uses `storedApiKey` (`string | null`; legacy "" → null):
@@ -118,7 +118,7 @@ export async function fetchMyProviderModels(apiKey: string): Promise<AIModel[]> 
 
 function createMyProviderClient(secrets: Extract<AISecrets, { provider: "myProvider" }>): AIGenerationClient {
   if (!isPresentApiKey(secrets.apiKey)) {
-    throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+    throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
   }
   const resolved = { apiKey: secrets.apiKey };
   return {
@@ -136,7 +136,7 @@ export const myProviderEntry: AIProviderEntry = {
   fetchModels: (secrets) => {
     const s = secrets as Extract<AISecrets, { provider: "myProvider" }>;
     if (!isPresentApiKey(s.apiKey)) {
-      throw new AIError("validation.settings-ai.providers.apiKey", "apiKey is required");
+      throw new AIError("validation.settings-ai.providers.api-key", "apiKey is required");
     }
     return fetchMyProviderModels(s.apiKey);
   },

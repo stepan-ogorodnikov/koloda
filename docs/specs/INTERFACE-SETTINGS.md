@@ -36,7 +36,8 @@ The offered languages are:
 - English
 - Russian
 
-The default is English. Leaving a picker untouched counts as choosing the default:
+The default is English.
+Leaving a picker untouched counts as choosing the default:
 implicit selections are remembered like explicit ones.
 Changing the language switches all interface text immediately.
 The choice is saved with the interface settings.
