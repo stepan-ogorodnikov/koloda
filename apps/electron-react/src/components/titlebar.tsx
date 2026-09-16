@@ -2,7 +2,6 @@ import { getAppPlatform } from "@koloda/app";
 import {
   WINDOW_GET_OVERLAY_WIDTH_CHANNEL,
   WINDOW_MAXIMIZE_CHANNEL,
-  WINDOW_MAXIMIZE_CHANGED_CHANNEL,
   WINDOW_SET_TITLE_BAR_OVERLAY_CHANNEL,
   WINDOW_SET_WINDOW_BUTTON_POSITION_CHANNEL,
 } from "@koloda/native-ipc";
@@ -44,12 +43,6 @@ export function Titlebar() {
       .invoke<number>(WINDOW_GET_OVERLAY_WIDTH_CHANNEL)
       .then(setOverlayWidth)
       .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    window.electronAPI.on(WINDOW_MAXIMIZE_CHANGED_CHANNEL, (...args: unknown[]) => {
-      void args;
-    });
   }, []);
 
   useEffect(() => {

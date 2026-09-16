@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { appDir, isDev } from "./env";
 import { getDefaultSurfaceColor, loadUiPrefs } from "./ui-prefs";
 import { loadWindowState, saveWindowState } from "./window-state";
-import { APP_SHUTDOWN_REQUEST_CHANNEL, WINDOW_MAXIMIZE_CHANGED_CHANNEL } from "@koloda/native-ipc";
+import { APP_SHUTDOWN_REQUEST_CHANNEL } from "@koloda/native-ipc";
 import { createWindowCloseCoordinator } from "./window-close-coordinator";
 import type { WindowCloseCoordinator } from "./window-close-coordinator";
 
@@ -82,8 +82,6 @@ export function createWindow() {
 
   if (windowState.isMaximized) win.maximize();
 
-  win.on("maximize", () => win.webContents.send(WINDOW_MAXIMIZE_CHANGED_CHANNEL, true));
-  win.on("unmaximize", () => win.webContents.send(WINDOW_MAXIMIZE_CHANGED_CHANNEL, false));
   win.on("close", () => saveWindowState(win));
   attachWindowCloseCoordination(win);
 
