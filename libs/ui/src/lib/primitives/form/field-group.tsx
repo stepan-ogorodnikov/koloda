@@ -11,7 +11,7 @@ export const fieldGroup = tv({
       button: "bg-button-primary fg-level-1 border-button-primary border-2 shadow-button-primary",
       ghost: "",
     },
-    focusable: {
+    isFocusable: {
       true: "focus-within:focus-ring",
     },
     size: {

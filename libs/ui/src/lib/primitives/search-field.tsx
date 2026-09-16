@@ -24,7 +24,7 @@ export const searchFieldGroup = tv({
   defaultVariants: {
     style: "input",
     size: "default",
-    focusable: true,
+    isFocusable: true,
   },
 });
 
@@ -54,11 +54,16 @@ export type SearchFieldClearButtonProps = ButtonProps & {
   isHidden: boolean;
 };
 
-function SearchFieldClearButton({ isHidden, ...props }: SearchFieldClearButtonProps) {
-  const cn = (isHidden ? "opacity-0 " : "") + "animate-opacity";
+const searchFieldClearButton = tv({
+  base: "animate-opacity",
+  variants: {
+    isHidden: { true: "opacity-0" },
+  },
+});
 
+function SearchFieldClearButton({ isHidden, ...props }: SearchFieldClearButtonProps) {
   return (
-    <Button variants={{ style: "ghost", size: "miniIcon", class: cn }} {...props}>
+    <Button variants={{ style: "ghost", size: "miniIcon", class: searchFieldClearButton({ isHidden }) }} {...props}>
       <HugeiconsIcon className="size-4 min-w-4" strokeWidth={1.75} icon={Cancel01Icon} aria-hidden="true" />
     </Button>
   );

@@ -17,7 +17,7 @@ export function SelectSearchField({ label, placeholder }: SelectSearchFieldProps
 
   return (
     <SearchField variants={{ class: "w-full" }} aria-label={label}>
-      <SearchField.Group variants={{ style: "ghost", focusable: false, class: "mt-1 -mb-1" }}>
+      <SearchField.Group variants={{ style: "ghost", isFocusable: false, class: "mt-1 -mb-1" }}>
         <SearchField.Icon />
         <SearchField.Input placeholder={placeholder} ref={inputRef} />
       </SearchField.Group>

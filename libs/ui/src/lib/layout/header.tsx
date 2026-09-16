@@ -33,9 +33,9 @@ export function LayoutHeader({ variants, children }: LayoutHeaderProps) {
 const layoutH1 = tv({
   base: "p-2 text-lg/6 truncate",
   variants: {
-    grow: { true: "grow", false: "" },
+    isGrow: { true: "grow", false: "" },
   },
-  defaultVariants: { grow: true },
+  defaultVariants: { isGrow: true },
 });
 
 type LayoutH1Props = PropsWithChildren & TWVProps<typeof layoutH1>;

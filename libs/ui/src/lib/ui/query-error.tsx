@@ -4,10 +4,25 @@ import { formatAppError, isAppError } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { useCallback, useState } from "react";
+import { tv } from "tailwind-variants";
 import { Button } from "../primitives/form/button";
 import { ErrorMessage } from "./error-message";
 
 const RETRY_DELAY_MS = 125;
+
+const queryErrorRetryButton = tv({
+  base: "fg-link",
+  variants: {
+    isPending: { true: "pointer-events-none opacity-50" },
+  },
+});
+
+const queryErrorRetryIcon = tv({
+  base: "size-5 min-w-5",
+  variants: {
+    isPending: { true: "animate-spin" },
+  },
+});
 
 export type QueryErrorProps = {
   error?: Error;
@@ -46,15 +61,8 @@ export function QueryError({ error, onRetry }: QueryErrorProps) {
         />
         <ErrorMessage message={message} details={details} />
         {onRetry && (
-          <Button
-            variants={{ style: "ghost", class: `fg-link ${isPending ? "pointer-events-none opacity-50" : ""}` }}
-            onClick={handleRetry}
-          >
-            <HugeiconsIcon
-              className={`size-5 min-w-5 ${isPending ? "animate-spin" : ""}`}
-              strokeWidth={1.75}
-              icon={Refresh04Icon}
-            />
+          <Button variants={{ style: "ghost", class: queryErrorRetryButton({ isPending }) }} onClick={handleRetry}>
+            <HugeiconsIcon className={queryErrorRetryIcon({ isPending })} strokeWidth={1.75} icon={Refresh04Icon} />
             {_(msg`query-error.retry`)}
           </Button>
         )}
