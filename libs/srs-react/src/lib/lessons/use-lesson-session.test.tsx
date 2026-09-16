@@ -72,7 +72,7 @@ function createWrapper(options?: { queries?: Queries }) {
   const queryClient = createQueryClient();
   const queries = options?.queries ?? buildQueries();
   store.set(queriesAtom, queries);
-  store.set(hotkeysScopesAtom, ["nav"]);
+  store.set(hotkeysScopesAtom, ["navigation"]);
 
   return {
     store,
@@ -190,13 +190,13 @@ describe("useLessonSession", () => {
     });
 
     await waitFor(() => {
-      expect(store.get(hotkeysScopesAtom)).toContain("lesson");
-      expect(store.get(hotkeysScopesAtom)).not.toContain("nav");
+      expect(store.get(hotkeysScopesAtom)).toContain("grades");
+      expect(store.get(hotkeysScopesAtom)).not.toContain("navigation");
     });
 
     unmount();
 
-    expect(store.get(hotkeysScopesAtom)).toContain("nav");
-    expect(store.get(hotkeysScopesAtom)).not.toContain("lesson");
+    expect(store.get(hotkeysScopesAtom)).toContain("navigation");
+    expect(store.get(hotkeysScopesAtom)).not.toContain("grades");
   });
 });

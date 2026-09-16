@@ -136,15 +136,15 @@ msgstr "Не удалось открыть диалог"
 msgid "ai.conversation.recovery.unsupported {0} {1}"
 msgstr "Этот диалог сохранён в формате версии {0}, а это приложение поддерживает версии до {1}."
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:16
+#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:15
 msgid "ai.conversation.running"
 msgstr "Выполняется"
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:17
+#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:16
 msgid "ai.conversation.unread"
 msgstr "Не прочитано"
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:15
+#: ../../libs/assistant-react/src/lib/ui/assistant-conversations-list.tsx:14
 msgid "ai.conversation.untitled"
 msgstr "Диалог без названия"
 

@@ -340,6 +340,26 @@ msgstr "Прокрутить вверх"
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Переключить настройки"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:11
+msgid "settings.hotkeys.categories.ai"
+msgstr "ИИ"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:7
+msgid "settings.hotkeys.categories.form"
+msgstr "Редактирование"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:10
+msgid "settings.hotkeys.categories.grades"
+msgstr "Выбор сложности"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:9
+msgid "settings.hotkeys.categories.navigation"
+msgstr "Навигация"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.categories.ui"
+msgstr "Интерфейс"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.form.reset"
 msgstr "Сбросить"
@@ -387,26 +407,6 @@ msgstr "Настройки"
 #: ../../libs/app/src/lib/settings-hotkeys.ts:33
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Шаблоны"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:11
-msgid "settings.hotkeys.scopes.ai"
-msgstr "ИИ"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:7
-msgid "settings.hotkeys.scopes.form"
-msgstr "Редактирование"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:10
-msgid "settings.hotkeys.scopes.grades"
-msgstr "Выбор сложности"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:9
-msgid "settings.hotkeys.scopes.navigation"
-msgstr "Навигация"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:8
-msgid "settings.hotkeys.scopes.ui"
-msgstr "Интерфейс"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:25
 msgid "settings.hotkeys.ui.close"

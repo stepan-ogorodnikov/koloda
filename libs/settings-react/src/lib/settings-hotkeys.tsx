@@ -1,5 +1,5 @@
-import { HOTKEY_SCOPE_LABELS, HOTKEYS_LABELS, hotkeysSettingsValidation as schema } from "@koloda/app";
-import type { HotkeyScope, HotkeysSettings } from "@koloda/app";
+import { HOTKEY_CATEGORY_LABELS, HOTKEYS_LABELS, hotkeysSettingsValidation as schema } from "@koloda/app";
+import type { HotkeyCategory, HotkeysSettings } from "@koloda/app";
 import { objectEntries, toFormErrors } from "@koloda/app";
 import { queriesAtom, queryKeys } from "@koloda/core-react";
 import { AddHotkeyButton, FormLayout, formLayout, useAppForm } from "@koloda/ui";
@@ -13,10 +13,10 @@ import { SettingsHotkeysHotkey } from "./settings-hotkeys-hotkey";
 export type SettingsHotkeysProps = { data: HotkeysSettings };
 
 type HotkeyFieldPath = {
-  [Scope in HotkeyScope]: {
-    [Id in keyof HotkeysSettings[Scope] & string]: `${Scope}.${Id}`;
-  }[keyof HotkeysSettings[Scope] & string];
-}[HotkeyScope];
+  [Category in HotkeyCategory]: {
+    [Id in keyof HotkeysSettings[Category] & string]: `${Category}.${Id}`;
+  }[keyof HotkeysSettings[Category] & string];
+}[HotkeyCategory];
 
 type HotkeysErrorMap = {
   onChange?: Record<string, unknown>;
@@ -59,11 +59,11 @@ export function SettingsHotkeys({ data }: SettingsHotkeysProps) {
         form.handleSubmit();
       }}
     >
-      {objectEntries(HOTKEY_SCOPE_LABELS).map(([scopeKey, scopeLabel]) => (
-        <div key={scopeKey}>
-          <FormLayout.Section term={_(scopeLabel)} />
-          {Object.entries(HOTKEYS_LABELS[scopeKey]).map(([id, label]) => {
-            const fieldPath = `${scopeKey}.${id}` as HotkeyFieldPath;
+      {objectEntries(HOTKEY_CATEGORY_LABELS).map(([categoryKey, categoryLabel]) => (
+        <div key={categoryKey}>
+          <FormLayout.Section term={_(categoryLabel)} />
+          {Object.entries(HOTKEYS_LABELS[categoryKey]).map(([id, label]) => {
+            const fieldPath = `${categoryKey}.${id}` as HotkeyFieldPath;
 
             return (
               <form.Field key={id} name={fieldPath as DeepKeys<HotkeysSettings>}>

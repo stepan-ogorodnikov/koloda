@@ -3,12 +3,12 @@ import { msg } from "@lingui/core/macro";
 import type { RegisterableHotkey } from "@tanstack/react-hotkeys";
 import { z } from "zod";
 
-export const HOTKEY_SCOPE_LABELS: Record<HotkeyScope, MessageDescriptor> = {
-  form: msg`settings.hotkeys.scopes.form`,
-  ui: msg`settings.hotkeys.scopes.ui`,
-  navigation: msg`settings.hotkeys.scopes.navigation`,
-  grades: msg`settings.hotkeys.scopes.grades`,
-  ai: msg`settings.hotkeys.scopes.ai`,
+export const HOTKEY_CATEGORY_LABELS: Record<HotkeyCategory, MessageDescriptor> = {
+  form: msg`settings.hotkeys.categories.form`,
+  ui: msg`settings.hotkeys.categories.ui`,
+  navigation: msg`settings.hotkeys.categories.navigation`,
+  grades: msg`settings.hotkeys.categories.grades`,
+  ai: msg`settings.hotkeys.categories.ai`,
 } as const;
 
 export const HOTKEYS_LABELS: HotkeysSettingsGeneric<MessageDescriptor> = {
@@ -77,50 +77,50 @@ const hotkeys = {
 
 type Hotkeys = typeof hotkeys;
 
-type ScopeHotkey<T extends HotkeyScope> = Hotkeys[T][number];
+type CategoryHotkey<T extends HotkeyCategory> = Hotkeys[T][number];
 
-export type HotkeyScope = keyof Hotkeys;
+export type HotkeyCategory = keyof Hotkeys;
 
 export type HotkeysSettings = z.input<typeof hotkeysSettingsValidation>;
 
 export type HotkeyEntry = RegisterableHotkey[];
 
 export type HotkeysSettingsGeneric<T> = {
-  [K in HotkeyScope]: { [L in Hotkeys[K][number]]: T };
+  [K in HotkeyCategory]: { [L in Hotkeys[K][number]]: T };
 };
 
 export type AppHotkeys = HotkeysSettingsGeneric<HotkeyEntry>;
 
 const hotkeyEntry = z.array(z.string()).default([]);
 
-function scopeSchema<T extends HotkeyScope>(scope: T) {
-  const shape = Object.fromEntries(hotkeys[scope].map((key) => [key, hotkeyEntry])) as Record<
-    ScopeHotkey<T>,
+function categorySchema<T extends HotkeyCategory>(category: T) {
+  const shape = Object.fromEntries(hotkeys[category].map((key) => [key, hotkeyEntry])) as Record<
+    CategoryHotkey<T>,
     typeof hotkeyEntry
   >;
   return z.object(shape);
 }
 
-function scopeDefault<T extends HotkeyScope>(scope: T) {
-  return Object.fromEntries(hotkeys[scope].map((v) => [v, []])) as unknown as Record<ScopeHotkey<T>, string[]>;
+function categoryDefault<T extends HotkeyCategory>(category: T) {
+  return Object.fromEntries(hotkeys[category].map((v) => [v, []])) as unknown as Record<CategoryHotkey<T>, string[]>;
 }
 
 export const hotkeysSettingsValidation = z
   .object({
-    form: scopeSchema("form").default(scopeDefault("form")),
-    ui: scopeSchema("ui").default(scopeDefault("ui")),
-    navigation: scopeSchema("navigation").default(scopeDefault("navigation")),
-    grades: scopeSchema("grades").default(scopeDefault("grades")),
-    ai: scopeSchema("ai").default(scopeDefault("ai")),
+    form: categorySchema("form").default(categoryDefault("form")),
+    ui: categorySchema("ui").default(categoryDefault("ui")),
+    navigation: categorySchema("navigation").default(categoryDefault("navigation")),
+    grades: categorySchema("grades").default(categoryDefault("grades")),
+    ai: categorySchema("ai").default(categoryDefault("ai")),
   })
   .superRefine((data, ctx) => {
-    Object.entries(data).forEach(([scopeKey, scopeValue]) => {
-      if (!areAllHotkeysUniqueInScope(scopeValue)) {
-        getDuplicateHotkeyPaths(scopeValue).forEach(([field, index]) => {
+    Object.entries(data).forEach(([categoryKey, categoryValue]) => {
+      if (!areAllHotkeysUniqueInCategory(categoryValue)) {
+        getDuplicateHotkeyPaths(categoryValue).forEach(([field, index]) => {
           ctx.addIssue({
             code: "custom",
             message: "validation.settings-hotkeys.duplicate-keys",
-            path: [scopeKey, field, index],
+            path: [categoryKey, field, index],
           });
         });
       }
@@ -129,29 +129,29 @@ export const hotkeysSettingsValidation = z
     const uiHotkeys = Object.entries(data.ui).flatMap(([field, hotkeys]) =>
       hotkeys.map((hotkey) => [hotkey, field] as [string, string]),
     );
-    const otherScopesHotkeys = Object.entries(data)
-      .filter(([scopeKey]) => scopeKey !== "ui")
-      .flatMap(([scopeKey, scopeValue]) =>
-        Object.entries(scopeValue).flatMap(([field, hotkeys]) =>
-          hotkeys.map((hotkey) => [hotkey, scopeKey, field] as [string, string, string]),
+    const otherCategoriesHotkeys = Object.entries(data)
+      .filter(([categoryKey]) => categoryKey !== "ui")
+      .flatMap(([categoryKey, categoryValue]) =>
+        Object.entries(categoryValue).flatMap(([field, hotkeys]) =>
+          hotkeys.map((hotkey) => [hotkey, categoryKey, field] as [string, string, string]),
         ),
       );
 
-    const allHotkeysMap = new Map<string, Array<{ scope: string; field: string }>>();
+    const allHotkeysMap = new Map<string, Array<{ category: string; field: string }>>();
     uiHotkeys.forEach(([hotkey, field]) => {
-      allHotkeysMap.set(hotkey, [...(allHotkeysMap.get(hotkey) || []), { scope: "ui", field }]);
+      allHotkeysMap.set(hotkey, [...(allHotkeysMap.get(hotkey) || []), { category: "ui", field }]);
     });
-    otherScopesHotkeys.forEach(([hotkey, scope, field]) => {
+    otherCategoriesHotkeys.forEach(([hotkey, category, field]) => {
       if (allHotkeysMap.has(hotkey)) {
-        allHotkeysMap.get(hotkey)!.push({ scope, field });
+        allHotkeysMap.get(hotkey)!.push({ category, field });
       }
     });
 
     allHotkeysMap.forEach((locations, hotkey) => {
-      const hasUiScope = locations.some((loc) => loc.scope === "ui");
-      if (hasUiScope && locations.length > 1) {
+      const hasUiCategory = locations.some((loc) => loc.category === "ui");
+      if (hasUiCategory && locations.length > 1) {
         locations.forEach((loc) => {
-          if (loc.scope === "ui") {
+          if (loc.category === "ui") {
             const index = data.ui[loc.field as keyof typeof data.ui].indexOf(hotkey);
             ctx.addIssue({
               code: "custom",
@@ -159,12 +159,12 @@ export const hotkeysSettingsValidation = z
               path: ["ui", loc.field, index],
             });
           } else {
-            const scopeData = data[loc.scope as keyof typeof data] as Record<string, string[]>;
-            const index = scopeData[loc.field].indexOf(hotkey);
+            const categoryData = data[loc.category as keyof typeof data] as Record<string, string[]>;
+            const index = categoryData[loc.field].indexOf(hotkey);
             ctx.addIssue({
               code: "custom",
               message: "validation.settings-hotkeys.duplicate-keys",
-              path: [loc.scope, loc.field, index],
+              path: [loc.category, loc.field, index],
             });
           }
         });
@@ -172,18 +172,18 @@ export const hotkeysSettingsValidation = z
     });
   });
 
-const areAllHotkeysUniqueInScope = (scope: HotkeysSettings[HotkeyScope]) => {
-  if (!scope) return true;
-  const allHotkeys = Object.values(scope).flat();
+const areAllHotkeysUniqueInCategory = (category: HotkeysSettings[HotkeyCategory]) => {
+  if (!category) return true;
+  const allHotkeys = Object.values(category).flat();
   const uniqueHotkeys = new Set(allHotkeys);
   return allHotkeys.length === uniqueHotkeys.size;
 };
 
-const getDuplicateHotkeyPaths = (scope: HotkeysSettings[HotkeyScope]) => {
-  if (!scope) return [];
+const getDuplicateHotkeyPaths = (category: HotkeysSettings[HotkeyCategory]) => {
+  if (!category) return [];
   const hotkeyToLocations = new Map<string, Array<[string, number]>>();
 
-  Object.entries(scope).forEach(([field, hotkeys]) => {
+  Object.entries(category).forEach(([field, hotkeys]) => {
     if (!hotkeys) return;
     hotkeys.forEach((hotkey, index) => {
       if (!hotkeyToLocations.has(hotkey)) hotkeyToLocations.set(hotkey, []);

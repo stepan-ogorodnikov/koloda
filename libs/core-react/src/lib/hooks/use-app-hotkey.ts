@@ -2,9 +2,15 @@ import type { HotkeyEntry } from "@koloda/app";
 import { getHotkeyManager } from "@tanstack/react-hotkeys";
 import type { HotkeyCallback, HotkeyOptions, HotkeyRegistrationHandle } from "@tanstack/react-hotkeys";
 import { useEffect, useEffectEvent, useRef } from "react";
+import type { AppHotkeyScope, RuntimeScope } from "./use-hotkeys-status";
 import { useHotkeysStatus } from "./use-hotkeys-status";
 
-export function useAppHotkey(hotkeys: HotkeyEntry, callback: HotkeyCallback, scope: string, options?: HotkeyOptions) {
+export function useAppHotkey(
+  hotkeys: HotkeyEntry,
+  callback: HotkeyCallback,
+  scope: AppHotkeyScope,
+  options?: HotkeyOptions,
+) {
   const hotkeyManager = getHotkeyManager();
   const { scopes } = useHotkeysStatus();
   const handles = useRef<HotkeyRegistrationHandle[]>([]);
@@ -24,11 +30,11 @@ export function useAppHotkey(hotkeys: HotkeyEntry, callback: HotkeyCallback, sco
     setHandlesOptions(handles.current, updated, scope, scopes);
   });
 
-  const onScopeChange = useEffectEvent((updated: string) => {
+  const onScopeChange = useEffectEvent((updated: AppHotkeyScope) => {
     setHandlesOptions(handles.current, options, updated, scopes);
   });
 
-  const onScopesChange = useEffectEvent((updated: Record<string, boolean>) => {
+  const onScopesChange = useEffectEvent((updated: Record<RuntimeScope, boolean>) => {
     setHandlesOptions(handles.current, options, scope, updated);
   });
 
@@ -67,14 +73,19 @@ export function useAppHotkey(hotkeys: HotkeyEntry, callback: HotkeyCallback, sco
 function setHandlesOptions(
   handles: HotkeyRegistrationHandle[],
   options: HotkeyOptions | undefined,
-  scope: string,
-  scopes: Record<string, boolean>,
+  scope: AppHotkeyScope,
+  scopes: Record<RuntimeScope, boolean>,
 ) {
   const value = getOptions(options, scope, scopes);
   handles.forEach((handle) => handle.setOptions(value));
 }
 
-function getOptions(options: HotkeyOptions | undefined, scope: string, scopes: Record<string, boolean>) {
+function getOptions(
+  options: HotkeyOptions | undefined,
+  scope: AppHotkeyScope,
+  scopes: Record<RuntimeScope, boolean>,
+) {
   const { enabled = true } = options || {};
-  return { ...options, enabled: enabled && (!scope || !!scopes[scope]) };
+  if (!scope) return { ...options, enabled };
+  return { ...options, enabled: enabled && !!scopes[scope] };
 }

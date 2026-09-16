@@ -50,9 +50,9 @@ pub struct HotkeysSettings {
 
 impl HotkeysSettings {
     pub fn validate(&self) -> Result<(), AppError> {
-        for scope in [&self.form, &self.ui, &self.navigation, &self.grades, &self.ai] {
+        for category in [&self.form, &self.ui, &self.navigation, &self.grades, &self.ai] {
             let mut seen = HashSet::new();
-            for keys in scope.values() {
+            for keys in category.values() {
                 for key in keys {
                     if !seen.insert(key) {
                         return Err(AppError::new(
@@ -84,20 +84,20 @@ impl HotkeysSettings {
     }
 
     pub fn fill_defaults(&mut self) {
-        fill_scope(&mut self.form, FORM_KEYS);
-        fill_scope(&mut self.ui, UI_KEYS);
-        fill_scope(&mut self.navigation, NAVIGATION_KEYS);
-        fill_scope(&mut self.grades, GRADES_KEYS);
-        fill_scope(&mut self.ai, AI_KEYS);
+        fill_category(&mut self.form, FORM_KEYS);
+        fill_category(&mut self.ui, UI_KEYS);
+        fill_category(&mut self.navigation, NAVIGATION_KEYS);
+        fill_category(&mut self.grades, GRADES_KEYS);
+        fill_category(&mut self.ai, AI_KEYS);
     }
 }
 
-fn fill_scope(scope: &mut HashMap<String, Vec<String>>, known: &[&str]) {
+fn fill_category(category: &mut HashMap<String, Vec<String>>, known: &[&str]) {
     // WHY: unknown action names are dropped here to match `@koloda/app` Zod (retired keys, e.g.
     // `toggleCardsMode`). Do not reject them in `validate()` — `get_settings` normalizes on read
     // and would fail legacy rows.
-    scope.retain(|key, _| known.contains(&key.as_str()));
+    category.retain(|key, _| known.contains(&key.as_str()));
     for key in known {
-        scope.entry(key.to_string()).or_default();
+        category.entry(key.to_string()).or_default();
     }
 }

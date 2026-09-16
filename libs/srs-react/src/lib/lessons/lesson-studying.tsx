@@ -21,18 +21,18 @@ export function LessonStudying() {
   const selectGrade = useSetAtom(selectLessonGradeAtom);
   const requestTermination = useSetAtom(requestLessonTerminationAtom);
 
-  useAppHotkey(grades.again, () => selectGrade(0), "lesson", { eventType: "keyup" });
-  useAppHotkey(grades.hard, () => selectGrade(1), "lesson", { eventType: "keyup" });
-  useAppHotkey(grades.normal, () => selectGrade(2), "lesson", { eventType: "keyup" });
-  useAppHotkey(grades.easy, () => selectGrade(3), "lesson", { eventType: "keyup" });
-  useAppHotkey(["Enter", "Space"], () => submitCard(), "lesson", { conflictBehavior: "allow" });
-  useAppHotkey(["Escape"], () => requestTermination(), "lesson", { ignoreInputs: false });
+  useAppHotkey(grades.again, () => selectGrade(0), "grades", { eventType: "keyup" });
+  useAppHotkey(grades.hard, () => selectGrade(1), "grades", { eventType: "keyup" });
+  useAppHotkey(grades.normal, () => selectGrade(2), "grades", { eventType: "keyup" });
+  useAppHotkey(grades.easy, () => selectGrade(3), "grades", { eventType: "keyup" });
+  useAppHotkey(["Enter", "Space"], () => submitCard(), "grades", { conflictBehavior: "allow" });
+  useAppHotkey(["Escape"], () => requestTermination(), "grades", { ignoreInputs: false });
   useAppHotkey(
     ui.submit,
     () => {
       if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) submitCard();
     },
-    "lesson",
+    "grades",
     { ignoreInputs: false, conflictBehavior: "allow" },
   );
 

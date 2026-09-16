@@ -18,92 +18,92 @@ msgstr ""
 msgid "{0, plural, other {delete-algorithm.used-by-#-decks}}"
 msgstr "This preset is used by {0, plural, one {# deck} other {# decks}}."
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:64
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:58
 msgid "{selectedCount, plural, other {cards-table.selection.label}}"
 msgstr "selected"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:83
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:88
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:76
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:81
 msgid "add-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:107
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:100
 msgid "add-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:114
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:107
 msgid "add-algorithm.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:77
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:70
 msgid "add-algorithm.title"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:62
-#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:63
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:55
+#: ../../libs/srs-react/src/lib/algorithms/add-algorithm.tsx:56
 msgid "add-algorithm.trigger"
 msgstr "New preset"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:133
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:134
 msgid "add-card.submit"
 msgstr "Create card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:89
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:90
 msgid "add-cards.title"
 msgstr "Add card"
 
-#: ../../libs/srs-react/src/lib/cards/add-card.tsx:80
 #: ../../libs/srs-react/src/lib/cards/add-card.tsx:81
+#: ../../libs/srs-react/src/lib/cards/add-card.tsx:82
 msgid "add-cards.trigger"
 msgstr "Add cards"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:95
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:86
 msgid "add-deck.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:120
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:111
 msgid "add-deck.redirect.link"
 msgstr "Go to the new deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:118
 msgid "add-deck.submit"
 msgstr "Add deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:127
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:118
 msgid "add-deck.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:84
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:75
 msgid "add-deck.title"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:69
-#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:70
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:60
+#: ../../libs/srs-react/src/lib/decks/add-deck.tsx:61
 msgid "add-deck.trigger"
 msgstr "New deck"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:88
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:81
 msgid "add-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:107
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:100
 msgid "add-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:114
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:107
 msgid "add-template.submit"
 msgstr "Create"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:77
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:70
 msgid "add-template.title"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:62
-#: ../../libs/srs-react/src/lib/templates/add-template.tsx:63
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:55
+#: ../../libs/srs-react/src/lib/templates/add-template.tsx:56
 msgid "add-template.trigger"
 msgstr "New template"
 
-#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:32
+#: ../../libs/srs-react/src/lib/algorithms/algorithm-picker.tsx:31
 msgid "algorithm-picker.label"
 msgstr "Preset"
 
@@ -263,47 +263,47 @@ msgstr "Template"
 msgid "cards-table.filters.trigger"
 msgstr "Filters"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:188
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:195
 msgid "cards-table.search.label"
 msgstr "Search cards"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:198
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:205
 msgid "cards-table.search.placeholder"
 msgstr "Search"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:98
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:92
 msgid "cards-table.selection.clear"
 msgstr "Clear"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:89
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:83
 msgid "cards-table.selection.delete.cancel"
 msgstr "Cancel"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:86
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:80
 msgid "cards-table.selection.delete.confirm"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:70
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:64
 msgid "cards-table.selection.delete.trigger"
 msgstr "Delete"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:101
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:104
 msgid "cards.table.columns.created-at"
 msgstr "Created"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:86
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:89
 msgid "cards.table.columns.due-at"
 msgstr "Due"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:78
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:81
 msgid "cards.table.columns.state"
 msgstr "Status"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:107
+#: ../../libs/srs-react/src/lib/cards/cards-table.tsx:110
 msgid "cards.table.columns.updated-at"
 msgstr "Updated"
 
-#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:81
+#: ../../libs/srs-react/src/lib/cards/cards-table-selection-controls.tsx:75
 msgid "cards.table.selection.delete-confirm"
 msgstr "Are you sure you want to delete selected cards?"
 
@@ -317,43 +317,43 @@ msgstr "Stack"
 msgid "cards.views.table"
 msgstr "Table"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:85
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:78
 msgid "clone-algorithm.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:95
 msgid "clone-algorithm.redirect.link"
 msgstr "Go to the new preset"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:113
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:113
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:102
 msgid "clone-algorithm.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:65
+#: ../../libs/srs-react/src/lib/algorithms/clone-algorithm.tsx:58
 msgid "clone-algorithm.trigger"
 msgstr "Clone preset"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:85
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:78
 msgid "clone-template.inputs.title.label"
 msgstr "Title"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:95
 msgid "clone-template.redirect.link"
 msgstr "Go to the new template"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:109
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.submit"
 msgstr "Clone"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:109
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:102
 msgid "clone-template.success"
 msgstr "Done"
 
-#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:65
+#: ../../libs/srs-react/src/lib/templates/clone-template.tsx:58
 msgid "clone-template.trigger"
 msgstr "Clone template"
 

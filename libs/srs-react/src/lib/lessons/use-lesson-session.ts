@@ -65,16 +65,16 @@ export function useLessonSession(): UseLessonSessionResult {
 
   useEffect(() => {
     if (isOpen) {
-      disableScope("nav");
-      enableScope("lesson");
+      disableScope("navigation");
+      enableScope("grades");
     } else {
-      enableScope("nav");
-      disableScope("lesson");
+      enableScope("navigation");
+      disableScope("grades");
     }
 
     return () => {
-      enableScope("nav");
-      disableScope("lesson");
+      enableScope("navigation");
+      disableScope("grades");
     };
   }, [isOpen, disableScope, enableScope]);
 

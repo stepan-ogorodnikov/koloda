@@ -1,20 +1,20 @@
 # Hotkeys
 
-Covers the keyboard shortcut system: scopes, bindings, conflict resolution, configuration, and validation.
+Covers the keyboard shortcut system: categories, scopes, bindings, conflict resolution, configuration, and validation.
 Does not cover specific hotkey actions.
 
 ## What is a Hotkey
 
 A hotkey is a keyboard shortcut that triggers an action.
-Each hotkey has a scope, one or more key bindings, and an action.
-Hotkeys are organized by scope to control when they are active.
+Each hotkey belongs to a category and has one or more key bindings and an action.
+Hotkeys that need activation gating also carry a runtime scope.
 
-## Scopes
+## Categories
 
-Hotkeys are grouped into scopes.
-A scope determines when its hotkeys are active.
+Hotkeys are grouped into categories for settings, validation, and persistence.
+A category never gates whether a hotkey fires.
 
-The following scopes exist:
+The following categories exist:
 
 - **form** — actions within form dialogs
 - **ui** — interface-wide actions (focus management, tabs, sidebar, theme)
@@ -22,14 +22,21 @@ The following scopes exist:
 - **grades** — card grading actions
 - **ai** — assistant chat actions
 
+## Runtime Scopes
+
+A runtime scope determines when its hotkeys are active, distinct from the settings category.
+The following runtime scopes exist: `navigation`, `grades`, `form`.
+The `ui` and `ai` categories have no runtime scope — their hotkeys register always-on
+and gate via component mount plus per-hotkey `enabled` instead.
+
 ## Scope Activation
 
-A scope must be enabled for its hotkeys to fire.
+A runtime scope must be enabled for its hotkeys to fire.
 Scopes are enabled and disabled at runtime.
 
 The **navigation** scope is enabled on app load and stays enabled unless explicitly disabled.
-Other scopes are enabled while the UI that uses them is open.
-For example, grade hotkeys while a lesson is open, and assistant hotkeys while the assistant is visible.
+The **grades** scope is enabled while a lesson is open.
+The **form** scope is enabled while a form is mounted.
 
 When a scope is disabled, its hotkeys are silently ignored.
 They do not fire, even if the keys are pressed.
@@ -58,18 +65,18 @@ Hotkeys do not fire when a text input or textarea is focused, unless the hotkey 
 
 Hotkey conflicts occur when two hotkeys share the same key binding.
 
-### Within a Scope
+### Within a Category
 
-Duplicate key bindings within the same scope are not allowed.
-If the user tries to assign the same key to two hotkeys in the same scope, validation fails.
+Duplicate key bindings within the same category are not allowed.
+If the user tries to assign the same key to two hotkeys in the same category, validation fails.
 
 ### Across Scopes
 
-The **ui** scope has special status.
-If a **ui** hotkey shares a binding with a hotkey in any other scope, both hotkeys are marked as conflicting.
+The **ui** category has special status.
+If a **ui** hotkey shares a binding with a hotkey in any other category, both hotkeys are marked as conflicting.
 The conflict is reported as a validation error.
 
-Non-UI scopes can share bindings with each other without conflict.
+Non-UI categories can share bindings with each other without conflict.
 For example, a **navigation** hotkey and an **ai** hotkey can use the same key.
 Only the one that fires first (based on scope activation order) will trigger.
 
@@ -94,7 +101,7 @@ Users can configure hotkey bindings in the settings panel.
 
 ### What Cannot Be Changed
 
-- The hotkey's scope
+- The hotkey's category
 - The hotkey's action
 - Which hotkeys exist
 
@@ -102,8 +109,8 @@ Users can configure hotkey bindings in the settings panel.
 
 When the user saves hotkey settings, the configuration is validated:
 
-1. No duplicate bindings within any scope
-2. No binding in a non-UI scope conflicts with a UI binding
+1. No duplicate bindings within any category
+2. No binding in a non-UI category conflicts with a UI binding
 3. Unknown hotkey names are dropped and are not persisted
 
 The save still succeeds after unknown names are dropped.

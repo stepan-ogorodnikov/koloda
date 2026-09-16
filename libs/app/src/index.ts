@@ -30,10 +30,10 @@ export type { ErrorCode, FormError, ZodIssue } from "./lib/error";
 export {
   DEFAULT_HOTKEYS_SETTINGS,
   HOTKEYS_LABELS,
-  HOTKEY_SCOPE_LABELS,
+  HOTKEY_CATEGORY_LABELS,
   hotkeysSettingsValidation,
 } from "./lib/settings-hotkeys";
-export type { AppHotkeys, HotkeyEntry, HotkeyScope, HotkeysSettings } from "./lib/settings-hotkeys";
+export type { AppHotkeys, HotkeyCategory, HotkeyEntry, HotkeysSettings } from "./lib/settings-hotkeys";
 export {
   DARK_THEMES,
   DEFAULT_INTERFACE_SETTINGS,

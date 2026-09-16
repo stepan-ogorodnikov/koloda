@@ -340,6 +340,26 @@ msgstr "Scroll up"
 msgid "settings.hotkeys.ai.toggle-settings"
 msgstr "Toggle settings"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:11
+msgid "settings.hotkeys.categories.ai"
+msgstr "AI"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:7
+msgid "settings.hotkeys.categories.form"
+msgstr "Forms"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:10
+msgid "settings.hotkeys.categories.grades"
+msgstr "Grade selection"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:9
+msgid "settings.hotkeys.categories.navigation"
+msgstr "Navigation"
+
+#: ../../libs/app/src/lib/settings-hotkeys.ts:8
+msgid "settings.hotkeys.categories.ui"
+msgstr "Interface"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:17
 msgid "settings.hotkeys.form.reset"
 msgstr "Discard"
@@ -387,26 +407,6 @@ msgstr "Settings"
 #: ../../libs/app/src/lib/settings-hotkeys.ts:33
 msgid "settings.hotkeys.navigation.templates"
 msgstr "Templates"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:11
-msgid "settings.hotkeys.scopes.ai"
-msgstr "AI"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:7
-msgid "settings.hotkeys.scopes.form"
-msgstr "Forms"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:10
-msgid "settings.hotkeys.scopes.grades"
-msgstr "Grade selection"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:9
-msgid "settings.hotkeys.scopes.navigation"
-msgstr "Navigation"
-
-#: ../../libs/app/src/lib/settings-hotkeys.ts:8
-msgid "settings.hotkeys.scopes.ui"
-msgstr "Interface"
 
 #: ../../libs/app/src/lib/settings-hotkeys.ts:25
 msgid "settings.hotkeys.ui.close"

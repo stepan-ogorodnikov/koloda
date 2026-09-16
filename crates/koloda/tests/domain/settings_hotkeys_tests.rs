@@ -28,33 +28,33 @@ fn test_valid_hotkeys_settings_full() {
 }
 
 #[test]
-fn test_empty_json_object_defaults_all_scopes() {
-    // WHY: every scope carries #[serde(default)], so `{}` exercises the default path for all five
+fn test_empty_json_object_defaults_all_categories() {
+    // WHY: every category carries #[serde(default)], so `{}` exercises the default path for all five
     // fields at once and validate() must accept the resulting empty maps.
     let json = r#"{}"#;
 
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-    assert!(settings.validate().is_ok(), "Empty JSON should default all scopes");
+    assert!(settings.validate().is_ok(), "Empty JSON should default all categories");
 }
 
 #[test]
 fn test_unknown_action_names_pass_validation() {
     // WHY: stripping is normalize/fill_defaults's job; validate stays duplicate-only so reads of
     // dirty JSON do not fail before strip.
-    for (scope, json) in [
+    for (category, json) in [
         ("navigation", r#"{"navigation":{"extraAction":["X"]}}"#),
         ("grades", r#"{"grades":{"extraAction":["X"]}}"#),
     ] {
         let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
-        let extra_present = match scope {
+        let extra_present = match category {
             "navigation" => settings.navigation.contains_key("extraAction"),
             "grades" => settings.grades.contains_key("extraAction"),
-            other => panic!("unexpected scope {other}"),
+            other => panic!("unexpected category {other}"),
         };
-        assert!(extra_present, "{scope}.extraAction must still be present before strip");
+        assert!(extra_present, "{category}.extraAction must still be present before strip");
         assert!(
             settings.validate().is_ok(),
-            "Unknown action name in {scope} should be accepted"
+            "Unknown action name in {category} should be accepted"
         );
     }
 }
@@ -75,7 +75,7 @@ fn test_extra_top_level_fields_ignored() {
 
 #[test]
 fn test_duplicate_keys_fail_with_code() {
-    // WHY: one per-scope HashSet backs every within-scope duplicate, so same-action,
+    // WHY: one per-category HashSet backs every within-category duplicate, so same-action,
     // cross-action, grades-side, and later-in-array spellings all funnel through the same
     // rejection path and error code.
     for (label, json) in [
@@ -87,7 +87,7 @@ fn test_duplicate_keys_fail_with_code() {
             }"#,
         ),
         (
-            "duplicate across actions in the same scope",
+            "duplicate across actions in the same category",
             r#"{
                 "navigation": { "dashboard": ["ArrowRight"], "decks": ["ArrowRight"] },
                 "grades": {}
@@ -126,7 +126,7 @@ fn test_duplicate_keys_fail_with_code() {
 }
 
 #[test]
-fn test_duplicate_keys_between_scopes_allowed() {
+fn test_duplicate_keys_between_categories_allowed() {
     let json = r#"{
         "navigation": {
             "dashboard": ["Space"]
@@ -139,7 +139,7 @@ fn test_duplicate_keys_between_scopes_allowed() {
     let settings: HotkeysSettings = serde_json::from_str(json).expect("Should deserialize");
     assert!(
         settings.validate().is_ok(),
-        "Same key in different scopes should be allowed"
+        "Same key in different categories should be allowed"
     );
 }
 
@@ -206,7 +206,7 @@ fn test_settings_name_hotkeys_validation_with_duplicates() {
 fn test_hotkeys_normalize_drops_unknown_action_names() {
     // WHY: Zod strips unknown action keys; desktop must do the same on normalize so retired
     // names (e.g. toggleCardsMode) are not persisted and do not fail reads.
-    for (scope, known_action, known_binding, unknown_action, missing_action) in [
+    for (category, known_action, known_binding, unknown_action, missing_action) in [
         ("form", "submit", "Mod+S", "retiredFormAction", "reset"),
         ("ui", "close", "Alt+C", "legacyUiAction", "focusNext"),
         ("navigation", "dashboard", "KeyH", "extraAction", "decks"),
@@ -217,34 +217,34 @@ fn test_hotkeys_normalize_drops_unknown_action_names() {
         actions.insert(known_action.to_string(), serde_json::json!([known_binding]));
         actions.insert(unknown_action.to_string(), serde_json::json!(["X"]));
         let mut root = serde_json::Map::new();
-        root.insert(scope.to_string(), serde_json::Value::Object(actions));
+        root.insert(category.to_string(), serde_json::Value::Object(actions));
         let content = serde_json::Value::Object(root);
 
         let normalized = SettingsName::Hotkeys
             .normalize(content)
             .expect("unknown action names must not reject normalize");
-        let scope_map = normalized[scope]
+        let category_map = normalized[category]
             .as_object()
-            .unwrap_or_else(|| panic!("{scope} must serialize as an object"));
+            .unwrap_or_else(|| panic!("{category} must serialize as an object"));
 
         assert!(
-            !scope_map.contains_key(unknown_action),
-            "{scope}: {unknown_action} must be dropped"
+            !category_map.contains_key(unknown_action),
+            "{category}: {unknown_action} must be dropped"
         );
         assert_eq!(
-            scope_map.get(known_action),
+            category_map.get(known_action),
             Some(&serde_json::json!([known_binding])),
-            "{scope}: known binding for {known_action} must be kept"
+            "{category}: known binding for {known_action} must be kept"
         );
         assert_eq!(
-            scope_map.get(missing_action),
+            category_map.get(missing_action),
             Some(&serde_json::json!([])),
-            "{scope}: missing known action {missing_action} must be filled with []"
+            "{category}: missing known action {missing_action} must be filled with []"
         );
     }
 }
 
-fn sorted_scope_keys(map: &HashMap<String, Vec<String>>) -> Vec<String> {
+fn sorted_category_keys(map: &HashMap<String, Vec<String>>) -> Vec<String> {
     let mut keys: Vec<String> = map.keys().cloned().collect();
     keys.sort();
     keys
@@ -257,8 +257,8 @@ fn sorted_ts_keys(keys: &[&str]) -> Vec<String> {
 }
 
 #[test]
-fn test_hotkeys_scope_action_ids_match_ts() {
-    // INVARIANT: TS↔Rust twin (agents/TESTING.md) — per-scope action ids must stay in sync with
+fn test_hotkeys_category_action_ids_match_ts() {
+    // INVARIANT: TS↔Rust twin (agents/TESTING.md) — per-category action ids must stay in sync with
     // the TS `hotkeys` const in `libs/app/src/lib/settings-hotkeys.ts`, pinned in
     // `libs/app/src/lib/settings-hotkeys.test.ts`. Adding a hotkey requires touching both pins
     // (agents/ADD-HOTKEY.md).
@@ -266,9 +266,9 @@ fn test_hotkeys_scope_action_ids_match_ts() {
         serde_json::from_value(serde_json::json!({})).expect("empty object deserializes");
     settings.fill_defaults();
 
-    assert_eq!(sorted_scope_keys(&settings.form), sorted_ts_keys(&["submit", "reset"]));
+    assert_eq!(sorted_category_keys(&settings.form), sorted_ts_keys(&["submit", "reset"]));
     assert_eq!(
-        sorted_scope_keys(&settings.ui),
+        sorted_category_keys(&settings.ui),
         sorted_ts_keys(&[
             "submit",
             "focusNext",
@@ -281,15 +281,15 @@ fn test_hotkeys_scope_action_ids_match_ts() {
         ])
     );
     assert_eq!(
-        sorted_scope_keys(&settings.navigation),
+        sorted_category_keys(&settings.navigation),
         sorted_ts_keys(&["dashboard", "decks", "algorithms", "templates", "settings", "ai"])
     );
     assert_eq!(
-        sorted_scope_keys(&settings.grades),
+        sorted_category_keys(&settings.grades),
         sorted_ts_keys(&["again", "hard", "normal", "easy"])
     );
     assert_eq!(
-        sorted_scope_keys(&settings.ai),
+        sorted_category_keys(&settings.ai),
         sorted_ts_keys(&[
             "cancel",
             "focusPrompt",

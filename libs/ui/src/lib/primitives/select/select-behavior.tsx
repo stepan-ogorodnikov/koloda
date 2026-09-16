@@ -57,7 +57,7 @@ export function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {
   useAppHotkey(ui.focusPrev, () => dispatchSelectNavigationKey(ref, state, "ArrowUp"), "", options);
 
   useEffect(() => {
-    (isOpen ? disableScope : enableScope)("nav");
+    (isOpen ? disableScope : enableScope)("navigation");
   }, [isOpen, disableScope, enableScope]);
 
   // WHY: Capture-phase close hotkey — Autocomplete onKeyDown may stopPropagation

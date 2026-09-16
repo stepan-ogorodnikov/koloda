@@ -31,12 +31,12 @@ export function useAppHotkeys() {
     });
   }, [persistScheme, setScheme]);
 
-  useAppHotkey(navigation.dashboard, () => navigate({ to: "/dashboard", viewTransition: isMotionOn }), "nav");
-  useAppHotkey(navigation.decks, () => navigate({ to: "/decks", viewTransition: isMotionOn }), "nav");
-  useAppHotkey(navigation.algorithms, () => navigate({ to: "/algorithms", viewTransition: isMotionOn }), "nav");
-  useAppHotkey(navigation.templates, () => navigate({ to: "/templates", viewTransition: isMotionOn }), "nav");
-  useAppHotkey(navigation.settings, () => navigate({ to: "/settings", viewTransition: isMotionOn }), "nav");
-  useAppHotkey(navigation.ai, () => navigate({ to: "/ai", viewTransition: isMotionOn }), "nav");
+  useAppHotkey(navigation.dashboard, () => navigate({ to: "/dashboard", viewTransition: isMotionOn }), "navigation");
+  useAppHotkey(navigation.decks, () => navigate({ to: "/decks", viewTransition: isMotionOn }), "navigation");
+  useAppHotkey(navigation.algorithms, () => navigate({ to: "/algorithms", viewTransition: isMotionOn }), "navigation");
+  useAppHotkey(navigation.templates, () => navigate({ to: "/templates", viewTransition: isMotionOn }), "navigation");
+  useAppHotkey(navigation.settings, () => navigate({ to: "/settings", viewTransition: isMotionOn }), "navigation");
+  useAppHotkey(navigation.ai, () => navigate({ to: "/ai", viewTransition: isMotionOn }), "navigation");
   useAppHotkey(ui.focusNext, focusNext, "", { ignoreInputs: false, conflictBehavior: "allow" });
   useAppHotkey(ui.focusPrev, focusPrev, "", { ignoreInputs: false, conflictBehavior: "allow" });
   useAppHotkey(ui.nextTab, goToNextTab, "", { preventDefault: false, conflictBehavior: "allow" });

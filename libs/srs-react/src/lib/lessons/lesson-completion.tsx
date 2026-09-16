@@ -7,7 +7,7 @@ export function LessonCompletion() {
   const { _ } = useLingui();
   const { closeLesson } = useLessonClose();
 
-  useAppHotkey(["Escape"], () => closeLesson(), "lesson");
+  useAppHotkey(["Escape"], () => closeLesson(), "grades");
 
   return <div className="text-xl font-semibold">{_(msg`lesson.completion.message`)}</div>;
 }

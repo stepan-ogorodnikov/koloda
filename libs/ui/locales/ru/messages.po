@@ -26,20 +26,20 @@ msgid "error.details"
 msgstr "Подробности"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:33
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:34
 msgid "form.created-at {0}"
 msgstr "Создано {0}"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:108
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:109
 msgid "form.reset"
 msgstr "Сбросить"
 
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:87
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:88
 msgid "form.save"
 msgstr "Сохранить"
 
 #. placeholder {0}: i18n.date(timestamp)
-#: ../../libs/ui/src/lib/primitives/form/form.tsx:45
+#: ../../libs/ui/src/lib/primitives/form/form.tsx:46
 msgid "form.updated-at {0}"
 msgstr "Обновлено {0}"
 

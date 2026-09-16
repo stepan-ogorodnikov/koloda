@@ -15,14 +15,14 @@ export function LessonInit() {
   const submitSetup = useSetAtom(submitLessonSetupAtom);
   const { closeLesson } = useLessonClose();
 
-  useAppHotkey(["Escape"], () => closeLesson(), "lesson", { ignoreInputs: false });
+  useAppHotkey(["Escape"], () => closeLesson(), "grades", { ignoreInputs: false });
 
   useAppHotkey(
     ui.submit,
     () => {
       if (["TEXTAREA", "INPUT"].includes(document.activeElement?.tagName || "")) submitSetup();
     },
-    "lesson",
+    "grades",
     { ignoreInputs: false, conflictBehavior: "allow" },
   );
 

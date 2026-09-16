@@ -6,9 +6,9 @@ function getIssuePaths(result: ReturnType<typeof hotkeysSettingsValidation.safeP
   return result.error.issues.map((issue) => issue.path);
 }
 
-// INVARIANT: TS↔Rust twin (agents/TESTING.md) — per-scope action ids must stay in sync with
+// INVARIANT: TS↔Rust twin (agents/TESTING.md) — per-category action ids must stay in sync with
 // the Rust `*_KEYS` arrays in `crates/koloda/src/domain/settings_hotkeys.rs`, pinned by
-// `test_hotkeys_scope_action_ids_match_ts` in `crates/koloda/tests/domain/settings_hotkeys_tests.rs`.
+// `test_hotkeys_category_action_ids_match_ts` in `crates/koloda/tests/domain/settings_hotkeys_tests.rs`.
 // Adding a hotkey requires touching both pins (agents/ADD-HOTKEY.md).
 const RUST_HOTKEY_ACTION_IDS = {
   form: ["submit", "reset"],
@@ -31,7 +31,7 @@ const RUST_HOTKEY_ACTION_IDS = {
 } as const;
 
 describe("settings-hotkeys", () => {
-  it("fills missing scopes with empty hotkey arrays", () => {
+  it("fills missing categories with empty hotkey arrays", () => {
     expect(hotkeysSettingsValidation.parse({})).toEqual({
       form: {
         submit: [],
@@ -81,7 +81,7 @@ describe("settings-hotkeys", () => {
     expect(hotkeysSettingsValidation.parse(DEFAULT_HOTKEYS_SETTINGS)).toEqual(DEFAULT_HOTKEYS_SETTINGS);
   });
 
-  it("reports duplicate hotkeys inside the same scope", () => {
+  it("reports duplicate hotkeys inside the same category", () => {
     const result = hotkeysSettingsValidation.safeParse({
       ...structuredClone(DEFAULT_HOTKEYS_SETTINGS),
       form: {
@@ -97,7 +97,7 @@ describe("settings-hotkeys", () => {
     ]);
   });
 
-  it("reports duplicates when a ui hotkey is reused in another scope", () => {
+  it("reports duplicates when a ui hotkey is reused in another category", () => {
     const result = hotkeysSettingsValidation.safeParse({
       ...structuredClone(DEFAULT_HOTKEYS_SETTINGS),
       ui: {
@@ -117,7 +117,7 @@ describe("settings-hotkeys", () => {
     ]);
   });
 
-  it("allows duplicate hotkeys across non-ui scopes", () => {
+  it("allows duplicate hotkeys across non-ui categories", () => {
     const result = hotkeysSettingsValidation.safeParse({
       ...structuredClone(DEFAULT_HOTKEYS_SETTINGS),
       navigation: {
@@ -151,9 +151,9 @@ describe("settings-hotkeys", () => {
   });
 
   it.each(Object.entries(RUST_HOTKEY_ACTION_IDS) as [keyof typeof RUST_HOTKEY_ACTION_IDS, readonly string[]][])(
-    "scope %s action ids match the pinned Rust *_KEYS list",
-    (scope, rustKeys) => {
-      expect(Object.keys(DEFAULT_HOTKEYS_SETTINGS[scope]).sort()).toEqual([...rustKeys].sort());
+    "category %s action ids match the pinned Rust *_KEYS list",
+    (category, rustKeys) => {
+      expect(Object.keys(DEFAULT_HOTKEYS_SETTINGS[category]).sort()).toEqual([...rustKeys].sort());
     },
   );
 });

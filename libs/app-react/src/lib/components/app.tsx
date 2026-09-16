@@ -35,7 +35,7 @@ export function App({ children }: PropsWithChildren) {
   const { enableScope } = useHotkeysStatus();
 
   useEffect(() => {
-    enableScope("nav");
+    enableScope("navigation");
   }, [enableScope]);
 
   return (
