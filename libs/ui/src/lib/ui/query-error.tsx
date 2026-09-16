@@ -8,6 +8,8 @@ import { tv } from "tailwind-variants";
 import { Button } from "../primitives/form/button";
 import { ErrorMessage } from "./error-message";
 
+// WHY: deliberate beat so the pending spinner animation starts before the retry runs —
+// a retry that errors immediately would otherwise resolve before any feedback appears.
 const RETRY_DELAY_MS = 125;
 
 const queryErrorRetryButton = tv({
