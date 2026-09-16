@@ -22,6 +22,7 @@ export function useGlobalSync() {
   const setLightTheme = useSetAtom(lightThemeAtom);
   const setDarkTheme = useSetAtom(darkThemeAtom);
   const setMotion = useSetAtom(motionSettingAtom);
+  const setLang = useSetAtom(langAtom);
   const language = useAtomValue(langAtom);
 
   useEffect(() => {
@@ -37,8 +38,11 @@ export function useGlobalSync() {
       if (data?.content?.lightTheme) setLightTheme(data.content.lightTheme);
       if (data?.content?.darkTheme) setDarkTheme(data.content.darkTheme);
       if (data?.content?.motion) setMotion(data.content.motion);
+      // WHY: interface.language is the authoritative persisted locale — the store
+      // boot value is only a pre-setup guess (localStorage / navigator).
+      if (data?.content?.language) setLang(data.content.language);
     }
-  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion]);
+  }, [data, setScheme, setLightTheme, setDarkTheme, setMotion, setLang]);
 
   useEffect(() => {
     document.documentElement.lang = language;

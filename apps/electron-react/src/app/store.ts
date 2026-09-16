@@ -18,6 +18,7 @@ wireUiPreferences(store);
 
 store.sub(langAtom, () => {
   const lang = store.get(langAtom);
+  localStorage.setItem("lang", lang);
   activateLanguage(lang);
 });
 

@@ -1,9 +1,9 @@
 import { getLanguageCode, LOCALES } from "@koloda/app";
 import { i18n } from "@lingui/core";
-import { detect, fromNavigator } from "@lingui/detect-locale";
+import { detect, fromNavigator, fromStorage } from "@lingui/detect-locale";
 
 export function getLanguage() {
-  return getLanguageCode(detect(fromNavigator())) as string;
+  return getLanguageCode(detect(fromStorage("lang"), fromNavigator())) as string;
 }
 
 export async function activateLanguage(locale: string) {
