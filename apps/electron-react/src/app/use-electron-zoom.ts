@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 
+// WHY: zoom intentionally lives outside the hotkey system (docs/specs/HOTKEYS.md) —
+// it is not configurable, not scope-gated, and must fire even in text inputs.
+// Do not migrate these listeners to useAppHotkey without a product decision.
 export function useElectronZoom() {
   useEffect(() => {
     const api = window.electronAPI;

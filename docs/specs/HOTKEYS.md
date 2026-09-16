@@ -3,6 +3,9 @@
 Covers the keyboard shortcut system: categories, scopes, bindings, conflict resolution, configuration, and validation.
 Does not cover specific hotkey actions.
 
+Desktop zoom (ctrl/cmd `+`/`-`/`0`, ctrl+wheel) intentionally lives outside this system:
+it is not configurable, not scope-gated, and fires while text inputs are focused.
+
 ## What is a Hotkey
 
 A hotkey is a keyboard shortcut that triggers an action.
