@@ -54,9 +54,12 @@ export function finishRunningReasoning(run: AssistantRun) {
   }
 }
 
-export function stampRunningToolElapsed(run: AssistantRun) {
+export function finishRunningTools(run: AssistantRun) {
+  // WHY: a run ending without a tool result must not leave its activity
+  // spinning. Match restore's error status, but freeze elapsed time now.
   for (const entry of run.toolCalls ?? []) {
     if (!isReasoningActivity(entry) && entry.status === "running") {
+      entry.status = "error";
       stampActivityElapsed(entry);
     }
   }

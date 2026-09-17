@@ -6,7 +6,7 @@ import {
   hasRetryableTurn,
   initialConversationState,
 } from "./conversation-reducer";
-import type { ConversationReducerState } from "./conversation-reducer";
+import type { ConversationReducerAction, ConversationReducerState } from "./conversation-reducer";
 import { reduce } from "./conversation-reducer.fixtures";
 
 function testId(n: number): string {
@@ -639,6 +639,47 @@ describe("conversationReducer", () => {
     });
   });
 
+  describe("terminal tool activity", () => {
+    it.each<{ action: ConversationReducerAction }>([
+      { action: ["completeRun", { runId: "r1" }] },
+      { action: ["runFailed", { runId: "r1", error: { message: "boom" } }] },
+      { action: ["cancelRun", { runId: "r1" }] },
+      { action: ["interruptRun", { runId: "r1", reason: "app_shutdown" }] },
+    ])("closes running tools and preserves finished tools on $action.0", ({ action }) => {
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(0);
+        let state = reduce([
+          ["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }],
+          ["addToolCall", { runId: "r1", call: { id: "success", name: "list_decks", input: {} } }],
+          ["addToolCall", { runId: "r1", call: { id: "error", name: "list_decks", input: {} } }],
+          ["addToolCall", { runId: "r1", call: { id: "running-1", name: "list_decks", input: {} } }],
+          ["addToolCall", { runId: "r1", call: { id: "running-2", name: "list_decks", input: {} } }],
+        ]);
+        vi.setSystemTime(1000);
+        state = conversationReducer(state, [
+          "setToolCallResult",
+          { runId: "r1", callId: "success", output: { decks: [] } },
+        ]);
+        state = conversationReducer(state, [
+          "setToolCallResult",
+          { runId: "r1", callId: "error", error: "unavailable" },
+        ]);
+        vi.setSystemTime(4000);
+        state = conversationReducer(state, action);
+
+        expect(state.runs["r1"].toolCalls).toMatchObject([
+          { id: "success", status: "success", elapsedSeconds: 1, output: { decks: [] } },
+          { id: "error", status: "error", elapsedSeconds: 1, error: "unavailable" },
+          { id: "running-1", status: "error", elapsedSeconds: 4 },
+          { id: "running-2", status: "error", elapsedSeconds: 4 },
+        ]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe("completeRun", () => {
     it("sets status to success, computes elapsedSeconds, and clears activeRunId", () => {
       vi.useFakeTimers();
@@ -671,27 +712,6 @@ describe("conversationReducer", () => {
           elapsedSeconds: expect.any(Number),
         },
       ]);
-    });
-
-    it("freezes a still-running tool call's elapsed time when the run completes", () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date("2026-07-01T12:00:00.000Z"));
-
-      let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
-      state = conversationReducer(state, [
-        "addToolCall",
-        { runId: "r1", call: { id: "call-1", name: "list_decks", input: {} } },
-      ]);
-      vi.setSystemTime(new Date("2026-07-01T12:00:04.000Z"));
-      state = conversationReducer(state, ["completeRun", { runId: "r1" }]);
-
-      expect(state.runs["r1"].toolCalls?.[0]).toMatchObject({
-        id: "call-1",
-        status: "running",
-        elapsedSeconds: 4,
-      });
-
-      vi.useRealTimers();
     });
 
     it("does not clear activeRunId when a different run completes", () => {

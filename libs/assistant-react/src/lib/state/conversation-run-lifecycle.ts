@@ -11,9 +11,9 @@ import type {
 import {
   clearActiveIfRun,
   finishRunningReasoning,
+  finishRunningTools,
   makeRun,
   stampElapsed,
-  stampRunningToolElapsed,
 } from "./conversation-run-helpers";
 import { assistantMessageId, getAssistantMetadata } from "./assistant-messages";
 
@@ -82,7 +82,7 @@ export function transitionRun(draft: ConversationReducerState, runId: string, ev
     terminationReason = "user";
   }
   finishRunningReasoning(run);
-  stampRunningToolElapsed(run);
+  finishRunningTools(run);
   stampElapsed(run);
   clearActiveIfRun(draft, runId);
   logAssistantStructured({
