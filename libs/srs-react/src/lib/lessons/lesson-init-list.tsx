@@ -22,6 +22,7 @@ export function LessonInitList() {
             <LessonInitLearnedToday
               learned={reviewTotals[type]}
               limit={type === "total" ? dailyLimits.total : dailyLimits[type].value}
+              uncappedWhenZero={type === "total"}
             />
           </div>
           <div className="flex flex-row items-center justify-between">

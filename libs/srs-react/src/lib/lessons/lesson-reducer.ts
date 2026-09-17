@@ -187,9 +187,9 @@ export function calculateInitialLessonAmounts({
     0,
   );
   const diffs = {
-    untouched: Math.max((dailyLimits.untouched.value || Infinity) - reviewTotals.untouched, 0),
-    learn: Math.max((dailyLimits.learn.value || Infinity) - reviewTotals.learn, 0),
-    review: Math.max((dailyLimits.review.value || Infinity) - reviewTotals.review, 0),
+    untouched: Math.max(dailyLimits.untouched.value - reviewTotals.untouched, 0),
+    learn: Math.max(dailyLimits.learn.value - reviewTotals.learn, 0),
+    review: Math.max(dailyLimits.review.value - reviewTotals.review, 0),
     total: Math.max((dailyLimits.total || Infinity) - countedReviewTotal, 0),
   };
 

@@ -59,8 +59,14 @@ export function LearnedToday() {
             <div className="flex flex-col">
               {(["untouched", "learn", "review", "total"] as LessonType[]).map((type) => {
                 const limit = type === "total" ? data.dailyLimits.total : data.dailyLimits[type].value;
-                const percentage = (data.reviewTotals[type] / (limit || Infinity)) * 100;
-                const isInfinity = limit === 0;
+                const isInfinity = type === "total" && limit === 0;
+                const percentage = isInfinity
+                  ? 0
+                  : limit === 0
+                    ? data.reviewTotals[type] > 0
+                      ? 100
+                      : 0
+                    : (data.reviewTotals[type] / limit) * 100;
                 const progressWidth = Math.min(Math.max(percentage, 0), 100);
                 const progressLabel = formatProgressLabel(progressWidth, isInfinity);
 
@@ -76,7 +82,7 @@ export function LearnedToday() {
                         </span>
                         <span className="fg-level-4 font-normal text-xs leading-8">/</span>
                         <span className={learnedTodayAmount({ content: "limit", isInfinity })}>
-                          {limit === 0 ? "∞" : `${limit}`}
+                          {isInfinity ? "∞" : `${limit}`}
                         </span>
                       </div>
                     </div>

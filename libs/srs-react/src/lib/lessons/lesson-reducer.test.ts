@@ -514,4 +514,32 @@ describe("calculateInitialLessonAmounts", () => {
       }),
     ).toEqual(REVIEW_EXPECTED_AMOUNTS);
   });
+
+  it("treats a per-type limit of zero as no remaining room for defaults", () => {
+    expect(
+      calculateInitialLessonAmounts({
+        type: "total",
+        available: TOTAL_LESSONS.total,
+        dailyLimits: {
+          ...TOTAL_TODAY_REVIEW_TOTALS.dailyLimits,
+          untouched: { value: 0, counts: true },
+        },
+        reviewTotals: { untouched: 0, learn: 0, review: 0, total: 0 },
+      }),
+    ).toMatchObject({ untouched: 0 });
+
+    expect(
+      calculateInitialLessonAmounts({
+        type: "untouched",
+        available: TOTAL_LESSONS.total,
+        dailyLimits: {
+          total: 50,
+          untouched: { value: 0, counts: true },
+          learn: { value: 10, counts: true },
+          review: { value: 10, counts: true },
+        },
+        reviewTotals: { untouched: 0, learn: 0, review: 0, total: 0 },
+      }),
+    ).toEqual({ untouched: 0, learn: 0, review: 0, total: 0 });
+  });
 });
