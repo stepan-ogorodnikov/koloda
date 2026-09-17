@@ -312,16 +312,18 @@ describe("conversationReducer", () => {
       expect(JSON.stringify(stored).length).toBeLessThan(JSON.stringify(output).length);
     });
 
-    it("keeps the executor's totalCards on a bounded get_deck_cards output", () => {
+    it.each([
+      { totalCards: 300, returnedCount: 200, textLength: 5 },
+      { totalCards: 40, returnedCount: 2, textLength: 3000 },
+    ])("bounds $returnedCount returned cards without confusing them with $totalCards total", (testCase) => {
+      const { totalCards, returnedCount, textLength } = testCase;
       let state = reduce([["submitTurn", { runId: "r1", text: "hello", kind: "chat-text", assistantText: "" }]]);
       state = conversationReducer(state, [
         "addToolCall",
         { runId: "r1", call: { id: "call-1", name: "get_deck_cards", input: {} } },
       ]);
-      // get_deck_cards shape: the cards list bloats the serialization past the
-      // cap, and the row headline reads totalCards off the stored copy.
-      const cards = Array.from({ length: 30 }, (_, i) => ({ fields: { Front: `front ${i}${"x".repeat(120)}` } }));
-      const output = { deckTitle: "Deck", totalCards: 30, isCapped: false, cards };
+      const cards = Array.from({ length: returnedCount }, () => ({ fields: { Front: "x".repeat(textLength) } }));
+      const output = { deckTitle: "Deck", totalCards, isCapped: true, cards };
       expect(JSON.stringify(output).length).toBeGreaterThan(2000);
 
       state = conversationReducer(state, ["setToolCallResult", { runId: "r1", callId: "call-1", output }]);
@@ -330,10 +332,12 @@ describe("conversationReducer", () => {
         isTruncated: boolean;
         itemCount: number;
         totalCards?: number;
+        acceptedCount?: number;
         cards?: unknown;
       };
       expect(stored.isTruncated).toBe(true);
-      expect(stored.totalCards).toBe(30);
+      expect(stored.totalCards).toBe(totalCards);
+      expect(stored.acceptedCount).toBe(returnedCount);
       expect(stored.cards).toBeUndefined();
     });
 

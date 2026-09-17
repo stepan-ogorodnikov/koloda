@@ -333,7 +333,7 @@ function toolCallSummaries(call: AIToolCallRecord, translate: I18n["_"]): string
     if (deckCount !== null) return [translate(msg`${plural(deckCount, { other: "ai.chat.tool-activity.decks" })}`)];
   }
   if (call.name === "get_deck_cards") {
-    const cardCount = namedArrayLength(call.output, "cards") ?? namedNumber(call.output, "totalCards");
+    const cardCount = namedArrayLength(call.output, "cards") ?? namedInteger(call.output, "acceptedCount");
     if (cardCount !== null) return [translate(msg`${plural(cardCount, { other: "ai.chat.tool-activity.cards" })}`)];
   }
   if (call.name === "propose_cards") {

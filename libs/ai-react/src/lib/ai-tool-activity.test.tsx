@@ -3,6 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AIToolActivity } from "./ai-tool-activity";
 import type { AIToolCallRecord } from "./ai-tool-activity";
 
+const plural = vi.hoisted(() => vi.fn((_count: number, forms: { other: string }) => forms.other));
+
+vi.mock("@lingui/core/macro", async (importOriginal) => ({
+  ...(await importOriginal()),
+  plural,
+}));
+
 vi.mock("@lingui/react", () => ({
   useLingui: () => ({
     _: (message: { toString(): string }) => message.toString(),
@@ -50,7 +57,18 @@ describe("AIToolActivity", () => {
     expect(document.querySelector("svg")).not.toBeNull();
   });
 
-  it("renders a get_deck_cards success row from the returned cards length", () => {
+  it.each([
+    {
+      scenario: "full output",
+      output: { totalCards: 40, cards: [{ fields: {} }, { fields: {} }], acceptedCount: 9 },
+      count: 2,
+    },
+    { scenario: "card cap", output: { isTruncated: true, totalCards: 300, acceptedCount: 200 }, count: 200 },
+    { scenario: "character budget", output: { isTruncated: true, totalCards: 40, acceptedCount: 2 }, count: 2 },
+    { scenario: "empty result", output: { isTruncated: true, totalCards: 40, acceptedCount: 0 }, count: 0 },
+    { scenario: "unknown returned count", output: { isTruncated: true, totalCards: 40 }, count: null },
+  ])("uses the returned card count for $scenario", ({ output, count }) => {
+    plural.mockClear();
     render(
       <AIToolActivity
         calls={[
@@ -59,14 +77,16 @@ describe("AIToolActivity", () => {
             name: "get_deck_cards",
             status: "success",
             input: { deckId: 9 },
-            output: { deckTitle: "Spanish", totalCards: 40, isCapped: true, cards: [{ fields: {} }, { fields: {} }] },
+            output,
           }),
         ]}
       />,
     );
 
     expect(screen.getByText("ai.chat.tool-activity.get-deck-cards")).toBeTruthy();
-    expect(screen.getByText("ai.chat.tool-activity.cards")).toBeTruthy();
+    const expectedCalls = count === null ? [] : [[count, { other: "ai.chat.tool-activity.cards" }]];
+    expect(plural.mock.calls).toEqual(expectedCalls);
+    expect(screen.queryByText("ai.chat.tool-activity.cards") !== null).toBe(count !== null);
   });
 
   it("renders a propose_cards success row from the cards array length", () => {

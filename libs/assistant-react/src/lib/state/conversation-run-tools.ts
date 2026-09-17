@@ -87,11 +87,9 @@ export function boundToolOutput(output: unknown): unknown {
   return {
     isTruncated: true,
     itemCount: Array.isArray(output) ? output.length : Object.keys(output).length,
-    // WHY: the tool-row headline counts cards via totalCards (spec Visibility);
-    // without this, any get_deck_cards output past the cap renders name-only.
     ...(typeof totalCards === "number" && Number.isFinite(totalCards) ? { totalCards } : {}),
-    // WHY: propose_cards headline counts accepted cards and skipped drops;
-    // truncation must not hide those counts (ASSISTANT-DATA-ACCESS.md Visibility).
+    // WHY: both card-tool headlines count the returned cards, not the deck's
+    // total. Keep that count and proposal drops when truncating (spec Visibility).
     ...(Array.isArray(cards) ? { acceptedCount: cards.length } : {}),
     ...(typeof rejectedCount === "number" && Number.isInteger(rejectedCount) ? { rejectedCount } : {}),
     preview: serialized.slice(0, MAX_TOOL_OUTPUT_PREVIEW_CHARS),
