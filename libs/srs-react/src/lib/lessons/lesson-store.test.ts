@@ -69,7 +69,7 @@ function initializePayload(request = REQUEST) {
   };
 }
 
-describe("lessonAtom compatibility", () => {
+describe("lessonAtom launch", () => {
   it("writes a request through open and reads it back", () => {
     const store = createStore();
 

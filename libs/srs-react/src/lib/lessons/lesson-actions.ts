@@ -59,10 +59,10 @@ export const settleLessonUploadAtom = atom(
   },
 );
 
-// INVARIANT: Compatibility launch atom over store request — not a second open
-// state. Write request → open; write null → closeLessonStateAtom (reset only,
-// no query invalidation). The atom cannot call React Query; do not fold
-// useLessonClose into it.
+// INVARIANT: Badge launch atom (see lesson-badge.tsx). Read mirrors lessonRequestAtom.
+// Write request → openLessonAtom; write null → closeLessonStateAtom (reset state only,
+// no query invalidation). Not a legacy shim — do not remove. Cannot call React Query;
+// do not fold useLessonClose into it.
 export const lessonAtom = atom(
   (get) => get(lessonRequestAtom),
   (_get, set, value: LessonAtomValue | null) => {
