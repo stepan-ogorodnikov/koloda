@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { aiSecretsValidation } from "./provider-secrets";
 import type { AISecrets } from "./provider-secrets";
+import { GENERATION_TEMPERATURE } from "./prompts";
 
 export const aiProfileValidation = z.object({
   id: z.uuid(),
@@ -21,7 +22,7 @@ export const chatPromptModeSchema = z.enum(["default", "custom"]);
 export type ChatPromptMode = z.infer<typeof chatPromptModeSchema>;
 
 export const assistantSettingsValidation = z.object({
-  temperature: z.number().min(0).max(2).default(0.2),
+  temperature: z.number().min(0).max(2).default(GENERATION_TEMPERATURE),
   chatPromptTemplate: z.string().nullable().default(null),
   chatPromptMode: chatPromptModeSchema.optional(),
 });

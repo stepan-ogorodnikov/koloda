@@ -1,5 +1,5 @@
 import type { AssistantSettings } from "@koloda/ai";
-import { resolveEffectiveChatPromptTemplate } from "@koloda/ai";
+import { GENERATION_TEMPERATURE, resolveEffectiveChatPromptTemplate } from "@koloda/ai";
 import { queriesAtom } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -27,7 +27,7 @@ export function useAssistantRuntimeConfig({
   const { getSettingsQuery } = useAtomValue(queriesAtom);
   const { data: aiSettings } = useQuery(getSettingsQuery("ai"));
   const assistantSettings = aiSettings?.content?.assistant as AssistantSettings | undefined;
-  const temperature = assistantSettings?.temperature ?? 0.2;
+  const temperature = assistantSettings?.temperature ?? GENERATION_TEMPERATURE;
   const chatPromptTemplate = resolveEffectiveChatPromptTemplate(assistantSettings ?? {});
 
   const conversationConfig: AssistantConversationConfig = {

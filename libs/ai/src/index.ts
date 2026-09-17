@@ -19,7 +19,7 @@ export type {
   Message,
 } from "./lib/generation";
 export type { AIModel, ModelParameter, StreamUsage } from "./lib/models";
-export { DEFAULT_CHAT_PROMPT_TEMPLATE } from "./lib/prompts";
+export { DEFAULT_CHAT_PROMPT_TEMPLATE, GENERATION_TEMPERATURE } from "./lib/prompts";
 export { AI_PROVIDERS, AI_PROVIDER_LABELS } from "./lib/provider-catalog";
 export type { AiProvider } from "./lib/provider-catalog";
 export {

@@ -3,6 +3,7 @@ import {
   assistantSettingsFormSchema,
   assistantSettingsValidation,
   DEFAULT_CHAT_PROMPT_TEMPLATE,
+  GENERATION_TEMPERATURE,
   resolveChatPromptMode,
 } from "@koloda/ai";
 import { toFormErrors } from "@koloda/app";
@@ -22,7 +23,7 @@ export type AssistantSettingsProps = {
 
 function toFormValues(assistant: AssistantSettingsType | undefined) {
   return {
-    temperature: assistant?.temperature ?? 0.2,
+    temperature: assistant?.temperature ?? GENERATION_TEMPERATURE,
     chatPromptTemplate: assistant?.chatPromptTemplate ?? null,
     chatPromptMode: resolveChatPromptMode(assistant ?? {}),
   };
