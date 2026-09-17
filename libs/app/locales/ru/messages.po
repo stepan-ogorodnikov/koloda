@@ -436,6 +436,10 @@ msgstr "Отправка формы"
 msgid "settings.hotkeys.ui.toggle-color-scheme"
 msgstr "Переключить цветовую схему"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:28
+msgid "settings.hotkeys.ui.toggle-language"
+msgstr "Переключить язык"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:26
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Переключить боковую панель"

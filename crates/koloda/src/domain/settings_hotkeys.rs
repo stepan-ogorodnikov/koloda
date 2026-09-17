@@ -16,6 +16,7 @@ const UI_KEYS: &[&str] = &[
     "close",
     "toggleSidebarControls",
     "toggleColorScheme",
+    "toggleLanguage",
 ];
 const NAVIGATION_KEYS: &[&str] = &["dashboard", "decks", "algorithms", "templates", "settings", "ai"];
 const GRADES_KEYS: &[&str] = &["again", "hard", "normal", "easy"];

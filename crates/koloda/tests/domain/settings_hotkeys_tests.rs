@@ -51,7 +51,10 @@ fn test_unknown_action_names_pass_validation() {
             "grades" => settings.grades.contains_key("extraAction"),
             other => panic!("unexpected category {other}"),
         };
-        assert!(extra_present, "{category}.extraAction must still be present before strip");
+        assert!(
+            extra_present,
+            "{category}.extraAction must still be present before strip"
+        );
         assert!(
             settings.validate().is_ok(),
             "Unknown action name in {category} should be accepted"
@@ -266,7 +269,10 @@ fn test_hotkeys_category_action_ids_match_ts() {
         serde_json::from_value(serde_json::json!({})).expect("empty object deserializes");
     settings.fill_defaults();
 
-    assert_eq!(sorted_category_keys(&settings.form), sorted_ts_keys(&["submit", "reset"]));
+    assert_eq!(
+        sorted_category_keys(&settings.form),
+        sorted_ts_keys(&["submit", "reset"])
+    );
     assert_eq!(
         sorted_category_keys(&settings.ui),
         sorted_ts_keys(&[
@@ -278,6 +284,7 @@ fn test_hotkeys_category_action_ids_match_ts() {
             "close",
             "toggleSidebarControls",
             "toggleColorScheme",
+            "toggleLanguage",
         ])
     );
     assert_eq!(

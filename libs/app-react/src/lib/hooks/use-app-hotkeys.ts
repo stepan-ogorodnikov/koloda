@@ -1,5 +1,6 @@
+import { LOCALES } from "@koloda/app";
 import type { AllowedSettings } from "@koloda/settings";
-import { queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
+import { langAtom, queriesAtom, queryKeys, schemeAtom, useAppHotkey, useHotkeysSettings } from "@koloda/core-react";
 import { focusNext, focusPrev, goToNextTab, goToPrevTab, useMotionSetting } from "@koloda/ui";
 import type { HotkeyOptions } from "@tanstack/react-hotkeys";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,9 +18,10 @@ export function useAppHotkeys() {
   const navigate = useNavigate();
   const isMotionOn = useMotionSetting();
   const setScheme = useSetAtom(schemeAtom);
+  const setLang = useSetAtom(langAtom);
   const { patchSettingsMutation } = useAtomValue(queriesAtom);
   const queryClient = useQueryClient();
-  const { mutate: persistScheme } = useMutation({
+  const { mutate: persistInterface } = useMutation({
     onSuccess: (settings: AllowedSettings<"interface"> | undefined) => {
       queryClient.setQueryData(queryKeys.settings.detail("interface"), settings);
     },
@@ -30,10 +32,19 @@ export function useAppHotkeys() {
     setScheme((current) => {
       const index = SCHEME_CYCLE.indexOf(current as (typeof SCHEME_CYCLE)[number]);
       const next = SCHEME_CYCLE[(index + 1) % SCHEME_CYCLE.length];
-      persistScheme({ name: "interface", content: { scheme: next } });
+      persistInterface({ name: "interface", content: { scheme: next } });
       return next;
     });
-  }, [persistScheme, setScheme]);
+  }, [persistInterface, setScheme]);
+
+  const toggleLanguage = useCallback(() => {
+    setLang((current) => {
+      const index = LOCALES.indexOf(current);
+      const next = LOCALES[(index + 1) % LOCALES.length];
+      persistInterface({ name: "interface", content: { language: next } });
+      return next;
+    });
+  }, [persistInterface, setLang]);
 
   useAppHotkey(navigation.dashboard, () => navigate({ to: "/dashboard", viewTransition: isMotionOn }), "navigation");
   useAppHotkey(navigation.decks, () => navigate({ to: "/decks", viewTransition: isMotionOn }), "navigation");
@@ -46,6 +57,7 @@ export function useAppHotkeys() {
   useAppHotkey(ui.nextTab, goToNextTab, "", TAB_HOTKEY_OPTIONS);
   useAppHotkey(ui.prevTab, goToPrevTab, "", TAB_HOTKEY_OPTIONS);
   useAppHotkey(ui.toggleColorScheme, toggleColorScheme, "", TOGGLE_HOTKEY_OPTIONS);
+  useAppHotkey(ui.toggleLanguage, toggleLanguage, "", TOGGLE_HOTKEY_OPTIONS);
 
   return null;
 }

@@ -436,6 +436,10 @@ msgstr "Submit text field"
 msgid "settings.hotkeys.ui.toggle-color-scheme"
 msgstr "Toggle color scheme"
 
+#: ../../libs/app/src/lib/settings-hotkeys.ts:28
+msgid "settings.hotkeys.ui.toggle-language"
+msgstr "Toggle language"
+
 #: ../../libs/app/src/lib/settings-hotkeys.ts:26
 msgid "settings.hotkeys.ui.toggle-sidebar-controls"
 msgstr "Toggle sidebar"

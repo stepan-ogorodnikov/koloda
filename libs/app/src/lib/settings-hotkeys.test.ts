@@ -12,7 +12,17 @@ function getIssuePaths(result: ReturnType<typeof hotkeysSettingsValidation.safeP
 // Adding a hotkey requires touching both pins (agents/ADD-HOTKEY.md).
 const RUST_HOTKEY_ACTION_IDS = {
   form: ["submit", "reset"],
-  ui: ["submit", "focusNext", "focusPrev", "nextTab", "prevTab", "close", "toggleSidebarControls", "toggleColorScheme"],
+  ui: [
+    "submit",
+    "focusNext",
+    "focusPrev",
+    "nextTab",
+    "prevTab",
+    "close",
+    "toggleSidebarControls",
+    "toggleColorScheme",
+    "toggleLanguage",
+  ],
   navigation: ["dashboard", "decks", "algorithms", "templates", "settings", "ai"],
   grades: ["again", "hard", "normal", "easy"],
   ai: [
@@ -46,6 +56,7 @@ describe("settings-hotkeys", () => {
         close: [],
         toggleSidebarControls: [],
         toggleColorScheme: [],
+        toggleLanguage: [],
       },
       navigation: {
         dashboard: [],
