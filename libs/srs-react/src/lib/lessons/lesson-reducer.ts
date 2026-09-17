@@ -97,6 +97,14 @@ export type LessonReducerState = {
 
 export type LessonAmounts = Record<LessonType, number>;
 
+/** Session-only stand-in when loaders return no cards (`null` / `None`). Not a persistence payload. */
+export const EMPTY_LESSON_DATA: LessonData = {
+  cards: [],
+  decks: [],
+  templates: [],
+  algorithms: [],
+};
+
 export const lessonReducerDefault: LessonReducerState = {
   phase: "closed",
   request: null,

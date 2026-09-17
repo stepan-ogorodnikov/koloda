@@ -170,8 +170,8 @@ export async function getLessonData(
 ): Promise<LessonData | null> {
   const lessonCards = await getLessonCards(db, dueAt, filters, amounts);
   // INVARIANT: empty match is `null`, not `{ cards: [], ... }`. Twin of Rust `get_lesson_data`
-  // returning `None`. Spec: studying must not begin. `useLessonSession` treats only nullish
-  // data as not ready — an empty object is truthy and would start studying with no current card.
+  // returning `None`. Spec: studying must not begin. `useLessonSession` maps a successful `null`
+  // to the same finished path as an empty in-memory payload.
   if (lessonCards.length === 0) return null;
 
   const deckIdsSet = new Set<Deck["id"]>();

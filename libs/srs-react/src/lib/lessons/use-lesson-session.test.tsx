@@ -138,6 +138,33 @@ describe("useLessonSession", () => {
     });
   });
 
+  it("finishes when card data loads as null", async () => {
+    const { store, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getLessonDataQuery: (params) => ({
+          queryKey: queryKeys.lessons.data(params),
+          queryFn: async () => null,
+        }),
+      }),
+    });
+    renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("configuring");
+    });
+
+    act(() => {
+      store.set(submitLessonSetupAtom);
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("finished");
+    });
+  });
+
   it("loads card data once after setup is submitted", async () => {
     const { store, Wrapper } = createWrapper();
     renderHook(() => useLessonSession(), { wrapper: Wrapper });

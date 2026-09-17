@@ -38,7 +38,7 @@ export function useLessonSession(): UseLessonSessionResult {
   });
 
   const isLoadingCards = phase === "loading-cards" && !!setup;
-  const { data: lessonData } = useQuery({
+  const { data: lessonData, isSuccess: hasLoadedLessonData } = useQuery({
     ...getLessonDataQuery({
       amounts: setup?.amounts ?? { untouched: 0, learn: 0, review: 0, total: 0 },
       filters: setup?.filters ?? { deckIds: [] },
@@ -59,9 +59,9 @@ export function useLessonSession(): UseLessonSessionResult {
   }, [phase, request, hasFetchedLearningSettings, learningSettings, lessons, todayReviewTotals, initialize]);
 
   useEffect(() => {
-    if (phase !== "loading-cards" || !lessonData) return;
-    receiveLessonData(lessonData);
-  }, [phase, lessonData, receiveLessonData]);
+    if (phase !== "loading-cards" || !hasLoadedLessonData) return;
+    receiveLessonData(lessonData ?? null);
+  }, [phase, lessonData, hasLoadedLessonData, receiveLessonData]);
 
   useEffect(() => {
     if (isOpen) {

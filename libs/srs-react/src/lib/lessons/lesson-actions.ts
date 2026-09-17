@@ -1,6 +1,7 @@
 import type { LessonData } from "@koloda/srs";
 import { atom } from "jotai";
 import type { InitializePayload, LessonAtomValue } from "./lesson-reducer";
+import { EMPTY_LESSON_DATA } from "./lesson-reducer";
 import { lessonRequestAtom } from "./lesson-selectors";
 import { lessonStateAtom } from "./lesson-store";
 
@@ -12,8 +13,8 @@ export const initializeLessonAtom = atom(null, (_get, set, payload: InitializePa
   set(lessonStateAtom, ["initialize", payload]);
 });
 
-export const receiveLessonDataAtom = atom(null, (_get, set, data: LessonData) => {
-  set(lessonStateAtom, ["lessonDataReceived", data]);
+export const receiveLessonDataAtom = atom(null, (_get, set, data: LessonData | null) => {
+  set(lessonStateAtom, ["lessonDataReceived", data ?? EMPTY_LESSON_DATA]);
 });
 
 export const updateLessonAmountAtom = atom(
