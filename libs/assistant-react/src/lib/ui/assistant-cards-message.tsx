@@ -2,8 +2,6 @@ import type { GeneratedCard } from "@koloda/ai";
 import { AIChatMessageLayout, AIChatMessageStatus } from "@koloda/ai-react";
 import { queriesAtom } from "@koloda/core-react";
 import type { Deck, Template } from "@koloda/srs";
-import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { AssistantCardsTable } from "./assistant-cards-table";
@@ -49,7 +47,6 @@ export function AssistantCardsMessage({
   startedAt,
   modelName,
 }: AssistantCardsMessageProps) {
-  const { _ } = useLingui();
   const { getTemplateQuery } = useAtomValue(queriesAtom);
   const liveTemplateQuery = useQuery({
     ...(templateId !== undefined
@@ -102,9 +99,6 @@ export function AssistantCardsMessage({
       {showStatus && isFailed && <AIChatMessageStatus state="failed" canRetry={canRetry} onRetry={onRetry} />}
       {showStatus && isSuccess && elapsedSeconds !== undefined && showCards && (
         <AIChatMessageStatus state="success" elapsedSeconds={elapsedSeconds} modelName={modelName} />
-      )}
-      {isSuccess && !isTemplateUnavailable && !cards.length && (
-        <p className="fg-level-3">{_(msg`assistant.generated-no-cards`)}</p>
       )}
     </AIChatMessageLayout>
   );

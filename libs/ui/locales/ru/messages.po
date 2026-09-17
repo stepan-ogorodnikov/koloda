@@ -75,11 +75,11 @@ msgstr "Запрашиваемые данные не существуют"
 msgid "not-found.title"
 msgstr "Не найдено"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:20
+#: ../../libs/ui/src/lib/ui/query-error.tsx:41
 msgid "query-error.message"
 msgstr "Ошибка загрузки"
 
-#: ../../libs/ui/src/lib/ui/query-error.tsx:58
+#: ../../libs/ui/src/lib/ui/query-error.tsx:68
 msgid "query-error.retry"
 msgstr "Повторить"
 

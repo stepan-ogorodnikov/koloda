@@ -152,10 +152,6 @@ msgstr "Untitled conversation"
 msgid "assistant.add"
 msgstr "Add cards"
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-cards-message.tsx:107
-msgid "assistant.generated-no-cards"
-msgstr "No cards were generated"
-
 #: ../../libs/assistant-react/src/lib/ui/assistant-settings.tsx:106
 msgid "assistant.settings.system-prompt.label"
 msgstr "System prompt"

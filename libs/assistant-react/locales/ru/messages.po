@@ -152,10 +152,6 @@ msgstr "Диалог без названия"
 msgid "assistant.add"
 msgstr "Добавить карточки"
 
-#: ../../libs/assistant-react/src/lib/ui/assistant-cards-message.tsx:107
-msgid "assistant.generated-no-cards"
-msgstr "Карточки не сгенерированы"
-
 #: ../../libs/assistant-react/src/lib/ui/assistant-settings.tsx:106
 msgid "assistant.settings.system-prompt.label"
 msgstr "Системный промпт"
