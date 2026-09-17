@@ -46,6 +46,8 @@ export function SelectStateBridge({ stateRef }: SelectStateBridgeProps) {
   return null;
 }
 
+// WHY: Omit `target` so this object stays a stable identity. Listening is document-wide
+// on purpose: the search field is a sibling of the listbox, and the callback no-ops unless open.
 const SELECT_HOTKEY_OPTIONS: HotkeyOptions = { ignoreInputs: false, conflictBehavior: "allow" };
 
 export function useSelectHotkeys(ref: RefObject<HTMLDivElement | null>) {

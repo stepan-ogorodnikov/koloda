@@ -73,7 +73,7 @@ Hotkey conflicts occur when two hotkeys share the same key binding.
 Duplicate key bindings within the same category are not allowed.
 If the user tries to assign the same key to two hotkeys in the same category, validation fails.
 
-### Across Scopes
+### Across Categories
 
 The **ui** category has special status.
 If a **ui** hotkey shares a binding with a hotkey in any other category, both hotkeys are marked as conflicting.
@@ -130,10 +130,9 @@ Hotkey settings are saved to the database.
 They persist across sessions.
 
 If a save fails, the in-memory bindings revert to the last saved state.
-If the stored settings are corrupted, both hosts report an error instead of silently
-falling back to defaults. Corrupted settings must never look the same as missing
-settings, otherwise safety checks, such as the guards that protect a default algorithm
-or template from deletion, could pass when they should fail.
+If the stored settings are corrupted, both hosts report an error instead of silently falling back to defaults.
+Corrupted settings must never look the same as missing settings.
+Otherwise safety checks could pass when they should fail.
 
 When stored settings contain unknown action names (for example a retired hotkey), those names are dropped.
 Known actions and their bindings are kept.
