@@ -63,7 +63,6 @@ export function DeckDetails({ id }: DeckDetailsProps) {
     >
       <FormLayout.Section>
         <form.Timestamps>
-          <form.Timestamp>ID: {data?.id}</form.Timestamp>
           <form.CreatedAt timestamp={data?.createdAt} />
           <form.UpdatedAt timestamp={data?.updatedAt} />
         </form.Timestamps>
