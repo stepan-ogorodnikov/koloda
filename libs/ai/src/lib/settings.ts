@@ -1,4 +1,4 @@
-import { optionalProfileTitleSchema } from "@koloda/srs";
+import { optionalProfileTitleSchema } from "@koloda/app";
 import { z } from "zod";
 import { aiSecretsValidation } from "./provider-secrets";
 import type { AISecrets } from "./provider-secrets";

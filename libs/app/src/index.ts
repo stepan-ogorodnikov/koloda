@@ -13,6 +13,13 @@ export type {
   DeleteConversationData,
   SetConversationData,
 } from "./lib/conversations";
+export {
+  ENTITY_TITLE_MAX_LENGTH,
+  optionalProfileTitleSchema,
+  PROFILE_TITLE_MAX_LENGTH,
+  requiredEntityTitleSchema,
+  trimTitleValue,
+} from "./lib/titles";
 export { timestampsValidation } from "./lib/db";
 export type { Timestamps } from "./lib/db";
 export { getAppPlatform } from "./lib/environment";

@@ -2,7 +2,7 @@ import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
-import { requiredEntityTitleSchema } from "./titles";
+import { requiredEntityTitleSchema } from "@koloda/app";
 
 export const algorithmValidation = z.object({
   id: z.uuid(),

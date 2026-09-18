@@ -51,9 +51,12 @@ function toPublicProfile(profile: {
   // WHY: `hasSecrets` from stored key presence — not from a redacted `apiKey: null`.
   const hasSecrets = profile.hasSecrets === true || profileHasSecrets(profile.secrets);
   return {
-    ...profile,
+    id: profile.id,
+    title: profile.title,
     secrets: profile.secrets ? redactSecrets(profile.secrets) : undefined,
     hasSecrets,
+    whitelistModelIds: profile.whitelistModelIds,
+    createdAt: profile.createdAt,
   };
 }
 

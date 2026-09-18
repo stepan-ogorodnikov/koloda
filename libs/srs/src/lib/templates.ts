@@ -2,7 +2,7 @@ import type { UpdateData } from "@koloda/app";
 import { SEED_TEMPLATE_TYPE_BACK_FIELD_ID, SEED_TEMPLATE_TYPE_FRONT_FIELD_ID, timestampsValidation } from "@koloda/app";
 import { msg } from "@lingui/core/macro";
 import { z } from "zod";
-import { requiredEntityTitleSchema } from "./titles";
+import { requiredEntityTitleSchema } from "@koloda/app";
 
 export const TEMPLATE_FIELD_TYPES = ["text", "markdown"] as const;
 export const TEMPLATE_OPERATIONS = ["display", "reveal", "type"] as const;
