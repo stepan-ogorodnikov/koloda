@@ -45,7 +45,7 @@ describe("referential integrity integration", () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);
 
-    await addCard(db, {
+    const card = await addCard(db, {
       deckId: deck.id,
       templateId: template.id,
       content: createCardContent(template),
@@ -55,12 +55,28 @@ describe("referential integrity integration", () => {
       templateId: template.id,
       content: createCardContent(template),
     });
+
+    await insertReview(db, {
+      cardId: card.id,
+      rating: 3,
+      state: 2,
+      dueAt: new Date("2026-01-15T09:00:00.000Z"),
+      stability: 7.5,
+      difficulty: 3.25,
+      scheduledDays: 12,
+      learningSteps: 2,
+      time: 4200,
+      isIgnored: false,
+      createdAt: new Date("2026-01-10T09:00:00.000Z"),
+    });
+    expect(await getReviews(db, { cardId: card.id })).toHaveLength(1);
 
     expect(await getCards(db, { deckId: deck.id })).toHaveLength(2);
 
     await deleteDeck(db, { id: deck.id });
 
     expect(await getCards(db, { deckId: deck.id })).toEqual([]);
+    expect(await getReviews(db, { cardId: card.id })).toEqual([]);
 
     const [{ count }] = await db.all("SELECT COUNT(*) AS count FROM cards");
     expect(Number(count)).toBe(0);
