@@ -47,7 +47,7 @@ export function LessonInitTable() {
                 variants={{ table: true }}
                 learned={reviewTotals[type]}
                 limit={type === "total" ? dailyLimits.total : dailyLimits[type].value}
-                uncappedWhenZero={type === "total"}
+                isUncappedWhenZero={type === "total"}
               />
             </LessonInitTd>
           </tr>

@@ -14,11 +14,11 @@ type LessonInitLearnedTodayProps = TWVProps<typeof lessonInitLearnedToday> & {
   learned: number;
   limit: number;
   /** Total daily limit only — a zero total means uncapped (LEARNING-SETTINGS §Daily Limits). */
-  uncappedWhenZero?: boolean;
+  isUncappedWhenZero?: boolean;
 };
 
-export function LessonInitLearnedToday({ variants, learned, limit, uncappedWhenZero }: LessonInitLearnedTodayProps) {
-  const showInfinity = uncappedWhenZero && limit === 0;
+export function LessonInitLearnedToday({ variants, learned, limit, isUncappedWhenZero }: LessonInitLearnedTodayProps) {
+  const showInfinity = isUncappedWhenZero && limit === 0;
 
   return (
     <div className={lessonInitLearnedToday(variants)}>
