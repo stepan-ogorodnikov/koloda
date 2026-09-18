@@ -35,7 +35,7 @@ Acceptable anchors:
 - An ADR: `docs/adr/0001-TS-RUST-DOMAIN-MIRRORING.md`.
 - A spec: `docs/specs/LESSONS.md` (Grading).
 - A playbook row: `agents/ASSISTANT-MAP.md` (Fix streaming).
-- A package README boundary: `libs/srs-react/README.md` (Does NOT own).
+- A package README boundary: `libs/assistant-react/README.md` (Does NOT own).
 - A task file's Plan item: `tasks/live/<slug>.md` or `tasks/archive/<slug>.md`.
   Cite that item's Goal, Constraints, Done when, or Green.
 - A lint rule from `.oxlintrc.json`.
