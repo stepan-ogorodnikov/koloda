@@ -48,3 +48,40 @@ test("deletes an algorithm with successor selection when in use by a deck", asyn
   // Verify the algorithm no longer appears
   await expect(page.getByRole("link", { name: algorithmTitle, exact: true })).not.toBeVisible();
 });
+
+test("prevents deleting the learning-default algorithm", async ({ page }) => {
+  await setupApp(page);
+
+  await openSection(page, "Presets");
+  await page.getByRole("link", { name: "Simple", exact: true }).click();
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
+
+  const deleteTrigger = page.getByRole("button", { name: "Delete preset", exact: true });
+  await expect(deleteTrigger).toBeDisabled();
+});
+
+test("prevents deleting the last remaining algorithm", async ({ page }) => {
+  await setupApp(page);
+
+  await openSection(page, "Presets");
+  await page.getByRole("link", { name: "Complex", exact: true }).click();
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
+
+  const deleteTrigger = page.getByRole("button", { name: "Delete preset", exact: true });
+  await deleteTrigger.click();
+
+  const deleteDialog = page.getByRole("dialog");
+  await deleteDialog.getByRole("button", { name: "Delete preset", exact: true }).click();
+  await expect(page).toHaveURL(/\/algorithms$/);
+  await expect(page.getByRole("link", { name: "Complex", exact: true })).not.toBeVisible();
+
+  await page.getByRole("link", { name: "Simple", exact: true }).click();
+  await expect(page).toHaveURL(
+    /\/algorithms\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+  );
+  await expect(page.getByRole("button", { name: "Delete preset", exact: true })).toBeDisabled();
+});
