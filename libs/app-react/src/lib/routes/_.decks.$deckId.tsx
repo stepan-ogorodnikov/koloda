@@ -57,10 +57,10 @@ function DeckRoute() {
           {() => (
             <Tabs.Panels>
               <Tabs.Panel id="cards">
-                <DeckCards deckId={deckId} />
+                <DeckCards deckId={deckId} key={deckId} />
               </Tabs.Panel>
               <Tabs.Panel id="details">
-                <DeckDetails id={deckId} />
+                <DeckDetails id={deckId} key={deckId} />
               </Tabs.Panel>
             </Tabs.Panels>
           )}
