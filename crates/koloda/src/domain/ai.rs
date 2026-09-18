@@ -252,13 +252,7 @@ impl AIProfile {
         // WHY: Empty and malformed ids share one code, mirroring the single `id: z.uuid()`
         // failure in the TS `aiProfileValidation` twin (covers input and storage paths).
         common::validate_uuid(&self.id, error_codes::VALIDATION_SETTINGS_AI_PROVIDERS_ID)?;
-
-        if let Some(title) = &self.title {
-            // WHY: UTF-16 units, not bytes — same rule as `common::validate_title`.
-            if title.encode_utf16().count() > 128 {
-                return Err(AppError::new(error_codes::VALIDATION_COMMON_TITLE_TOO_LONG, None));
-            }
-        }
+        common::validate_optional_profile_title(&self.title)?;
 
         Ok(())
     }

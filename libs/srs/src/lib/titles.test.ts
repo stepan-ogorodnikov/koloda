@@ -57,4 +57,18 @@ describe.each(TITLE_SCHEMAS)("$name title bounds", ({ parse }) => {
     expect(issue?.path).toEqual(["title"]);
     expect(issue?.message).toBe("validation.common.title.too-short");
   });
+
+  it("rejects a whitespace-only title", () => {
+    const result = parse("   ");
+    expect(result.success).toBe(false);
+    const issue = result.error!.issues[0];
+    expect(issue?.path).toEqual(["title"]);
+    expect(issue?.message).toBe("validation.common.title.too-short");
+  });
+
+  it("trims leading and trailing whitespace from accepted titles", () => {
+    const result = parse("  Deck name  ");
+    expect(result.success).toBe(true);
+    expect(result.data!.title).toBe("Deck name");
+  });
 });

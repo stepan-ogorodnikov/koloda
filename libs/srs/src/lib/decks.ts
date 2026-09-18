@@ -2,11 +2,12 @@ import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
+import { requiredEntityTitleSchema } from "./titles";
 import { templateValidation } from "./templates";
 
 export const deckValidation = z.object({
   id: z.uuid(),
-  title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
+  title: requiredEntityTitleSchema,
   algorithmId: algorithmValidation.shape.id,
   templateId: templateValidation.shape.id,
 });

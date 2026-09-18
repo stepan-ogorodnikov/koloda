@@ -364,6 +364,20 @@ fn test_ai_profile_validate_title_one_past_max_length_in_cyrillic_fails() {
 }
 
 #[test]
+fn test_ai_profile_validate_whitespace_only_title_ok() {
+    let profile = AIProfile {
+        id: "01900000-0000-7000-8000-000000000008".to_string(),
+        title: Some("   ".to_string()),
+        secrets: None,
+        has_secrets: false,
+        whitelist_model_ids: None,
+        created_at: TEST_CREATED_AT,
+    };
+
+    profile.validate().unwrap();
+}
+
+#[test]
 fn test_ai_profile_validate_title_max_length_in_emoji_fails() {
     // 64 emoji are 128 UTF-16 units (2 per astral char), 65 are 130 — char counting
     // would accept the title the TS zod mirror (UTF-16 units) rejects.

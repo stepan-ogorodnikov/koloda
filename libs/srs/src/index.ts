@@ -1,3 +1,4 @@
+export { optionalProfileTitleSchema, requiredEntityTitleSchema, trimTitleValue } from "./lib/titles";
 export {
   algorithmRowSchema,
   cloneAlgorithmSchema,

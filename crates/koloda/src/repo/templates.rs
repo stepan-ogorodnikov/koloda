@@ -3,6 +3,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use crate::app::db::{parse_json_column, Database};
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::{get_current_timestamp, minted_uuidv7};
+use crate::domain::common::normalize_required_title;
 use crate::domain::templates::{
     CloneTemplateData, DeleteTemplateData, InsertTemplateData, Template, TemplateContent, TemplateDeck,
     UpdateTemplateData,
@@ -154,12 +155,13 @@ pub(crate) fn insert_template(
     id: Option<&str>,
 ) -> Result<String, AppError> {
     let id = minted_uuidv7(id);
+    let title = normalize_required_title(&data.title);
     conn.execute(
         r#"
         INSERT INTO templates (id, title, content, created_at, updated_at)
         VALUES (?1, ?2, ?3, ?4, NULL)
         "#,
-        params![id, data.title, serde_json::to_string(&data.content)?, now],
+        params![id, title, serde_json::to_string(&data.content)?, now],
     )?;
 
     Ok(id)
@@ -194,6 +196,7 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
             data.values.validate(None)?;
         }
         let now = get_current_timestamp()?;
+        let title = normalize_required_title(&data.values.title);
 
         db.with_conn(|conn| {
             conn.execute(
@@ -205,12 +208,7 @@ pub fn update_template(db: &Database, data: UpdateTemplateData) -> Result<Templa
                     updated_at = ?3
                 WHERE id = ?4
                 "#,
-                params![
-                    data.values.title,
-                    serde_json::to_string(&data.values.content)?,
-                    now,
-                    data.id
-                ],
+                params![title, serde_json::to_string(&data.values.content)?, now, data.id],
             )?;
 
             Ok(())

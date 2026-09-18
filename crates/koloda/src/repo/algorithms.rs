@@ -7,6 +7,7 @@ use crate::domain::algorithms::{
     Algorithm, AlgorithmDeck, CloneAlgorithmData, DeleteAlgorithmData, InsertAlgorithmData, UpdateAlgorithmData,
 };
 use crate::domain::algorithms_fsrs::AlgorithmFSRS;
+use crate::domain::common::normalize_required_title;
 use crate::repo::settings;
 
 fn get_algorithm_row(row: &rusqlite::Row<'_>) -> Result<Algorithm, rusqlite::Error> {
@@ -93,12 +94,13 @@ pub(crate) fn insert_algorithm(
 ) -> Result<String, AppError> {
     let id = minted_uuidv7(id);
     let content = serde_json::to_string(&data.content)?;
+    let title = normalize_required_title(&data.title);
     conn.execute(
         r#"
         INSERT INTO algorithms (id, title, content, created_at, updated_at)
         VALUES (?1, ?2, ?3, ?4, NULL)
         "#,
-        params![id, data.title, content, now],
+        params![id, title, content, now],
     )?;
 
     Ok(id)
@@ -116,6 +118,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
         })?;
 
         let now = get_current_timestamp()?;
+        let title = normalize_required_title(&data.values.title);
 
         db.with_conn(|conn| {
             let content = serde_json::to_string(&data.values.content)?;
@@ -128,7 +131,7 @@ pub fn update_algorithm(db: &Database, data: UpdateAlgorithmData) -> Result<Algo
                     updated_at = ?3
                 WHERE id = ?4
                 "#,
-                params![data.values.title, content, now, data.id],
+                params![title, content, now, data.id],
             )?;
 
             Ok(())

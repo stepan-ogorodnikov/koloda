@@ -8,6 +8,7 @@ use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::secrets::get_secret_store;
 use crate::app::utility::{generate_uuid, get_current_timestamp};
+use crate::domain::common::normalize_optional_title;
 use crate::domain::settings::SettingsName;
 use crate::domain::settings_ai::{AIProfile, AISecrets, AISettings};
 
@@ -171,7 +172,7 @@ pub fn add_ai_profile(
         let has_secrets = secrets.as_ref().and_then(|s| s.api_key()).is_some();
         let profile = AIProfile {
             id: profile_id.clone(),
-            title,
+            title: normalize_optional_title(title),
             secrets: secrets_for_db,
             has_secrets,
             whitelist_model_ids,
@@ -235,7 +236,7 @@ pub fn update_ai_profile(
         }
 
         if title.is_some() {
-            existing_profile.title = title;
+            existing_profile.title = normalize_optional_title(title);
         }
 
         if let Some(whitelist_model_ids) = whitelist_model_ids {

@@ -103,6 +103,8 @@ Saving persists title, fields, and layout together.
 Discard restores the last saved values.
 
 The template title is required and limited in length.
+Leading and trailing whitespace is stripped before a title is saved.
+A title that is empty or contains only whitespace is rejected.
 Empty field titles are allowed.
 
 When the template is locked, the editor disables changing field type and required, and hides add-field and remove-field controls.

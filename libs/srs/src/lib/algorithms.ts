@@ -2,10 +2,11 @@ import type { UpdateData } from "@koloda/app";
 import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmFSRSValidation } from "./algorithms-fsrs";
+import { requiredEntityTitleSchema } from "./titles";
 
 export const algorithmValidation = z.object({
   id: z.uuid(),
-  title: z.string().min(1, "validation.common.title.too-short").max(255, "validation.common.title.too-long"),
+  title: requiredEntityTitleSchema,
   content: algorithmFSRSValidation,
 });
 

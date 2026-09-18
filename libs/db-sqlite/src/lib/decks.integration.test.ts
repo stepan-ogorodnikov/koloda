@@ -91,6 +91,42 @@ describe("decks repository integration", () => {
     expect(await getDecks(db)).toEqual([deck]);
   });
 
+  it("rejects deck adds with a whitespace-only title", async () => {
+    const { db } = testDb;
+    const { deck, algorithm, template } = await seedDeckContext(db);
+
+    await expect(
+      addDeck(db, {
+        title: "   ",
+        algorithmId: algorithm.id,
+        templateId: template.id,
+      }),
+    ).rejects.toMatchObject({
+      issues: expect.arrayContaining([
+        expect.objectContaining({
+          message: "validation.common.title.too-short",
+          path: ["title"],
+        }),
+      ]),
+    });
+
+    expect(await getDecks(db)).toEqual([deck]);
+  });
+
+  it("stores deck titles without leading or trailing whitespace", async () => {
+    const { db } = testDb;
+    const { algorithm, template } = await seedDeckContext(db);
+
+    const deck = await addDeck(db, {
+      title: "  Trimmed deck  ",
+      algorithmId: algorithm.id,
+      templateId: template.id,
+    });
+
+    expect(deck.title).toBe("Trimmed deck");
+    expect(await getDeck(db, deck.id)).toMatchObject({ title: "Trimmed deck" });
+  });
+
   it("rejects add/update when algorithm or template is missing", async () => {
     const { db } = testDb;
     const { deck, algorithm, template } = await seedDeckContext(db);

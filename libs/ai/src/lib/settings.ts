@@ -1,3 +1,4 @@
+import { optionalProfileTitleSchema } from "@koloda/srs";
 import { z } from "zod";
 import { aiSecretsValidation } from "./provider-secrets";
 import type { AISecrets } from "./provider-secrets";
@@ -5,7 +6,7 @@ import { GENERATION_TEMPERATURE } from "./prompts";
 
 export const aiProfileValidation = z.object({
   id: z.uuid(),
-  title: z.string().max(128, "validation.common.title.too-long").optional(),
+  title: optionalProfileTitleSchema,
   secrets: aiSecretsValidation.optional(),
   // WHY: Default so stored settings without the field still parse; hosts set the
   // real value when returning profiles (key may exist while `apiKey` is redacted).

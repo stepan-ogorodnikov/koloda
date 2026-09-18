@@ -3,6 +3,7 @@ use rusqlite::{params, OptionalExtension};
 use crate::app::db::Database;
 use crate::app::error::{error_codes, throw_known_error, AppError};
 use crate::app::utility::{get_current_timestamp, minted_uuidv7};
+use crate::domain::common::normalize_required_title;
 use crate::domain::decks::{Deck, DeleteDeckData, InsertDeckData, UpdateDeckData};
 use crate::repo::algorithms::get_algorithm;
 use crate::repo::templates::get_template;
@@ -102,6 +103,7 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
         })?;
 
         let now = get_current_timestamp()?;
+        let title = normalize_required_title(&data.title);
 
         let id = db.with_conn(|conn| {
             let id = minted_uuidv7(None);
@@ -110,7 +112,7 @@ pub fn add_deck(db: &Database, data: InsertDeckData) -> Result<Deck, AppError> {
                 INSERT INTO decks (id, title, algorithm_id, template_id, created_at, updated_at)
                 VALUES (?1, ?2, ?3, ?4, ?5, NULL)
                 "#,
-                params![id, data.title, data.algorithm_id, data.template_id, now],
+                params![id, title, data.algorithm_id, data.template_id, now],
             )?;
 
             Ok(id)
@@ -144,6 +146,7 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
         })?;
 
         let now = get_current_timestamp()?;
+        let title = normalize_required_title(&data.values.title);
 
         db.with_conn(|conn| {
             conn.execute(
@@ -156,13 +159,7 @@ pub fn update_deck(db: &Database, data: UpdateDeckData) -> Result<Deck, AppError
                     updated_at = ?4
                 WHERE id = ?5
                 "#,
-                params![
-                    data.values.title,
-                    data.values.algorithm_id,
-                    data.values.template_id,
-                    now,
-                    data.id
-                ],
+                params![title, data.values.algorithm_id, data.values.template_id, now, data.id],
             )?;
 
             Ok(())

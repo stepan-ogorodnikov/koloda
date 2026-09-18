@@ -28,9 +28,11 @@ Relationships:
 The user adds a deck by giving it a title and choosing an algorithm and a template.
 
 See LEARNING-SETTINGS.md (§Defaults) for the algorithm and template offered when the user does not pick otherwise.
-The title is required and limited in length.
 Two decks may have the same title; they remain distinct.
-An empty title is rejected.
+
+The title is required and limited in length.
+Leading and trailing whitespace is stripped before a title is saved.
+A title that is empty or contains only whitespace is rejected.
 The chosen algorithm and template must already exist; otherwise add fails and nothing is created.
 
 After a successful add, the dialog offers a link to open the new deck.

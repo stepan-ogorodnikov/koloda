@@ -58,7 +58,9 @@ The new algorithm starts from the built-in FSRS defaults for all parameters.
 After a successful add, the dialog offers a link to open the new algorithm.
 Changing the title again clears that success state so another add can be submitted.
 
-An empty title is rejected.
+The title is required and limited in length.
+Leading and trailing whitespace is stripped before a title is saved.
+A title that is empty or contains only whitespace is rejected.
 
 ## Cloning Algorithms
 

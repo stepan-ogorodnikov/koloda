@@ -126,6 +126,9 @@ On save, the app also rejects:
 - Titles longer than the maximum allowed length.
 - Required secret fields that are empty or whitespace-only on create.
 
+Optional profile titles are trimmed.
+A title that is empty or contains only whitespace is stored as absent (no title).
+
 Whitespace-only secret values are treated as absent on store, so a partial update cannot clear a stored key with whitespace.
 Empty optional fields are allowed on save so partial updates do not fail.
 If form validation passes but save rejects, the error is shown in the form.

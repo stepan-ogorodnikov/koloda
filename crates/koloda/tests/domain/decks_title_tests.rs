@@ -14,6 +14,18 @@ fn test_insert_deck_empty_title_fails() {
 }
 
 #[test]
+fn test_insert_deck_whitespace_only_title_fails() {
+    let data = json!({
+        "title": "   ",
+        "algorithmId": "01900000-0000-7000-8000-000000000001",
+        "templateId": "01900000-0000-7000-8000-000000000001"
+    });
+    let result = serde_json::from_value::<InsertDeckData>(data);
+    let validation_result = result.unwrap().validate();
+    assert_eq!(validation_result.unwrap_err().code, "validation.common.title.too-short");
+}
+
+#[test]
 fn test_insert_deck_title_max_length_ok() {
     let data = json!({
         "title": "a".repeat(255),

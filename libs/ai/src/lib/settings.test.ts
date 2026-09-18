@@ -123,6 +123,16 @@ describe("aiProfileValidation title", () => {
     expect(issue?.path).toEqual(["title"]);
     expect(issue?.message).toBe("validation.common.title.too-long");
   });
+
+  it("treats a whitespace-only title as absent", () => {
+    const parsed = aiProfileValidation.parse({ ...base, title: "   " });
+    expect(parsed.title).toBeUndefined();
+  });
+
+  it("trims a provided profile title", () => {
+    const parsed = aiProfileValidation.parse({ ...base, title: "  My provider  " });
+    expect(parsed.title).toBe("My provider");
+  });
 });
 
 describe("assistantSettingsValidation", () => {
