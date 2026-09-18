@@ -3,7 +3,6 @@ import { timestampsValidation } from "@koloda/app";
 import { z } from "zod";
 import { algorithmValidation } from "./algorithms";
 import { templateValidation } from "./templates";
-import type { Template } from "./templates";
 
 export const deckValidation = z.object({
   id: z.uuid(),
@@ -15,8 +14,6 @@ export const deckValidation = z.object({
 export const deckRowSchema = deckValidation.extend(timestampsValidation.shape);
 
 export type Deck = z.infer<typeof deckRowSchema>;
-
-export type DeckWithTemplate = Deck & { template: Template };
 
 export const deckWithOnlyTitleSchema = deckValidation.pick({ id: true, title: true });
 
