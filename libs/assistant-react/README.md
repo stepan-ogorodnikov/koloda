@@ -12,8 +12,7 @@ Provider HTTP stays in `@koloda/ai`; run execution lifetime and stream transport
 
 ## Architectural Map
 
-- Assistant layout under `assistant/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (engine host adapter, session/`RunController`, orchestration, `build-stream-request`), `persistence/` (restore, save write adapter, coerce/normalize), `ui/` (chat shell, lists, settings, renderers).
-- Profile cascade (assistant root): `use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts` — chat-tree subscription rules live here, not in `ai-react`.
+- Layout under `src/lib/`: `state/` (reducer, store, actions, selectors, messages), `runs/` (engine host adapter, session/`RunController`, orchestration, `build-stream-request`), `persistence/` (restore, save write adapter, coerce/normalize), `ui/` (chat shell, lists, settings, renderers); profile cascade hooks at `src/lib/` root (`use-assistant-profile-selection.ts`, `use-global-ai-profile-state.ts`, `use-assistant-runtime-config.ts`).
 
 ### Does NOT own (prevent scope creep)
 

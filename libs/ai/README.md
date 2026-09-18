@@ -4,7 +4,7 @@ Provider-agnostic AI abstraction: streams chat completions from any registered p
 
 ## Where it sits
 
-Consumed by host `AIRuntime` adapters (Electron main / web) for provider HTTP, and by `libs/ai-react` / `libs/assistant-react/.../assistant` for types, pure helpers, and the `AIRuntime` contract.
+Consumed by host `AIRuntime` adapters (Electron main / web) for provider HTTP, and by `libs/ai-react` / `libs/assistant-react/src/lib` for types, pure helpers, and the `AIRuntime` contract.
 Shared React must not call `createAIGenerationClient` with secrets — see `agents/ASSISTANT-MAP.md` (AIRuntime seam).
 Mirrors the provider enum and secrets schema in `crates/koloda` (`domain/ai.rs` + `repo/ai.rs` for redaction/reconstruction); the two must stay in sync — see `agents/ADD-AI-PROVIDER.md`.
 Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-provider SDK packages, dynamically imported.
@@ -28,9 +28,9 @@ Talks to provider HTTP endpoints via the Vercel AI SDK (`ai` package) and per-pr
 
 ### Does NOT own (prevent scope creep)
 
-- Conversation / run lifecycle state — `libs/assistant-react/.../assistant`
+- Conversation / run lifecycle state — `libs/assistant-react/src/lib` (policy + React); stream execution lifetime — `@koloda/assistant` + host `AIRuntime`
 - Persistence schema & secrets storage — `@koloda/db-sqlite` + `crates/koloda/src/repo`
-- UI rendering / streaming hooks — `libs/ai-react`
+- Presentational AI UI (message shells, pickers, tool-activity chrome) — `libs/ai-react`
 - The canonical provider enum — Rust (`crates/koloda/src/domain/ai.rs`) is source of truth; this lib mirrors it
 
 ## Read next
