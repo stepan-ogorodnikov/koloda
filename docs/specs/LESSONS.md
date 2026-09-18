@@ -88,7 +88,7 @@ A lesson moves through six phases: closed, preparing, configuring, loading-cards
   The user edits the amounts for the lesson.
 - **loading-cards** — the user pressed Start and the cards for the chosen amounts are being loaded.
 - **studying** — the cards are shown and graded one by one.
-- **finished** — every card has been graded and the completion screen is shown.
+- **finished** — every card in the session has been graded, or the session ended with nothing to study; the completion screen is shown.
 
 Escape, the "Close popover" hotkey, and the dialog close control all close or interrupt the lesson.
 The effect depends on the phase.
@@ -141,7 +141,8 @@ Manual edits are not re-clamped to daily limits — only to the available count 
 ## Studying
 
 When the user starts the lesson, cards are loaded for the chosen amounts and filters.
-If the loaded data has no cards, studying never begins and no current card is shown.
+If the load succeeds but matches no cards — for example because cards were removed after init — the lesson skips studying and shows the completion screen immediately.
+No current card is shown in that case.
 
 Cards are included in this order:
 
