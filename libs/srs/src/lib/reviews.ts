@@ -26,8 +26,7 @@ const reviewFieldsSchema = z.object({
   cardId: cardValidation.shape.id,
   rating: z.int(),
   state: z.int(),
-  // INVARIANT: desktop `Review`/`InsertReviewData` is `i64`; never make this nullable.
-  // Card `dueAt` is the nullable field.
+  // INVARIANT: required — FSRS always supplies `due`. Twin of desktop `i64`. Card `dueAt` stays optional.
   dueAt: z.date(),
   stability: z.number().default(0),
   difficulty: z.number().default(0),

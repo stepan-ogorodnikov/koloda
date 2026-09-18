@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 	card_id text NOT NULL,
 	state integer DEFAULT 0 NOT NULL,
 	rating integer DEFAULT 0 NOT NULL,
-	due_at integer,
+	due_at integer NOT NULL,
 	stability real DEFAULT 0 NOT NULL,
 	difficulty real DEFAULT 0 NOT NULL,
 	scheduled_days integer DEFAULT 0 NOT NULL,

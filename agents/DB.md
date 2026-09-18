@@ -27,6 +27,7 @@ When modifying database schema:
    No backticks in SQL.
    Add `IF NOT EXISTS` to `CREATE TABLE` / `CREATE INDEX` / `CREATE UNIQUE INDEX`.
    Storage conventions: timestamps are unix-ms integers, JSON is `text`, booleans are `0/1`.
+   `reviews.due_at` is NOT NULL (FSRS always supplies `due`); `cards.due_at` is nullable (untouched cards).
    Product entity ids are client-minted UUIDv7 text primary keys.
    `settings.id` stays `integer PRIMARY KEY AUTOINCREMENT` (rows are keyed by `name`).
    `conversations.id` stays text (v4 mint, not v7).

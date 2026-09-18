@@ -102,7 +102,7 @@ pub fn insert_review_row(db: &Database, card_id: &str, state: i32, is_ignored: i
             r#"
             INSERT INTO reviews (id, card_id, rating, state, due_at, stability, difficulty,
                                 scheduled_days, learning_steps, time, is_ignored, created_at)
-            VALUES (?1, ?2, 3, ?3, NULL, 1.0, 5.0, 0, 0, 10, ?4, ?5)
+            VALUES (?1, ?2, 3, ?3, 1900000000000, 1.0, 5.0, 0, 0, 10, ?4, ?5)
             "#,
             rusqlite::params![
                 koloda::app::utility::generate_uuidv7(),

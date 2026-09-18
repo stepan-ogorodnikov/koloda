@@ -19,8 +19,8 @@ pub struct Review {
     pub card_id: String,
     pub rating: i32,
     pub state: i32,
-    // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
-    // FSRS always supplies `due`. Do not restore `Option<i64>` because the SQLite column is nullable.
+    // INVARIANT: required timestamp — FSRS always supplies `due`. Twin of `@koloda/srs` `z.date()`.
+    // Card `due_at` stays optional (untouched rows).
     #[serde(deserialize_with = "deserialize_timestamp", serialize_with = "serialize_timestamp")]
     pub due_at: i64,
     pub stability: f64,
@@ -42,8 +42,8 @@ pub struct InsertReviewData {
     pub card_id: String,
     pub rating: i32,
     pub state: i32,
-    // INVARIANT: wire/DTO is a timestamp, never JSON null; twin of `@koloda/srs` `z.date()`.
-    // FSRS always supplies `due`. Do not restore `Option<i64>` because the SQLite column is nullable.
+    // INVARIANT: required timestamp — FSRS always supplies `due`. Twin of `@koloda/srs` `z.date()`.
+    // Card `due_at` stays optional (untouched rows).
     #[serde(deserialize_with = "deserialize_timestamp")]
     pub due_at: i64,
     pub stability: f64,
