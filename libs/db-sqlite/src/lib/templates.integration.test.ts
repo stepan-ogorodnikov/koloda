@@ -95,6 +95,17 @@ describe("templates repository integration", () => {
     expect(storedTemplate?.content.fields.find((field) => field.id === frontId)?.type).toBe("text");
   });
 
+  it("rejects deleting a template referenced by a deck with no cards", async () => {
+    const { db } = testDb;
+    const { template } = await seedDeckContext(db);
+
+    await expect(deleteTemplate(db, { id: template.id })).rejects.toMatchObject({
+      code: "validation.templates.delete-used",
+    });
+
+    expect(await getTemplate(db, template.id)).not.toBeNull();
+  });
+
   it("prevents deleting locked templates", async () => {
     const { db } = testDb;
     const { deck, template } = await seedDeckContext(db);

@@ -240,22 +240,34 @@ pub fn clone_template(db: &Database, data: CloneTemplateData) -> Result<Template
 
 pub fn delete_template(db: &Database, data: DeleteTemplateData) -> Result<(), AppError> {
     throw_known_error(error_codes::DB_DELETE, || {
-        // INVARIANT: the learning default template is not deletable while it remains the default
-        // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
-        // convenience, not the enforcement.
-        let is_default =
-            db.with_conn(|conn| Ok(settings::learning_defaults(conn)?.is_some_and(|d| d.template == data.id)))?;
-        if is_default {
-            return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_DEFAULT, None));
-        }
+        db.with_transaction(|tx| {
+            // INVARIANT: the learning default, locked templates, and templates referenced by a deck's
+            // current template are not deletable (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting
+            // Templates). UI disable is a convenience, not the enforcement.
+            let is_default = settings::learning_defaults(tx)?.is_some_and(|d| d.template == data.id);
+            if is_default {
+                return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_DEFAULT, None));
+            }
 
-        let is_locked = is_template_locked(db, &data.id)?;
-        if is_locked {
-            return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED, None));
-        }
+            let is_locked: bool = tx.query_row(
+                "SELECT COUNT(*) > 0 FROM cards WHERE template_id = ?1",
+                params![data.id],
+                |row| row.get(0),
+            )?;
+            if is_locked {
+                return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_LOCKED, None));
+            }
 
-        db.with_conn(|conn| {
-            conn.execute("DELETE FROM templates WHERE id = ?1", params![data.id])?;
+            let has_decks: bool = tx.query_row(
+                "SELECT COUNT(*) > 0 FROM decks WHERE template_id = ?1",
+                params![data.id],
+                |row| row.get(0),
+            )?;
+            if has_decks {
+                return Err(AppError::new(error_codes::VALIDATION_TEMPLATES_DELETE_USED, None));
+            }
+
+            tx.execute("DELETE FROM templates WHERE id = ?1", params![data.id])?;
             Ok(())
         })
     })

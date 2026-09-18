@@ -108,18 +108,24 @@ export async function cloneTemplate(db: DB, { title, sourceId }: CloneTemplateDa
 
 export async function deleteTemplate(db: DB, { id }: DeleteTemplateData) {
   return throwKnownError("db.delete", async () => {
-    // INVARIANT: the learning default template is not deletable while it remains the default
-    // (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting Templates). UI disable is a
-    // convenience, not the enforcement. A corrupt learning row fails closed (getSettings
-    // throws) — twin of Rust `learning_defaults`.
-    const learning = await getSettings(db, "learning");
-    if (learning?.content.defaults.template === id) throw new AppError("validation.templates.delete-default");
+    // WHY: guards run inside the transaction (twin of Rust `with_transaction`) so a
+    // concurrent writer on another connection cannot pass them before the delete lands.
+    return db.transaction(async (tx) => {
+      // INVARIANT: the learning default, locked templates, and templates referenced by a deck's
+      // current template are not deletable (LEARNING-SETTINGS.md §Defaults, TEMPLATES.md §Deleting
+      // Templates). UI disable is a convenience, not the enforcement. A corrupt learning row fails
+      // closed (getSettings throws) — twin of Rust `learning_defaults`.
+      const learning = await getSettings(tx, "learning");
+      if (learning?.content.defaults.template === id) throw new AppError("validation.templates.delete-default");
 
-    const template = await getTemplate(db, id);
+      const template = await getTemplate(tx, id);
+      if (template?.isLocked) throw new AppError("validation.templates.delete-locked");
 
-    if (template?.isLocked) throw new AppError("validation.templates.delete-locked");
+      const templateDecks = await getTemplateDecks(tx, { id });
+      if (templateDecks.length > 0) throw new AppError("validation.templates.delete-used");
 
-    await db.run(`DELETE FROM templates WHERE id = ?`, [id]);
+      await tx.run(`DELETE FROM templates WHERE id = ?`, [id]);
+    });
   });
 }
 

@@ -90,6 +90,7 @@ export const ERROR_MESSAGES = {
   "validation.templates.update-locked": msg`validation.templates.update-locked`,
   "validation.templates.delete-locked": msg`validation.templates.delete-locked`,
   "validation.templates.delete-default": msg`validation.templates.delete-default`,
+  "validation.templates.delete-used": msg`validation.templates.delete-used`,
   "validation.cards.content.field-empty": msg`validation.cards.content.field-empty`,
   "validation.cards-progress.state": msg`Invalid card state`,
   "validation.cards-progress.stability": msg`Stability must be non-negative`,

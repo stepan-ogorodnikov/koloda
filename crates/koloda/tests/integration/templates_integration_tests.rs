@@ -31,6 +31,30 @@ fn update_template_fails_with_not_found_when_template_is_missing() {
 }
 
 #[test]
+fn delete_template_fails_when_a_deck_uses_the_template() {
+    let db = test_db();
+    let algorithm_id = add_algorithm(&db, "FSRS");
+    let template_id = add_template(&db, "Basic");
+    let _deck_id = add_deck(&db, &algorithm_id, &template_id, "Deck");
+
+    let err = templates::delete_template(
+        &db,
+        DeleteTemplateData {
+            id: template_id.clone(),
+        },
+    )
+    .expect_err("template in use by deck should not delete");
+
+    assert_eq!(err.code, error_codes::VALIDATION_TEMPLATES_DELETE_USED);
+    assert!(
+        templates::get_template(&db, &template_id)
+            .expect("query should succeed")
+            .is_some(),
+        "template should remain"
+    );
+}
+
+#[test]
 fn delete_template_fails_when_template_is_locked_by_cards() {
     let db = test_db();
     let algorithm_id = add_algorithm(&db, "FSRS");

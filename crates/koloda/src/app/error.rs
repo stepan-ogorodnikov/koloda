@@ -74,6 +74,7 @@ pub mod error_codes {
     pub const VALIDATION_TEMPLATES_UPDATE_LOCKED: &str = "validation.templates.update-locked";
     pub const VALIDATION_TEMPLATES_DELETE_LOCKED: &str = "validation.templates.delete-locked";
     pub const VALIDATION_TEMPLATES_DELETE_DEFAULT: &str = "validation.templates.delete-default";
+    pub const VALIDATION_TEMPLATES_DELETE_USED: &str = "validation.templates.delete-used";
 
     pub const VALIDATION_CARDS_CONTENT_FIELD_EMPTY: &str = "validation.cards.content.field-empty";
 

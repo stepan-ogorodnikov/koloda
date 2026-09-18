@@ -553,6 +553,10 @@ msgstr "Default template can't be deleted"
 msgid "validation.templates.delete-locked"
 msgstr "Cannot delete locked template"
 
+#: ../../libs/app/src/lib/error.ts:93
+msgid "validation.templates.delete-used"
+msgstr "This template is used by deck(s) and can't be deleted"
+
 #: ../../libs/app/src/lib/error.ts:85
 msgid "validation.templates.fields.too-few"
 msgstr "There has to be at least one field"
