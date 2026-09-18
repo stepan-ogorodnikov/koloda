@@ -309,6 +309,19 @@ describe("lessonReducer", () => {
     });
   });
 
+  it("finishes when lesson cards cannot be joined to deck, algorithm, or template data", () => {
+    const orphanedCard = createCard({ deckId: testId(99) });
+    const state = startLesson({
+      lessonData: createLessonData({
+        cards: [orphanedCard],
+        decks: [],
+      }),
+    });
+
+    expect(state.phase).toBe("finished");
+    expect(state.session?.content).toBeNull();
+  });
+
   it("updates and submits the card form only while studying", () => {
     const loading = startLesson({ shouldSubmitSetup: true });
     const ignoredForm = lessonReducer(loading, [

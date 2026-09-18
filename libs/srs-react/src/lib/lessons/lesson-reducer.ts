@@ -283,44 +283,55 @@ function moveToNextCard(draft: LessonReducerState) {
   if (!draft.session) return;
 
   const { cards, decks, templates, algorithms } = draft.session.data;
-  const index = typeof draft.session.content?.index === "number" ? draft.session.content.index + 1 : 0;
+  let index = typeof draft.session.content?.index === "number" ? draft.session.content.index + 1 : 0;
 
-  // WHY: an empty payload (cards deleted between configure and load) has no
-  // index 0 — finish instead of stranding the dialog in loading-cards.
-  if (index >= cards.length) {
-    if (typeof draft.session.content?.index === "number") draft.session.content.index++;
-    draft.phase = "finished";
+  while (index < cards.length) {
+    const card = cards[index];
+    if (!card) {
+      index++;
+      continue;
+    }
+
+    const deck = decks.find(({ id }) => id === card.deckId);
+    if (!deck) {
+      index++;
+      continue;
+    }
+
+    const algorithm = algorithms.find(({ id }) => id === deck.algorithmId);
+    if (!algorithm) {
+      index++;
+      continue;
+    }
+
+    const template = templates.find(({ id }) => id === deck.templateId);
+    if (!template) {
+      index++;
+      continue;
+    }
+
+    // WHY: display-only layouts have nothing to submit — show grades immediately.
+    const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
+
+    draft.session.content = {
+      index,
+      startedAt: Date.now(),
+      form: {
+        firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
+        data: {},
+        isSubmitted: !canSubmit,
+      },
+      card,
+      template,
+      grades: getCardGrades(card, algorithm),
+    };
     updateProgressAmounts(draft);
     return;
   }
 
-  const card = cards[index];
-  if (!card) return;
-
-  const deck = decks.find(({ id }) => id === card.deckId);
-  if (!deck) return;
-
-  const algorithm = algorithms.find(({ id }) => id === deck.algorithmId);
-  if (!algorithm) return;
-
-  const template = templates.find(({ id }) => id === deck.templateId);
-  if (!template) return;
-
-  // WHY: display-only layouts have nothing to submit — show grades immediately.
-  const canSubmit = template.layout.reduce((acc, x) => acc || x.operation !== "display", false);
-
-  draft.session.content = {
-    index,
-    startedAt: Date.now(),
-    form: {
-      firstInputFieldId: template.layout.find((x) => x.operation === "type")?.field?.id,
-      data: {},
-      isSubmitted: !canSubmit,
-    },
-    card,
-    template,
-    grades: getCardGrades(card, algorithm),
-  };
+  // WHY: no card at index (empty load) or every remaining row lacked deck/algorithm/template joins.
+  if (typeof draft.session.content?.index === "number") draft.session.content.index++;
+  draft.phase = "finished";
   updateProgressAmounts(draft);
 }
 
