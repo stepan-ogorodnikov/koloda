@@ -265,6 +265,17 @@ describe("lessonReducer", () => {
     expect(submitted.phase).toBe("loading-cards");
   });
 
+  it("moves to finished and stores the error when lesson data fails during loading-cards", () => {
+    const loading = lessonReducer(startLesson(), ["setupSubmitted"]);
+    const err = new Error("db failure");
+    const failed = lessonReducer(loading, ["lessonDataFailed", err]);
+
+    expect(failed.phase).toBe("finished");
+    expect(failed.loadError).toBe(err);
+    expect(failed.session).toBeNull();
+    expect(failed.isTerminationRequested).toBe(false);
+  });
+
   it("accepts lessonDataReceived only once during loading-cards, then studies with content", () => {
     const configuring = startLesson();
     const ignoredWhileConfiguring = lessonReducer(configuring, ["lessonDataReceived", createLessonData()]);

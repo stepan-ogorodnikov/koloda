@@ -2,7 +2,7 @@ import { queriesAtom, useHotkeysStatus } from "@koloda/core-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { initializeLessonAtom, receiveLessonDataAtom } from "./lesson-actions";
+import { initializeLessonAtom, receiveLessonDataAtom, failLessonDataLoadAtom } from "./lesson-actions";
 import { filtersFromRequest } from "./lesson-reducer";
 import { lessonIsOpenAtom, lessonPhaseAtom, lessonRequestAtom, lessonSetupAtom } from "./lesson-selectors";
 import { useLessonUploader } from "./lesson-uploader";
@@ -22,6 +22,7 @@ export function useLessonSession(): UseLessonSessionResult {
   const isOpen = useAtomValue(lessonIsOpenAtom);
   const initialize = useSetAtom(initializeLessonAtom);
   const receiveLessonData = useSetAtom(receiveLessonDataAtom);
+  const failLessonDataLoad = useSetAtom(failLessonDataLoadAtom);
   const { closeLesson } = useLessonClose();
   const { getSettingsQuery, getTodayReviewTotalsQuery, getLessonsQuery, getLessonDataQuery } =
     useAtomValue(queriesAtom);
@@ -38,7 +39,13 @@ export function useLessonSession(): UseLessonSessionResult {
   });
 
   const isLoadingCards = phase === "loading-cards" && !!setup;
-  const { data: lessonData, isSuccess: hasLoadedLessonData } = useQuery({
+  const {
+    data: lessonData,
+    error: lessonDataError,
+    isSuccess: hasLoadedLessonData,
+    isError: hasLessonDataError,
+    isFetching: isFetchingLessonData,
+  } = useQuery({
     ...getLessonDataQuery({
       amounts: setup?.amounts ?? { untouched: 0, learn: 0, review: 0, total: 0 },
       filters: setup?.filters ?? { deckIds: [] },
@@ -62,6 +69,11 @@ export function useLessonSession(): UseLessonSessionResult {
     if (phase !== "loading-cards" || !hasLoadedLessonData) return;
     receiveLessonData(lessonData ?? null);
   }, [phase, lessonData, hasLoadedLessonData, receiveLessonData]);
+
+  useEffect(() => {
+    if (phase !== "loading-cards" || !hasLessonDataError || isFetchingLessonData || !lessonDataError) return;
+    failLessonDataLoad(lessonDataError);
+  }, [phase, hasLessonDataError, isFetchingLessonData, lessonDataError, failLessonDataLoad]);
 
   useEffect(() => {
     if (isOpen) {

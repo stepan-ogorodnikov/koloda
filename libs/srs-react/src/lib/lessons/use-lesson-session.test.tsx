@@ -1,3 +1,4 @@
+import { AppError } from "@koloda/app";
 import { hotkeysScopesAtom, queriesAtom, queryKeys } from "@koloda/core-react";
 import type { Queries } from "@koloda/core-react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import {
   testId,
 } from "../../test/test-helpers";
 import { openLessonAtom, submitLessonSetupAtom } from "./lesson-actions";
-import { lessonContentAtom, lessonPhaseAtom, lessonSetupAtom } from "./lesson-selectors";
+import { lessonContentAtom, lessonLoadErrorAtom, lessonPhaseAtom, lessonSetupAtom } from "./lesson-selectors";
 import { lessonStateAtom } from "./lesson-store";
 import { useLessonSession } from "./use-lesson-session";
 
@@ -163,6 +164,38 @@ describe("useLessonSession", () => {
     await waitFor(() => {
       expect(store.get(lessonPhaseAtom)).toBe("finished");
     });
+  });
+
+  it("finishes with a stored error when getLessonData rejects", async () => {
+    const loadError = new AppError("db.get", "lesson cards unavailable");
+    const { store, Wrapper } = createWrapper({
+      queries: buildQueries({
+        getLessonDataQuery: (params) => ({
+          queryKey: queryKeys.lessons.data(params),
+          queryFn: async () => {
+            throw loadError;
+          },
+        }),
+      }),
+    });
+    renderHook(() => useLessonSession(), { wrapper: Wrapper });
+
+    act(() => {
+      store.set(openLessonAtom, REQUEST);
+    });
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("configuring");
+    });
+
+    act(() => {
+      store.set(submitLessonSetupAtom);
+    });
+
+    await waitFor(() => {
+      expect(store.get(lessonPhaseAtom)).toBe("finished");
+    });
+    expect(store.get(lessonLoadErrorAtom)).toBe(loadError);
+    expect(store.get(lessonContentAtom)).toBeUndefined();
   });
 
   it("loads card data once after setup is submitted", async () => {

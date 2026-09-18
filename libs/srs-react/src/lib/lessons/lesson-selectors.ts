@@ -23,6 +23,8 @@ export const lessonProgressAtom = atom((get) => get(lessonStateAtom).session?.pr
 
 export const lessonTerminationRequestedAtom = atom((get) => get(lessonStateAtom).isTerminationRequested);
 
+export const lessonLoadErrorAtom = atom((get) => get(lessonStateAtom).loadError);
+
 export const lessonUploadHeadAtom = atom((get) => get(lessonStateAtom).upload.queue[0]);
 
 export const lessonUploadLogAtom = atom((get) => get(lessonStateAtom).upload.log);

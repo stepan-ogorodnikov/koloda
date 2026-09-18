@@ -84,6 +84,7 @@ export type LessonReducerState = {
   request: LessonAtomValue | null;
   setup: LessonSetup | null;
   session: LessonSession | null;
+  loadError: unknown;
   isTerminationRequested: boolean;
   upload: {
     queue: {
@@ -110,6 +111,7 @@ export const lessonReducerDefault: LessonReducerState = {
   request: null,
   setup: null,
   session: null,
+  loadError: null,
   isTerminationRequested: false,
   upload: {
     queue: [],
@@ -123,6 +125,7 @@ const actions = {
   amountUpdated,
   setupSubmitted,
   lessonDataReceived,
+  lessonDataFailed,
   cardSubmitted,
   cardFormUpdated,
   gradeSelected,
@@ -253,6 +256,8 @@ function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
   if (draft.phase !== "loading-cards") return;
   if (draft.session) return;
 
+  draft.loadError = null;
+
   draft.session = {
     learnAheadLimit: draft.setup?.learnAheadLimit,
     data: payload,
@@ -264,6 +269,14 @@ function lessonDataReceived(draft: LessonReducerState, payload: LessonData) {
   };
   moveToNextCard(draft);
   if (draft.phase === "loading-cards") draft.phase = "studying";
+}
+
+function lessonDataFailed(draft: LessonReducerState, error: unknown) {
+  if (draft.phase !== "loading-cards") return;
+
+  draft.loadError = error;
+  draft.isTerminationRequested = false;
+  draft.phase = "finished";
 }
 
 function moveToNextCard(draft: LessonReducerState) {
@@ -393,6 +406,7 @@ function close(draft: LessonReducerState) {
   draft.request = next.request;
   draft.setup = next.setup;
   draft.session = next.session;
+  draft.loadError = next.loadError;
   draft.isTerminationRequested = next.isTerminationRequested;
   draft.upload = next.upload;
 }
