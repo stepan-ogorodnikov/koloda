@@ -19,7 +19,8 @@ They are edited on the learning settings screen and take effect for later study.
 ## Core Model
 
 - **Defaults** — the algorithm and template offered when creating a deck
-- **Daily limits** — caps for New, Learn, Review, and Total for the current learning day
+- **Daily limits** — caps for New, Learn, Review, and Total for the current learning day.
+  Each cap is unlimited or a non-negative number.
 - **Counts toward total** — whether a per-type limit contributes to Total
 - **Day starts at** — local wall-clock time that begins a new learning day
 - **Learn-ahead limit** — how far into the future a graded card may still re-enter the same lesson
@@ -46,25 +47,31 @@ On first setup, defaults are pointed at the seeded algorithm and template.
 
 ## Daily Limits
 
-There is a Total limit and a limit for each of New, Learn, and Review.
+There is a Total cap and a cap for each of New, Learn, and Review.
 
-Each of New, Learn, and Review has:
+Each cap is either unlimited or a non-negative number.
+The user sets unlimited with an Unlimited control next to that cap.
 
-- a numeric value — the per-type cap for the learning day
-- a **counts toward total** switch
+Each of New, Learn, and Review also has a **counts toward total** switch.
+That switch still applies when the type is unlimited.
 
-Total has only a numeric value.
+Total has only a cap.
 
-A Total of zero means no cap for Total.
-The UI shows that as infinity where Total is displayed.
+Zero is a hard cap for that limit.
+That limit has no remaining room.
+Any cards of that type already studied today are over that type's limit.
+A Total of zero is a hard cap for Total.
 
-A New, Learn, or Review value of zero is a hard zero for that type.
-That type has no remaining room under its own limit.
-Any card of that type already studied today is over that type's limit.
+Unlimited Total does not cap counted types.
 
-When Total is greater than zero, any per-type limit that counts toward Total must not exceed Total.
+Where a cap is shown, unlimited appears as infinity.
+
+When Total is a number, any per-type number that counts toward Total must not exceed Total.
 Saving with such a value is rejected and the previous settings are kept.
-A per-type limit that does not count toward Total may be larger than Total.
+When Total is zero, a counted per-type number must be zero.
+A per-type cap that does not count toward Total may be larger than Total.
+Unlimited New, Learn, or Review is allowed when Total is a number.
+Total still clamps counted remaining room when init defaults are computed; see LESSONS.md (§Default Amounts).
 
 Limits do not hard-block studying.
 They shape lesson init defaults.

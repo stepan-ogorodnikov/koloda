@@ -55,7 +55,7 @@ New, Learn, Review, and Total are each shown.
 The same figures are shown at lesson init; see §Init.
 
 What counts as today and how Total is summed are LEARNING-SETTINGS.md (§Learning Day).
-What a limit of zero means is LEARNING-SETTINGS.md (§Daily Limits).
+What unlimited and a limit of zero mean is LEARNING-SETTINGS.md (§Daily Limits).
 
 Closing a lesson refreshes these figures.
 
@@ -133,7 +133,7 @@ If the user opened from the "Total" badge, defaults fill "New", then "Learn", th
 Each type that counts toward "Total" consumes remaining "Total" allowance as it goes.
 Types that do not count toward "Total" leave that allowance untouched.
 
-See LEARNING-SETTINGS.md (§Daily Limits) for a limit value of zero.
+See LEARNING-SETTINGS.md (§Daily Limits) for unlimited and for a limit of zero.
 
 Editing an amount after defaults are set recalculates "Total".
 Manual edits are not re-clamped to daily limits — only to the available count for that type.

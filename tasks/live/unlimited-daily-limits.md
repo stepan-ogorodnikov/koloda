@@ -1,6 +1,6 @@
 # Unlimited daily limits
 
-Status: draft
+Status: ready
 
 ## Intent
 
@@ -37,7 +37,7 @@ Out:
 
 ## Plan
 
-- [ ] 1. Describe unlimited daily limits in the spec
+- [x] 1. Describe unlimited daily limits in the spec
   Goal: Rewrite `docs/specs/LEARNING-SETTINGS.md` §Daily Limits so it matches the intended product, not the current Total-zero-as-uncapped rule.
   Each of Total, New, Learn, and Review can be unlimited or a non-negative number.
   Zero is a hard cap for that limit: no remaining room, and any cards of that type already studied today are over that type's limit.
@@ -54,10 +54,7 @@ Out:
   Do not change code or `agents/TESTING.md`.
   Read `docs/specs/LEARNING-SETTINGS.md`, `docs/specs/LESSONS.md`, `agents/FUNCTIONAL-SPECIFICATIONS.md`, `agents/MARKDOWN.md`.
   Done when: the spec states unlimited vs zero vs a positive cap for all four limits, the counted-vs-Total save rules, and the LESSONS.md pointers no longer say only "a limit of zero".
-  Commit candidates:
-  - Spell out unlimited vs a hard-zero daily cap
-  - Replace Total-zero-as-uncapped in the learning-settings spec
-  - Describe unlimited daily limits in LEARNING-SETTINGS
+  Commit: Document unlimited daily limits in learning settings spec
   Depends on: none
 
 - [ ] 2. Encode unlimited as null and apply it in remaining room
@@ -83,10 +80,7 @@ Out:
   Done when: validation tests cover null Total, hard-zero Total, legacy Total `0` → null, and counted-exceeds-total.
   Review-totals and lesson-init tests treat null as uncapped and `0` as no remaining room on every limit type.
   Settings form compile/type errors may remain.
-  Commit candidates:
-  - Treat null daily limits as unlimited and zero as a hard cap
-  - Stop using Total zero as the unlimited daily-limit sentinel
-  - Mirror nullable daily limits in Zod and Rust
+  Commit: Treat null daily limits as unlimited and zero as a hard cap
   Depends on: 1
 
 - [ ] 3. Add Unlimited switches on the learning settings form
@@ -103,10 +97,7 @@ Out:
   Read `docs/specs/LEARNING-SETTINGS.md`, `agents/I18N.md`, `agents/CODE-STYLE.md`, `agents/CODE-DOCUMENTATION.md`, `agents/TESTING.md`, `agents/CSS.md`.
   Done when: the form can save unlimited and hard-zero for each limit, unit or form tests cover the switch, and both e2e suites pass the old and new validation cases.
   `bunx nx test settings-react` and the two learning-settings e2e specs pass.
-  Commit candidates:
-  - Add Unlimited switches to daily limit fields
-  - Let learning settings save unlimited daily caps
-  - Expose unlimited daily limits on the settings form
+  Commit: Expose unlimited daily limits on the settings form
   Depends on: 2
 
 ## Outcome
