@@ -251,6 +251,11 @@ It does not roll back results that already succeeded.
 
 When every card in the session has been graded, the lesson is finished.
 The content area shows "Done".
+
+If card data fails to load after the user starts the lesson, the lesson is also finished.
+No cards are studied.
+The content area shows the load error instead of "Done".
+
 The footer shows "Close", focused by default.
 Escape or "Close popover" also closes the dialog.
 

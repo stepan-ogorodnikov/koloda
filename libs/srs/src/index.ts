@@ -1,4 +1,3 @@
-export { optionalProfileTitleSchema, requiredEntityTitleSchema, trimTitleValue } from "@koloda/app";
 export {
   algorithmRowSchema,
   cloneAlgorithmSchema,
